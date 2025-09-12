@@ -411,7 +411,7 @@ do_file:
 is_dir_flag:
         .byte   0
 
-LA4F9:  .byte   0
+LA4F9:  .byte   0               ; TODO: written but not read; remove?
 .endproc ; CopyFiles
 
 ;;; ============================================================
@@ -487,12 +487,13 @@ ep2:    MLI_CALL GET_FILE_INFO, get_src_file_info_params
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
         bcc     exists
         cmp     #ERR_FILE_NOT_FOUND
-        beq     LA5A1
+        beq     continue
         jmp     HandleErrorCode
 
 exists: copy16  get_dst_file_info_params::blocks_used, existing_blocks
 
-LA5A1:  copy8   pathname_dst, saved_length
+continue:
+        copy8   pathname_dst, saved_length
         ;; Strip to vol name - either end of string or next slash
         ldy     #1
     DO
@@ -516,11 +517,13 @@ LA5A1:  copy8   pathname_dst, saved_length
 
         ;; Not enough room
         sec
-        bcs     LA603
+        bcs     finish          ; always
+
 has_room:
         clc
 
-LA603:  copy8   saved_length, pathname_dst
+finish:
+        copy8   saved_length, pathname_dst
         rts
 
 blocks_free:              ; Blocks free on volume

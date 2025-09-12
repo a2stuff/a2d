@@ -728,12 +728,12 @@ menukey:
 
 .proc HandleMenu
         ldx     menu_params::menu_item
-        beq     L93BE
+        beq     fail
         ldx     menu_params::menu_id
-        bne     L93C1
-L93BE:  jmp     EventLoop
+        bne     :+
+fail:   jmp     EventLoop
 
-L93C1:  dex
+:       dex
         lda     menu_addr_table,x
         tax
         ldy     menu_params::menu_item
@@ -746,11 +746,11 @@ L93C1:  dex
         adc     addr
         tax
         copy16  menu_dispatch_table,x, addr
-        jsr     L93EB
+        jsr     dispatch
         MGTK_CALL MGTK::HiliteMenu, menu_params
         rts
 
-L93EB:
+dispatch:
         addr := *+1
         jmp     SELF_MODIFIED
 .endproc ; HandleMenu
@@ -764,7 +764,7 @@ retry:
 
         ;; Load file dialog overlay
         MLI_CALL OPEN, open_selector_params
-        bcs     L9443
+    IF_CC
         lda     open_selector_params::ref_num
         sta     set_mark_overlay1_params::ref_num
         sta     read_overlay1_params::ref_num
@@ -785,7 +785,9 @@ ok:     tya                     ; now A,X = path
 
 cancel: jmp     LoadSelectorList
 
-L9443:  lda     #AlertID::insert_system_disk
+    END_IF
+
+        lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry           ; `kAlertResultTryAgain` = 0

@@ -340,7 +340,7 @@ done:
         sta     num_selector_list_items
 
         copy8   selector_list_data_buf, count
-L0A3B:  lda     index
+loop:   lda     index
         cmp     count
         beq     done
 
@@ -367,7 +367,7 @@ L0A3B:  lda     index
 
         inc     index
         inc     selector_menu
-        jmp     L0A3B
+        jmp     loop
 
 done:   jmp     end
 
@@ -665,7 +665,7 @@ end:
         jsr     main::IsDiskII
         beq     done_create     ; skip
         ldx     device_index
-        jsr     RemoveDevice
+        jsr     _RemoveDevice
         jmp     next
       END_IF
 
@@ -686,13 +686,10 @@ next:
         copy8   #0, cached_window_id
         jsr     main::StoreWindowEntryTable
 
-        jmp     PopulateDeviceNames
-.endscope
+        jmp     end_of_scope
 
-;;; ============================================================
-
-        ;; Remove device num in X from devices list
-.proc RemoveDevice
+;;; Remove device num in X from devices list
+.proc _RemoveDevice
         dex
     DO
         inx
@@ -709,7 +706,11 @@ next:
         ;; not be necessary.
 
         rts
-.endproc ; RemoveDevice
+.endproc ; _RemoveDevice
+
+        end_of_scope := *
+        FALL_THROUGH_TO PopulateDeviceNames
+.endscope
 
 ;;; ============================================================
 ;;; This section populates `device_name_table` - it determines which
@@ -845,7 +846,7 @@ next:   dec     slot
 
         ;; Set number of menu items.
         stx     startup_menu
-        jmp     InitializeDisksInDevicesTables
+        jmp     end_of_scope
 
 slot:   .byte   0
 
@@ -858,6 +859,9 @@ slot_string_table:
         .addr   startup_menu_item_6
         .addr   startup_menu_item_7
         ASSERT_ADDRESS_TABLE_SIZE slot_string_table, ::kMenuSizeStartup
+
+        end_of_scope := *
+        FALL_THROUGH_TO InitializeDisksInDevicesTables
 .endproc ; PopulateStartupMenu
 
 ;;; ============================================================
@@ -912,7 +916,7 @@ next:   inc     index
       WHILE_POS
     END_IF
 
-        jmp     FinalSetup
+        jmp     end_of_scope
 
         DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
 
@@ -970,6 +974,9 @@ index:  .byte   0
 count:  .byte   0
 unit_num:
         .byte   0
+
+        end_of_scope := *
+        FALL_THROUGH_TO FinalSetup
 .endproc ; InitializeDisksInDevicesTables
 
 ;;; ============================================================

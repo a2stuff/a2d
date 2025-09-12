@@ -44,10 +44,11 @@ start:
 
         ;; Open up Selector itself
         MLI_CALL OPEN, open_params
-        bcc     L2049
+    IF_CS
         brk
+    END_IF
 
-L2049:  lda     open_params::ref_num
+        lda     open_params::ref_num
         sta     set_mark_segment_invoker_params::ref_num
         sta     set_mark_segment_app_params::ref_num
         sta     set_mark_segment_alert_params::ref_num

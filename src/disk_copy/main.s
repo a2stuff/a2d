@@ -367,8 +367,8 @@ IsDriveEjectable := IsDriveEjectableImpl::start
         sta     auxlc::block_index_shift
         lda     #0
         sta     auxlc::block_index_div8
-        sta     L0FE4
-        sta     L0FE5
+        sta     flag1
+        sta     flag2
 
         beq     check           ; always
 
@@ -390,29 +390,34 @@ check:
         jmp     error
     END_IF
 
-        bit     L0FE4
+        bit     flag1
         bmi     success
-        bit     L0FE5
-        bmi     L0F69
+        bit     flag2
+        bmi     continue
 
         jsr     AdvanceToNextBlockIndex
-        bcc     L0F51
-        bne     :+
+    IF_CS
+      IF_ZERO
         cpx     #$00
         beq     success
-:       ldy     #$80
-        sty     L0FE4
-L0F51:  stax    mem_block_addr
+      END_IF
+        ldy     #$80
+        sty     flag1
+    END_IF
+
+        stax    mem_block_addr
         jsr     AdvanceToNextBlock
         bcc     _ReadOrWriteBlock
-        bne     :+
+      IF_ZERO
         cpx     #$00
-        beq     L0F69
-:       ldy     #$80
-        sty     L0FE5
+        beq     continue
+      END_IF
+        ldy     #$80
+        sty     flag2
         bne     _ReadOrWriteBlock
 
-L0F69:  return  #$80
+continue:
+        return  #$80
 
 success:
         return  #0
@@ -502,8 +507,8 @@ use_lcbank2:
         jmp     loop
 .endproc ; _ReadOrWriteBlock
 
-L0FE4:  .byte   0
-L0FE5:  .byte   0
+flag1:  .byte   0               ; ???
+flag2:  .byte   0               ; ???
 
 write_flag:                     ; high bit set if writing
         .byte   0

@@ -30,18 +30,20 @@ Exec:
 .proc Exit
         pha
         lda     clean_flag
-    IF_NS                       ; dirty, check about saving
-L9015:  pla
-ret:    rts
-    END_IF
+        bpl     check_about_saving ; dirty, check about saving
 
+finish: pla
+ret:    rts
+
+check_about_saving:
         lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
         adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
         jsr     main::GetCopiedToRAMCardFlag
         cmp     #$80
-        bne     L9015
+        bne     finish
+
         jsr     WriteFileToOriginalPrefix
         pla
         rts
