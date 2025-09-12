@@ -1082,7 +1082,7 @@ exit:   jmp     main::LoadDesktopEntryTable
         ;; fails, the routine will restore the stack then
         ;; rts, returning to our caller.
         tsx
-        stx     saved_stack
+        stx     main::saved_stack
         jmp     main::OpenWindowForPath
 .endproc ; _MaybeOpenWindow
 

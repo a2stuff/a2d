@@ -80,17 +80,17 @@ window_id := $0A
 unit_num:
         .byte   0
 
-save_stack:
+saved_stack:
         .byte   0
 
 ;;; ============================================================
 
 start:  tsx
-        stx     save_stack
+        stx     saved_stack
         jmp     Start2
 
 .proc Exit
-        ldx     save_stack
+        ldx     saved_stack
         txs
 
         lda     window_id

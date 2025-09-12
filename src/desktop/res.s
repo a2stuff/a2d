@@ -732,9 +732,6 @@ alert_params:   .tag    AlertParams
 
 ;;; ============================================================
 
-saved_stack:
-        .byte   0
-
 .params menu_click_params       ; used for MGTK::MenuKey as well
 menu_id:        .byte   0
 item_num:       .byte   0

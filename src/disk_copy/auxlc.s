@@ -47,8 +47,6 @@ pencopy:        .byte   MGTK::pencopy
 penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
-stack_stash:  .byte   0
-
 .params hilitemenu_params
 menu_id   := * + 0
 .endparams
@@ -932,8 +930,6 @@ menu_offset_table:
         jmp     EventLoop
 
 do_jump:
-        tsx
-        stx     stack_stash
         jump_addr := *+1
         jmp     SELF_MODIFIED
 .endproc ; HandleMenuSelection

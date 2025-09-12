@@ -39,9 +39,6 @@ kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
 ;;; ============================================================
 ;;; Resources
 
-saved_stack:
-        .byte   $00
-
 ;;; for MenuSelect, HiliteMenu, MenuKey
 .params menu_params
 menu_id:
@@ -753,9 +750,7 @@ L93C1:  dex
         MGTK_CALL MGTK::HiliteMenu, menu_params
         rts
 
-L93EB:  tsx
-        stx     saved_stack
-
+L93EB:
         addr := *+1
         jmp     SELF_MODIFIED
 .endproc ; HandleMenu

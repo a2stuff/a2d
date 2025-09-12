@@ -9892,7 +9892,7 @@ target_is_icon:
         copy8   #0, operation_flags ; bit7=0 = copy/delete
         copy8   #0, move_flag
         tsx
-        stx     stack_stash
+        stx     saved_stack
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
@@ -9918,7 +9918,7 @@ FinishOperation:
         copy8   #%11000000, operation_flags ; bits7&6=1 = copy to RAMCard
         copy8   #0, dst_is_appleshare_flag  ; by definition, not AppleShare
         tsx
-        stx     stack_stash
+        stx     saved_stack
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
@@ -9949,7 +9949,7 @@ ep_always_copy:
         copy8   #0, operation_flags ; bit7=0 = copy/delete
         copy8   #$00, copy_delete_flags ; bit7=0 = copy
         tsx
-        stx     stack_stash
+        stx     saved_stack
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
@@ -9965,7 +9965,7 @@ DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
         copy8   #0, operation_flags ; bit7=0 = copy/delete
         copy8   #$80, copy_delete_flags ; bit7=1 = delete
         tsx
-        stx     stack_stash
+        stx     saved_stack
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenDeleteProgressDialog
@@ -10050,7 +10050,7 @@ iterate_selection:
 
 ;;; ============================================================
 
-stack_stash:
+saved_stack:
         .byte   0
 
         ;; $80 = lock/unlock (obsolete)
@@ -11762,7 +11762,7 @@ canceled:
 
         MLI_CALL CLOSE, close_params
 
-        ldx     operations::stack_stash     ; restore stack, in case recursion was aborted
+        ldx     operations::saved_stack     ; restore stack, in case recursion was aborted
         txs
 
         @result := *+1
@@ -12222,7 +12222,7 @@ append_size:
 
         copy16  #DoNothing, operations::operation_complete_callback ; handle error
         tsx
-        stx     operations::stack_stash
+        stx     operations::saved_stack
         jsr     ProcessDir
         jmp     _UpdateDirSizeDisplay ; in case 0 files were seen
 
@@ -15274,6 +15274,9 @@ list_view_filerecord:
 datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
 
 ;;; ============================================================
+
+saved_stack:
+        .byte   0
 
 case_bits:      .word   0
 
