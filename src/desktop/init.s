@@ -332,7 +332,7 @@ done:
 
         copy8   #0, index
         jsr     _ReadSelectorList
-        jne     done
+        bne     done
 
         lda     selector_list_data_buf + kSelectorListNumPrimaryRunListOffset
         clc
@@ -369,10 +369,18 @@ loop:   lda     index
         inc     selector_menu
         jmp     loop
 
-done:   jmp     end
+done:
+        ;; No separator if it is last
+        lda     selector_menu
+    IF_A_EQ     #kSelectorMenuFixedItems
+        dec     selector_menu
+    END_IF
+        jmp     end_of_scope
 
 index:  .byte   0
 count:  .byte   0
+
+;;; --------------------------------------------------
 
 .proc _CopyPtr1ToPtr2
         ptr1 := $06
@@ -400,22 +408,17 @@ str_selector_list:
 
 .proc _ReadSelectorList
         MLI_CALL OPEN, open_params
-        bcs     _WriteSelectorList
+        bcs     not_found
 
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
         rts
-.endproc ; _ReadSelectorList
 
-        DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
-        DEFINE_READWRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
-
-.proc _WriteSelectorList
-        ptr := $06
-
+not_found:
         ;; Clear buffer
+        ptr := $06
         copy16  #selector_list_data_buf, ptr
         ldx     #>kSelectorListShortSize ; number of pages
         lda     #0
@@ -428,27 +431,10 @@ str_selector_list:
         inc     ptr+1
         dex
     WHILE_NOT_ZERO
+        rts
+.endproc ; _ReadSelectorList
 
-        ;; Write out file
-        MLI_CALL CREATE, create_params
-        bcs     done
-        MLI_CALL OPEN, open_params
-        lda     open_params::ref_num
-        sta     write_params::ref_num
-        sta     close_params::ref_num
-        MLI_CALL WRITE, write_params ; two blocks of $400
-        MLI_CALL WRITE, write_params
-        MLI_CALL CLOSE, close_params
-
-done:   rts
-.endproc ; _WriteSelectorList
-
-end:
-        ;; No separator if it is last
-        lda     selector_menu
-    IF_A_EQ     #kSelectorMenuFixedItems
-        dec     selector_menu
-    END_IF
+        end_of_scope := *
 
 .endproc ; LoadSelectorList
 

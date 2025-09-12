@@ -959,9 +959,10 @@ index:  .byte   0
 
 filename_buffer := $1C00
 
-        DEFINE_CREATE_PARAMS create_params, filename_buffer, ACCESS_DEFAULT, $F1
+        DEFINE_CREATE_PARAMS create_origpfx_params, filename_buffer, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_origpfx_params, filename_buffer, io_buf
 
+        DEFINE_CREATE_PARAMS create_curpfx_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_curpfx_params, filename, io_buf
 
 filename:
@@ -989,7 +990,7 @@ filename:
 
         copy8   #0, second_try_flag
 
-retry:  MLI_CALL CREATE, create_params
+retry:  MLI_CALL CREATE, create_origpfx_params
         MLI_CALL OPEN, open_origpfx_params
         bcc     write
 
@@ -1033,13 +1034,15 @@ second_try_flag:
 ;;; Read SELECTOR.LIST file (using current prefix)
 
 .proc ReadFile
-@retry: MLI_CALL OPEN, open_curpfx_params
+retry:  MLI_CALL OPEN, open_curpfx_params
         bcc     read
+        cmp     #ERR_FILE_NOT_FOUND
+        beq     not_found
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
-        beq     @retry
-        return  #$FF
+        beq     retry
+        return  #$FF            ; failure
 
 read:   lda     open_curpfx_params::ref_num
         sta     read_params::ref_num
@@ -1051,13 +1054,32 @@ read:   lda     open_curpfx_params::ref_num
         pla
         plp
         rts
+
+not_found:
+        ;; Clear buffer
+        ptr := $06
+        copy16  #selector_list, ptr
+        ldx     #>kSelectorListBufSize ; number of pages
+        lda     #0
+    DO
+        ldy     #0
+      DO
+        sta     (ptr),y
+        dey
+      WHILE_NOT_ZERO
+        inc     ptr+1
+        dex
+    WHILE_NOT_ZERO
+        return  #0
 .endproc ; ReadFile
 
 ;;; ============================================================
 ;;; Write SELECTOR.LIST file (using current prefix)
 
 .proc WriteFile
-@retry: MLI_CALL OPEN, open_curpfx_params
+@retry:
+        MLI_CALL CREATE, create_curpfx_params
+        MLI_CALL OPEN, open_curpfx_params
         bcc     write
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
