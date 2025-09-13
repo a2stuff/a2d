@@ -2934,17 +2934,17 @@ CmdNewFolder    := CmdNewFolderImpl::start
         pha
 
         tya
-                jsr     LoadWindowEntryTable
+        jsr     LoadWindowEntryTable
 
         ;; Iterate icons
-        copy8   #0, icon
+        copy8   #0, index
 
     DO
-        icon := *+1
+        index := *+1
         ldx     #SELF_MODIFIED_BYTE
       IF_X_EQ   cached_window_entry_count
         ;; Not found
-        copy8   #0, icon
+        lda     #0
         beq     done            ; always
       END_IF
 
@@ -2955,19 +2955,21 @@ CmdNewFolder    := CmdNewFolderImpl::start
         jsr     CompareStrings
       IF_EQ
         ;; Match!
-        ldx     icon
-        copy8   cached_window_entry_list,x, icon
+        ldx     index
+        lda     cached_window_entry_list,x
 
         ;; the "not found" case goes here too
 done:
+        sta     icon
         pla
         jsr     LoadWindowEntryTable
         jsr     PopPointers
-        lda     icon
+        icon := *+1
+        lda     #SELF_MODIFIED_BYTE
         rts
       END_IF
 
-        inc     icon
+        inc     index
     WHILE_NOT_ZERO              ; always
 
 .endproc
@@ -3184,7 +3186,6 @@ done:
 ;;; ============================================================
 
 .proc CmdCheckOrEjectImpl
-        buffer := $1800
 
 eject:  lda     #$80
         SKIP_NEXT_2_BYTE_INSTRUCTION
@@ -3202,35 +3203,44 @@ done:   rts
         cmp     trash_icon_num  ; if it's Trash, skip it
         beq     done
 
-        ;; Record non-Trash selected volume icons to a buffer
-        lda     #0
-        tax
-        tay
+        ;; Record selected volumes
+        selection_count_copy := $1800
+        selection_list_copy := $1801
+        ldx     selected_icon_count
+        stx     selection_count_copy
     DO
-        lda     selected_icon_list,y
-      IF_A_NE   trash_icon_num
-        sta     buffer,x
-        inx
-      END_IF
-        iny
-    WHILE_Y_NE  selected_icon_count
+        copy8   selected_icon_list-1,x, selection_list_copy-1,x
         dex
-        stx     count
+    WHILE_NOT_ZERO
 
-        ;; Do the ejection
+        ;; If ejecting, clear selection
         bit     eject_flag
     IF_NS
-        jsr     DoEject
+        jsr     ClearSelection
     END_IF
 
-        ;; Check each of the recorded volumes
+        ;; Iterate the recorded volumes
+        ldx     #0              ; X = index
     DO
-        count := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        copy8   buffer,x, drive_to_refresh ; icon number
+        txa                     ; A = index
+        pha
+
+        lda     selection_list_copy,x
+      IF_A_NE   trash_icon_num
+        bit     eject_flag
+       IF_NS
+        pha
+        jsr     SmartportEject
+        pla
+       END_IF
+        sta     drive_to_refresh ; icon number
         jsr     CheckDriveByIconNumber
-        dec     count
-    WHILE_POS
+      END_IF
+
+        pla                     ; A = index
+        tax                     ; X = index
+        inx
+    WHILE_X_NE  selection_count_copy
 
         rts
 
@@ -5080,7 +5090,7 @@ map_icon_number:
         iny
 :
         sty     devlst_index
-        jmp     have_index
+        FALL_THROUGH_TO have_index
 
 ;;; --------------------------------------------------
 
@@ -5838,12 +5848,13 @@ beyond:
         ;; --------------------------------------------------
         ;; Do we have a parent icon for this window?
 
-        copy8   #0, icon
+        lda     #0
         ldx     cached_window_id
-        lda     window_to_dir_icon_table-1,x
-    IF_NC                       ; is `kWindowToDirIconNone`
-        sta     icon
+        ldy     window_to_dir_icon_table-1,x
+    IF_NC                       ; is not `kWindowToDirIconNone`
+        tya
     END_IF
+        sta     icon
 
         ;; --------------------------------------------------
         ;; Animate closing
@@ -5851,7 +5862,7 @@ beyond:
         lda     cached_window_id
         jsr     GetWindowPath
         jsr     IconToAnimate
-        sta     anim_icon       ; to select later
+        pha                     ; A = animation icon
         ldx     cached_window_id
         jsr     AnimateWindowClose ; A = icon id, X = window id
 
@@ -5888,8 +5899,7 @@ beyond:
         ;; --------------------------------------------------
         ;; Select the ancestor icon that was animated into
 
-        anim_icon := *+1
-        lda     #SELF_MODIFIED_BYTE
+        pla                     ; A = animation icon
         jmp     SelectIcon
 
 .endproc ; CloseSpecifiedWindow
@@ -6677,23 +6687,24 @@ done:
     IF_NOT_ZERO
         jsr     PrepWindowScreenMapping
 
-        copy8   #0, index
-        index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     cached_window_entry_count
-        beq     done
+        ldx     #0              ; X = index
+      DO
+        BREAK_IF_X_EQ cached_window_entry_count
+        txa
+        pha                     ; A = index
 
-        tax
         lda     cached_window_entry_list,x
         jsr     GetIconEntry
         proc := *+1
         jsr     SELF_MODIFIED
 
-        inc     index
-        jmp     loop            ; TODO: `BNE`
+        pla                     ; A = index
+        tax                     ; X = index
+        inx
+      WHILE_NOT_ZERO
     END_IF
 
-done:   jsr     PopPointers     ; do not tail-call optimize!
+        jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; _CachedIconsXToY
 
@@ -7187,14 +7198,21 @@ CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
 ;;; TODO: Skip if same-vol windows already have data.
 
 .proc GetVolUsedFreeViaPath
-        copy8   src_path_buf, saved_length
+        lda     src_path_buf
+        pha                     ; A = original length
 
         ;; Strip to vol name - either end of string or next slash
         param_call MakeVolumePath, src_path_buf
 
         ;; Get volume information
         jsr     GetSrcFileInfo
-        bcs     finish          ; failure
+
+        pla                     ; A = original length
+        sta     src_path_buf
+
+    IF_CS
+        return  #$FF            ; failure
+    END_IF
 
         ;; aux = total blocks
         copy16  src_file_info_params::blocks_used, vol_kb_used
@@ -7204,16 +7222,8 @@ CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
         ;; Blocks to K
         lsr16   vol_kb_free
         lsr16   vol_kb_used
-        lda     #0              ; success
 
-finish: php
-
-        saved_length := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     src_path_buf
-
-        plp
-        rts
+        return  #0              ; success
 .endproc ; GetVolUsedFreeViaPath
 
 vol_kb_free:  .word   0
@@ -7244,7 +7254,6 @@ vol_kb_used:  .word   0
         index := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_A_EQ     window_id_to_filerecord_list_count
-        ldx     index           ; yes...
         asl     a               ; so update the start of free space
         tax
         copy16  window_filerecord_table,x, filerecords_free_start
@@ -7750,6 +7759,9 @@ END_PARAM_BLOCK
 .proc ComputeIconsBBox
         kIntMax = $7FFF
 
+        ;; TODO: Skip initialization unless no icons, since
+        ;; first icon coords are used as basis.
+
         ;; min.x = min.y = max.x = max.y = 0
         ldx     #.sizeof(MGTK::Rect)-1
         lda     #0
@@ -7761,16 +7773,45 @@ END_PARAM_BLOCK
         ;; icon_num = 0
         sta     icon_num
 
+        ;; TODO: This is needed for empty windows. Why???
+
         ;; min.x = min.y = kIntMax
         ldax    #kIntMax
         stax    iconbb_rect::x1
         stax    iconbb_rect+MGTK::Rect::y1
 
-check_icon:
+        ;; --------------------------------------------------
+
+        ;; For each icon...
+    DO
         icon_num := *+1
         ldx     #SELF_MODIFIED_BYTE
-        cpx     cached_window_entry_count
-        bne     more
+        BREAK_IF_X_EQ cached_window_entry_count
+
+        ;; Get the bounds
+        copy8   cached_window_entry_list,x, icon_param
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
+
+        jsr     GetCachedWindowViewBy
+        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
+      IF_ZERO
+        ;; Pretend icon is max height
+        sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
+      END_IF
+
+        lda     icon_num
+      IF_ZERO
+        ;; First icon (index 0) - just use its coordinates as min/max
+        COPY_BLOCK tmp_rect, iconbb_rect
+      ELSE
+        ;; Expand bounding rect to encompass icon's rect
+        MGTK_CALL MGTK::UnionRects, unionrects_tmp_iconbb
+      END_IF
+
+        inc     icon_num
+    WHILE_NOT_ZERO              ; always
+
+        ;; --------------------------------------------------
 
         ;; If there are any entries...
         lda     cached_window_entry_count
@@ -7785,30 +7826,8 @@ check_icon:
         ;; Add padding around bbox
         MGTK_CALL MGTK::InflateRect, bbox_pad_iconbb_rect
     END_IF
-
         rts
 
-more:   copy8   cached_window_entry_list,x, icon_param
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-
-        jsr     GetCachedWindowViewBy
-        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
-    IF_ZERO
-        ;; Pretend icon is max height
-        sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
-    END_IF
-
-        lda     icon_num
-    IF_ZERO
-        ;; First icon (index 0) - just use its coordinates as min/max
-        COPY_BLOCK tmp_rect, iconbb_rect
-    ELSE
-        ;; Expand bounding rect to encompass icon's rect
-        MGTK_CALL MGTK::UnionRects, unionrects_tmp_iconbb
-    END_IF
-
-next:   inc     icon_num
-        jmp     check_icon
 .endproc ; ComputeIconsBBox
 
 ;;; ============================================================
@@ -7915,7 +7934,6 @@ END_PARAM_BLOCK
 
         lda     #0
         sta     icons_this_row
-        sta     index
 
         ;; Copy `cached_window_entry_list` to temp location
         record_order_list := $800
@@ -7937,12 +7955,13 @@ END_PARAM_BLOCK
         copy8   cached_window_id, active_window_id
 
         ;; Loop over files, creating icon for each
+        ldx     #0              ; X = index
     DO
-        index := *+1
-        ldx     #SELF_MODIFIED_BYTE
         num_files := *+1
         cpx     #SELF_MODIFIED_BYTE
         BREAK_IF_EQ
+        txa                     ; A = index
+        pha
 
         ;; Get record from ordered list
         lda     record_order_list,x
@@ -7957,7 +7976,9 @@ END_PARAM_BLOCK
         pla                     ; A = record_num-1
         jsr     _AllocAndPopulateFileIcon
 
-        inc     index
+        pla                     ; A = index
+        tax                     ; X = index
+        inx
     WHILE_NOT_ZERO              ; always
 
         jsr     CachedIconsWindowToScreen
@@ -12889,38 +12910,6 @@ do_str2:
 done:   stx     buf
         rts
 .endproc ; JoinPaths
-
-;;; ============================================================
-
-.proc DoEject
-        lda     selected_icon_count
-        beq     ret
-
-        ldx     selected_icon_count
-        stx     $800
-        dex
-    DO
-        copy8   selected_icon_list,x, $0801,x
-        dex
-    WHILE_POS
-
-        jsr     ClearSelection
-        ldx     #0
-        stx     index
-    DO
-        index := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        lda     $0801,x
-      IF_A_NE   #$01
-        jsr     SmartportEject
-      END_IF
-        inc     index
-        ldx     index
-    WHILE_X_NE  $800
-
-
-ret:    rts
-.endproc ; DoEject
 
 ;;; ============================================================
 ;;; Inputs: A = icon number
