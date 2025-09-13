@@ -4605,10 +4605,6 @@ dimensions := width
 _Preamble:
         jsr     LoadActiveWindowEntryTable
 
-        jsr     CachedIconsScreenToWindow
-        jsr     ComputeIconsBBox
-        jsr     CachedIconsWindowToScreen
-
         jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_POS
         ;; Icon view
@@ -4629,8 +4625,19 @@ _Preamble:
         sub16   viewport+MGTK::Rect::x2, viewport+MGTK::Rect::x1, width
         sub16   viewport+MGTK::Rect::y2, viewport+MGTK::Rect::y1, height
 
+        lda     cached_window_entry_count
+    IF_ZERO
+        ;; If no icons in window, the viewport is fine.
+        COPY_STRUCT MGTK::Rect, viewport, ubox
+        rts
+    END_IF
+
         ;; Make `ubox` bound both viewport and icons; needed to ensure
         ;; offset cases are handled.
+        jsr     CachedIconsScreenToWindow
+        jsr     ComputeIconsBBox
+        jsr     CachedIconsWindowToScreen
+
         MGTK_CALL MGTK::UnionRects, unionrects_viewport_iconbb
         COPY_BLOCK iconbb_rect, ubox
         rts
@@ -7347,6 +7354,7 @@ copy_new_window_bounds_flag:
         jsr     PushPointers
 
         ;; NOTE: Coordinates (screen vs. window) doesn't matter
+        ;; Results in `iconbb_rect` are ignored if window is empty
         jsr     ComputeIconsBBox
 
         winfo_ptr := $06
@@ -7431,15 +7439,14 @@ assign_height:
 
 ;;; Inputs: `cached_window_id` is accurate
 .proc AdjustViewportForNewIcons
+        ;; No-op if window is empty
+        lda     cached_window_entry_count
+    IF_NOT_ZERO
         ;; Screen space
         jsr     ComputeIconsBBox
 
         winfo_ptr := $06
         tmpw := $08
-
-        ;; No-op if window is empty
-        lda     cached_window_entry_count
-        beq     ret
 
         lda     cached_window_id
         jsr     GetWindowPtr
@@ -7455,8 +7462,8 @@ assign_height:
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
         add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
         jsr     CachedIconsWindowToScreen
-
-ret:    rts
+    END_IF
+        rts
 .endproc ; AdjustViewportForNewIcons
 
 
@@ -7755,34 +7762,16 @@ END_PARAM_BLOCK
 ;;; ============================================================
 ;;; Compute bounding box for icons within cached window
 ;;; Inputs: `cached_window_id` is set
-
+;;; Outputs: `iconbb_rect` updated (unless cached window is empty)
 .proc ComputeIconsBBox
-        kIntMax = $7FFF
 
-        ;; TODO: Skip initialization unless no icons, since
-        ;; first icon coords are used as basis.
-
-        ;; min.x = min.y = max.x = max.y = 0
-        ldx     #.sizeof(MGTK::Rect)-1
-        lda     #0
-    DO
-        sta     iconbb_rect,x
-        dex
-    WHILE_POS
-
-        ;; icon_num = 0
-        sta     icon_num
-
-        ;; TODO: This is needed for empty windows. Why???
-
-        ;; min.x = min.y = kIntMax
-        ldax    #kIntMax
-        stax    iconbb_rect::x1
-        stax    iconbb_rect+MGTK::Rect::y1
+        lda     cached_window_entry_count
+        RTS_IF_ZERO
 
         ;; --------------------------------------------------
 
         ;; For each icon...
+        copy8   #0, icon_num
     DO
         icon_num := *+1
         ldx     #SELF_MODIFIED_BYTE
@@ -7813,19 +7802,15 @@ END_PARAM_BLOCK
 
         ;; --------------------------------------------------
 
-        ;; If there are any entries...
-        lda     cached_window_entry_count
-    IF_NOT_ZERO
         ;; List view?
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-      IF_NEG
+      IF_NS
         ;; max.x = kListViewWidth
         add16   iconbb_rect::x1, #kListViewWidth, iconbb_rect::x2
       END_IF
 
         ;; Add padding around bbox
         MGTK_CALL MGTK::InflateRect, bbox_pad_iconbb_rect
-    END_IF
         rts
 
 .endproc ; ComputeIconsBBox
