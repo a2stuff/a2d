@@ -9567,12 +9567,11 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
 .proc AllocDesktopIconPosition
         pha
 
-        ldx     #0
+        ldx     #AS_BYTE(-1)
     DO
-        lda     desktop_icon_usage_table,x
-        BREAK_IF_ZERO
         inx
-    WHILE_NOT_ZERO              ; always
+        lda     desktop_icon_usage_table,x
+    WHILE_NOT_ZERO
 
         pla
         sta     desktop_icon_usage_table,x
@@ -13298,7 +13297,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 ;;; A,X = A * 64
 .proc ATimes64
         ldx     #6
-        bne     AShiftX       ; always
+        FALL_THROUGH_TO AShiftX
 .endproc ; ATimes64
 
 ;;; A,X = A << X
@@ -14568,18 +14567,15 @@ ptr_str_files_suffix:
         ldax    file_count
         jsr     IntToStringWithSeparators
 
-        ldy     #0
         ldx     #0
     DO
-        BREAK_IF_X_EQ str_from_int
         inx
-        iny
-        copy8   str_from_int,x, str_file_count,y
-    WHILE_NOT_ZERO              ; always
+        copy8   str_from_int,x, str_file_count,x
+    WHILE_X_NE str_from_int
 
-        iny
-        copy8   #' ', str_file_count,y
-        sty     str_file_count
+        inx
+        copy8   #' ', str_file_count,x
+        stx     str_file_count
 
         ;; Adjust `ptr_str_files_suffix`
         lda     file_count+1    ; > 255?
