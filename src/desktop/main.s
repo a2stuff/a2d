@@ -5012,8 +5012,6 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
     DO
         devlst_index := *+1
         ldy     #SELF_MODIFIED_BYTE
-        inc     cached_window_entry_count
-        inc     icon_count
         copy8   #0, device_to_icon_map,y
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
@@ -9402,27 +9400,28 @@ GetBlockCount   := GetBlockCountImpl::start
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
-        bcc     success
-
-error:  pha                     ; save error
-        ldy     devlst_index      ; remove unit from list
+   IF_CS
+error:
+        pha                     ; A = error
+        ldy     devlst_index    ; remove unit from list
         copy8   #0, device_to_icon_map,y
-        dec     cached_window_entry_count
-        dec     icon_count
-        pla
+        pla                     ; A = error
         rts
+   END_IF
 
-success:
         lda     cvi_data_buffer ; dr/slot/name_len
         and     #NAME_LENGTH_MASK
     IF_ZERO
         lda     cvi_data_buffer+1 ; if name len is zero, second byte is error
-        jmp     error
+        bne     error             ; always
     END_IF
 
         param_call AdjustOnLineEntryCase, cvi_data_buffer
         jsr     _CompareNames
-        bne     error
+        bne     error           ; duplicate
+
+        ;; --------------------------------------------------
+        ;; Success, proceed with icon creation
 
         icon_ptr := $6
         icon_defn_ptr := $8
@@ -9431,29 +9430,25 @@ success:
         jsr     PushPointers
 
         ITK_CALL IconTK::AllocIcon, get_icon_entry_params
-        copy16  get_icon_entry_params::addr, icon_ptr
-        lda     get_icon_entry_params::id
+        inc     icon_count
 
         ;; Assign icon number
+        lda     get_icon_entry_params::id
         ldy     devlst_index
         sta     device_to_icon_map,y
+        inc     cached_window_entry_count
         ldx     cached_window_entry_count
-        dex
-        sta     cached_window_entry_list,x
+        sta     cached_window_entry_list-1,x
 
         ;; Copy name
-        ldy     #IconEntry::name+1
-
-        ldx     #0
+        copy16  get_icon_entry_params::addr, icon_ptr
+        ldy     #IconEntry::name+kMaxFilenameLength
+        ldx     #kMaxFilenameLength
     DO
-        copy8   cvi_data_buffer+1,x, (icon_ptr),y
-        iny
-        inx
-    WHILE_X_NE  cvi_data_buffer
-
-        txa
-        ldy     #IconEntry::name
-        sta     (icon_ptr),y
+        copy8   cvi_data_buffer,x, (icon_ptr),y
+        dey
+        dex
+    WHILE_POS
 
         ;; NOTE: Done with `cvi_data_buffer` at this point,
         ;; so $800 is free.
@@ -9516,7 +9511,6 @@ success:
 ;;; Compare a volume name against existing volume icons for drives.
 ;;; Inputs: String to compare against is in `cvi_data_buffer`
 ;;; Output: A=0 if not a duplicate, ERR_DUPLICATE_VOLUME if there is a duplicate.
-;;; Assert: `cached_window_entry_count` is one greater than actual count
 .proc _CompareNames
 
         icon_ptr := $06
@@ -9525,7 +9519,6 @@ success:
         copy16  #cvi_data_buffer, $08
 
         ldx     cached_window_entry_count
-        dex                     ; skip the newly created icon
         stx     index
 
     DO

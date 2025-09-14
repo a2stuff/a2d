@@ -639,8 +639,6 @@ end:
         lda     DEVLST,y
         pha                     ; A = unmasked unit number
 
-        inc     cached_window_entry_count
-        inc     icon_count
         jsr     main::CreateVolumeIcon ; A = unmasked unit number, Y = device index
       IF_A_EQ   #ERR_DEVICE_NOT_CONNECTED
         ;; If device is not connected, remove it from DEVLST
