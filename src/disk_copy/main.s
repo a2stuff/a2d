@@ -320,7 +320,7 @@ loop:   lda     page
 
 start:
         jsr     FindSmartportDispatchAddress
-        bcs     not_removable
+    IF_CC
         stax    dispatch
         sty     status_params::unit_num
 
@@ -329,16 +329,16 @@ start:
         jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
-        bcs     not_removable
 
+      IF_CC
         lda     dib_buffer+SPDIB::Device_Type_Code
-        cmp     #SPDeviceType::Disk35
-        bne     not_removable
-
+       IF_A_EQ  #SPDeviceType::Disk35
         ;; Assume all 3.5" drives are ejectable
         return  #$80
+       END_IF
+      END_IF
+    END_IF
 
-not_removable:
         return  #0
 
 .endproc ; IsDriveEjectableImpl
@@ -1032,6 +1032,7 @@ memory_bitmap:
 kMemoryBitmapSize = * - memory_bitmap
 
         .assert DEFAULT_FONT + 1283 < $8E00, error, "Update memory_bitmap if MGTK+font extends past $8E00"
+        .assert end_of_main <= $1400, error, "Update memory_bitmap if code extends past $1400"
 
 ;;; ============================================================
 ;;; Inputs: A = unit num (DSSS0000), X,Y = driver address
@@ -1096,7 +1097,7 @@ done:   rts
 
 ;;; ============================================================
 
-        .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
+        end_of_main := *
 .endscope ; main
 
 main__FormatDevice              := main::FormatDevice

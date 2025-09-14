@@ -2983,8 +2983,7 @@ done:
 ;;; Trashes $06
 .proc MaybeStashDropTargetName
         ;; Flag as not stashed
-        ldy     #0
-        sty     stashed_name
+        copy8   #0, stashed_name
 
         ;; Is the target an icon?
         lda     drag_drop_params::target
@@ -6199,9 +6198,7 @@ no_win:
 
         add16_8 icon_ptr, #IconEntry::name, name_ptr
 
-        ldy     #0
-        lda     (name_ptr),y
-        tay
+        ldy     #kMaxFilenameLength
     DO
         copy8   (name_ptr),y, (title_ptr),y
         dey
@@ -6480,7 +6477,7 @@ err:    sec
         ldx     path_buf4       ; Strip '/'
         dex
         stx     path_buf4+1
-        ldax    #path_buf4+1
+        ldax    #path_buf4+1    ; A,X=volname
         ldy     #0              ; 0=desktop
     ELSE
         ;; File - need to see if there's a window
@@ -8977,8 +8974,7 @@ finish:
         ;; Append '/'
         ldx     dst_path_buf
         inx
-        lda     #'/'
-        sta     dst_path_buf,x
+        copy8   #'/', dst_path_buf,x
 
         ;; Append new filename
         ldy     #0
@@ -10204,9 +10200,8 @@ do_op_flag:
 
 .proc PushEntryCount
         ldx     entry_count_stack_index
-        copy8   entries_to_skip, entry_count_stack,x
+        copy16  entries_to_skip, entry_count_stack,x
         inx
-        copy8   entries_to_skip+1, entry_count_stack,x
         inx
         stx     entry_count_stack_index
         rts
@@ -10215,9 +10210,8 @@ do_op_flag:
 .proc PopEntryCount
         ldx     entry_count_stack_index
         dex
-        copy8   entry_count_stack,x, entries_to_skip+1
         dex
-        copy8   entry_count_stack,x, entries_to_skip
+        copy16  entry_count_stack,x, entries_to_skip
         stx     entry_count_stack_index
         rts
 .endproc ; PopEntryCount
@@ -13777,10 +13771,7 @@ ignore: sec
         MGTK_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     #winfo_about_dialog::kWindowId
         jsr     SafeSetPortFromWindowId
-        jsr     SetPenModeNotCopy
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, aux::about_dialog_frame_rect
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        param_call DrawDialogFrame, aux::about_dialog_frame_rect
         jsr     SetPenModeXOR
         param_call DrawDialogTitle, aux::str_about1
         param_call DrawDialogLabel, 1 | DDL_CENTER, aux::str_about2
@@ -13831,10 +13822,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 .proc OpenProgressDialog
         MGTK_CALL MGTK::OpenWindow, winfo_progress_dialog
         jsr     SetPortForProgressDialog
-        jsr     SetPenModeNotCopy
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, aux::progress_dialog_frame_rect
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        param_call DrawDialogFrame, aux::progress_dialog_frame_rect
         MGTK_CALL MGTK::FrameRect, progress_dialog_bar_frame
         jmp     SetCursorWatch  ; undone by `CloseProgressDialog`
 .endproc ; OpenProgressDialog
@@ -14366,10 +14354,7 @@ params:  .res    3
 
         MGTK_CALL MGTK::OpenWindow, winfo_prompt_dialog
         jsr     SetPortForDialogWindow
-        jsr     SetPenModeNotCopy
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, aux::prompt_dialog_frame_rect
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        param_call DrawDialogFrame, aux::prompt_dialog_frame_rect
 
         BTK_CALL BTK::Draw, ok_button
         bit     prompt_button_flags
@@ -14635,6 +14620,15 @@ ptr_str_files_suffix:
         MGTK_CALL MGTK::SetPenMode, notpencopy
         rts
 .endproc ; SetPenModeNotCopy
+
+.proc DrawDialogFrame
+        stax    addr
+        jsr     SetPenModeNotCopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, SELF_MODIFIED, addr
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        rts
+.endproc ; DrawDialogFrame
 
 ;;; ============================================================
 
