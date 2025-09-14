@@ -1707,7 +1707,10 @@ folder_sm_mask:
         DEFINE_ICON_RESOURCE cdrom_icon, cdrom_pixels, 4, 26, 14, cdrom_mask
 
 ;;; Trash Can
-        DEFINE_ICON_RESOURCE trash_icon, trash_pixels, 4, 22, 17, trash_mask
+        kTrashIconWidth = 23
+        kTrashIconHeight = 18
+
+        DEFINE_ICON_RESOURCE trash_icon, trash_pixels, 4, kTrashIconWidth-1, kTrashIconHeight-1, trash_mask
 
 ;;; ============================================================
 

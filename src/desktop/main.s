@@ -9397,9 +9397,6 @@ GetBlockCount   := GetBlockCountImpl::start
         DEFINE_ON_LINE_PARAMS on_line_params,, cvi_data_buffer
 
 .proc CreateVolumeIcon
-        kMaxIconWidth = 53
-        kMaxIconHeight = 15
-
         sta     unit_number     ; unmasked, for `GetDeviceType`
         sty     devlst_index
         and     #UNIT_NUM_MASK
@@ -9502,16 +9499,16 @@ success:
 
         ;; Center it horizontally
         ldy     #IconResource::maprect + MGTK::Rect::x2
-        sub16in #kMaxIconWidth, (icon_defn_ptr),y, offset
-        lsr16   offset          ; offset = (max_width - icon_width) / 2
+        copy16in (icon_defn_ptr),y, offset
+        lsr16   offset          ; offset = (icon_width-1) / 2
         ldy     #IconEntry::iconx
-        add16in (icon_ptr),y, offset, (icon_ptr),y
+        sub16in (icon_ptr),y, offset, (icon_ptr),y
 
         ;; Adjust vertically
         ldy     #IconResource::maprect + MGTK::Rect::y2
-        sub16in #kMaxIconHeight, (icon_defn_ptr),y, offset
+        copy16in (icon_defn_ptr),y, offset ; offset = (icon_height-1)
         ldy     #IconEntry::icony
-        add16in (icon_ptr),y, offset, (icon_ptr),y
+        sub16in (icon_ptr),y, offset, (icon_ptr),y
 
         jsr     PopPointers
         return  #0
@@ -15203,33 +15200,49 @@ str_pt3_suffix:                 ; Vortex Tracker PT3
 ;;;  | 10  9   8   7   6 Trash |
 ;;;  +-------------------------+
 
-        kTrashIconX = 506
-        kTrashIconY = 160
-
         kVolIconDeltaY = 29
+        kVolIconDeltaX = 90
 
-        kVolIconCol1 = 490
-        kVolIconCol2 = 400
-        kVolIconCol3 = 310
-        kVolIconCol4 = 220
-        kVolIconCol5 = 130
-        kVolIconCol6 = 40
+        ;; Volume icons are positioned at:
+        ;; * pos_x - ((icon_width-1) / 2)
+        ;; * pos_y - (icon_height-1)
+        ;; The "-1" is because the bitmap's x2/y2 are used, not w/h.
+        ;; So the coordinates represent the center-bottom of the
+        ;; bitmap.
+
+        kVolIconRow1 = 30
+        kVolIconRow2 = kVolIconRow1 + kVolIconDeltaY*1
+        kVolIconRow3 = kVolIconRow1 + kVolIconDeltaY*2
+        kVolIconRow4 = kVolIconRow1 + kVolIconDeltaY*3
+        kVolIconRow5 = kVolIconRow1 + kVolIconDeltaY*4
+        kVolIconRow6 = kVolIconRow1 + kVolIconDeltaY*5 + 2
+
+        kVolIconCol1 = 516
+        kVolIconCol2 = kVolIconCol1 - kVolIconDeltaX*1
+        kVolIconCol3 = kVolIconCol1 - kVolIconDeltaX*2
+        kVolIconCol4 = kVolIconCol1 - kVolIconDeltaX*3
+        kVolIconCol5 = kVolIconCol1 - kVolIconDeltaX*4
+        kVolIconCol6 = kVolIconCol1 - kVolIconDeltaX*5
+
+        ;; Trash icon is positioned at exactly these coordinates:
+        kTrashIconX = kVolIconCol1 - ((kTrashIconWidth-1) / 2)
+        kTrashIconY = kVolIconRow6 - (kTrashIconHeight-1)
 
 desktop_icon_coords_table:
-        .word    kVolIconCol1,15 + kVolIconDeltaY*0 ; 1
-        .word    kVolIconCol1,15 + kVolIconDeltaY*1 ; 2
-        .word    kVolIconCol1,15 + kVolIconDeltaY*2 ; 3
-        .word    kVolIconCol1,15 + kVolIconDeltaY*3 ; 4
-        .word    kVolIconCol1,15 + kVolIconDeltaY*4 ; 5
-        .word    kVolIconCol2,kTrashIconY+2         ; 6
-        .word    kVolIconCol3,kTrashIconY+2         ; 7
-        .word    kVolIconCol4,kTrashIconY+2         ; 8
-        .word    kVolIconCol5,kTrashIconY+2         ; 9
-        .word    kVolIconCol6,kTrashIconY+2         ; 10
-        .word    kVolIconCol2,15 + kVolIconDeltaY*4 ; 11
-        .word    kVolIconCol3,15 + kVolIconDeltaY*4 ; 12
-        .word    kVolIconCol4,15 + kVolIconDeltaY*4 ; 13
-        .word    kVolIconCol5,15 + kVolIconDeltaY*4 ; 14
+        .word    kVolIconCol1, kVolIconRow1 ; 1
+        .word    kVolIconCol1, kVolIconRow2 ; 2
+        .word    kVolIconCol1, kVolIconRow3 ; 3
+        .word    kVolIconCol1, kVolIconRow4 ; 4
+        .word    kVolIconCol1, kVolIconRow5 ; 5
+        .word    kVolIconCol2, kVolIconRow6 ; 6
+        .word    kVolIconCol3, kVolIconRow6 ; 7
+        .word    kVolIconCol4, kVolIconRow6 ; 8
+        .word    kVolIconCol5, kVolIconRow6 ; 9
+        .word    kVolIconCol6, kVolIconRow6 ; 10
+        .word    kVolIconCol2, kVolIconRow5 ; 11
+        .word    kVolIconCol3, kVolIconRow5 ; 12
+        .word    kVolIconCol4, kVolIconRow5 ; 13
+        .word    kVolIconCol5, kVolIconRow5 ; 14
         ASSERT_RECORD_TABLE_SIZE desktop_icon_coords_table, ::kMaxVolumes, .sizeof(MGTK::Point)
 
 
