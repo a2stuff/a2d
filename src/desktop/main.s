@@ -2487,19 +2487,18 @@ main_length:    .word   0
 ;;; If a volume name, splits off leading "/" (e.g. "/VOL" to "/" and "VOL")
 .proc SplitPathBuf4
         param_call FindLastPathSegment, path_buf4
-        cpy     path_buf4
-        beq     volume
 
-        ;; Copy filename part to buf
+    IF_Y_NE     path_buf4
+        ;; Shorter, so file - Copy filename part to buf
         ldx     #1
         iny                     ; +1 for length byte
         iny                     ; +1 to skip past '/'
-    DO
+      DO
         copy8   path_buf4,y, filename_buf,x
         BREAK_IF_Y_EQ path_buf4
         iny
         inx
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         stx     filename_buf
 
         ;; And remove from `path_buf4`
@@ -2509,9 +2508,9 @@ main_length:    .word   0
         sta     path_buf4
         dec     path_buf4
         rts
+    END_IF
 
-        ;; Y = path length
-volume:
+        ;; Unchanged, so volume - Copy, removing leading slash
         dey
         sty     filename_buf
     DO
@@ -4082,8 +4081,7 @@ fallback:
         ;; ...except on desktop, since first is Trash.
         tay                     ; make last (Y) be Trash (0)
         inx                     ; and first (X) be 1st volume icon
-        cpx     cached_window_entry_count
-      IF_EQ                      ; unless there isn't one
+      IF_X_EQ   cached_window_entry_count ; unless there isn't one
         dex
       END_IF
     END_IF
@@ -4543,10 +4541,8 @@ repeat: jsr     GetEvent        ; no need to synthesize events
         bne     repeat
 
         lda     event_params::key
-        cmp     #CHAR_RETURN
-        beq     done
-        cmp     #CHAR_ESCAPE
-    IF_EQ
+
+    IF_A_EQ_ONE_OF #CHAR_RETURN, #CHAR_ESCAPE
 done:   rts
     END_IF
 
@@ -6097,8 +6093,7 @@ for_path:
 no_win:
         ;; Is there a free window?
         lda     num_open_windows
-        cmp     #kMaxDeskTopWindows
-    IF_GE
+    IF_A_GE     #kMaxDeskTopWindows
         ;; Nope, show error.
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_too_many_windows
         ldx     saved_stack
@@ -10268,8 +10263,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
 
         inc     entries_read_this_block
         lda     entries_read_this_block
-        cmp     num_entries_per_block
-    IF_GE
+    IF_A_GE     num_entries_per_block
         copy8   #0, entries_read_this_block
         copy8   op_ref_num, read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
@@ -12007,15 +12001,11 @@ common: jsr     GetSrcFileInfo
         ;; Descendant size/file count
 
         lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     do_dir
-        cmp     #ST_LINKED_DIRECTORY
-        bne     :+
-do_dir:
+    IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     SetCursorWatch
         jsr     _GetDirSize
         jsr     SetCursorPointer
-:
+    END_IF
         ;; --------------------------------------------------
         ;; Run the dialog, until OK or Cancel
 
