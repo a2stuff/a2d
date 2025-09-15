@@ -1083,6 +1083,7 @@ changed:
 
 found:
         tya
+        ldy     #$80              ; Y = show unexpected errors flag (do)
         jmp     CheckDriveByIndex ; A = DEVLST index
 .endproc ; CheckDiskInsertedEjected
 
@@ -3214,9 +3215,6 @@ done:   rts
         cmp     trash_icon_num  ; if it's Trash, skip it
         beq     done
 
-        ;; Record selected volumes
-        selection_count_copy := $1800
-        selection_list_copy := $1801
         ldx     selected_icon_count
         stx     selection_count_copy
     DO
@@ -3238,11 +3236,13 @@ done:   rts
 
         lda     selection_list_copy,x
       IF_A_NE   trash_icon_num
+        ldy     #$80            ; Y = show unexpected errors flag (do)
         bit     eject_flag
        IF_NS
         pha
         jsr     SmartportEject
         pla
+        ldy     #$00            ; Y = show unexpected errors flag (don't)
        END_IF
         jsr     CheckDriveByIconNumber ; A = icon number
       END_IF
@@ -3256,6 +3256,13 @@ done:   rts
 
 eject_flag:
         .byte   0
+
+selection_count_copy:
+        .byte   0
+
+selection_list_copy:
+        .res    ::kMaxVolumes
+
 .endproc ; CmdCheckOrEjectImpl
         CmdEject        := CmdCheckOrEjectImpl::eject
         CmdCheckDrive   := CmdCheckOrEjectImpl::check
@@ -3584,6 +3591,7 @@ exec:   lda     #kDynamicRoutineFormatErase
         RTS_IF_NOT_ZERO
 
         txa
+        ldy     #$00            ; Y = show unexpected errors flag (don't)
         jmp     CheckDriveByUnitNumber ; A = unit number
 
 unit:   sta     unit_num
@@ -5013,6 +5021,8 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
         copy8   #kErrDuplicateVolName, pending_alert
       END_IF
 
+        ;; TODO: Prompt to format?
+
         ldx     cached_window_entry_count
         copy8   cached_window_entry_list-1,x, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
@@ -5044,7 +5054,7 @@ pending_alert:
 
 ;;; --------------------------------------------------
 ;;; After a Format/Erase action
-;;; Input: A = unit number
+;;; Input: A = unit number, Y = show unexpected errors flag
 
 by_unit_number:
         ;; Map unit number to index in DEVLST
@@ -5055,43 +5065,39 @@ by_unit_number:
         and     #UNIT_NUM_MASK
         compare := *+1
         cmp     #SELF_MODIFIED_BYTE
-        BREAK_IF_EQ
+        beq     common
         dex
     WHILE_POS                   ; always
-        ;; X = index
-        lda     #0              ; not explicit command
-        beq     common          ; always
 
 ;;; --------------------------------------------------
 ;;; After an Open/Eject/Rename action
-;;; Input: A = icon id
+;;; Input: A = icon id, Y = show unexpected errors flag
 
 by_icon_number:
         ;; Map icon number to index in DEVLST
         jsr     IconToDeviceIndex
         RTS_IF_NOT_ZERO         ; Not found - not a volume icon
-        ;; X = index
-        lda     #0              ; not explicit command
         beq     common          ; always
 
 ;;; --------------------------------------------------
 ;;; After polling drives
-;;; Input: A = DEVLST index
+;;; Input: A = DEVLST index, Y = show unexpected errors flag
 
 by_index:
         tax                     ; X = index
-        lda     #$80            ; explicit command
         FALL_THROUGH_TO common
 
 ;;; --------------------------------------------------
 
 common:
         stx     devlst_index
-        sta     explicit_command_flag
+        sty     show_unexpected_errors_flag
+
+        ;; --------------------------------------------------
+        ;; Close any associated windows
 
         lda     device_to_icon_map,x
     IF_NOT_ZERO
-        ;; Close any associated windows.
 
         ;; A = icon number
         jsr     GetIconName
@@ -5120,9 +5126,12 @@ close_loop:
       END_IF
     END_IF
 
-        jsr     ClearSelection
-        jsr     LoadDesktopEntryTable
+        ;; --------------------------------------------------
         ;; If there was an existing icon, destroy it
+
+        jsr     ClearSelection
+
+        jsr     LoadDesktopEntryTable
         ldy     devlst_index
         copy8   device_to_icon_map,y, icon_param
     IF_NOT_ZERO
@@ -5135,18 +5144,45 @@ close_loop:
         jsr     StoreWindowEntryTable
     END_IF
 
-        ;; Create a new icon
-        copy8   cached_window_entry_count, previous_icon_count
+        ;; --------------------------------------------------
+        ;; Try to create a new volume icon
 
         ldy     devlst_index
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
         jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
+    IF_ZERO
+        ldx     cached_window_entry_count
+        copy8   cached_window_entry_list-1,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param
+        jmp     StoreWindowEntryTable
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Error cases:
+
+        ;; Always show this error
+        cmp     #ERR_DUPLICATE_VOLUME
+        beq     show_error
+
+        ;; Per Technical Note: ProDOS #21
+        ;; https://prodos8.com/docs/technote/21/
+        ;; `ERR_DEVICE_OFFLINE`: "... there is no disk in the drive."
+        ;; ... so ignore
+        cmp     #ERR_DEVICE_OFFLINE
+        beq     ret
+
+        ;; `ERR_IO_ERROR`: "... the disk in the drive is either
+        ;; damaged or blank (not formatted)." - but this seems to be
+        ;; returned for empty Disk II and SmartPort devices, so we
+        ;; ignore it.
+        cmp     #ERR_IO_ERROR
+        beq     ret
 
     IF_A_EQ     #ERR_NOT_PRODOS_VOLUME
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unreadable_format
         cmp     #kAlertResultCancel
-        RTS_IF_EQ
+        beq     ret
 
         ldy     devlst_index
         lda     DEVLST,y
@@ -5154,44 +5190,26 @@ close_loop:
         jmp     FormatUnitNum
     END_IF
 
-        cmp     #ERR_DUPLICATE_VOLUME
-        beq     err
+        ;; Show an alert for other errors only if requested by the
+        ;; caller. The history here is that an error should only be
+        ;; shown if there is an unexpected type of error (i.e. not one
+        ;; of the above) when polling or as explicit command
+        ;; (originally Check > Slot S drive D).
+        bit     show_unexpected_errors_flag
+        bmi     show_error
 
-        bit     explicit_command_flag
-        bpl     add_icon
+ret:    rts
 
-        ;; Explicit command
-        and     #$FF            ; check `CreateVolumeIcon` results
-        beq     add_icon
+        ;; --------------------------------------------------
 
-        ;; Expected errors per Technical Note: ProDOS #21
-        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.21.html
-        cmp     #ERR_IO_ERROR   ; disk damaged or blank
-        beq     add_icon
-        cmp     #ERR_DEVICE_OFFLINE ; no disk in the drive
-        beq     add_icon
-
-err:    pha
-        jsr     StoreWindowEntryTable
-        pla
+show_error:
         jmp     ShowAlert
 
-add_icon:
-        lda     cached_window_entry_count
-        previous_icon_count := *+1
-        cmp     #SELF_MODIFIED_BYTE
-    IF_NE
-        ;; If a new icon was added, more work is needed.
-        ldx     cached_window_entry_count
-        copy8   cached_window_entry_list-1,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-    END_IF
-
-        jmp     StoreWindowEntryTable
+        ;; --------------------------------------------------
 
 devlst_index:
         .byte   0
-explicit_command_flag:
+show_unexpected_errors_flag:
         .byte   0
 
 .endproc ; CheckDriveImpl
@@ -7108,6 +7126,7 @@ file_entry_to_file_record_mapping_table:
       IF_ZERO
         ;; Volume icon - check that it's still valid.
         lda     icon_param
+        ldy     #$00            ; Y = show unexpected errors flag (don't)
         jsr     CheckDriveByIconNumber ; A = icon id
       END_IF
     END_IF

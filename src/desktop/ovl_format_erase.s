@@ -8,6 +8,15 @@
 
 .scope format_erase_overlay
 
+;;; Memory Map
+;;; ...
+;;; $1E00 - $1FFF - unused/preserved
+;;; $1C00 - $1DFF - `read_buffer` (for checking target format)
+;;; $1A00 - $1BFF - `block_buffer` (for writing)
+;;; $1700 - $19FF - unused/preserved
+;;; $0800 - $16FF - overlay code
+;;; ...
+
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
         LETKEntry := LETKRelayImpl
