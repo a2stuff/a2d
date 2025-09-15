@@ -18,13 +18,13 @@
 ;;; Some encodings preclude lowercase ASCII, so no case adjust
 
 AdjustOnLineEntryCase:
-AdjustFileEntryCase:
         ptr := $A
         stax    ptr
         ldy     #0
         lda     (ptr),y
         and     #NAME_LENGTH_MASK
         sta     (ptr),y
+AdjustFileEntryCase:
 AdjustFileNameCase:
         rts
 .else

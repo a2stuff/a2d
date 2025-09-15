@@ -1683,3 +1683,4 @@ Repeat these tests for all language builds:
 
 * Launch DeskTop. Click the Apple Menu. Verify that no screen corruption occurs.
 * Launch DeskTop. Click the Shortcuts menu. Verify that no screen corruption occurs.
+* Launch DeskTop. Select a file. File > Copy To.... Verify that directories appear within volumes.
