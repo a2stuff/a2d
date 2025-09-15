@@ -81,7 +81,7 @@ JT_GET_TICKS:           jmp     GetTickCount            ; *
         ;; Can loop to here if no state changed
 loop:
         jsr     SystemTask
-    IF_ZERO
+    IF_ZS
         ;; Maybe poll drives for updates
         dec     counter
       IF_NEG
@@ -485,7 +485,7 @@ offset_table:
         and     #%00000001      ; bit 0 = clock card
       IF_NE
         cmp16   event_params::xcoord, #460 ; TODO: Hard coded?
-       IF_CS
+       IF_GE
         param_jump InvokeDeskAccWithIcon, $FF, str_date_and_time
        END_IF
       END_IF
@@ -732,46 +732,44 @@ bail:   return  #$FF            ; high bit set = not repeating
         pla
 
         jsr     IsIconSelected
-        bne     not_selected
-
+    IF_EQ
         ;; --------------------------------------------------
         ;; Icon was already selected
         jsr     ExtendSelectionModifierDown
-    IF_NS
+      IF_NS
         ;; Modifier down - remove from selection
         lda     findicon_params::which_icon
         jsr     UnhighlightAndDeselectIcon
         jmp     _ActivateClickedWindow ; no-op if already active
-    END_IF
-
-        ;; Double click or drag?
-        jmp     check_double_click
-
+      END_IF
+    ELSE
         ;; --------------------------------------------------
         ;; Icon was not already selected
-not_selected:
         jsr     ExtendSelectionModifierDown
-    IF_NS
+      IF_NS
         ;; Modifier down - add to selection
+        ;; ...if there is a selection, and it is same window
         lda     selected_icon_count
-      IF_NOT_ZERO
+       IF_NOT_ZERO
         lda     findicon_params::window_id
-       IF_A_EQ  selected_window_id
+        IF_A_EQ selected_window_id
         lda     findicon_params::which_icon
         jsr     AddIconToSelection
-        jmp     check_double_click
+        jmp     :+
+        END_IF
        END_IF
       END_IF
-    END_IF
 
-        ;; Replace selection with clicked icon
+        ;; Otherwise, replace selection with clicked icon
         lda     findicon_params::which_icon
         jsr     SelectIcon
-        FALL_THROUGH_TO check_double_click
+:
+    END_IF
 
         ;; --------------------------------------------------
-check_double_click:
-        ;; Stash initial coords so dragging is accurate.
+        ;; Stash initial coords so dragging is accurate,
+        ;; and check for double-click
+
         COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
 
         jsr     DetectDoubleClick
@@ -781,7 +779,7 @@ check_double_click:
     END_IF
 
         ;; --------------------------------------------------
-        ;; Drag of icon
+        ;; Drag of icon?
 
         copy8   findicon_params::which_icon, drag_drop_params::icon
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
@@ -936,7 +934,7 @@ prev_selected_icon:
         ;; (3/4) Dropped on icon?
 
         lda     drag_drop_params::target
-    IF_POS
+    IF_NC
         ;; Yes, on an icon; update used/free for same-vol windows
         pha
         jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
@@ -944,6 +942,7 @@ prev_selected_icon:
         param_call UpdateUsedFreeViaPath, path_buf3
       END_IF
         pla
+
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
       IF_EQ
         inx
@@ -2489,6 +2488,9 @@ main_length:    .word   0
         param_call FindLastPathSegment, path_buf4
 
     IF_Y_NE     path_buf4
+        tya                     ; Y = position of last '/'
+        pha
+
         ;; Shorter, so file - Copy filename part to buf
         ldx     #1
         iny                     ; +1 for length byte
@@ -2502,11 +2504,10 @@ main_length:    .word   0
         stx     filename_buf
 
         ;; And remove from `path_buf4`
-        lda     path_buf4
-        sec
-        sbc     filename_buf
-        sta     path_buf4
-        dec     path_buf4
+        pla                     ; Y = position of last '/'
+        tay
+        dey
+        sty     path_buf4
         rts
     END_IF
 
@@ -3952,7 +3953,7 @@ down:   lda     #kDirDown
 ;;; If a list view, use index-based logic
 
         jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
-    IF_NEG
+    IF_NS
         lda     dir
         cmp     #kDirUp
         beq     KeyboardHighlightPrev
@@ -4614,7 +4615,7 @@ _Preamble:
         jsr     LoadActiveWindowEntryTable
 
         jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
-    IF_POS
+    IF_NC
         ;; Icon view
         ldx     #kIconViewScrollTickH
         ldy     #kIconViewScrollTickV
@@ -7859,7 +7860,7 @@ END_PARAM_BLOCK
         ;; Sort (if needed)
 
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-    IF_NEG
+    IF_NS
         jsr     SortRecords
     END_IF
 
@@ -7898,7 +7899,7 @@ END_PARAM_BLOCK
 
         ;; Select the template
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-    IF_NEG
+    IF_NS
         ldy     #init_list_view - init_views + init_view_size-1
     ELSE
         ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
@@ -9618,7 +9619,7 @@ open:   ldy     #$00
         win_rect := rect_table + kMaxAnimationStep * .sizeof(MGTK::Rect)
         icon_rect := rect_table
 
-    IF_NEG
+    IF_NS
         ;; --------------------------------------------------
         ;; Use desktop rect
         copy16  #0, win_rect + MGTK::Rect::x1
