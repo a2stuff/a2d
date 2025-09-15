@@ -224,9 +224,7 @@ tick_counter:
 
         ;; `AdjustUpdatePortForEntries` also relies on `window_grafport`
         jsr     AdjustUpdatePortForEntries
-        jsr     DrawWindowEntries
-
-        rts
+        jmp     DrawWindowEntries
 .endproc ; UpdateWindow
 
 ;;; ============================================================
@@ -5810,9 +5808,7 @@ beyond:
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         ;; `dragwindow_params::moved` is not checked; harmless if it didn't.
 
-        jsr     CachedIconsWindowToScreen
-
-        rts
+        jmp     CachedIconsWindowToScreen
 .endproc ; DoWindowDrag
 
 ;;; ============================================================
@@ -7032,9 +7028,9 @@ next:   inc     index_in_block
         ldx     #$00
         ldy     #$00
         lda     (entry_ptr),y
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         beq     next            ; inactive entry
-        sta     record,x
+        sta     record,x        ; name length
 
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
@@ -7048,66 +7044,16 @@ next:   inc     index_in_block
 
         inc     record_count
 
-        ;; See FileRecord struct for record structure
-
         param_call_indirect AdjustFileEntryCase, entry_ptr
 
-        ;; Point at first character
-        ldx     #FileRecord::name+1
-        ldy     #FileEntry::file_name
-
-        ;; name, file_type
+        ;; Copy fields from `FileEntry` to `FileRecord`
+        ;; (name length handled above, hence off-by-ones)
+        ldx     #1
     DO
-        copy8   (entry_ptr),y, record,x
-        iny
-        inx
-    WHILE_X_NE  #FileEntry::file_type+1 ; name and type
-
-        ;; TODO: Make this table driven?
-
-        ;; blocks
-        ldy     #FileEntry::blocks_used
+        ldy     file_entry_to_file_record_mapping_table-1,x
         copy8   (entry_ptr),y, record,x
         inx
-        iny
-        copy8   (entry_ptr),y, record,x
-
-        ;; creation date/time
-        ldy     #FileEntry::creation_date
-        inx
-    DO
-        copy8   (entry_ptr),y, record,x
-        inx
-        iny
-    WHILE_Y_NE  #FileEntry::creation_date+4
-
-        ;; modification date/time
-        ldy     #FileEntry::mod_date
-    DO
-        copy8   (entry_ptr),y, record,x
-        inx
-        iny
-    WHILE_Y_NE  #FileEntry::mod_date+4
-
-        ;; access
-        ldy     #FileEntry::access
-        copy8   (entry_ptr),y, record,x
-        inx
-
-        ;; header pointer
-        ldy     #FileEntry::header_pointer
-        copy8   (entry_ptr),y, record,x
-        inx
-        iny
-        copy8   (entry_ptr),y, record,x
-        inx
-
-        ;; aux type
-        ldy     #FileEntry::aux_type
-        copy8   (entry_ptr),y, record,x
-        inx
-        iny
-        copy8   (entry_ptr),y, record,x
+    WHILE_X_NE  #.sizeof(FileRecord)
 
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         bit     LCBANK2
@@ -7138,6 +7084,31 @@ finish: copy16  record_ptr, filerecords_free_start
         jsr     SetCursorPointer ; after loading directory
         jsr     PopPointers      ; do not tail-call optimise!
         rts
+
+;;; index is offset in `FileRecord`-1, value is offset in `FileEntry`
+file_entry_to_file_record_mapping_table:
+        ;; name length needs masking and is handled separately
+        .repeat ::kMaxFilenameLength,i
+        .byte   FileEntry::file_name+i
+        .endrepeat
+        .byte   FileEntry::file_type
+        .byte   FileEntry::blocks_used+0
+        .byte   FileEntry::blocks_used+1
+        .byte   FileEntry::creation_date+0
+        .byte   FileEntry::creation_date+1
+        .byte   FileEntry::creation_date+2
+        .byte   FileEntry::creation_date+3
+        .byte   FileEntry::mod_date+0
+        .byte   FileEntry::mod_date+1
+        .byte   FileEntry::mod_date+2
+        .byte   FileEntry::mod_date+3
+        .byte   FileEntry::access
+        .byte   FileEntry::header_pointer+0
+        .byte   FileEntry::header_pointer+1
+        .byte   FileEntry::aux_type+0
+        .byte   FileEntry::aux_type+1
+        ASSERT_TABLE_SIZE file_entry_to_file_record_mapping_table, .sizeof(FileRecord)-1
+
 .endproc ; _Start
 
 ;;; --------------------------------------------------
