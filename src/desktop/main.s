@@ -9869,10 +9869,14 @@ target_is_icon:
 ;;; ============================================================
 ;;; Operations where source/target paths are passed by callers
 
+        kOperationFlagsNone         = %00000000
+        kOperationFlagsCheckBadCopy = %01000000
+        kOperationFlagsCheckVolFree = %10000000
+
 ;;; File > Duplicate - for a single file copy
 ;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
 .proc DoCopyFile
-        copy8   #0, operation_flags ; bit7=0 = copy/delete
+        copy8   #kOperationFlagsCheckBadCopy, operation_flags
         copy8   #0, move_flag
         tsx
         stx     saved_stack
@@ -9898,7 +9902,7 @@ FinishOperation:
 ;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
 .proc DoCopyToRAM
         copy8   #0, move_flag
-        copy8   #%11000000, operation_flags ; bits7&6=1 = copy to RAMCard
+        copy8   #kOperationFlagsCheckVolFree, operation_flags
         copy8   #0, dst_is_appleshare_flag  ; by definition, not AppleShare
         tsx
         stx     saved_stack
@@ -9929,8 +9933,7 @@ ep_always_copy:
 
         sta     move_flag
 
-        copy8   #0, operation_flags ; bit7=0 = copy/delete
-        copy8   #$00, copy_delete_flags ; bit7=0 = copy
+        copy8   #kOperationFlagsCheckBadCopy, operation_flags
         tsx
         stx     saved_stack
 
@@ -9945,8 +9948,7 @@ DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
 ;;; Drag / Drop to Trash (except volumes)
 .proc DoDeleteSelection
         copy8   #0, move_flag
-        copy8   #0, operation_flags ; bit7=0 = copy/delete
-        copy8   #$80, copy_delete_flags ; bit7=1 = delete
+        copy8   #kOperationFlagsNone, operation_flags
         tsx
         stx     saved_stack
 
@@ -9981,30 +9983,33 @@ iterate_selection:
         ;; NOTE: Here rather than in `CopyProcessSelectedFile` because we don't
         ;; run this for copy using paths (i.e. Duplicate, Copy to RAMCard)
         lda     do_op_flag
-        bne     :+
-        bit     copy_delete_flags ; bit7=0 = copy
-        bmi     :+
+       IF_ZERO
+        bit     operation_flags
+        ASSERT_EQUALS operations::kOperationFlagsCheckBadCopy, $40
+        IF_VS
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; Check for copying/moving an item into itself.
         copy16  #src_path_buf, $06
         copy16  #dst_path_buf, $08
         jsr     IsPathPrefixOf
-       IF_NE
+         IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_move_copy_into_self
         jmp     CloseFilesCancelDialogWithCanceledResult
-       END_IF
+         END_IF
         jsr     AppendSrcPathLastSegmentToDstPath
 
         ;; Check for replacing an item with itself or a descendant.
         copy16  #dst_path_buf, $06
         copy16  #src_path_buf, $08
         jsr     IsPathPrefixOf
-       IF_NE
+         IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_bad_replacement
         jmp     CloseFilesCancelDialogWithCanceledResult
+         END_IF
+        END_IF
        END_IF
-:
+
         jsr     OpProcessSelectedFile
       END_IF
 
@@ -10036,14 +10041,8 @@ iterate_selection:
 saved_stack:
         .byte   0
 
-        ;; $80 = lock/unlock (obsolete)
-        ;; $C0 = "download" (a.k.a. copy to ramcard)
-        ;; $00 = copy/delete
-operation_flags:
-        .byte   0
 
-        ;; bit 7 set = delete, clear = copy
-copy_delete_flags:
+operation_flags:
         .byte   0
 
         ;; bit 7 set = move, clear = copy
@@ -10472,10 +10471,10 @@ operation_lifecycle_callbacks_for_copy:
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
 ;;; Used for these operations:
-;;; * File > Duplicate (via `not_selected` entry point) - operates on passed path, `operation_flags` = $00
-;;; * Run a Shortcut (via `not_selected` entry point) - operates on passed path, `operation_flags` = $C0
-;;; * File > Copy To - operates on selection, `operation_flags` = $00
-;;; * Drag/Drop (to non-Trash) - operates on selection, `operation_flags` = $00
+;;; * File > Duplicate (via `not_selected` entry point) - operates on passed path, `operation_flags` = `kOperationFlagsCheckBadCopy`
+;;; * Run a Shortcut (via `not_selected` entry point) - operates on passed path, `operation_flags` = `kOperationFlagsCheckVolFree`
+;;; * File > Copy To - operates on selection, `operation_flags` = `kOperationFlagsCheckBadCopy`
+;;; * Drag/Drop (to non-Trash) - operates on selection, `operation_flags` = `kOperationFlagsCheckBadCopy`
 
 .proc CopyProcessFileImpl
         ;; Normal handling, via `CopyProcessSelectedFile`
@@ -10493,8 +10492,9 @@ not_selected:
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; If "Copy to RAMCard", make sure there's enough room.
-        bit     operations::operation_flags ; CopyToRAM has N=1/V=1, otherwise N=0/V=0
-    IF_VS
+        bit     operations::operation_flags
+        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
+    IF_NS
         jsr     CheckVolBlocksFree
     END_IF
 
@@ -11534,12 +11534,8 @@ do_sum_file_size:
 ;;; Called by `ProcessDir` to process a single file
 
 .proc EnumerationProcessDirectoryEntry
-        ;; If operation is "get size" or "download", add the block count to the sum
-        bit     operations::operation_flags
-    IF_VS
         ;; Called with `src_file_info_params` pre-populated
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
-    END_IF
 
         inc16   op_file_count
         ldax    op_file_count
@@ -11551,6 +11547,7 @@ do_sum_file_size:
 op_file_count:
         .word   0
 
+;;; Only used for "Copy to RAMCard" but computed regardless.
 op_block_count:
         .word   0
 
