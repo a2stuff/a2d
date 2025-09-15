@@ -192,7 +192,7 @@ erase_flag:
 .proc FormatDisk
         lda     #$00
         jsr     PromptForDeviceAndName
-        bcs     cancel
+        bcs     finish
         sta     unit_num
 
         ;; --------------------------------------------------
@@ -222,7 +222,7 @@ l12:    pha
 
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
-        bne     cancel          ; `kAlertResultCancel` = 1
+        bne     finish          ; `kAlertResultCancel` = 1
         beq     retry           ; `kAlertResultTryAgain` = 0
     END_IF
 
@@ -230,10 +230,11 @@ l12:    pha
         cmp     #kAlertResultCancel
         bne     retry
 
-cancel:
+finish:
         pha
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        jsr     main::ClearUpdates
 
         ldx     unit_num
         pla
@@ -246,7 +247,7 @@ cancel:
 .proc EraseDisk
         lda     #$80
         jsr     PromptForDeviceAndName
-        bcs     cancel
+        bcs     finish
 
 ;;; Entry point used after `FormatDisk`
 EP2:
@@ -269,14 +270,14 @@ retry:
         pla
     IF_ZERO
         lda     #$00
-        beq     cancel          ; always
+        beq     finish          ; always
     END_IF
 
     IF_A_EQ     #ERR_WRITE_PROTECTED
 
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
-        bne     cancel          ; `kAlertResultCancel` = 1
+        bne     finish          ; `kAlertResultCancel` = 1
         beq     retry           ; `kAlertResultTryAgain` = 0
     END_IF
 
@@ -284,10 +285,11 @@ retry:
         cmp     #kAlertResultCancel
         bne     retry
 
-cancel:
-        pha                     ; cancel
+finish:
+        pha
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        jsr     main::ClearUpdates
 
         ldx     unit_num
         pla

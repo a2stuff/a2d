@@ -2706,7 +2706,9 @@ window_id_to_close:
 close_current:
         lda     active_window_id
         SKIP_NEXT_2_BYTE_INSTRUCTION
-normal: copy8   #0, window_id_to_close
+normal: lda     #0
+
+        sta     window_id_to_close
 
         lda     active_window_id
         beq     done
@@ -2759,10 +2761,9 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 
 ;;; ============================================================
 
-.proc CmdClose
-        lda     active_window_id
-        RTS_IF_ZERO
+;;; Assert: Window open
 
+.proc CmdClose
         bit     menu_modified_click_flag
         bmi     CmdCloseAll
 
@@ -2772,11 +2773,12 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 ;;; ============================================================
 
 .proc CmdCloseAll
+repeat:
         lda     active_window_id  ; current window
-        beq     done              ; nope, done!
+        RTS_IF_ZERO               ; nope, done!
+
         jsr     CloseActiveWindow ; close it...
-        jmp     CmdCloseAll       ; and try again
-done:   rts
+        jmp     repeat            ; and try again
 .endproc ; CmdCloseAll
 
 ;;; ============================================================
@@ -2925,6 +2927,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
 .proc FindIconByName
         ptr_name := $06
 
+        ;; TODO: Do we need to save pointers?
         jsr     PushPointers
         stax    ptr_name
 
@@ -2998,19 +3001,19 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
         ;; Is the target an icon?
         lda     drag_drop_params::target
-        bmi     done            ; high bit set = window
-
-        jsr     GetIconWindow   ; file icon?
-        beq     done            ; nope, vol icon
-
+    IF_NC                       ; high bit clear = icon
+        ;; Is the target in a window?
+        jsr     GetIconWindow
+      IF_NOT_ZERO
         ;; Stash name
         ptr1 := $06
         lda     drag_drop_params::target
         jsr     GetIconName
         stax    ptr1
         param_call CopyPtr1ToBuf, stashed_name
-
-done:   rts
+      END_IF
+    END_IF
+        rts
 .endproc ; MaybeStashDropTargetName
 
 ;;; Outputs: `drag_drop_params::target` updated if needed
@@ -3145,7 +3148,6 @@ concatenate:
         jsr     ApplyActiveWinfoToWindowGrafport
         add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
 
-
         ;; Padding
         MGTK_CALL MGTK::InflateRect, bbox_pad_tmp_rect
 
@@ -3169,11 +3171,11 @@ concatenate:
 adjust:
         lda     delta
         ora     delta+1
-        beq     done
-
+      IF_NOT_ZERO
         inc     dirty
         add16   viewport+MGTK::Rect::topleft,x, delta, viewport+MGTK::Rect::topleft,x
         add16   viewport+MGTK::Rect::bottomright,x, delta, viewport+MGTK::Rect::bottomright,x
+      END_IF
 
 done:
         dex                     ; next dimension
@@ -3367,22 +3369,21 @@ menu_item_to_view_by:
         .byte   DeskTopSettings::kViewBySize
         .byte   DeskTopSettings::kViewByType
 
-.proc CmdViewBy
-        ldx     menu_click_params::item_num
-        copy8   menu_item_to_view_by-1,x, view
+;;; Assert: Window is open
 
-        ;; Valid?
-        lda     active_window_id
-        RTS_IF_ZERO
+.proc CmdViewBy
+        jsr     GetActiveWindowViewBy
+        sta     current
+
+        ldx     menu_click_params::item_num
+        lda     menu_item_to_view_by-1,x
 
         ;; Is this a change?
-        jsr     GetActiveWindowViewBy
-        cmp     view
+        current := *+1
+        cmp     #SELF_MODIFIED_BYTE
         RTS_IF_EQ
 
         ;; Update view menu/table
-        view := *+1
-        lda     #SELF_MODIFIED_BYTE
         ldx     active_window_id
         sta     win_view_by_table-1,x
 
@@ -3590,12 +3591,9 @@ exec:   lda     #kDynamicRoutineFormatErase
         action := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     format_erase_overlay__Exec
-        stx     drive_to_refresh ; X = unit number
-        pha                      ; A = result
-        jsr     ClearUpdates     ; following dialog close
-        pla                      ; A = result
         RTS_IF_NOT_ZERO
 
+        stx     drive_to_refresh ; X = unit number
         jmp     CheckDriveByUnitNumber
 
 unit:   sta     unit_num
@@ -3651,7 +3649,7 @@ ret:    rts
     IF_NS
         ;; Selected items were modified (e.g. locked), so refresh
         lda     selected_window_id
-      IF_NOT_ZERO               ; windowed (not desktop); no refresh needed
+      IF_NOT_ZERO               ; windowed (not desktop); refresh needed
         cmp     active_window_id
         jeq     ClearAndDrawActiveWindowEntries ; active - just repaint
         jmp     ActivateWindow  ; inactive - activate, it will repaint
@@ -3663,10 +3661,9 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc CmdDeleteSelection
-        lda     selected_window_id
-        jeq     CmdEject
+;;; Assert: File(s) are selected
 
+.proc CmdDeleteSelection
         jsr     DoDeleteSelection
         cmp     #kOperationCanceled
         RTS_IF_EQ
@@ -4581,7 +4578,6 @@ done:   rts
 viewport := window_grafport+MGTK::GrafPort::maprect
 
 ;;; Local variables on ZP
-;;; NOTE: $50...$6F is used because MulDiv uses $10...$19
 PARAM_BLOCK, $50
 ;;; `ubox` is a union of the effective viewport and icon bounding box
 ubox    .tag    MGTK::Rect
@@ -5073,7 +5069,7 @@ by_unit_number:
         sta     check_drive_flags
         bit     check_drive_flags
         bpl     have_index
-        bvc     map_icon_number
+        bvc     map_unit_number
 
 ;;; --------------------------------------------------
 ;;; After an Open/Eject/Rename action
@@ -5089,7 +5085,7 @@ by_unit_number:
 ;;; --------------------------------------------------
 ;;; After a Format/Erase action
 
-map_icon_number:
+map_unit_number:
         ;; Map unit number to index in DEVLST
         ldy     DEVCNT
     DO
@@ -14935,6 +14931,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 ;;; ============================================================
 
 ;;; A,X = A,X * Y
+;;; Uses $10..$19
 .proc Multiply_16_8_16
 PARAM_BLOCK muldiv_params, $10
 number          .word           ; (in)
@@ -14944,10 +14941,19 @@ result          .word           ; (out)
 remainder       .word           ; (out)
 END_PARAM_BLOCK
 
+        ;; number = A,X
         stax    muldiv_params::number
-        sty     muldiv_params::numerator
-        copy8   #0, muldiv_params::numerator+1
-        copy16  #1, muldiv_params::denominator
+
+        ;; numerator = Y
+        sty     muldiv_params::numerator ; lo
+        ldy     #0
+        sty     muldiv_params::numerator+1 ; hi
+
+        ;; denominator = 1
+        sty     muldiv_params::denominator+1 ; hi
+        iny
+        sty     muldiv_params::denominator ; lo
+
         MGTK_CALL MGTK::MulDiv, muldiv_params
         ldax    muldiv_params::result
         rts
