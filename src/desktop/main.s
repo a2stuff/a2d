@@ -1082,9 +1082,8 @@ changed:
         rts
 
 found:
-        sty     drive_to_refresh ; DEVLST index
-        jsr     CheckDriveByIndex
-        rts
+        tya
+        jmp     CheckDriveByIndex ; A = DEVLST index
 .endproc ; CheckDiskInsertedEjected
 
 ;;; ============================================================
@@ -3245,8 +3244,7 @@ done:   rts
         jsr     SmartportEject
         pla
        END_IF
-        sta     drive_to_refresh ; icon number
-        jsr     CheckDriveByIconNumber
+        jsr     CheckDriveByIconNumber ; A = icon number
       END_IF
 
         pla                     ; A = index
@@ -3565,14 +3563,6 @@ RefreshView := RefreshViewImpl::entry3
 
 ;;; ============================================================
 
-;;; Set after format, erase, failed open, etc.
-;;; Used by `CheckDriveByXXX`; may be unit number,
-;;; icon number, or device index depending on call site.
-drive_to_refresh:
-        .byte   0
-
-;;; ============================================================
-
 .proc CmdFormatEraseDiskImpl
 format: lda     #FormatEraseAction::format
         SKIP_NEXT_2_BYTE_INSTRUCTION
@@ -3593,8 +3583,8 @@ exec:   lda     #kDynamicRoutineFormatErase
         jsr     format_erase_overlay__Exec
         RTS_IF_NOT_ZERO
 
-        stx     drive_to_refresh ; X = unit number
-        jmp     CheckDriveByUnitNumber
+        txa
+        jmp     CheckDriveByUnitNumber ; A = unit number
 
 unit:   sta     unit_num
         copy8   #FormatEraseAction::format, action
@@ -5052,63 +5042,55 @@ pending_alert:
 
 .proc CheckDriveImpl
 
-        ;; After open/eject/rename
-by_icon_number:
-        lda     #$C0            ; NOTE: This not safe to skip!
-        SKIP_NEXT_2_BYTE_INSTRUCTION
+;;; --------------------------------------------------
+;;; After a Format/Erase action
+;;; Input: A = unit number
 
-        ;; After polling drives
-by_index:
-        lda     #$00
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-
-        ;; After format/erase
 by_unit_number:
-        lda     #$80
-
-        sta     check_drive_flags
-        bit     check_drive_flags
-        bpl     have_index
-        bvc     map_unit_number
+        ;; Map unit number to index in DEVLST
+        sta     compare
+        ldx     DEVCNT
+    DO
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        compare := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        BREAK_IF_EQ
+        dex
+    WHILE_POS                   ; always
+        ;; X = index
+        lda     #0              ; not explicit command
+        beq     common          ; always
 
 ;;; --------------------------------------------------
 ;;; After an Open/Eject/Rename action
+;;; Input: A = icon id
 
+by_icon_number:
         ;; Map icon number to index in DEVLST
-        lda     drive_to_refresh
         jsr     IconToDeviceIndex
-        RTS_IF_NOT_ZERO             ; Not found - not a volume icon
+        RTS_IF_NOT_ZERO         ; Not found - not a volume icon
+        ;; X = index
+        lda     #0              ; not explicit command
+        beq     common          ; always
 
+;;; --------------------------------------------------
+;;; After polling drives
+;;; Input: A = DEVLST index
+
+by_index:
+        tax                     ; X = index
+        lda     #$80            ; explicit command
+        FALL_THROUGH_TO common
+
+;;; --------------------------------------------------
+
+common:
         stx     devlst_index
-        jmp     have_index
+        sta     explicit_command_flag
 
-;;; --------------------------------------------------
-;;; After a Format/Erase action
-
-map_unit_number:
-        ;; Map unit number to index in DEVLST
-        ldy     DEVCNT
-    DO
-        lda     DEVLST,y
-        and     #UNIT_NUM_MASK
-        cmp     drive_to_refresh
-        beq     :+
-        dey
-    WHILE_POS
-        iny
-:
-        sty     devlst_index
-        FALL_THROUGH_TO have_index
-
-;;; --------------------------------------------------
-
-        devlst_index := drive_to_refresh
-
-have_index:
-        ldy     devlst_index
-        lda     device_to_icon_map,y
-        jeq     not_in_map
-
+        lda     device_to_icon_map,x
+    IF_NOT_ZERO
         ;; Close any associated windows.
 
         ;; A = icon number
@@ -5131,16 +5113,16 @@ close_loop:
         ;; during close when animating window.
         param_call FindWindowsForPrefix, path_buf
         ldx     found_windows_count
-        beq     not_in_map
+      IF_NOT_ZERO
         lda     found_windows_list-1,x
         jsr     CloseSpecifiedWindow
         jmp     close_loop
-
-not_in_map:
+      END_IF
+    END_IF
 
         jsr     ClearSelection
         jsr     LoadDesktopEntryTable
-
+        ;; If there was an existing icon, destroy it
         ldy     devlst_index
         copy8   device_to_icon_map,y, icon_param
     IF_NOT_ZERO
@@ -5151,6 +5133,8 @@ not_in_map:
         ITK_CALL IconTK::EraseIcon, icon_param
         ITK_CALL IconTK::FreeIcon, icon_param
     END_IF
+
+        ;; Create a new icon
         copy8   cached_window_entry_count, previous_icon_count
 
         ldy     devlst_index
@@ -5172,8 +5156,8 @@ not_in_map:
         cmp     #ERR_DUPLICATE_VOLUME
         beq     err
 
-        bit     check_drive_flags
-        bmi     add_icon
+        bit     explicit_command_flag
+        bpl     add_icon
 
         ;; Explicit command
         and     #$FF            ; check `CreateVolumeIcon` results
@@ -5198,15 +5182,15 @@ add_icon:
     IF_NE
         ;; If a new icon was added, more work is needed.
         ldx     cached_window_entry_count
-        dex
-        copy8   cached_window_entry_list,x, icon_param
+        copy8   cached_window_entry_list-1,x, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
     END_IF
 
         jmp     StoreWindowEntryTable
 
-;;; 0 = command, $80 = format/erase, $C0 = open/eject/rename
-check_drive_flags:
+devlst_index:
+        .byte   0
+explicit_command_flag:
         .byte   0
 
 .endproc ; CheckDriveImpl
@@ -7122,8 +7106,8 @@ file_entry_to_file_record_mapping_table:
         lda     selected_window_id
       IF_ZERO
         ;; Volume icon - check that it's still valid.
-        copy8   icon_param, drive_to_refresh ; icon_number
-        jsr     CheckDriveByIconNumber
+        lda     icon_param
+        jsr     CheckDriveByIconNumber ; A = icon id
       END_IF
     END_IF
         ;; A window was allocated but unused, so restore the count.
