@@ -84,6 +84,7 @@
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
 * Launch DeskTop. Special > Check All Drives. Verify that no error is shown.
 * Launch DeskTop. Mount a new drive that will appear in the middle of the drive order. Special > Check All Drives. Verify that no new volumes overdraw old volumes.
+* Launch DeskTop. Select a volume icon and Special > Eject Disk.... Special > Check All Drives. Verify that DeskTop doesn't hang or crash.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double-click on B. Verify that the existing B window activates.
 

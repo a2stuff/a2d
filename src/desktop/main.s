@@ -5141,10 +5141,7 @@ not_in_map:
         jsr     ClearSelection
         jsr     LoadDesktopEntryTable
 
-        lda     devlst_index
-        tay
-        pha
-
+        ldy     devlst_index
         copy8   device_to_icon_map,y, icon_param
     IF_NOT_ZERO
         jsr     RemoveIconFromWindow
@@ -5154,13 +5151,9 @@ not_in_map:
         ITK_CALL IconTK::EraseIcon, icon_param
         ITK_CALL IconTK::FreeIcon, icon_param
     END_IF
-
         copy8   cached_window_entry_count, previous_icon_count
-        inc     cached_window_entry_count
-        inc     icon_count
 
-        pla
-        tay
+        ldy     devlst_index
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
         jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
