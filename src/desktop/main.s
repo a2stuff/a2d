@@ -2922,58 +2922,71 @@ CmdNewFolder    := CmdNewFolderImpl::start
 ;;; Find an icon by name in the given window.
 ;;; Inputs: Y = window id, A,X = name
 ;;; Outputs: Z=0, A = icon id (or Z=1, A=0 if not found)
+;;; Preserves $06/$08
 
 .proc FindIconByName
-        ptr_icon_name := $06
-        ptr_name := $08
+        ptr_name := $06
 
         jsr     PushPointers
         stax    ptr_name
 
         lda     cached_window_id
-        pha
+        pha                     ; A = previous `cached_window_id`
 
         tya
         jsr     LoadWindowEntryTable
 
+        jsr     FindIconByNameInCachedWindow
+        sta     icon
+
+        pla                     ; A = previous `cached_window_id`
+        jsr     LoadWindowEntryTable
+        jsr     PopPointers
+
+        icon := *+1
+        lda     #SELF_MODIFIED_BYTE
+        rts
+.endproc ; FindIconByName
+
+;;; ============================================================
+;;; Input: $06 has name
+;;; Output: A = icon id (and Z=0), or A=0 and Z=1 if not found
+;;; Trashes $08
+
+.proc FindIconByNameInCachedWindow
+        ptr_name := $06
+        ptr_icon_name := $08
+
         ;; Iterate icons
         copy8   #0, index
-
     DO
         index := *+1
         ldx     #SELF_MODIFIED_BYTE
       IF_X_EQ   cached_window_entry_count
         ;; Not found
         lda     #0
-        beq     done            ; always
+        rts
       END_IF
 
         ;; Compare with name from dialog
         lda     cached_window_entry_list,x
+      IF_A_NE   trash_icon_num
+
         jsr     GetIconName
         stax    ptr_icon_name
         jsr     CompareStrings
-      IF_EQ
+       IF_EQ
         ;; Match!
         ldx     index
         lda     cached_window_entry_list,x
-
-        ;; the "not found" case goes here too
-done:
-        sta     icon
-        pla
-        jsr     LoadWindowEntryTable
-        jsr     PopPointers
-        icon := *+1
-        lda     #SELF_MODIFIED_BYTE
         rts
+       END_IF
       END_IF
 
         inc     index
     WHILE_NOT_ZERO              ; always
 
-.endproc
- ; FindIconByName
+.endproc ; FindIconByNameInCachedWindow
 
 ;;; ============================================================
 ;;; Save/Restore drop target icon ID in case the window was rebuilt.
@@ -9508,36 +9521,15 @@ error:
 ;;; Inputs: String to compare against is in `cvi_data_buffer`
 ;;; Output: A=0 if not a duplicate, ERR_DUPLICATE_VOLUME if there is a duplicate.
 .proc _CompareNames
-
-        icon_ptr := $06
-
         jsr     PushPointers
-        copy16  #cvi_data_buffer, $08
+        copy16  #cvi_data_buffer, $06
 
-        ldx     cached_window_entry_count
-        stx     index
-
-    DO
-        index := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        lda     cached_window_entry_list-1,x
-      IF_A_NE   trash_icon_num
-        jsr     GetIconName
-        stax    icon_ptr
-
-        jsr     CompareStrings
-       IF_EQ
-        ;; It matches; report a duplicate.
+        jsr     FindIconByNameInCachedWindow
+    IF_NOT_ZERO
         lda     #ERR_DUPLICATE_VOLUME
         bne     finish          ; always
-       END_IF
+    END_IF
 
-      END_IF
-        ;; Doesn't match, try again
-        dec     index
-    WHILE_NOT_ZERO
-
-        ;; All done, clean up and report no duplicates.
         lda     #0
 
 finish: jsr     PopPointers     ; do not tail-call optimise!

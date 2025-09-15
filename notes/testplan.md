@@ -737,6 +737,8 @@
 
 * Launch DeskTop. Open a window. File > Quit. Launch DeskTop again. Ensure the window is restored. Try to drag-select volume icons. Verify that they are selected.
 
+* Launch DeskTop. Open a volume window. Rename the volume to "TRASH" (all uppercase). File > Quit. Load DeskTop. Verify that the restored window is named "TRASH" not "Trash".
+
 
 ## Apple Menu
 
