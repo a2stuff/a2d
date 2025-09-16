@@ -61,6 +61,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Draw volume icons during load/check for better feedback.
 * Improve startup time by creating `LOCAL/SELECTOR.LIST` lazily.
 * Fix restoring a volume window named "Trash".
+* Fix behavior after Special > Check Drive with non-ProDOS disks.
 
 ### Selector
 

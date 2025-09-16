@@ -5132,6 +5132,7 @@ close_loop:
         jsr     FreeDesktopIconPosition
         ITK_CALL IconTK::EraseIcon, icon_param
         ITK_CALL IconTK::FreeIcon, icon_param
+        jsr     StoreWindowEntryTable
     END_IF
 
         ;; Create a new icon
