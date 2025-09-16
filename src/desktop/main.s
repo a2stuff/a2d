@@ -1879,7 +1879,7 @@ devlst_backup:
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
         jne     ShowAlert       ; too long
 
-        COPY_STRING path_buf3, path_buf0
+        param_call CopyToBuf0, path_buf3
       END_IF
     END_IF
 
@@ -9754,7 +9754,7 @@ target_is_icon:
         rts
     END_IF
 
-        COPY_STRING path_buf3, path_buf4
+        param_call CopyToBuf4, path_buf3
         clc                     ; success
         rts
 .endproc ; SetPathBuf4FromDragDropResult
