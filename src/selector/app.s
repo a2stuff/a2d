@@ -807,12 +807,10 @@ cancel: jmp     LoadSelectorList
         jmp     HandleMenu
     END_IF
 
-        cmp     #MGTK::Area::content
-        RTS_IF_NE
+        RTS_IF_A_NE #MGTK::Area::content
 
         lda     findwindow_params::window_id
-        cmp     #winfo::kDialogId
-        RTS_IF_NE
+        RTS_IF_A_NE #winfo::kDialogId
 
         lda     #winfo::kDialogId
         jsr     GetWindowPort
@@ -953,16 +951,12 @@ noop:   rts
 
         ;; 1-8 to select entry
 
-        cmp     #'1'
-        RTS_IF_LT
-
-        cmp     #'8'+1
-        RTS_IF_GE
+        RTS_IF_A_LT #'1'
+        RTS_IF_A_GE #'8'+1
 
         sec
         sbc     #'1'
-        cmp     num_primary_run_list_entries
-        RTS_IF_GE
+        RTS_IF_A_GE num_primary_run_list_entries
 
         sta     op_params::new_selection
         OPTK_CALL OPTK::SetSelection, op_params

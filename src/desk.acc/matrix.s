@@ -252,8 +252,7 @@ exit:   rts
         ;; Still on screen? If not, skip (until reset)
         ldy     #Cursor::vpos
         lda     (ptr),y
-        cmp     #24
-        RTS_IF_GE
+        RTS_IF_A_GE #24
 
         ;; Set BASL/H
         sta     CV

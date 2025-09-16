@@ -369,10 +369,28 @@
 ;;;     RTS_IF_VS
 ;;;     RTS_IF_NC           aliases: RTS_IF_POS, RTS_IF_PLUS
 ;;;     RTS_IF_NS           aliases: RTS_IF_NEG, RTS_IF_MINUS
+;;;
+;;;     RTS_IF_A_EQ
+;;;     RTS_IF_A_NE
+;;;     RTS_IF_A_LT
+;;;     RTS_IF_A_GE
+;;; ... and ditto for *_X_* and *_Y_*
 
-.macro _RTS_IF_BOP_ bop
+.macro _RTS_IF_BOP_ branchOp
         .local  skip
-        bop     skip
+        branchOp skip
+        rts
+skip:
+.endmacro
+
+.macro _RTS_IF_COP_BOP_ compareOp, branchOp, arg, reg
+    .ifblank reg
+        compareOp arg
+    .else
+        compareOp arg,reg
+    .endif
+        .local  skip
+        branchOp skip
         rts
 skip:
 .endmacro
@@ -398,6 +416,7 @@ skip:
         .define .ident(.sprintf("UNTIL_%s_%s", reg, .string(cond))) _WHILE_COP_BOP_ compareOp, branchOp2,
         .define .ident(.sprintf("CONTINUE_IF_%s_%s", reg, .string(cond))) _CONTINUE_IF_COP_BOP_ compareOp, branchOp1,
         .define .ident(.sprintf("BREAK_IF_%s_%s", reg, .string(cond))) _BREAK_IF_COP_BOP_ compareOp, branchOp1,
+        .define .ident(.sprintf("RTS_IF_%s_%s", reg, .string(cond))) _RTS_IF_COP_BOP_ compareOp, branchOp2,
 .endmacro
 
 _FLOW_DEFINE_FLAG_MACROS_ ZS, beq, bne

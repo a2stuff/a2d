@@ -7935,12 +7935,11 @@ not_selected:
 
 .proc SelectWindowImpl
         jsr     WindowByIdOrExit
-        cmp     current_window
-        bne     :+
-        cpx     current_window+1
-        RTS_IF_EQ
+    IF_A_EQ     current_window
+        RTS_IF_X_EQ current_window+1
+    END_IF
 
-:       jsr     LinkWindow
+        jsr     LinkWindow
 do_select_win:
         ldy     #MGTK::Winfo::nextwinfo
         lda     current_window
@@ -8813,8 +8812,7 @@ activate:
 toggle: eor     params::activate
         and     #1
         eor     (window),y
-        cmp     (window),y      ; no-op if no change
-        RTS_IF_EQ
+        RTS_IF_A_EQ (window),y  ; no-op if no change
         sta     (window),y
 
         jsr     HideCursorSaveParams
@@ -9527,8 +9525,7 @@ check_win:
 
         ldy     #MGTK::Winfo::vthumbpos
 :       lda     params::thumbpos
-        cmp     (window),y      ; no-op if no change
-        RTS_IF_EQ
+        RTS_IF_A_EQ (window),y  ; no-op if no change
         sta     (window),y
 
         jsr     HideCursorSaveParams

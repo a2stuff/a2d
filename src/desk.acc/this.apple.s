@@ -1230,8 +1230,7 @@ egg:    .byte   0
 
 .proc ClearWindow
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        RTS_IF_EQ
+        RTS_IF_A_EQ #MGTK::Error::window_obscured
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::grafport + MGTK::GrafPort::maprect
@@ -1242,8 +1241,7 @@ egg:    .byte   0
 
 .proc DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        RTS_IF_EQ
+        RTS_IF_A_EQ #MGTK::Error::window_obscured
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor

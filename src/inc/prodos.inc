@@ -21,6 +21,14 @@ TIMELO          := $BF92        ; Time lo
 TIMEHI          := $BF93        ; Time hi
 LEVEL           := $BF94        ; File level
 MACHID          := $BF98        ; Machine ID
+
+  kMachIDSysType  = %11000000   ; bits 6,7 = system type (see bit 3)
+  kMachIDHas128k  = %00110000   ; bits 4,5 = 128k if both set (else < 128k)
+  kMachIDSysMod   = %00001000   ; bit 3 = modifies bit 6/7 decoding
+  kMachIDReserved = %00000100   ; bit 2 = RESERVED
+  kMachIDHas80Col = %00000010   ; bit 1 = has 80 col card
+  kMachIDHasClock = %00000001   ; bit 0 = has clock card
+
 SLTBYT          := $BF99        ; '1' bits indicate rom in slot (bit#)
 IVERSION        := $BFFD        ; Interpreter Version
 KVERSION        := $BFFF        ; ProDOS Kernel Version

@@ -210,8 +210,7 @@ tick_counter:
 
 ;;; Inputs: A = `window_id` from `update` event
 .proc UpdateWindow
-        cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
-        RTS_IF_GE
+        RTS_IF_A_GE #kMaxDeskTopWindows+1 ; directory windows are 1-8
 
         jsr     LoadWindowEntryTable
 
@@ -480,7 +479,7 @@ offset_table:
 
         ;; Maybe clock?
         lda     MACHID
-        and     #%00000001      ; bit 0 = clock card
+        and     #kMachIDHasClock
       IF_NE
         cmp16   event_params::xcoord, #460 ; TODO: Hard coded?
        IF_GE
@@ -782,8 +781,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         copy8   findicon_params::which_icon, drag_drop_params::icon
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
 
-        cmp     #IconTK::kDragResultCanceled
-        RTS_IF_EQ
+        RTS_IF_A_EQ #IconTK::kDragResultCanceled
 
     IF_A_EQ     #IconTK::kDragResultNotADrag
         jsr     _ActivateClickedWindow ; no-op if already active
@@ -861,8 +859,7 @@ bail:   return  #$FF            ; high bit set = not repeating
     END_IF
 
         ;; Desktop?
-        cmp     #$80
-        RTS_IF_EQ               ; ignore
+        RTS_IF_A_EQ #$80        ; ignore
 
         ;; Path for target
         jsr     SetPathBuf4FromDragDropResult
@@ -913,8 +910,7 @@ prev_selected_icon:
         ;; --------------------------------------------------
         ;; (1/4) Canceled?
 
-        cmp     #kOperationCanceled
-        RTS_IF_EQ
+        RTS_IF_A_EQ #kOperationCanceled
 
         ;; --------------------------------------------------
         ;; (2/4) Was a move?
@@ -973,11 +969,9 @@ clicked_window_id := _ActivateClickedWindow::window_id
 ;;; Inputs: A = window id to activate
 
 .proc ActivateWindow
-        cmp     active_window_id
-        RTS_IF_EQ
+        RTS_IF_A_EQ active_window_id
 
-        cmp     #0
-        RTS_IF_EQ
+        RTS_IF_A_EQ #0
 
         ;; Make the window active.
         sta     active_window_id
@@ -1978,8 +1972,7 @@ done:   rts
         jsr     _PrepEntryCopyPaths
         jsr     DoCopyToRAM
 
-        cmp     #kOperationCanceled
-        RTS_IF_EQ
+        RTS_IF_A_EQ #kOperationCanceled
 
     IF_A_EQ     #kOperationFailed
         param_call CopyRAMCardPrefix, path_buf4
@@ -2442,8 +2435,7 @@ main_length:    .word   0
         param_call CopyPtr1ToBuf, path_buf4
         jsr     DoCopySelection
 
-        cmp     #kOperationCanceled
-        RTS_IF_EQ
+        RTS_IF_A_EQ #kOperationCanceled
 
         FALL_THROUGH_TO RefreshWindowForPathBuf4
 
@@ -3663,8 +3655,7 @@ ret:    rts
 
 .proc CmdDeleteSelection
         jsr     DoDeleteSelection
-        cmp     #kOperationCanceled
-        RTS_IF_EQ
+        RTS_IF_A_EQ #kOperationCanceled
 
         copy8   #$80, validate_windows_flag
         jmp     UpdateActivateAndRefreshSelectedWindow
@@ -3788,8 +3779,8 @@ spin:   jsr     GetSelectionWindow
         jsr     CopyPathsFromPtrsToBufsAndSplitName
         jsr     DoCopyFile
         sta     result
-        cmp     #kOperationCanceled
-        RTS_IF_EQ
+
+        RTS_IF_A_EQ #kOperationCanceled
 
         ;; Update name case bits on disk, if possible.
         param_call CopyToSrcPath, dst_path_buf
@@ -4125,8 +4116,7 @@ not_file_char:
 
 file_char:
         ldx     typedown_buf
-        cpx     #kMaxFilenameLength
-        RTS_IF_ZS               ; Z=1 to consume
+        RTS_IF_X_EQ #kMaxFilenameLength ; Z=1 to consume
 
         inx
         stx     typedown_buf
@@ -4241,8 +4231,7 @@ typedown_buf:
 
         jsr     GetKeyboardSelectableIcons
 
-        cpx     #2
-        RTS_IF_CC
+        RTS_IF_X_LT #2
 
         ;; Selection sort. In each outer iteration, the highest
         ;; remaining element is moved to the end of the unsorted
@@ -5617,8 +5606,7 @@ event_loop:
         ;; Process all icons in window
         jsr     FrameTmpRect
         ldx     #0
-iloop:  cpx     cached_window_entry_count
-        RTS_IF_EQ
+iloop:  RTS_IF_X_EQ cached_window_entry_count
 
         ;; Check if icon should be selected
         txa
@@ -8124,8 +8112,7 @@ scratch_space   := $804         ; can be used by comparison funcs
         sta     _CompareFileRecords_sort_by
 
         lda     cached_window_entry_count
-        cmp     #2
-        RTS_IF_LT               ; can't sort < 2 records
+        RTS_IF_A_LT #2          ; can't sort < 2 records
 
         sta     num_records
 
@@ -11756,8 +11743,7 @@ retry:  param_call_indirect GetFileInfo, src_ptr
         ;; Skip if source is volume; the contents are copied not the
         ;; item itself, so it doesn't make sense.
         lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        RTS_IF_EQ
+        RTS_IF_A_EQ #ST_VOLUME_DIRECTORY
 
         FALL_THROUGH_TO ApplySrcInfoToDst
 .endproc ; GetAndApplySrcInfoToDst

@@ -647,8 +647,7 @@ not_file_char:
 
 file_char:
         ldx     type_down_buf
-        cpx     #15
-        RTS_IF_ZS               ; Z=1 to consume
+        RTS_IF_X_EQ #kMaxFilenameLength ; Z=1 to consume
 
         inx
         stx     type_down_buf
@@ -1332,8 +1331,7 @@ finish:
 
 .proc _SortFileNames
         lda     num_file_names
-        cmp     #2
-        RTS_IF_LT               ; can't sort < 2 records
+        RTS_IF_A_LT #2          ; can't sort < 2 records
 
         ;; --------------------------------------------------
         ;; Selection sort

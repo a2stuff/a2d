@@ -249,7 +249,7 @@ min_offset:
         DA_START_MAIN_SEGMENT
 
         lda     MACHID
-        and     #1              ; bit 0 = clock card
+        and     #kMachIDHasClock
     IF_ZERO
         lda     #ERR_DEVICE_NOT_CONNECTED
         jmp     JUMP_TABLE_SHOW_ALERT

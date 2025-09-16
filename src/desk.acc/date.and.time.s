@@ -594,8 +594,7 @@ hit_target_jump_table:
 
         bit     clock_24hours
     IF_NS
-        cmp     #Field::period
-        RTS_IF_EQ
+        RTS_IF_A_EQ #Field::period
     END_IF
 
         jmp     SelectField
@@ -1334,7 +1333,7 @@ current:
 
 .scope main
         lda     MACHID
-        and     #%00000001
+        and     #kMachIDHasClock
         tay                     ; A,X are trashed by macro
         JSR_TO_AUX aux::RunDA
         sta     result

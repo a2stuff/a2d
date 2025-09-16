@@ -256,8 +256,7 @@ width   .word
 END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        RTS_IF_EQ
+        RTS_IF_A_EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor

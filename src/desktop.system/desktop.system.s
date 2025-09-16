@@ -119,7 +119,7 @@ start:
 
 .proc Check128K
         lda     MACHID
-        and     #%00000001      ; bit 0 = clock card
+        and     #kMachIDHasClock
     IF_ZERO
         lda     DATELO          ; Any date already set?
         ora     DATEHI
@@ -129,9 +129,8 @@ start:
     END_IF
 
         lda     MACHID
-        and     #%00110000      ; bits 4,5 set = 128k
-        cmp     #%00110000
-        RTS_IF_EQ
+        and     #kMachIDHas128k
+        RTS_IF_A_EQ #kMachIDHas128k
 
         ;;  If not 128k machine, just quit back to ProDOS
         jsr     HOME

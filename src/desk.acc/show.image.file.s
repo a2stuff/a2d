@@ -283,8 +283,7 @@ fail:   rts
 
         lda     get_file_info_params::file_type
 
-        cmp     #FT_DIRECTORY
-        RTS_IF_EQ               ; C=1 signals failure
+        RTS_IF_A_EQ #FT_DIRECTORY ; C=1 signals failure
 
         cmp     #FT_PNT
         jeq     ShowPackedSHR

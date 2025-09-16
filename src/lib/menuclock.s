@@ -18,7 +18,7 @@ force_update:
 normal: copy8   #0, force_flag
 
 common: lda     MACHID
-        and     #1              ; bit 0 = clock card
+        and     #kMachIDHasClock
         RTS_IF_ZERO
 
         MLI_CALL GET_TIME, 0

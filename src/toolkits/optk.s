@@ -420,8 +420,7 @@ new_selection   .byte
 ;;; ============================================================
 
 .proc _SetSelection
-        cmp     oprc_selected_index ; same as previous?
-        RTS_IF_EQ
+        RTS_IF_A_EQ oprc_selected_index ; same as previous?
 
         pha                     ; A = new selection
         jsr     _SetPort
