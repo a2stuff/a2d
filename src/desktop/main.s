@@ -400,7 +400,7 @@ dispatch_table:
 
         ;; Special menu (5)
         menu5_start := *
-        .addr   CmdCheckDrives
+        .addr   CmdCheckAllDrives
         .addr   CmdCheckDrive
         .addr   CmdEject
         .addr   CmdNoOp         ; --------
@@ -4973,72 +4973,22 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
 
 ;;; ============================================================
 
-.proc CmdCheckDrives
-        jsr     CmdCloseAll
-        jsr     ClearSelection
-
-        ;; --------------------------------------------------
-        ;; Destroy existing volume icons
-.scope
-        jsr     LoadDesktopEntryTable
-        ldx     cached_window_entry_count
-        dex
-    DO
-        lda     cached_window_entry_list,x
-      IF_A_NE   trash_icon_num
-        txa
-        pha
-        copy8   cached_window_entry_list,x, icon_param
-        ITK_CALL IconTK::EraseIcon, icon_param
-        ITK_CALL IconTK::FreeIcon, icon_param
-        lda     icon_param
-        jsr     FreeDesktopIconPosition
-        dec     cached_window_entry_count
-        dec     icon_count
-
-        pla
-        tax
-      END_IF
-        dex
-    WHILE_POS
-.endscope
-
-        ;; --------------------------------------------------
-        ;; Create new volume icons
-.scope
-        copy8   #0, pending_alert
-
+.proc CmdCheckAllDrives
         ;; Enumerate DEVLST in reverse order (most important volumes first)
-        copy8   DEVCNT, devlst_index
+        ldx     DEVCNT          ; X = index
     DO
-        devlst_index := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        copy8   #0, device_to_icon_map,y
-        lda     DEVLST,y
-        ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
-        jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
-      IF_A_EQ   #ERR_DUPLICATE_VOLUME
-        copy8   #kErrDuplicateVolName, pending_alert
-      END_IF
+        txa                     ; A = index
+        pha
 
-        ;; TODO: Prompt to format?
+        ldy     #$80            ; Y = show unexpected errors flag (do)
+        jsr     CheckDriveByIndex ; A = DEVLST index
 
-        ldx     cached_window_entry_count
-        copy8   cached_window_entry_list-1,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-
-        dec     devlst_index
+        pla                     ; A = index
+        tax                     ; X = index
+        dex
     WHILE_POS
-
-        lda     pending_alert
-    IF_NOT_ZERO
-        jsr     ShowAlert
-    END_IF
-
-        jmp     StoreWindowEntryTable
-.endscope
-
-.endproc ; CmdCheckDrives
+        rts
+.endproc ; CmdCheckAllDrives
 
 ;;; ============================================================
 
