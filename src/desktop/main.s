@@ -641,38 +641,38 @@ window_click:
         cmp     #MGTK::Part::thumb
         jeq     _TrackThumb
 
-      IF_A_EQ   #MGTK::Part::left_arrow
-       DO
+    IF_A_EQ     #MGTK::Part::left_arrow
+      DO
         jsr     ScrollLeft
         lda     #MGTK::Part::left_arrow
         jsr     _CheckControlRepeat
-       WHILE_NC
+      WHILE_NC
         rts
-      END_IF
+    END_IF
 
-      IF_A_EQ   #MGTK::Part::right_arrow
-       DO
+    IF_A_EQ     #MGTK::Part::right_arrow
+      DO
         jsr     ScrollRight
         lda     #MGTK::Part::right_arrow
         jsr     _CheckControlRepeat
-       WHILE_NC
+      WHILE_NC
         rts
-      END_IF
+    END_IF
 
-      IF_A_EQ   #MGTK::Part::page_left
-       DO
+    IF_A_EQ     #MGTK::Part::page_left
+      DO
         jsr     ScrollPageLeft
         lda     #MGTK::Part::page_left
         jsr     _CheckControlRepeat
-       WHILE_NC
+      WHILE_NC
         rts
-      END_IF
+    END_IF
 
-      DO
+    DO
         jsr     ScrollPageRight
         lda     #MGTK::Part::page_right
         jsr     _CheckControlRepeat
-      WHILE_NC
+    WHILE_NC
         rts
 
 ;;; ------------------------------------------------------------
@@ -1264,7 +1264,7 @@ set_flags:
         lda     table,y         ; flags
         flags := *+1
         and     #SELF_MODIFIED_BYTE
-      IF_A_EQ     table,y
+      IF_A_EQ   table,y
         ldx     #MGTK::disableitem_enable
       END_IF
         stx     disableitem_params::disable
@@ -1388,7 +1388,7 @@ sys_disk:
         sec
 :       ror     sys_prompt_flag
 
-        jsr     SetCursorWatch ; before invoking
+        jsr     SetCursorWatch  ; before invoking
 
         ;; Easiest to assume absolute path later.
         jsr     _MakeSrcPathAbsolute ; Trashes `INVOKER_INTERPRETER`
@@ -1434,7 +1434,7 @@ retry:  jsr     GetSrcFileInfo
         ;; Fallback - try BASIS.SYSTEM
 fallback:
         jsr     _CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
-    IF_CC                        ; yes, continue below
+    IF_CC                         ; yes, continue below
         copy8   #$80, INVOKER_BITSY_COMPAT
         bmi     launch          ; always
     END_IF
@@ -1756,7 +1756,7 @@ check_header:
       WHILE_NOT_ZERO
     END_IF
         rts
-.endproc                        ; UpcaseString
+.endproc ; UpcaseString
 
 ;;; ============================================================
 ;;; Inputs: Character in A
@@ -2190,7 +2190,7 @@ start:  jsr     SetCursorWatch  ; before loading DA
         param_call CopyToSrcPath, str_desk_acc
 
         ;; Find DA name
-        lda     menu_click_params::item_num           ; menu item index (1-based)
+        lda     menu_click_params::item_num ; menu item index (1-based)
         sec
         sbc     #kAppleMenuFixedItems+1
         tay
@@ -2288,7 +2288,7 @@ retry:  MLI_CALL OPEN, open_params
         copy16  #DA_LOAD_ADDRESS, STARTLO
         copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
         add16   #DA_LOAD_ADDRESS-1, DAHeader__aux_length, ENDLO
-        sec ; main>aux
+        sec                     ; main>aux
         jsr     AUXMOVE
 
         ;; Main memory segment
@@ -2397,7 +2397,7 @@ main_length:    .word   0
         cpy     pathlen
         beq     :+
         lda     (ptr),y
-    WHILE_A_NE #'/'
+    WHILE_A_NE  #'/'
         dey
 :
         tya
@@ -3290,9 +3290,9 @@ start:
         ;; Load and run/reinstall previous QUIT handler.
         MLI_CALL OPEN, open_params
         bcs     fail
-        lda open_params::ref_num
-        sta read_params::ref_num
-        sta close_params::ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
         jmp     quit_code_addr
@@ -4214,7 +4214,7 @@ typedown_buf:
         BREAK_IF_X_EQ cached_window_entry_count
         copy8   cached_window_entry_list,x, buffer+1,x
         inx
-    WHILE_NE                  ; always
+    WHILE_NE                    ; always
 
         stx     buffer
         rts
@@ -4281,7 +4281,7 @@ typedown_buf:
         buffer := $1800
 
         tax
-        lda     buffer+1,x         ; A = icon num
+        lda     buffer+1,x      ; A = icon num
         jmp     GetIconName
 .endproc ; GetNthSelectableIconName
 
@@ -5264,11 +5264,11 @@ arbitrary_target:
 retry:  param_call CopyToDstPath, path_buf4
         param_call AppendFilenameToDstPath, stashed_name
         jsr     GetDstFileInfo
-      IF_CS
+    IF_CS
         cmp     #ERR_FILE_NOT_FOUND
         beq     create
         bne     err
-      END_IF
+    END_IF
         jsr     SpinName
         jmp     retry
 
@@ -5863,7 +5863,7 @@ validate_windows_flag:
         window_id := *+1
         ldx     #SELF_MODIFIED_BYTE
         lda     window_to_dir_icon_table-1,x
-       IF_NOT_ZERO               ; isn't `kWindowToDirIconFree`
+       IF_NOT_ZERO           ; isn't `kWindowToDirIconFree`
         ;; Get and copy its path somewhere useful
         txa
         jsr     GetWindowPath
@@ -7710,10 +7710,10 @@ END_PARAM_BLOCK
 
         ;; List view?
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-      IF_NS
+    IF_NS
         ;; max.x = kListViewWidth
         add16   iconbb_rect::x1, #kListViewWidth, iconbb_rect::x2
-      END_IF
+    END_IF
 
         ;; Add padding around bbox
         MGTK_CALL MGTK::InflateRect, bbox_pad_iconbb_rect
@@ -8476,7 +8476,7 @@ set_pos:
         copy8   str_from_int+1,y, text_buffer2+1,x
         iny
         inx
-    WHILE_Y_NE   str_from_int
+    WHILE_Y_NE  str_from_int
 
         ;; Append ".5" if needed
         frac_flag := *+1
@@ -8549,19 +8549,19 @@ append_date_strings:
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         ASSERT_EQUALS DeskTopSettings::kDateOrderMDY, 0
-      IF_EQ
+    IF_EQ
         ;; Month Day, Year
         jsr     _AppendMonthString
         param_call _ConcatenateDatePart, str_space
         jsr     _AppendDayString
         param_call _ConcatenateDatePart, str_comma
-      ELSE
+    ELSE
         ;; Day Month Year
         jsr     _AppendDayString
         param_call _ConcatenateDatePart, str_space
         jsr     _AppendMonthString
         param_call _ConcatenateDatePart, str_space
-      END_IF
+    END_IF
         jmp     _AppendYearString
 .endproc ; _AppendDateString
 
@@ -9116,7 +9116,7 @@ vdrive: ldax    #str_device_type_vdrive
         lda     unit_number
         jsr     DeviceDriverAddress ; Z=1 if $Cn
         bvs     is_sp
-        jne     generic             ; not $CnXX, unknown type
+        jne     generic         ; not $CnXX, unknown type
 
         ;; Firmware driver; maybe SmartPort?
 is_sp:  lda     unit_number
@@ -9161,11 +9161,11 @@ done:   sty     dib_buffer+SPDIB::ID_String_Length
         IF_ZS
         lda     dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
         jsr     IsAlpha
-        IF_ZS
+         IF_ZS
         lda     dib_buffer+SPDIB::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
-        END_IF
+         END_IF
         END_IF
         dey
        WHILE_NOT_ZERO
@@ -9306,20 +9306,20 @@ GetBlockCount   := GetBlockCountImpl::start
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
-   IF_CS
+    IF_CS
 error:
         pha                     ; A = error
         ldy     devlst_index    ; remove unit from list
         copy8   #0, device_to_icon_map,y
         pla                     ; A = error
         rts
-   END_IF
+    END_IF
 
         lda     cvi_data_buffer ; dr/slot/name_len
         and     #NAME_LENGTH_MASK
     IF_ZERO
         lda     cvi_data_buffer+1 ; if name len is zero, second byte is error
-        bne     error             ; always
+        bne     error           ; always
     END_IF
 
         param_call AdjustOnLineEntryCase, cvi_data_buffer
@@ -10323,11 +10323,11 @@ operation_traversal_callbacks_for_copy:
         stax    total_count
         jsr     SetPortForProgressDialog
         bit     move_flag
-      IF_NC
+    IF_NC
         param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
-      ELSE
+    ELSE
         param_call DrawProgressDialogLabel, 0, aux::str_move_moving
-      END_IF
+    END_IF
         jmp     DrawFileCountWithSuffix
 .endproc ; _CopyDialogEnumerationCallback
 
@@ -11469,7 +11469,7 @@ op_block_count:
     DO
         iny
         lda     path_buf3,y
-      IF_A_EQ #'/'
+      IF_A_EQ   #'/'
         sty     src_path_slash_index
       END_IF
         sta     src_path_buf,y
@@ -11955,12 +11955,12 @@ write_protected_flag:
         param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
 
         lda     selected_window_id
-      IF_ZERO
+    IF_ZERO
         param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
         param_call DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
-      ELSE
+    ELSE
         param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
-      END_IF
+    END_IF
 
         ;; --------------------------------------------------
         ;; Name
@@ -11999,7 +11999,7 @@ write_protected_flag:
         copy8   #0, text_input_buf
 
         lda     selected_window_id ; volume?
-        beq     volume                ; yes
+        beq     volume             ; yes
 
         ;; A file, so just show the size
         ldax    src_file_info_params::blocks_used
@@ -12529,9 +12529,9 @@ DoRename        := DoRenameImpl::start
 .proc _DialogOpen
         ldy     #LETK::kLineEditOptionsNormal
         jsr     GetSelectionViewBy
-      IF_A_EQ   #DeskTopSettings::kViewByIcon
+    IF_A_EQ     #DeskTopSettings::kViewByIcon
         ldy     #LETK::kLineEditOptionsCentered
-      END_IF
+    END_IF
         sty     rename_line_edit_rec::options
 
         COPY_STRUCT MGTK::Point, tmp_rect::topleft, winfo_rename_dialog::viewloc
@@ -12564,10 +12564,10 @@ loop:   jsr     _InputLoop
         lda     path_buf0       ; full path okay?
         clc
         adc     text_input_buf
-      IF_A_GE   #::kMaxPathLength ; not +1 because we'll add '/'
+    IF_A_GE     #::kMaxPathLength ; not +1 because we'll add '/'
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
         jmp     loop
-      END_IF
+    END_IF
 
         ldxy    #text_input_buf
         return  #0
@@ -12651,13 +12651,13 @@ loop:   jsr     _InputLoop
         bne     allow           ; pass through modified keys
 
         ;; No modifiers
-      IF_A_EQ   #CHAR_RETURN
+    IF_A_EQ     #CHAR_RETURN
         return  #PromptResult::ok
-      END_IF
+    END_IF
 
-      IF_A_EQ   #CHAR_ESCAPE
+    IF_A_EQ     #CHAR_ESCAPE
         return  #PromptResult::cancel
-      END_IF
+    END_IF
 
         jsr     IsControlChar   ; pass through control characters
         bcc     allow
@@ -15102,20 +15102,20 @@ str_pt3_suffix:                 ; Vortex Tracker PT3
         kTrashIconY = kVolIconRow6 - (kTrashIconHeight-1)
 
 desktop_icon_coords_table:
-        .word    kVolIconCol1, kVolIconRow1 ; 1
-        .word    kVolIconCol1, kVolIconRow2 ; 2
-        .word    kVolIconCol1, kVolIconRow3 ; 3
-        .word    kVolIconCol1, kVolIconRow4 ; 4
-        .word    kVolIconCol1, kVolIconRow5 ; 5
-        .word    kVolIconCol2, kVolIconRow6 ; 6
-        .word    kVolIconCol3, kVolIconRow6 ; 7
-        .word    kVolIconCol4, kVolIconRow6 ; 8
-        .word    kVolIconCol5, kVolIconRow6 ; 9
-        .word    kVolIconCol6, kVolIconRow6 ; 10
-        .word    kVolIconCol2, kVolIconRow5 ; 11
-        .word    kVolIconCol3, kVolIconRow5 ; 12
-        .word    kVolIconCol4, kVolIconRow5 ; 13
-        .word    kVolIconCol5, kVolIconRow5 ; 14
+        .word   kVolIconCol1, kVolIconRow1 ; 1
+        .word   kVolIconCol1, kVolIconRow2 ; 2
+        .word   kVolIconCol1, kVolIconRow3 ; 3
+        .word   kVolIconCol1, kVolIconRow4 ; 4
+        .word   kVolIconCol1, kVolIconRow5 ; 5
+        .word   kVolIconCol2, kVolIconRow6 ; 6
+        .word   kVolIconCol3, kVolIconRow6 ; 7
+        .word   kVolIconCol4, kVolIconRow6 ; 8
+        .word   kVolIconCol5, kVolIconRow6 ; 9
+        .word   kVolIconCol6, kVolIconRow6 ; 10
+        .word   kVolIconCol2, kVolIconRow5 ; 11
+        .word   kVolIconCol3, kVolIconRow5 ; 12
+        .word   kVolIconCol4, kVolIconRow5 ; 13
+        .word   kVolIconCol5, kVolIconRow5 ; 14
         ASSERT_RECORD_TABLE_SIZE desktop_icon_coords_table, ::kMaxVolumes, .sizeof(MGTK::Point)
 
 
@@ -15223,65 +15223,65 @@ menu_modified_click_flag:
 ;;; Table mapping IconType to kIconEntryFlags*
 icontype_iconentryflags_table := * - IconType::VOL_COUNT
         ;; Volume types skipped via above math.
-        .byte   0                    ; generic
-        .byte   0                    ; text
-        .byte   0                    ; binary
-        .byte   0                    ; graphics
-        .byte   0                    ; animation
-        .byte   0                    ; music
-        .byte   0                    ; tracker
-        .byte   0                    ; audio
-        .byte   0                    ; speech
-        .byte   0                    ; font
-        .byte   0                    ; relocatable
-        .byte   0                    ; command
+        .byte   0               ; generic
+        .byte   0               ; text
+        .byte   0               ; binary
+        .byte   0               ; graphics
+        .byte   0               ; animation
+        .byte   0               ; music
+        .byte   0               ; tracker
+        .byte   0               ; audio
+        .byte   0               ; speech
+        .byte   0               ; font
+        .byte   0               ; relocatable
+        .byte   0               ; command
         .byte   kIconEntryFlagsDropTarget ; folder
         .byte   kIconEntryFlagsDropTarget ; system_folder
-        .byte   0                    ; iigs
-        .byte   0                    ; appleworks_db
-        .byte   0                    ; appleworks_wp
-        .byte   0                    ; appleworks_sp
-        .byte   0                    ; archive
-        .byte   0                    ; encoded
-        .byte   0                    ; link
-        .byte   0                    ; desk_accessory
-        .byte   0                    ; basic
-        .byte   0                    ; intbasic
-        .byte   0                    ; variables
-        .byte   0                    ; system
-        .byte   0                    ; application
+        .byte   0               ; iigs
+        .byte   0               ; appleworks_db
+        .byte   0               ; appleworks_wp
+        .byte   0               ; appleworks_sp
+        .byte   0               ; archive
+        .byte   0               ; encoded
+        .byte   0               ; link
+        .byte   0               ; desk_accessory
+        .byte   0               ; basic
+        .byte   0               ; intbasic
+        .byte   0               ; variables
+        .byte   0               ; system
+        .byte   0               ; application
         ;; Small Icon types skipped via math below
         ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT - IconType::SMALL_COUNT
 
 icontype_to_smicon_table := * - IconType::VOL_COUNT
         ;; Volume types skipped via above math
-        .byte      IconType::small_generic ; generic
-        .byte      IconType::small_generic ; text
-        .byte      IconType::small_generic ; binary
-        .byte      IconType::small_generic ; graphics
-        .byte      IconType::small_generic ; animation/video
-        .byte      IconType::small_generic ; music
-        .byte      IconType::small_generic ; tracker
-        .byte      IconType::small_generic ; audio
-        .byte      IconType::small_generic ; speech
-        .byte      IconType::small_generic ; font
-        .byte      IconType::small_generic ; relocatable
-        .byte      IconType::small_generic ; command
-        .byte      IconType::small_folder  ; folder
-        .byte      IconType::small_folder  ; system_folder
-        .byte      IconType::small_generic ; iigs
-        .byte      IconType::small_generic ; appleworks_db
-        .byte      IconType::small_generic ; appleworks_wp
-        .byte      IconType::small_generic ; appleworks_sp
-        .byte      IconType::small_generic ; archive
-        .byte      IconType::small_generic ; encoded
-        .byte      IconType::small_generic ; link
-        .byte      IconType::small_generic ; desk_accessory
-        .byte      IconType::small_generic ; basic
-        .byte      IconType::small_generic ; intbasic
-        .byte      IconType::small_generic ; variables
-        .byte      IconType::small_generic ; system
-        .byte      IconType::small_generic ; application
+        .byte   IconType::small_generic ; generic
+        .byte   IconType::small_generic ; text
+        .byte   IconType::small_generic ; binary
+        .byte   IconType::small_generic ; graphics
+        .byte   IconType::small_generic ; animation/video
+        .byte   IconType::small_generic ; music
+        .byte   IconType::small_generic ; tracker
+        .byte   IconType::small_generic ; audio
+        .byte   IconType::small_generic ; speech
+        .byte   IconType::small_generic ; font
+        .byte   IconType::small_generic ; relocatable
+        .byte   IconType::small_generic ; command
+        .byte   IconType::small_folder  ; folder
+        .byte   IconType::small_folder  ; system_folder
+        .byte   IconType::small_generic ; iigs
+        .byte   IconType::small_generic ; appleworks_db
+        .byte   IconType::small_generic ; appleworks_wp
+        .byte   IconType::small_generic ; appleworks_sp
+        .byte   IconType::small_generic ; archive
+        .byte   IconType::small_generic ; encoded
+        .byte   IconType::small_generic ; link
+        .byte   IconType::small_generic ; desk_accessory
+        .byte   IconType::small_generic ; basic
+        .byte   IconType::small_generic ; intbasic
+        .byte   IconType::small_generic ; variables
+        .byte   IconType::small_generic ; system
+        .byte   IconType::small_generic ; application
         ;; Small Icon types skipped via math below
         ASSERT_TABLE_SIZE icontype_to_smicon_table, IconType::COUNT - IconType::SMALL_COUNT
 

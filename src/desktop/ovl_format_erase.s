@@ -95,7 +95,7 @@ Exec:
 
     DO
         jsr     main::PromptInputLoop
-    WHILE_NS                 ; not done
+    WHILE_NS                    ; not done
         jne     cancel          ; cancel
 
         jsr     GetSelectedUnitNum
@@ -461,7 +461,7 @@ no:     lda     #$80
 
 on_line_buffer:
 path:
-        .res    17,0              ; length + '/' + 15-char name
+        .res    17,0            ; length + '/' + 15-char name
 
 ;;; ============================================================
 ;;; Get driver address
@@ -643,7 +643,7 @@ got_blocks:
         dey
     WHILE_POS
 
-        MLI_CALL GET_TIME ; Apply timestamp
+        MLI_CALL GET_TIME       ; Apply timestamp
         ldy     #3
     DO
         copy8   DATELO,y, block_buffer + VolumeDirectoryHeader::creation_date,y
@@ -903,7 +903,7 @@ prodos_loader_blocks:
         MLI_CALL READ_BLOCK, read_block_params
     IF_CC
         lda     read_buffer + 1
-      IF_A_NE     #kPascalSig1  ; DOS 3.3?
+      IF_A_NE   #kPascalSig1    ; DOS 3.3?
         jmp     maybe_dos       ; Maybe...
       END_IF
 

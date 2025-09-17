@@ -69,7 +69,7 @@ ASSERT_EQUALS *, WriteSettingFromAux, "entry point"
         pha
 
         ;; Copy the params here
-        ldy     #3      ; ptr is off by 1
+        ldy     #3              ; ptr is off by 1
     DO
         copy8   (params_src),y, params-1,y
         dey
@@ -79,7 +79,7 @@ ASSERT_EQUALS *, WriteSettingFromAux, "entry point"
         jsr     BankInAux
 call_addr := * + 1
         jsr     SELF_MODIFIED
-params:  .res    3
+params: .res    3
         jmp     BankInMain
 .endproc ; ParamsRelayImpl
 
@@ -164,8 +164,8 @@ params:  .res    3
         scmp16  tmpw, #kWindowHeaderHeight
     IF_NEG
         ;; Adjust grafport to account for header
-        add16 window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
-        add16 window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        add16   window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
+        add16   window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
 
         MGTK_CALL MGTK::SetPort, desktop_grafport
     END_IF

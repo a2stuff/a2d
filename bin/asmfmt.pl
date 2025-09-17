@@ -23,6 +23,12 @@ sub respace_comment($) {
 sub max ($$) { $_[$_[0] < $_[1]] }
 sub min ($$) { $_[$_[0] > $_[1]] }
 
+sub nextTabStopPast ($) {
+  my ($c) = @_;
+  while ($c % $TAB_WIDTH) { ++$c; }
+  return $c;
+}
+
 my $tabstop = 0;
 my $flow_indent = 4;
 
@@ -57,7 +63,7 @@ while (<STDIN>) {
   } else {
 
     my $comment = '';
-    if (m/^(.*?)(;.*)$/) {
+    if (m/^(.*?)\s*(;.*)$/) {
       $_ = $1;
       $comment = respace_comment($2);
     }
@@ -145,9 +151,14 @@ while (<STDIN>) {
       $tabstop = max($tabstop, length($_));
       $_ .= ' ' while length($_) < $tabstop;
 
-      $_ .= $opcode    . ' ';
-      if ($opcode =~ m/^([a-z]{3}\w*)$|^(\.(byte|word|addr|res))$/) {
-        $_ .= ' ' while length($_) < $OPERAND_COLUMN;
+      $_ .= $opcode;
+      if ($opcode =~ m/^\.(byte|word|dword|addr|res|tag)$/) {
+        my $col = max(nextTabStopPast(length($_)), $OPERAND_COLUMN);
+        $_ .= ' ' x max($col - length($_), 1);
+      } elsif ($opcode =~ m/^([a-z]{3}\w*)$/) {
+        $_ .= ' ' x max($OPERAND_COLUMN - length($_), 1);
+      } else {
+        $_ .= ' ';
       }
       $_ .= $arguments . ' ';
 

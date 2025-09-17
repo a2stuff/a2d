@@ -116,14 +116,14 @@ start:
         ora     #DeskTopSettings::kSysCapIsIIgs | DeskTopSettings::kSysCapIsLaser128
     IF_NOT_ZERO
         lda     #kPeriodicTaskDelayIIgs
-        bne     end                     ; always
+        bne     end             ; always
     END_IF
 
         txa                     ; A = X = kSysCapXYZ bitmap
         ora     #DeskTopSettings::kSysCapIsIIc
     IF_NOT_ZERO
         lda     #kPeriodicTaskDelayIIc
-        bne     end                     ; always
+        bne     end             ; always
     END_IF
 
         ;; Default
@@ -792,17 +792,17 @@ next:
         ora     #$C0            ; hi byte of $Cn00
         sta     slot_ptr+1
 
-        ldy     #$01        ; $Cn01 == $20 ?
+        ldy     #$01            ; $Cn01 == $20 ?
         lda     (slot_ptr),y
         cmp     #$20
         bne     next
 
-        ldy     #$03        ; $Cn03 == $00 ?
+        ldy     #$03            ; $Cn03 == $00 ?
         lda     (slot_ptr),y
         cmp     #$00
         bne     next
 
-        ldy     #$05        ; $Cn05 == $03 ?
+        ldy     #$05            ; $Cn05 == $03 ?
         lda     (slot_ptr),y
         cmp     #$03
         bne     next
@@ -1087,7 +1087,7 @@ kDeviceTemplateDriveOffset = res_const_sd_prefix_pattern_offset2
 kSDPrefixLength = .strlen(res_string_sd_prefix_pattern)
 str_sdname_buffer:
         PASCAL_STRING res_string_sd_prefix_pattern ; "S#,D#: " prefix
-        .res    16, 0              ; space for actual name
+        .res    16, 0           ; space for actual name
 
 str_volume_type_unknown:
         PASCAL_STRING res_string_volume_type_unknown

@@ -562,7 +562,7 @@ start:
 :
 
         ;; Look up message
-        copylohi  message_table_low,y, message_table_high,y, alert_params+AlertParams::text
+        copylohi message_table_low,y, message_table_high,y, alert_params+AlertParams::text
 
         ;; If options is 0, use table value; otherwise,
         ;; mask off low bit and it's the action (N and V bits)
@@ -572,13 +572,13 @@ start:
         ;; %10...... e.g. $80 = Try Again, Cancel
         ;; %11...... e.g. $C0 = OK, Cancel
 
-      IF_X_NE   #0
+    IF_X_NE     #0
         txa
         and     #$FE            ; ignore low bit, e.g. treat $01 as $00
         sta     alert_params+AlertParams::buttons
-      ELSE
+    ELSE
         copy8   alert_options_table,y, alert_params+AlertParams::buttons
-      END_IF
+    END_IF
         copy8   #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
 
         ldax    #alert_params

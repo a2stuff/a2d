@@ -135,7 +135,7 @@ jt_callbacks:
 ;;;          X = which run list (1=primary, 2=secondary)
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
-DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, main::tmp_path_buf
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, main::tmp_path_buf
 
 .proc HandleOK
         param_call file_dialog::GetPath, path_buf0
