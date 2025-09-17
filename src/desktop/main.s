@@ -2494,9 +2494,8 @@ main_length:    .word   0
         stx     filename_buf
 
         ;; And remove from `path_buf4`
-        pla                     ; Y = position of last '/'
-        tay
-        dey
+        pla
+        tay                     ; Y = position of last '/'
         sty     path_buf4
         rts
     END_IF
