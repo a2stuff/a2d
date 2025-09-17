@@ -802,62 +802,40 @@ event_size                      = 5        ; any kind of event
 ;;; Rect definition.
 ;;;    DEFINE_RECT ident,0,0,20,30
 .macro DEFINE_RECT ident, left, top, right, bottom
-        WARN_IF_SHADOWING ident
-        ident := *
-.scope ident
-topleft:
-x1:     .word   AS_WORD(left)
-y1:     .word   AS_WORD(top)
-bottomright:
-x2:     .word   AS_WORD(right)
-y2:     .word   AS_WORD(bottom)
-        .refto topleft
-        .refto x1
-        .refto y1
-        .refto bottomright
-        .refto x2
-        .refto y2
-.endscope
+        ;; A .struct is used here so that .sizeof(topleft) (etc) works
+PARAM_BLOCK ident, *
+.union
+topleft .word 2
+.struct
+x1      .word
+y1      .word
+.endstruct
+.endunion
+.union
+bottomright .word 2
+.struct
+x2      .word
+y2      .word
+.endstruct
+.endunion
+END_PARAM_BLOCK
+        .refto ident::topleft
+        .refto ident::x1
+        .refto ident::y1
+        .refto ident::bottomright
+        .refto ident::x2
+        .refto ident::y2
+        .word AS_WORD(left), AS_WORD(top), AS_WORD(right), AS_WORD(bottom)
 .endmacro
 
 ;;; Define a rect by size (right = left + width, bottom = top + height)
 .macro DEFINE_RECT_SZ ident, left, top, width, height
-        WARN_IF_SHADOWING ident
-        ident := *
-.scope ident
-topleft:
-x1:     .word   AS_WORD(left)
-y1:     .word   AS_WORD(top)
-bottomright:
-x2:     .word   AS_WORD((left) + (width))
-y2:     .word   AS_WORD((top) + (height))
-        .refto topleft
-        .refto x1
-        .refto y1
-        .refto bottomright
-        .refto x2
-        .refto y2
-.endscope
+        DEFINE_RECT ident, (left), (top), (left) + (width), (top) + (height)
 .endmacro
 
 ;;; Define an inset rect rect by size
 .macro DEFINE_RECT_INSET ident, left, top, width, height
-        WARN_IF_SHADOWING ident
-        ident := *
-.scope ident
-topleft:
-x1:     .word   AS_WORD(left)
-y1:     .word   AS_WORD(top)
-bottomright:
-x2:     .word   AS_WORD((width) - (left))
-y2:     .word   AS_WORD((height) - (top))
-        .refto topleft
-        .refto x1
-        .refto y1
-        .refto bottomright
-        .refto x2
-        .refto y2
-.endscope
+        DEFINE_RECT ident, (left), (top), (width) - (left), (height) - (top)
 .endmacro
 
 ;;; Point definition.

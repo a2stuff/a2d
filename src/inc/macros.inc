@@ -242,8 +242,15 @@ loop:   lda     src,x
         bpl     loop
 .endmacro
 
-.macro COPY_STRUCT type, src, dst
-        COPY_BYTES .sizeof(type), src, dst
+;;; Either:
+;;;    COPY_STRUCT src, dst        ; if .sizeof(src) works
+;;;    COPY_STRUCT type, src, dst  ; if .sizeof(type) is needed
+.macro COPY_STRUCT arg1, arg2, arg3
+    .ifblank arg3
+        COPY_BYTES .sizeof(arg1), arg1, arg2
+    .else
+        COPY_BYTES .sizeof(arg1), arg2, arg3
+    .endif
 .endmacro
 
 .macro COPY_BLOCK block, dst

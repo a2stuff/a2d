@@ -326,7 +326,7 @@ EraseDisk__EP2 := EraseDisk::EP2
 ;;; ============================================================
 
 .proc HandleClick
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, vol_picker_params::coords
+        COPY_STRUCT screentowindow_params::window, vol_picker_params::coords
         OPTK_CALL OPTK::Click, vol_picker_params
     IF_NC
         jsr     DetectDoubleClick

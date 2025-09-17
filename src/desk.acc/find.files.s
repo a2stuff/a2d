@@ -437,7 +437,7 @@ finish:
 
         lda     findwindow_params::window_id
     IF_A_EQ     #kResultsWindowId
-        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
       IF_NC
         jsr     DetectDoubleClick
@@ -476,7 +476,7 @@ finish:
         MGTK_CALL MGTK::InRect, input_rect
         beq     done
 
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
+        COPY_STRUCT screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
 
 done:   jmp     InputLoop

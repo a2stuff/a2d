@@ -267,7 +267,7 @@ reserved:       .byte   0
         MGTK_CALL MGTK::PaintBitsHC, frame_params
 
         ;; Stash rect of this frame so we can optionally erase it next time
-        COPY_STRUCT MGTK::Point, frame_params::viewloc, erase_rect::topleft
+        COPY_STRUCT frame_params::viewloc, erase_rect::topleft
         add16_8 frame_params::viewloc::xcoord, #kNekoWidth-1, erase_rect::x2
         add16_8 frame_params::viewloc::ycoord, #kNekoHeight-1, erase_rect::y2
 

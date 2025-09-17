@@ -847,7 +847,7 @@ update_poly:
         dex                     ; next dimension
         dex
     WHILE_POS
-        COPY_STRUCT MGTK::Point, findwindow_params, last_coords
+        COPY_STRUCT MGTK::Point, findwindow_params::mousex, last_coords
 
         copy16  polybuf_addr, poly_ptr
 ploop:  ldy     #2              ; offset in poly to first vertex
@@ -2088,7 +2088,7 @@ reserved:       .byte   0
 
         ;; Duplicate structs needed for clipping
         COPY_BLOCK portbits::maprect, clip_bounds
-        COPY_STRUCT MGTK::Point, portbits::maprect::topleft, portbits::viewloc
+        COPY_STRUCT portbits::maprect::topleft, portbits::viewloc
 
         MGTK_CALL MGTK::SetPortBits, portbits
         rts

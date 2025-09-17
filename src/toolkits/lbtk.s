@@ -281,7 +281,7 @@ a_record        .addr
 coords          .tag MGTK::Point
         END_PARAM_BLOCK
 
-        COPY_STRUCT MGTK::Point, params::coords, event_params::coords
+        COPY_STRUCT params::coords, event_params::coords
 
         jsr     _FindControlIsVerticalScrollBar
     IF_EQ

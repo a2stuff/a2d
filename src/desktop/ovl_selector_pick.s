@@ -492,7 +492,7 @@ handle_button:
         rts
     END_IF
 
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, shortcut_picker_params::coords
+        COPY_STRUCT screentowindow_params::window, shortcut_picker_params::coords
         OPTK_CALL OPTK::Click, shortcut_picker_params
     IF_NC
         jsr     DetectDoubleClick

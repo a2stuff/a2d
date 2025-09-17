@@ -498,7 +498,7 @@ caret_blink_caret_bitmap:
 
 .proc HandleMove
         ;; For warping the cursor after scaling change
-        COPY_STRUCT MGTK::Point, event_params::coords, last_mouse_pos
+        COPY_STRUCT event_params::coords, last_mouse_pos
 
         jmp     InputLoop
 .endproc ; HandleMove

@@ -477,7 +477,7 @@ index:  .byte   0
         ;; Click in line edit?
         MGTK_CALL MGTK::InRect, input_rect
     IF_NE
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
+        COPY_STRUCT screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
         jmp     done
     END_IF

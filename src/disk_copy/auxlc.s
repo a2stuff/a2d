@@ -998,7 +998,7 @@ ret:    rts
         beq     HandleDialogClick
 
     IF_A_EQ     winfo_drive_select
-        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
 
         php

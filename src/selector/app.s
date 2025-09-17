@@ -850,7 +850,7 @@ retry:  param_call GetFileInfo, str_desktop_2
     END_IF
 
         ;; Entry selection?
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, op_params::coords
+        COPY_STRUCT screentowindow_params::window, op_params::coords
         OPTK_CALL OPTK::Click, op_params
         bmi     ret
         jsr     DetectDoubleClick

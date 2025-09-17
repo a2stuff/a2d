@@ -767,7 +767,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         ;; Stash initial coords so dragging is accurate,
         ;; and check for double-click
 
-        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
+        COPY_STRUCT event_params::coords, drag_drop_params::coords
 
         jsr     DetectDoubleClick
     IF_NC
@@ -5691,7 +5691,7 @@ update: lda     window_id
 beyond:
         jsr     FrameTmpRect
 
-        COPY_STRUCT MGTK::Point, event_params::coords, last_pos
+        COPY_STRUCT event_params::coords, last_pos
 
         ;; --------------------------------------------------
         ;; Figure out coords for rect's left/top/bottom/right
@@ -12634,7 +12634,7 @@ loop:   jsr     _InputLoop
         copy8   winfo_rename_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, rename_le_params::coords
+        COPY_STRUCT screentowindow_params::window, rename_le_params::coords
         LETK_CALL LETK::Click, rename_le_params
 
         return  #$FF
@@ -13503,7 +13503,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         ;; Was click inside text box?
         MGTK_CALL MGTK::InRect, name_input_rect
     IF_NOT_ZERO
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, prompt_le_params::coords
+        COPY_STRUCT screentowindow_params::window, prompt_le_params::coords
         LETK_CALL LETK::Click, prompt_le_params
     END_IF
 

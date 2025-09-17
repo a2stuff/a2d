@@ -260,7 +260,7 @@ port:           .addr   grafport_win
 
         lda     findwindow_params::window_id
     IF_A_EQ     #kPickerWindowId
-        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
       IF_NC
         jsr     DetectDoubleClick
@@ -569,7 +569,7 @@ remainder:      .word   0                 ; (out)
 
         lda     findwindow_params::window_id
     IF_A_EQ     #kCatalogWindowId
-        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
       IF_NC
         jsr     DetectDoubleClick

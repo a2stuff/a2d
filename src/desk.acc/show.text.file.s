@@ -1048,7 +1048,7 @@ window_id:      .byte   kDAWindowId
         MGTK_CALL MGTK::DrawText, text_params
 
         ;; Reset port
-        COPY_STRUCT MGTK::MapInfo, default_port, winfo::port
+        COPY_STRUCT default_port, winfo::port
         MGTK_CALL MGTK::SetPortBits, winfo::port
         rts
 .endproc ; DrawMode

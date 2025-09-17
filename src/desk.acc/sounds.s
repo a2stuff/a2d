@@ -314,7 +314,7 @@ grafport_win:       .tag    MGTK::GrafPort
     IF_A_EQ     winfo_listbox::window_id
         lda     findwindow_params::which_area
       IF_A_EQ   #MGTK::Area::content
-        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         jmp     InputLoop
       END_IF

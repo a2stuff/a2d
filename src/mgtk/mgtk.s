@@ -10475,7 +10475,7 @@ rect       .tag MGTK::Rect
 ;;; RedrawDeskTop
 
 .proc RedrawDeskTopImpl
-        COPY_STRUCT MGTK::MapInfo, desktop_mapinfo, set_port_params
+        COPY_STRUCT desktop_mapinfo, set_port_params
 
         ;; Restored by `EraseWindow`
         jsr     HideCursorSaveParams
