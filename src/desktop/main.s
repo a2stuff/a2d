@@ -159,8 +159,8 @@ handle_update:
     IF_ZERO
         ;; Desktop
         ITK_CALL IconTK::DrawAll, event_params::window_id
-    ELSE
-        ;; Window
+    ELSE_IF_A_LT #kMaxDeskTopWindows
+        ;; Directory Window
         jsr     UpdateWindow
     END_IF
         MGTK_CALL MGTK::EndUpdate
@@ -210,8 +210,6 @@ tick_counter:
 
 ;;; Inputs: A = `window_id` from `update` event
 .proc UpdateWindow
-        RTS_IF_A_GE #kMaxDeskTopWindows+1 ; directory windows are 1-8
-
         jsr     LoadWindowEntryTable
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
@@ -318,22 +316,16 @@ menu_accelerators:
 .endproc ; HandleKeydown
 
 .proc MenuDispatch
-        ldx     menu_click_params::menu_id
+        ldx     menu_click_params::menu_id ; X = menu id (1-based)
         RTS_IF_ZERO
 
-        dex                     ; x has top level menu id
-        lda     offset_table,x
+        copy8   offset_table-1,x, tmp ; A = `dispatch_table` offset for that menu
+        lda     menu_click_params::item_num ; A = menu item id (1-based)
+        asl     a                           ; *= 2; Assert: C=0
+        tmp := *+1
+        adc     #SELF_MODIFIED_BYTE
         tax
-        ldy     menu_click_params::item_num
-        dey
-        tya
-        asl     a
-        sta     proc_addr
-        txa
-        clc
-        adc     proc_addr
-        tax
-        copy16  dispatch_table,x, proc_addr
+        copy16  dispatch_table-2,x, proc_addr
         jsr     call_proc
         MGTK_CALL MGTK::HiliteMenu, menu_click_params
         copy8   #0, menu_click_params::menu_id ; for `ToggleMenuHilite`
@@ -570,110 +562,73 @@ window_click:
 
         ;; --------------------------------------------------
 
-        cmp     #MGTK::Ctl::dead_zone
-        jeq     _ActivateClickedWindow ; no-op if already active
+        ;; If not the active window, just activate it
+        lda     clicked_window_id
+        cmp     active_window_id
+        jne     ActivateWindow
+
+        lda     findcontrol_params::which_ctl
+        RTS_IF_A_EQ #MGTK::Ctl::dead_zone
 
     IF_A_EQ     #MGTK::Ctl::vertical_scroll_bar
         ;; Vertical scrollbar
-        lda     clicked_window_id
-        cmp     active_window_id
-        jne     ActivateWindow
 
-        jsr     GetWindowPtr
-        stax    $06
-        ldy     #MGTK::Winfo::vscroll
-        lda     ($06),y
-        and     #MGTK::Scroll::option_active
-        RTS_IF_EQ
+        ;; Thumb?
+        ldy     findcontrol_params::which_part
+        cpy     #MGTK::Part::thumb
+        beq     _TrackThumb
 
-        lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::thumb
-        jeq     _TrackThumb
-
-      IF_A_EQ   #MGTK::Part::up_arrow
-       DO
-        jsr     ScrollUp
-        lda     #MGTK::Part::up_arrow
-        jsr     _CheckControlRepeat
-       WHILE_NC
-        rts
-      END_IF
-
-      IF_A_EQ   #MGTK::Part::down_arrow
-       DO
-        jsr     ScrollDown
-        lda     #MGTK::Part::down_arrow
-        jsr     _CheckControlRepeat
-       WHILE_NC
-        rts
-      END_IF
-
-      IF_A_EQ   #MGTK::Part::page_up
-       DO
-        jsr     ScrollPageUp
-        lda     #MGTK::Part::page_up
-        jsr     _CheckControlRepeat
-       WHILE_NC
-        rts
-      END_IF
-
-      DO
-        jsr     ScrollPageDown
-        lda     #MGTK::Part::page_down
-        jsr     _CheckControlRepeat
-      WHILE_NC
-        rts
+        ;; Other parts
+        lda     v_proc_lo-1,y   ; A = proc lo
+        ldx     v_proc_hi-1,y   ; X = proc hi
+        bne     _DoScrollbarPart ; always; Y = part
     END_IF
-
         ;; Horizontal scrollbar
-        lda     clicked_window_id
-        cmp     active_window_id
-        jne     ActivateWindow
 
-        jsr     GetWindowPtr
-        stax    $06
-        ldy     #MGTK::Winfo::hscroll
-        lda     ($06),y
-        and     #MGTK::Scroll::option_active
-        RTS_IF_EQ
+        ;; Thumb?
+        ldy     findcontrol_params::which_part
+        cpy     #MGTK::Part::thumb
+        beq     _TrackThumb
+
+        ;; Other parts
+        lda     h_proc_lo-1,y     ; A = proc hi
+        ldx     h_proc_hi-1,y     ; X = proc hi
+        FALL_THROUGH_TO _DoScrollbarPart ; Y = part
+
+;;; ------------------------------------------------------------
+
+;;; Input: A,X = proc, Y = part
+.proc _DoScrollbarPart
+        stax    proc
+        sty     part
+        copy8   findcontrol_params::which_ctl, ctl
+      DO
+        ;; Dispatch to handler
+        proc := *+1
+        jsr     SELF_MODIFIED
+
+        ;; Check for control repeat
+        jsr     PeekEvent
+        lda     event_params::kind
+        BREAK_IF_A_NE #MGTK::EventKind::drag
+
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        ctl := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        BREAK_IF_NE
 
         lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::thumb
-        jeq     _TrackThumb
-
-    IF_A_EQ     #MGTK::Part::left_arrow
-      DO
-        jsr     ScrollLeft
-        lda     #MGTK::Part::left_arrow
-        jsr     _CheckControlRepeat
-      WHILE_NC
+        part := *+1
+        cmp     #SELF_MODIFIED_BYTE
+      WHILE_EQ
         rts
-    END_IF
+.endproc ; _DoScrollbarPart
 
-    IF_A_EQ     #MGTK::Part::right_arrow
-      DO
-        jsr     ScrollRight
-        lda     #MGTK::Part::right_arrow
-        jsr     _CheckControlRepeat
-      WHILE_NC
-        rts
-    END_IF
-
-    IF_A_EQ     #MGTK::Part::page_left
-      DO
-        jsr     ScrollPageLeft
-        lda     #MGTK::Part::page_left
-        jsr     _CheckControlRepeat
-      WHILE_NC
-        rts
-    END_IF
-
-    DO
-        jsr     ScrollPageRight
-        lda     #MGTK::Part::page_right
-        jsr     _CheckControlRepeat
-    WHILE_NC
-        rts
+v_proc_lo:        .lobytes ScrollUp, ScrollDown, ScrollPageUp, ScrollPageDown
+v_proc_hi:        .hibytes ScrollUp, ScrollDown, ScrollPageUp, ScrollPageDown
+h_proc_lo:        .lobytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRight
+h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRight
 
 ;;; ------------------------------------------------------------
 
@@ -688,30 +643,6 @@ window_click:
         jeq     ScrollTrackVThumb
         jmp     ScrollTrackHThumb
 .endproc ; _TrackThumb
-
-;;; ------------------------------------------------------------
-;;; Handle mouse held down on scroll arrow/pager
-
-.proc _CheckControlRepeat
-        ctl := $06
-
-        sta     ctl
-        jsr     PeekEvent
-        lda     event_params::kind
-    IF_A_NE     #MGTK::EventKind::drag
-bail:   return  #$FF            ; high bit set = not repeating
-    END_IF
-
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        beq     bail
-        cmp     #MGTK::Ctl::dead_zone
-        beq     bail
-        lda     findcontrol_params::which_part
-        cmp     ctl
-        bne     bail
-        return  #0              ; high bit set = repeating
-.endproc ; _CheckControlRepeat
 
 .endscope ; _ContentClick
 
@@ -5160,8 +5091,7 @@ show_unexpected_errors_flag:
 
 .proc CmdStartupItem
         ldx     menu_click_params::item_num
-        dex
-        lda     startup_slot_table,x
+        lda     startup_slot_table-1,x
         ora     #>$C000         ; compute $Cn00
         sta     reset_and_invoke_target+1
         lda     #<$C000
@@ -10026,6 +9956,7 @@ file_entry_buf          .tag    FileEntry
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
+PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY
 operation_lifecycle_callbacks:
 operation_enumeration_callback: .addr   SELF_MODIFIED
 operation_complete_callback:    .addr   SELF_MODIFIED
