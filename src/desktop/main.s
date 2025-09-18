@@ -346,7 +346,7 @@ dispatch_table:
         menu1_start := *
         .addr   CmdAbout
         .addr   CmdAboutThisApple
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .repeat ::kMaxDeskAccCount
         .addr   CmdDeskAcc
         .endrepeat
@@ -358,14 +358,14 @@ dispatch_table:
         .addr   CmdOpen
         .addr   CmdClose
         .addr   CmdCloseAll
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .addr   CmdGetInfo
         .addr   CmdRename
         .addr   CmdDuplicate
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .addr   CmdCopySelection
         .addr   CmdDeleteSelection
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .addr   CmdQuit
         ASSERT_ADDRESS_TABLE_SIZE menu2_start, ::kMenuSizeFile
 
@@ -375,7 +375,7 @@ dispatch_table:
         .addr   CmdCopy
         .addr   CmdPaste
         .addr   CmdClear
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .addr   CmdSelectAll
         ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeEdit
 
@@ -394,11 +394,11 @@ dispatch_table:
         .addr   CmdCheckAllDrives
         .addr   CmdCheckDrive
         .addr   CmdEject
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .addr   CmdFormatDisk
         .addr   CmdEraseDisk
         .addr   CmdDiskCopy
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .addr   CmdMakeLink
         .addr   CmdShowLink
         ASSERT_ADDRESS_TABLE_SIZE menu5_start, ::kMenuSizeSpecial
@@ -420,7 +420,7 @@ dispatch_table:
         .addr   CmdSelectorAction
         .addr   CmdSelectorAction
         .addr   CmdSelectorAction
-        .addr   CmdNoOp         ; --------
+        .addr   0               ; --------
         .addr   CmdSelectorItem
         .addr   CmdSelectorItem
         .addr   CmdSelectorItem
@@ -1791,12 +1791,6 @@ devlst_backup:
 
 ;;; ============================================================
 
-.proc CmdNoOp
-        rts
-.endproc ; CmdNoOp
-
-;;; ============================================================
-
 .proc CmdSelectorAction
         ;; If adding, try to default to the current selection.
         lda     menu_click_params::item_num
@@ -1858,7 +1852,7 @@ done:   rts
 .proc CmdSelectorItem
         lda     menu_click_params::item_num
         sec
-        sbc     #6              ; 4 items + separator (and make 0 based)
+        sbc     #kSelectorMenuFixedItems + 1 ; make 0 based
 
         FALL_THROUGH_TO InvokeSelectorEntry
 .endproc ; CmdSelectorItem
@@ -2095,9 +2089,7 @@ entry_num:
 
 ;;; ============================================================
 
-.proc CmdAbout
-        jmp     AboutDialogProc
-.endproc ; CmdAbout
+CmdAbout := AboutDialogProc
 
 ;;; ============================================================
 
@@ -6817,6 +6809,8 @@ record_count:           .byte   0
 too_many_files:
         jsr     _DoClose
 
+        ;; Show error
+        ;; TODO: Consider not showing if during window restore, like `_DoOpen`
         ldax    #aux::str_warning_window_must_be_closed ; too many files to show
         ldy     active_window_id ; is a window open?
     IF_ZERO
@@ -6825,9 +6819,16 @@ too_many_files:
         ldy     #AlertButtonOptions::OK
         jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
 
+        ;; If opening an icon, need to reset icon state.
+        ;; TODO: What if opening from a path? (N=1)
         jsr     MarkIconNotDimmed
+
+        ;; A window was allocated but unused, so restore the count.
         dec     num_open_windows
 
+        ;; TODO: Handle "a table entry was possibly allocated" as in `_DoOpen`
+
+        ;; And return via saved stack.
         jsr     SetCursorPointer ; after loading directory (failed)
         ldx     saved_stack
         txs
