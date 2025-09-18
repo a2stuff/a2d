@@ -14,6 +14,21 @@
         .byte   $2C             ; OPC_BIT_abs
 .endmacro
 
+.macro SET_BIT7_FLAG ident
+    .ifblank ident
+        .error "CLEAR_BIT7_FLAG without identifier!"
+    .endif
+        sec
+        ror     ident
+.endmacro
+
+.macro CLEAR_BIT7_FLAG ident
+    .ifblank ident
+        .error "CLEAR_BIT7_FLAG without identifier!"
+    .endif
+        clc
+        ror     ident
+.endmacro
 
 ;;; ============================================================
 ;;; Strings

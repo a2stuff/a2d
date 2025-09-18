@@ -341,8 +341,7 @@ ret:    rts
         dex
     WHILE_NOT_ZERO
 
-        clc
-        ror     scrambled_flag
+        CLEAR_BIT7_FLAG scrambled_flag
 
 ret:    rts
 
@@ -505,8 +504,7 @@ ret:    rts
         dex
     WHILE_POS
 
-        sec
-        ror     scrambled_flag
+        SET_BIT7_FLAG scrambled_flag
 
         jmp     DrawWindow
 .endproc ; Scramble

@@ -650,8 +650,7 @@ skip_encode:
         ;; Now we have dir/deltas/signs figured out. Decide
         ;; on the behavior.
 
-        clc                     ; clear `moved_flag`
-        ror     moved_flag
+        CLEAR_BIT7_FLAG moved_flag
 
         lda     state
 new_state:
@@ -705,8 +704,7 @@ new_state:
         jmp     set_state_and_frame
       END_IF
 
-        sec                     ; set `moved_flag`
-        ror     moved_flag
+        SET_BIT7_FLAG moved_flag
 
         jsr     MoveAndClamp
       IF_Y_NE   #0              ; Y = clamped

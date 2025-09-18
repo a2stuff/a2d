@@ -847,8 +847,7 @@ rts2:   rts
       IF_NOT_ZERO
         lda     calc_n
        IF_ZERO
-        sec
-        ror     calc_n
+        SET_BIT7_FLAG calc_n
         pla
         pha
         jmp     do_digit_click
@@ -974,8 +973,7 @@ do_digit_click:
     END_IF
 
         pla
-update: sec
-        ror     calc_g
+update: SET_BIT7_FLAG calc_g
         ldy     calc_l
     IF_ZERO
         pha
@@ -986,8 +984,7 @@ update: sec
       END_IF
     END_IF
 
-        sec
-        ror     calc_p
+        SET_BIT7_FLAG calc_p
         cpy     #10
         bcs     rts3
         pha
@@ -1172,8 +1169,7 @@ end:    jsr     DisplayBuffer1
 
         MGTK_CALL MGTK::SetPattern, black_pattern
         MGTK_CALL MGTK::SetPenMode, penmode_xor
-        sec
-        ror     button_state
+        SET_BIT7_FLAG button_state
 
 invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts port
 
@@ -1199,8 +1195,7 @@ check_button:
 inside: lda     button_state    ; inside, and down
         bne     check_button    ; so keep looking
 
-        sec                     ; inside, was not down
-        ror     button_state    ; so set down
+        SET_BIT7_FLAG button_state ; inside, was not down so set down
         jmp     invert          ; and show it
 
 done:   lda     button_state                    ; high bit set if button down

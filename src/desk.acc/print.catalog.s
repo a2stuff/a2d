@@ -92,8 +92,7 @@
         copy8   #'/', searchPath,y
         sty     searchPath
 
-        clc
-        ror     vol_flag
+        CLEAR_BIT7_FLAG vol_flag
 
         jmp     continue
 
@@ -105,8 +104,7 @@ no_windows:
         copy8   #1, searchPath
         copy8   #'/', searchPath+1
 
-        sec
-        ror     vol_flag
+        SET_BIT7_FLAG vol_flag
 
         ;; --------------------------------------------------
 

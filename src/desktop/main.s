@@ -5380,13 +5380,11 @@ alert:  jmp     ShowAlert
         return  #$FF
 
 .proc _TryActivateAndRefreshWindow
-        sec                     ; set bit7, preserving A
-        ror     exception_flag
+        SET_BIT7_FLAG exception_flag ; set bit7, preserving A
         tsx
         stx     saved_stack
         jsr     ActivateAndRefreshWindow
-        clc                     ; clear bit7, preserving A
-        ror     exception_flag
+        CLEAR_BIT7_FLAG exception_flag ; clear bit7, preserving A
         rts
 .endproc ; _TryActivateAndRefreshWindow
 

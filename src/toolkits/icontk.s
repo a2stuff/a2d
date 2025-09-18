@@ -2161,8 +2161,7 @@ reentry:
         ;; completely done with this icon.
         jsr     is_degenerate
     IF_NEG
-        clc
-        ror     more_drawing_needed_flag ; clear bit7
+        CLEAR_BIT7_FLAG more_drawing_needed_flag
         sec
         rts
     END_IF

@@ -10790,8 +10790,7 @@ loop:
         dex
         bpl     loop
 
-        sec
-        ror     cursor_shielded_flag
+        SET_BIT7_FLAG cursor_shielded_flag
         jmp     HideCursorImpl
 
 outside:
