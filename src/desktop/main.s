@@ -3110,9 +3110,9 @@ done:
 
 .proc CmdCheckOrEjectImpl
 
-eject:  lda     #$80
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-check:  lda     #0
+eject:  sec
+        .byte   OPC_BCC         ; masks next byte
+check:  clc
         sta     eject_flag
 
         ;; Ensure that volumes are selected
@@ -5366,9 +5366,9 @@ alert:  jmp     ShowAlert
 ;;; Output: A=0/Z=1/N=0 on success, A=$FF/Z=0/N=1 on failure
 
 .proc ActivateAndRefreshWindowOrClose
-        pha
+        pha                     ; A = window id
         jsr     _TryActivateAndRefreshWindow
-        pla
+        pla                     ; A = window id
 
         bit     exception_flag
     IF_NC
@@ -5376,17 +5376,17 @@ alert:  jmp     ShowAlert
     END_IF
 
         inc     num_open_windows ; was decremented on failure
-        jsr     CloseSpecifiedWindow
+        jsr     CloseSpecifiedWindow ; A = window id
         return  #$FF
 
 .proc _TryActivateAndRefreshWindow
-        ldx     #$80
-        stx     exception_flag
+        sec                     ; set bit7, preserving A
+        ror     exception_flag
         tsx
         stx     saved_stack
         jsr     ActivateAndRefreshWindow
-        ldx     #0
-        stx     exception_flag
+        clc                     ; clear bit7, preserving A
+        ror     exception_flag
         rts
 .endproc ; _TryActivateAndRefreshWindow
 
@@ -6689,14 +6689,14 @@ slash:  cpy     #1
         ptr1 := $6
         ptr2 := $8
 
-exact:  ldy     #$80
-        bne     start           ; always
+exact:  sec
+        bcs     start           ; always
 
-prefix: ldy     #0
+prefix: clc
 
 
 start:  stax    ptr1
-        sty     exact_match_flag
+        ror     exact_match_flag
 
         lda     #0
         sta     found_windows_count
@@ -6809,30 +6809,20 @@ record_count:           .byte   0
 too_many_files:
         jsr     _DoClose
 
-        ;; Show error
-        ;; TODO: Consider not showing if during window restore, like `_DoOpen`
+        ;; Show error, unless this is during window restore.
+        bit     suppress_error_on_open_flag
+    IF_NC
         ldax    #aux::str_warning_window_must_be_closed ; too many files to show
         ldy     active_window_id ; is a window open?
-    IF_ZERO
+      IF_ZERO
         ldax    #aux::str_warning_too_many_files ; suggest closing a window
-    END_IF
+      END_IF
         ldy     #AlertButtonOptions::OK
         jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+    END_IF
 
-        ;; If opening an icon, need to reset icon state.
-        ;; TODO: What if opening from a path? (N=1)
-        jsr     MarkIconNotDimmed
-
-        ;; A window was allocated but unused, so restore the count.
-        dec     num_open_windows
-
-        ;; TODO: Handle "a table entry was possibly allocated" as in `_DoOpen`
-
-        ;; And return via saved stack.
-        jsr     SetCursorPointer ; after loading directory (failed)
-        ldx     saved_stack
-        txs
-        rts
+        lda     #$00            ; check vol flag (no)
+        jmp     _HandleFailure
 
 enough_room:
         record_ptr := $06
@@ -6973,44 +6963,16 @@ file_entry_to_file_record_mapping_table:
 .proc _DoOpen
         MLI_CALL OPEN, open_params
     IF_CS
-        ;; On error, clean up state
-
         ;; Show error, unless this is during window restore.
         bit     suppress_error_on_open_flag
       IF_NC
         jsr     ShowAlert
       END_IF
 
-        ;; If opening an icon, need to reset icon state.
-        bit     icon_param      ; Were we opening a path? (N=1)
-      IF_NC
-        jsr     MarkIconNotDimmed
-
-        lda     selected_window_id
-       IF_ZERO
-        ;; Volume icon - check that it's still valid.
-        lda     icon_param
-        ldy     #$00            ; Y = show unexpected errors flag (don't)
-        jsr     CheckDriveByIconNumber ; A = icon id
-       END_IF
-      END_IF
-
-        ;; A window was allocated but unused, so restore the count.
-        dec     num_open_windows
-
-        ;; A table entry was possibly allocated - free it.
-        ldy     cached_window_id
-      IF_NOT_ZERO
-        lda     #kWindowToDirIconFree
-        sta     window_to_dir_icon_table-1,y
-        sta     cached_window_id
-      END_IF
-
-        ;; And return via saved stack.
-        jsr     SetCursorPointer
-        ldx     saved_stack
-        txs
+        lda     #$80            ; check vol flag (yes)
+        jmp     _HandleFailure
     END_IF
+
         rts
 .endproc ; _DoOpen
 
@@ -7028,6 +6990,44 @@ suppress_error_on_open_flag:
         MLI_CALL CLOSE, close_params
         rts
 .endproc ; _DoClose
+
+;;; Input: A = check vol flag
+.proc _HandleFailure
+        pha                     ; A = check vol flag
+
+        ;; If opening an icon, need to reset icon state.
+        bit     icon_param      ; Were we opening a path? (N=1)
+    IF_NC
+        jsr     MarkIconNotDimmed
+    END_IF
+
+        ;; A window was allocated but unused, so restore the count.
+        dec     num_open_windows
+
+        ;; A table entry was possibly allocated - free it.
+        ldy     cached_window_id
+    IF_NOT_ZERO
+        lda     #kWindowToDirIconFree
+        sta     window_to_dir_icon_table-1,y
+        sta     cached_window_id
+    END_IF
+
+        pla                     ; A = check vol flag
+    IF_NS
+        lda     selected_window_id
+      IF_ZERO
+        ;; Volume icon - check that it's still valid.
+        lda     icon_param
+        ldy     #$00            ; Y = show unexpected errors flag (don't)
+        jsr     CheckDriveByIconNumber ; A = icon id
+      END_IF
+    END_IF
+
+        ;; And return via saved stack.
+        jsr     SetCursorPointer
+        ldx     saved_stack
+        txs
+.endproc ; _HandleFailure
 
 ;;; --------------------------------------------------
 .endproc ; CreateFileRecordsForWindowImpl
@@ -9437,10 +9437,10 @@ kMaxAnimationStep = 7
         ptr := $06
         rect_table := $800
 
-close:  ldy     #$80
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-open:   ldy     #$00
-        sty     close_flag
+close:  sec
+        .byte   OPC_BCC         ; masks next byte
+open:   clc
+        ror     close_flag
 
         sta     icon_param
         txa                     ; A = window_id
