@@ -2543,12 +2543,11 @@ common:
         ;; Were any directories opened?
         dir_flag := *+1
         lda     #SELF_MODIFIED_BYTE
-        bpl     done
-
+    IF_NS
         ;; Maybe close the previously active window, depending on source/modifiers
         jsr     MaybeCloseWindowAfterOpen
-
-done:   rts
+    END_IF
+        rts
 
 next:   txa
         pha                     ; A = index
@@ -2610,11 +2609,10 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
 ;;; Modifies `findwindow_params::window_id`
 .proc MaybeCloseWindowAfterOpen
         lda     window_id_to_close
-        beq     done
-
+    IF_NOT_ZERO
         jsr     CloseSpecifiedWindow
-
-done:   rts
+    END_IF
+        rts
 .endproc ; MaybeCloseWindowAfterOpen
 
 ;;; Parent window to close
@@ -2945,17 +2943,16 @@ CmdNewFolder    := CmdNewFolderImpl::start
 .proc MaybeUpdateDropTargetFromName
         ;; Did we previously stash an icon's name?
         lda     stashed_name
-        beq     done            ; not stashed
-
+    IF_NOT_ZERO
         ;; Try to find the icon by name.
         ldy     active_window_id
         param_call FindIconByName, stashed_name
-        beq     done            ; no match
-
+      IF_NOT_ZERO
         ;; Update drop target with new icon id.
         sta     drag_drop_params::target
-
-done:   rts
+      END_IF
+    END_IF
+        rts
 .endproc ; MaybeUpdateDropTargetFromName
 
 stashed_name:
@@ -4074,7 +4071,7 @@ file_char:
       END_IF
     END_IF
 
-done:   lda     #0
+        lda     #0
         rts
 
         num_filenames := $1800
@@ -6381,8 +6378,7 @@ err:    sec
         ;; List View Columns
 
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-        bpl     done
-
+    IF_NS
         ;; Find FileRecord list
         lda     cached_window_id
         jsr     GetFileRecordListForWindow
@@ -6411,6 +6407,7 @@ rloop:  cpx     cached_window_entry_count
         tax                     ; X = index
         inx
         jmp     rloop
+    END_IF
 
         ;; --------------------------------------------------
 done:
@@ -6974,45 +6971,46 @@ file_entry_to_file_record_mapping_table:
 
 .proc _DoOpen
         MLI_CALL OPEN, open_params
-        bcc     done
-
+    IF_CS
         ;; On error, clean up state
 
         ;; Show error, unless this is during window restore.
         bit     suppress_error_on_open_flag
-    IF_NC
+      IF_NC
         jsr     ShowAlert
-    END_IF
+      END_IF
 
         ;; If opening an icon, need to reset icon state.
-        bit     icon_param      ; Were we opening a path?
-    IF_NC                       ; Yes, no icons to twiddle.
+        bit     icon_param      ; Were we opening a path? (N=1)
+      IF_NC
         jsr     MarkIconNotDimmed
 
         lda     selected_window_id
-      IF_ZERO
+       IF_ZERO
         ;; Volume icon - check that it's still valid.
         lda     icon_param
         ldy     #$00            ; Y = show unexpected errors flag (don't)
         jsr     CheckDriveByIconNumber ; A = icon id
+       END_IF
       END_IF
-    END_IF
+
         ;; A window was allocated but unused, so restore the count.
         dec     num_open_windows
 
         ;; A table entry was possibly allocated - free it.
         ldy     cached_window_id
-    IF_NOT_ZERO
+      IF_NOT_ZERO
         lda     #kWindowToDirIconFree
         sta     window_to_dir_icon_table-1,y
         sta     cached_window_id
-    END_IF
+      END_IF
+
         ;; And return via saved stack.
         jsr     SetCursorPointer
         ldx     saved_stack
         txs
-
-done:   rts
+    END_IF
+        rts
 .endproc ; _DoOpen
 
 suppress_error_on_open_flag:
@@ -10150,7 +10148,7 @@ retry:  param_call GetFileInfo, path_buf4
         jsr     ReadFileEntry
         jmp     :-
     END_IF
-done:   rts
+        rts
 .endproc ; FinishDir
 
 .proc ProcessDir
@@ -10449,21 +10447,21 @@ ok_dir: jsr     RemoveSrcPathSegment
 .proc MaybeFinishFileMove
         ;; Copy or move?
         bit     move_flag
-        bpl     done
-
+    IF_NS
         ;; Was a move - delete file
 retry:  MLI_CALL DESTROY, destroy_src_params
-    IF_CS
-      IF_A_EQ   #ERR_ACCESS_ERROR
+      IF_CS
+       IF_A_EQ  #ERR_ACCESS_ERROR
         jsr     UnlockSrcFile
         beq     retry
         rts                     ; silently leave file
-      END_IF
+       END_IF
 
         jsr     ShowErrorAlert
         jmp     retry
+      END_IF
     END_IF
-done:   rts
+        rts
 .endproc ; MaybeFinishFileMove
 
 ;;; ============================================================
@@ -11231,12 +11229,11 @@ error:  jsr     ShowErrorAlert
         jsr     GetSrcFileInfo
         lda     src_file_info_params::access
         and     #ACCESS_D       ; destroy enabled bit set?
-        bne     done            ; yes, no need to unlock
-
+    IF_ZERO                     ; no, need to unlock
         copy8   #ACCESS_DEFAULT, src_file_info_params::access
         jsr     SetSrcFileInfo
-
-done:   rts
+    END_IF
+        rts
 .endproc ; UnlockSrcFile
 
 ;;; ============================================================
@@ -12676,7 +12673,7 @@ do_str2:
         ;; Append $6 (str2)
         ldy     #0
         lda     (str2),y
-        beq     done
+    IF_NOT_ZERO
         sta     @len
 :       iny
         inx
@@ -12684,8 +12681,9 @@ do_str2:
         @len := *+1
         cpy     #SELF_MODIFIED_BYTE
         bne     :-
+    END_IF
 
-done:   stx     buf
+        stx     buf
         rts
 .endproc ; JoinPaths
 
@@ -14301,11 +14299,12 @@ ret:    rts
 
         stax    textptr
         jsr     AuxLoad
-        beq     done
+    IF_NOT_ZERO
         sta     textlen
         inc16   textptr
         MGTK_CALL MGTK::DrawText, params
-done:   rts
+    END_IF
+        rts
 .endproc ; DrawString
 
 ;;; ============================================================
