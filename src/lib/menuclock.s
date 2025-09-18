@@ -11,13 +11,15 @@
 .scope menuclock_impl
 ;;; Entry point: force an update, even if time hasn't changed
 force_update:
-        copy8   #$80, force_flag
-        bne     common          ; always
+        sec
+        .byte   OPC_BCC         ; mask next byte (CLC)
 
 ;;; Entry point: only update if time has changed
-normal: copy8   #0, force_flag
+normal: clc
 
-common: lda     MACHID
+common:
+        ror     force_flag      ; set bit7
+        lda     MACHID
         and     #kMachIDHasClock
         RTS_IF_ZERO
 
@@ -140,7 +142,7 @@ last_s1:.byte   0               ; previous settings
 last_s2:.byte   0               ; previous settings
 
 force_flag:
-        .byte   0               ; force update if high bit set
+        .byte   0               ; bit7 = force update
 .endscope ; menuclock_impl
 
 ;;; Exports

@@ -347,8 +347,9 @@ IsDriveEjectable := IsDriveEjectableImpl::start
 
 ;;; ============================================================
 
+;;; Input: C = write flag (0=reading, 1=writing)
 .proc CopyBlocks
-        sta     write_flag
+        ror     write_flag
         and     #$FF
 
     IF_NEG

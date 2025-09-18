@@ -833,7 +833,7 @@ start:
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
 
-        copy8   #0, dirty_flag
+        CLEAR_BIT7_FLAG dirty_flag
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         jsr     EnumerateDrives
@@ -1179,7 +1179,7 @@ start:
         ;; +$00 WORD address (low/high)
         ;; +$02 WORD length (low/high)
         copy16  RWTS_SECTOR_BUF+0, create_params::aux_type
-        copy8   #$80, set_eof_flag
+        SET_BIT7_FLAG set_eof_flag
         copy16  RWTS_SECTOR_BUF+2, set_eof_params::eof
         copy16  #RWTS_SECTOR_BUF+4, write_params::data_buffer
         copy16  #256-4, write_params::request_count
@@ -1191,7 +1191,7 @@ start:
         ;; +$00 WORD length (low/high)
         copy16  #$0801, create_params::aux_type
         copy16  RWTS_SECTOR_BUF+0, set_eof_params::eof
-        copy8   #$80, set_eof_flag
+        SET_BIT7_FLAG set_eof_flag
         copy16  #RWTS_SECTOR_BUF+2, write_params::data_buffer
         copy16  #256-2, write_params::request_count
         jmp     translate_type
@@ -1202,14 +1202,14 @@ start:
         ;; +$00 WORD length (low/high)
         copy16  #$0000, create_params::aux_type
         copy16  RWTS_SECTOR_BUF+0, set_eof_params::eof
-        copy8   #$80, set_eof_flag
+        SET_BIT7_FLAG set_eof_flag
         copy16  #RWTS_SECTOR_BUF+2, write_params::data_buffer
         copy16  #256-2, write_params::request_count
         jmp     translate_type
     END_IF
 
         copy16  #0, create_params::aux_type
-        copy8   #0, set_eof_flag
+        CLEAR_BIT7_FLAG set_eof_flag
         copy16  #RWTS_SECTOR_BUF, write_params::data_buffer
         copy16  #256, write_params::request_count
         FALL_THROUGH_TO translate_type
@@ -1288,7 +1288,7 @@ finish:
     END_IF
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
-        copy8   #$80, dirty_flag
+        SET_BIT7_FLAG dirty_flag
         return  #0              ; success
 
 ;;; C=1 if false
@@ -1357,7 +1357,7 @@ prodos_type_table:
 
 ;;; ============================================================
 
-dirty_flag:     .byte   0
+dirty_flag:     .byte   0       ; bit7
 
 prefix_path:    .res    ::kPathBufferSize, 0
 

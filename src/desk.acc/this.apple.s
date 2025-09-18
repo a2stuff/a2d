@@ -660,7 +660,7 @@ str_list_separator:
         PASCAL_STRING ", "
 
 memory:.word    0
-memory_is_mb_flag:      .byte   0
+memory_is_mb_flag:      .byte   0 ; bit7
 
 ;;; ============================================================
 
@@ -1934,7 +1934,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         lsr16   memory          ; / 16
         dey
       WHILE_NOT_ZERO
-        copy8   #$80, memory_is_mb_flag
+        SET_BIT7_FLAG memory_is_mb_flag
     END_IF
 
         ldax    memory
@@ -2249,7 +2249,7 @@ p658xx: bit     ROMIN2
         slot_ptr := $06
 
 start:
-        copy8   #$80, empty_flag
+        SET_BIT7_FLAG empty_flag
         lda     #0
         sta     str_last
         sta     duplicate_count
@@ -2348,7 +2348,7 @@ device_loop:
     IF_PLUS
         param_call DrawString, str_list_separator
     END_IF
-        copy8   #0, empty_flag  ; saw a unit!
+        CLEAR_BIT7_FLAG empty_flag ; saw a unit!
 
         ;; Draw the device name
         param_call DrawString, str_current
@@ -2365,7 +2365,7 @@ finish:
 
         ;; If no units, populate with "(none)"
         bit     empty_flag
-    IF_MINUS
+    IF_NS
         ldax    #str_none
         jsr     DrawString
     END_IF
@@ -2376,7 +2376,7 @@ str_last:
         .res    ::kMaxSPDeviceNameLength+1
 duplicate_count:
         .byte   0
-empty_flag:
+empty_flag:                     ; bit7 set while no entries seen
         .byte   0
 num_devices:
         .byte   0

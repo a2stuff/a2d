@@ -97,7 +97,7 @@ file_names      := $1800
         DEFINE_READWRITE_PARAMS read_params, dir_read_buf, kDirReadSize
         DEFINE_CLOSE_PARAMS close_params
 
-only_show_dirs_flag:            ; set when selecting copy destination
+only_show_dirs_flag:            ; bit7 set when selecting copy destination
         .byte   0
 
 ;;; bit7 = 0 = no selection required
@@ -134,7 +134,7 @@ selection_requirement_flags:
 ;;; Flags set by invoker to alter behavior
 
 .ifdef FD_EXTENDED
-;;; Set when `click_handler_hook` should be called and name input present.
+;;; bit7 set when `click_handler_hook` should be called and name input present.
 extra_controls_flag:
         .byte   0
 

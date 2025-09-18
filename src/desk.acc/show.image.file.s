@@ -1,6 +1,7 @@
         .include "../config.inc"
 
         .include "apple2.inc"
+        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -110,7 +111,7 @@ event_params:   .tag MGTK::Event
 ;;; ============================================================
 
 .proc Init
-        copy8   #0, mode
+        CLEAR_BIT7_FLAG color_mode_flag
 
         ;; In case we're re-entered c/o switching to another file
         jsr     MaybeCallExitHook
@@ -169,7 +170,7 @@ event_params:   .tag MGTK::Event
 on_key:
         ;; Stop slideshow on any keypress
         ldy     slideshow_flag  ; Y = previous `slideshow_flag` state
-        copy8   #0, slideshow_flag
+        CLEAR_BIT7_FLAG slideshow_flag
 
         lda     event_params + MGTK::Event::key
         jsr     ToUpperCase
@@ -210,7 +211,7 @@ on_key:
 ;;; ============================================================
 
 .proc SetSlideshowMode
-        copy8   #$80, slideshow_flag
+        SET_BIT7_FLAG slideshow_flag
         jsr     InitSlideshowCounter
         jmp     InputLoop
 .endproc ; SetSlideshowMode
@@ -398,7 +399,7 @@ signature:
 .proc ShowLZ4FHFile
         sta     PAGE2OFF
 
-        copy8   #$80, restore_buffer_overlay_flag
+        SET_BIT7_FLAG restore_buffer_overlay_flag
         copy16  #OVERLAY_BUFFER, read_params::data_buffer
         JUMP_TABLE_MLI_CALL READ, read_params
         copy16  #$2000, read_params::data_buffer
@@ -701,32 +702,30 @@ END_PROC_AT
 ;;; ============================================================
 ;;; Color/B&W Toggle
 
-mode:   .byte   0               ; 0 = B&W, $80 = color
+color_mode_flag:   .byte   0    ; bit7=0 = B&W, bit7=1 = color
 
 .proc ToggleMode
-        lda     mode
-        bne     SetBWMode
+        bit     color_mode_flag
+        bpl     SetBWMode
         FALL_THROUGH_TO SetColorMode
 .endproc ; ToggleMode
 
 .proc SetColorMode
-        lda     mode
-        bne     done
-        copy8   #$80, mode
-
+        bit     color_mode_flag
+    IF_NC
+        SET_BIT7_FLAG color_mode_flag
         jsr     JUMP_TABLE_COLOR_MODE
-
-done:   rts
+    END_IF
+        rts
 .endproc ; SetColorMode
 
 .proc SetBWMode
-        lda     mode
-        beq     done
-        copy8   #0, mode
-
+        bit     color_mode_flag
+    IF_NS
+        CLEAR_BIT7_FLAG color_mode_flag
         jsr     JUMP_TABLE_MONO_MODE
-
-done:   rts
+    END_IF
+        rts
 .endproc ; SetBWMode
 
 ;;; ============================================================
@@ -867,14 +866,14 @@ dhr_file:
         lda     #$C0            ; S = is dhr?, V = is aux page?
         SKIP_NEXT_2_BYTE_INSTRUCTION
 hr_file:
-        copy8   #0, dhr_flag
+        copy8   #0, dhr_flags
         copy16  #hires, ptr
 
         sta     PAGE2OFF
 
         param_call UnpackRead, Write
 
-        bit     dhr_flag        ; if hires, need to convert
+        bit     dhr_flags       ; if hires, need to convert
     IF_NC
         jsr     HRToDHR
     END_IF
@@ -901,9 +900,9 @@ hr_file:
         bne     exit
         copy8   #$20, ptr+1     ; yes, back to page 1
 
-        bit     dhr_flag        ; if DHR aux half, need to copy page to aux
+        bit     dhr_flags       ; if DHR aux half, need to copy page to aux
         bvc     exit            ; nope
-        copy8   #$80, dhr_flag
+        copy8   #$80, dhr_flags
 
         ;; Save ptr, X, Y
         lda     ptr
@@ -933,8 +932,8 @@ exit:   pla
 
         ;; --------------------------------------------------
 
-dhr_flag:
-        .byte   0
+dhr_flags:
+        .byte   0               ; bit7 = is dhr, bit6 = is aux page
 
 .endproc ; ShowPackedHRDHRFileImpl
 ShowPackedHRFile     := ShowPackedHRDHRFileImpl::hr_file
@@ -1008,11 +1007,11 @@ yes:    clc                     ; match!
 .proc ShowSHRImpl
 
 packed:
-        lda     #$80
-        SKIP_NEXT_2_BYTE_INSTRUCTION
+        sec
+        .byte   OPC_BCC         ; mask next byte (CLC)
 unpacked:
-        lda     #0
-        sta     packed_flag
+        clc
+        ror     packed_flag     ; set bit7
 
         ;; IIgs?
         bit     ROMIN2
@@ -1044,7 +1043,7 @@ is_iigs:
         clc                     ; success
         rts
 
-packed_flag:
+packed_flag:                    ; bit7
         .byte   0
 
         ;; --------------------------------------------------
@@ -1522,7 +1521,7 @@ fail:   jmp     Init
         dex
     WHILE_NOT_ZERO
 
-        copy8   #$80, seen_flag
+        SET_BIT7_FLAG seen_flag
         rts
 
 not_cur:
@@ -1548,7 +1547,7 @@ tmp:    .addr   0
 
 flags:                          ; bit 6 = modified, bit 7 = advance
         .byte   0
-seen_flag:
+seen_flag:                      ; bit7
         .byte   0
 cur_filename:
         .res    16

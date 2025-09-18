@@ -38,7 +38,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         stx     saved_stack
 
         jsr     file_dialog::Init
-        copy8   #$80, file_dialog::extra_controls_flag
+        SET_BIT7_FLAG file_dialog::extra_controls_flag
         copy8   #file_dialog::kSelectionRequiredDirsOK, file_dialog::selection_requirement_flags
 
         lda     #BTK::kButtonStateNormal

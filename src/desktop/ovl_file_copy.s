@@ -13,7 +13,7 @@
         stx     saved_stack
 
         jsr     file_dialog::Init
-        copy8   #$80, file_dialog::only_show_dirs_flag
+        SET_BIT7_FLAG file_dialog::only_show_dirs_flag
         copy8   #file_dialog::kSelectionOptionalUnlessRoot, file_dialog::selection_requirement_flags
 
         param_call file_dialog::OpenWindow, label_copy_selection

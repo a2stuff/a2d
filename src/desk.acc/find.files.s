@@ -145,7 +145,7 @@ pencopy:        .byte   MGTK::pencopy
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
-cursor_ibeam_flag: .byte   0
+cursor_ibeam_flag: .byte   0    ; bit7
 
 kBufSize = ::kMaxFilenameLength+1     ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
@@ -417,7 +417,7 @@ search:
 
 finish:
         bit     cursor_ibeam_flag
-    IF_PLUS
+    IF_NC
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
     ELSE
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
@@ -495,14 +495,14 @@ done:   jmp     InputLoop
 outside:
         bit     cursor_ibeam_flag
         bpl     done
-        copy8   #0, cursor_ibeam_flag
+        CLEAR_BIT7_FLAG cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jmp     done
 
 inside:
         bit     cursor_ibeam_flag
         bmi     done
-        copy8   #$80, cursor_ibeam_flag
+        SET_BIT7_FLAG cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop

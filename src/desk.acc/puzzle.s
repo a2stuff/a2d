@@ -481,7 +481,7 @@ notpenXOR:       .byte  MGTK::notpenXOR
 
 name:   PASCAL_STRING res_string_window_title
 
-scrambled_flag:
+scrambled_flag:                 ; bit7
         .byte   0
 
 ;;; ============================================================
@@ -836,7 +836,7 @@ done:   jsr     CheckVictory
         tax
         dex
     WHILE_NOT_ZERO
-        copy8   #0, scrambled_flag
+        CLEAR_BIT7_FLAG scrambled_flag
 .endproc ; OnVictory
 
 after_click:
@@ -1112,7 +1112,7 @@ redo:
 .proc Scramble
         jsr     SwapTables      ; swap
 
-        copy8   #$80, scrambled_flag
+        SET_BIT7_FLAG scrambled_flag
         jsr     DrawAll
         jsr     FindHole
 

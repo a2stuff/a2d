@@ -45,24 +45,25 @@ Exec:
 
 ;;; ============================================================
 ;;; Show the device prompt, name prompt, and confirmation.
-;;; Input: A=operation flag, high bit set=erase, clear=format
+;;; Input: C=operation flag, 1=erase, 0=format
 ;;;        X=unit num, or 0 to prompt for device
 ;;; Output: C=0, A=unit_num on success, C=1 if canceled.
 
 .proc PromptForDeviceAndName
-        sta     erase_flag
+        ror     erase_flag      ; C into bit7
         stx     unit_num
 
         ;; --------------------------------------------------
         ;; Prompt for device
 .scope
-        copy8   #$00, has_input_field_flag
-        jsr     main::OpenPromptWindow
+        CLEAR_BIT7_FLAG has_input_field_flag
+        lda     #kPromptButtonsOKCancel
+        jsr     main::OpenPromptWindow ; A = `prompt_button_flags`
         jsr     main::SetPortForDialogWindow
-        bit     erase_flag
-    IF_NC
+
         ldax    #aux::label_format_disk
-    ELSE
+        bit     erase_flag
+    IF_NS
         ldax    #aux::label_erase_disk
     END_IF
         jsr     main::DrawDialogTitle
@@ -71,10 +72,9 @@ Exec:
         bne     skip_select
 
         MGTK_CALL MGTK::MoveTo, vol_picker_select_pos
-        bit     erase_flag
-    IF_NC
         ldax    #aux::str_select_format
-    ELSE
+        bit     erase_flag
+    IF_NS
         ldax    #aux::str_select_erase
     END_IF
         jsr     main::DrawString
@@ -88,7 +88,7 @@ Exec:
         copy8   #$FF, vol_picker_record::selected_index
         copy16  #HandleClick, main::PromptDialogClickHandlerHook
         copy16  #HandleKey, main::PromptDialogKeyHandlerHook
-        copy8   #$80, has_device_picker_flag
+        SET_BIT7_FLAG has_device_picker_flag
 
         OPTK_CALL OPTK::Draw, vol_picker_params
         jsr     main::UpdateOKButton
@@ -114,9 +114,9 @@ skip_select:
         jsr     SetPortAndClear
         jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
-        copy8   #$80, has_input_field_flag
+        SET_BIT7_FLAG has_input_field_flag
         copy8   #0, text_input_buf
-        copy8   #$00, has_device_picker_flag
+        CLEAR_BIT7_FLAG has_device_picker_flag
 
         param_call main::DrawDialogLabel, 2, aux::str_location
 
@@ -162,7 +162,7 @@ loop2:
 .scope
         COPY_STRING text_input_buf, main::filename_buf
 
-        copy8   #0, has_input_field_flag
+        CLEAR_BIT7_FLAG has_input_field_flag
         jsr     SetPortAndClear
         MGTK_CALL MGTK::PaintRect, ok_button::rect
         MGTK_CALL MGTK::PaintRect, cancel_button::rect
@@ -199,7 +199,7 @@ erase_flag:
 ;;; Format Disk
 
 .proc FormatDisk
-        lda     #$00
+        clc                     ; C=0 = format
         jsr     PromptForDeviceAndName
         bcs     finish
         sta     unit_num
@@ -254,7 +254,7 @@ finish:
 ;;; Erase Disk
 
 .proc EraseDisk
-        lda     #$80
+        sec                     ; C=1 = erase
         jsr     PromptForDeviceAndName
         bcs     finish
 

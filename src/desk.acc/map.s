@@ -257,7 +257,7 @@ position_marker_bitmap:
 ;;; ============================================================
 ;;; Line Edit
 
-cursor_ibeam_flag: .byte   0
+cursor_ibeam_flag: .byte   0    ; bit7
 
 kBufSize = 16                       ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
@@ -542,14 +542,14 @@ notpencopy:     .byte   MGTK::notpencopy
 outside:
         bit     cursor_ibeam_flag
         bpl     done
-        copy8   #0, cursor_ibeam_flag
+        CLEAR_BIT7_FLAG cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jmp     done
 
 inside:
         bit     cursor_ibeam_flag
         bmi     done
-        copy8   #$80, cursor_ibeam_flag
+        SET_BIT7_FLAG cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop
@@ -600,10 +600,10 @@ done:   jmp     InputLoop
 .proc DrawLatLong
         ;; Latitude
         copy16  lat, tmp
-        copy8   #0, sflag
+        CLEAR_BIT7_FLAG sflag
         bit     tmp+1
     IF_NS
-        copy8   #$80, sflag
+        SET_BIT7_FLAG sflag
         sub16   #0, tmp, tmp
     END_IF
 
@@ -622,10 +622,10 @@ done:   jmp     InputLoop
 
         ;; Longitude
         copy16  long, tmp
-        copy8   #0, sflag
+        CLEAR_BIT7_FLAG sflag
         bit     tmp+1
     IF_NS
-        copy8   #$80, sflag
+        SET_BIT7_FLAG sflag
         sub16   #0, tmp, tmp
     END_IF
 

@@ -210,8 +210,7 @@ prompt_button_flags:
         .byte   0
 has_input_field_flag:
         .byte   0
-
-has_device_picker_flag:      ; set when prompt is showing device picker
+has_device_picker_flag:      ; bit7 set when prompt is showing device picker
         .byte   0
 
 ;;; ============================================================

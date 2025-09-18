@@ -313,7 +313,7 @@ notpencopy:     .byte   MGTK::notpencopy
         BTK_CALL BTK::RadioDraw, joy_btn1_button
         BTK_CALL BTK::RadioDraw, joy_btn2_button
 
-        copy8   #$80, force_draw_flag
+        SET_BIT7_FLAG force_draw_flag
         MGTK_CALL MGTK::ShowCursor
     END_IF
 
@@ -379,7 +379,7 @@ notpencopy:     .byte   MGTK::notpencopy
         lda     curr+InputState::pdl3
         cmp     last+InputState::pdl3
         beq     :+
-set:    copy8   #$80, joy2_valid_flag
+set:    SET_BIT7_FLAG joy2_valid_flag
 :
     END_IF
 
@@ -400,7 +400,7 @@ set:    copy8   #$80, joy2_valid_flag
         ;; --------------------------------------------------
 
         COPY_STRUCT InputState, curr, last
-        copy8   #0, force_draw_flag
+        CLEAR_BIT7_FLAG force_draw_flag
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -483,11 +483,11 @@ last:   .tag InputState
 penOR:          .byte   MGTK::penOR
 notpencopy:     .byte   MGTK::notpencopy
 
-joy2_valid_flag:
+joy2_valid_flag:                ; bit7
         .byte   0
 .endproc ; DoJoystick
 
-force_draw_flag:
+force_draw_flag:                ; bit7
         .byte   0
 
 ;;; ============================================================

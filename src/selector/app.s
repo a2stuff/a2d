@@ -519,7 +519,7 @@ set_startup_menu_items:
 
         MGTK_CALL MGTK::SetZP1, setzp_params
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
-        copy8   #$80, desktop_started_flag
+        SET_BIT7_FLAG desktop_started_flag
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
         jsr     ShowClock
@@ -555,10 +555,7 @@ set_startup_menu_items:
 
         ;; Is DeskTop available?
         param_call GetFileInfo, str_desktop_2
-    IF_CS
-        lda     #$80
-    END_IF
-        sta     desktop_available_flag
+        ror     desktop_available_flag ; bit7 = C (1=not available)
 
         ;; --------------------------------------------------
         ;; Open the window
@@ -646,7 +643,7 @@ ClearUpdates:
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         bne     done            ; obscured
-        lda     #$80            ; is update
+        sec                     ; is update
         jsr     DrawWindow
 
         OPTK_CALL OPTK::Update, op_params
@@ -1162,14 +1159,14 @@ backup_devlst:
 .proc GetPortAndDrawWindow
         lda     #winfo::kDialogId
         jsr     GetWindowPort
-        lda     #0              ; not an update
+        clc                     ; not an update
         FALL_THROUGH_TO DrawWindow
 .endproc ; GetPortAndDrawWindow
 
-;;; Inputs: A high bit set if processing update event, clear otherwise
+;;; Inputs: C set if processing update event, clear otherwise
 .proc DrawWindow
-        ;; A = is update
-        pha
+        ;; C = is update
+        php
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
@@ -1178,8 +1175,8 @@ backup_devlst:
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         param_call DrawTitleString, str_selector_title
 
-        pla
-    IF_NS
+        plp
+    IF_CS
         ;; Processing update event
         BTK_CALL BTK::Update, ok_button
         bit     desktop_available_flag
@@ -1554,7 +1551,7 @@ check_type:
 
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
     IF_EQ
-        copy8   #$80, INVOKER_BITSY_COMPAT
+        SET_BIT7_FLAG INVOKER_BITSY_COMPAT
         bmi     check_path      ; always
     END_IF
 

@@ -233,7 +233,7 @@ done:
         jsr     WriteSetting
     END_IF
 
-        copy8   #$80, main::mli_relay_checkevents_flag
+        SET_BIT7_FLAG main::mli_relay_checkevents_flag
 
         ;; --------------------------------------------------
         ;; Cursor tracking

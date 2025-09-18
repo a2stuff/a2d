@@ -262,8 +262,8 @@ bg_white:
 
 kListRows = 8                   ; number of visible rows
 
-selection_mode:
-        .byte   0               ; high bit clear = source; set = destination
+selection_mode_flag:
+        .byte   0               ; bit7 clear = source; set = destination
 
 
 kListEntrySlotOffset    = 8
@@ -433,7 +433,7 @@ init:
         copy8   #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy8   #0, disk_copy_flag
+        CLEAR_BIT7_FLAG disk_copy_flag
 
         ;; Open dialog window
         MGTK_CALL MGTK::OpenWindow, winfo_dialog
@@ -490,7 +490,7 @@ InitDialog:
         jsr     GetAllBlockCounts
 
         jsr     SetCursorPointer
-        copy8   #$00, selection_mode
+        CLEAR_BIT7_FLAG selection_mode_flag
 
         LBTK_CALL LBTK::Init, lb_params
         jsr     UpdateOKButton
@@ -514,7 +514,7 @@ InitDialog:
 
         ;; Prepare for destination selection
         jsr     EnumerateDestinationDevices
-        copy8   #$80, selection_mode
+        SET_BIT7_FLAG selection_mode_flag
         LBTK_CALL LBTK::Init, lb_params
         jsr     UpdateOKButton
 
@@ -750,7 +750,7 @@ copy_loop:
         jsr     SetCursorWatch
 
         jsr     DrawStatusReading
-        lda     #$00
+        clc                     ; reading
         jsr     main__CopyBlocks
         cmp     #$01
         beq     copy_failure
@@ -761,7 +761,7 @@ copy_loop:
         jsr     SetCursorWatch
 
         jsr     DrawStatusWriting
-        lda     #$80
+        sec                     ; writing
         jsr     main__CopyBlocks
         bmi     copy_success
         bne     copy_failure
@@ -947,7 +947,7 @@ do_jump:
         copy8   #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy8   #0, disk_copy_flag
+        CLEAR_BIT7_FLAG disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         MGTK_CALL MGTK::MoveTo, point_title
@@ -967,7 +967,7 @@ ret:    rts
         copy8   #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy8   #$80, disk_copy_flag
+        SET_BIT7_FLAG disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         MGTK_CALL MGTK::MoveTo, point_title
@@ -1418,13 +1418,13 @@ fallback:
     WHILE_POS
         pla
 
-        bit     selection_mode  ; source or destination?
-        bpl     draw
-
+        bit     selection_mode_flag  ; source or destination?
+    IF_NS
         tax                     ; indirection for destination
         lda     destination_index_table,x
+    END_IF
 
-draw:   jmp     DrawDeviceListEntry
+        jmp     DrawDeviceListEntry
 .endproc ; DrawListEntryProc
 
 ;;; ============================================================

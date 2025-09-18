@@ -146,6 +146,12 @@ kListViewScrollTickH = kListViewRowHeight * 2
 kListViewScrollTickV = kListViewRowHeight
 
 ;;; ============================================================
+;;; Prompt Dialog
+
+kPromptButtonsOKCancel = $00
+kPromptButtonsOKOnly   = $80
+
+;;; ============================================================
 ;;; Operations
 
 kOperationSucceeded     = 0

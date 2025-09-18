@@ -309,7 +309,7 @@ modifiers:
 menu_accelerators:
         copy8   event_params::key, menu_click_params::which_key
         copy8   event_params::modifiers, menu_click_params::key_mods
-        copy8   #0, menu_modified_click_flag ; note that source is not Apple+click
+        CLEAR_BIT7_FLAG menu_modified_click_flag ; note that source is not Apple+click
         MGTK_CALL MGTK::MenuKey, menu_click_params
 
         FALL_THROUGH_TO MenuDispatch
@@ -847,7 +847,7 @@ prev_selected_icon:
         ;; (2/4) Was a move?
         ;; NOTE: Only applies in file icon case.
 
-        bit     operations__move_flag
+        bit     operations__move_flags
     IF_NS
         ;; Update source vol's contents
         jsr     MaybeStashDropTargetName ; in case target is in window...
@@ -1366,7 +1366,7 @@ retry:  jsr     GetSrcFileInfo
 fallback:
         jsr     _CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
     IF_CC                         ; yes, continue below
-        copy8   #$80, INVOKER_BITSY_COMPAT
+        SET_BIT7_FLAG INVOKER_BITSY_COMPAT
         bmi     launch          ; always
     END_IF
         param_jump ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_cannot_open
@@ -2514,7 +2514,7 @@ from_double_click:
 
         ;; --------------------------------------------------
 common:
-        copy8   #0, dir_flag
+        CLEAR_BIT7_FLAG dir_flag
 
         ;; Make a copy of selection
         ldx     selected_icon_count
@@ -2534,7 +2534,7 @@ common:
 
         ;; Were any directories opened?
         dir_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     #SELF_MODIFIED_BYTE ; bit7
     IF_NS
         ;; Maybe close the previously active window, depending on source/modifiers
         jsr     MaybeCloseWindowAfterOpen
@@ -2561,7 +2561,7 @@ next:   txa
         beq     maybe_open_file ; nope
 
         ;; Directory
-        copy8   #$80, dir_flag
+        SET_BIT7_FLAG dir_flag
 
         pla                     ; A = icon id
         jsr     OpenWindowForIcon
@@ -3111,9 +3111,9 @@ done:
 .proc CmdCheckOrEjectImpl
 
 eject:  sec
-        .byte   OPC_BCC         ; masks next byte
+        .byte   OPC_BCC         ; mask next byte (CLC)
 check:  clc
-        sta     eject_flag
+        ror     eject_flag      ; set bit7
 
         ;; Ensure that volumes are selected
         lda     selected_window_id
@@ -3228,7 +3228,7 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 ;;; Returns with ALTZPOFF and ROM banked in.
 
 .proc RestoreSystem
-        copy8   #0, main::mli_relay_checkevents_flag
+        CLEAR_BIT7_FLAG main::mli_relay_checkevents_flag
 
         jsr     SaveWindows
 
@@ -3576,7 +3576,7 @@ ret:    rts
         jsr     DoDeleteSelection
         RTS_IF_A_EQ #kOperationCanceled
 
-        copy8   #$80, validate_windows_flag
+        SET_BIT7_FLAG validate_windows_flag
         jmp     UpdateActivateAndRefreshSelectedWindow
 .endproc ; CmdDeleteSelection
 
@@ -5764,14 +5764,14 @@ beyond:
 ;;; Check windows and close any where the backing volume/file no
 ;;; longer exists.
 
-;;; Set to $80 to run a validation pass and close as needed.
+;;; Set bit7 to run a validation pass and close as needed.
 validate_windows_flag:
         .byte   0
 
 .proc ValidateWindows
         bit     validate_windows_flag
     IF_NS
-        copy8   #0, validate_windows_flag
+        CLEAR_BIT7_FLAG validate_windows_flag
         copy8   #kMaxDeskTopWindows, window_id
 
       DO
@@ -6819,7 +6819,7 @@ too_many_files:
         jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
     END_IF
 
-        lda     #$00            ; check vol flag (no)
+        clc                     ; check vol flag (no)
         jmp     _HandleFailure
 
 enough_room:
@@ -6967,7 +6967,7 @@ file_entry_to_file_record_mapping_table:
         jsr     ShowAlert
       END_IF
 
-        lda     #$80            ; check vol flag (yes)
+        sec                     ; check vol flag (yes)
         jmp     _HandleFailure
     END_IF
 
@@ -6991,7 +6991,7 @@ suppress_error_on_open_flag:
 
 ;;; Input: A = check vol flag
 .proc _HandleFailure
-        pha                     ; A = check vol flag
+        php                     ; C = check vol flag
 
         ;; If opening an icon, need to reset icon state.
         bit     icon_param      ; Were we opening a path? (N=1)
@@ -7010,8 +7010,8 @@ suppress_error_on_open_flag:
         sta     cached_window_id
     END_IF
 
-        pla                     ; A = check vol flag
-    IF_NS
+        plp                     ; C = check vol flag
+    IF_CS
         lda     selected_window_id
       IF_ZERO
         ;; Volume icon - check that it's still valid.
@@ -8380,7 +8380,7 @@ set_pos:
         jsr     ReadSetting
         sta     deci_sep
 
-        copy8   #0, frac_flag
+        CLEAR_BIT7_FLAG frac_flag
         cmp16   value, #20
     IF_LT
         lsr16   value        ; Convert blocks to K, rounding up
@@ -8406,7 +8406,7 @@ set_pos:
 
         ;; Append ".5" if needed
         frac_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     #SELF_MODIFIED_BYTE ; bit7
     IF_NS
         deci_sep := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -9436,9 +9436,9 @@ kMaxAnimationStep = 7
         rect_table := $800
 
 close:  sec
-        .byte   OPC_BCC         ; masks next byte
+        .byte   OPC_BCC         ; mask next byte (CLC)
 open:   clc
-        ror     close_flag
+        ror     close_flag      ; set bit7
 
         sta     icon_param
         txa                     ; A = window_id
@@ -9700,7 +9700,7 @@ target_is_icon:
 ;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
 .proc DoCopyFile
         copy8   #kOperationFlagsCheckBadCopy, operation_flags
-        copy8   #0, move_flag
+        copy8   #0, move_flags
         tsx
         stx     saved_stack
 
@@ -9724,9 +9724,9 @@ FinishOperation:
 ;;; Shortcuts > Run a Shortcut... w/ "Copy to RAMCard"/"at first use"
 ;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
 .proc DoCopyToRAM
-        copy8   #0, move_flag
+        copy8   #0, move_flags
         copy8   #kOperationFlagsCheckVolFree, operation_flags
-        copy8   #0, dst_is_appleshare_flag  ; by definition, not AppleShare
+        CLEAR_BIT7_FLAG dst_is_appleshare_flag  ; by definition, not AppleShare
         tsx
         stx     saved_stack
 
@@ -9754,7 +9754,7 @@ FinishOperation:
 ep_always_copy:
         lda     #0              ; do not convert to `copy8`!
 
-        sta     move_flag
+        sta     move_flags
 
         copy8   #kOperationFlagsCheckBadCopy, operation_flags
         tsx
@@ -9770,7 +9770,7 @@ DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
 ;;; File > Delete
 ;;; Drag / Drop to Trash (except volumes)
 .proc DoDeleteSelection
-        copy8   #0, move_flag
+        copy8   #0, move_flags
         copy8   #kOperationFlagsNone, operation_flags
         tsx
         stx     saved_stack
@@ -9870,7 +9870,7 @@ operation_flags:
 
         ;; bit 7 set = move, clear = copy
         ;; bit 6 set = same volume move and relink supported
-move_flag:
+move_flags:
         .byte   0
 
         ;; bit 7 set = "all" selected in Yes / No / All prompt
@@ -10008,6 +10008,7 @@ OpFinishDirectory:
 DoNothing:   rts
 
 ;;; 0 for count/size pass, non-zero for actual operation
+;;; TODO: Convert to bit7 flag
 do_op_flag:
         .byte   0
 
@@ -10107,7 +10108,7 @@ eof:    return  #$FF
 ;;; Input: Destination path in `path_buf4`
 ;;; Output: `dst_is_appleshare_flag` is set
 .proc SetDstIsAppleShareFlag
-        copy8   #0, dst_is_appleshare_flag
+        CLEAR_BIT7_FLAG dst_is_appleshare_flag
 
         ;; Issue a `GET_FILE_INFO` on destination to set `DEVNUM`
 retry:  param_call GetFileInfo, path_buf4
@@ -10120,7 +10121,7 @@ retry:  param_call GetFileInfo, path_buf4
         copy8   DEVNUM, vol_key_block_params::unit_num
         MLI_CALL READ_BLOCK, vol_key_block_params
     IF_A_EQ     #ERR_NETWORK_ERROR
-        copy8   #$80, dst_is_appleshare_flag
+        SET_BIT7_FLAG dst_is_appleshare_flag
     END_IF
         rts
 .endproc ; SetDstIsAppleShareFlag
@@ -10249,7 +10250,7 @@ operation_traversal_callbacks_for_copy:
         stax    file_count
         stax    total_count
         jsr     SetPortForProgressDialog
-        bit     move_flag
+        bit     move_flags
     IF_NC
         param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
     ELSE
@@ -10273,7 +10274,7 @@ operation_lifecycle_callbacks_for_copy:
 .proc PrepTraversalCallbacksForCopy
         COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_copy, operation_traversal_callbacks
 
-        copy8   #0, operations::all_flag
+        CLEAR_BIT7_FLAG operations::all_flag
         copy8   #1, do_op_flag
         rts
 .endproc ; PrepTraversalCallbacksForCopy
@@ -10284,7 +10285,7 @@ operation_lifecycle_callbacks_for_copy:
 .proc PrepTraversalCallbacksForDownload
         COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_copy, operation_traversal_callbacks
 
-        copy8   #$80, operations::all_flag
+        SET_BIT7_FLAG operations::all_flag
         copy8   #1, do_op_flag
         rts
 .endproc ; PrepTraversalCallbacksForDownload
@@ -10302,13 +10303,13 @@ operation_lifecycle_callbacks_for_copy:
 .proc CopyProcessFileImpl
         ;; Normal handling, via `CopyProcessSelectedFile`
 selected:
-        ;; Caller sets `move_flag` appropriately
+        ;; Caller sets `move_flags` appropriately
         lda     #$80
         SKIP_NEXT_2_BYTE_INSTRUCTION
 
         ;; Via File > Duplicate or copying to RAMCard
 not_selected:
-        ;; Caller sets `move_flag` to $00
+        ;; Caller sets `move_flags` to $00
         lda     #0
 
         pha                     ; A = use selection?
@@ -10360,7 +10361,7 @@ retry:  jsr     GetSrcFileInfo
         jsr     TryCreateDst
         bcs     done
 
-        bit     move_flag       ; same volume relink move?
+        bit     move_flags      ; same volume relink move?
     IF_VS
         jmp     RelinkFile
     END_IF
@@ -10374,7 +10375,7 @@ dir:
         jsr     TryCreateDst
         bcs     done
 
-        bit     move_flag       ; same volume relink move?
+        bit     move_flags      ; same volume relink move?
     IF_VS
         jsr     RelinkFile
         jmp     NotifyPathChanged
@@ -10385,7 +10386,7 @@ dir:
         jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove
 
-        bit     move_flag
+        bit     move_flags
     IF_NS
         jsr     NotifyPathChanged
     END_IF
@@ -10445,7 +10446,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 
 .proc MaybeFinishFileMove
         ;; Copy or move?
-        bit     move_flag
+        bit     move_flags
     IF_NS
         ;; Was a move - delete file
 retry:  MLI_CALL DESTROY, destroy_src_params
@@ -10560,7 +10561,7 @@ retry:  copy8   dst_path_buf, saved_length
 
         ;; Show appropriate message
         ldax    #aux::str_large_copy_prompt
-        bit     move_flag
+        bit     move_flags
     IF_NS
         ldax    #aux::str_large_move_prompt
     END_IF
@@ -10586,7 +10587,7 @@ existing_size:
 ;;; Output: C=0 on success, C=1 on failure
 
 .proc TryCreateDst
-        bit     move_flag       ; same volume relink move?
+        bit     move_flags      ; same volume relink move?
     IF_VC
         ;; No, verify that there is room.
         jsr     CheckSpaceAndShowPrompt
@@ -10642,7 +10643,7 @@ retry:  jsr     GetDstFileInfo
         beq     failure
         cmp     #kAlertResultAll
         bne     cancel
-        copy8   #$80, operations::all_flag
+        SET_BIT7_FLAG operations::all_flag
 yes:
         MLI_CALL DESTROY, destroy_dst_params
         bcs     retry
@@ -11146,7 +11147,7 @@ operation_lifecycle_callbacks_for_delete:
 .proc PrepTraversalCallbacksForDelete
         COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_delete, operation_traversal_callbacks
 
-        copy8   #0, operations::all_flag
+        CLEAR_BIT7_FLAG operations::all_flag
         copy8   #1, do_op_flag
         rts
 .endproc ; PrepTraversalCallbacksForDelete
@@ -11211,7 +11212,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         beq     unlock
         cmp     #kAlertResultAll
         bne     :+
-        copy8   #$80, operations::all_flag
+        SET_BIT7_FLAG operations::all_flag
         bne     unlock          ; always
 :       jmp     CloseFilesCancelDialogWithFailedResult
 
@@ -11333,7 +11334,7 @@ retry:  jsr     GetSrcFileInfo
         ;; `src_file_info_params` populated.
         jsr     EnumerationProcessDirectoryEntry
 
-        bit     move_flag       ; same volume relink move?
+        bit     move_flags      ; same volume relink move?
         RTS_IF_VS
 
 is_dir:
@@ -11813,7 +11814,7 @@ common: jsr     GetSrcFileInfo
        IF_CC
         MLI_CALL WRITE_BLOCK, getinfo_block_params
         IF_A_EQ #ERR_WRITE_PROTECTED
-        copy8   #$80, write_protected_flag
+        SET_BIT7_FLAG write_protected_flag
         END_IF
        END_IF
       END_IF
@@ -11848,7 +11849,7 @@ done:   copy8   #0, path_buf4
 
 icon_index:
         .byte   0
-result_flag:
+result_flag:                    ; bit7
         .byte   0
 vol_used_blocks:
         .word   0
@@ -11861,13 +11862,13 @@ write_protected_flag:
 ;;; Open and populate the dialog
 
 .proc _DialogOpen
-        copy8   #0, has_input_field_flag
+        CLEAR_BIT7_FLAG has_input_field_flag
 
-        lda     #$00            ; OK only
+        lda     #kPromptButtonsOKCancel
         ldx     icon_index
         inx
     IF_X_EQ     selected_icon_count
-        lda     #$80            ; OK/Cancel
+        lda     #kPromptButtonsOKOnly
     END_IF
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
@@ -12190,7 +12191,7 @@ do_nibble:
         bit     LCBANK1
         bit     LCBANK1
 
-        copy8   #$80, result_flag
+        SET_BIT7_FLAG result_flag
 
 ret:    return  #$FF
 .endproc ; _ToggleFileLock
@@ -12208,7 +12209,7 @@ ret:    return  #$FF
         DoDeleteSelection := operations::DoDeleteSelection
         DoCopyToRAM := operations::DoCopyToRAM
         DoCopyFile := operations::DoCopyFile
-        operations__move_flag := operations::move_flag
+        operations__move_flags := operations::move_flags
 
         DoGetInfo := operations::get_info::DoGetInfo
 
@@ -13616,7 +13617,7 @@ ignore: sec
         bit     cursor_ibeam_flag
     IF_NC
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        copy8   #$80, cursor_ibeam_flag
+        SET_BIT7_FLAG cursor_ibeam_flag
     END_IF
         rts
 .endproc ; SetCursorIBeamWithFlag
@@ -14071,7 +14072,7 @@ exit:
 
 ;;; ============================================================
 
-mli_relay_checkevents_flag:
+mli_relay_checkevents_flag:     ; bit7
         .byte   0
 
 .proc MLIRelayImpl

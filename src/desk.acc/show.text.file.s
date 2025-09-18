@@ -90,8 +90,8 @@ kLineScrollDelta = 1
 ;;; Scroll by this number of lines when doing page up/down
 kPageScrollDelta = kLinesPerPage - 1
 
-;;; When set, the whole file is rendered, and line offsets are recorded.
-;;; When clear, line offsets are used to accelerate rendering.
+;;; When bit7 set, the whole file is rendered, and line offsets are recorded.
+;;; When bit7 clear, line offsets are used to accelerate rendering.
 record_offsets_flag:
         .byte   0
 
@@ -208,9 +208,9 @@ remainder:      .word   0       ; (out)
         MGTK_CALL MGTK::SetPort, winfo::port
         jsr     CalcAndDrawMode
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        copy8   #$80, record_offsets_flag
+        SET_BIT7_FLAG record_offsets_flag
         jsr     DrawContent
-        copy8   #$00, record_offsets_flag
+        CLEAR_BIT7_FLAG record_offsets_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jsr     InitScrollBar
         MGTK_CALL MGTK::FlushEvents
@@ -971,9 +971,9 @@ prep:   lda     #$00
 
         jsr     DrawMode
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        copy8   #$80, record_offsets_flag
+        SET_BIT7_FLAG record_offsets_flag
         jsr     ForceScrollTop
-        copy8   #$00, record_offsets_flag
+        CLEAR_BIT7_FLAG record_offsets_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jsr     InitScrollBar
         sec                     ; Click consumed

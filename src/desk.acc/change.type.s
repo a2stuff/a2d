@@ -234,7 +234,7 @@ cursor_ibeam_flag: .byte   0
         RTS_IF_NS
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        copy8   #$80, cursor_ibeam_flag
+        SET_BIT7_FLAG cursor_ibeam_flag
         rts
 .endproc ; SetCursorIBeam
 
@@ -243,7 +243,7 @@ cursor_ibeam_flag: .byte   0
         RTS_IF_NC
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        copy8   #0, cursor_ibeam_flag
+        CLEAR_BIT7_FLAG cursor_ibeam_flag
         rts
 .endproc ; SetCursorPointer
 .endproc ; HandleMouseMoved
@@ -389,24 +389,22 @@ yes:    clc
 ;;; No-op if type already focused
 .proc FocusType
         bit     auxtype_focused_flag
-        RTS_IF_NC
-
+    IF_NS
         LETK_CALL LETK::Deactivate, auxtype_le_params
         LETK_CALL LETK::Activate, type_le_params
-        copy8   #0, auxtype_focused_flag
-
+        CLEAR_BIT7_FLAG auxtype_focused_flag
+    END_IF
         rts
 .endproc ; FocusType
 
 ;;; No-op if auxtype already focused
 .proc FocusAuxtype
         bit     auxtype_focused_flag
-        RTS_IF_NS
-
+    IF_NC
         LETK_CALL LETK::Deactivate, type_le_params
         LETK_CALL LETK::Activate, auxtype_le_params
-        copy8   #$80, auxtype_focused_flag
-
+        SET_BIT7_FLAG auxtype_focused_flag
+    END_IF
         rts
 .endproc ; FocusAuxtype
 
@@ -455,9 +453,9 @@ yes:    clc
 
         lda     str_type
     IF_ZERO
-        copy8   #0, data::type_valid
+        CLEAR_BIT7_FLAG data::type_valid
     ELSE
-        copy8   #$80, data::type_valid
+        SET_BIT7_FLAG data::type_valid
         jsr     PadType
         lda     str_type+1
         ldx     str_type+2
@@ -467,9 +465,9 @@ yes:    clc
 
         lda     str_auxtype
     IF_ZERO
-        copy8   #0, data::auxtype_valid
+        CLEAR_BIT7_FLAG data::auxtype_valid
     ELSE
-        copy8   #$80, data::auxtype_valid
+        SET_BIT7_FLAG data::auxtype_valid
         jsr     PadAuxtype
         lda     str_auxtype+1
         ldx     str_auxtype+2
@@ -608,10 +606,10 @@ digits: .byte   "0123456789ABCDEF"
 
 ;;; Copied to/from aux
 .params data
-type_valid:     .byte   0
+type_valid:     .byte   0       ; bit7
 type:           .byte   SELF_MODIFIED_BYTE
 
-auxtype_valid:  .byte   0
+auxtype_valid:  .byte   0       ; bit7
 auxtype:        .word   SELF_MODIFIED
 .endparams
 .assert .sizeof(data) = .sizeof(aux::data), error, "size mismatch"
@@ -692,12 +690,12 @@ callback:
         ;; Rest - determine if same type/auxtype
         lda     gfi_params::file_type
       IF_A_NE   data::type
-        copy8   #0, data::type_valid
+        CLEAR_BIT7_FLAG data::type_valid
       END_IF
 
         ecmp16  gfi_params::aux_type, data::auxtype
       IF_NE
-        copy8   #0, data::auxtype_valid
+        CLEAR_BIT7_FLAG data::auxtype_valid
       END_IF
 
     END_IF

@@ -532,7 +532,7 @@ tmp_poly:
         bcc     continue
 
         ;; Swap in alternate layout
-        copy8   #$80, extended_layout_flag
+        SET_BIT7_FLAG extended_layout_flag
         COPY_BLOCK empty_rect, rect_gap ; Gap is eliminated
         COPY_BLOCK rect_new_bshl, kr5C ; [\|] replaces Solid Apple
         COPY_BLOCK rect_new_bshl, kr7C
@@ -797,16 +797,17 @@ check:  sec
         ptr := $06
 
         cmp     #CHAR_RETURN
-        bne     normal
+    IF_EQ
         bit     extended_layout_flag
-        bpl     normal
-
+      IF_NS
         ;; Special key
         COPY_BYTES      2 + 7 * .sizeof(MGTK::Point), poly_new_ret_inner, tmp_poly
         rts
+      END_IF
+    END_IF
 
         ;; Rectangular key
-normal:
+
         ;; Compute address of rect
         sta     ptr
         copy8   #0, ptr+1
