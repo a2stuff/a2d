@@ -3109,11 +3109,7 @@ done:
 ;;; ============================================================
 
 .proc CmdCheckOrEjectImpl
-
-eject:  sec
-        .byte   OPC_BCC         ; mask next byte (CLC)
-check:  clc
-        ror     eject_flag      ; set bit7
+        ENTRY_POINTS_FOR_BIT7_FLAG eject, check, eject_flag
 
         ;; Ensure that volumes are selected
         lda     selected_window_id
@@ -9435,10 +9431,7 @@ kMaxAnimationStep = 7
         ptr := $06
         rect_table := $800
 
-close:  sec
-        .byte   OPC_BCC         ; mask next byte (CLC)
-open:   clc
-        ror     close_flag      ; set bit7
+        ENTRY_POINTS_FOR_BIT7_FLAG close, open, close_flag
 
         sta     icon_param
         txa                     ; A = window_id

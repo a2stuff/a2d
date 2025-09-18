@@ -5083,7 +5083,7 @@ fail:   EXIT_CALL MGTK::Error::desktop_already_initialized
 ;;; GetEvent
 
 .proc GetEventImpl
-        sec
+        sec                     ; masked if `PeekEvent` is called
         php
         bit     use_interrupts
         bpl     :+
@@ -6713,7 +6713,7 @@ dmrts:  rts
 
 
 .proc DrawMenuBar
-        sec
+        sec                     ; masked if `HideMenu` is called
         lda     cur_open_menu_id
         beq     dmrts
         php

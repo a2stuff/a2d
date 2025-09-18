@@ -467,11 +467,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
 ;;; ============================================================
 
 .proc PaintWindow
-
-draw:   sec
-        .byte   OPC_BCC         ; mask next byte (CLC)
-update: clc
-        ror     full_flag       ; set bit7
+        ENTRY_POINTS_FOR_BIT7_FLAG draw, update, full_flag
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params

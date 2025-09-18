@@ -1006,12 +1006,7 @@ yes:    clc                     ; match!
 ;;; Output: C=0 on success, C=1 on failure
 .proc ShowSHRImpl
 
-packed:
-        sec
-        .byte   OPC_BCC         ; mask next byte (CLC)
-unpacked:
-        clc
-        ror     packed_flag     ; set bit7
+        ENTRY_POINTS_FOR_BIT7_FLAG packed, unpacked, packed_flag
 
         ;; IIgs?
         bit     ROMIN2
