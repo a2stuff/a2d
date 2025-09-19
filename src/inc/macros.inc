@@ -33,7 +33,7 @@
 .macro ENTRY_POINTS_FOR_BIT7_FLAG ep_set, ep_clear, flag_name
 ep_set:
         sec
-        .byte   OPC_BCC         ; mask next byte (CLC)
+        .byte   $90             ; OPC_BCC
 ep_clear:
         clc
         ror     flag_name       ; C into bit7

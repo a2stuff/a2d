@@ -1307,7 +1307,7 @@ kEntriesPerBlock = $0D
 
         stax    callback
 
-        copy8   #0, saw_header_flag
+        CLEAR_BIT7_FLAG saw_header_flag
 
         ;; Open directory
         JUMP_TABLE_MLI_CALL OPEN, open_params
@@ -1334,10 +1334,10 @@ next_entry:
         add16_8 entry_ptr, #.sizeof(FileEntry)
 
         ;; Header?
-        lda     saw_header_flag
-    IF_ZERO
-        inc     saw_header_flag
-        bne     next_entry      ; always
+        bit     saw_header_flag
+    IF_NC
+        SET_BIT7_FLAG saw_header_flag
+        bmi     next_entry      ; always
     END_IF
 
         ;; Active entry?
@@ -1367,7 +1367,7 @@ exit:
 
 entry_in_block:
         .byte   0
-saw_header_flag:
+saw_header_flag:                ; bit7
         .byte   0
 
 .endproc ; EnumerateDirectory

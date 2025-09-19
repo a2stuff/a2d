@@ -344,7 +344,7 @@ ret:    rts
         bit     cursor_ibeam_flag
     IF_NC
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        copy8   #$80, cursor_ibeam_flag
+        SET_BIT7_FLAG cursor_ibeam_flag
     END_IF
         rts
 .endproc ; _SetCursorIBeam
@@ -353,7 +353,7 @@ ret:    rts
         bit     cursor_ibeam_flag
     IF_NS
         jsr     _SetCursorPointer
-        copy8   #0, cursor_ibeam_flag
+        CLEAR_BIT7_FLAG cursor_ibeam_flag
     END_IF
         rts
 .endproc ; _UnsetCursorIBeam
@@ -1220,7 +1220,7 @@ finish:
 
         jsr     _SetCursorPointer
 .ifdef FD_EXTENDED
-        copy8   #0, cursor_ibeam_flag
+        CLEAR_BIT7_FLAG cursor_ibeam_flag
 .endif
 
         clc

@@ -9798,8 +9798,8 @@ iterate_selection:
         ;; If copy, validate the source vs. target during enumeration phase
         ;; NOTE: Here rather than in `CopyProcessSelectedFile` because we don't
         ;; run this for copy using paths (i.e. Duplicate, Copy to RAMCard)
-        lda     do_op_flag
-       IF_ZERO
+        bit     do_op_flag
+       IF_NC
         bit     operation_flags
         ASSERT_EQUALS operations::kOperationFlagsCheckBadCopy, $40
         IF_VS
@@ -9837,8 +9837,8 @@ iterate_selection:
         ;; --------------------------------------------------
 
         ;; Done icons - did we complete the operation?
-        lda     do_op_flag
-    IF_NE
+        bit     do_op_flag
+    IF_NS
         jsr     InvokeOperationCompleteCallback
         return  #0
     END_IF
@@ -10000,8 +10000,7 @@ OpFinishDirectory:
 
 DoNothing:   rts
 
-;;; 0 for count/size pass, non-zero for actual operation
-;;; TODO: Convert to bit7 flag
+;;; bit7=0 for count/size pass, bit7=1 for actual operation
 do_op_flag:
         .byte   0
 
@@ -10165,10 +10164,10 @@ loop:   jsr     ReadFileEntry
         ;; During directory iteration, allow Escape to cancel the operation.
         jsr     CheckCancel
 
-        copy8   #0, cancel_descent_flag
+        CLEAR_BIT7_FLAG continue_descent_flag
         jsr     OpProcessDirectoryEntry
-        lda     cancel_descent_flag
-        bne     loop
+        bit     continue_descent_flag
+        bmi     loop
 
         lda     file_entry_buf + FileEntry::file_type
         cmp     #FT_DIRECTORY
@@ -10188,7 +10187,7 @@ end_dir:
         jmp     CloseSrcDir
 .endproc ; ProcessDir
 
-cancel_descent_flag:  .byte   0
+continue_descent_flag:  .byte   0 ; bit7
 
 ;;; ============================================================
 
@@ -10268,7 +10267,7 @@ operation_lifecycle_callbacks_for_copy:
         COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_copy, operation_traversal_callbacks
 
         CLEAR_BIT7_FLAG operations::all_flag
-        copy8   #1, do_op_flag
+        SET_BIT7_FLAG do_op_flag
         rts
 .endproc ; PrepTraversalCallbacksForCopy
 
@@ -10279,7 +10278,7 @@ operation_lifecycle_callbacks_for_copy:
         COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_copy, operation_traversal_callbacks
 
         SET_BIT7_FLAG operations::all_flag
-        copy8   #1, do_op_flag
+        SET_BIT7_FLAG do_op_flag
         rts
 .endproc ; PrepTraversalCallbacksForDownload
 
@@ -10419,7 +10418,7 @@ done:
         ;; Directory
         jsr     TryCreateDst
         bcc     ok_dir          ; leave dst path segment in place for recursion
-        copy8   #$FF, cancel_descent_flag
+        SET_BIT7_FLAG continue_descent_flag
 
         ;; --------------------------------------------------
 
@@ -10889,7 +10888,7 @@ Start:  lda     DEVNUM
         jsr     _OpenDst
     IF_NOT_ZERO
         ;; Destination not available; note it, can prompt later
-        copy8   #$FF, src_dst_exclusive_flag
+        SET_BIT7_FLAG src_dst_exclusive_flag
     END_IF
 
         ;; Read
@@ -10913,7 +10912,7 @@ write:  bit     src_eof_flag
 
         MLI_CALL SET_MARK, mark_src_params
         bcc     read
-        copy8   #$FF, src_eof_flag
+        SET_BIT7_FLAG src_eof_flag
         jmp     read
 
         ;; EOF
@@ -10969,7 +10968,7 @@ retry:  MLI_CALL READ, read_src_params
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
         bne     :+
-eof:    copy8   #$FF, src_eof_flag
+eof:    SET_BIT7_FLAG src_eof_flag
 :       MLI_CALL GET_MARK, mark_src_params
         rts
 .endproc ; _ReadSrc
@@ -11074,7 +11073,7 @@ src_dst_exclusive_flag:
         .byte   0
 
 src_eof_flag:
-        .byte   0
+        .byte   0               ; bit7
 
 .endproc ; DoFileCopy
 
@@ -11141,7 +11140,7 @@ operation_lifecycle_callbacks_for_delete:
         COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_delete, operation_traversal_callbacks
 
         CLEAR_BIT7_FLAG operations::all_flag
-        copy8   #1, do_op_flag
+        SET_BIT7_FLAG do_op_flag
         rts
 .endproc ; PrepTraversalCallbacksForDelete
 
@@ -11206,7 +11205,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         cmp     #kAlertResultAll
         bne     :+
         SET_BIT7_FLAG operations::all_flag
-        bne     unlock          ; always
+        bmi     unlock          ; always
 :       jmp     CloseFilesCancelDialogWithFailedResult
 
 unlock: jsr     UnlockSrcFile
@@ -11535,8 +11534,8 @@ map:    .byte   FileEntry::access
     END_IF
         rts
 
-cancel: lda     do_op_flag
-        beq     CloseFilesCancelDialogWithCanceledResult
+cancel: bit     do_op_flag
+        bpl     CloseFilesCancelDialogWithCanceledResult
         FALL_THROUGH_TO CloseFilesCancelDialogWithFailedResult
 .endproc ; CheckCancel
 
@@ -11795,7 +11794,7 @@ common: jsr     GetSrcFileInfo
         lda     selected_window_id
     IF_ZERO
         ;; Volume - determine write-protect state
-        copy8   #0, write_protected_flag
+        CLEAR_BIT7_FLAG write_protected_flag
         ldx     icon_index
         lda     selected_icon_list,x
         jsr     IconToDeviceIndex
@@ -12456,7 +12455,7 @@ DoRename        := DoRenameImpl::start
 
         COPY_STRUCT MGTK::Point, tmp_rect::topleft, winfo_rename_dialog::viewloc
 
-        copy8   #0, cursor_ibeam_flag
+        CLEAR_BIT7_FLAG cursor_ibeam_flag
         jsr     SetCursorPointer
 
         MGTK_CALL MGTK::OpenWindow, winfo_rename_dialog
@@ -13601,7 +13600,7 @@ ignore: sec
         bit     cursor_ibeam_flag
     IF_NS
         jsr     SetCursorPointer ; toggle routine
-        copy8   #0, cursor_ibeam_flag
+        CLEAR_BIT7_FLAG cursor_ibeam_flag
     END_IF
         rts
 .endproc ; SetCursorPointerWithFlag

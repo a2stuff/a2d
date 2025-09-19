@@ -293,7 +293,7 @@ dest_drive_index:  .byte   0
 str_d:  PASCAL_STRING 0
 str_s:  PASCAL_STRING 0
 unit_num:       .byte   0
-ejectable_flag: .byte   0
+ejectable_flag: .byte   0       ; bit7
 
 ;;; Memory index of block, for memory bitmap lookups
 block_index_div8:               ; block index, divided by 8
@@ -325,7 +325,7 @@ rect:   .tag    MGTK::Rect
 device_name_buf:
         .res 18, 0
 
-listbox_enabled_flag:  .byte   0
+listbox_enabled_flag:  .byte   0 ; bit7
 
 
 ;;; %0xxxxxxx = ProDOS
@@ -443,7 +443,7 @@ init:
         MGTK_CALL MGTK::FrameRect, rect_frame
 
 InitDialog:
-        copy8   #0, listbox_enabled_flag
+        CLEAR_BIT7_FLAG listbox_enabled_flag
         copy8   #$FF, current_drive_selection
         copy8   #BTK::kButtonStateDisabled, dialog_ok_button::state
 
@@ -482,7 +482,7 @@ InitDialog:
         ;; Drive select listbox
 
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
-        copy8   #$FF, listbox_enabled_flag
+        SET_BIT7_FLAG listbox_enabled_flag
 
         jsr     SetCursorWatch
         jsr     EnumerateDevices
@@ -525,7 +525,7 @@ InitDialog:
         ;; Have a destination selection
         tax
         copy8   destination_index_table,x, dest_drive_index
-        copy8   #$00, listbox_enabled_flag
+        CLEAR_BIT7_FLAG listbox_enabled_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -2114,7 +2114,7 @@ options:        .byte   0       ; AlertOptions
 
 start:
         pha                     ; A = alert id
-        copy8   #0, ejectable_flag
+        CLEAR_BIT7_FLAG ejectable_flag
 
         ;; --------------------------------------------------
         ;; Determine alert options
@@ -2229,7 +2229,7 @@ find_in_alert_table:
         sty     unit_num
         tya
         jsr     main__IsDriveEjectable
-    IF_NOT_ZERO
+    IF_NS
         sta     ejectable_flag
     END_IF
         rts

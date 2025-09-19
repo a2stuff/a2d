@@ -7,24 +7,14 @@
 
 .scope inttostring_impl
 
-;;; Entry point: with thousands separators
-sep:    sec
-        bcs     common
-
-;;; Entry point: without thousands separators
-nosep:  clc
-        FALL_THROUGH_TO common
-
-common: stax    value
-        ror                     ; move carry to high bit
-        sta     separator_flag
+        ENTRY_POINTS_FOR_BIT7_FLAG sep, nosep, separator_flag
+        stax    value
 
         ldx     #DeskTopSettings::intl_thou_sep
         jsr     ReadSetting
         sta     thou_sep_char
 
-        lda     #0
-        sta     nonzero_flag
+        CLEAR_BIT7_FLAG nonzero_flag
         ldy     #0              ; y = position in string
         ldx     #0              ; x = which power index is subtracted (*2)
 
@@ -47,9 +37,7 @@ break:  lda     digit
         ;; Convert to ASCII
 not_pad:
         ora     #'0'
-        pha
-        copy8   #$80, nonzero_flag
-        pla
+        SET_BIT7_FLAG nonzero_flag
 
         ;; Place the character
         iny
@@ -81,9 +69,9 @@ done:   lda     value           ; handle last digit
 powers: .word   10000, 1000, 100, 10
 value:  .word   0            ; remaining value as subtraction proceeds
 digit:  .byte   0            ; current digit being accumulated
-nonzero_flag:                ; high bit set once a non-zero digit seen
+nonzero_flag:                ; bit7 set once a non-zero digit seen
         .byte   0
-separator_flag:
+separator_flag:              ; bit7 set if thousands separators requested
         .byte   0
 .endscope ; inttostring_impl
 

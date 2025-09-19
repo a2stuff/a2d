@@ -560,7 +560,7 @@ done:   jmp     InputLoop
 .proc DrawWindow
         ;; If we're drawing the window, the indicator is implicitly
         ;; not currently visible.
-        copy8   #0, indicator_flag
+        CLEAR_BIT7_FLAG indicator_flag
 
         ;; Defer if content area is not visible
         jsr     SetPort
@@ -685,7 +685,7 @@ HidePositionIndicator := ShowPositionIndicator
         rts
 .endproc ; XDrawPositionIndicator
 
-indicator_flag:
+indicator_flag:                 ; bit7 = indicator is visible
         .byte   0
 
 .proc ResetBlinkCounter

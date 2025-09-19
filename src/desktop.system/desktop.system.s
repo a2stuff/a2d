@@ -521,8 +521,8 @@ is_dir:
         bcc     ok
 fail:   jmp     (hook_handle_error_code)
 
-onerr:  copy8   #$FF, copy_err_flag
-        bne     copy_err             ; always
+onerr:  SET_BIT7_FLAG copy_err_flag
+        bmi     copy_err        ; always
 
 ok:     jsr     AppendFilenameToPath1
         jsr     CreateDir
@@ -988,12 +988,11 @@ loop:   jsr     ReadFileEntry
         and     #NAME_LENGTH_MASK
         sta     filename
 
-        copy8   #0, copy_err_flag
-
+        CLEAR_BIT7_FLAG copy_err_flag
         jsr     CopyEntry
+        bit     copy_err_flag   ; don't recurse if the copy failed
+        bmi     loop
 
-        lda     copy_err_flag   ; don't recurse if the copy failed
-        bne     loop
         lda     file_entry + FileEntry::file_type
         cmp     #FT_DIRECTORY
         bne     loop            ; and don't recurse unless it's a directory
@@ -1015,7 +1014,7 @@ done:   jmp     DoCloseFile
 ;;; ============================================================
 
         ;; Set on error during copying of a single file
-copy_err_flag:
+copy_err_flag:                  ; bit7
         .byte   0
 
 

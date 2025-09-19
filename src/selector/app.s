@@ -285,7 +285,7 @@ num_primary_run_list_entries:
 num_secondary_run_list_entries:
         .byte   0
 
-invoked_during_boot_flag: ; set to 1 during key checks during boot, 0 otherwise
+invoked_during_boot_flag: ; bit7 set during keyboard checks during boot
         .byte   0
 
 ;;; ============================================================
@@ -331,7 +331,7 @@ entry:
 .scope AppInit
         copy8   #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
-        copy8   #1, invoked_during_boot_flag
+        SET_BIT7_FLAG invoked_during_boot_flag
         lda     num_secondary_run_list_entries
         ora     num_primary_run_list_entries
         bne     check_key_down
@@ -398,7 +398,7 @@ check_key:
 
 done_keys:
         sta     KBDSTRB
-        copy8   #0, invoked_during_boot_flag
+        CLEAR_BIT7_FLAG invoked_during_boot_flag
 
         ;; --------------------------------------------------
 
@@ -1383,16 +1383,16 @@ start:
 
         ;; --------------------------------------------------
         ;; Highlight entry in UI, if needed
-        lda     invoked_during_boot_flag
-    IF_ZERO                     ; skip if there's no UI yet
+        bit     invoked_during_boot_flag
+    IF_NC                       ; skip if there's no UI yet
         jsr     SetCursorWatch
         jsr     ClearSelectedIndex
     END_IF
 
         ;; --------------------------------------------------
         ;; Figure out entry path, given entry options and overrides
-        lda     invoked_during_boot_flag
-    IF_ZERO
+        bit     invoked_during_boot_flag
+    IF_NC
         bit     BUTN0           ; if Open-Apple is down, skip RAMCard copy
         jmi     use_entry_path
 
@@ -1414,8 +1414,8 @@ start:
 
         ;; --------------------------------------------------
         ;; `kSelectorEntryCopyOnUse`
-        lda     invoked_during_boot_flag
-        bne     use_ramcard_path ; skip if no UI
+        bit     invoked_during_boot_flag
+        bmi     use_ramcard_path ; skip if no UI
 
         ldx     invoke_index
         jsr     GetEntryCopiedToRAMCardFlag
@@ -1446,8 +1446,8 @@ start:
         ;; --------------------------------------------------
         ;; `kSelectorEntryCopyOnBoot`
 on_boot:
-        lda     invoked_during_boot_flag
-    IF_ZERO                     ; skip if no UI
+        bit     invoked_during_boot_flag
+    IF_NC                       ; skip if no UI
         ldx     invoke_index
         jsr     GetEntryCopiedToRAMCardFlag
         bpl     use_entry_path  ; wasn't copied!
@@ -1482,8 +1482,8 @@ retry:
 
         ;; Not present; maybe show a retry prompt
         tax
-        lda     invoked_during_boot_flag
-    IF_ZERO
+        bit     invoked_during_boot_flag
+    IF_NC
         txa
         pha
         jsr     ShowAlert
@@ -1615,8 +1615,8 @@ check_path:
         DEFINE_QUIT_PARAMS quit_params
 
 .proc ClearSelectedIndex
-        lda     invoked_during_boot_flag
-    IF_ZERO
+        bit     invoked_during_boot_flag
+    IF_NC
         copy8   #$FF, op_params::new_selection
         OPTK_CALL OPTK::SetSelection, op_params
         jsr     UpdateOKButton

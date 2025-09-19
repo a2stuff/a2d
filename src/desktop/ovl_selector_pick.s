@@ -1026,7 +1026,7 @@ write:  lda     open_origpfx_params::ref_num
 close:  MLI_CALL CLOSE, close_params
         rts
 
-second_try_flag:
+second_try_flag:                ; 0 or 1, updated with INC
         .byte   0
 .endproc ; WriteFileToOriginalPrefix
 

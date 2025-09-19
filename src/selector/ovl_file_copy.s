@@ -252,16 +252,21 @@ loop:
         param_call app::AdjustFileEntryCase, file_entry
 
         lda     file_entry+FileEntry::storage_type_name_length
-        beq     loop
+        beq     loop            ; deleted
+
         and     #NAME_LENGTH_MASK
         sta     file_entry+FileEntry::storage_type_name_length
-        copy8   #0, copy_err_flag
+
+        CLEAR_BIT7_FLAG copy_err_flag
         jsr     op_jt1
-        lda     copy_err_flag
-        bne     loop
+        bit     copy_err_flag   ; don't recurse if the copy failed
+        bmi     loop
+
         lda     file_entry+FileEntry::file_type
         cmp     #FT_DIRECTORY
-        bne     loop
+        bne     loop            ; and don't recurse unless it's a directory
+
+        ;; Recurse into child directory
         jsr     DescendDirectory
         inc     recursion_depth
         jmp     loop
@@ -279,7 +284,7 @@ loop:
 
 ;;; ============================================================
 
-copy_err_flag:  .byte   0
+copy_err_flag:  .byte   0       ; bit7
 
 ;;; ============================================================
 
@@ -443,7 +448,7 @@ PopDstSegment:
 
 err:    jsr     RemoveSegmentFromDstPathname
         jsr     RemoveSegmentFromSrcPathname
-        copy8   #$FF, copy_err_flag
+        SET_BIT7_FLAG copy_err_flag
         rts
 
 got_src_info:

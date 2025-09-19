@@ -416,6 +416,7 @@ exit:   lda     down_flag       ; was depressed?
     IF_ZERO
         jsr     _Invert
     END_IF
+        ;; Note that we want N=0 and Z=1 if clicked, so bits<7 matter.
         lda     down_flag
         rts
 .endproc ; TrackImpl
