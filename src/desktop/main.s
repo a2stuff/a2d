@@ -159,7 +159,7 @@ handle_update:
     IF_ZERO
         ;; Desktop
         ITK_CALL IconTK::DrawAll, event_params::window_id
-    ELSE_IF_A_LT #kMaxDeskTopWindows
+    ELSE_IF_A_LT #kMaxDeskTopWindows+1 ; 1...max are ours
         ;; Directory Window
         jsr     UpdateWindow
     END_IF
