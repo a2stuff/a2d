@@ -90,10 +90,7 @@
         pla
         tay
 
-        lda     #>(JUMP_TABLE_LAUNCH_FILE-1)
-        pha
-        lda     #<(JUMP_TABLE_LAUNCH_FILE-1)
-        pha
+        PUSH_RETURN_ADDRESS JUMP_TABLE_LAUNCH_FILE
 
         tya
         pha

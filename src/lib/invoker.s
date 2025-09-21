@@ -137,10 +137,7 @@ load_target:
 
         ;; Set return address to the QUIT call below
         ;; (mostly for invoking BIN files)
-        lda     #>(quit_call-1)
-        pha
-        lda     #<(quit_call-1)
-        pha
+        PUSH_RETURN_ADDRESS quit_call
 
         jmp_addr := *+1
         jmp     PRODOS_SYS_START

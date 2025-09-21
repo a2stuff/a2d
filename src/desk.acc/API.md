@@ -168,10 +168,7 @@ highlighted in DeskTop. This can be done by copying the full path to
         tay
 
         ;; Inject a call to `JUMP_TABLE_SHOW_FILE`
-        lda     #>(JUMP_TABLE_SHOW_FILE-1)
-        pha
-        lda     #<(JUMP_TABLE_SHOW_FILE-1)
-        pha
+        PUSH_RETURN_ADDRESS JUMP_TABLE_SHOW_FILE
 
         ;; Restore the top of the stack
         tya

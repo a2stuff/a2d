@@ -39,6 +39,14 @@ ep_clear:
         ror     flag_name       ; C into bit7
 .endmacro
 
+;;; Inject a return address to the stack.
+.macro PUSH_RETURN_ADDRESS addr
+        lda     #>(addr-1)
+        pha
+        lda     #<(addr-1)
+        pha
+.endmacro
+
 ;;; ============================================================
 ;;; Strings
 ;;; ============================================================

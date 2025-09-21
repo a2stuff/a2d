@@ -711,10 +711,7 @@ continue:
         pla
         tay
 
-        lda     #>(JUMP_TABLE_SHOW_FILE-1)
-        pha
-        lda     #<(JUMP_TABLE_SHOW_FILE-1)
-        pha
+        PUSH_RETURN_ADDRESS JUMP_TABLE_SHOW_FILE
 
         tya
         pha
