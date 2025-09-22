@@ -96,8 +96,8 @@ loop:
 
         ;; Did the mouse move?
     IF_A_EQ     #kEventKindMouseMoved
-        jsr     ClearTypeDown
-        jmp     loop            ; no state change
+        jsr     ClearTypeDown   ; always returns Z=1
+        beq     loop            ; just to `loop` because no state change
     END_IF
 
         ;; Is it a key down event?
@@ -108,14 +108,14 @@ loop:
 
         ;; Is it a button-down event? (including w/ modifiers)
     IF_A_EQ_ONE_OF #MGTK::EventKind::button_down, #MGTK::EventKind::apple_key
-        jsr     ClearTypeDown
         jsr     HandleClick
-        jmp     MainLoop
+        jsr     ClearTypeDown   ; always returns Z=1
+        beq     MainLoop        ; always
     END_IF
 
         ;; Is it an update event?
     IF_A_EQ     #MGTK::EventKind::update
-        jsr     ClearUpdatesNoPeek
+        jsr     ClearUpdatesSkipGet
     END_IF
 
         jmp     loop
@@ -134,43 +134,33 @@ counter:
 ;;; (e.g. a window close followed by a nested loop or slow
 ;;; file operation).
 
-.proc ClearUpdatesImpl
-
-;;; Caller already called GetEvent, no need to PeekEvent;
-;;; just jump directly into the clearing loop.
-clear_no_peek := handle_update
-
-;;; Clear any pending updates.
-clear:
-        FALL_THROUGH_TO loop
-
-        ;; --------------------------------------------------
-loop:
+.proc ClearUpdates
+    DO
         jsr     PeekEvent
         lda     event_params::kind
-        cmp     #MGTK::EventKind::update
-        bne     finish
+        BREAK_IF_A_NE #MGTK::EventKind::update
+
         jsr     GetEvent        ; no need to synthesize events
 
-handle_update:
+;;; If caller already called GetEvent, start here.
+skip_get:
         MGTK_CALL MGTK::BeginUpdate, event_params::window_id
-        bne     loop            ; obscured
+        CONTINUE_IF_NOT_ZERO    ; obscured
+
         lda     event_params::window_id
-    IF_ZERO
+      IF_ZERO
         ;; Desktop
         ITK_CALL IconTK::DrawAll, event_params::window_id
-    ELSE_IF_A_LT #kMaxDeskTopWindows+1 ; 1...max are ours
+      ELSE_IF_A_LT #kMaxDeskTopWindows+1; 1...max are ours
         ;; Directory Window
         jsr     UpdateWindow
-    END_IF
+      END_IF
         MGTK_CALL MGTK::EndUpdate
-        jmp     loop
+    WHILE_ZERO                  ; always
 
-finish:
         rts
-.endproc ; ClearUpdatesImpl
-ClearUpdatesNoPeek := ClearUpdatesImpl::clear_no_peek
-ClearUpdates := ClearUpdatesImpl::clear
+.endproc ; ClearUpdates
+ClearUpdatesSkipGet := ClearUpdates::skip_get
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
@@ -210,16 +200,17 @@ tick_counter:
 
 ;;; Inputs: A = `window_id` from `update` event
 .proc UpdateWindow
+        sta     getwinport_params::window_id
         jsr     LoadWindowEntryTable
+
+        ;; `DrawWindowHeader` and `AdjustUpdatePortForEntries` rely on
+        ;; `window_grafport` for dimensions
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
 
-        ;; `DrawWindowHeader` relies on `window_grafport` for dimensions
-        copy8   cached_window_id, getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     DrawWindowHeader
 
-        ;; `AdjustUpdatePortForEntries` also relies on `window_grafport`
         jsr     AdjustUpdatePortForEntries
         jmp     DrawWindowEntries
 .endproc ; UpdateWindow
@@ -888,7 +879,7 @@ prev_selected_icon:
 .proc _ActivateClickedWindow
         window_id := *+1
         lda     #SELF_MODIFIED_BYTE
-        jmp     ActivateWindow
+        FALL_THROUGH_TO ActivateWindow
 .endproc ; _ActivateClickedWindow
 clicked_window_id := _ActivateClickedWindow::window_id
 
@@ -1841,7 +1832,7 @@ devlst_backup:
         ;; "Run" command
         result := *+1
         lda     #SELF_MODIFIED_BYTE
-        jmp     InvokeSelectorEntry
+        bpl     InvokeSelectorEntry ; always
     END_IF
 
 done:   rts
@@ -3549,6 +3540,8 @@ ret:    rts
 
 ;;; ============================================================
 
+;;; Assert: Icon(s) selected
+
 .proc CmdGetInfo
         jsr     DoGetInfo
     IF_NS
@@ -3593,7 +3586,8 @@ ret:    rts
         RTS_IF_EQ
 
         ldax    #clipboard
-        jmp     CmdRenameWithDefaultNameGiven
+        ASSERT_NOT_EQUALS .hibyte(clipboard), 0
+        bne     CmdRenameWithDefaultNameGiven
 .endproc ; CmdPaste
 
 .proc CmdCut
@@ -3603,7 +3597,8 @@ ret:    rts
 
 .proc CmdClear
         ldax    #str_empty
-        jmp     CmdRenameWithDefaultNameGiven
+        ASSERT_NOT_EQUALS .hibyte(str_empty), 0
+        beq     CmdRenameWithDefaultNameGiven
 .endproc ; CmdClear
 
 ;;; ============================================================
@@ -4003,6 +3998,7 @@ KeyboardHighlightUp    := KeyboardHighlightSpatialImpl::up
 ;;; ============================================================
 ;;; Type Down Selection
 
+;;; Output: Z=1 (always)
 .proc ClearTypeDown
         copy8   #0, typedown_buf
         rts
@@ -4341,23 +4337,6 @@ ret:    rts
 
 finish: rts
 .endproc ; CmdSelectAll
-
-
-;;; ============================================================
-;;; Initiate keyboard-based resizing
-
-.proc CmdResize
-        MGTK_CALL MGTK::KeyboardMouse
-        jmp     DoWindowResize
-.endproc ; CmdResize
-
-;;; ============================================================
-;;; Initiate keyboard-based window moving
-
-.proc CmdMove
-        MGTK_CALL MGTK::KeyboardMouse
-        jmp     DoWindowDrag
-.endproc ; CmdMove
 
 ;;; ============================================================
 ;;; Cycle Through Windows
@@ -5510,32 +5489,35 @@ clear:  jsr     ClearSelection
         ;; --------------------------------------------------
         ;; Event loop
 event_loop:
+
+        ;; Done the drag?
         jsr     PeekEvent
         lda     event_params::kind
-        cmp     #MGTK::EventKind::drag
-        jeq     update
+    IF_A_NE     #MGTK::EventKind::drag
+
+        jsr     FrameTmpRect
 
         ;; Process all icons in window
-        jsr     FrameTmpRect
-        ldx     #0
-iloop:  RTS_IF_X_EQ cached_window_entry_count
+        ldx     #0              ; X = index
+      DO
+        RTS_IF_X_EQ cached_window_entry_count
+        txa
+        pha                     ; A = index
 
         ;; Check if icon should be selected
-        txa
-        pha
         copy8   cached_window_entry_list,x, icon_param
         lda     window_id
-    IF_NOT_ZERO
+       IF_NOT_ZERO
         lda     icon_param
         jsr     IconScreenToWindow
-    END_IF
+       END_IF
         ITK_CALL IconTK::IconInRect, icon_param
         beq     done_icon
 
         ;; Already selected?
         lda     icon_param
         jsr     IsIconSelected
-    IF_NE
+       IF_NE
         ;; Highlight and add to selection
         ;; NOTE: Does not use `AddIconToSelection` because we perform
         ;; a more optimized drawing below.
@@ -5543,34 +5525,36 @@ iloop:  RTS_IF_X_EQ cached_window_entry_count
         lda     icon_param
         jsr     AddToSelectionList
         copy8   window_id, selected_window_id
-    ELSE
+       ELSE
         ;; Unhighlight and remove from selection
         ITK_CALL IconTK::UnhighlightIcon, icon_param
         lda     icon_param
         jsr     RemoveFromSelectionList
-    END_IF
+       END_IF
 
         lda     window_id
-    IF_ZERO
+       IF_ZERO
         ITK_CALL IconTK::DrawIcon, icon_param
-    ELSE
+       ELSE
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag select)
-    END_IF
+       END_IF
 
 done_icon:
         lda     window_id
-    IF_NOT_ZERO
+       IF_NOT_ZERO
         lda     icon_param
         jsr     IconWindowToScreen
-    END_IF
-        pla
-        tax
+       END_IF
+
+        pla                     ; A = index
+        tax                     ; X = index
         inx
-        jmp     iloop
+      WHILE_NOT_ZERO            ; always
+    END_IF
 
         ;; --------------------------------------------------
         ;; Check movement threshold
-update: lda     window_id
+        lda     window_id
     IF_NOT_ZERO
         jsr     _CoordsScreenToWindow
     END_IF
@@ -5640,6 +5624,14 @@ beyond:
 .endproc ; DragSelect
 
 ;;; ============================================================
+;;; Initiate keyboard-based window moving
+
+.proc CmdMove
+        MGTK_CALL MGTK::KeyboardMouse
+        FALL_THROUGH_TO DoWindowDrag
+.endproc ; CmdMove
+
+;;; ============================================================
 
 .proc DoWindowDrag
         copy8   active_window_id, dragwindow_params::window_id
@@ -5652,6 +5644,14 @@ beyond:
 
         jmp     CachedIconsWindowToScreen
 .endproc ; DoWindowDrag
+
+;;; ============================================================
+;;; Initiate keyboard-based resizing
+
+.proc CmdResize
+        MGTK_CALL MGTK::KeyboardMouse
+        FALL_THROUGH_TO DoWindowResize
+.endproc ; CmdResize
 
 ;;; ============================================================
 
@@ -7145,9 +7145,9 @@ vol_kb_used:  .word   0
         sub16   filerecords_free_start, window_filerecord_table,x, deltam
         inc     index
 
-loop2:  lda     index
-        cmp     window_id_to_filerecord_list_count
-        jeq     finish
+    DO
+        lda     index
+        BREAK_IF_A_EQ window_id_to_filerecord_list_count
 
         lda     index
         asl     a
@@ -7155,16 +7155,13 @@ loop2:  lda     index
         sub16   window_filerecord_table+2,x, window_filerecord_table,x, size
         add16   window_filerecord_table-2,x, size, window_filerecord_table,x
         inc     index
-        jmp     loop2
+    WHILE_NOT_ZERO              ; always
 
-finish:
         ;; Update "start of free memory" pointer
         lda     window_id_to_filerecord_list_count
-        sec
-        sbc     #1
         asl     a
         tax
-        add16   window_filerecord_table,x, deltam, filerecords_free_start
+        add16   window_filerecord_table-2,x, deltam, filerecords_free_start
         rts
 .endproc ; RemoveWindowFileRecords
 
@@ -7211,11 +7208,12 @@ copy_new_window_bounds_flag:
         cmp16   bbox_dx, #kMaxWindowWidth
         bcs     use_maxw
         ldax    bbox_dx
-        jmp     assign_width
+        bcc     assign_width    ; always
 
 use_minw:
         ldax    #kMinWindowWidth
-        jmp     assign_width
+        ASSERT_EQUALS .hibyte(::kMinWindowWidth), 0
+        beq     assign_width    ; always
 
 use_maxw:
         ldax    #kMaxWindowWidth
@@ -7239,11 +7237,12 @@ assign_width:
         cmp16   bbox_dy, #kMaxWindowHeight
         bcs     use_maxh
         ldax    bbox_dy
-        jmp     assign_height
+        bcc     assign_height   ; always
 
 use_minh:
         ldax    #kMinWindowHeight
-        jmp     assign_height
+        ASSERT_EQUALS .hibyte(::kMinWindowHeight), 0
+        beq     assign_height   ; always
 
 use_maxh:
         ldax    #kMaxWindowHeight
@@ -10174,14 +10173,14 @@ loop:   jsr     ReadFileEntry
         bne     loop
         jsr     PrepToOpenDir
         inc     process_depth
-        jmp     loop
+        bpl     loop            ; always
 
 end_dir:
         lda     process_depth
     IF_NOT_ZERO
         jsr     FinishDir
         dec     process_depth
-        jmp     loop
+        bpl     loop            ; always
     END_IF
 
         jmp     CloseSrcDir
@@ -11752,8 +11751,6 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 ;;; Assert: At least one icon is selected
 
 .proc DoGetInfo
-        lda     selected_icon_count
-        RTS_IF_ZERO
 
         ;; --------------------------------------------------
         ;; Loop over selected icons
@@ -11762,14 +11759,15 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
         sta     icon_index
         sta     result_flag
 
-loop:   ldx     icon_index
+loop:
+        icon_index := *+1
+        ldx     #SELF_MODIFIED_BYTE
         cpx     selected_icon_count
         jeq     done
 
-        ldx     icon_index
         lda     selected_icon_list,x
         cmp     trash_icon_num
-        jeq     next
+        beq     next
 
         ;; --------------------------------------------------
         ;; Get the file / volume info from ProDOS
@@ -11839,8 +11837,6 @@ done:   copy8   #0, path_buf4
         lda     result_flag
         rts
 
-icon_index:
-        .byte   0
 result_flag:                    ; bit7
         .byte   0
 vol_used_blocks:
@@ -14205,7 +14201,8 @@ params:  .res    3
 
     IF_A_EQ     #DDL_VALUE
         copy16  #kDialogValueLeft, dialog_label_pos::xcoord
-        jmp     calc_y
+        ASSERT_EQUALS .hibyte(::kDialogValueLeft), 0
+        beq     calc_y
     END_IF
 
         ;; Compute text width

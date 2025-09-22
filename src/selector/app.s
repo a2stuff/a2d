@@ -454,7 +454,7 @@ next:   dex
         jeq     StartupSlot
         dey
     WHILE_NOT_ZERO
-        jmp     set_startup_menu_items
+        FALL_THROUGH_TO set_startup_menu_items
 
 set_startup_menu_items:
         copy8   slot_table, startup_menu
@@ -625,31 +625,27 @@ retry:  param_call GetFileInfo, str_desktop_2
 ;;; Handle update events
 
 CheckAndClearUpdates:
+    DO
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::update
-        bne     done
+        BREAK_IF_A_NE #MGTK::EventKind::update
+
         MGTK_CALL MGTK::GetEvent, event_params
         FALL_THROUGH_TO ClearUpdates
 
 ClearUpdates:
-        jsr     @do_update
-        jmp     CheckAndClearUpdates
-
-@do_update:
         lda     event_params::window_id
-        cmp     #winfo::kDialogId
-        bne     done
+        CONTINUE_IF_A_NE #winfo::kDialogId
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
-        bne     done            ; obscured
+        CONTINUE_IF_NOT_ZERO    ; obscured
+
         sec                     ; is update
         jsr     DrawWindow
-
         OPTK_CALL OPTK::Update, op_params
-
         MGTK_CALL MGTK::EndUpdate
-done:   rts
+    WHILE_ZERO                  ; always
+        rts
 
 ;;; ============================================================
 ;;; Menu dispatch tables

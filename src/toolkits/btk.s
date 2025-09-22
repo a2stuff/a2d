@@ -192,8 +192,7 @@ ret:
         MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect
-
-        jmp     HiliteImpl__skip_port
+        beq     HiliteImpl__skip_port ; always
 .endproc ; UpdateImpl
 
 ;;; ============================================================
@@ -382,7 +381,7 @@ UNSUPPRESS_SHADOW_WARNING
         copy8   #0, down_flag
 
         ;; Do initial inversion
-        jsr     _Invert
+loop_i: jsr     _Invert
 
         ;; Event loop
 loop:   MGTK_CALL MGTK::GetEvent, event_params
@@ -406,11 +405,10 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
 inside: lda     down_flag       ; already depressed?
         beq     loop
 
-toggle: jsr     _Invert
-        lda     down_flag
+toggle: lda     down_flag
         eor     #$80
         sta     down_flag
-        jmp     loop
+        jmp     loop_i          ; invert and continue
 
 exit:   lda     down_flag       ; was depressed?
     IF_ZERO

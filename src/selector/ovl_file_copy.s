@@ -1136,7 +1136,7 @@ remainder:      .word   0                 ; (out)
 .proc HandleErrorCode
         lda     #AlertID::copy_incomplete
         jsr     app::ShowAlert
-        jmp     RestoreStackAndReturn
+        FALL_THROUGH_TO RestoreStackAndReturn
 .endproc ; HandleErrorCode
 
 ;;; ============================================================

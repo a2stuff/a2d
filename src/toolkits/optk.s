@@ -309,7 +309,7 @@ key             .byte
         jsr     _CallIsEntryProc
     UNTIL_NC
 
-        jmp     _SetSelectionAndNotify
+        bpl     _SetSelectionAndNotify ; always
 .endproc ; _HandleKeyRight
 
 ;;; --------------------------------------------------
@@ -333,7 +333,7 @@ last:   lda     max_entries_minus_one
         jsr     _CallIsEntryProc
     UNTIL_NC
 
-        jmp     _SetSelectionAndNotify
+        bpl     _SetSelectionAndNotify ; always
 .endproc ; _HandleKeyLeft
 
 ;;; --------------------------------------------------
@@ -357,7 +357,7 @@ last:   lda     max_entries_minus_one
         jsr     _CallIsEntryProc
     UNTIL_NC
 
-        jmp     _SetSelectionAndNotify
+        bpl     _SetSelectionAndNotify ; always
 .endproc ; _HandleKeyUp
 
 ;;; --------------------------------------------------
@@ -377,7 +377,7 @@ last:   lda     max_entries_minus_one
         jsr     _CallIsEntryProc
     UNTIL_NC
 
-        jmp     _SetSelectionAndNotify
+        bpl     _SetSelectionAndNotify ; always
 .endproc ; _HandleKeyDown
 
 .endproc ; KeyImpl
@@ -430,7 +430,7 @@ new_selection   .byte
         pla                     ; A = new selection
         sta     (a_record),y
         sta     oprc_selected_index ; keep copy in sync
-        jmp     _HighlightIndex
+        FALL_THROUGH_TO _HighlightIndex
 .endproc ; SetSelectionImpl
 
 ;;; ============================================================

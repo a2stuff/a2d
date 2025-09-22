@@ -18,31 +18,29 @@ str_file_type:
         lda     type_table,y
         file_type := *+1
         cmp     #SELF_MODIFIED_BYTE
-        beq     found
-        dey
-    WHILE_POS
-        jmp     not_found
-
+      IF_EQ
         ;; Found - copy string from `type_names_table`
-found:  tya
+        tya
         sta     add
-        asl     a
+        asl     a               ; *=2
         clc
-        add := *+1
+        add := *+1              ; *=3
         adc     #SELF_MODIFIED_BYTE
         tay
 
         ldx     #0
-    DO
+       DO
         copy8   type_names_table,y, str_file_type+1,x
         iny
         inx
-    WHILE_X_NE  #3
+       WHILE_X_NE #3
 
         rts
+      END_IF
+        dey
+    WHILE_POS
 
         ;; Type not found - use generic "$xx"
-not_found:
         copy8   #'$', str_file_type+1
 
         lda     file_type

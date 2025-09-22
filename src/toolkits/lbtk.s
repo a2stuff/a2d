@@ -256,7 +256,7 @@ a_record        .addr
     IF_NS
         lda     #0
     END_IF
-        ora     #$80            ; high bit = force draw
+        sec                     ; force draw
         jmp     _ScrollIntoView
 .endproc ; InitImpl
 
@@ -580,7 +580,8 @@ new_selection   .byte
         sta     (a_record),y
         sta     lbr_copy + LBTK::ListBoxRecord::selected_index ; keep copy in sync
     IF_NC
-        jmp     _ScrollIntoView
+        clc                     ; not force draw
+        bcc     _ScrollIntoView ; always
     END_IF
         rts
 .endproc ; _SetSelection
@@ -664,15 +665,14 @@ activate:
 .endproc ; _EnableScrollbar
 
 ;;; ============================================================
-;;; Input: A = row to ensure visible; high bit = force redraw,
+;;; Input: A = row to ensure visible; C = force redraw,
 ;;;   even if no scrolling occurred.
 ;;; Assert: `LBTK::ListBoxRecord::winfo`'s `MGTK::Winfo::vthumbpos` is set.
 
 .proc _ScrollIntoView
         force_draw_flag := tmp_space
 
-        sta     force_draw_flag
-        and     #$7F            ; A = index
+        ror     force_draw_flag ; set bit7
 
         ldy     #MGTK::Winfo::vthumbpos
         cmp     (winfo_ptr),y
