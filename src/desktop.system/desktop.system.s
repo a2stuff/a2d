@@ -371,8 +371,8 @@ syscap: .byte   0
 ;;; ============================================================
 
 ;;; Entry point is `GenericCopy::DoCopy`
-;;; * Source path is `GenericCopy::path2`
-;;; * Destination path is `GenericCopy::path1`
+;;; * Source path is `GenericCopy::pathname_src`
+;;; * Destination path is `GenericCopy::pathname_dst`
 ;;; * Callbacks (`GenericCopy::hook_*`) must be populated
 
 .proc GenericCopy
@@ -380,16 +380,23 @@ syscap: .byte   0
 ;;; ============================================================
 
 ;;; Source/Destination paths - caller must initialize these
-path1:  .res    ::kPathBufferSize, 0
-path2:  .res    ::kPathBufferSize, 0
+pathname_dst:  .res    ::kPathBufferSize, 0
+pathname_src:  .res    ::kPathBufferSize, 0
 
 ;;; Callbacks - caller must initialize these
 hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code or kErrCancel
 hook_handle_no_space:     .addr   0 ; fatal
 hook_insert_source:       .addr   0 ; if this returns, copy is retried
-hook_show_file:           .addr   0 ; called when `path2` updated
+hook_show_file:           .addr   0 ; called when `pathname_src` updated
 
 kErrCancel = $FF
+
+.macro HANDLE_ERROR_CODE
+        jmp     (hook_handle_error_code)
+.endmacro
+.macro HANDLE_NO_SPACE
+        jmp     (hook_handle_no_space)
+.endmacro
 
 ;;; ============================================================
 
@@ -399,10 +406,10 @@ ShowInsertPrompt:
 ShowCopyingScreen:
         jmp     (hook_show_file)
 
-        DEFINE_GET_FILE_INFO_PARAMS get_path2_info_params, path2
-        DEFINE_GET_FILE_INFO_PARAMS get_path1_info_params, path1
-        DEFINE_CREATE_PARAMS create_params, path1, 0
-        DEFINE_OPEN_PARAMS open_path2_params, path2, dir_io_buffer
+        DEFINE_GET_FILE_INFO_PARAMS get_src_file_info_params, pathname_src
+        DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
+        DEFINE_CREATE_PARAMS create_params, pathname_dst, 0
+        DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, dir_io_buffer
 
         ;; Used for reading directory structure
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
@@ -411,8 +418,8 @@ ShowCopyingScreen:
         DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
 buf_block_pointers:     .res    kBlockPointersSize, 0
 
-        DEFINE_CLOSE_PARAMS close_params
-        DEFINE_READWRITE_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
+        DEFINE_CLOSE_PARAMS close_src_dir_params
+        DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
 
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
@@ -424,11 +431,11 @@ buf_padding_bytes:      .res    kMaxPaddingBytes, 0
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
 
-        DEFINE_OPEN_PARAMS open_src_params, path2, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dst_params, path1, dst_io_buffer
+        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
         DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
         DEFINE_READWRITE_PARAMS write_dst_params, copy_buffer, kCopyBufferSize
-        DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
+        DEFINE_CREATE_PARAMS create_dir_params, pathname_dst, ACCESS_DEFAULT
         DEFINE_SET_MARK_PARAMS mark_dst_params, 0
 
 file_entry:
@@ -437,29 +444,30 @@ filename:
 
 ;;; ============================================================
 ;;; Perform the file copy.
-;;; Inputs: `path2` is source path
-;;;         `path1` is destination path
+;;; Inputs: `pathname_src` is source path
+;;;         `pathname_dst` is destination path
 .proc DoCopy
         ;; Check destination dir
-        MLI_CALL GET_FILE_INFO, get_path1_info_params
+        MLI_CALL GET_FILE_INFO, get_dst_file_info_params
     IF_A_EQ_ONE_OF #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
         ;; Get source dir info
-repeat: MLI_CALL GET_FILE_INFO, get_path2_info_params
+check_src:
+        MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bcc     gfi_ok
         cmp     #ERR_VOL_NOT_FOUND
-        beq     prompt
+        beq     :+
         cmp     #ERR_FILE_NOT_FOUND
-        bne     fail
+        bne     error
 
-prompt: jsr     ShowInsertPrompt
-        jmp     repeat
+:       jsr     ShowInsertPrompt
+        jmp     check_src       ; retry
     END_IF
 
-fail:   jmp     (hook_handle_error_code)
+error:  HANDLE_ERROR_CODE
 
         ;; Prepare for copy...
 gfi_ok: ldy     #$FF
-        lda     get_path2_info_params::storage_type
+        lda     get_src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
@@ -467,35 +475,35 @@ gfi_ok: ldy     #$FF
         ldy     #0
 is_dir:
         sty     is_dir_flag
+
         ;; copy `file_type`, `aux_type`, `storage_type`
         ldy     #4
     DO
-        copy8   get_path2_info_params+3,y, create_params+3,y
+        copy8   get_src_file_info_params+3,y, create_params+3,y
         dey
     WHILE_NOT_ZERO
         copy8   #ACCESS_DEFAULT, create_params::access
 
         jsr     CheckSpaceAvailable
     IF_CS
-        jmp     (hook_handle_no_space)
+        HANDLE_NO_SPACE
     END_IF
 
-        ;; copy dates
-        COPY_STRUCT DateTime, get_path2_info_params::create_date, create_params::create_date
+        ;; Copy creation date/time
+        COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_params::create_date
 
-        ;; create the file
+        ;; Create the file
         lda     create_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY ; if it was a volume dir, make sure we create a subdir
-    IF_EQ                            ; (if it was not a directory, just keep the type)
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
-        MLI_CALL CREATE, create_params
-        bcs     fail
 
+        MLI_CALL CREATE, create_params
+        bcs     error
         is_dir_flag := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_NOT_ZERO
-        jmp     CopyDirectory
+        jmp     ProcessDirectory
     END_IF
         jmp     CopyNormalFile
 
@@ -506,130 +514,137 @@ is_dir:
 ;;; For directories, the target is created but the caller is responsible
 ;;; for copying the child entries.
 ;;; Inputs: `file_entry` populated with FileEntry
-;;;         `path2` has source directory path
-;;;         `path1` has destination directory path
+;;;         `pathname_src` has source directory path
+;;;         `pathname_dst` has destination directory path
 ;;; Errors: `hook_handle_error_code` is invoked
 
-.proc CopyEntry
+.proc CopyProcessDirectoryEntry
+        ;; TODO: `CheckCancel`
+
         lda     file_entry + FileEntry::file_type
     IF_A_EQ     #FT_DIRECTORY
         ;; --------------------------------------------------
         ;; Directory
-        jsr     AppendFilenameToPath2
+        jsr     AppendFileEntryToSrcPath ; TODO: Hoist out of IF block
         jsr     ShowCopyingScreen
-        MLI_CALL GET_FILE_INFO, get_path2_info_params
+        MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bcc     ok
-fail:   jmp     (hook_handle_error_code)
+fail:   HANDLE_ERROR_CODE
 
-onerr:  SET_BIT7_FLAG copy_err_flag
+err:    SET_BIT7_FLAG copy_err_flag
         bmi     copy_err        ; always
 
-ok:     jsr     AppendFilenameToPath1
+ok:     jsr     AppendFileEntryToDstPath ; TODO: Hoist out of IF block
         jsr     CreateDir
-        bcs     onerr
-        jmp     RemoveFilenameFromPath2
+        bcs     err
+        jmp     RemoveSrcPathSegment
     END_IF
 
         ;; --------------------------------------------------
-        ;; File
+        ;; Regular File
 
-        jsr     AppendFilenameToPath1
-        jsr     AppendFilenameToPath2
+        jsr     AppendFileEntryToDstPath ; TODO: Hoist out of IF block
+        jsr     AppendFileEntryToSrcPath ; TODO: Hoist out of IF block
         jsr     ShowCopyingScreen
-        MLI_CALL GET_FILE_INFO, get_path2_info_params
+        MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bcs     fail
 
         jsr     CheckSpaceAvailable
     IF_CS
-        jmp     (hook_handle_no_space)
+        HANDLE_NO_SPACE
     END_IF
 
         ;; Create parent dir if necessary
-        jsr     RemoveFilenameFromPath2
+        ;; TODO: Is this actually needed?
+        jsr     RemoveSrcPathSegment
         jsr     CreateDir
         bcs     cleanup
-        jsr     AppendFilenameToPath2
+        jsr     AppendFileEntryToSrcPath
 
         ;; Do the copy
         jsr     CopyNormalFile
 
 copy_err:
-        jsr     RemoveFilenameFromPath2
+        jsr     RemoveSrcPathSegment
 
 cleanup:
-        jmp     RemoveFilenameFromPath1
-.endproc ; CopyEntry
+        jmp     RemoveDstPathSegment
+.endproc ; CopyProcessDirectoryEntry
+OpProcessDirectoryEntry := CopyProcessDirectoryEntry
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
-;;; Inputs: `path2` is source; `path1` is target
+;;; Inputs: `pathname_src` is source; `pathname_dst` is target
 ;;; Outputs: C=0 if there is sufficient space, C=1 otherwise
 
 .proc CheckSpaceAvailable
-
         ;; --------------------------------------------------
         ;; Get source size
 
-        MLI_CALL GET_FILE_INFO, get_path2_info_params
+        MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bcs     fail
 
         ;; --------------------------------------------------
         ;; Get destination size (in case of overwrite)
 
         ;lda     #0
-        sta     dst_size        ; default 0, if it doesn't exist
-        sta     dst_size+1
-        MLI_CALL GET_FILE_INFO, get_path1_info_params
+        sta     existing_blocks ; default 0, if it doesn't exist
+        sta     existing_blocks+1
+        MLI_CALL GET_FILE_INFO, get_dst_file_info_params
     IF_CS
         cmp     #ERR_FILE_NOT_FOUND
         beq     got_dst_size    ; this is fine
-fail:   jmp     (hook_handle_error_code)
+fail:   HANDLE_ERROR_CODE
     END_IF
-        copy16  get_path1_info_params::blocks_used, dst_size
+        copy16  get_dst_file_info_params::blocks_used, existing_blocks
 got_dst_size:
 
         ;; --------------------------------------------------
         ;; Get destination volume free space
 
         ;; Isolate destination volume name
-        copy8   path1, path1_length ; save
+        copy8   pathname_dst, saved_length ; save
 
+        ;; Strip to vol name - either end of string or next slash
         ldy     #1
         lda     #'/'
     DO
         iny
-        cpy     path1
+        cpy     pathname_dst
         bcs     have_space
-    WHILE_A_NE  path1,y
-        sty     path1
+    WHILE_A_NE  pathname_dst,y
+        sty     pathname_dst
 
         ;; Get volume info
-        MLI_CALL GET_FILE_INFO, get_path1_info_params
+        MLI_CALL GET_FILE_INFO, get_dst_file_info_params
     IF_CS
-        jmp     (hook_handle_error_code)
+        HANDLE_ERROR_CODE
     END_IF
 
-        ;; Free = Total - Used
-        sub16   get_path1_info_params::aux_type, get_path1_info_params::blocks_used, vol_free
+        ;; Free = Total (aux) - Used
+        sub16   get_dst_file_info_params::aux_type, get_dst_file_info_params::blocks_used, blocks_free
         ;; If overwriting, some blocks will be reclaimed.
-        add16   vol_free, dst_size, vol_free
+        add16   blocks_free, existing_blocks, blocks_free
         ;; Does it fit? (free >= needed)
-        cmp16   vol_free, get_path2_info_params::blocks_used
-        bcs     have_space
-
+        cmp16   blocks_free, get_src_file_info_params::blocks_used
+    IF_LT
+        ;; Not enough room
         sec                     ; no space
         bcs     :+              ; always
+   END_IF
 
 have_space:
         clc
 :
-        path1_length := *+1         ; save full length of path
+        saved_length := *+1         ; save full length of path
         lda     #SELF_MODIFIED_BYTE ; restore
-        sta     path1
+        sta     pathname_dst
         rts
 
-vol_free:       .word   0
-dst_size:       .word   0
+blocks_free:              ; Blocks free on volume
+        .word   0
+existing_blocks:          ; Blocks taken by file that will be replaced
+        .word   0
 .endproc ; CheckSpaceAvailable
 
 
@@ -669,7 +684,7 @@ dst_size:       .word   0
       IF_CS
         cmp     #ERR_END_OF_FILE
         beq     close
-fail:   jmp     (hook_handle_error_code)
+fail:   HANDLE_ERROR_CODE
       END_IF
 
         ;; EOF?
@@ -688,13 +703,13 @@ close:  MLI_CALL CLOSE, close_dst_params
         MLI_CALL CLOSE, close_src_params
 
         ;; Copy file info
-        MLI_CALL GET_FILE_INFO, get_path2_info_params
+        MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bcs     fail
-        COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
+        COPY_BYTES $B, get_src_file_info_params::access, get_dst_file_info_params::access
 
-        copy8   #7, get_path1_info_params ; `SET_FILE_INFO` param_count
-        MLI_CALL SET_FILE_INFO, get_path1_info_params
-        copy8   #10, get_path1_info_params ; `GET_FILE_INFO` param_count
+        copy8   #7, get_dst_file_info_params ; `SET_FILE_INFO` param_count
+        MLI_CALL SET_FILE_INFO, get_dst_file_info_params
+        copy8   #10, get_dst_file_info_params ; `GET_FILE_INFO` param_count
 
         rts
 
@@ -793,33 +808,38 @@ ret:    rts
 ret:    rts
 
 cancel: lda     #kErrCancel
-        jmp     (hook_handle_error_code)
+        HANDLE_ERROR_CODE
 .endproc ; CheckCancel
 
 ;;; ============================================================
 
 .proc CreateDir
-        ;; Copy `file_type`, `aux_type`, `storage_type`
+        ;; Copy `file_type`, `aux_type`, and `storage_type`
         ldx     #4
     DO
-        copy8   get_path2_info_params+3,x, create_dir_params+3,x
+        copy8   get_src_file_info_params+3,x, create_dir_params+3,x
         dex
     WHILE_NOT_ZERO
+
+        ;; TODO: Make this static
         copy8   #ACCESS_DEFAULT, create_dir_params::access
 
         ;; Copy dates
-        COPY_STRUCT DateTime, get_path2_info_params::create_date, create_dir_params::create_date
+        COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_dir_params::create_date
 
         ;; Create it
         lda     create_dir_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-    IF_EQ
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_dir_params::storage_type
     END_IF
+
+        ;; Create it
         MLI_CALL CREATE, create_dir_params
     IF_CS
-        jmp     (hook_handle_error_code)
+        ;; TODO: Consider `ERR_DUPLICATE_FILENAME` acceptable
+        HANDLE_ERROR_CODE
     END_IF
+        ;; TODO: ensure C=0 here (if above is modified)
         rts
 .endproc ; CreateDir
 
@@ -827,6 +847,7 @@ cancel: lda     #kErrCancel
 
 recursion_depth:        .byte   0 ; How far down the directory structure are we
 entries_per_block:      .byte   0
+;;; TODO: Remove this, set ref num in other params on open
 ref_num:                .byte   0
 entry_index_in_dir:     .word   0
 target_index:           .word   0
@@ -842,6 +863,7 @@ entry_index_in_block:   .byte   0
 
 .proc PushIndexToStack
         ldx     stack_index
+        ;; TODO: copy16, like desktop
         copy8   target_index, index_stack,x
         inx
         copy8   target_index+1, index_stack,x
@@ -855,6 +877,7 @@ entry_index_in_block:   .byte   0
 .proc PopIndexFromStack
         ldx     stack_index
         dex
+        ;; TODO: copy16, like desktop
         copy8   index_stack,x, target_index+1
         dex
         copy8   index_stack,x, target_index
@@ -864,7 +887,7 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 ;;; Open the source directory for reading, skipping header.
-;;; Inputs: `path2` set to dir
+;;; Inputs: `pathname_src` set to dir
 ;;; Outputs: ref_num
 
 .proc OpenSrcDir
@@ -872,13 +895,14 @@ entry_index_in_block:   .byte   0
         sta     entry_index_in_dir
         sta     entry_index_in_dir+1
         sta     entry_index_in_block
-        MLI_CALL OPEN, open_path2_params
+
+        MLI_CALL OPEN, open_src_dir_params
     IF_CS
-fail:   jmp     (hook_handle_error_code)
+fail:   HANDLE_ERROR_CODE
     END_IF
 
         ;; Skip over prev/next block pointers in header
-        lda     open_path2_params::ref_num
+        lda     open_src_dir_params::ref_num
         sta     ref_num
         sta     read_block_pointers_params::ref_num
         MLI_CALL READ, read_block_pointers_params
@@ -896,15 +920,15 @@ fail:   jmp     (hook_handle_error_code)
 
 ;;; ============================================================
 
-.proc DoCloseFile
-        lda     ref_num
-        sta     close_params::ref_num
-        MLI_CALL CLOSE, close_params
+.proc CloseSrcDir
+        ;; TODO: Move to `OpenSrcDir` ?
+        copy8   ref_num, close_src_dir_params::ref_num
+        MLI_CALL CLOSE, close_src_dir_params
     IF_CS
-        jmp     (hook_handle_error_code)
+        HANDLE_ERROR_CODE
     END_IF
         rts
-.endproc ; DoCloseFile
+.endproc ; CloseSrcDir
 
 ;;; ============================================================
 ;;; Read the next file entry in the directory into `file_entry`
@@ -913,28 +937,26 @@ fail:   jmp     (hook_handle_error_code)
 .proc ReadFileEntry
         inc16   entry_index_in_dir
 
-        ;; Skip entry
-        lda     ref_num
-        sta     read_fileentry_params::ref_num
-        MLI_CALL READ, read_fileentry_params
+        copy8   ref_num, read_src_dir_entry_params::ref_num
+        MLI_CALL READ, read_src_dir_entry_params
     IF_CS
         cmp     #ERR_END_OF_FILE
         beq     eof
-fail:   jmp     (hook_handle_error_code)
+
+fail:   HANDLE_ERROR_CODE
     END_IF
 
-        ldax    #file_entry
-        jsr     AdjustFileEntryCase
+        ;; TODO: Move to `ProcessDirectory`
+        param_call AdjustFileEntryCase, file_entry
 
         inc     entry_index_in_block
         lda     entry_index_in_block
         cmp     entries_per_block
-        lda     #0              ; result if branch not taken
+        lda     #0              ; result if branch not taken TODO: move after block
     IF_GE
         ;; Advance to first entry in next "block"
         sta     entry_index_in_block
-        lda     ref_num
-        sta     read_padding_bytes_params::ref_num
+        copy8   ref_num, read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
         bcs     fail
     END_IF
@@ -947,19 +969,25 @@ eof:    return  #$FF
 
 .proc DescendDirectory
         copy16  entry_index_in_dir, target_index
-        jsr     DoCloseFile
+        jsr     CloseSrcDir
         jsr     PushIndexToStack
-        jsr     AppendFilenameToPath2
+        jsr     AppendFileEntryToSrcPath
         jmp     OpenSrcDir
 .endproc ; DescendDirectory
 
+;;; ============================================================
+
 .proc AscendDirectory
-        jsr     DoCloseFile
-        jsr     RemoveFilenameFromPath2
+        jsr     CloseSrcDir
+        ;; (No callback)
+        jsr     RemoveSrcPathSegment
         jsr     PopIndexFromStack
         jsr     OpenSrcDir
+
+        ;; TODO: inline `AdvanceToTargetEntry`
         jsr     AdvanceToTargetEntry
-        jmp     RemoveFilenameFromPath1
+
+        jmp     RemoveDstPathSegment
 .endproc ; AscendDirectory
 
 .proc AdvanceToTargetEntry
@@ -973,23 +1001,25 @@ eof:    return  #$FF
 
 ;;; ============================================================
 ;;; Recursively copy
-;;; Inputs: `path2` points at source directory
+;;; Inputs: `pathname_src` points at source directory
 
-.proc CopyDirectory
+.proc ProcessDirectory
         copy8   #0, recursion_depth
         jsr     OpenSrcDir
-
-loop:   jsr     ReadFileEntry
-        bne     next
+loop:
+        jsr     ReadFileEntry
+    IF_ZERO
+        ;; TODO: `AdjustFileEntryCase` ?
 
         lda     file_entry + FileEntry::storage_type_name_length
         beq     loop            ; deleted
 
+        ;; Simplify to length-prefixed string
         and     #NAME_LENGTH_MASK
-        sta     filename
+        sta     filename        ; TODO: Modify `FileEntry`?
 
         CLEAR_BIT7_FLAG copy_err_flag
-        jsr     CopyEntry
+        jsr     OpProcessDirectoryEntry
         bit     copy_err_flag   ; don't recurse if the copy failed
         bmi     loop
 
@@ -1000,100 +1030,98 @@ loop:   jsr     ReadFileEntry
         ;; Recurse into child directory
         jsr     DescendDirectory
         inc     recursion_depth
-        jmp     loop
+        jmp     loop            ; TODO: `BPL`; always
+    END_IF
 
-next:   lda     recursion_depth
-        beq     done
+        lda     recursion_depth
+    IF_NOT_ZERO
         jsr     AscendDirectory
         dec     recursion_depth
-        jmp     loop
+        jmp     loop            ; TODO: `BPL`; always
+    END_IF
 
-done:   jmp     DoCloseFile
-.endproc ; CopyDirectory
+        jmp     CloseSrcDir
+.endproc ; ProcessDirectory
 
-;;; ============================================================
-
-        ;; Set on error during copying of a single file
-copy_err_flag:                  ; bit7
-        .byte   0
-
+;;; Set on error during copying of a single file
+copy_err_flag:  .byte   0       ; bit7
 
 ;;; ============================================================
 
-.proc AppendFilenameToPath2
+.proc AppendFileEntryToSrcPath
         lda     filename
     IF_NOT_ZERO
         ldx     #$00
-        ldy     path2
-        copy8   #'/', path2+1,y
+        ldy     pathname_src
+        copy8   #'/', pathname_src+1,y
       DO
         iny
         BREAK_IF_X_GE filename
-        copy8   filename+1,x, path2+1,y
+        copy8   filename+1,x, pathname_src+1,y
         inx
       WHILE_NOT_ZERO            ; always
-        sty     path2
+        sty     pathname_src
     END_IF
         rts
-.endproc ; AppendFilenameToPath2
+.endproc ; AppendFileEntryToSrcPath
 
 ;;; ============================================================
 
-.proc RemoveFilenameFromPath2
-        ldx     path2
+.proc RemoveSrcPathSegment
+        ldx     pathname_src
     IF_NOT_ZERO
         lda     #'/'
       DO
-        cmp     path2,x
-        beq     done
+        cmp     pathname_src,x
+        beq     :+
         dex
       WHILE_NOT_ZERO
         inx
-
-done:   dex
-        stx     path2
+:
+        dex
+        stx     pathname_src
     END_IF
         rts
-.endproc ; RemoveFilenameFromPath2
+.endproc ; RemoveSrcPathSegment
 
 ;;; ============================================================
 
-.proc AppendFilenameToPath1
+.proc AppendFileEntryToDstPath
         lda     filename
     IF_NOT_ZERO
         ldx     #0
-        ldy     path1
-        copy8   #'/', path1+1,y
+        ldy     pathname_dst
+        copy8   #'/', pathname_dst+1,y
       DO
         iny
         BREAK_IF_X_GE filename
-        copy8   filename+1,x, path1+1,y
+        copy8   filename+1,x, pathname_dst+1,y
         inx
       WHILE_NOT_ZERO            ; always
 
-done:   sty     path1
+done:   sty     pathname_dst
     END_IF
         rts
-.endproc ; AppendFilenameToPath1
+.endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
 
-.proc RemoveFilenameFromPath1
-        ldx     path1
+.proc RemoveDstPathSegment
+        ldx     pathname_dst
     IF_NOT_ZERO
         lda     #'/'
       DO
-        cmp     path1,x
+        cmp     pathname_dst,x
         beq     done
         dex
       WHILE_NOT_ZERO
         inx
 
 done:   dex
-        stx     path1
+        stx     pathname_dst
     END_IF
         rts
-.endproc ; RemoveFilenameFromPath1
+.endproc ; RemoveDstPathSegment
 
 .endproc ; GenericCopy
 
@@ -1611,14 +1639,14 @@ done:   dex
         ;; Set up source path
         ldy     src_path
     DO
-        copy8   src_path,y, GenericCopy::path2,y
+        copy8   src_path,y, GenericCopy::pathname_src,y
         dey
     WHILE_POS
 
         ;; Set up destination path
         ldy     dst_path
     DO
-        copy8   dst_path,y, GenericCopy::path1,y
+        copy8   dst_path,y, GenericCopy::pathname_dst,y
         dey
     WHILE_POS
 
@@ -1850,18 +1878,18 @@ entry_dir_name:
         jsr     PreparePathsFromEntryPaths
 
         ;; Set up destination dir path, e.g. "/RAM/APPLEWORKS"
-        ldx     GenericCopy::path1 ; Append '/' to `path1`
-        copy8   #'/', GenericCopy::path1+1,x
-        inc     GenericCopy::path1
+        ldx     GenericCopy::pathname_dst ; Append '/' to `path1`
+        copy8   #'/', GenericCopy::pathname_dst+1,x
+        inc     GenericCopy::pathname_dst
 
         ldy     #0              ; Append `entry_dir_name` to `path1`
-        ldx     GenericCopy::path1
+        ldx     GenericCopy::pathname_dst
     DO
         iny
         inx
-        copy8   entry_dir_name,y, GenericCopy::path1,x
+        copy8   entry_dir_name,y, GenericCopy::pathname_dst,x
     WHILE_Y_NE  entry_dir_name
-        stx     GenericCopy::path1
+        stx     GenericCopy::pathname_dst
 
         ;; If already exists, consider that a success
         MLI_CALL GET_FILE_INFO, gfi_params
@@ -1874,7 +1902,7 @@ entry_dir_name:
         copy16  #ShowCopyingEntryScreen, GenericCopy::hook_show_file
         jmp     GenericCopy::DoCopy
 
-        DEFINE_GET_FILE_INFO_PARAMS gfi_params, GenericCopy::path1
+        DEFINE_GET_FILE_INFO_PARAMS gfi_params, GenericCopy::pathname_dst
 .endproc ; CopyUsingEntryPaths
 
 ;;; ============================================================
@@ -1882,17 +1910,17 @@ entry_dir_name:
 
 .proc PreparePathsFromEntryPaths
 
-        ;; Copy `entry_path2` to `path2`
+        ;; Copy `entry_path2` to `pathname_src`
         ldy     #AS_BYTE(-1)
     DO
         iny
-        copy8   entry_path2,y, GenericCopy::path2,y
+        copy8   entry_path2,y, GenericCopy::pathname_src,y
     WHILE_Y_NE entry_path2
 
         ;; Copy `entry_path1` to `path1`
         ldy     entry_path1
     DO
-        copy8   entry_path1,y, GenericCopy::path1,y
+        copy8   entry_path1,y, GenericCopy::pathname_dst,y
         dey
     WHILE_POS
 
@@ -2083,7 +2111,7 @@ str_not_completed:
         jsr     VTABZ
         copy8   #0, OURCH
         param_call CoutString, str_copying
-        param_call CoutStringNewline, GenericCopy::path2
+        param_call CoutStringNewline, GenericCopy::pathname_src
         rts
 .endproc ; ShowCopyingEntryScreen
 
@@ -2146,7 +2174,7 @@ str_not_completed:
         pla
         jsr     PRBYTE
         param_call CoutString, str_error_suffix
-        param_call CoutStringNewline, GenericCopy::path2
+        param_call CoutStringNewline, GenericCopy::pathname_src
         param_call CoutString, str_not_completed
 
         ;; Wait for keyboard
