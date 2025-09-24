@@ -2360,7 +2360,7 @@ CalcWindowIntersections := CalcWindowIntersectionsImpl::start
         RTS_IF_ZERO
 
         clip_dx := clip_coords + MGTK::Point::xcoord
-        clip_dy := clip_coords + MGTK::Point::xcoord
+        clip_dy := clip_coords + MGTK::Point::ycoord
 
         ldxy    clip_dx
         addxy   portbits::maprect::x1
