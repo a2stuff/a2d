@@ -690,10 +690,6 @@ callback:
     IF_ZERO
         ;; First - use this type/auxtype
         copy8   gfi_params::file_type, data::type
-      IF_A_EQ   #FT_DIRECTORY
-        jmp     ShowDirErrorAndAbort
-      END_IF
-
         copy16  gfi_params::aux_type, data::auxtype
         lda     #$80
         sta     data::type_valid
@@ -701,9 +697,6 @@ callback:
     ELSE
         ;; Rest - determine if same type/auxtype
         lda     gfi_params::file_type
-      IF_A_EQ   #FT_DIRECTORY
-        jmp     ShowDirErrorAndAbort
-      END_IF
       IF_A_NE   data::type
         CLEAR_BIT7_FLAG data::type_valid
       END_IF
@@ -723,14 +716,6 @@ callback:
         ora     data::auxtype_valid
         RTS_IF_NC
 
-        bit     data::type_valid
-    IF_NS
-        lda     data::type
-      IF_A_EQ   #FT_DIRECTORY
-        jmp     ShowDirErrorAndAbort
-      END_IF
-    END_IF
-
         copy16  #callback, IterationCallback
         jsr     IterateSelectedFiles
         rts
@@ -741,8 +726,27 @@ callback:
 
         bit     data::type_valid
     IF_NS
+        ;; Disallow changing type to/from directory
+        lda     data::type
+        cmp     gfi_params::file_type
+      IF_NE
+        ;; type change - either one dir?
+        lda     data::type
+       IF_A_EQ  #FT_DIRECTORY
+        jsr     ShowDirError
+        jmp     skip
+       END_IF
+
+        lda     gfi_params::file_type
+       IF_A_EQ  #FT_DIRECTORY
+        jsr     ShowDirError
+        jmp     skip
+       END_IF
+      END_IF
+
         copy8   data::type, gfi_params::file_type
     END_IF
+skip:
 
         bit     data::auxtype_valid
     IF_NS
@@ -831,11 +835,16 @@ index:  .byte   0
 
 ;;; ============================================================
 
-.proc ShowDirErrorAndAbort
-        ldx     saved_stack
-        txs
-        param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertDirectoriesNotOK
-.endproc ; ShowDirErrorAndAbort
+.proc ShowDirError
+        bit     flag
+    IF_NC
+        param_call JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertDirectoriesNotOK
+        SET_BIT7_FLAG flag
+    END_IF
+        rts
+
+flag:   .byte   0
+.endproc ; ShowDirError
 
 ;;; ============================================================
 

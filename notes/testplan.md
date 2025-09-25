@@ -1328,9 +1328,12 @@ With Sci.Calc:
 
 ## Change Type
 
-* Select a folder. Apple > Change Type. Verify that an error is shown.
-* Select a non-folder and a folder. Apple > Change Type. Verify that an error is shown.
-* Select a folder. Apple > Change Type. Specify 0F as the type and click OK. Verify that an error is shown.
+* Select a folder. Apple > Change Type. Modify only the type (e.g. 06) . Verify that an error is shown.
+* Select a folder. Apple > Change Type. Modify only the aux type (e.g. 8000) . Verify that no error is shown.
+* Select a non-folder and a folder. Apple > Change Type. Modify only the type (e.g. 06). Verify that an error is shown, and only the non-folder is modified.
+* Select a non-folder and a folder. Apple > Change Type. Modify only the aux type (e.g. 8000). Verify that no error is shown.
+* Select a non-folder. Apple > Change Type. Specify 0F as the type and click OK. Verify that an error is shown.
+* Select two folders. Apple > Change Type. Modify only the type (e.g. 06) . Verify that only a single error is shown.
 
 
 # Shortcuts (Module)
