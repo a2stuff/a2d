@@ -123,6 +123,14 @@ str_auxtype:
 str_err_no_files_selected:
         PASCAL_STRING res_string_err_no_files_selected
 
+.params AlertDirectoriesNotOK
+        .addr   str_err_directories_not_ok
+        .byte   AlertButtonOptions::OK
+        .byte   AlertOptions::Beep | AlertOptions::SaveBack
+.endparams
+str_err_directories_not_ok:
+        PASCAL_STRING res_string_err_directories_not_supported
+
 ;;; ============================================================
 
         .include "../lib/event_params.s"
@@ -682,6 +690,10 @@ callback:
     IF_ZERO
         ;; First - use this type/auxtype
         copy8   gfi_params::file_type, data::type
+      IF_A_EQ   #FT_DIRECTORY
+        jmp     ShowDirErrorAndAbort
+      END_IF
+
         copy16  gfi_params::aux_type, data::auxtype
         lda     #$80
         sta     data::type_valid
@@ -689,6 +701,9 @@ callback:
     ELSE
         ;; Rest - determine if same type/auxtype
         lda     gfi_params::file_type
+      IF_A_EQ   #FT_DIRECTORY
+        jmp     ShowDirErrorAndAbort
+      END_IF
       IF_A_NE   data::type
         CLEAR_BIT7_FLAG data::type_valid
       END_IF
@@ -707,6 +722,14 @@ callback:
         lda     data::type_valid
         ora     data::auxtype_valid
         RTS_IF_NC
+
+        bit     data::type_valid
+    IF_NS
+        lda     data::type
+      IF_A_EQ   #FT_DIRECTORY
+        jmp     ShowDirErrorAndAbort
+      END_IF
+    END_IF
 
         copy16  #callback, IterationCallback
         jsr     IterateSelectedFiles
@@ -805,6 +828,14 @@ index:  .byte   0
         jcs     Abort
         rts
 .endproc ; SetFileInfo
+
+;;; ============================================================
+
+.proc ShowDirErrorAndAbort
+        ldx     saved_stack
+        txs
+        param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertDirectoriesNotOK
+.endproc ; ShowDirErrorAndAbort
 
 ;;; ============================================================
 

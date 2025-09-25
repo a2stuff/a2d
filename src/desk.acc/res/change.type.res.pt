@@ -1,3 +1,4 @@
 .define res_string_label_type "Tipo:  $"
 .define res_string_label_auxtype "Tipo Aux:  $"
 .define res_string_err_no_files_selected "N[o h@ arquivos selecionados."
+.define res_string_err_directories_not_supported "N[o h@ suporte para modifica][o de diret~rios."

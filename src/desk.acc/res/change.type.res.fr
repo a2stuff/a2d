@@ -1,3 +1,4 @@
 .define res_string_label_type "Type :  $"
 .define res_string_label_auxtype "Type auxiliaire :  $"
 .define res_string_err_no_files_selected "Aucun fichier n'est s{lectionn{."
+.define res_string_err_directories_not_supported "La modification des r{pertoires n'est pas prise en charge."

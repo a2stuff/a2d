@@ -107,6 +107,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Map: Fix indicator updated after window is moved.
 * Text Preview: Fix scrollbar behavior when toggling fixed/proportional.
 * Image Preview: Support lo-res and double lo-res graphics files.
+* Change Type: Prevent modifying directories.
 * New DA (in Extras): "Screenshot" - saves screenshot file to application directory.
 * New DA (in Extras): "DOS33.Import" - allows importing files from DOS 3.3 disks.
 * New DA (in Control Panels): "Views" - allows setting the default view style.

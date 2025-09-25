@@ -1,3 +1,4 @@
 .define res_string_label_type "Type:  $"
 .define res_string_label_auxtype "AuxType:  $"
 .define res_string_err_no_files_selected "There are no files selected."
+.define res_string_err_directories_not_supported "Modifying directories is not supported."

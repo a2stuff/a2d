@@ -1,3 +1,4 @@
 .define res_string_label_type "tip: $"
 .define res_string_label_auxtype "AUXTYPE:  $"
 .define res_string_err_no_files_selected "nqma izbrani fajlowe."
+.define res_string_err_directories_not_supported "modificiraneto na direktorii ne se poddyrva."

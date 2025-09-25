@@ -1,3 +1,4 @@
 .define res_string_label_type "Typ:  $"
 .define res_string_label_auxtype "AuxTyp:  $"
 .define res_string_err_no_files_selected "Es werden keine Dateien ausgew{hlt."
+.define res_string_err_directories_not_supported "Das [ndern von Verzeichnissen wird nicht unterst}tzt."

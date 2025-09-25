@@ -1326,6 +1326,13 @@ With Sci.Calc:
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Print Screen DA. Invoke the Print Catalog DA. Verify that the catalog is printed on separate lines, not all overprinted on the same line onto one.
 * Using MAME (e.g. via Ample), configure a system with an SSC in Slot 1 and a Serial Printer. Invoke the Print Screen DA. Verify that the File menu is not corrupted.
 
+## Change Type
+
+* Select a folder. Apple > Change Type. Verify that an error is shown.
+* Select a non-folder and a folder. Apple > Change Type. Verify that an error is shown.
+* Select a folder. Apple > Change Type. Specify 0F as the type and click OK. Verify that an error is shown.
+
+
 # Shortcuts (Module)
 
 Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shortcuts on startup. Launching `DESKTOP.SYSTEM` should load the Shortcuts module instead of DeskTop, as long as there is at least one shortcut configured.
