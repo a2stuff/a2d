@@ -131,6 +131,8 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/DIP.CHIPS"     $mediadir "DIP.Chips"      088066 # FOT LZ4FH-packed
     emit add_file $disposition "res/package/BBROS.LOGO"    $mediadir "BBros.Logo"     082000 # FOT bw280
     emit add_file $disposition "res/package/BBROS.MINI"    $mediadir "BBros.Mini"     065800 # BIN minipix
+    emit add_file $disposition "res/package/LR.JESTER"     $mediadir "LR.Jester"      060400 # BIN lo-res
+    emit add_file $disposition "res/package/DLR.JESTER"    $mediadir "DLR.Jester"     060400 # BIN double lo-res
 
     emit add_file $disposition "res/package/LOREM.IPSUM"   $mediadir "Lorem.ipsum"    040000
     emit add_file $disposition "res/package/SHAKESPEARE"   $mediadir "Shakespeare"    040000

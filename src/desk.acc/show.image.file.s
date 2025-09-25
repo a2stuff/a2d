@@ -1,7 +1,6 @@
         .include "../config.inc"
 
         .include "apple2.inc"
-        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -23,7 +22,7 @@
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          | MP Src    | | MP Dst    |
-;;;  $1900   +-----------+ +-----------+
+;;;  $1800   +-----------+ +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
@@ -36,15 +35,21 @@
         kHiresSize = $2000
 
         ;; Minipix/Print Shop images are loaded/converted
-        minipix_src_buf := $1900 ; Load address (main)
+        minipix_src_buf := $1800 ; Load address (main)
         kMinipixSrcSize = 576
-        minipix_dst_buf := $1900 ; Convert address (aux)
+        minipix_dst_buf := $1800 ; Convert address (aux)
         kMinipixDstSize = 26*52
+
+        ;; LR/DLR-Lores images are loaded/converted
+        lores_src_buf := $1800  ; Load address (main
+        kLoresBufferSize = $400
 
         dir_path := $380
 
-        .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
-        .assert (minipix_dst_buf + kMinipixDstSize) < $2000, error, "Not enough room for Minipix convert buffer"
+        .assert (minipix_src_buf + kMinipixSrcSize) <= DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
+        .assert (minipix_dst_buf + kMinipixDstSize) <= $2000, error, "Not enough room for Minipix convert buffer"
+
+        .assert (lores_src_buf + kLoresBufferSize) <= DA_IO_BUFFER, error, "Lores buffer size too small"
 
 ;;; ============================================================
 
@@ -91,6 +96,7 @@ reserved:       .byte   0
 
         DEFINE_READWRITE_PARAMS read_params, hires, kHiresSize
         DEFINE_READWRITE_PARAMS read_minipix_params, minipix_src_buf, kMinipixSrcSize
+        DEFINE_READWRITE_PARAMS read_lores_params, lores_src_buf, kLoresBufferSize
 
         DEFINE_CLOSE_PARAMS close_params
 
@@ -121,6 +127,7 @@ event_params:   .tag MGTK::Event
         sta     get_eof_params::ref_num
         sta     read_params::ref_num
         sta     read_minipix_params::ref_num
+        sta     read_lores_params::ref_num
         sta     close_params::ref_num
 
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
@@ -321,14 +328,19 @@ fail:   rts
 get_eof:
         JUMP_TABLE_MLI_CALL GET_EOF, get_eof_params
 
+        ;; Maybe LR/DLR?
+        ecmp16  get_file_info_params::aux_type, #$400
+    IF_EQ
+        ecmp24  get_eof_params::eof, #$400
+        jeq     ShowLRFile
+
+        ecmp24  get_eof_params::eof, #$800
+        jeq     ShowDLRFile
+    END_IF
+
         ;; If bigger than $2000, assume DHR
 
-        lda     get_eof_params::eof ; fancy 3-byte unsigned compare
-        cmp     #<(kHiresSize+1)
-        lda     get_eof_params::eof+1
-        sbc     #>(kHiresSize+1)
-        lda     get_eof_params::eof+2
-        sbc     #^(kHiresSize+1)
+        ucmp24  get_eof_params::eof, #(kHiresSize+1)
         jcs     ShowDHRFile
 
         ;; If bigger than 576, assume HR
@@ -593,6 +605,156 @@ next:
 
 done:   rts
 .endproc ; HRToDHR
+
+;;; ============================================================
+
+;;; Output: C=0 on success, C=1 on failure
+.proc ShowLRFileImpl
+        ENTRY_POINTS_FOR_BIT7_FLAG double, single, double_flag
+
+        sta     PAGE2OFF
+
+        hr_ptr := $06
+        lr_ptr := $08
+
+        kRows   = 192
+        kCols   = 40
+
+        ;; Aux
+        JUMP_TABLE_MLI_CALL READ, read_lores_params
+        sta     PAGE2ON
+        lda     #0              ; aux
+        jsr     convert
+        sta     PAGE2OFF
+
+        ;; Main
+        double_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+    IF_NS
+        JUMP_TABLE_MLI_CALL READ, read_lores_params
+    END_IF
+        lda     #$80            ; main
+        FALL_THROUGH_TO convert
+
+convert:
+        sta     is_main
+
+        ;; Loop over HR rows
+        lda     #0              ; A = row
+    DO
+        pha                     ; A = row
+
+        ;; Destination hires row
+        tax
+        copylohi hires_table_lo,x, hires_table_hi,x, hr_ptr
+
+        ;; Source lores row (in `lores_src_buf`)
+        lda     hr_ptr
+        clc
+        adc     #<lores_src_buf
+        sta     lr_ptr          ; lo
+        lda     hr_ptr+1
+        and     #%00000011
+        adc     #>lores_src_buf
+        sta     lr_ptr+1        ; hi
+
+        ;; Loop over columns
+        ldy     #0
+      DO
+        lda     (lr_ptr),y      ; read source
+        tax                     ; X = double pixel
+
+        ;; Which nibble?
+        pla                     ; A = row
+        pha                     ; A = row
+        and     #%0000100
+       IF_ZERO
+        ;; Top nibble
+        txa                     ; A = double pixel
+        and     #%00001111      ; A = pixel
+       ELSE
+        ;; Bottom nibble
+        txa                     ; A = double pixel
+        lsr
+        lsr
+        lsr
+        lsr                     ; A = pixel
+       END_IF
+
+        ;; In double-lores, the aux-bank patterns are shifted
+        bit     double_flag
+       IF_NS
+        bit     is_main
+        IF_NC
+        ;; rotate lo nibble left, A = 0000abcd
+        asl                     ; A = 000abcd0
+        adc     #%11110000      ; A = xxxxbcd0 C=a
+        adc     #0              ; A = xxxxbcda
+        and     #%00001111      ; A = 0000bcda
+        END_IF
+       END_IF
+
+        ;; Convert pixel bit pattern into lookup
+        pha                     ; A = 0000PPPP (P = pattern)
+        tya                     ; A = col
+        ror                     ; C = odd?
+        pla                     ; A = 0000PPPP (P = pattern)
+        rol                     ; A = 000PPPPO (P = pattern, O = odd?)
+        is_main := *+1          ; N = main?
+        ldx     #SELF_MODIFIED_BYTE
+        cpx     #$80-1          ; C = main?
+        rol                     ; A = 00PPPPOM (P = pattern, O = odd? M = main?)
+        tax                     ; X = 00CCCCOM C = color O = odd? M = main?
+
+        ;; Splat into 4 hires rows
+        lda     hr_ptr+1        ; save ptr
+        pha
+
+        lda     bitmap_table,x
+        ldx     #4              ; 4 hires rows = 1 lores pixel
+       DO
+        sta     (hr_ptr),y
+        inc     hr_ptr+1
+        inc     hr_ptr+1
+        inc     hr_ptr+1
+        inc     hr_ptr+1
+        dex
+       WHILE_NOT_ZERO
+        pla                     ; restore ptr
+        sta     hr_ptr+1
+
+        iny                     ; next col
+      WHILE_Y_NE #kCols
+
+        pla                     ; A = row
+        clc
+        adc     #4
+    WHILE_A_LT #kRows
+
+        clc                     ; success
+        rts
+
+bitmap_table:
+        .byte   %0000000,%0000000,%0000000,%0000000
+        .byte   %0001000,%0010001,%0100010,%1000100
+        .byte   %0010001,%0100010,%1000100,%0001000
+        .byte   %0011001,%0110011,%1100110,%1001100
+        .byte   %0100010,%1000100,%0001000,%0010001
+        .byte   %0101010,%1010101,%0101010,%1010101
+        .byte   %0110011,%1100110,%1001100,%0011001
+        .byte   %0111011,%1110111,%1101110,%1011101
+        .byte   %1000100,%0001000,%0010001,%0100010
+        .byte   %1001100,%0011001,%0110011,%1100110
+        .byte   %1010101,%0101010,%1010101,%0101010
+        .byte   %1011101,%0111011,%1110111,%1101110
+        .byte   %1100110,%1001100,%0011001,%0110011
+        .byte   %1101110,%1011101,%0111011,%1110111
+        .byte   %1110111,%1101110,%1011101,%0111011
+        .byte   %1111111,%1111111,%1111111,%1111111
+
+.endproc ; ShowDLRFile
+ShowLRFile := ShowLRFileImpl::single
+ShowDLRFile := ShowLRFileImpl::double
 
 ;;; ============================================================
 ;;; Minipix images
@@ -1218,15 +1380,23 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
 
     IF_A_EQ     #FT_PIC
         ecmp16  entry+FileEntry::aux_type, #$0000
-        beq     yes
-        bne     no              ; always
+        jeq     yes
+        jne     no              ; always
     END_IF
 
         cmp     #FT_BINARY
-        bne     no
+        jne     no
 
         ;; Binary: Must match size/address
-        ecmp16  entry+FileEntry::blocks_used, #33
+        ecmp16  entry+FileEntry::blocks_used, #33 ; DHR
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$2000
+        jeq     yes
+        ecmp16  entry+FileEntry::aux_type, #$4000
+        jeq     yes
+    END_IF
+
+        ecmp16  entry+FileEntry::blocks_used, #17 ; HR
     IF_EQ
         ecmp16  entry+FileEntry::aux_type, #$2000
         beq     yes
@@ -1234,17 +1404,21 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         beq     yes
     END_IF
 
-        ecmp16  entry+FileEntry::blocks_used, #17
-    IF_EQ
-        ecmp16  entry+FileEntry::aux_type, #$2000
-        beq     yes
-        ecmp16  entry+FileEntry::aux_type, #$4000
-        beq     yes
-    END_IF
-
-        ecmp16  entry+FileEntry::blocks_used, #3
+        ecmp16  entry+FileEntry::blocks_used, #3 ; MiniPix
     IF_EQ
         ecmp16  entry+FileEntry::aux_type, #$5800
+        beq     yes
+    END_IF
+
+        ecmp16  entry+FileEntry::blocks_used, #3 ; LR
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$400
+        beq     yes
+    END_IF
+
+        ecmp16  entry+FileEntry::blocks_used, #5 ; DLR
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$400
         beq     yes
     END_IF
 
@@ -1584,6 +1758,7 @@ LZ4FH__in_dst := LZ4FH::in_dst
 ;;; ============================================================
 
         .assert * < minipix_src_buf, error, "buffer collision!"
+        .assert * < lores_src_buf, error, "buffer collision!"
 
 ;;; ============================================================
 

@@ -856,7 +856,7 @@ skip:   dec     arg
 
 ;;; Copy 24-bit value
 ;;;    copy24 #$111111, $2222 ; immediate, absolute
-;;;    copy24 $1111, $2222      ; absolute, absolute
+;;;    copy24 $1111, $2222    ; absolute, absolute
 .macro copy24 arg1, arg2
         _op_b0  lda, {arg1}
         sta     arg2
@@ -875,6 +875,32 @@ skip:   dec     arg
         inc     arg+1
         bne     skip
         inc     arg+2
+skip:
+.endmacro
+
+;;;    ucmp24 #$111111, $2222 ; immediate, absolute
+;;;    ucmp24 $1111, $2222    ; absolute, absolute
+.macro ucmp24   arg1, arg2
+        _op_b0  lda, {arg1}
+        _op_b0  cmp, {arg2}
+        _op_b1  lda, {arg1}
+        _op_b1  sbc, {arg2}
+        _op_b2  lda, {arg1}
+        _op_b2  sbc, {arg2}
+.endmacro
+
+;;;    ecmp24 #$111111, $2222 ; immediate, absolute
+;;;    ecmp24 $1111, $2222    ; absolute, absolute
+.macro ecmp24   arg1, arg2
+        .local skip
+        _op_b0  lda, {arg1}
+        _op_b0  cmp, {arg2}
+        bne     skip
+        _op_b1  lda, {arg1}
+        _op_b1  cmp, {arg2}
+        bne     skip
+        _op_b2  lda, {arg1}
+        _op_b2  cmp, {arg2}
 skip:
 .endmacro
 
