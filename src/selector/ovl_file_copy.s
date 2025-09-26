@@ -33,19 +33,28 @@ skip:
 ;;; Recursive Enumerate & Copy Logic
 ;;; ============================================================
 
+        src_io_buffer = $D00
+        dst_io_buffer = $1100
+        data_buf = $1500
+
+        kCopyBufferSize = $A00
+        .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
+
+;;; ============================================================
+;;; Directory enumeration parameter blocks
+
         DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, $800
 
+        ;; Used for reading directory structure
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         kBlockPointersSize = 4
         ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
         DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
 buf_block_pointers:
-        .res    kBlockPointersSize, 0
-
-        DEFINE_CLOSE_PARAMS close_src_dir_params
-        DEFINE_CLOSE_PARAMS close_everything_params ; used in case of error
+        .res    kBlockPointersSize
 
         DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
+        DEFINE_CLOSE_PARAMS close_src_dir_params
 
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
@@ -53,34 +62,34 @@ buf_block_pointers:
         kMaxPaddingBytes = 5
         DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
 buf_padding_bytes:
-        .res    kMaxPaddingBytes, 0
+        .res    kMaxPaddingBytes
 
-        DEFINE_CLOSE_PARAMS close_src_params
-        DEFINE_CLOSE_PARAMS close_dst_params
+file_entry:
+        .res    .sizeof(FileEntry)
 
-        src_io_buffer = $D00
-        dst_io_buffer = $1100
-        data_buf = $1500
 
-        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
-
-        kDirCopyBufSize = $A00
-        .assert (kDirCopyBufSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
-
-        DEFINE_READWRITE_PARAMS read_src_params, data_buf, kDirCopyBufSize
-        DEFINE_READWRITE_PARAMS write_dst_params, data_buf, kDirCopyBufSize
-        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
+;;; ============================================================
+;;; File copy parameter blocks
 
         DEFINE_CREATE_PARAMS create_dir_params, pathname_dst, ACCESS_DEFAULT
 
         DEFINE_CREATE_PARAMS create_params, pathname_dst, 0
+        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
+        DEFINE_READWRITE_PARAMS read_src_params, data_buf, kCopyBufferSize
+        DEFINE_READWRITE_PARAMS write_dst_params, data_buf, kCopyBufferSize
+        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
+        DEFINE_CLOSE_PARAMS close_src_params
+        DEFINE_CLOSE_PARAMS close_dst_params
 
         DEFINE_GET_FILE_INFO_PARAMS get_src_file_info_params, pathname_src
         DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
 
-file_entry:
-        .res    .sizeof(FileEntry)
+;;; ============================================================
+
+        DEFINE_CLOSE_PARAMS close_everything_params ; used in case of error
+
+;;; ============================================================
 
 addr_table:
 
@@ -130,189 +139,6 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 
-.proc PushIndexToStack
-        ldx     stack_index
-        ;; TODO: copy16, like desktop
-        copy8   target_index, index_stack,x
-        inx
-        copy8   target_index+1, index_stack,x
-        inx
-        stx     stack_index
-        rts
-.endproc ; PushIndexToStack
-
-;;; ============================================================
-
-.proc PopIndexFromStack
-        ldx     stack_index
-        dex
-        ;; TODO: copy16, like desktop
-        copy8   index_stack,x, target_index+1
-        dex
-        copy8   index_stack,x, target_index
-        stx     stack_index
-        rts
-.endproc ; PopIndexFromStack
-
-;;; ============================================================
-;;; Open the source directory for reading, skipping header.
-;;; Inputs: `pathname_src` set to dir
-;;; Outputs: ref_num
-
-.proc OpenSrcDir
-        lda     #$00
-        sta     entry_index_in_dir
-        sta     entry_index_in_dir+1
-        sta     entry_index_in_block
-
-        MLI_CALL OPEN, open_src_dir_params
-    IF_CS
-        HANDLE_ERROR_CODE
-    END_IF
-
-        ;; Skip over prev/next block pointers in header
-        lda     open_src_dir_params::ref_num
-        sta     ref_num
-        sta     read_block_pointers_params::ref_num
-        MLI_CALL READ, read_block_pointers_params
-        jcs     HandleErrorCode ; TODO: `BCS` to `JMP` above
-
-        ;; Header size is next/prev blocks + a file entry
-        ASSERT_EQUALS .sizeof(SubdirectoryHeader), .sizeof(FileEntry) + 4
-        copy8   #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
-        jsr     ReadFileEntry          ; read the rest of the header
-
-        copy8   file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
-
-        rts
-.endproc ; OpenSrcDir
-
-;;; ============================================================
-
-.proc CloseSrcDir
-        ;; TODO: Move to `OpenSrcDir` ?
-        copy8   ref_num, close_src_dir_params::ref_num
-        MLI_CALL CLOSE, close_src_dir_params
-    IF_CS
-        HANDLE_ERROR_CODE
-    END_IF
-        rts
-.endproc ; CloseSrcDir
-
-;;; ============================================================
-;;; Read the next file entry in the directory into `file_entry`
-;;; NOTE: Also used to read the vol/dir header.
-
-.proc ReadFileEntry
-        inc16   entry_index_in_dir
-
-        copy8   ref_num, read_src_dir_entry_params::ref_num
-        MLI_CALL READ, read_src_dir_entry_params
-    IF_CS
-        cmp     #ERR_END_OF_FILE
-        beq     eof
-
-        HANDLE_ERROR_CODE
-    END_IF
-
-        inc     entry_index_in_block
-        lda     entry_index_in_block
-    IF_A_GE     entries_per_block
-        ;; Advance to first entry in next "block"
-        copy8   #0, entry_index_in_block
-        copy8   ref_num, read_padding_bytes_params::ref_num
-        MLI_CALL READ, read_padding_bytes_params
-        jcs     HandleErrorCode ; TODO: `BCS` to `JMP` above
-    END_IF
-
-        return  #0
-
-eof:    return  #$FF
-.endproc ; ReadFileEntry
-
-;;; ============================================================
-
-.proc DescendDirectory
-        copy16  entry_index_in_dir, target_index
-        jsr     CloseSrcDir
-        jsr     PushIndexToStack
-        jsr     AppendFileEntryToSrcPath
-        jmp     OpenSrcDir
-.endproc ; DescendDirectory
-
-;;; ============================================================
-
-.proc AscendDirectory
-        jsr     CloseSrcDir
-        jsr     OpFinishDirectory
-        jsr     RemoveSrcPathSegment
-        jsr     PopIndexFromStack
-        jsr     OpenSrcDir
-
-        ;; TODO: inline `AdvanceToTargetEntry`
-        jsr     AdvanceToTargetEntry
-
-        jmp     op_jt2
-.endproc ; AscendDirectory
-
-.proc AdvanceToTargetEntry
-:       cmp16   entry_index_in_dir, target_index
-    IF_LT
-        jsr     ReadFileEntry
-        jmp     :-
-    END_IF
-        rts
-.endproc ; AdvanceToTargetEntry
-
-;;; ============================================================
-;;; Recursively copy
-;;; Inputs: `pathname_src` points at source directory
-
-.proc ProcessDirectory
-        copy8   #0, recursion_depth
-        jsr     OpenSrcDir
-loop:
-        jsr     ReadFileEntry
-    IF_ZERO
-        param_call app::AdjustFileEntryCase, file_entry
-
-        lda     file_entry + FileEntry::storage_type_name_length
-        beq     loop            ; deleted
-
-        ;; Simplify to length-prefixed string
-        and     #NAME_LENGTH_MASK
-        sta     file_entry + FileEntry::storage_type_name_length
-
-        CLEAR_BIT7_FLAG copy_err_flag
-        jsr     OpProcessDirectoryEntry
-        bit     copy_err_flag   ; don't recurse if the copy failed
-        bmi     loop
-
-        lda     file_entry + FileEntry::file_type
-        cmp     #FT_DIRECTORY
-        bne     loop            ; and don't recurse unless it's a directory
-
-        ;; Recurse into child directory
-        jsr     DescendDirectory
-        inc     recursion_depth
-        jmp     loop            ; TODO: `BPL` ; always
-    END_IF
-
-        lda     recursion_depth
-    IF_NOT_ZERO
-        jsr     AscendDirectory
-        dec     recursion_depth
-        jmp     loop            ; TODO: `BPL`; always
-    END_IF
-
-        jmp     CloseSrcDir
-.endproc ; ProcessDirectory
-
-;;; Set on error during copying of a single file
-copy_err_flag:  .byte   0       ; bit7
-
-;;; ============================================================
-
 OpProcessDirectoryEntry:
         jmp     (op_jt_addr1)
 op_jt2: jmp     (op_jt_addr2)
@@ -326,6 +152,18 @@ copy_jt:
         .addr   CopyProcessDirectoryEntry
         .addr   PopDstSegment
         .addr   NoOp2
+
+;;; ============================================================
+
+src_path_slash_index:           ; TODO: Written but never read?
+        .byte   0
+
+saved_stack:
+        .byte   0
+
+        ;; TODO: Remove this indirection
+PopDstSegment:
+        jmp     RemoveDstPathSegment
 
 ;;; ============================================================
 
@@ -457,18 +295,54 @@ LA4F9:  .byte   0               ; TODO: written but not read; remove?
 .endproc ; DoCopy
 
 ;;; ============================================================
+;;; Recursively copy
+;;; Inputs: `pathname_src` points at source directory
 
-src_path_slash_index:           ; TODO: Written but never read?
-        .byte   0
+.proc ProcessDirectory
+        copy8   #0, recursion_depth
+        jsr     OpenSrcDir
+loop:
+        jsr     ReadFileEntry
+    IF_ZERO
+        param_call app::AdjustFileEntryCase, file_entry
 
-saved_stack:
-        .byte   0
+        lda     file_entry + FileEntry::storage_type_name_length
+        beq     loop            ; deleted
 
-        ;; TODO: Remove this indirection
-PopDstSegment:
-        jmp     RemoveDstPathSegment
+        ;; Simplify to length-prefixed string
+        and     #NAME_LENGTH_MASK
+        sta     file_entry + FileEntry::storage_type_name_length
+
+        CLEAR_BIT7_FLAG copy_err_flag
+        jsr     OpProcessDirectoryEntry
+        bit     copy_err_flag   ; don't recurse if the copy failed
+        bmi     loop
+
+        lda     file_entry + FileEntry::file_type
+        cmp     #FT_DIRECTORY
+        bne     loop            ; and don't recurse unless it's a directory
+
+        ;; Recurse into child directory
+        jsr     DescendDirectory
+        inc     recursion_depth
+        jmp     loop            ; TODO: `BPL` ; always
+    END_IF
+
+        lda     recursion_depth
+    IF_NOT_ZERO
+        jsr     AscendDirectory
+        dec     recursion_depth
+        jmp     loop            ; TODO: `BPL`; always
+    END_IF
+
+        jmp     CloseSrcDir
+.endproc ; ProcessDirectory
+
+;;; Set on error during copying of a single file
+copy_err_flag:  .byte   0       ; bit7
 
 ;;; ============================================================
+;;; Copy an entry in a directory - regular file or directory.
 
 .proc CopyProcessDirectoryEntry
         jsr     CheckCancel
@@ -612,6 +486,224 @@ existing_blocks:          ; Blocks taken by file that will be replaced
 .endproc ; CheckSpaceAvailable
 
 ;;; ============================================================
+
+.proc PushIndexToStack
+        ldx     stack_index
+        ;; TODO: copy16, like desktop
+        copy8   target_index, index_stack,x
+        inx
+        copy8   target_index+1, index_stack,x
+        inx
+        stx     stack_index
+        rts
+.endproc ; PushIndexToStack
+
+;;; ============================================================
+
+.proc PopIndexFromStack
+        ldx     stack_index
+        dex
+        ;; TODO: copy16, like desktop
+        copy8   index_stack,x, target_index+1
+        dex
+        copy8   index_stack,x, target_index
+        stx     stack_index
+        rts
+.endproc ; PopIndexFromStack
+
+;;; ============================================================
+;;; Open the source directory for reading, skipping header.
+;;; Inputs: `pathname_src` set to dir
+;;; Outputs: ref_num
+
+.proc OpenSrcDir
+        lda     #$00
+        sta     entry_index_in_dir
+        sta     entry_index_in_dir+1
+        sta     entry_index_in_block
+
+        MLI_CALL OPEN, open_src_dir_params
+    IF_CS
+        HANDLE_ERROR_CODE
+    END_IF
+
+        ;; Skip over prev/next block pointers in header
+        lda     open_src_dir_params::ref_num
+        sta     ref_num
+        sta     read_block_pointers_params::ref_num
+        MLI_CALL READ, read_block_pointers_params
+        jcs     HandleErrorCode ; TODO: `BCS` to `JMP` above
+
+        ;; Header size is next/prev blocks + a file entry
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader), .sizeof(FileEntry) + 4
+        copy8   #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
+        jsr     ReadFileEntry          ; read the rest of the header
+
+        copy8   file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
+
+        rts
+.endproc ; OpenSrcDir
+
+;;; ============================================================
+
+.proc CloseSrcDir
+        ;; TODO: Move to `OpenSrcDir` ?
+        copy8   ref_num, close_src_dir_params::ref_num
+        MLI_CALL CLOSE, close_src_dir_params
+    IF_CS
+        HANDLE_ERROR_CODE
+    END_IF
+        rts
+.endproc ; CloseSrcDir
+
+;;; ============================================================
+;;; Read the next file entry in the directory into `file_entry`
+;;; NOTE: Also used to read the vol/dir header.
+
+.proc ReadFileEntry
+        inc16   entry_index_in_dir
+
+        copy8   ref_num, read_src_dir_entry_params::ref_num
+        MLI_CALL READ, read_src_dir_entry_params
+    IF_CS
+        cmp     #ERR_END_OF_FILE
+        beq     eof
+
+        HANDLE_ERROR_CODE
+    END_IF
+
+        inc     entry_index_in_block
+        lda     entry_index_in_block
+    IF_A_GE     entries_per_block
+        ;; Advance to first entry in next "block"
+        copy8   #0, entry_index_in_block
+        copy8   ref_num, read_padding_bytes_params::ref_num
+        MLI_CALL READ, read_padding_bytes_params
+        jcs     HandleErrorCode ; TODO: `BCS` to `JMP` above
+    END_IF
+
+        return  #0
+
+eof:    return  #$FF
+.endproc ; ReadFileEntry
+
+;;; ============================================================
+
+.proc DescendDirectory
+        copy16  entry_index_in_dir, target_index
+        jsr     CloseSrcDir
+        jsr     PushIndexToStack
+        jsr     AppendFileEntryToSrcPath
+        jmp     OpenSrcDir
+.endproc ; DescendDirectory
+
+;;; ============================================================
+
+.proc AscendDirectory
+        jsr     CloseSrcDir
+        jsr     OpFinishDirectory
+        jsr     RemoveSrcPathSegment
+        jsr     PopIndexFromStack
+        jsr     OpenSrcDir
+
+        ;; TODO: inline `AdvanceToTargetEntry`
+        jsr     AdvanceToTargetEntry
+
+        jmp     op_jt2
+.endproc ; AscendDirectory
+
+.proc AdvanceToTargetEntry
+:       cmp16   entry_index_in_dir, target_index
+    IF_LT
+        jsr     ReadFileEntry
+        jmp     :-
+    END_IF
+        rts
+.endproc ; AdvanceToTargetEntry
+
+;;; ============================================================
+
+.proc AppendFileEntryToSrcPath
+        lda     file_entry+FileEntry::storage_type_name_length
+        RTS_IF_ZERO             ; TODO: Use `RTS` below / `IF_NOT_ZERO`
+
+        ldx     #$00
+        ldy     pathname_src
+        copy8   #'/', pathname_src+1,y
+        iny
+:       cpx     file_entry+FileEntry::storage_type_name_length
+        bcs     :+
+        copy8   file_entry+FileEntry::file_name,x, pathname_src+1,y
+        inx
+        iny
+        jmp     :-              ; TODO: `BNE` / `WHILE_NOT_ZERO`
+:
+        sty     pathname_src
+        rts
+.endproc ; AppendFileEntryToSrcPath
+
+;;; ============================================================
+
+.proc RemoveSrcPathSegment
+        ldx     pathname_src
+        RTS_IF_ZERO
+
+    DO
+        lda     pathname_src,x
+        cmp     #'/'
+        beq     :+
+        dex
+    WHILE_NOT_ZERO
+        stx     pathname_src
+        rts
+:
+        dex
+        stx     pathname_src
+        rts
+.endproc ; RemoveSrcPathSegment
+
+;;; ============================================================
+
+.proc AppendFileEntryToDstPath
+        lda     file_entry+FileEntry::storage_type_name_length
+        RTS_IF_ZERO
+
+        ldx     #$00
+        ldy     pathname_dst
+        copy8   #'/', pathname_dst+1,y
+        iny
+:       cpx     file_entry+FileEntry::storage_type_name_length
+        bcs     :+
+        copy8   file_entry+FileEntry::file_name,x, pathname_dst+1,y
+        inx
+        iny
+        jmp     :-              ; TODO: `BNE`
+:
+        sty     pathname_dst
+        rts
+.endproc ; AppendFileEntryToDstPath
+
+;;; ============================================================
+
+.proc RemoveDstPathSegment
+        ldx     pathname_dst
+        RTS_IF_ZERO
+
+    DO
+        lda     pathname_dst,x
+        cmp     #'/'
+        beq     :+
+        dex
+    WHILE_NOT_ZERO
+        stx     pathname_dst
+        rts
+:
+        dex
+        stx     pathname_dst
+        rts
+.endproc ; RemoveDstPathSegment
+
+;;; ============================================================
 ;;; Copy a normal (non-directory) file. File info is copied too.
 ;;; Inputs: `open_src_params` populated
 ;;;         `open_dst_params` populated; file already created
@@ -641,7 +733,7 @@ existing_blocks:          ; Blocks taken by file that will be replaced
 
 loop:
         ;; Read a chunk
-        copy16  #kDirCopyBufSize, read_src_params::request_count
+        copy16  #kCopyBufferSize, read_src_params::request_count
         ;; TODO: `CheckCancel` ?
         MLI_CALL READ, read_src_params
     IF_CS
@@ -880,88 +972,6 @@ total_count:
         .word   0
 blocks_total:
         .word   0
-
-;;; ============================================================
-
-.proc AppendFileEntryToSrcPath
-        lda     file_entry+FileEntry::storage_type_name_length
-        RTS_IF_ZERO             ; TODO: Use `RTS` below / `IF_NOT_ZERO`
-
-        ldx     #$00
-        ldy     pathname_src
-        copy8   #'/', pathname_src+1,y
-        iny
-:       cpx     file_entry+FileEntry::storage_type_name_length
-        bcs     :+
-        copy8   file_entry+FileEntry::file_name,x, pathname_src+1,y
-        inx
-        iny
-        jmp     :-              ; TODO: `BNE` / `WHILE_NOT_ZERO`
-:
-        sty     pathname_src
-        rts
-.endproc ; AppendFileEntryToSrcPath
-
-;;; ============================================================
-
-.proc RemoveSrcPathSegment
-        ldx     pathname_src
-        RTS_IF_ZERO
-
-    DO
-        lda     pathname_src,x
-        cmp     #'/'
-        beq     :+
-        dex
-    WHILE_NOT_ZERO
-        stx     pathname_src
-        rts
-:
-        dex
-        stx     pathname_src
-        rts
-.endproc ; RemoveSrcPathSegment
-
-;;; ============================================================
-
-.proc AppendFileEntryToDstPath
-        lda     file_entry+FileEntry::storage_type_name_length
-        RTS_IF_ZERO
-
-        ldx     #$00
-        ldy     pathname_dst
-        copy8   #'/', pathname_dst+1,y
-        iny
-:       cpx     file_entry+FileEntry::storage_type_name_length
-        bcs     :+
-        copy8   file_entry+FileEntry::file_name,x, pathname_dst+1,y
-        inx
-        iny
-        jmp     :-              ; TODO: `BNE`
-:
-        sty     pathname_dst
-        rts
-.endproc ; AppendFileEntryToDstPath
-
-;;; ============================================================
-
-.proc RemoveDstPathSegment
-        ldx     pathname_dst
-        RTS_IF_ZERO
-
-    DO
-        lda     pathname_dst,x
-        cmp     #'/'
-        beq     :+
-        dex
-    WHILE_NOT_ZERO
-        stx     pathname_dst
-        rts
-:
-        dex
-        stx     pathname_dst
-        rts
-.endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
 ;;; Copy `src_path` to `pathname_src` and `dst_path` to `pathname_dst`
