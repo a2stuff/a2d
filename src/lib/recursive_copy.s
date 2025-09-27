@@ -6,15 +6,7 @@
 ;;; set of callbacks and error handlers. For file copying (the most
 ;;; common case), default callback implementations are provided.
 
-
 ;;; Callers must define:
-;;;
-;;; ----------------------------------------
-;;; Macros
-;;; ----------------------------------------
-;;; * `HANDLE_ERROR_CODE` - shows error, restores stack
-;;; * `HANDLE_NO_SPACE` - shows error, restores stack
-;;; * `UPDATE_PROGRESS_UI` - updates UI and returns
 ;;;
 ;;; ----------------------------------------
 ;;; Identifiers
@@ -30,6 +22,9 @@
 ;;; ----------------------------------------
 ;;; * `OpCheckCancel` - called regularly, allows caller to abort (close all open files, restore stack, hide UI)
 ;;; * `OpInsertSource` - called by `DoCopy`
+;;; * `OpHandleErrorCode` - shows error, restores stack
+;;; * `OpHandleNoSpace` - shows error, restores stack
+;;; * `OpUpdateProgress` - updates UI and returns
 ;;;
 ;;; * `OpProcessDirectoryEntry` - called for each directory entry
 ;;; * `OpResumeDirectory` - called when resuming directory enumeration
@@ -202,7 +197,7 @@ entry_err_flag:  .byte   0      ; bit7
 
         MLI_CALL OPEN, open_src_dir_params
     IF_CS
-fail:   HANDLE_ERROR_CODE
+fail:   jmp     OpHandleErrorCode
     END_IF
 
         ;; Skip over prev/next block pointers in header
@@ -229,7 +224,7 @@ fail:   HANDLE_ERROR_CODE
 .proc _CloseSrcDir
         MLI_CALL CLOSE, close_src_dir_params
     IF_CS
-        HANDLE_ERROR_CODE
+        jmp     OpHandleErrorCode
     END_IF
         rts
 .endproc ; _CloseSrcDir
@@ -246,7 +241,7 @@ fail:   HANDLE_ERROR_CODE
         cmp     #ERR_END_OF_FILE
         beq     eof
 
-fail:   HANDLE_ERROR_CODE
+fail:   jmp     OpHandleErrorCode
     END_IF
 
         inc     entry_index_in_block
@@ -411,7 +406,7 @@ check_src:
       END_IF
     END_IF
 
-        HANDLE_ERROR_CODE
+        jmp     OpHandleErrorCode
 
         ;; Prepare for copy...
 gfi_ok:
@@ -434,7 +429,7 @@ is_dir:
 
         jsr     _CheckSpaceAvailable
     IF_CS
-        HANDLE_NO_SPACE
+        jmp     OpHandleNoSpace
     END_IF
 
         ;; Copy creation date/time
@@ -450,10 +445,10 @@ is_dir:
     IF_CS
 .if ::kCopyIgnoreDuplicateErrorOnCreate
       IF_A_NE   #ERR_DUPLICATE_FILENAME
-        HANDLE_ERROR_CODE
+        jmp     OpHandleErrorCode
       END_IF
 .else
-        HANDLE_ERROR_CODE
+        jmp     OpHandleErrorCode
 .endif
     END_IF
 
@@ -472,7 +467,7 @@ is_dir:
 ;;; Inputs: `file_entry` populated with FileEntry
 ;;;         `pathname_src` has source directory path
 ;;;         `pathname_dst` has destination directory path
-;;; Errors: `HANDLE_ERROR_CODE` is invoked
+;;; Errors: `OpHandleErrorCode` is invoked
 
 .proc CopyProcessDirectoryEntry
         jsr     OpCheckCancel
@@ -482,10 +477,10 @@ is_dir:
         ;; --------------------------------------------------
         ;; Directory
         jsr     AppendFileEntryToSrcPath ; TODO: Hoist out of IF block
-        UPDATE_PROGRESS_UI
+        jsr     OpUpdateProgress
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
       IF_CS
-fail:   HANDLE_ERROR_CODE
+fail:   jmp     OpHandleErrorCode
       END_IF
 
         jsr     AppendFileEntryToDstPath ; TODO: Hoist out of IF block
@@ -502,13 +497,13 @@ fail:   HANDLE_ERROR_CODE
 
         jsr     AppendFileEntryToDstPath ; TODO: Hoist out of IF block
         jsr     AppendFileEntryToSrcPath ; TODO: Hoist out of IF block
-        UPDATE_PROGRESS_UI
+        jsr     OpUpdateProgress
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bcs     fail
 
         jsr     _CheckSpaceAvailable
     IF_CS
-        HANDLE_NO_SPACE
+        jmp     OpHandleNoSpace
     END_IF
 
         ;; Create parent dir if necessary
@@ -548,7 +543,7 @@ pop_dst:
     IF_CS
         cmp     #ERR_FILE_NOT_FOUND
         beq     got_dst_size    ; this is fine
-fail:   HANDLE_ERROR_CODE
+fail:   jmp     OpHandleErrorCode
     END_IF
         copy16  get_dst_file_info_params::blocks_used, existing_blocks
 got_dst_size:
@@ -603,7 +598,7 @@ existing_blocks:          ; Blocks taken by file that will be replaced
 ;;; Copy a normal (non-directory) file. File info is copied too.
 ;;; Inputs: `open_src_params` populated
 ;;;         `open_dst_params` populated; file already created
-;;; Errors: `HANDLE_ERROR_CODE` is invoked
+;;; Errors: `OpHandleErrorCode` is invoked
 
 .proc _CopyNormalFile
         ;; Open source
@@ -635,7 +630,7 @@ existing_blocks:          ; Blocks taken by file that will be replaced
       IF_CS
         cmp     #ERR_END_OF_FILE
         beq     close
-fail:   HANDLE_ERROR_CODE
+fail:   jmp     OpHandleErrorCode
       END_IF
 
         ;; EOF?
@@ -769,7 +764,7 @@ ret:    rts
         MLI_CALL CREATE, create_dir_params
     IF_CS
       IF_A_NE   #ERR_DUPLICATE_FILENAME
-        HANDLE_ERROR_CODE
+        jmp     OpHandleErrorCode
       END_IF
     END_IF
         clc                     ; treated as success

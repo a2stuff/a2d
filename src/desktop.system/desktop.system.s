@@ -62,7 +62,6 @@ kCopyBufferSize = MLI - copy_buffer
 
 kShortcutMonitor = res_char_monitor_shortcut
 
-
 ;;; ============================================================
 
         .org PRODOS_SYS_START
@@ -384,25 +383,6 @@ ShowInsertSourceDiskPrompt:
 ShowCopyingScreen:
         jmp     (hook_show_file)
 
-;;; ============================================================
-;;; Parameterized logic to support different implementations
-
-.macro HANDLE_ERROR_CODE
-        jmp     (hook_handle_error_code)
-.endmacro
-
-.macro HANDLE_NO_SPACE
-        jmp     (hook_handle_no_space)
-.endmacro
-
-.macro UPDATE_PROGRESS_UI
-        jsr     ShowCopyingScreen
-.endmacro
-
-;;; Since this is only ever "copy to RAMCard" / "at boot" we assume it
-;;; is okay if it already exists.
-::kCopyIgnoreDuplicateErrorOnCreate = 1
-
 ;;; Callbacks - caller must initialize these
 hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code or kErrCancel
 hook_handle_no_space:     .addr   0 ; fatal
@@ -412,11 +392,24 @@ hook_show_file:           .addr   0 ; called when `pathname_src` updated
 kErrCancel = $FF
 
 ;;; --------------------------------------------------
+;;; Identifiers
+;;; --------------------------------------------------
+
+;;; Since this is only ever "copy to RAMCard" / "at boot" we assume it
+;;; is okay if it already exists.
+::kCopyIgnoreDuplicateErrorOnCreate = 1
+
+;;; --------------------------------------------------
 ;;; Callbacks
 ;;; --------------------------------------------------
 
 OpCheckCancel  := CheckCancel
 OpInsertSource := ShowInsertSourceDiskPrompt
+OpHandleErrorCode:
+        jmp     (hook_handle_error_code)
+OpHandleNoSpace:
+        jmp     (hook_handle_no_space)
+OpUpdateProgress := ShowCopyingScreen
 
 ;;; Previously this used a jump table, but since there is only a
 ;;; copy operation and no enumeration (etc) the jump table was
@@ -442,7 +435,7 @@ OpFinishDirectory       := NoOp
 ret:    rts
 
 cancel: lda     #kErrCancel
-        HANDLE_ERROR_CODE
+        jmp     (hook_handle_error_code)
 .endproc ; CheckCancel
 
 ;;; ============================================================

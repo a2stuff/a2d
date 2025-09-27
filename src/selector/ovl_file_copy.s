@@ -58,22 +58,6 @@ skip:
 ;;;          :             :
 
 ;;; --------------------------------------------------
-;;; Required macros:
-;;; --------------------------------------------------
-
-.macro HANDLE_ERROR_CODE
-        jmp     HandleErrorCode
-.endmacro
-
-.macro HANDLE_NO_SPACE
-        jmp     ShowDiskFullError
-.endmacro
-
-.macro UPDATE_PROGRESS_UI
-        jsr     UpdateWindowContent
-.endmacro
-
-;;; --------------------------------------------------
 ;;; Required identifiers:
 ;;; --------------------------------------------------
 
@@ -82,7 +66,7 @@ src_io_buffer :=  $D00  ; 1024 bytes for I/O
 dst_io_buffer := $1100  ; 1024 bytes for I/O
 copy_buffer   := $1500  ; Read/Write buffer
 
-        kCopyBufferSize = $A00
+kCopyBufferSize = $A00
 
 ;;; Since this is only ever "copy to RAMCard" / "on use" we assume it
 ;;; is okay if it already exists.
@@ -99,8 +83,11 @@ op_jt_addr2:  .addr   RemoveDstPathSegment
 op_jt_addr3:  .addr   NoOp
 kOpJTSize = * - op_jt_addrs
 
-OpCheckCancel  := CheckCancel
-OpInsertSource := ShowInsertSourceDiskPrompt
+OpCheckCancel     := CheckCancel
+OpInsertSource    := ShowInsertSourceDiskPrompt
+OpHandleErrorCode := HandleErrorCode
+OpHandleNoSpace   := ShowDiskFullError
+OpUpdateProgress  := UpdateWindowContent
 
 OpProcessDirectoryEntry:
         jmp     (op_jt_addr1)
@@ -156,7 +143,7 @@ saved_stack:
         jsr     CopyPathsFromBufsToSrcAndDst
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
     IF_CS
-        HANDLE_ERROR_CODE
+        jmp     HandleErrorCode
     END_IF
 
         blocks := $06
@@ -165,7 +152,7 @@ saved_stack:
         sub16   get_dst_file_info_params::aux_type, get_dst_file_info_params::blocks_used, blocks
         cmp16   blocks, blocks_total
     IF_LT
-        HANDLE_NO_SPACE
+        jmp     ShowDiskFullError
     END_IF
 
         ;; Append `filename` to `pathname_dst`
