@@ -400,6 +400,10 @@ ShowCopyingScreen:
         jsr     ShowCopyingScreen
 .endmacro
 
+;;; Since this is only ever "copy to RAMCard" / "at boot" we assume it
+;;; is okay if it already exists.
+::kCopyIgnoreDuplicateErrorOnCreate = 1
+
 ;;; Callbacks - caller must initialize these
 hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code or kErrCancel
 hook_handle_no_space:     .addr   0 ; fatal
@@ -795,11 +799,13 @@ is_dir:
 
         MLI_CALL CREATE, create_params
     IF_CS
-        ;; NOTE: Since this is only ever "copy to RAMCard" / "at boot"
-        ;; we assume it is okay if it already exists.
+.if ::kCopyIgnoreDuplicateErrorOnCreate
       IF_A_NE   #ERR_DUPLICATE_FILENAME
         HANDLE_ERROR_CODE
       END_IF
+.else
+        HANDLE_ERROR_CODE
+.endif
     END_IF
 
         is_dir_flag := *+1
@@ -817,6 +823,7 @@ is_dir:
 ;;; Inputs: `file_entry` populated with FileEntry
 ;;;         `pathname_src` has source directory path
 ;;;         `pathname_dst` has destination directory path
+;;; Errors: `HANDLE_ERROR_CODE` is invoked
 
 .proc CopyProcessDirectoryEntry
         jsr     CheckCancel
@@ -947,6 +954,7 @@ existing_blocks:          ; Blocks taken by file that will be replaced
 ;;; Copy a normal (non-directory) file. File info is copied too.
 ;;; Inputs: `open_src_params` populated
 ;;;         `open_dst_params` populated; file already created
+;;; Errors: `HANDLE_ERROR_CODE` is invoked
 
 .proc CopyNormalFile
         ;; Open source

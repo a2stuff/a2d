@@ -80,6 +80,9 @@ copy_buffer   := $1500  ; Read/Write buffer
         jsr     UpdateWindowContent
 .endmacro
 
+;;; Since this is only ever "copy to RAMCard" / "on use" we assume it
+;;; is okay if it already exists.
+::kCopyIgnoreDuplicateErrorOnCreate = 1
 
 ;;; Jump table - populated by operation
 op_jt_addrs:
@@ -475,11 +478,13 @@ is_dir:
 
         MLI_CALL CREATE, create_params
     IF_CS
-        ;; NOTE: Since this is only ever "copy to RAMCard" / "on use"
-        ;; we assume it is okay if it already exists.
+.if ::kCopyIgnoreDuplicateErrorOnCreate
       IF_A_NE   #ERR_DUPLICATE_FILENAME
         HANDLE_ERROR_CODE
       END_IF
+.else
+        HANDLE_ERROR_CODE
+.endif
     END_IF
 
         is_dir_flag := *+1
@@ -540,7 +545,7 @@ fail:   HANDLE_ERROR_CODE
         ;; TODO: Is this actually needed?
         jsr     RemoveSrcPathSegment
         jsr     CopyCreateDir
-        bcs     CheckSpace      ; ??? fail here or `pop_dst` ?
+        bcs     pop_dst
         jsr     AppendFileEntryToSrcPath
 
         ;; Do the copy
@@ -549,16 +554,9 @@ fail:   HANDLE_ERROR_CODE
 pop_src_and_dst:
         jsr     RemoveSrcPathSegment
 
-;;; `pop_dst` label???
+pop_dst:
         jmp     RemoveDstPathSegment
 .endproc ; CopyProcessDirectoryEntry
-
-;;; ============================================================
-
-.proc CheckSpace
-        jsr     RemoveDstPathSegment
-        FALL_THROUGH_TO CheckSpaceAvailable
-.endproc ; CheckSpace
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
@@ -952,9 +950,9 @@ set:    sta     is_dir_flag
 
         ;; TODO: Move these somewhere more sensible.
 is_dir_flag:
-        .byte   0
+        .byte   0               ; TODO: Written but never read?
 storage_type:
-        .byte   0
+        .byte   0               ; TODO: Move inline/SMC
     END_IF
 
 visit:  jsr     EnumerateVisitFile
