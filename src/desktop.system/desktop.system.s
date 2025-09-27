@@ -403,15 +403,6 @@ kErrCancel = $FF
         jsr     ShowCopyingScreen
 .endmacro
 
-;;; Previously this used a jump table, but since there is only a
-;;; copy operation and no enumeration (etc) the jump table was
-;;; removed.
-OpProcessDirectoryEntry := CopyProcessDirectoryEntry
-OpFinishDirectory       := NoOp
-OpResumeDirectory       := RemoveDstPathSegment
-
-NoOp:   rts
-
 ;;; ============================================================
 
 ShowInsertSourceDiskPrompt:
@@ -419,6 +410,20 @@ ShowInsertSourceDiskPrompt:
 
 ShowCopyingScreen:
         jmp     (hook_show_file)
+
+;;; ============================================================
+;;; Generic Recursive Operation Logic
+;;; ============================================================
+;;; Entry point is `ProcessDirectory`
+
+;;; Previously this used a jump table, but since there is only a
+;;; copy operation and no enumeration (etc) the jump table was
+;;; removed.
+OpProcessDirectoryEntry := CopyProcessDirectoryEntry
+OpResumeDirectory       := RemoveDstPathSegment
+OpFinishDirectory       := NoOp
+
+NoOp:   rts
 
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks
@@ -461,27 +466,6 @@ index_stack:    .res    ::kDirStackBufferSize, 0
 stack_index:    .byte   0
 
 entry_index_in_block:   .byte   0
-
-;;; ============================================================
-;;; File copy parameter blocks
-
-        DEFINE_CREATE_PARAMS create_dir_params, pathname_dst, ACCESS_DEFAULT
-
-        DEFINE_CREATE_PARAMS create_params, pathname_dst, ACCESS_DEFAULT
-        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
-        DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
-        DEFINE_READWRITE_PARAMS write_dst_params, copy_buffer, kCopyBufferSize
-        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
-        DEFINE_CLOSE_PARAMS close_src_params
-        DEFINE_CLOSE_PARAMS close_dst_params
-
-        DEFINE_GET_FILE_INFO_PARAMS get_src_file_info_params, pathname_src
-        DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
-
-;;; ============================================================
-;;; Generic Recursive Operation Logic
-;;; ============================================================
 
 ;;; ============================================================
 ;;; Iterate directory entries
@@ -736,6 +720,23 @@ eof:    return  #$FF
 ;;; ============================================================
 ;;; Copy
 ;;; ============================================================
+
+;;; ============================================================
+;;; File copy parameter blocks
+
+        DEFINE_CREATE_PARAMS create_dir_params, pathname_dst, ACCESS_DEFAULT
+
+        DEFINE_CREATE_PARAMS create_params, pathname_dst, ACCESS_DEFAULT
+        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
+        DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
+        DEFINE_READWRITE_PARAMS write_dst_params, copy_buffer, kCopyBufferSize
+        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
+        DEFINE_CLOSE_PARAMS close_src_params
+        DEFINE_CLOSE_PARAMS close_dst_params
+
+        DEFINE_GET_FILE_INFO_PARAMS get_src_file_info_params, pathname_src
+        DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
 
 ;;; ============================================================
 ;;; Perform the recursive file copy.

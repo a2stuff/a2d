@@ -43,6 +43,69 @@ skip:
         .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
 
 ;;; ============================================================
+
+        DEFINE_CLOSE_PARAMS close_everything_params ; used in case of error
+
+;;; ============================================================
+
+;;; Specific file paths during copy
+pathname_dst:        .res    ::kPathBufferSize, 0
+pathname_src:        .res    ::kPathBufferSize, 0
+
+;;; Copy of `pathname_src` modified for display
+display_path:
+        .res    ::kPathBufferSize, 0
+
+;;; Paths for overall operation
+dst_path:       .res    64, 0
+src_path:       .res    64, 0
+filename:       .res    16, 0
+
+.macro HANDLE_ERROR_CODE
+        jmp     HandleErrorCode
+.endmacro
+
+.macro HANDLE_NO_SPACE
+        jmp     ShowDiskFullError
+.endmacro
+
+.macro UPDATE_PROGRESS_UI
+        jsr     UpdateWindowContent
+.endmacro
+
+;;; ============================================================
+
+src_path_slash_index:           ; TODO: Written but never read?
+        .byte   0
+
+saved_stack:
+        .byte   0
+
+;;; ============================================================
+;;; Generic Recursive Operation Logic
+;;; ============================================================
+;;; Entry point is `ProcessDirectory`
+
+;;; This is used for both enumeration and copy passes by
+;;; swapping the callback jump table.
+
+;;; Jump table - populated by operation
+op_jt_addrs:
+op_jt_addr1:  .addr   CopyProcessDirectoryEntry
+op_jt_addr2:  .addr   RemoveDstPathSegment
+op_jt_addr3:  .addr   NoOp
+kOpJTSize = * - op_jt_addrs
+
+OpProcessDirectoryEntry:
+        jmp     (op_jt_addr1)
+OpResumeDirectory:
+        jmp     (op_jt_addr2)
+OpFinishDirectory:
+        jmp     (op_jt_addr3)
+
+NoOp:   rts
+
+;;; ============================================================
 ;;; Directory enumeration parameter blocks
 
         DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, $800
@@ -83,98 +146,6 @@ index_stack:    .res    ::kDirStackBufferSize, 0
 stack_index:    .byte   0
 
 entry_index_in_block:   .byte   0
-
-;;; ============================================================
-;;; File copy parameter blocks
-
-        DEFINE_CREATE_PARAMS create_dir_params, pathname_dst, ACCESS_DEFAULT
-
-        DEFINE_CREATE_PARAMS create_params, pathname_dst, ACCESS_DEFAULT
-        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
-        DEFINE_READWRITE_PARAMS read_src_params, data_buf, kCopyBufferSize
-        DEFINE_READWRITE_PARAMS write_dst_params, data_buf, kCopyBufferSize
-        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
-        DEFINE_CLOSE_PARAMS close_src_params
-        DEFINE_CLOSE_PARAMS close_dst_params
-
-        DEFINE_GET_FILE_INFO_PARAMS get_src_file_info_params, pathname_src
-        DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
-
-;;; ============================================================
-
-        DEFINE_CLOSE_PARAMS close_everything_params ; used in case of error
-
-;;; ============================================================
-
-;;; Specific file paths during copy
-pathname_dst:        .res    ::kPathBufferSize, 0
-pathname_src:        .res    ::kPathBufferSize, 0
-
-;;; Copy of `pathname_src` modified for display
-display_path:
-        .res    ::kPathBufferSize, 0
-
-;;; Paths for overall operation
-dst_path:       .res    64, 0
-src_path:       .res    64, 0
-filename:       .res    16, 0
-
-.macro HANDLE_ERROR_CODE
-        jmp     HandleErrorCode
-.endmacro
-
-.macro HANDLE_NO_SPACE
-        jmp     ShowDiskFullError
-.endmacro
-
-.macro UPDATE_PROGRESS_UI
-        jsr     UpdateWindowContent
-.endmacro
-
-;;; ============================================================
-
-OpProcessDirectoryEntry:
-        jmp     (op_jt_addr1)
-OpResumeDirectory:
-        jmp     (op_jt_addr2)
-OpFinishDirectory:
-        jmp     (op_jt_addr3)
-
-;;; ============================================================
-
-;;; Jump table for `CopyFiles`
-copy_jt:
-        .addr   CopyProcessDirectoryEntry ; callback for `OpProcessDirectoryEntry`
-        .addr   PopDstSegment             ; callback for `OpResumeDirectory`
-        .addr   NoOp                      ; callback for `OpFinishDirectory`
-
-;;; ============================================================
-
-src_path_slash_index:           ; TODO: Written but never read?
-        .byte   0
-
-saved_stack:
-        .byte   0
-
-        ;; TODO: Remove this indirection
-PopDstSegment:
-        jmp     RemoveDstPathSegment
-
-;;; ============================================================
-;;; Generic Recursive Operation Logic
-;;; ============================================================
-;;; This is used for both enumeration and copy passes by
-;;; swapping the callback jump table.
-
-;;; Jump table - populated by operation
-op_jt_addrs:
-op_jt_addr1:  .addr   CopyProcessDirectoryEntry
-op_jt_addr2:  .addr   PopDstSegment
-op_jt_addr3:  .addr   NoOp
-kOpJTSize = * - op_jt_addrs
-
-NoOp:   rts
 
 ;;; ============================================================
 ;;; Iterate directory entries
@@ -429,6 +400,34 @@ eof:    return  #$FF
 ;;; ============================================================
 ;;; Copy
 ;;; ============================================================
+
+;;; ============================================================
+;;; File copy parameter blocks
+
+        DEFINE_CREATE_PARAMS create_dir_params, pathname_dst, ACCESS_DEFAULT
+
+        DEFINE_CREATE_PARAMS create_params, pathname_dst, ACCESS_DEFAULT
+        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
+        DEFINE_READWRITE_PARAMS read_src_params, data_buf, kCopyBufferSize
+        DEFINE_READWRITE_PARAMS write_dst_params, data_buf, kCopyBufferSize
+        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
+        DEFINE_CLOSE_PARAMS close_src_params
+        DEFINE_CLOSE_PARAMS close_dst_params
+
+        DEFINE_GET_FILE_INFO_PARAMS get_src_file_info_params, pathname_src
+        DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
+
+;;; ============================================================
+
+;;; Jump table for `CopyFiles`
+copy_jt:
+        .addr   CopyProcessDirectoryEntry ; callback for `OpProcessDirectoryEntry`
+        .addr   RemoveDstPathSegment      ; callback for `OpResumeDirectory`
+        .addr   NoOp                      ; callback for `OpFinishDirectory`
+
+;;; ============================================================
+
 
 .proc CopyFiles
         ;; Prepare jump table
