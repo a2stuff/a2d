@@ -95,6 +95,10 @@ header_orig_prefix:
 
 ;;; ============================================================
 
+        DEFINE_CLOSE_PARAMS close_everything_params
+
+;;; ============================================================
+
 start:
         ;; Old ProDOS leaves interrupts inhibited on start.
         ;; Do this for good measure.
@@ -439,6 +443,7 @@ cancel: lda     #kErrCancel
 .endproc ; CheckCancel
 
 ;;; ============================================================
+
 
 .endproc ; GenericCopy
 
@@ -936,6 +941,7 @@ done:   dex
 
         ldx     saved_stack
         txs
+        MLI_CALL CLOSE, close_everything_params
 
         jmp     DidNotCopy
 .endproc ; FailCopy
@@ -1445,6 +1451,7 @@ str_not_completed:
     IF_A_EQ     #$80|CHAR_ESCAPE
         ldx     saved_stack
         txs
+        MLI_CALL CLOSE, close_everything_params
         jmp     FinishAndInvoke
     END_IF
 
@@ -1457,6 +1464,7 @@ str_not_completed:
 .proc ShowNoSpacePrompt
         ldx     saved_stack
         txs
+        MLI_CALL CLOSE, close_everything_params
 
         lda     #0
         jsr     VTABZ
@@ -1475,6 +1483,9 @@ str_not_completed:
 .proc HandleErrorCode
         ldx     saved_stack
         txs
+        pha
+        MLI_CALL CLOSE, close_everything_params
+        pla
 
         cmp     #GenericCopy::kErrCancel
         jeq     FinishAndInvoke
@@ -1543,7 +1554,6 @@ CopySelectorEntriesToRAMCard := CopySelectorEntriesToRAMCardImpl::Start
         DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, src_io_buffer
         DEFINE_OPEN_PARAMS open_selector_params, str_selector, src_io_buffer
         DEFINE_READWRITE_PARAMS read_params, MODULE_BOOTSTRAP, kModuleBootstrapSize
-        DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
         PASCAL_STRING kPathnameSelector
