@@ -379,17 +379,14 @@ syscap: .byte   0
 
 ;;; ============================================================
 
-;;; Source/Destination paths - caller must initialize these
-pathname_dst:  .res    ::kPathBufferSize, 0
-pathname_src:  .res    ::kPathBufferSize, 0
+ShowInsertSourceDiskPrompt:
+        jmp     (hook_insert_source)
 
-;;; Callbacks - caller must initialize these
-hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code or kErrCancel
-hook_handle_no_space:     .addr   0 ; fatal
-hook_insert_source:       .addr   0 ; if this returns, copy is retried
-hook_show_file:           .addr   0 ; called when `pathname_src` updated
+ShowCopyingScreen:
+        jmp     (hook_show_file)
 
-kErrCancel = $FF
+;;; ============================================================
+;;; Parameterized logic to support different implementations
 
 .macro HANDLE_ERROR_CODE
         jmp     (hook_handle_error_code)
@@ -403,18 +400,13 @@ kErrCancel = $FF
         jsr     ShowCopyingScreen
 .endmacro
 
-;;; ============================================================
+;;; Callbacks - caller must initialize these
+hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code or kErrCancel
+hook_handle_no_space:     .addr   0 ; fatal
+hook_insert_source:       .addr   0 ; if this returns, copy is retried
+hook_show_file:           .addr   0 ; called when `pathname_src` updated
 
-ShowInsertSourceDiskPrompt:
-        jmp     (hook_insert_source)
-
-ShowCopyingScreen:
-        jmp     (hook_show_file)
-
-;;; ============================================================
-;;; Generic Recursive Operation Logic
-;;; ============================================================
-;;; Entry point is `ProcessDirectory`
+kErrCancel = $FF
 
 ;;; Previously this used a jump table, but since there is only a
 ;;; copy operation and no enumeration (etc) the jump table was
@@ -423,7 +415,16 @@ OpProcessDirectoryEntry := CopyProcessDirectoryEntry
 OpResumeDirectory       := RemoveDstPathSegment
 OpFinishDirectory       := NoOp
 
+;;; ============================================================
+;;; Generic Recursive Operation Logic
+;;; ============================================================
+;;; Entry point is `ProcessDirectory`
+
 NoOp:   rts
+
+;;; Specific file paths (`pathname_dst` only used during copy)
+pathname_src:        .res    ::kPathBufferSize, 0
+pathname_dst:        .res    ::kPathBufferSize, 0
 
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks
@@ -718,7 +719,7 @@ eof:    return  #$FF
 .endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
-;;; Copy
+;;; Standard Copy Implementation
 ;;; ============================================================
 
 ;;; ============================================================
