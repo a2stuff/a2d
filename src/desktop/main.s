@@ -9867,51 +9867,15 @@ dst_is_appleshare_flag:
 ;;; $0800 - $0BFF   - src dir I/O buffer
 ;;; ...
 
-        ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
-        .define kBlockPointersSize 4
-        ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
+src_io_buffer    := $0D00
+dst_io_buffer    := $1100
+file_data_buffer := $1500
+kCopyBufferSize  = $A00
 
-        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
-        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
-        ;; block pointers are the next 4.
-        .define kMaxPaddingBytes 5
-
-        PARAM_BLOCK dir_data, $C00
-buf_block_pointers      .res    kBlockPointersSize
-buf_padding_bytes       .res    kMaxPaddingBytes
-file_entry              .tag    FileEntry
-        END_PARAM_BLOCK
-        file_entry := dir_data::file_entry
-
-        DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
-        DEFINE_READWRITE_PARAMS read_block_pointers_params, dir_data::buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
-
-        DEFINE_CLOSE_PARAMS close_src_dir_params
-
-        DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
-
-        DEFINE_READWRITE_PARAMS read_padding_bytes_params, dir_data::buf_padding_bytes, kMaxPaddingBytes
-
-        file_data_buffer := $1500
-        kCopyBufferSize = $A00
         .assert file_data_buffer + kCopyBufferSize <= dst_path_buf, error, "Buffer overlap"
         .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
 
-        src_io_buffer := $0D00
-        dst_io_buffer := $1100
-
-        DEFINE_CLOSE_PARAMS close_src_params
-        DEFINE_CLOSE_PARAMS close_dst_params
-        DEFINE_DESTROY_PARAMS destroy_src_params, src_path_buf
-        DEFINE_DESTROY_PARAMS destroy_dst_params, dst_path_buf
-        DEFINE_OPEN_PARAMS open_src_params, src_path_buf, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, dst_io_buffer
-        DEFINE_READWRITE_PARAMS read_src_params, file_data_buffer, kCopyBufferSize
-        DEFINE_READWRITE_PARAMS write_dst_params, file_data_buffer, kCopyBufferSize
-        DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
-
-        DEFINE_SET_MARK_PARAMS mark_src_params, 0
-        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
+        ;; TODO: Is $800 safe here, given this is called on retry?
         DEFINE_ON_LINE_PARAMS on_line_all_drives_params,, $800
 
         block_buffer := file_data_buffer
@@ -9988,30 +9952,136 @@ do_op_flag:
         .byte   0
 
 ;;; ============================================================
+;;; Generic Recursive Operation Logic
+;;; ============================================================
 
-.proc PushIndexToStack
-        ldx     entry_count_stack_index
-        copy16  target_index, entry_count_stack,x
-        inx
-        inx
-        stx     entry_count_stack_index
-        rts
-.endproc ; PushIndexToStack
+;;; TODO: Unify with `../lib/recursive_copy.s`
+
+;;; ============================================================
+;;; Directory enumeration parameter blocks
+
+        ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
+        .define kBlockPointersSize 4
+        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
+        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
+        ;; block pointers are the next 4.
+        .define kMaxPaddingBytes 5
+
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
+
+        ;; TODO: Generalize this as a scratch page
+        PARAM_BLOCK, $C00
+buf_block_pointers      .res    kBlockPointersSize
+buf_padding_bytes       .res    kMaxPaddingBytes
+file_entry              .tag    FileEntry
+        END_PARAM_BLOCK
+
+        DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
+        DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
+        DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
+        DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+        DEFINE_CLOSE_PARAMS close_src_dir_params
+
+;;; ============================================================
+;;; State for directory recursion
+
+recursion_depth:        .byte   0 ; How far down the directory structure are we
+entries_per_block:      .byte   13 ; Number of file entries per directory block
+entry_index_in_dir:     .word   0
+target_index:           .word   0
+
+;;; During directory traversal, the number of file entries processed
+;;; at the current level is pushed here, so that following a descent
+;;; the previous entries can be skipped.
+index_stack:
+        .res    ::kDirStackBufferSize, 0 ; TODO: move into scratch page
+
+stack_index:
+        .byte   0
+
+entry_index_in_block:   .byte   0
+
+;;; ============================================================
+;;; Iterate directory entries
+;;; Inputs: `pathname_src` points at source directory
+
+.proc ProcessDirectory
+        copy8   #0, recursion_depth
+        jsr     _OpenSrcDir
+loop:
+        jsr     _ReadFileEntry
+    IF_ZERO
+        param_call AdjustFileEntryCase, file_entry
+
+        lda     file_entry + FileEntry::storage_type_name_length
+        beq     loop            ; deleted
+
+        ;; Requires `storage_type_name_length` to be intact
+        jsr     ConvertFileEntryToFileInfo
+
+        ;; Simplify to length-prefixed string
+        lda     file_entry + FileEntry::storage_type_name_length
+        and     #NAME_LENGTH_MASK
+        sta     file_entry
+
+        ;; During directory iteration, allow Escape to cancel the operation.
+        jsr     CheckCancel
+
+        CLEAR_BIT7_FLAG entry_err_flag
+        jsr     OpProcessDirectoryEntry
+        bit     entry_err_flag  ; don't recurse if the copy failed
+        bmi     loop
+
+        lda     file_entry + FileEntry::file_type
+        cmp     #FT_DIRECTORY
+        bne     loop            ; and don't recurse unless it's a directory
+
+        ;; Recurse into child directory
+        jsr     _DescendDirectory
+        inc     recursion_depth
+        bpl     loop            ; always
+    END_IF
+
+        lda     recursion_depth
+    IF_NOT_ZERO
+        jsr     _AscendDirectory
+        dec     recursion_depth
+        bpl     loop            ; always
+    END_IF
+
+        jmp     _CloseSrcDir
+.endproc ; ProcessDirectory
+
+;;; Set on error during copying of a single file
+entry_err_flag:  .byte   0      ; bit7
 
 ;;; ============================================================
 
-.proc PopIndexFromStack
-        ldx     entry_count_stack_index
-        dex
-        dex
-        copy16  entry_count_stack,x, target_index
-        stx     entry_count_stack_index
+.proc _PushIndexToStack
+        ldx     stack_index
+        copy16  target_index, index_stack,x
+        inx
+        inx
+        stx     stack_index
         rts
-.endproc ; PopIndexFromStack
+.endproc ; _PushIndexToStack
 
 ;;; ============================================================
 
-.proc OpenSrcDir
+.proc _PopIndexFromStack
+        ldx     stack_index
+        dex
+        dex
+        copy16  index_stack,x, target_index
+        stx     stack_index
+        rts
+.endproc ; _PopIndexFromStack
+
+;;; ============================================================
+;;; Open the source directory for reading, skipping header.
+;;; Inputs: `pathname_src` set to dir
+
+.proc _OpenSrcDir
         lda     #0
         sta     entry_index_in_dir
         sta     entry_index_in_dir+1
@@ -10041,13 +10111,13 @@ retry2: MLI_CALL READ, read_block_pointers_params
 
         ;; TODO: align with selector/disk_copy - init `entries_per_block`
         ;; temporarily, but patch it after this call
-        jmp     ReadFileEntry
-.endproc ; OpenSrcDir
+        jmp     _ReadFileEntry
+.endproc ; _OpenSrcDir
 
 ;;; ============================================================
 
-.proc CloseSrcDir
-        ;; TODO: Move to `OpenSrcDir` ?
+.proc _CloseSrcDir
+        ;; TODO: Move to `_OpenSrcDir` ?
         copy8   op_ref_num, close_src_dir_params::ref_num
 retry:  MLI_CALL CLOSE, close_src_dir_params
     IF_CS
@@ -10058,13 +10128,13 @@ retry:  MLI_CALL CLOSE, close_src_dir_params
         jmp     CloseFilesCancelDialogWithFailedResult
     END_IF
         rts
-.endproc ; CloseSrcDir
+.endproc ; _CloseSrcDir
 
 ;;; ============================================================
 ;;; Read the next file entry in the directory into `file_entry`
 ;;; NOTE: Also used to read the vol/dir header.
 
-.proc ReadFileEntry
+.proc _ReadFileEntry
         inc16   entry_index_in_dir
 
         copy8   op_ref_num, read_src_dir_entry_params::ref_num
@@ -10092,109 +10162,69 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
         return  #0
 
 eof:    return  #$FF
-.endproc ; ReadFileEntry
+.endproc ; _ReadFileEntry
 
 ;;; ============================================================
+;;; Record the current index in the current directory, and
+;;; recurse to the child directory in `file_entry`.
 
-;;; Input: Destination path in `path_buf4`
-;;; Output: `dst_is_appleshare_flag` is set
-.proc SetDstIsAppleShareFlag
-        CLEAR_BIT7_FLAG dst_is_appleshare_flag
-
-        ;; Issue a `GET_FILE_INFO` on destination to set `DEVNUM`
-retry:  param_call GetFileInfo, path_buf4
-    IF_CS
-        jsr     ShowErrorAlertDst
-        jmp     retry
-    END_IF
-
-        ;; Try to read a block off device; if AppleShare will fail.
-        copy8   DEVNUM, vol_key_block_params::unit_num
-        MLI_CALL READ_BLOCK, vol_key_block_params
-    IF_A_EQ     #ERR_NETWORK_ERROR
-        SET_BIT7_FLAG dst_is_appleshare_flag
-    END_IF
-        rts
-.endproc ; SetDstIsAppleShareFlag
-
-;;; ============================================================
-
-.proc DescendDirectory
+.proc _DescendDirectory
         copy16  entry_index_in_dir, target_index
-        jsr     CloseSrcDir
-        jsr     PushIndexToStack
+        jsr     _CloseSrcDir
+        jsr     _PushIndexToStack
         jsr     AppendFileEntryToSrcPath
-        jmp     OpenSrcDir
-.endproc ; DescendDirectory
+        jmp     _OpenSrcDir
+.endproc ; _DescendDirectory
 
 ;;; ============================================================
+;;; Close the current directory and resume iterating in the
+;;; parent directory where we left off.
 
-.proc AscendDirectory
-        jsr     CloseSrcDir
+.proc _AscendDirectory
+        jsr     _CloseSrcDir
         jsr     OpFinishDirectory
         jsr     RemoveSrcPathSegment
-        jsr     PopIndexFromStack
-        jsr     OpenSrcDir
+        jsr     _PopIndexFromStack
+        jsr     _OpenSrcDir
 
 :       cmp16   entry_index_in_dir, target_index
     IF_LT
-        jsr     ReadFileEntry
+        jsr     _ReadFileEntry
         jmp     :-
     END_IF
         rts
-.endproc ; AscendDirectory
+.endproc ; _AscendDirectory
 
 ;;; ============================================================
+;;; Append name at `file_entry` to path at `src_path_buf`
 
-.proc ProcessDirectory
-        copy8   #0, recursion_depth
-        jsr     OpenSrcDir
-loop:
-        jsr     ReadFileEntry
-    IF_ZERO
-        param_call AdjustFileEntryCase, file_entry
+.proc AppendFileEntryToSrcPath
+        param_jump AppendFilenameToSrcPath, file_entry
+.endproc ; AppendFileEntryToSrcPath
 
-        lda     file_entry + FileEntry::storage_type_name_length
-        beq     loop            ; deleted
+;;; ============================================================
+;;; Remove segment from path at `src_path_buf`
 
-        jsr     ConvertFileEntryToFileInfo
+.proc RemoveSrcPathSegment
+        param_jump RemovePathSegment, src_path_buf
+.endproc ; RemoveSrcPathSegment
 
-        ;; Simplify to length-prefixed string
-        lda     file_entry + FileEntry::storage_type_name_length
-        and     #NAME_LENGTH_MASK
-        sta     file_entry
+;;; ============================================================
+;;; Append name at `file_entry` to path at `dst_path_buf`
 
-        ;; During directory iteration, allow Escape to cancel the operation.
-        jsr     CheckCancel
+.proc AppendFileEntryToDstPath
+        param_jump AppendFilenameToDstPath, file_entry
+.endproc ; AppendFileEntryToDstPath
 
-        CLEAR_BIT7_FLAG copy_err_flag
-        jsr     OpProcessDirectoryEntry
-        bit     copy_err_flag   ; don't recurse if the copy failed
-        bmi     loop
+;;; ============================================================
+;;; Remove segment from path at `dst_path_buf`
 
-        lda     file_entry + FileEntry::file_type
-        cmp     #FT_DIRECTORY
-        bne     loop            ; and don't recurse unless it's a directory
+.proc RemoveDstPathSegment
+        param_jump RemovePathSegment, dst_path_buf
+.endproc ; RemoveDstPathSegment
 
-        ;; Recurse into child directory
-        jsr     DescendDirectory
-        inc     recursion_depth
-        bpl     loop            ; always
-    END_IF
-
-        lda     recursion_depth
-    IF_NOT_ZERO
-        jsr     AscendDirectory
-        dec     recursion_depth
-        bpl     loop            ; always
-    END_IF
-
-        jmp     CloseSrcDir
-.endproc ; ProcessDirectory
-
-;;; Set on error during copying of a single file
-copy_err_flag:  .byte   0       ; bit7
-
+;;; ============================================================
+;;; Generic Helpers
 ;;; ============================================================
 
 ;;; Verify that file is not forked (etc); if it is an OK/Cancel alert is shown.
@@ -10221,8 +10251,51 @@ copy_err_flag:  .byte   0       ; bit7
 .endproc ; ValidateStorageType
 
 ;;; ============================================================
+
+;;; Input: Destination path in `path_buf4`
+;;; Output: `dst_is_appleshare_flag` is set
+.proc SetDstIsAppleShareFlag
+        CLEAR_BIT7_FLAG dst_is_appleshare_flag
+
+        ;; Issue a `GET_FILE_INFO` on destination to set `DEVNUM`
+retry:  param_call GetFileInfo, path_buf4
+    IF_CS
+        jsr     ShowErrorAlertDst
+        jmp     retry
+    END_IF
+
+        ;; Try to read a block off device; if AppleShare will fail.
+        copy8   DEVNUM, vol_key_block_params::unit_num
+        MLI_CALL READ_BLOCK, vol_key_block_params
+    IF_A_EQ     #ERR_NETWORK_ERROR
+        SET_BIT7_FLAG dst_is_appleshare_flag
+    END_IF
+        rts
+.endproc ; SetDstIsAppleShareFlag
+
+;;; ============================================================
 ;;; "Copy" (including Drag/Drop/Move) files state and logic
 ;;; ============================================================
+
+;;; ============================================================
+;;; File copy parameter blocks
+
+        ;; Also used by "Delete"
+        DEFINE_DESTROY_PARAMS destroy_src_params, src_path_buf
+        DEFINE_DESTROY_PARAMS destroy_dst_params, dst_path_buf
+
+        ;; Used for both files and directories
+        DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
+
+        DEFINE_OPEN_PARAMS open_src_params, src_path_buf, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, dst_io_buffer
+        DEFINE_READWRITE_PARAMS read_src_params, file_data_buffer, kCopyBufferSize
+        DEFINE_READWRITE_PARAMS write_dst_params, file_data_buffer, kCopyBufferSize
+        DEFINE_SET_MARK_PARAMS mark_src_params, 0
+        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
+        DEFINE_CLOSE_PARAMS close_src_params
+        DEFINE_CLOSE_PARAMS close_dst_params
+
 
 ;;; `CopyProcessSelectedFile`
 ;;;  - delegates to `CopyProcessDirectoryEntry`; if op=move, fixes up paths
@@ -10420,7 +10493,7 @@ done:
         ;; Directory
         jsr     TryCreateDst
         bcc     ok_dir ; leave dst path segment in place for recursion
-        SET_BIT7_FLAG copy_err_flag
+        SET_BIT7_FLAG entry_err_flag
 
         ;; --------------------------------------------------
 
@@ -11508,21 +11581,6 @@ map:    .byte   FileEntry::access
         rts
 .endproc ; DrawProgressDialogFilesRemaining
 
-;;; ============================================================
-;;; Append name at `file_entry` to path at `src_path_buf`
-
-.proc AppendFileEntryToSrcPath
-        param_jump AppendFilenameToSrcPath, file_entry
-.endproc ; AppendFileEntryToSrcPath
-
-;;; ============================================================
-;;; Append name at `file_entry` to path at `dst_path_buf`
-
-.proc AppendFileEntryToDstPath
-        param_jump AppendFilenameToDstPath, file_entry
-.endproc ; AppendFileEntryToDstPath
-
-;;; ============================================================
 
 ;;; ============================================================
 ;;; If Escape is pressed, abort the operation.
@@ -13095,14 +13153,6 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 .endproc ; AShiftX
 
 ;;; ============================================================
-;;; Remove segment from path at `src_path_buf`
-
-.proc RemoveSrcPathSegment
-        ldax    #src_path_buf
-        FALL_THROUGH_TO RemovePathSegment
-.endproc ; RemoveSrcPathSegment
-
-;;; ============================================================
 ;;; Remove segment from path at A,X
 ;;; Inputs: A,X = path
 ;;; Output: A = length
@@ -13136,13 +13186,6 @@ found:  dey
 finish: jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; RemovePathSegment
-
-;;; ============================================================
-;;; Remove segment from path at `dst_path_buf`
-
-.proc RemoveDstPathSegment
-        param_jump RemovePathSegment, dst_path_buf
-.endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
 ;;; Given a path and a prospective name, update the filesystem with
@@ -15063,30 +15106,6 @@ filename_buf:
 
 ;;; TODO: Remove this, set ref num in other params on open
 op_ref_num:
-        .byte   0
-
-recursion_depth:
-        .byte   0               ; tracks recursion depth
-
-;;; Number of file entries per directory block
-entries_per_block:
-        .byte   13
-
-entry_index_in_dir:
-        .word   0
-target_index:
-        .word   0
-
-;;; During directory traversal, the number of file entries processed
-;;; at the current level is pushed here, so that following a descent
-;;; the previous entries can be skipped.
-entry_count_stack:
-        .res    ::kDirStackBufferSize, 0
-
-entry_count_stack_index:
-        .byte   0
-
-entry_index_in_block:
         .byte   0
 
 ;;; ============================================================
