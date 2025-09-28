@@ -10098,8 +10098,10 @@ retry:  MLI_CALL OPEN, open_src_dir_params
 
         ;; Skip over prev/next block pointers in header
         lda     open_src_dir_params::ref_num
-        sta     op_ref_num
         sta     read_block_pointers_params::ref_num
+        sta     read_src_dir_entry_params::ref_num
+        sta     read_padding_bytes_params::ref_num
+        sta     close_src_dir_params::ref_num
 retry2: MLI_CALL READ, read_block_pointers_params
     IF_CS
         ldx     #AlertButtonOptions::TryAgainCancel
@@ -10117,8 +10119,6 @@ retry2: MLI_CALL READ, read_block_pointers_params
 ;;; ============================================================
 
 .proc _CloseSrcDir
-        ;; TODO: Move to `_OpenSrcDir` ?
-        copy8   op_ref_num, close_src_dir_params::ref_num
 retry:  MLI_CALL CLOSE, close_src_dir_params
     IF_CS
         ldx     #AlertButtonOptions::TryAgainCancel
@@ -10137,7 +10137,6 @@ retry:  MLI_CALL CLOSE, close_src_dir_params
 .proc _ReadFileEntry
         inc16   entry_index_in_dir
 
-        copy8   op_ref_num, read_src_dir_entry_params::ref_num
 retry:  MLI_CALL READ, read_src_dir_entry_params
     IF_CS
         cmp     #ERR_END_OF_FILE
@@ -10155,7 +10154,6 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
     IF_A_GE     entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
-        copy8   op_ref_num, read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
         ;; TODO: Handle error here?
     END_IF
@@ -15103,10 +15101,6 @@ path_buf3:
         .res    ::kPathBufferSize, 0
 filename_buf:
         .res    16, 0
-
-;;; TODO: Remove this, set ref num in other params on open
-op_ref_num:
-        .byte   0
 
 ;;; ============================================================
 
