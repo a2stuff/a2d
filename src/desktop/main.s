@@ -11427,37 +11427,28 @@ retry:  jsr     GetSrcFileInfo
         jmp     retry
     END_IF
 
-        copy8   src_file_info_params::storage_type, storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     is_dir
-        cmp     #ST_LINKED_DIRECTORY
-        bne     do_sum_file_size
-
-        ;; For linked directory - tally it now while we have
-        ;; `src_file_info_params` populated.
+        ;; Visit the key file
+        lda     src_file_info_params::storage_type
+        pha                     ; A = `storage_type`
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
+        copy16  #0, src_file_info_params::blocks_used ; dummy value
+    END_IF
         jsr     EnumerationProcessDirectoryEntry
+        pla                     ; A = `storage_type`
 
         bit     move_flags      ; same volume relink move?
         RTS_IF_VS
 
-is_dir:
+    IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     ProcessDirectory
-        storage_type := *+1
-        lda     #SELF_MODIFIED_BYTE
-    IF_A_EQ     #ST_VOLUME_DIRECTORY
-        ;; If copying a volume dir, it will not be counted as a file
-        ;; during enumeration but will be counted during copy, so
-        ;; include it to avoid off-by-one.
-        inc16   op_file_count
     END_IF
-        rts
 
-do_sum_file_size:
-        FALL_THROUGH_TO EnumerationProcessDirectoryEntry
+        rts
 .endproc ; EnumerationProcessSelectedFile
 
 ;;; ============================================================
 ;;; Called by `ProcessDirectory` to process a single file
+;;; Input: `src_file_info_params::blocks_used` populated
 
 .proc EnumerationProcessDirectoryEntry
         ;; Called with `src_file_info_params` pre-populated

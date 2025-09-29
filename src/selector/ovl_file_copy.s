@@ -221,51 +221,32 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         jmp     HandleErrorCode
     END_IF
 
-        copy8   src_file_info_params::storage_type, storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     is_dir
-        cmp     #ST_LINKED_DIRECTORY
-        beq     is_dir
-        lda     #$00
-        beq     set
-is_dir: lda     #$FF
-set:    sta     is_dir_flag
-        beq     visit
+        ;; Visit the key file
+        lda     src_file_info_params::storage_type
+        pha                     ; A = `storage_type`
+        ldxy    #0              ; dummy value
+    IF_A_NE     #ST_VOLUME_DIRECTORY
+        ldxy    src_file_info_params::blocks_used ; actual value
+    END_IF
+        stxy    file_entry+FileEntry::blocks_used
+        jsr     EnumerateVisitFile ; needs `file_entry`'s `blocks_used`
+
+        ;; Traverse if necessary
+        pla                     ; A = `storage_type`
+    IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     ProcessDirectory
-
-        lda     storage_type
-    IF_A_EQ     #ST_VOLUME_DIRECTORY
-        ;; If copying a volume dir to RAMCard, the volume dir
-        ;; will not be counted as a file during enumeration but
-        ;; will be counted during copy, so include it to avoid
-        ;; off-by-one.
-        ;; https://github.com/a2stuff/a2d/issues/564
-        inc16   file_count
-        jsr     UpdateFileCountDisplay
-        return  #0
-
-        ;; TODO: Move these somewhere more sensible.
-is_dir_flag:
-        .byte   0               ; TODO: Written but never read?
-storage_type:
-        .byte   0               ; TODO: Move inline/SMC
     END_IF
 
-visit:  jsr     EnumerateVisitFile
         return  #0
 .endproc ; EnumerateFiles
 
 ;;; ============================================================
+;;; Input: `file_entry+FileEntry::blocks_used` populated
+;;; Output: `file_count` and `blocks_total` updated
 
 .proc EnumerateVisitFile
-        jsr     AppendFileEntryToSrcPath
-        ;; TODO: We have the `FileEntry`, just use `FileEntry::blocks_used`!
-        MLI_CALL GET_FILE_INFO, src_file_info_params
-    IF_CC
-        add16   blocks_total, src_file_info_params::blocks_used, blocks_total
-    END_IF
+        add16   blocks_total, file_entry+FileEntry::blocks_used, blocks_total
         inc16   file_count
-        jsr     RemoveSrcPathSegment
         jmp     UpdateFileCountDisplay
 .endproc ; EnumerateVisitFile
 
