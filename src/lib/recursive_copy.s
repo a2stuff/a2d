@@ -101,6 +101,9 @@ buf_padding_bytes:
 file_entry:
         .res    .sizeof(FileEntry)
 
+        ;; Populated during iteration
+        DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, pathname_src
+
 ;;; ============================================================
 ;;; State for directory recursion
 
@@ -130,10 +133,15 @@ loop:
 
         lda     file_entry + FileEntry::storage_type_name_length
         beq     loop            ; deleted
+        pha                     ; A = `storage_type_name_length`
+
+        ;; Requires `storage_type_name_length` to be intact
+        jsr     _ConvertFileEntryToFileInfo
 
         ;; Simplify to length-prefixed string
+        pla                     ; A = `storage_type_name_length`
         and     #NAME_LENGTH_MASK
-        sta     file_entry + FileEntry::storage_type_name_length
+        sta     file_entry
 
         jsr     OpCheckCancel
 
@@ -164,6 +172,46 @@ loop:
 
 ;;; Set on error during copying of a single file
 entry_err_flag:  .byte   0      ; bit7
+
+;;; ============================================================
+
+;;; Populate `src_file_info_params` from `file_entry`
+
+.proc _ConvertFileEntryToFileInfo
+        ldx     #kMapSize-1
+    DO
+        ldy     map,x
+        copy8   file_entry,y, src_file_info_params::access,x
+        dex
+    WHILE_POS
+
+        ;; Fix `storage_type`
+        ldx     #4
+    DO
+        lsr     src_file_info_params::storage_type
+        dex
+    WHILE_NOT_ZERO
+
+        rts
+
+;;; index is offset in `src_file_info_params`, value is offset in `file_entry`
+map:    .byte   FileEntry::access
+        .byte   FileEntry::file_type
+        .byte   FileEntry::aux_type
+        .byte   FileEntry::aux_type+1
+        .byte   FileEntry::storage_type_name_length
+        .byte   FileEntry::blocks_used
+        .byte   FileEntry::blocks_used+1
+        .byte   FileEntry::mod_date
+        .byte   FileEntry::mod_date+1
+        .byte   FileEntry::mod_time
+        .byte   FileEntry::mod_time+1
+        .byte   FileEntry::creation_date
+        .byte   FileEntry::creation_date+1
+        .byte   FileEntry::creation_time
+        .byte   FileEntry::creation_time+1
+        kMapSize = * - map
+.endproc ; _ConvertFileEntryToFileInfo
 
 ;;; ============================================================
 
@@ -384,8 +432,7 @@ eof:    return  #$FF
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
 
-        DEFINE_GET_FILE_INFO_PARAMS get_src_file_info_params, pathname_src
-        DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
+        DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, pathname_dst
 
 ;;; ============================================================
 ;;; Perform the recursive file copy.
@@ -393,11 +440,11 @@ eof:    return  #$FF
 ;;;         `pathname_dst` is destination path
 
 .proc DoCopy
-        ;; Check destination dir
-        MLI_CALL GET_FILE_INFO, get_dst_file_info_params
+        ;; Check destination
+        MLI_CALL GET_FILE_INFO, dst_file_info_params
     IF_A_EQ_ONE_OF #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
-        ;; Get source dir info
-retry:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
+        ;; Get source info
+retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         bcc     gfi_ok
       IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     OpInsertSource
@@ -410,7 +457,7 @@ retry:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
         ;; Prepare for copy...
 gfi_ok:
         ldy     #$FF            ; maybe is dir
-        lda     get_src_file_info_params::storage_type
+        lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
@@ -438,7 +485,8 @@ is_dir:
 
 ;;; ============================================================
 ;;; Copy an entry in a directory - regular file or directory.
-;;; Inputs: `file_entry` populated with FileEntry
+;;; Inputs: `file_entry` populated with `FileEntry`
+;;;         `src_file_info_params` populated
 ;;;         `pathname_src` has source directory path
 ;;;         `pathname_dst` has destination directory path
 ;;; Errors: `OpHandleErrorCode` is invoked
@@ -448,14 +496,9 @@ is_dir:
         jsr     AppendFileEntryToSrcPath
         jsr     OpUpdateProgress
 
-        ;; Populate `src_file_info_params`
-        MLI_CALL GET_FILE_INFO, get_src_file_info_params
-      IF_CS
-        jmp     OpHandleErrorCode
-      END_IF
-
-        lda     file_entry + FileEntry::file_type
-    IF_A_NE     #FT_DIRECTORY
+        ;; Called with `src_file_info_params` pre-populated
+        lda     src_file_info_params::storage_type
+    IF_A_NE     #ST_LINKED_DIRECTORY
         ;; --------------------------------------------------
         ;; File
         jsr     _CheckSpaceAvailable
@@ -482,7 +525,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
-;;; Inputs: `get_src_file_info_params` is populated; `pathname_dst` is target
+;;; Inputs: `src_file_info_params` is populated; `pathname_dst` is target
 ;;; Outputs: C=0 if there is sufficient space, C=1 otherwise
 
 .proc _CheckSpaceAvailable
@@ -490,13 +533,13 @@ ok_dir: jsr     RemoveSrcPathSegment
         ;; Get destination size (in case of overwrite)
 
         copy16  #0, existing_blocks ; default 0, if it doesn't exist
-        MLI_CALL GET_FILE_INFO, get_dst_file_info_params
+        MLI_CALL GET_FILE_INFO, dst_file_info_params
     IF_CS
         cmp     #ERR_FILE_NOT_FOUND
         beq     got_dst_size    ; this is fine
 fail:   jmp     OpHandleErrorCode
     END_IF
-        copy16  get_dst_file_info_params::blocks_used, existing_blocks
+        copy16  dst_file_info_params::blocks_used, existing_blocks
 got_dst_size:
 
         ;; --------------------------------------------------
@@ -516,15 +559,15 @@ got_dst_size:
         sty     pathname_dst
 
         ;; Total blocks/used blocks on destination volume
-        MLI_CALL GET_FILE_INFO, get_dst_file_info_params
+        MLI_CALL GET_FILE_INFO, dst_file_info_params
         bcs     fail
 
         ;; Free = Total (aux) - Used
-        sub16   get_dst_file_info_params::aux_type, get_dst_file_info_params::blocks_used, blocks_free
+        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         ;; If overwriting, some blocks will be reclaimed.
         add16   blocks_free, existing_blocks, blocks_free
         ;; Does it fit? (free >= needed)
-        cmp16   blocks_free, get_src_file_info_params::blocks_used
+        cmp16   blocks_free, src_file_info_params::blocks_used
     IF_LT
         ;; Not enough room
         sec                     ; no space
@@ -601,11 +644,11 @@ close:  MLI_CALL CLOSE, close_dst_params
         MLI_CALL CLOSE, close_src_params
 
         ;; Copy file info
-        COPY_BYTES $B, get_src_file_info_params::access, get_dst_file_info_params::access
+        COPY_BYTES $B, src_file_info_params::access, dst_file_info_params::access
 
-        copy8   #7, get_dst_file_info_params ; `SET_FILE_INFO` param_count
-        MLI_CALL SET_FILE_INFO, get_dst_file_info_params
-        copy8   #10, get_dst_file_info_params ; `GET_FILE_INFO` param_count
+        copy8   #7, dst_file_info_params ; `SET_FILE_INFO` param_count
+        MLI_CALL SET_FILE_INFO, dst_file_info_params
+        copy8   #10, dst_file_info_params ; `GET_FILE_INFO` param_count
 
         rts
 
@@ -697,10 +740,10 @@ ret:    rts
 
 .proc _CopyCreateFile
         ;; Copy `file_type`, `aux_type`, and `storage_type`
-        COPY_BYTES get_src_file_info_params::storage_type - get_src_file_info_params::file_type + 1, get_src_file_info_params::file_type, create_params::file_type
+        COPY_BYTES src_file_info_params::storage_type - src_file_info_params::file_type + 1, src_file_info_params::file_type, create_params::file_type
 
         ;; Copy `create_date`/`create_time`
-        COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_params::create_date
+        COPY_STRUCT DateTime, src_file_info_params::create_date, create_params::create_date
 
         ;; If source is volume, create directory
         lda     create_params::storage_type

@@ -10015,16 +10015,16 @@ loop:
 
         lda     file_entry + FileEntry::storage_type_name_length
         beq     loop            ; deleted
+        pha                     ; A = `storage_type_name_length`
 
         ;; Requires `storage_type_name_length` to be intact
-        jsr     ConvertFileEntryToFileInfo
+        jsr     _ConvertFileEntryToFileInfo
 
         ;; Simplify to length-prefixed string
-        lda     file_entry + FileEntry::storage_type_name_length
+        pla                     ; A = `storage_type_name_length`
         and     #NAME_LENGTH_MASK
         sta     file_entry
 
-        ;; During directory iteration, allow Escape to cancel the operation.
         jsr     CheckCancel
 
         CLEAR_BIT7_FLAG entry_err_flag
@@ -10054,6 +10054,46 @@ loop:
 
 ;;; Set on error during copying of a single file
 entry_err_flag:  .byte   0      ; bit7
+
+;;; ============================================================
+
+;;; Populate `src_file_info_params` from `file_entry`
+
+.proc _ConvertFileEntryToFileInfo
+        ldx     #kMapSize-1
+    DO
+        ldy     map,x
+        copy8   file_entry,y, src_file_info_params::access,x
+        dex
+    WHILE_POS
+
+        ;; Fix `storage_type`
+        ldx     #4
+    DO
+        lsr     src_file_info_params::storage_type
+        dex
+    WHILE_NOT_ZERO
+
+        rts
+
+;;; index is offset in `src_file_info_params`, value is offset in `file_entry`
+map:    .byte   FileEntry::access
+        .byte   FileEntry::file_type
+        .byte   FileEntry::aux_type
+        .byte   FileEntry::aux_type+1
+        .byte   FileEntry::storage_type_name_length
+        .byte   FileEntry::blocks_used
+        .byte   FileEntry::blocks_used+1
+        .byte   FileEntry::mod_date
+        .byte   FileEntry::mod_date+1
+        .byte   FileEntry::mod_time
+        .byte   FileEntry::mod_time+1
+        .byte   FileEntry::creation_date
+        .byte   FileEntry::creation_date+1
+        .byte   FileEntry::creation_time
+        .byte   FileEntry::creation_time+1
+        kMapSize = * - map
+.endproc ; _ConvertFileEntryToFileInfo
 
 ;;; ============================================================
 
@@ -10368,18 +10408,8 @@ operation_lifecycle_callbacks_for_copy:
 ;;; * Drag/Drop (to non-Trash) - operates on selection, `operation_flags` = `kOperationFlagsCheckBadCopy`
 
 .proc CopyProcessFileImpl
-        ;; Normal handling, via `CopyProcessSelectedFile`
-selected:
-        ;; Caller sets `move_flags` appropriately
-        lda     #$80
-        SKIP_NEXT_2_BYTE_INSTRUCTION
+        ENTRY_POINTS_FOR_BIT7_FLAG selected, not_selected, use_selection_flag
 
-        ;; Via File > Duplicate or copying to RAMCard
-not_selected:
-        ;; Caller sets `move_flags` to $00
-        lda     #0
-
-        pha                     ; A = use selection?
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; If "Copy to RAMCard", make sure there's enough room.
@@ -10389,7 +10419,8 @@ not_selected:
         jsr     CheckVolBlocksFree
     END_IF
 
-        pla                     ; A = use selection?
+        use_selection_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
     IF_NS
         ;; File > Copy To...
         ;; Drag/Drop
@@ -10460,8 +10491,12 @@ retry:  jsr     GetSrcFileInfo
 done:
         rts
 .endproc ; CopyProcessFileImpl
-        CopyProcessSelectedFile := CopyProcessFileImpl::selected
-        CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
+
+;;; Operations on selection (e.g. drag/drop, File > Copy To..., etc)
+CopyProcessSelectedFile := CopyProcessFileImpl::selected
+
+;;; Operations on paths (e.g. File > Duplicate, Copy to RAMCard, etc)
+CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 
 ;;; ============================================================
 ;;; Called by `ProcessDirectory` to process a single file
@@ -11482,46 +11517,6 @@ src_path_slash_index:
         stx     dst_path_buf
         rts
 .endproc ; AppendSrcPathLastSegmentToDstPath
-
-;;; ============================================================
-
-;;; Populate `src_file_info_params` from `file_entry`
-
-.proc ConvertFileEntryToFileInfo
-        ldx     #kMapSize-1
-    DO
-        ldy     map,x
-        copy8   file_entry,y, src_file_info_params::access,x
-        dex
-    WHILE_POS
-
-        ;; Fix `storage_type`
-        ldx     #4
-    DO
-        lsr     src_file_info_params::storage_type
-        dex
-    WHILE_NOT_ZERO
-
-        rts
-
-;;; index is offset in `src_file_info_params`, value is offset in `file_entry`
-map:    .byte   FileEntry::access
-        .byte   FileEntry::file_type
-        .byte   FileEntry::aux_type
-        .byte   FileEntry::aux_type+1
-        .byte   FileEntry::storage_type_name_length
-        .byte   FileEntry::blocks_used
-        .byte   FileEntry::blocks_used+1
-        .byte   FileEntry::mod_date
-        .byte   FileEntry::mod_date+1
-        .byte   FileEntry::mod_time
-        .byte   FileEntry::mod_time+1
-        .byte   FileEntry::creation_date
-        .byte   FileEntry::creation_date+1
-        .byte   FileEntry::creation_time
-        .byte   FileEntry::creation_time+1
-        kMapSize = * - map
-.endproc ; ConvertFileEntryToFileInfo
 
 ;;; ============================================================
 

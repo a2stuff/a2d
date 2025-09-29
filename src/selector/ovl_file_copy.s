@@ -141,7 +141,7 @@ saved_stack:
         stx     saved_stack
 
         jsr     CopyPathsFromBufsToSrcAndDst
-        MLI_CALL GET_FILE_INFO, get_dst_file_info_params
+        MLI_CALL GET_FILE_INFO, dst_file_info_params
     IF_CS
         jmp     HandleErrorCode
     END_IF
@@ -149,7 +149,7 @@ saved_stack:
         blocks := $06
 
         ;; Is there enough space?
-        sub16   get_dst_file_info_params::aux_type, get_dst_file_info_params::blocks_used, blocks
+        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks
         cmp16   blocks, blocks_total
     IF_LT
         jmp     ShowDiskFullError
@@ -212,7 +212,7 @@ blocks_total:
         sta     blocks_total+1
 
         jsr     CopyPathsFromBufsToSrcAndDst
-retry:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
+retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     IF_CS
       IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     ShowInsertSourceDiskPrompt
@@ -221,7 +221,7 @@ retry:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
         jmp     HandleErrorCode
     END_IF
 
-        copy8   get_src_file_info_params::storage_type, storage_type
+        copy8   src_file_info_params::storage_type, storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
@@ -260,9 +260,9 @@ visit:  jsr     EnumerateVisitFile
 .proc EnumerateVisitFile
         jsr     AppendFileEntryToSrcPath
         ;; TODO: We have the `FileEntry`, just use `FileEntry::blocks_used`!
-        MLI_CALL GET_FILE_INFO, get_src_file_info_params
+        MLI_CALL GET_FILE_INFO, src_file_info_params
     IF_CC
-        add16   blocks_total, get_src_file_info_params::blocks_used, blocks_total
+        add16   blocks_total, src_file_info_params::blocks_used, blocks_total
     END_IF
         inc16   file_count
         jsr     RemoveSrcPathSegment
