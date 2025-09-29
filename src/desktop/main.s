@@ -11644,7 +11644,7 @@ retry:  param_call_indirect GetFileInfo, src_ptr
         jmp     retry
     END_IF
 
-        copy8   DEVNUM, vol_key_block_params
+        copy8   DEVNUM, vol_key_block_params::unit_num
         MLI_CALL READ_BLOCK, vol_key_block_params
         lda     #$80            ; bit 7 = move
     IF_CC
