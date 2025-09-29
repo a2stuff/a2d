@@ -373,8 +373,6 @@ eof:    return  #$FF
 ;;; ============================================================
 ;;; File copy parameter blocks
 
-        DEFINE_CREATE_PARAMS create_dir_params, pathname_dst, ACCESS_DEFAULT
-
         DEFINE_CREATE_PARAMS create_params, pathname_dst, ACCESS_DEFAULT
         DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
         DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
@@ -420,27 +418,24 @@ gfi_ok:
 is_dir:
         sty     is_dir_flag
 
-        ;; copy `file_type`, `aux_type`, `storage_type`
-        ldy     #4
-    DO
-        copy8   get_src_file_info_params+3,y, create_params+3,y
-        dey
-    WHILE_NOT_ZERO
+        ;; copy `file_type`, `aux_type`, and `storage_type`
+        COPY_BYTES get_src_file_info_params::storage_type - get_src_file_info_params::file_type + 1, get_src_file_info_params::file_type, create_params::file_type
 
         jsr     _CheckSpaceAvailable
     IF_CS
         jmp     OpHandleNoSpace
     END_IF
 
-        ;; Copy creation date/time
+        ;; Copy `create_date`/`create_time`
         COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_params::create_date
 
-        ;; Create the file
+        ;; If source is volume, create directory
         lda     create_params::storage_type
     IF_A_EQ     #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
+        ;; Create it
         MLI_CALL CREATE, create_params
     IF_CS
 .if ::kCopyIgnoreDuplicateErrorOnCreate
@@ -484,7 +479,7 @@ fail:   jmp     OpHandleErrorCode
       END_IF
 
         jsr     AppendFileEntryToDstPath ; TODO: Hoist out of IF block
-        jsr     _CopyCreateDir
+        jsr     _CopyCreateFile
       IF_CS
         SET_BIT7_FLAG entry_err_flag
         bmi     pop_src_and_dst ; always
@@ -509,7 +504,7 @@ fail:   jmp     OpHandleErrorCode
         ;; Create parent dir if necessary
         ;; TODO: Is this actually needed?
         jsr     RemoveSrcPathSegment
-        jsr     _CopyCreateDir
+        jsr     _CopyCreateFile
         bcs     pop_dst
         jsr     AppendFileEntryToSrcPath
 
@@ -745,23 +740,21 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc _CopyCreateDir
+.proc _CopyCreateFile
         ;; Copy `file_type`, `aux_type`, and `storage_type`
-        kOffset = get_src_file_info_params::file_type - get_src_file_info_params
-        kLen = get_src_file_info_params::storage_type - get_src_file_info_params::file_type + 1
-        COPY_BYTES kLen, get_src_file_info_params+kOffset, create_dir_params+kOffset
+        COPY_BYTES get_src_file_info_params::storage_type - get_src_file_info_params::file_type + 1, get_src_file_info_params::file_type, create_params::file_type
 
-        ;; Copy dates
-        COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_dir_params::create_date
+        ;; Copy `create_date`/`create_time`
+        COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_params::create_date
 
         ;; If source is volume, create directory
-        lda     create_dir_params::storage_type
+        lda     create_params::storage_type
     IF_A_EQ     #ST_VOLUME_DIRECTORY
-        copy8   #ST_LINKED_DIRECTORY, create_dir_params::storage_type
+        copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
         ;; Create it
-        MLI_CALL CREATE, create_dir_params
+        MLI_CALL CREATE, create_params
     IF_CS
       IF_A_NE   #ERR_DUPLICATE_FILENAME
         jmp     OpHandleErrorCode
@@ -769,4 +762,4 @@ ret:    rts
     END_IF
         clc                     ; treated as success
         rts
-.endproc ; _CopyCreateDir
+.endproc ; _CopyCreateFile

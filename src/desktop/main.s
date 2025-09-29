@@ -10659,19 +10659,11 @@ existing_size:
         RTS_IF_CS
     END_IF
 
-        ;; Copy file_type, aux_type, storage_type
-        ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
-    DO
-        copy8   src_file_info_params::file_type,x, create_params3::file_type,x
-        dex
-    WHILE_POS
+        ;; Copy `file_type`, `aux_type`, and `storage_type`
+        COPY_BYTES src_file_info_params::storage_type - src_file_info_params::file_type + 1, src_file_info_params::file_type, create_params3::file_type
 
-        ;; Copy create_time/create_date
-        ldx     #.sizeof(DateTime)-1
-    DO
-        copy8   src_file_info_params::create_date,x, create_params3::create_date,x
-        dex
-    WHILE_POS
+        ;; Copy `create_date`/`create_time`
+        COPY_STRUCT DateTime, src_file_info_params::create_date, create_params3::create_date
 
         jsr     ReadSrcCaseBits
 
