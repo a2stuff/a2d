@@ -10448,7 +10448,7 @@ operation_lifecycle_callbacks_for_copy:
     END_IF
 
         ;; Paths are set up - update dialog and populate `src_file_info_params`
-        jsr     DecFileCountAndUpdateCopyDialogProgress
+        jsr     CopyUpdateProgress
 
 retry:  jsr     GetSrcFileInfo
     IF_CS
@@ -10491,7 +10491,6 @@ retry:  jsr     GetSrcFileInfo
 
         ;; Copy directory contents
         jsr     ProcessDirectory
-        ;; TODO: Is this redundant with call in `CopyFinishDirectory`?
         jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove
 
@@ -10516,7 +10515,7 @@ CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 .proc CopyProcessDirectoryEntry
         jsr     AppendFileEntryToDstPath
         jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndUpdateCopyDialogProgress
+        jsr     CopyUpdateProgress
 
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
@@ -10577,7 +10576,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
 
 ;;; ============================================================
 
-.proc DecFileCountAndUpdateCopyDialogProgress
+.proc CopyUpdateProgress
         jsr     DecrementOpFileCount
         stax    file_count
         jsr     SetPortForProgressDialog
@@ -10591,7 +10590,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         jsr     DrawDestFilePath
 
         jmp     DrawProgressDialogFilesRemaining
-.endproc ; DecFileCountAndUpdateCopyDialogProgress
+.endproc ; CopyUpdateProgress
 
 ;;; ============================================================
 ;;; Used before "Copy to RAMCard", to ensure everything will fit.
@@ -11262,7 +11261,7 @@ operation_lifecycle_callbacks_for_delete:
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; Path is set up - update dialog and populate `src_file_info_params`
-        jsr     DecFileCountAndUpdateDeleteDialogProgress
+        jsr     DeleteUpdateProgress
 
 retry:  jsr     GetSrcFileInfo
     IF_CS
@@ -11281,7 +11280,7 @@ retry:  jsr     GetSrcFileInfo
 
         ;; Recurse, and process directory
         jsr     ProcessDirectory
-        jsr     UpdateDeleteDialogProgress ; update path display
+        jsr     DeleteRefreshProgress ; update path display
         ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
         FALL_THROUGH_TO do_destroy
 
@@ -11343,7 +11342,7 @@ error:  jsr     ShowErrorAlert
 
 .proc DeleteProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndUpdateDeleteDialogProgress
+        jsr     DeleteUpdateProgress
 
         ;; Called with `src_file_info_params` pre-populated
         ;; Directories will be processed separately
@@ -11362,19 +11361,21 @@ next_file:
 ;;; Delete directory when exiting via traversal
 
 .proc DeleteFinishDirectory
-        jsr     UpdateDeleteDialogProgress
+        jsr     DeleteRefreshProgress
         jmp     DeleteFileCommon
 .endproc ; DeleteFinishDirectory
 
 ;;; ============================================================
 
-.proc DecFileCountAndUpdateDeleteDialogProgress
+.proc DeleteUpdateProgress
         jsr     DecrementOpFileCount
         stax    file_count
-        FALL_THROUGH_TO UpdateDeleteDialogProgress
-.endproc ; DecFileCountAndUpdateDeleteDialogProgress
+        FALL_THROUGH_TO DeleteRefreshProgress
+.endproc ; DeleteUpdateProgress
 
-.proc UpdateDeleteDialogProgress
+;;; Does not decrement count, just repaints path so that the correct
+;;; path is visible if an alert is shown when finishing a directory.
+.proc DeleteRefreshProgress
         jsr     SetPortForProgressDialog
 
         param_call CopyToBuf0, src_path_buf
@@ -11382,7 +11383,7 @@ next_file:
         jsr     DrawTargetFilePath
 
         jmp     DrawProgressDialogFilesRemaining
-.endproc ; UpdateDeleteDialogProgress
+.endproc ; DeleteRefreshProgress
 
 ;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
