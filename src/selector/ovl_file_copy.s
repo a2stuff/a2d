@@ -50,7 +50,7 @@ skip:
 ;;;          |             |
 ;;;          | Src I/O Buf |
 ;;;    $D00  +-------------+
-;;;          |.(unused)....|
+;;;          | Dir Data    |
 ;;;    $C00  +-------------+
 ;;;          |             |
 ;;;          | Dir I/O Buf |
@@ -61,12 +61,12 @@ skip:
 ;;; Required identifiers:
 ;;; --------------------------------------------------
 
-dir_io_buffer :=  $800  ; 1024 bytes for I/O
-src_io_buffer :=  $D00  ; 1024 bytes for I/O
-dst_io_buffer := $1100  ; 1024 bytes for I/O
-copy_buffer   := $1500  ; Read/Write buffer
-
-kCopyBufferSize = $A00
+dir_io_buffer   :=  $800        ; 1024 bytes for I/O
+dir_data_buffer :=  $C00        ; 256 bytes for directory data
+src_io_buffer   :=  $D00        ; 1024 bytes for I/O
+dst_io_buffer   := $1100        ; 1024 bytes for I/O
+copy_buffer     := $1500        ; Read/Write buffer
+kCopyBufferSize = $1F00 - copy_buffer
 
 ;;; Since this is only ever "copy to RAMCard" / "on use" we assume it
 ;;; is okay if it already exists.

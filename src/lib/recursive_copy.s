@@ -11,10 +11,11 @@
 ;;; ----------------------------------------
 ;;; Identifiers
 ;;; ----------------------------------------
-;;; * `dir_io_buffer` - 1024 bytes for I/O
-;;; * `src_io_buffer` - 1024 bytes for I/O
-;;; * `dst_io_buffer` - 1024 bytes for I/O
-;;; * `copy_buffer` and `kCopyBufferSize` (integral number of blocks
+;;; * `dir_io_buffer`   - 1024 bytes for I/O
+;;; * `dir_data_buffer` - 256 bytes for miscellaneous data
+;;; * `src_io_buffer`   - 1024 bytes for I/O
+;;; * `dst_io_buffer`   - 1024 bytes for I/O
+;;; * `copy_buffer` and `kCopyBufferSize` (integral number of blocks)
 ;;; * `::kCopyIgnoreDuplicateErrorOnCreate` (0 or 1)
 ;;;
 ;;; ----------------------------------------
@@ -75,7 +76,7 @@ pathname_src:        .res    ::kPathBufferSize, 0
 pathname_dst:        .res    ::kPathBufferSize, 0
 
 ;;; ============================================================
-;;; Directory enumeration parameter blocks
+;;; Directory enumeration parameter blocks and state
 
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         kBlockPointersSize = 4
@@ -86,12 +87,29 @@ pathname_dst:        .res    ::kPathBufferSize, 0
 
         ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
 
-buf_block_pointers:
-        .res    kBlockPointersSize
-buf_padding_bytes:
-        .res    kMaxPaddingBytes
-file_entry:
-        .res    .sizeof(FileEntry)
+        PARAM_BLOCK, dir_data_buffer
+;;; Read buffers
+buf_block_pointers      .res    kBlockPointersSize
+buf_padding_bytes       .res    kMaxPaddingBytes
+file_entry              .tag    FileEntry
+
+;;; State for directory recursion
+recursion_depth         .byte   ; How far down the directory structure are we
+entries_per_block       .byte   ; Number of file entries per directory block
+entry_index_in_dir      .word
+target_index            .word
+
+;;; During directory traversal, the number of file entries processed
+;;; at the current level is pushed here, so that following a descent
+;;; the previous entries can be skipped.
+index_stack_lo          .res    ::kDirStackSize
+index_stack_hi          .res    ::kDirStackSize
+stack_index             .byte
+
+entry_index_in_block    .byte
+dir_data_buffer_end     .byte
+        END_PARAM_BLOCK
+        .assert dir_data_buffer_end - dir_data_buffer <= 256, error, "too big"
 
         DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, dir_io_buffer
         DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
@@ -103,27 +121,14 @@ file_entry:
         DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, pathname_src
 
 ;;; ============================================================
-;;; State for directory recursion
-
-recursion_depth:        .byte   0 ; How far down the directory structure are we
-entries_per_block:      .byte   0 ;  Number of file entries per directory block
-entry_index_in_dir:     .word   0
-target_index:           .word   0
-
-;;; During directory traversal, the number of file entries processed
-;;; at the current level is pushed here, so that following a descent
-;;; the previous entries can be skipped.
-index_stack:    .res    ::kDirStackBufferSize, 0 ; TODO: move into scratch page
-stack_index:    .byte   0
-
-entry_index_in_block:   .byte   0
-
-;;; ============================================================
 ;;; Iterate directory entries
 ;;; Inputs: `pathname_src` points at source directory
 
 .proc ProcessDirectory
-        copy8   #0, recursion_depth
+        lda     #0
+        sta     recursion_depth
+        sta     stack_index
+
         jsr     _OpenSrcDir
 loop:
         jsr     _ReadFileEntry
@@ -216,21 +221,19 @@ map:    .byte   FileEntry::access
 
 .proc _PushIndexToStack
         ldx     stack_index
-        copy16  target_index, index_stack,x
-        inx
-        inx
-        stx     stack_index
+        copy8   target_index, index_stack_lo,x
+        copy8   target_index+1, index_stack_hi,x
+        inc     stack_index
         rts
 .endproc ; _PushIndexToStack
 
 ;;; ============================================================
 
 .proc _PopIndexFromStack
+        dec     stack_index
         ldx     stack_index
-        dex
-        dex
-        copy16  index_stack,x, target_index
-        stx     stack_index
+        copy8   index_stack_lo,x, target_index
+        copy8   index_stack_hi,x, target_index+1
         rts
 .endproc ; _PopIndexFromStack
 

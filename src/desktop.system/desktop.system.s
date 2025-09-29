@@ -39,7 +39,7 @@
 ;;;          |             |    * reading copied files, SELECTOR.LIST
 ;;;          | Src I/O Buf |
 ;;;    $E00  +-------------+
-;;;          |.(unused)....|
+;;;          | Dir Data    |
 ;;;    $C00  +-------------+
 ;;;          |             |
 ;;;          | Dir I/O Buf |
@@ -48,15 +48,10 @@
 
 MLIEntry        := MLI
 
-dir_io_buffer   := $800         ; 1024 bytes for I/O
-block_buffer    := $800         ; 512 bytes for block read (exclusive with previous)
-
-src_io_buffer   := $E00         ; 1024 bytes for I/O
-dst_io_buffer   := $1200        ; 1024 bytes for I/O
+;;; I/O usage (See also: `GenericCopy`)
+misc_io_buffer  :=  $E00        ; 1024 bytes for I/O
+block_buffer    :=  $800        ; 512 bytes for block read
 selector_buffer := $1600        ; Room for `kSelectorListBufSize`
-
-copy_buffer     := $3B00
-kCopyBufferSize = MLI - copy_buffer
 
 ;;; ============================================================
 
@@ -278,7 +273,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
 ;;; ============================================================
 
-        SETTINGS_IO_BUF := src_io_buffer
+        SETTINGS_IO_BUF := misc_io_buffer
         .include "../lib/load_settings.s"
         .include "../lib/readwrite_settings.s"
 
@@ -398,6 +393,14 @@ kErrCancel = $FF
 ;;; --------------------------------------------------
 ;;; Identifiers
 ;;; --------------------------------------------------
+
+;;; For recursive copy operations
+dir_io_buffer   :=  $800        ; 1024 bytes for I/O
+dir_data_buffer :=  $C00        ; 256 bytes for directory data
+src_io_buffer   :=  $E00        ; 1024 bytes for I/O
+dst_io_buffer   := $1200        ; 1024 bytes for I/O
+copy_buffer     := $3900        ; Read/Write buffer
+kCopyBufferSize = MLI - copy_buffer
 
 ;;; Since this is only ever "copy to RAMCard" / "at boot" we assume it
 ;;; is okay if it already exists.
@@ -1027,7 +1030,7 @@ str_sentinel_path:
 ;;; original prefix.
 
 .proc UpdateSelfFileImpl
-        DEFINE_OPEN_PARAMS open_params, str_self_filename, dst_io_buffer
+        DEFINE_OPEN_PARAMS open_params, str_self_filename, misc_io_buffer
 str_self_filename:
         PASCAL_STRING kFilenameLauncher
         DEFINE_READWRITE_PARAMS write_params, PRODOS_SYS_START, kWriteBackSize
@@ -1288,7 +1291,7 @@ entry_dir_name:
 ;;; ============================================================
 
 .proc ReadSelectorListImpl
-        DEFINE_OPEN_PARAMS open_params, str_selector_list, src_io_buffer
+        DEFINE_OPEN_PARAMS open_params, str_selector_list, misc_io_buffer
 str_selector_list:
         PASCAL_STRING kPathnameSelectorList
         DEFINE_READWRITE_PARAMS read_params, selector_buffer, kSelectorListBufSize
@@ -1551,8 +1554,8 @@ CopySelectorEntriesToRAMCard := CopySelectorEntriesToRAMCardImpl::Start
 
         .assert * >= MODULE_BOOTSTRAP + kModuleBootstrapSize, error, "overlapping addresses"
 
-        DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, src_io_buffer
-        DEFINE_OPEN_PARAMS open_selector_params, str_selector, src_io_buffer
+        DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, misc_io_buffer
+        DEFINE_OPEN_PARAMS open_selector_params, str_selector, misc_io_buffer
         DEFINE_READWRITE_PARAMS read_params, MODULE_BOOTSTRAP, kModuleBootstrapSize
 
 str_selector:
@@ -1780,9 +1783,9 @@ str_ram_not_empty:
 ;;; ============================================================
 
         .include "../lib/smartport.s"
-        ADJUSTCASE_BLOCK_BUFFER := src_io_buffer
+        ADJUSTCASE_BLOCK_BUFFER := misc_io_buffer
         .include "../lib/adjustfilecase.s"
 
 ;;; ============================================================
 
-        .assert * <= copy_buffer, error, "copy_buffer collides with code"
+        .assert * <= GenericCopy::copy_buffer, error, "copy_buffer collides with code"
