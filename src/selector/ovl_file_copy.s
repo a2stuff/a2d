@@ -258,8 +258,6 @@ visit:  jsr     EnumerateVisitFile
 ;;; ============================================================
 
 .proc EnumerateVisitFile
-        jsr     CheckCancel
-
         jsr     AppendFileEntryToSrcPath
         ;; TODO: We have the `FileEntry`, just use `FileEntry::blocks_used`!
         MLI_CALL GET_FILE_INFO, get_src_file_info_params

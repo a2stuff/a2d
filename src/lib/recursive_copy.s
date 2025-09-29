@@ -135,6 +135,8 @@ loop:
         and     #NAME_LENGTH_MASK
         sta     file_entry + FileEntry::storage_type_name_length
 
+        jsr     OpCheckCancel
+
         CLEAR_BIT7_FLAG entry_err_flag
         jsr     OpProcessDirectoryEntry
         bit     entry_err_flag  ; don't recurse if the copy failed
@@ -465,71 +467,48 @@ is_dir:
 ;;; Errors: `OpHandleErrorCode` is invoked
 
 .proc CopyProcessDirectoryEntry
-        jsr     OpCheckCancel
+        jsr     AppendFileEntryToDstPath
+        jsr     AppendFileEntryToSrcPath
+        jsr     OpUpdateProgress
+
+        ;; Populate `src_file_info_params`
+        MLI_CALL GET_FILE_INFO, get_src_file_info_params
+      IF_CS
+        jmp     OpHandleErrorCode
+      END_IF
 
         lda     file_entry + FileEntry::file_type
-    IF_A_EQ     #FT_DIRECTORY
+    IF_A_NE     #FT_DIRECTORY
+        ;; --------------------------------------------------
+        ;; File
+        jsr     _CheckSpaceAvailable
+        jcs     OpHandleNoSpace
+
+        jsr     _CopyCreateFile
+        bcs     done
+
+        jsr     _CopyNormalFile
+    ELSE
         ;; --------------------------------------------------
         ;; Directory
-        jsr     AppendFileEntryToSrcPath ; TODO: Hoist out of IF block
-        jsr     OpUpdateProgress
-        MLI_CALL GET_FILE_INFO, get_src_file_info_params
-      IF_CS
-fail:   jmp     OpHandleErrorCode
-      END_IF
-
-        jsr     AppendFileEntryToDstPath ; TODO: Hoist out of IF block
         jsr     _CopyCreateFile
-      IF_CS
+        bcc     ok_dir ; leave dst path segment in place for recursion
         SET_BIT7_FLAG entry_err_flag
-        bmi     pop_src_and_dst ; always
-      END_IF
-        jmp     RemoveSrcPathSegment
     END_IF
 
         ;; --------------------------------------------------
-        ;; Regular File
 
-        jsr     AppendFileEntryToDstPath ; TODO: Hoist out of IF block
-        jsr     AppendFileEntryToSrcPath ; TODO: Hoist out of IF block
-        jsr     OpUpdateProgress
-        MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        bcs     fail
-
-        jsr     _CheckSpaceAvailable
-    IF_CS
-        jmp     OpHandleNoSpace
-    END_IF
-
-        ;; Create parent dir if necessary
-        ;; TODO: Is this actually needed?
-        jsr     RemoveSrcPathSegment
-        jsr     _CopyCreateFile
-        bcs     pop_dst
-        jsr     AppendFileEntryToSrcPath
-
-        ;; Do the copy
-        jsr     _CopyNormalFile
-
-pop_src_and_dst:
-        jsr     RemoveSrcPathSegment
-
-pop_dst:
-        jmp     RemoveDstPathSegment
+done:   jsr     RemoveDstPathSegment
+ok_dir: jsr     RemoveSrcPathSegment
+        rts
 .endproc ; CopyProcessDirectoryEntry
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
-;;; Inputs: `pathname_src` is source; `pathname_dst` is target
+;;; Inputs: `get_src_file_info_params` is populated; `pathname_dst` is target
 ;;; Outputs: C=0 if there is sufficient space, C=1 otherwise
 
 .proc _CheckSpaceAvailable
-        ;; --------------------------------------------------
-        ;; Get source size
-
-        MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        bcs     fail
-
         ;; --------------------------------------------------
         ;; Get destination size (in case of overwrite)
 

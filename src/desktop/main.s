@@ -10422,7 +10422,7 @@ retry:  jsr     GetSrcFileInfo
         jsr     ValidateStorageType
         bcs     done
 
-        jsr     TryCreateDst
+        jsr     _CopyCreateFile
         bcs     done
 
         bit     move_flags      ; same volume relink move?
@@ -10430,14 +10430,14 @@ retry:  jsr     GetSrcFileInfo
         jmp     RelinkFile
       END_IF
 
-        jsr     CopyNormalFile
+        jsr     _CopyNormalFile
         jmp     MaybeFinishFileMove
     END_IF
 
         ;; --------------------------------------------------
         ;; Directory
 
-        jsr     TryCreateDst
+        jsr     _CopyCreateFile
         bcs     done
 
         bit     move_flags      ; same volume relink move?
@@ -10475,23 +10475,21 @@ done:
     IF_A_NE     #ST_LINKED_DIRECTORY
         ;; --------------------------------------------------
         ;; File
-
         jsr     ValidateStorageType
         bcs     done
 
-        jsr     TryCreateDst
+        jsr     _CopyCreateFile
         bcs     done
 
-        jsr     CopyNormalFile
+        jsr     _CopyNormalFile
         jsr     MaybeFinishFileMove
-        jmp     done
-    END_IF
-
+    ELSE
         ;; --------------------------------------------------
         ;; Directory
-        jsr     TryCreateDst
+        jsr     _CopyCreateFile
         bcc     ok_dir ; leave dst path segment in place for recursion
         SET_BIT7_FLAG entry_err_flag
+    END_IF
 
         ;; --------------------------------------------------
 
@@ -10651,7 +10649,7 @@ existing_size:
 ;;; and `CopyProcessDirectoryEntry`
 ;;; Output: C=0 on success, C=1 on failure
 
-.proc TryCreateDst
+.proc _CopyCreateFile
         bit     move_flags      ; same volume relink move?
     IF_VC
         ;; No, verify that there is room.
@@ -10728,7 +10726,7 @@ failure:
         rts
 
 cancel: jmp     CloseFilesCancelDialogWithFailedResult
-.endproc ; TryCreateDst
+.endproc ; _CopyCreateFile
 
 ;;; ============================================================
 ;;; Case Bits
@@ -10784,7 +10782,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Relink - swaps source and target, then deletes source.
 ;;;
-;;; Assert: `TryCreateDst` has succeeded
+;;; Assert: `_CopyCreateFile` has succeeded
 
 .proc RelinkFileImpl
         src_block := $800
@@ -10938,7 +10936,7 @@ Start:  lda     DEVNUM
 ;;; ============================================================
 ;;; Actual byte-for-byte file copy routine
 
-.proc CopyNormalFile
+.proc _CopyNormalFile
         lda     #0
         sta     src_dst_exclusive_flag
         sta     src_eof_flag
@@ -11140,7 +11138,7 @@ src_dst_exclusive_flag:
 src_eof_flag:
         .byte   0               ; bit7
 
-.endproc ; CopyNormalFile
+.endproc ; _CopyNormalFile
 
 ;;; ============================================================
 ;;; "Delete" (Delete/Trash) files dialog state and logic
