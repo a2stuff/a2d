@@ -424,31 +424,7 @@ is_dir:
         jmp     OpHandleNoSpace
     END_IF
 
-        ;; TODO: Use `_CopyCreateFile` here
-
-        ;; copy `file_type`, `aux_type`, and `storage_type`
-        COPY_BYTES get_src_file_info_params::storage_type - get_src_file_info_params::file_type + 1, get_src_file_info_params::file_type, create_params::file_type
-
-        ;; Copy `create_date`/`create_time`
-        COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_params::create_date
-
-        ;; If source is volume, create directory
-        lda     create_params::storage_type
-    IF_A_EQ     #ST_VOLUME_DIRECTORY
-        copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
-    END_IF
-
-        ;; Create it
-        MLI_CALL CREATE, create_params
-    IF_CS
-.if ::kCopyIgnoreDuplicateErrorOnCreate
-      IF_A_NE   #ERR_DUPLICATE_FILENAME
-        jmp     OpHandleErrorCode
-      END_IF
-.else
-        jmp     OpHandleErrorCode
-.endif
-    END_IF
+        jsr     _CopyCreateFile
 
         is_dir_flag := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -735,9 +711,13 @@ ret:    rts
         ;; Create it
         MLI_CALL CREATE, create_params
     IF_CS
+.if ::kCopyIgnoreDuplicateErrorOnCreate
       IF_A_NE   #ERR_DUPLICATE_FILENAME
         jmp     OpHandleErrorCode
       END_IF
+.else
+        jmp     OpHandleErrorCode
+.endif
     END_IF
         clc                     ; treated as success
         rts
