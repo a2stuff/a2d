@@ -9957,15 +9957,20 @@ do_op_flag:
 
 ;;; TODO: Unify with `../lib/recursive_copy.s`
 
+dir_io_buffer := $800
+
+pathname_src := src_path_buf
+pathname_dst := dst_path_buf
+
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks
 
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
-        .define kBlockPointersSize 4
+        kBlockPointersSize = 4
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
         ;; block pointers are the next 4.
-        .define kMaxPaddingBytes 5
+        kMaxPaddingBytes = 5
 
         ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
 
@@ -9976,7 +9981,7 @@ buf_padding_bytes       .res    kMaxPaddingBytes
 file_entry              .tag    FileEntry
         END_PARAM_BLOCK
 
-        DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
+        DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, dir_io_buffer
         DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
         DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
         DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
@@ -9986,18 +9991,15 @@ file_entry              .tag    FileEntry
 ;;; State for directory recursion
 
 recursion_depth:        .byte   0 ; How far down the directory structure are we
-entries_per_block:      .byte   13 ; Number of file entries per directory block
+entries_per_block:      .byte   0 ; Number of file entries per directory block
 entry_index_in_dir:     .word   0
 target_index:           .word   0
 
 ;;; During directory traversal, the number of file entries processed
 ;;; at the current level is pushed here, so that following a descent
 ;;; the previous entries can be skipped.
-index_stack:
-        .res    ::kDirStackBufferSize, 0 ; TODO: move into scratch page
-
-stack_index:
-        .byte   0
+index_stack:    .res    ::kDirStackBufferSize, 0 ; TODO: move into scratch page
+stack_index:    .byte   0
 
 entry_index_in_block:   .byte   0
 
@@ -10136,12 +10138,13 @@ retry:  MLI_CALL OPEN, open_src_dir_params
         jmp     CloseFilesCancelDialogWithFailedResult
     END_IF
 
-        ;; Skip over prev/next block pointers in header
         lda     open_src_dir_params::ref_num
         sta     read_block_pointers_params::ref_num
         sta     read_src_dir_entry_params::ref_num
         sta     read_padding_bytes_params::ref_num
         sta     close_src_dir_params::ref_num
+
+        ;; Skip over prev/next block pointers in header
 retry2: MLI_CALL READ, read_block_pointers_params
     IF_CS
         ldx     #AlertButtonOptions::TryAgainCancel
@@ -10151,9 +10154,14 @@ retry2: MLI_CALL READ, read_block_pointers_params
         jmp     CloseFilesCancelDialogWithFailedResult
     END_IF
 
-        ;; TODO: align with selector/disk_copy - init `entries_per_block`
-        ;; temporarily, but patch it after this call
-        jmp     _ReadFileEntry
+        ;; Header size is next/prev blocks + a file entry
+        copy8   #13, entries_per_block ; so `_ReadFileEntry` doesn't immediately advance
+        jsr     _ReadFileEntry         ; read the rest of the header
+
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader), .sizeof(FileEntry) + 4
+        copy8   file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
+
+        rts
 .endproc ; _OpenSrcDir
 
 ;;; ============================================================
@@ -10197,6 +10205,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
         MLI_CALL READ, read_padding_bytes_params
         ;; TODO: Handle error here?
     END_IF
+
         return  #0
 
 eof:    return  #$FF
@@ -10230,35 +10239,36 @@ eof:    return  #$FF
         jsr     _ReadFileEntry
         jmp     :-
     END_IF
+
         rts
 .endproc ; _AscendDirectory
 
 ;;; ============================================================
-;;; Append name at `file_entry` to path at `src_path_buf`
+;;; Append name at `file_entry` to path at `pathname_src`
 
 .proc AppendFileEntryToSrcPath
         param_jump AppendFilenameToSrcPath, file_entry
 .endproc ; AppendFileEntryToSrcPath
 
 ;;; ============================================================
-;;; Remove segment from path at `src_path_buf`
+;;; Remove segment from path at `pathname_src`
 
 .proc RemoveSrcPathSegment
-        param_jump RemovePathSegment, src_path_buf
+        param_jump RemovePathSegment, pathname_src
 .endproc ; RemoveSrcPathSegment
 
 ;;; ============================================================
-;;; Append name at `file_entry` to path at `dst_path_buf`
+;;; Append name at `file_entry` to path at `pathname_dst`
 
 .proc AppendFileEntryToDstPath
         param_jump AppendFilenameToDstPath, file_entry
 .endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
-;;; Remove segment from path at `dst_path_buf`
+;;; Remove segment from path at `pathname_dst`
 
 .proc RemoveDstPathSegment
-        param_jump RemovePathSegment, dst_path_buf
+        param_jump RemovePathSegment, pathname_dst
 .endproc ; RemoveDstPathSegment
 
 ;;; ============================================================

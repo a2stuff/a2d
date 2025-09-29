@@ -77,29 +77,27 @@ pathname_dst:        .res    ::kPathBufferSize, 0
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks
 
-        DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, dir_io_buffer
-
-        ;; Used for reading directory structure
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         kBlockPointersSize = 4
-        ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
-        DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
-buf_block_pointers:
-        .res    kBlockPointersSize
-
-        DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
-        DEFINE_CLOSE_PARAMS close_src_dir_params
-
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
         ;; block pointers are the next 4.
         kMaxPaddingBytes = 5
-        DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
+
+buf_block_pointers:
+        .res    kBlockPointersSize
 buf_padding_bytes:
         .res    kMaxPaddingBytes
-
 file_entry:
         .res    .sizeof(FileEntry)
+
+        DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, dir_io_buffer
+        DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
+        DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
+        DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+        DEFINE_CLOSE_PARAMS close_src_dir_params
 
         ;; Populated during iteration
         DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, pathname_src
@@ -108,13 +106,14 @@ file_entry:
 ;;; State for directory recursion
 
 recursion_depth:        .byte   0 ; How far down the directory structure are we
-entries_per_block:      .byte   0
+entries_per_block:      .byte   0 ;  Number of file entries per directory block
 entry_index_in_dir:     .word   0
 target_index:           .word   0
 
-;;; Stack used when descending directories; keeps track of entry index within
-;;; directories.
-index_stack:    .res    ::kDirStackBufferSize, 0
+;;; During directory traversal, the number of file entries processed
+;;; at the current level is pushed here, so that following a descent
+;;; the previous entries can be skipped.
+index_stack:    .res    ::kDirStackBufferSize, 0 ; TODO: move into scratch page
 stack_index:    .byte   0
 
 entry_index_in_block:   .byte   0
@@ -230,7 +229,7 @@ map:    .byte   FileEntry::access
         ldx     stack_index
         dex
         dex
-        copy16   index_stack,x, target_index
+        copy16  index_stack,x, target_index
         stx     stack_index
         rts
 .endproc ; _PopIndexFromStack
@@ -250,20 +249,21 @@ map:    .byte   FileEntry::access
 fail:   jmp     OpHandleErrorCode
     END_IF
 
-        ;; Skip over prev/next block pointers in header
         lda     open_src_dir_params::ref_num
         sta     read_block_pointers_params::ref_num
         sta     read_src_dir_entry_params::ref_num
         sta     read_padding_bytes_params::ref_num
         sta     close_src_dir_params::ref_num
+
+        ;; Skip over prev/next block pointers in header
         MLI_CALL READ, read_block_pointers_params
         bcs     fail
 
         ;; Header size is next/prev blocks + a file entry
-        ASSERT_EQUALS .sizeof(SubdirectoryHeader), .sizeof(FileEntry) + 4
         copy8   #13, entries_per_block ; so `_ReadFileEntry` doesn't immediately advance
         jsr     _ReadFileEntry         ; read the rest of the header
 
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader), .sizeof(FileEntry) + 4
         copy8   file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
         rts
@@ -341,6 +341,7 @@ eof:    return  #$FF
 .endproc ; _AscendDirectory
 
 ;;; ============================================================
+;;; Append name at `file_entry` to path at `pathname_src`
 
 .proc AppendFileEntryToSrcPath
         lda     file_entry+FileEntry::storage_type_name_length
@@ -360,6 +361,7 @@ eof:    return  #$FF
 .endproc ; AppendFileEntryToSrcPath
 
 ;;; ============================================================
+;;; Remove segment from path at `pathname_src`
 
 .proc RemoveSrcPathSegment
         ldx     pathname_src
@@ -379,6 +381,7 @@ eof:    return  #$FF
 .endproc ; RemoveSrcPathSegment
 
 ;;; ============================================================
+;;; Append name at `file_entry` to path at `pathname_dst`
 
 .proc AppendFileEntryToDstPath
         lda     file_entry+FileEntry::storage_type_name_length
@@ -398,6 +401,7 @@ eof:    return  #$FF
 .endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
+;;; Remove segment from path at `pathname_dst`
 
 .proc RemoveDstPathSegment
         ldx     pathname_dst
