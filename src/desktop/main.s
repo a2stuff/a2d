@@ -10448,6 +10448,7 @@ retry:  jsr     GetSrcFileInfo
 
         ;; Copy directory contents
         jsr     ProcessDirectory
+        ;; TODO: Is this redundant with call in `CopyFinishDirectory`?
         jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove
 
@@ -10663,7 +10664,7 @@ existing_size:
         ;; Copy `create_date`/`create_time`
         COPY_STRUCT DateTime, src_file_info_params::create_date, create_params3::create_date
 
-        jsr     ReadSrcCaseBits
+        jsr     _ReadSrcCaseBits
 
         ;; If a volume, need to create a subdir instead
         lda     create_params3::storage_type
@@ -10715,7 +10716,7 @@ success:
         lda     case_bits
         ora     case_bits+1
     IF_NOT_ZERO
-        jsr     WriteDstCaseBits
+        jsr     _WriteDstCaseBits
     END_IF
 
         clc
@@ -10726,16 +10727,13 @@ failure:
         rts
 
 cancel: jmp     CloseFilesCancelDialogWithFailedResult
-.endproc ; _CopyCreateFile
 
 ;;; ============================================================
 ;;; Case Bits
+;;; Input: `src_file_info_params` pre-populated
 
-.proc ReadSrcCaseBits
+.proc _ReadSrcCaseBits
         copy16  #0, case_bits   ; best effort
-
-        jsr     GetSrcFileInfo
-        bcs     ret
 
         lda     src_file_info_params::storage_type
     IF_A_EQ     #ST_VOLUME_DIRECTORY
@@ -10756,9 +10754,9 @@ cancel: jmp     CloseFilesCancelDialogWithFailedResult
 
         clc                     ; success
 ret:    rts
-.endproc ; ReadSrcCaseBits
+.endproc ; _ReadSrcCaseBits
 
-.proc WriteDstCaseBits
+.proc _WriteDstCaseBits
         ldax    #dst_path_buf
         jsr     GetFileEntryBlock
         bcs     ret
@@ -10777,7 +10775,9 @@ ret:    rts
         MLI_CALL WRITE_BLOCK, block_params
 
 ret:    rts
-.endproc ; WriteDstCaseBits
+.endproc ; _WriteDstCaseBits
+
+.endproc ; _CopyCreateFile
 
 ;;; ============================================================
 ;;; Relink - swaps source and target, then deletes source.

@@ -397,12 +397,11 @@ eof:    return  #$FF
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
     IF_A_EQ_ONE_OF #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
         ;; Get source dir info
-check_src:
-        MLI_CALL GET_FILE_INFO, get_src_file_info_params
+retry:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bcc     gfi_ok
       IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     OpInsertSource
-        jmp     check_src       ; retry
+        jmp     retry
       END_IF
     END_IF
 
@@ -420,13 +419,15 @@ gfi_ok:
 is_dir:
         sty     is_dir_flag
 
-        ;; copy `file_type`, `aux_type`, and `storage_type`
-        COPY_BYTES get_src_file_info_params::storage_type - get_src_file_info_params::file_type + 1, get_src_file_info_params::file_type, create_params::file_type
-
         jsr     _CheckSpaceAvailable
     IF_CS
         jmp     OpHandleNoSpace
     END_IF
+
+        ;; TODO: Use `_CopyCreateFile` here
+
+        ;; copy `file_type`, `aux_type`, and `storage_type`
+        COPY_BYTES get_src_file_info_params::storage_type - get_src_file_info_params::file_type + 1, get_src_file_info_params::file_type, create_params::file_type
 
         ;; Copy `create_date`/`create_time`
         COPY_STRUCT DateTime, get_src_file_info_params::create_date, create_params::create_date
@@ -572,6 +573,7 @@ existing_blocks:          ; Blocks taken by file that will be replaced
 ;;; Copy a normal (non-directory) file. File info is copied too.
 ;;; Inputs: `open_src_params` populated
 ;;;         `open_dst_params` populated; file already created
+;;;         `src_file_info_params` populated
 ;;; Errors: `OpHandleErrorCode` is invoked
 
 .proc _CopyNormalFile
@@ -623,8 +625,6 @@ close:  MLI_CALL CLOSE, close_dst_params
         MLI_CALL CLOSE, close_src_params
 
         ;; Copy file info
-        MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        bcs     fail
         COPY_BYTES $B, get_src_file_info_params::access, get_dst_file_info_params::access
 
         copy8   #7, get_dst_file_info_params ; `SET_FILE_INFO` param_count
