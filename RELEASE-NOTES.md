@@ -62,6 +62,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve startup time by creating `LOCAL/SELECTOR.LIST` lazily.
 * Fix restoring a volume window named "Trash".
 * Fix behavior after Special > Check Drive with non-ProDOS disks.
+* Fix locking/unlocking directories.
 
 ### Selector
 

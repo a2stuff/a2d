@@ -625,6 +625,8 @@
 
 * Open a folder containing a regular file. Select the file. File > Get Info. Verify that the AuxType displays correctly. Click OK. View > by Name. View > as Icons. File > Get Info. Verify that the AuxType still displays correctly.
 
+* Open a volume window containing a folder. Select the folder. File > Get Info. Check Locked. Click OK. Close the volume window. Re-open the volume window. Verify that the folder is still a folder.
+
 
 ## New Folder, Rename & Duplicate
 

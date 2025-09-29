@@ -11823,6 +11823,7 @@ common: jsr     GetSrcFileInfo
         jsr     SetCursorWatch
         jsr     _GetDirSize
         jsr     SetCursorPointer
+        jsr     GetSrcFileInfo  ; needed for toggling lock
     END_IF
         ;; --------------------------------------------------
         ;; Run the dialog, until OK or Cancel
