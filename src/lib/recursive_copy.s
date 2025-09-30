@@ -463,6 +463,8 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         jmp     OpHandleErrorCode
     END_IF
 
+        jsr     _RecordDestVolBlocksFree
+
         ;; Regular file or directory?
         lda     src_file_info_params::storage_type
     IF_A_NE_ALL_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
@@ -524,68 +526,70 @@ ok_dir: jsr     RemoveSrcPathSegment
 .endproc ; CopyProcessDirectoryEntry
 
 ;;; ============================================================
-;;; Check that there is room to copy a file. Handles overwrites.
-;;; If not enough space, control is passed to `OpHandleNoSpace`
-;;; (which will not return). Only returns if there is enough space.
-;;; Inputs: `src_file_info_params` is populated; `pathname_dst` is target
+;;; Record the number of blocks free on the destination volume.
+;;; Input: `pathname_dst` is path on destination volume
+;;; Output: `blocks_free` has the free block count
 
-.proc _EnsureSpaceAvailable
-        ;; --------------------------------------------------
-        ;; Get destination size (in case of overwrite)
-
-        copy16  #0, existing_blocks ; default 0, if it doesn't exist
-        MLI_CALL GET_FILE_INFO, dst_file_info_params
-    IF_CS
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     got_dst_size    ; this is fine
-fail:   jmp     OpHandleErrorCode
-    END_IF
-        copy16  dst_file_info_params::blocks_used, existing_blocks
-got_dst_size:
-
-        ;; --------------------------------------------------
-        ;; Get destination volume free space
-
+.proc _RecordDestVolBlocksFree
         ;; Isolate destination volume name
         lda     pathname_dst
-        copy8   pathname_dst, saved_length ; save
+        pha                     ; A = `pathname_dst` saved length
 
         ;; Strip to vol name - either end of string or next slash
         ldy     #1
     DO
         iny
         cpy     pathname_dst
-        bcs     restore_path    ; destination is volume; give up
+        bcs     :+
         lda     pathname_dst,y
     WHILE_A_NE  #'/'
         sty     pathname_dst
-
-        ;; Total blocks/used blocks on destination volume
+:
+        ;; Get total blocks/used blocks on destination volume
         MLI_CALL GET_FILE_INFO, dst_file_info_params
-        bcs     fail
+        jcs     OpHandleErrorCode
 
         ;; Free = Total (aux) - Used
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
-        ;; If overwriting, some blocks will be reclaimed.
-        add16   blocks_free, existing_blocks, blocks_free
-        ;; Does it fit? (free >= needed)
-        cmp16   blocks_free, src_file_info_params::blocks_used
-    IF_LT
-        ;; Not enough room
-        jsr     restore_path
-        jmp     OpHandleNoSpace
-    END_IF
 
-restore_path:
-        saved_length := *+1         ; save full length of path
-        lda     #SELF_MODIFIED_BYTE ; restore
+        pla                     ; A = `pathname_dst` saved length
         sta     pathname_dst
         rts
 
 blocks_free:              ; Blocks free on volume
         .word   0
-existing_blocks:          ; Blocks taken by file that will be replaced
-        .word   0
+.endproc ; _RecordDestVolBlocksFree
+
+;;; ============================================================
+;;; Check that there is room to copy a file. Handles overwrites.
+;;; If not enough space, control is passed to `OpHandleNoSpace`
+;;; (which will not return). Only returns if there is enough space.
+;;; Inputs: `src_file_info_params` is populated; `pathname_dst` is target
+;;; and `_RecordDestVolBlocksFree` has been called.
+
+.proc _EnsureSpaceAvailable
+        blocks_free := _RecordDestVolBlocksFree::blocks_free
+
+        ;; Get destination size (in case of overwrite)
+        MLI_CALL GET_FILE_INFO, dst_file_info_params
+    IF_CC
+        ;; Assume those blocks will be freed
+        add16   blocks_free, dst_file_info_params::blocks_used, blocks_free
+    ELSE_IF_A_NE #ERR_FILE_NOT_FOUND
+        jmp     OpHandleErrorCode
+    END_IF
+
+        ;; Does it fit? (free >= needed)
+        cmp16   blocks_free, src_file_info_params::blocks_used
+    IF_LT
+        ;; Not enough room
+        jmp     OpHandleNoSpace
+    END_IF
+
+        ;; Assume those blocks will be used
+        add16   blocks_free, src_file_info_params::blocks_used, blocks_free
+
+        rts
 .endproc ; _EnsureSpaceAvailable
 
 ;;; ============================================================
