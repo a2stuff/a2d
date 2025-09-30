@@ -406,6 +406,9 @@ kCopyBufferSize = MLI - copy_buffer
 ;;; is okay if it already exists.
 ::kCopyIgnoreDuplicateErrorOnCreate = 1
 
+;;; No enumeration pass before the copy, so check as we go.
+::kCopyCheckSpaceAvailable = 1
+
 ;;; --------------------------------------------------
 ;;; Callbacks
 ;;; --------------------------------------------------

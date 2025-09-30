@@ -72,6 +72,9 @@ kCopyBufferSize = $1F00 - copy_buffer
 ;;; is okay if it already exists.
 ::kCopyIgnoreDuplicateErrorOnCreate = 1
 
+;;; We do an enumeration pass before the copy, so this is not needed.
+::kCopyCheckSpaceAvailable = 0
+
 ;;; --------------------------------------------------
 ;;; Callbacks
 ;;; --------------------------------------------------

@@ -17,6 +17,7 @@
 ;;; * `dst_io_buffer`   - 1024 bytes for I/O
 ;;; * `copy_buffer` and `kCopyBufferSize` (integral number of blocks)
 ;;; * `::kCopyIgnoreDuplicateErrorOnCreate` (0 or 1)
+;;; * `::kCopyCheckSpaceAvailable` (0 or 1)
 ;;;
 ;;; ----------------------------------------
 ;;; Callbacks
@@ -463,7 +464,9 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         jmp     OpHandleErrorCode
     END_IF
 
+.if ::kCopyCheckSpaceAvailable
         jsr     _RecordDestVolBlocksFree
+.endif
 
         ;; Regular file or directory?
         lda     src_file_info_params::storage_type
@@ -472,7 +475,9 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; --------------------------------------------------
         ;; File
 
+.if ::kCopyCheckSpaceAvailable
         jsr     _EnsureSpaceAvailable
+.endif
         jsr     _CopyCreateFile
         jmp     _CopyNormalFile
 
@@ -481,7 +486,9 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; --------------------------------------------------
         ;; Directory
 
+.if ::kCopyCheckSpaceAvailable
         jsr     _EnsureSpaceAvailable
+.endif
         jsr     _CopyCreateFile
         jmp     ProcessDirectory
 
@@ -505,7 +512,9 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     IF_A_NE     #ST_LINKED_DIRECTORY
         ;; --------------------------------------------------
         ;; File
+.if ::kCopyCheckSpaceAvailable
         jsr     _EnsureSpaceAvailable
+.endif
         jsr     _CopyCreateFile
         bcs     done
 
@@ -530,6 +539,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 ;;; Input: `pathname_dst` is path on destination volume
 ;;; Output: `blocks_free` has the free block count
 
+.if ::kCopyCheckSpaceAvailable
 .proc _RecordDestVolBlocksFree
         ;; Isolate destination volume name
         lda     pathname_dst
@@ -559,6 +569,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 blocks_free:              ; Blocks free on volume
         .word   0
 .endproc ; _RecordDestVolBlocksFree
+.endif
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
@@ -567,6 +578,7 @@ blocks_free:              ; Blocks free on volume
 ;;; Inputs: `src_file_info_params` is populated; `pathname_dst` is target
 ;;; and `_RecordDestVolBlocksFree` has been called.
 
+.if ::kCopyCheckSpaceAvailable
 .proc _EnsureSpaceAvailable
         blocks_free := _RecordDestVolBlocksFree::blocks_free
 
@@ -591,6 +603,7 @@ blocks_free:              ; Blocks free on volume
 
         rts
 .endproc ; _EnsureSpaceAvailable
+.endif
 
 ;;; ============================================================
 ;;; Copy a normal (non-directory) file. File info is copied too.
