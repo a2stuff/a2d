@@ -7,6 +7,7 @@
 
 ;;; * IF_* / ELSE_IF_* / ELSE / END_IF
 ;;;   * and IF_A_EQ_ONE_OF as a common case
+;;;   * and IF_A_NE_ALL_OF as a common case
 ;;; * DO / CONTINUE_IF_* / BREAK_IF_* / WHILE_*
 ;;;   * or REPEAT / UNTIL_* if you prefer
 ;;; * RTS_IF_*
@@ -70,6 +71,10 @@
 ;;;     ...
 ;;;     END_IF
 ;;;
+;;;     IF_A_NE_ALL_OF #ST_LINKED_DIRECTORY, #ST_VOLUME_DIRECTORY
+;;;     ...
+;;;     END_IF
+;;;
 ;;; Macros:
 ;;;     IF_ZS           aliases: IF_ZERO, IF_EQ
 ;;;     IF_ZC           aliases: IF_NOT_ZERO, IF_NE
@@ -88,6 +93,7 @@
 ;;; ... and ditto for *_X_* and *_Y_*
 ;;;
 ;;;     IF_A_EQ_ONE_OF
+;;;     IF_A_NE_ALL_OF
 
 ;;; A numeric variable for the current nesting depth of flow control
 ;;; structures. Incremented when entering a structure, decremented
@@ -149,6 +155,23 @@
         __flow_branch_ident__ {"if_one_of_terminal"} := *
         __INC_IDENT__ __flow_branch_ident_counter__
         bne __flow_branch_ident_block__
+    .endif
+.endmacro
+
+.macro IF_A_NE_ALL_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        __INC_IDENT__ __flow_branch_depth__
+        __INC_IDENT__ __flow_branch_count_at_depth__
+        __INC_IDENT__ __flow_branch_ident_counter__
+        __FLOW_LOG__ "if_not_one_of"
+
+        _IF_NOT_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.endmacro
+
+.macro _IF_NOT_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        cmp     arg1
+        beq     __flow_branch_ident_block__
+    .ifnblank arg2
+        _IF_NOT_ONE_OF_HELPER_ arg2,arg3,arg4,arg5,arg6,arg7,arg8
     .endif
 .endmacro
 

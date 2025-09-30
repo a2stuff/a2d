@@ -10197,16 +10197,14 @@ continue_descent_flag:  .byte   0 ; bit7
 ;;; Output: C=0 if supported type, C=1 if unsupported but user picks OK.
 ;;; Exception: If user selects Cancel, `CloseFilesCancelDialogWithFailedResult` is invoked.
 .proc ValidateStorageType
-    IF_A_NE     #ST_VOLUME_DIRECTORY
-      IF_A_NE   #ST_LINKED_DIRECTORY
-       IF_A_GE  #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
+    IF_A_NE_ALL_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+     IF_A_GE  #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
         ;; Unsupported type - show error, and either abort or return failure
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unsupported_type
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialogWithFailedResult
         sec
         rts
-       END_IF
       END_IF
     END_IF
 
@@ -10338,10 +10336,7 @@ retry:  jsr     GetSrcFileInfo
     END_IF
 
         lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     dir
-        cmp     #ST_LINKED_DIRECTORY
-        beq     dir
+    IF_A_NE_ALL_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
 
         ;; --------------------------------------------------
         ;; File
@@ -10353,16 +10348,17 @@ retry:  jsr     GetSrcFileInfo
         bcs     done
 
         bit     move_flags      ; same volume relink move?
-    IF_VS
+      IF_VS
         jmp     RelinkFile
-    END_IF
+      END_IF
 
         jsr     DoFileCopy
         jmp     MaybeFinishFileMove
+    END_IF
 
         ;; --------------------------------------------------
         ;; Directory
-dir:
+
         jsr     TryCreateDst
         bcs     done
 
@@ -10416,7 +10412,7 @@ done:
         ;; --------------------------------------------------
         ;; Directory
         jsr     TryCreateDst
-        bcc     ok_dir          ; leave dst path segment in place for recursion
+        bcc     ok_dir ; leave dst path segment in place for recursion
         SET_BIT7_FLAG continue_descent_flag
 
         ;; --------------------------------------------------
@@ -11700,17 +11696,14 @@ flag_clear:
         ldx     #0
         stx     flag
 
-        cmp     #ERR_VOL_NOT_FOUND ; if err is "not found"
-        beq     not_found       ; prompt specifically for src/dst disk
-        cmp     #ERR_PATH_NOT_FOUND
-        beq     not_found
-
+    IF_A_NE_ALL_OF #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
+        ;; if err is "not found" prompt specifically for src/dst disk
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
         jmp     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
+    END_IF
 
-not_found:
         ldax    #aux::str_alert_insert_source_disk
         bit     flag
     IF_NS
@@ -13197,23 +13190,18 @@ finish: jsr     PopPointers     ; do not tail-call optimize!
         ;; Is AppleWorks?
         ldy     #FileEntry::file_type
         lda     (block_ptr),y
-        cmp     #FT_ADB
-        beq     appleworks
-        cmp     #FT_AWP
-        beq     appleworks
-        cmp     #FT_ASP
-        beq     appleworks
+      IF_A_NE_ALL_OF #FT_ADB, #FT_AWP, #FT_ASP
 
         ;; --------------------------------------------------
         ;; Non-AppleWorks file
 
         jsr     get_case_bits_per_option_and_adjust_string
-        jmp     write_file_case_bits_and_block
+
+      ELSE
 
         ;; --------------------------------------------------
         ;; AppleWorks file
 
-appleworks:
         ;; Per Per File Type Notes: File Type $19 (25) All Auxiliary Types (etc)
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ftn.19.xxxx.html
         ;;
@@ -13233,16 +13221,15 @@ appleworks:
         sta     (block_ptr),y
 
         jsr     get_option
-      IF_ZERO
+       IF_ZERO
         ;; Option not set, so zero case bits; memory string preserved
         ldax    #0
-      ELSE
+       ELSE
         ;; Option set, so write case bits as is.
         ldax    case_bits
+       END_IF
       END_IF
-        FALL_THROUGH_TO write_file_case_bits_and_block
 
-write_file_case_bits_and_block:
         ldy     #FileEntry::case_bits
         sta     (block_ptr),y
         iny
