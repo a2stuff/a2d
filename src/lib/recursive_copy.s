@@ -470,11 +470,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; --------------------------------------------------
         ;; File
 
-        jsr     _CheckSpaceAvailable
-      IF_CS
-full:   jmp     OpHandleNoSpace
-      END_IF
-
+        jsr     _EnsureSpaceAvailable
         jsr     _CopyCreateFile
         jmp     _CopyNormalFile
 
@@ -483,9 +479,7 @@ full:   jmp     OpHandleNoSpace
         ;; --------------------------------------------------
         ;; Directory
 
-        jsr     _CheckSpaceAvailable
-        bcs     full
-
+        jsr     _EnsureSpaceAvailable
         jsr     _CopyCreateFile
         jmp     ProcessDirectory
 
@@ -509,9 +503,7 @@ full:   jmp     OpHandleNoSpace
     IF_A_NE     #ST_LINKED_DIRECTORY
         ;; --------------------------------------------------
         ;; File
-        jsr     _CheckSpaceAvailable
-        jcs     OpHandleNoSpace
-
+        jsr     _EnsureSpaceAvailable
         jsr     _CopyCreateFile
         bcs     done
 
@@ -533,10 +525,11 @@ ok_dir: jsr     RemoveSrcPathSegment
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
+;;; If not enough space, control is passed to `OpHandleNoSpace`
+;;; (which will not return). Only returns if there is enough space.
 ;;; Inputs: `src_file_info_params` is populated; `pathname_dst` is target
-;;; Outputs: C=0 if there is sufficient space, C=1 otherwise
 
-.proc _CheckSpaceAvailable
+.proc _EnsureSpaceAvailable
         ;; --------------------------------------------------
         ;; Get destination size (in case of overwrite)
 
@@ -554,6 +547,7 @@ got_dst_size:
         ;; Get destination volume free space
 
         ;; Isolate destination volume name
+        lda     pathname_dst
         copy8   pathname_dst, saved_length ; save
 
         ;; Strip to vol name - either end of string or next slash
@@ -561,7 +555,7 @@ got_dst_size:
     DO
         iny
         cpy     pathname_dst
-        bcs     have_space      ; ???
+        bcs     restore_path    ; destination is volume; give up
         lda     pathname_dst,y
     WHILE_A_NE  #'/'
         sty     pathname_dst
@@ -578,13 +572,11 @@ got_dst_size:
         cmp16   blocks_free, src_file_info_params::blocks_used
     IF_LT
         ;; Not enough room
-        sec                     ; no space
-        bcs     :+              ; always
+        jsr     restore_path
+        jmp     OpHandleNoSpace
     END_IF
 
-have_space:
-        clc
-:
+restore_path:
         saved_length := *+1         ; save full length of path
         lda     #SELF_MODIFIED_BYTE ; restore
         sta     pathname_dst
@@ -594,7 +586,7 @@ blocks_free:              ; Blocks free on volume
         .word   0
 existing_blocks:          ; Blocks taken by file that will be replaced
         .word   0
-.endproc ; _CheckSpaceAvailable
+.endproc ; _EnsureSpaceAvailable
 
 ;;; ============================================================
 ;;; Copy a normal (non-directory) file. File info is copied too.
