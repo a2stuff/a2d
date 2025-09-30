@@ -75,6 +75,10 @@ NoOp:   rts
 pathname_src:        .res    ::kPathBufferSize, 0
 pathname_dst:        .res    ::kPathBufferSize, 0
 
+        ;; Populated during iteration
+        DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, pathname_src
+        DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, pathname_dst
+
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks and state
 
@@ -116,9 +120,6 @@ dir_data_buffer_end     .byte
         DEFINE_READWRITE_PARAMS read_src_dir_entry_params, file_entry, .sizeof(FileEntry)
         DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
         DEFINE_CLOSE_PARAMS close_src_dir_params
-
-        ;; Populated during iteration
-        DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, pathname_src
 
 ;;; ============================================================
 ;;; Iterate directory entries
@@ -439,7 +440,6 @@ eof:    return  #$FF
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
 
-        DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, pathname_dst
 
 ;;; ============================================================
 ;;; Perform the recursive file copy.
@@ -449,44 +449,45 @@ eof:    return  #$FF
 .proc DoCopy
         ;; Check destination
         MLI_CALL GET_FILE_INFO, dst_file_info_params
-    IF_A_EQ_ONE_OF #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
+    IF_A_NE_ALL_OF #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
+        jmp     OpHandleErrorCode
+    END_IF
+
         ;; Get source info
 retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
-        bcc     gfi_ok
+    IF_CS
       IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     OpInsertSource
         jmp     retry
       END_IF
+        jmp     OpHandleErrorCode
     END_IF
 
-        jmp     OpHandleErrorCode
-
-        ;; Prepare for copy...
-gfi_ok:
-        ldy     #$FF            ; maybe is dir
+        ;; Regular file or directory?
         lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     is_dir
-        cmp     #ST_LINKED_DIRECTORY
-        beq     is_dir
-        ldy     #0              ; not a dir
-is_dir:
-        sty     is_dir_flag
+    IF_A_NE_ALL_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+
+        ;; --------------------------------------------------
+        ;; File
 
         jsr     _CheckSpaceAvailable
-    IF_CS
-        jmp     OpHandleNoSpace
-    END_IF
+      IF_CS
+full:   jmp     OpHandleNoSpace
+      END_IF
 
         jsr     _CopyCreateFile
+        jmp     _CopyNormalFile
 
-        is_dir_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
-    IF_NOT_ZERO
-        jmp     ProcessDirectory
     END_IF
 
-        jmp     _CopyNormalFile
+        ;; --------------------------------------------------
+        ;; Directory
+
+        jsr     _CheckSpaceAvailable
+        bcs     full
+
+        jsr     _CopyCreateFile
+        jmp     ProcessDirectory
 
 .endproc ; DoCopy
 

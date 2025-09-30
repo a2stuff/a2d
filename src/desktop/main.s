@@ -10447,15 +10447,17 @@ operation_lifecycle_callbacks_for_copy:
         param_call AppendFilenameToDstPath, filename_buf
     END_IF
 
-        ;; Paths are set up - update dialog and populate `src_file_info_params`
+        ;; Paths are set up - update dialog
         jsr     CopyUpdateProgress
 
+        ;; Populate `src_file_info_params`
 retry:  jsr     GetSrcFileInfo
     IF_CS
         jsr     ShowErrorAlert
         jmp     retry
     END_IF
 
+        ;; Regular file or directory?
         lda     src_file_info_params::storage_type
     IF_A_NE_ALL_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
 
@@ -13228,7 +13230,6 @@ finish: jsr     PopPointers     ; do not tail-call optimize!
         ;; Non-AppleWorks file
 
         jsr     get_case_bits_per_option_and_adjust_string
-
       ELSE
 
         ;; --------------------------------------------------
