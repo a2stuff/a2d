@@ -80,13 +80,10 @@ buttons:        .byte   0       ; AlertButtonOptions
 options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 .endparams
 
-start:  pha                     ; alert number
-        lda     app::invoked_during_boot_flag ; if no UI, just return cancel
-    IF_NOT_ZERO
-        pla
+start:  bit     app::invoked_during_boot_flag ; if no UI, just return cancel
+    IF_NS
         return  #kAlertResultCancel
     END_IF
-        pla                     ; alert number
 
         ;; --------------------------------------------------
         ;; Process Options, populate `alert_params`
