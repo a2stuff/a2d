@@ -18,7 +18,8 @@
         jsr     EnumerateFiles
         bne     skip
 
-        jsr     DrawWindowContent
+        copy16  file_count, total_count
+        jsr     PrepWindowForCopy
 
         jsr     PrepSrcAndDstPaths
         jsr     CopyFiles
@@ -81,16 +82,16 @@ kCopyBufferSize = $1F00 - copy_buffer
 
 ;;; Jump table - populated by operation
 op_jt_addrs:
-op_jt_addr1:  .addr   CopyProcessDirectoryEntry
-op_jt_addr2:  .addr   RemoveDstPathSegment
-op_jt_addr3:  .addr   NoOp
+op_jt_addr1:  .addr   SELF_MODIFIED
+op_jt_addr2:  .addr   SELF_MODIFIED
+op_jt_addr3:  .addr   SELF_MODIFIED
 kOpJTSize = * - op_jt_addrs
 
 OpCheckCancel     := CheckCancel
 OpInsertSource    := ShowInsertSourceDiskPrompt
 OpHandleErrorCode := HandleErrorCode
 OpHandleNoSpace   := ShowDiskFullError
-OpUpdateProgress  := UpdateWindowContent
+OpUpdateProgress  := UpdateCopyProgress
 
 OpProcessDirectoryEntry:
         jmp     (op_jt_addr1)
@@ -143,15 +144,13 @@ saved_stack:
         tsx
         stx     saved_stack
 
+        ;; Is there enough space?
         jsr     CopyPathsFromBufsToSrcAndDst
         MLI_CALL GET_FILE_INFO, dst_file_info_params
     IF_CS
         jmp     HandleErrorCode
     END_IF
-
         blocks := $06
-
-        ;; Is there enough space?
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks
         cmp16   blocks, blocks_total
     IF_LT
@@ -250,7 +249,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 .proc EnumerateVisitFile
         add16   blocks_total, file_entry+FileEntry::blocks_used, blocks_total
         inc16   file_count
-        jmp     UpdateFileCountDisplay
+        jmp     UpdateEnumerationProgress
 .endproc ; EnumerateVisitFile
 
 ;;; ============================================================
@@ -410,6 +409,7 @@ progress_pattern:
 
 
 ;;; ============================================================
+;;; Prepares window for the enumeration phase
 
 .proc OpenWindow
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -436,7 +436,7 @@ result:         .word   0                 ; (out)
 remainder:      .word   0                 ; (out)
 .endparams
 
-.proc DrawWindowContent
+.proc PrepWindowForCopy
         lda     #winfo::kWindowId
         jsr     app::GetWindowPort
         MGTK_CALL MGTK::PaintRect, rect_clear_details
@@ -444,11 +444,10 @@ remainder:      .word   0                 ; (out)
         MGTK_CALL MGTK::SetPenMode, app::notpencopy
         MGTK_CALL MGTK::FrameRect, progress_frame
 
-        copy16  file_count, total_count
-        FALL_THROUGH_TO UpdateWindowContent
-.endproc
+        FALL_THROUGH_TO UpdateCopyProgress
+.endproc ; PrepWindowForCopy
 
-.proc UpdateWindowContent
+.proc UpdateCopyProgress
         dec     file_count
         lda     file_count
     IF_A_EQ     #$FF
@@ -483,11 +482,11 @@ remainder:      .word   0                 ; (out)
 ;;; Copy of `pathname_src` modified for display
 display_path:
         .res    ::kPathBufferSize, 0
-.endproc ; UpdateWindowContent
+.endproc ; UpdateCopyProgress
 
 ;;; ============================================================
 
-.proc UpdateFileCountDisplay
+.proc UpdateEnumerationProgress
         lda     #winfo::kWindowId
         jsr     app::GetWindowPort
 
@@ -497,7 +496,7 @@ display_path:
         param_call DrawString, str_files_to_copy
         param_call DrawString, str_from_int
         param_jump DrawString, str_spaces
-.endproc ; UpdateFileCountDisplay
+.endproc ; UpdateEnumerationProgress
 
 ;;; ============================================================
 

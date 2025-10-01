@@ -47,7 +47,7 @@ check_about_saving:
         jsr     WriteFileToOriginalPrefix
         pla
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
