@@ -9917,6 +9917,8 @@ pathname_dst := dst_path_buf
 OpCheckCancel := CheckCancel
 OpCheckRetry  := CheckRetry
 
+::kCopyAllowRetry = 1
+
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks and state
 
@@ -10088,8 +10090,13 @@ map:    .byte   FileEntry::access
 
 retry:  MLI_CALL OPEN, open_src_dir_params
     IF_CS
+.if ::kCopyAllowRetry
         jsr     OpCheckRetry
         beq     retry           ; always
+.else
+        .refto retry
+fail:   jmp     OpHandleErrorCode
+.endif
     END_IF
 
         lda     open_src_dir_params::ref_num
@@ -10100,10 +10107,15 @@ retry:  MLI_CALL OPEN, open_src_dir_params
 
         ;; Skip over prev/next block pointers in header
 retry2: MLI_CALL READ, read_block_pointers_params
+.if ::kCopyAllowRetry
     IF_CS
         jsr     OpCheckRetry
         beq     retry2          ; always
     END_IF
+.else
+        .refto retry2
+        bcs     fail
+.endif
 
         ;; Header size is next/prev blocks + a file entry
         copy8   #13, entries_per_block ; so `_ReadFileEntry` doesn't immediately advance
@@ -10120,8 +10132,13 @@ retry2: MLI_CALL READ, read_block_pointers_params
 .proc _CloseSrcDir
 retry:  MLI_CALL CLOSE, close_src_dir_params
     IF_CS
+.if ::kCopyAllowRetry
         jsr     OpCheckRetry
         beq     retry           ; always
+.else
+        .refto retry
+        jmp     OpHandleErrorCode
+.endif
     END_IF
         rts
 .endproc ; _CloseSrcDir
@@ -10138,8 +10155,12 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
         cmp     #ERR_END_OF_FILE
         beq     eof
 
+.if ::kCopyAllowRetry
         jsr     OpCheckRetry
         beq     retry           ; always
+.else
+fail:   jmp     OpHandleErrorCode
+.endif
     END_IF
 
         inc     entry_index_in_block

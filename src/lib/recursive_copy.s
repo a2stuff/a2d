@@ -18,11 +18,13 @@
 ;;; * `copy_buffer` and `kCopyBufferSize` (integral number of blocks)
 ;;; * `::kCopyIgnoreDuplicateErrorOnCreate` (0 or 1)
 ;;; * `::kCopyCheckSpaceAvailable` (0 or 1)
+;;; * `::kCopyAllowRetry` (0 or 1)
 ;;;
 ;;; ----------------------------------------
 ;;; Callbacks
 ;;; ----------------------------------------
 ;;; * `OpCheckCancel` - called regularly, allows caller to abort (close all open files, restore stack, hide UI)
+;;; * `OpCheckRetry` - if `::kCopyAllowRetry`, called on error; client returns Z=1 to retry
 ;;; * `OpInsertSource` - called by `DoCopy`
 ;;; * `OpHandleErrorCode` - shows error, restores stack
 ;;; * `OpHandleNoSpace` - shows error, restores stack
@@ -249,9 +251,15 @@ map:    .byte   FileEntry::access
         sta     entry_index_in_dir+1
         sta     entry_index_in_block
 
-        MLI_CALL OPEN, open_src_dir_params
+retry:  MLI_CALL OPEN, open_src_dir_params
     IF_CS
+.if ::kCopyAllowRetry
+        jsr     OpCheckRetry
+        beq     retry           ; always
+.else
+        .refto retry
 fail:   jmp     OpHandleErrorCode
+.endif
     END_IF
 
         lda     open_src_dir_params::ref_num
@@ -261,8 +269,16 @@ fail:   jmp     OpHandleErrorCode
         sta     close_src_dir_params::ref_num
 
         ;; Skip over prev/next block pointers in header
-        MLI_CALL READ, read_block_pointers_params
+retry2: MLI_CALL READ, read_block_pointers_params
+.if ::kCopyAllowRetry
+    IF_CS
+        jsr     OpCheckRetry
+        beq     retry2          ; always
+    END_IF
+.else
+        .refto retry2
         bcs     fail
+.endif
 
         ;; Header size is next/prev blocks + a file entry
         copy8   #13, entries_per_block ; so `_ReadFileEntry` doesn't immediately advance
@@ -277,9 +293,15 @@ fail:   jmp     OpHandleErrorCode
 ;;; ============================================================
 
 .proc _CloseSrcDir
-        MLI_CALL CLOSE, close_src_dir_params
+retry:  MLI_CALL CLOSE, close_src_dir_params
     IF_CS
+.if ::kCopyAllowRetry
+        jsr     OpCheckRetry
+        beq     retry           ; always
+.else
+        .refto retry
         jmp     OpHandleErrorCode
+.endif
     END_IF
         rts
 .endproc ; _CloseSrcDir
@@ -291,12 +313,17 @@ fail:   jmp     OpHandleErrorCode
 .proc _ReadFileEntry
         inc16   entry_index_in_dir
 
-        MLI_CALL READ, read_src_dir_entry_params
+retry:  MLI_CALL READ, read_src_dir_entry_params
     IF_CS
         cmp     #ERR_END_OF_FILE
         beq     eof
 
+.if ::kCopyAllowRetry
+        jsr     OpCheckRetry
+        beq     retry           ; always
+.else
 fail:   jmp     OpHandleErrorCode
+.endif
     END_IF
 
         inc     entry_index_in_block

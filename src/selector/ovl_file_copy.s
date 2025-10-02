@@ -76,6 +76,9 @@ kCopyBufferSize = $1F00 - copy_buffer
 ;;; We do an enumeration pass before the copy, so this is not needed.
 ::kCopyCheckSpaceAvailable = 0
 
+;;; No retries, just show error and abort.
+::kCopyAllowRetry = 0
+
 ;;; --------------------------------------------------
 ;;; Callbacks
 ;;; --------------------------------------------------

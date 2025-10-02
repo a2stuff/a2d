@@ -409,6 +409,9 @@ kCopyBufferSize = MLI - copy_buffer
 ;;; No enumeration pass before the copy, so check as we go.
 ::kCopyCheckSpaceAvailable = 1
 
+;;; No retries, just show error and abort.
+::kCopyAllowRetry = 0
+
 ;;; --------------------------------------------------
 ;;; Callbacks
 ;;; --------------------------------------------------
