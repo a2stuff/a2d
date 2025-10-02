@@ -9914,6 +9914,9 @@ do_op_flag:
 pathname_src := src_path_buf
 pathname_dst := dst_path_buf
 
+OpCheckCancel := CheckCancel
+OpCheckRetry  := CheckRetry
+
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks and state
 
@@ -9983,7 +9986,7 @@ loop:
         and     #NAME_LENGTH_MASK
         sta     file_entry
 
-        jsr     CheckCancel
+        jsr     OpCheckCancel
 
         CLEAR_BIT7_FLAG entry_err_flag
         jsr     OpProcessDirectoryEntry
@@ -10085,11 +10088,8 @@ map:    .byte   FileEntry::access
 
 retry:  MLI_CALL OPEN, open_src_dir_params
     IF_CS
-        ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     ShowAlertOption
-        ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry           ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialogWithFailedResult
+        jsr     OpCheckRetry
+        beq     retry           ; always
     END_IF
 
         lda     open_src_dir_params::ref_num
@@ -10101,11 +10101,8 @@ retry:  MLI_CALL OPEN, open_src_dir_params
         ;; Skip over prev/next block pointers in header
 retry2: MLI_CALL READ, read_block_pointers_params
     IF_CS
-        ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     ShowAlertOption
-        ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry2          ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialogWithFailedResult
+        jsr     OpCheckRetry
+        beq     retry2          ; always
     END_IF
 
         ;; Header size is next/prev blocks + a file entry
@@ -10123,11 +10120,8 @@ retry2: MLI_CALL READ, read_block_pointers_params
 .proc _CloseSrcDir
 retry:  MLI_CALL CLOSE, close_src_dir_params
     IF_CS
-        ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     ShowAlertOption
-        ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry           ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialogWithFailedResult
+        jsr     OpCheckRetry
+        beq     retry           ; always
     END_IF
         rts
 .endproc ; _CloseSrcDir
@@ -10144,11 +10138,8 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
         cmp     #ERR_END_OF_FILE
         beq     eof
 
-        ldx     #AlertButtonOptions::TryAgainCancel
-        jsr     ShowAlertOption
-        ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry           ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialogWithFailedResult
+        jsr     OpCheckRetry
+        beq     retry           ; always
     END_IF
 
         inc     entry_index_in_block
@@ -10964,30 +10955,40 @@ Start:  lda     DEVNUM
         SET_BIT7_FLAG src_dst_exclusive_flag
     END_IF
 
-        ;; Read
-read:   jsr     _ReadSrc
-        bit     src_dst_exclusive_flag
-        bpl     write
-        jsr     _CloseSrc       ; swap if necessary
-        jsr     _OpenDst
-        MLI_CALL SET_MARK, mark_dst_params
+        ;; Read a chunk
+    DO
+        jsr     OpCheckCancel
+        jsr     _ReadSrc
 
-        ;; Write
-write:  bit     src_eof_flag
-        bmi     eof
+        bit     src_dst_exclusive_flag
+      IF_NS
+        jsr     _CloseSrc       ; swap if necessary
+       DO
+        jsr     _OpenDst
+       WHILE_NOT_ZERO
+        MLI_CALL SET_MARK, mark_dst_params
+      END_IF
+
+        bit     src_eof_flag
+        BREAK_IF_NS
+
+        ;; Write the chunk
+        jsr     OpCheckCancel
         jsr     _WriteDst
         bit     src_dst_exclusive_flag
-        bpl     read
+        CONTINUE_IF_NC
+
         jsr     _CloseDst       ; swap if necessary
         jsr     _OpenSrc
 
         MLI_CALL SET_MARK, mark_src_params
-        bcc     read
+        CONTINUE_IF_CC
+
         SET_BIT7_FLAG src_eof_flag
-        jmp     read
+    WHILE_NS                    ; always
 
         ;; EOF
-eof:    jsr     _CloseDst
+        jsr     _CloseDst
         bit     src_dst_exclusive_flag
     IF_NC
         jsr     _CloseSrc
@@ -11045,6 +11046,7 @@ retry:  MLI_CALL READ, read_src_params
         jmp     retry
     END_IF
 
+        ;; EOF?
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
         bne     :+
@@ -11550,6 +11552,18 @@ src_path_slash_index:
         rts
 .endproc ; DrawProgressDialogFilesRemaining
 
+;;; ============================================================
+;;; Prompt the user to retry the operation. Abort if canceled.
+;;; Input: A = error code
+;;; Output: Z=1 (if it returns)
+
+.proc CheckRetry
+        ldx     #AlertButtonOptions::TryAgainCancel
+        jsr     ShowAlertOption
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
+        bne     CloseFilesCancelDialogWithFailedResult
+        rts
+.endproc ; CheckRetry
 
 ;;; ============================================================
 ;;; If Escape is pressed, abort the operation.
