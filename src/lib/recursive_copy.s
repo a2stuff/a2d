@@ -376,81 +376,86 @@ eof:    return  #$FF
 ;;; Append name at `file_entry` to path at `pathname_src`
 
 .proc AppendFileEntryToSrcPath
-        lda     file_entry+FileEntry::storage_type_name_length
-    IF_NOT_ZERO
-        ldx     #0
-        ldy     pathname_src
-        copy8   #'/', pathname_src+1,y
-      DO
-        iny
-        BREAK_IF_X_GE file_entry+FileEntry::storage_type_name_length
-        copy8   file_entry+FileEntry::file_name,x, pathname_src+1,y
-        inx
-      WHILE_NOT_ZERO            ; always
-        sty     pathname_src
-    END_IF
-        rts
+        param_jump AppendFileEntryToPath, pathname_src
 .endproc ; AppendFileEntryToSrcPath
 
 ;;; ============================================================
 ;;; Remove segment from path at `pathname_src`
 
 .proc RemoveSrcPathSegment
-        ldx     pathname_src
-    IF_NOT_ZERO
-        lda     #'/'
-      DO
-        cmp     pathname_src,x
-        beq     :+
-        dex
-      WHILE_NOT_ZERO
-        inx
-:
-        dex
-        stx     pathname_src
-    END_IF
-        rts
+        param_jump RemovePathSegment, pathname_src
 .endproc ; RemoveSrcPathSegment
 
 ;;; ============================================================
 ;;; Append name at `file_entry` to path at `pathname_dst`
 
 .proc AppendFileEntryToDstPath
-        lda     file_entry+FileEntry::storage_type_name_length
-    IF_NOT_ZERO
-        ldx     #0
-        ldy     pathname_dst
-        copy8   #'/', pathname_dst+1,y
-      DO
-        iny
-        BREAK_IF_X_GE file_entry+FileEntry::storage_type_name_length
-        copy8   file_entry+FileEntry::file_name,x, pathname_dst+1,y
-        inx
-      WHILE_NOT_ZERO            ; always
-        sty     pathname_dst
-    END_IF
-        rts
+        param_jump AppendFileEntryToPath, pathname_dst
 .endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
 ;;; Remove segment from path at `pathname_dst`
 
 .proc RemoveDstPathSegment
-        ldx     pathname_dst
+        param_jump RemovePathSegment, pathname_dst
+.endproc ; RemoveDstPathSegment
+
+;;; ============================================================
+;;; Input: `file_entry` (a `FileEntry`), and A,X = path to modify
+;;; Trashes $06
+
+.proc AppendFileEntryToPath
+        path_ptr := $06
+        stax    path_ptr
+
+        lda     file_entry+FileEntry::storage_type_name_length
     IF_NOT_ZERO
-        lda     #'/'
+        ldy     #0
+        lda     (path_ptr),y
+        tay
+        iny
+        copy8   #'/', (path_ptr),y
+        ldx     #0
       DO
-        cmp     pathname_dst,x
-        beq     :+
-        dex
-      WHILE_NOT_ZERO
+        iny
+        copy8   file_entry+FileEntry::file_name,x, (path_ptr),y
         inx
-:
-        dex
-        stx     pathname_dst
+      WHILE_X_LT file_entry+FileEntry::storage_type_name_length
+        tya
+        ldy     #0
+        sta     (path_ptr),y
     END_IF
         rts
-.endproc ; RemoveDstPathSegment
+.endproc ; AppendFileEntryToPath
+
+;;; ============================================================
+;;; Input: A,X = path to modify
+;;; Trashes $06
+
+.proc RemovePathSegment
+        path_ptr := $06
+
+        stax    path_ptr
+
+        ldy     #0
+        lda     (path_ptr),y
+    IF_NOT_ZERO
+        tay
+      DO
+        lda     (path_ptr),y
+        cmp     #'/'
+        beq     :+
+        dey
+      WHILE_NOT_ZERO
+        iny
+:
+        dey
+        tya
+        ldy     #0
+        sta     (path_ptr),y
+    END_IF
+        rts
+.endproc ; RemovePathSegment
 
 ;;; ============================================================
 ;;; Standard Copy Implementation

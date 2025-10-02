@@ -13103,23 +13103,23 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
         ldy     #0
         lda     (ptr),y         ; length
-        beq     finish
-
+    IF_NOT_ZERO
         tay
-    DO
+      DO
         lda     (ptr),y
         cmp     #'/'
-        beq     found
+        beq     :+
         dey
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         iny
-
-found:  dey
+:
+        dey
         tya
         ldy     #0
         sta     (ptr),y
+    END_IF
 
-finish: jsr     PopPointers     ; do not tail-call optimize!
+        jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; RemovePathSegment
 
