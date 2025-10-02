@@ -1710,9 +1710,8 @@ str_basix_system:
         launch_path := INVOKER_PREFIX
         interp_path := INVOKER_INTERPRETER
 
-basic:  lda     #'C'            ; "BASI?" -> "BASIC"
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-basis:  lda     #'S'            ; "BASI?" -> "BASIS"
+        ENTRY_POINTS_FOR_A basic, 'C', basis, 'S'
+        ;; "BASI?" -> "BASIC", "BASI?" -> "BASIS"
         sta     str_basix_system + kBSOffset
 
         ;; Start off with `interp_path` = `launch_path`

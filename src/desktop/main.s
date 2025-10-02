@@ -1232,10 +1232,7 @@ table:
 ;;; Inputs: A = MGTK::checkitem_check or MGTK::checkitem_uncheck
 ;;; Assumes checkitem_params::menu_item has been updated or is last checked.
 .proc _CheckViewMenuItemImpl
-check:  lda     #MGTK::checkitem_check
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-        ASSERT_NOT_EQUALS MGTK::checkitem_uncheck, $C0, "Bad BIT skip"
-uncheck:lda     #MGTK::checkitem_uncheck
+        ENTRY_POINTS_FOR_A check, MGTK::checkitem_check, uncheck, MGTK::checkitem_uncheck
 
         sta     checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
@@ -1460,9 +1457,8 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         launch_path := INVOKER_PREFIX
         interp_path := INVOKER_INTERPRETER
 
-basic:  lda     #'C'            ; "BASI?" -> "BASIC"
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-basis:  lda     #'S'            ; "BASI?" -> "BASIS"
+        ;; "BASI?" -> "BASIC", "BASI?" -> "BASIS"
+        ENTRY_POINTS_FOR_A basic, 'C', basis, 'S'
         sta     str_basix_system + kBSOffset
 
         ;; Start off with `interp_path` = `launch_path`
@@ -3469,9 +3465,7 @@ RefreshView := RefreshViewImpl::entry3
 ;;; ============================================================
 
 .proc CmdFormatEraseDiskImpl
-format: lda     #FormatEraseAction::format
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-erase:  lda     #FormatEraseAction::erase
+        ENTRY_POINTS_FOR_A format, FormatEraseAction::format, erase, FormatEraseAction::erase
         sta     action
 
         jsr     GetSelectedUnitNum
@@ -3735,9 +3729,7 @@ alpha:  jsr     ShiftDown
         bpl     a_next
         FALL_THROUGH_TO a_prev
 
-a_prev: lda     #AS_BYTE(-1)
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-a_next: lda     #1
+        ENTRY_POINTS_FOR_A a_prev, AS_BYTE(-1), a_next, 1
 
         sta     delta
         jsr     GetKeyboardSelectableIconsSorted
@@ -3745,9 +3737,8 @@ a_next: lda     #1
 
         ;; ----------------------------------------
         ;; Arrows - next/prev in icon order
-prev:   lda     #AS_BYTE(-1)
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-next:   lda     #1
+
+        ENTRY_POINTS_FOR_A prev, AS_BYTE(-1), next, 1
 
         sta     delta
         jsr     GetKeyboardSelectableIcons
@@ -3830,17 +3821,7 @@ END_PARAM_BLOCK
         kDirUp    = 2
         kDirDown  = 3
 
-left:   lda     #kDirLeft
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-
-right:  lda     #kDirRight
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-
-up:     lda     #kDirUp
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-
-down:   lda     #kDirDown
-
+        ENTRY_POINTS_FOR_A left, kDirLeft, right, kDirRight, up, kDirUp, down, kDirDown
         sta     dir
 
 ;;; --------------------------------------------------
@@ -11538,12 +11519,7 @@ cancel: bit     do_op_flag
 ;;; Closes dialog, closes all open files, and restores stack.
 
 .proc CloseFilesCancelDialogImpl
-failed:
-        lda     #kOperationFailed
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-
-canceled:
-        lda     #kOperationCanceled
+        ENTRY_POINTS_FOR_A failed, kOperationFailed, canceled, kOperationCanceled
 
         sta     @result
         jsr     operations::InvokeOperationCompleteCallback

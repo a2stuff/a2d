@@ -1024,11 +1024,10 @@ UnpackRead := UnpackReadImpl::start
 .proc ShowPackedHRDHRFileImpl
         ptr := $06
 
-dhr_file:
-        lda     #$C0            ; S = is dhr?, V = is aux page?
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-hr_file:
-        copy8   #0, dhr_flags
+        ;; N = is dhr?, V = is aux page?
+        ENTRY_POINTS_FOR_A dhr_file, $C0, hr_file, $00
+        sta     dhr_flags
+
         copy16  #hires, ptr
 
         sta     PAGE2OFF

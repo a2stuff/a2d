@@ -39,6 +39,19 @@ ep_clear:
         ror     flag_name       ; C into bit7
 .endmacro
 
+.macro ENTRY_POINTS_FOR_A ep_1, value_1, ep_2, value_2, arg4, arg5, arg6, arg7, arg8, arg9
+ep_1:
+        lda     #value_1
+        SKIP_NEXT_2_BYTE_INSTRUCTION
+        ASSERT_NOT_EQUALS (value_2 & $F0), $C0, "Bad BIT skip"
+    .ifblank arg4
+ep_2:
+        lda     #value_2
+    .else
+        ENTRY_POINTS_FOR_A ep_2, value_2, arg4, arg5, arg6, arg7, arg8, arg9
+    .endif
+.endmacro
+
 ;;; Inject a return address to the stack.
 .macro PUSH_RETURN_ADDRESS addr
         lda     #>(addr-1)
