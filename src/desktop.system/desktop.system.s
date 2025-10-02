@@ -428,8 +428,7 @@ OpUpdateProgress := ShowCopyingScreen
 ;;; copy operation and no enumeration (etc) the jump table was
 ;;; removed.
 OpProcessDirectoryEntry := CopyProcessDirectoryEntry
-OpResumeDirectory       := RemoveDstPathSegment
-OpFinishDirectory       := NoOp
+OpFinishDirectory       := RemoveDstPathSegment
 
 ;;; --------------------------------------------------
 ;;; Library

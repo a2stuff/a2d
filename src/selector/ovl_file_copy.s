@@ -87,7 +87,6 @@ kCopyBufferSize = $1F00 - copy_buffer
 op_jt_addrs:
 op_jt_addr1:  .addr   SELF_MODIFIED
 op_jt_addr2:  .addr   SELF_MODIFIED
-op_jt_addr3:  .addr   SELF_MODIFIED
 kOpJTSize = * - op_jt_addrs
 
 OpCheckCancel     := CheckCancel
@@ -98,10 +97,8 @@ OpUpdateProgress  := UpdateCopyProgress
 
 OpProcessDirectoryEntry:
         jmp     (op_jt_addr1)
-OpResumeDirectory:
-        jmp     (op_jt_addr2)
 OpFinishDirectory:
-        jmp     (op_jt_addr3)
+        jmp     (op_jt_addr2)
 
 ;;; --------------------------------------------------
 ;;; Library
@@ -116,8 +113,7 @@ OpFinishDirectory:
 ;;; Jump table for `CopyFiles`
 copy_jt:
         .addr   CopyProcessDirectoryEntry ; callback for `OpProcessDirectoryEntry`
-        .addr   RemoveDstPathSegment      ; callback for `OpResumeDirectory`
-        .addr   NoOp                      ; callback for `OpFinishDirectory`
+        .addr   RemoveDstPathSegment      ; callback for `OpFinishDirectory`
 
 ;;; ============================================================
 ;;; Paths for overall copy operation
@@ -183,7 +179,6 @@ saved_stack:
 ;;; Jump table for `EnumerateFiles`
 enum_jt:
         .addr   EnumerateVisitFile ; callback for `OpProcessDirectoryEntry`
-        .addr   NoOp               ; callback for `OpResumeDirectory`
         .addr   NoOp               ; callback for `OpFinishDirectory`
 
 ;;; ============================================================

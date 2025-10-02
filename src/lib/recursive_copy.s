@@ -31,20 +31,16 @@
 ;;; * `OpUpdateProgress` - updates UI and returns
 ;;;
 ;;; * `OpProcessDirectoryEntry` - called for each directory entry
-;;; * `OpResumeDirectory` - called when resuming directory enumeration
 ;;; * `OpFinishDirectory` - called when enumerating a directory is complete
 ;;;
 ;;; For file copies:
 ;;; * `OpProcessDirectoryEntry` can use `CopyProcessDirectoryEntry`
-;;; * `OpResumeDirectory` should be `RemoveDstPathSegment` (to keep in sync w/ src path)
-;;; * `OpFinishDirectory` can be `NoOp`
+;;; * `OpFinishDirectory` should be `RemoveDstPathSegment` (to keep in sync w/ src path)
 ;;; For enumeration:
 ;;; * `OpProcessDirectoryEntry` can increment a count and inspect `file_entry`
-;;; * `OpResumeDirectory` can be `NoOp`
 ;;; * `OpFinishDirectory` can be `NoOp`
 ;;; For deletion:
 ;;; * `OpProcessDirectoryEntry` should delete non-directory files
-;;; * `OpResumeDirectory` can be `NoOp`
 ;;; * `OpFinishDirectory` should delete the directory
 
 ;;; ----------------------------------------
@@ -369,7 +365,7 @@ eof:    return  #$FF
         jmp     :-
     END_IF
 
-        jmp     OpResumeDirectory
+        rts
 .endproc ; _AscendDirectory
 
 ;;; ============================================================
