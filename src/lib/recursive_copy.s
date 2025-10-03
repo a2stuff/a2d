@@ -318,6 +318,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
         jsr     OpCheckRetry
         beq     retry           ; always
 .else
+        .refto retry
 fail:   jmp     OpHandleErrorCode
 .endif
     END_IF
@@ -327,8 +328,16 @@ fail:   jmp     OpHandleErrorCode
     IF_A_GE     entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
-        MLI_CALL READ, read_padding_bytes_params
+retry2: MLI_CALL READ, read_padding_bytes_params
+.if ::kCopyAllowRetry
+      IF_CS
+        jsr     OpCheckRetry
+        beq     retry2          ; always
+      END_IF
+.else
+        .refto retry2
         bcs     fail
+.endif
     END_IF
 
         return  #0
