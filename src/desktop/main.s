@@ -10403,6 +10403,7 @@ operation_lifecycle_callbacks_for_copy:
         bit     operations::operation_flags
         ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
     IF_NS
+        ;; Assert: dst path is a volume path
         jsr     CheckVolBlocksFree
     END_IF
 

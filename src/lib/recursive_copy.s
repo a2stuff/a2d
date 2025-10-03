@@ -514,9 +514,6 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; --------------------------------------------------
         ;; File
 
-.if ::kCopyCheckSpaceAvailable
-        jsr     _EnsureSpaceAvailable
-.endif
         jsr     _CopyCreateFile
         jmp     _CopyNormalFile
 
@@ -525,9 +522,6 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; --------------------------------------------------
         ;; Directory
 
-.if ::kCopyCheckSpaceAvailable
-        jsr     _EnsureSpaceAvailable
-.endif
         jsr     _CopyCreateFile
         jmp     ProcessDirectory
 
@@ -551,9 +545,6 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     IF_A_NE     #ST_LINKED_DIRECTORY
         ;; --------------------------------------------------
         ;; File
-.if ::kCopyCheckSpaceAvailable
-        jsr     _EnsureSpaceAvailable
-.endif
         jsr     _CopyCreateFile
         bcs     done
 
@@ -795,6 +786,10 @@ ret:    rts
 ;;; ============================================================
 
 .proc _CopyCreateFile
+.if ::kCopyCheckSpaceAvailable
+        jsr     _EnsureSpaceAvailable
+.endif
+
         ;; Copy `file_type`, `aux_type`, and `storage_type`
         COPY_BYTES src_file_info_params::storage_type - src_file_info_params::file_type + 1, src_file_info_params::file_type, create_params::file_type
 
