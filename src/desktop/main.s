@@ -10288,6 +10288,7 @@ eof:    return  #$FF
      IF_A_GE  #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
         ;; Unsupported type - show error, and either abort or return failure
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unsupported_type
+        jsr     SetCursorWatch  ; preserves A
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialogWithFailedResult
         sec

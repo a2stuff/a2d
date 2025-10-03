@@ -834,7 +834,8 @@
 
 * Launch DeskTop. File > New Folder.... Name it with a .A2FC suffix. Verify that it still has a folder icon.
 
-* Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and the watch cursor is shown.
+* Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if Cancel is clicked the operation is aborted.
 * Launch DeskTop. Try to copy files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
 * Launch DeskTop. Try to delete files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
 * Launch DeskTop. Try to delete files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted. Note that non-empty directories will fail to be deleted.
