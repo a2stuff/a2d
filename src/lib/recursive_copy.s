@@ -28,7 +28,7 @@
 ;;; * `OpInsertSource` - called by `DoCopy`
 ;;; * `OpHandleErrorCode` - shows error, restores stack
 ;;; * `OpHandleNoSpace` - shows error, restores stack
-;;; * `OpUpdateProgress` - updates UI and returns
+;;; * `OpUpdateCopyProgress` - updates UI and returns
 ;;;
 ;;; * `OpProcessDirectoryEntry` - called for each directory entry
 ;;; * `OpFinishDirectory` - called when enumerating a directory is complete
@@ -469,7 +469,9 @@ eof:    return  #$FF
 ;;; ============================================================
 ;;; File copy parameter blocks
 
+        ;; Used for both files and directories
         DEFINE_CREATE_PARAMS create_params, pathname_dst, ACCESS_DEFAULT
+
         DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
         DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
         DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
@@ -542,7 +544,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 .proc CopyProcessDirectoryEntry
         jsr     AppendFileEntryToDstPath
         jsr     AppendFileEntryToSrcPath
-        jsr     OpUpdateProgress
+        jsr     OpUpdateCopyProgress
 
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type

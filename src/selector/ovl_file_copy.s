@@ -93,7 +93,7 @@ OpCheckCancel     := CheckCancel
 OpInsertSource    := ShowInsertSourceDiskPrompt
 OpHandleErrorCode := HandleErrorCode
 OpHandleNoSpace   := ShowDiskFullError
-OpUpdateProgress  := UpdateCopyProgress
+OpUpdateCopyProgress  := UpdateCopyProgress
 
 OpProcessDirectoryEntry:
         jmp     (op_jt_addr1)

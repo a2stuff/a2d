@@ -422,7 +422,7 @@ OpHandleErrorCode:
         jmp     (hook_handle_error_code)
 OpHandleNoSpace:
         jmp     (hook_handle_no_space)
-OpUpdateProgress := ShowCopyingScreen
+OpUpdateCopyProgress := ShowCopyingScreen
 
 ;;; Previously this used a jump table, but since there is only a
 ;;; copy operation and no enumeration (etc) the jump table was

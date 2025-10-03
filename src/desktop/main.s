@@ -9916,6 +9916,7 @@ pathname_dst := dst_path_buf
 
 OpCheckCancel := CheckCancel
 OpCheckRetry  := CheckRetry
+OpUpdateCopyProgress := CopyUpdateProgress
 
 ::kCopyAllowRetry = 1
 
@@ -10305,14 +10306,14 @@ retry:  param_call GetFileInfo, path_buf4
 ;;; File copy parameter blocks
 
         ;; Also used by "Delete"
-        DEFINE_DESTROY_PARAMS destroy_src_params, src_path_buf
-        DEFINE_DESTROY_PARAMS destroy_dst_params, dst_path_buf
+        DEFINE_DESTROY_PARAMS destroy_src_params, pathname_src
+        DEFINE_DESTROY_PARAMS destroy_dst_params, pathname_dst
 
         ;; Used for both files and directories
-        DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
+        DEFINE_CREATE_PARAMS create_params, pathname_dst, ACCESS_DEFAULT
 
-        DEFINE_OPEN_PARAMS open_src_params, src_path_buf, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, dst_io_buffer
+        DEFINE_OPEN_PARAMS open_src_params, pathname_src, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
         DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
         DEFINE_READWRITE_PARAMS write_dst_params, copy_buffer, kCopyBufferSize
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
@@ -10422,7 +10423,7 @@ operation_lifecycle_callbacks_for_copy:
     END_IF
 
         ;; Paths are set up - update dialog
-        jsr     CopyUpdateProgress
+        jsr     OpUpdateCopyProgress
 
         ;; Populate `src_file_info_params`
 retry:  jsr     GetSrcFileInfo
@@ -10491,7 +10492,7 @@ CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 .proc CopyProcessDirectoryEntry
         jsr     AppendFileEntryToDstPath
         jsr     AppendFileEntryToSrcPath
-        jsr     CopyUpdateProgress
+        jsr     OpUpdateCopyProgress
 
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
@@ -10623,6 +10624,8 @@ retry2: jsr     GetDstFileInfo
     END_IF
         copy16  dst_file_info_params::blocks_used, existing_size
 :
+        ;; TODO: Do this only once per operation, not per file!
+
         ;; Compute destination volume path
 retry:  copy8   dst_path_buf, saved_length
 
@@ -10690,17 +10693,17 @@ existing_size:
     END_IF
 
         ;; Copy `file_type`, `aux_type`, and `storage_type`
-        COPY_BYTES src_file_info_params::storage_type - src_file_info_params::file_type + 1, src_file_info_params::file_type, create_params3::file_type
+        COPY_BYTES src_file_info_params::storage_type - src_file_info_params::file_type + 1, src_file_info_params::file_type, create_params::file_type
 
         ;; Copy `create_date`/`create_time`
-        COPY_STRUCT DateTime, src_file_info_params::create_date, create_params3::create_date
+        COPY_STRUCT DateTime, src_file_info_params::create_date, create_params::create_date
 
         jsr     _ReadSrcCaseBits
 
         ;; If a volume, need to create a subdir instead
-        lda     create_params3::storage_type
+        lda     create_params::storage_type
     IF_A_EQ     #ST_VOLUME_DIRECTORY
-        copy8   #ST_LINKED_DIRECTORY, create_params3::storage_type
+        copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
         ;; --------------------------------------------------
@@ -10738,7 +10741,7 @@ yes:
         ;; --------------------------------------------------
         ;; Create the file
 create:
-        MLI_CALL CREATE, create_params3
+        MLI_CALL CREATE, create_params
         bcc     success
         jsr     ShowErrorAlertDst
         jmp     retry
