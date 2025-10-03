@@ -111,6 +111,10 @@ stack_index             .byte
 
 entry_index_in_block    .byte
 dir_data_buffer_end     .byte
+
+;;; Other state
+dst_vol_blocks_free     .word
+
         END_PARAM_BLOCK
         .assert dir_data_buffer_end - dir_data_buffer <= 256, error, "too big"
 
@@ -567,7 +571,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 ;;; ============================================================
 ;;; Record the number of blocks free on the destination volume.
 ;;; Input: `pathname_dst` is path on destination volume
-;;; Output: `blocks_free` has the free block count
+;;; Output: `dst_vol_blocks_free` has the free block count
 
 .if ::kCopyCheckSpaceAvailable
 .proc _RecordDestVolBlocksFree
@@ -590,14 +594,11 @@ ok_dir: jsr     RemoveSrcPathSegment
         jcs     OpHandleErrorCode
 
         ;; Free = Total (aux) - Used
-        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
+        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, dst_vol_blocks_free
 
         pla                     ; A = `pathname_dst` saved length
         sta     pathname_dst
         rts
-
-blocks_free:              ; Blocks free on volume
-        .word   0
 .endproc ; _RecordDestVolBlocksFree
 .endif
 
@@ -610,26 +611,24 @@ blocks_free:              ; Blocks free on volume
 
 .if ::kCopyCheckSpaceAvailable
 .proc _EnsureSpaceAvailable
-        blocks_free := _RecordDestVolBlocksFree::blocks_free
-
         ;; Get destination size (in case of overwrite)
         MLI_CALL GET_FILE_INFO, dst_file_info_params
     IF_CC
         ;; Assume those blocks will be freed
-        add16   blocks_free, dst_file_info_params::blocks_used, blocks_free
+        add16   dst_vol_blocks_free, dst_file_info_params::blocks_used, dst_vol_blocks_free
     ELSE_IF_A_NE #ERR_FILE_NOT_FOUND
         jmp     OpHandleErrorCode
     END_IF
 
         ;; Does it fit? (free >= needed)
-        cmp16   blocks_free, src_file_info_params::blocks_used
+        cmp16   dst_vol_blocks_free, src_file_info_params::blocks_used
     IF_LT
         ;; Not enough room
         jmp     OpHandleNoSpace
     END_IF
 
         ;; Assume those blocks will be used
-        add16   blocks_free, src_file_info_params::blocks_used, blocks_free
+        sub16   dst_vol_blocks_free, src_file_info_params::blocks_used, dst_vol_blocks_free
 
         rts
 .endproc ; _EnsureSpaceAvailable

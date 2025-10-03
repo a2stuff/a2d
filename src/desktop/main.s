@@ -9953,6 +9953,8 @@ stack_index             .byte
 
 entry_index_in_block    .byte
 dir_data_buffer_end     .byte
+
+dst_vol_blocks_free     .word
         END_PARAM_BLOCK
         .assert dir_data_buffer_end - dir_data_buffer <= 256, error, "too big"
 
@@ -10399,14 +10401,6 @@ operation_lifecycle_callbacks_for_copy:
 
         jsr     CopyPathsFromBufsToSrcAndDst
 
-        ;; If "Copy to RAMCard", make sure there's enough room.
-        bit     operations::operation_flags
-        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
-    IF_NS
-        ;; Assert: dst path is a volume path
-        jsr     CheckVolBlocksFree
-    END_IF
-
         use_selection_flag := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_NS
@@ -10431,6 +10425,19 @@ retry:  jsr     GetSrcFileInfo
     IF_CS
         jsr     ShowErrorAlert
         jmp     retry
+    END_IF
+
+        jsr     _RecordDestVolBlocksFree
+
+        ;; If "Copy to RAMCard", make sure there's enough room.
+        bit     operations::operation_flags
+        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
+    IF_NS
+        cmp16   dst_vol_blocks_free, op_block_count
+      IF_LT
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
+        jmp     CloseFilesCancelDialogWithFailedResult
+      END_IF
     END_IF
 
         ;; Regular file or directory?
@@ -10524,6 +10531,104 @@ ok_dir: jsr     RemoveSrcPathSegment
 .endproc ; CopyProcessDirectoryEntry
 
 ;;; ============================================================
+;;; Record the number of blocks free on the destination volume.
+;;; Input: `pathname_dst` is path on destination volume
+;;; Output: `dst_vol_blocks_free` has the free block count
+
+.proc _RecordDestVolBlocksFree
+        ;; Isolate destination volume name
+        lda     pathname_dst
+        pha                     ; A = `pathname_dst` saved length
+
+        ;; Strip to vol name - either end of string or next slash
+        ldy     #1
+    DO
+        iny
+        cpy     pathname_dst
+        bcs     :+
+        lda     pathname_dst,y
+    WHILE_A_NE  #'/'
+        sty     pathname_dst
+:
+        ;; Get total blocks/used blocks on destination volume
+retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
+    IF_NOT_ZERO
+        jsr     ShowErrorAlertDst
+        jmp     retry
+    END_IF
+
+        ;; Free = Total (aux) - Used
+        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, dst_vol_blocks_free
+
+        pla                     ; A = `pathname_dst` saved length
+        sta     pathname_dst
+        rts
+.endproc ; _RecordDestVolBlocksFree
+
+;;; ============================================================
+;;; Used when copying a single file.
+;;; Inputs: `src_file_info_params` is populated; `pathname_dst` is target
+;;; and `_RecordDestVolBlocksFree` has been called.
+
+.proc _CheckSpaceAvailable
+
+        ;; Copying a volume? If so, `src_file_info_params` has total
+        ;; blocks used on the volume, which isn't useful for an
+        ;; incremental copy.
+        lda     src_file_info_params::storage_type
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
+        clc
+        rts
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Check how much space might be reclaimed if we're
+        ;; overwriting an existing file.
+
+        copy16  #0, dst_file_info_params::blocks_used
+retry:  jsr     GetDstFileInfo
+    IF_CS
+      IF_A_NE   #ERR_FILE_NOT_FOUND
+        jsr     ShowErrorAlertDst
+        jmp     retry
+      END_IF
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Check if there is enough room
+
+        blocks_free := $06
+
+        add16   dst_vol_blocks_free, dst_file_info_params::blocks_used, blocks_free
+        cmp16   blocks_free, src_file_info_params::blocks_used
+    IF_GE
+        ;; Assume those blocks will be used
+        sub16   blocks_free, src_file_info_params::blocks_used, dst_vol_blocks_free
+
+        clc
+        rts
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Show appropriate message
+
+        ldax    #aux::str_large_copy_prompt
+        bit     move_flags
+    IF_NS
+        ldax    #aux::str_large_move_prompt
+    END_IF
+        ldy     #AlertButtonOptions::OKCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        jsr     SetCursorWatch  ; preserves A
+
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialogWithFailedResult
+
+        sec
+        rts
+.endproc ; _CheckSpaceAvailable
+
+;;; ============================================================
 ;;; If moving, delete src file/directory.
 
 .proc CopyFinishDirectory
@@ -10571,126 +10676,22 @@ retry:  MLI_CALL DESTROY, destroy_src_params
 .endproc ; CopyUpdateProgress
 
 ;;; ============================================================
-;;; Used before "Copy to RAMCard", to ensure everything will fit.
-
-.proc CheckVolBlocksFree
-retry:  jsr     GetDstFileInfo
-    IF_CS
-        jsr     ShowErrorAlertDst
-        jmp     retry
-    END_IF
-
-        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
-        cmp16   blocks_free, op_block_count
-    IF_LT
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
-        jmp     CloseFilesCancelDialogWithFailedResult
-    END_IF
-
-        rts
-
-blocks_free:
-        .word   0
-.endproc ; CheckVolBlocksFree
-
-;;; ============================================================
-;;; Used when copying a single file.
-
-;;; Assert: `src_file_info_params` is populated
-.proc CheckSpaceAndShowPrompt
-
-        ;; Copying a volume? If so, `src_file_info_params` has total
-        ;; blocks used on the volume, which isn't useful for an
-        ;; incremental copy.
-        lda     src_file_info_params::storage_type
-    IF_A_EQ     #ST_VOLUME_DIRECTORY
-        clc
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; Check how much space is available on the target volume
-        ;; (including space reclaimed if a file will be overwritten)
-
-        ;; If destination doesn't exist, 0 blocks will be reclaimed.
-        copy16  #0, existing_size
-
-        ;; Does destination exist?
-retry2: jsr     GetDstFileInfo
-    IF_CS
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     :+
-        jsr     ShowErrorAlertDst ; retry if destination not present
-        jmp     retry2
-    END_IF
-        copy16  dst_file_info_params::blocks_used, existing_size
-:
-        ;; TODO: Do this only once per operation, not per file!
-
-        ;; Compute destination volume path
-retry:  copy8   dst_path_buf, saved_length
-
-        ;; Strip to vol name - either end of string or next slash
-        param_call MakeVolumePath, dst_path_buf
-
-        ;; Total blocks/used blocks on destination volume
-        jsr     GetDstFileInfo
-        pha
-        saved_length := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     dst_path_buf
-        pla
-    IF_NOT_ZERO
-        jsr     ShowErrorAlertDst
-        jmp     retry
-    END_IF
-
-        ;; aux = total blocks
-        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
-        add16   blocks_free, existing_size, blocks_free
-
-        ;; --------------------------------------------------
-        ;; Check if there is enough room
-
-        cmp16   blocks_free, src_file_info_params::blocks_used
-    IF_GE
-        clc
-        rts
-    END_IF
-
-        ;; Show appropriate message
-        ldax    #aux::str_large_copy_prompt
-        bit     move_flags
-    IF_NS
-        ldax    #aux::str_large_move_prompt
-    END_IF
-        ldy     #AlertButtonOptions::OKCancel
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
-        jsr     SetCursorWatch  ; preserves A
-
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialogWithFailedResult
-
-        sec
-        rts
-
-blocks_free:
-        .word   0
-existing_size:
-        .word   0
-.endproc ; CheckSpaceAndShowPrompt
-
-;;; ============================================================
 ;;; Common implementation used by both `CopyProcessSelectedFile`
 ;;; and `CopyProcessDirectoryEntry`
 ;;; Output: C=0 on success, C=1 on failure
 
 .proc _CopyCreateFile
+        ;; Check space if we didn't pre-flight via enumeration,
+        ;; and we're not just doing a relink.
+        bit     operations::operation_flags
+        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
+    IF_NC
         bit     move_flags      ; same volume relink move?
-    IF_VC
+      IF_VC
         ;; No, verify that there is room.
-        jsr     CheckSpaceAndShowPrompt
+        jsr     _CheckSpaceAvailable
         RTS_IF_CS
+      END_IF
     END_IF
 
         ;; Copy `file_type`, `aux_type`, and `storage_type`
