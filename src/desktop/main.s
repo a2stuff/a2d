@@ -10624,6 +10624,15 @@ blocks_free:
 ;;; Assert: `src_file_info_params` is populated
 .proc CheckSpaceAndShowPrompt
 
+        ;; Copying a volume? If so, `src_file_info_params` has total
+        ;; blocks used on the volume, which isn't useful for an
+        ;; incremental copy.
+        lda     src_file_info_params::storage_type
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
+        clc
+        rts
+    END_IF
+
         ;; --------------------------------------------------
         ;; Check how much space is available on the target volume
         ;; (including space reclaimed if a file will be overwritten)
