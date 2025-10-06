@@ -10974,13 +10974,13 @@ Start:  lda     DEVNUM
 
 .proc _CopyNormalFile
         lda     #0
+        sta     mark_dst_params::position
+        sta     mark_dst_params::position+1
+        sta     mark_dst_params::position+2
         sta     src_dst_exclusive_flag
         sta     mark_src_params::position
         sta     mark_src_params::position+1
         sta     mark_src_params::position+2
-        sta     mark_dst_params::position
-        sta     mark_dst_params::position+1
-        sta     mark_dst_params::position+2
 
         jsr     _OpenSrc
         jsr     _OpenDstOrFail
@@ -11033,12 +11033,17 @@ retry:  MLI_CALL READ, read_src_params
 
         ;; Close source and destination
 close:
+        ;; TODO: Swap these - we hit EOF with src open
         MLI_CALL CLOSE, close_dst_params
         bit     src_dst_exclusive_flag
     IF_NC
         MLI_CALL CLOSE, close_src_params
     END_IF
         jmp     ApplySrcInfoToDst
+
+        ;; Set if src/dst can't be open simultaneously.
+src_dst_exclusive_flag:
+        .byte   0
 
 ;;; --------------------------------------------------
 
@@ -11076,9 +11081,9 @@ retry:  MLI_CALL OPEN, open_dst_params
 finish:
         pha                     ; A = result
         lda     open_dst_params::ref_num ; harmless if failed
+        sta     mark_dst_params::ref_num
         sta     write_dst_params::ref_num
         sta     close_dst_params::ref_num
-        sta     mark_dst_params::ref_num
         pla                     ; A = result, set N and Z
         rts
 .endproc ; _OpenDstImpl
@@ -11172,10 +11177,6 @@ retry:  MLI_CALL WRITE, write_dst_params
         MLI_CALL GET_MARK, mark_dst_params
         rts
 .endproc ; _WriteDst
-
-        ;; Set if src/dst can't be open simultaneously.
-src_dst_exclusive_flag:
-        .byte   0
 
 .endproc ; _CopyNormalFile
 
