@@ -11011,7 +11011,8 @@ eof:    SET_BIT7_FLAG src_eof_flag
 
         bit     src_dst_exclusive_flag
       IF_NS
-        jsr     _CloseSrc       ; swap if necessary
+        ;; Swap
+        MLI_CALL CLOSE, close_src_params
        DO
         jsr     _OpenDst
        WHILE_NOT_ZERO
@@ -11027,7 +11028,8 @@ eof:    SET_BIT7_FLAG src_eof_flag
         bit     src_dst_exclusive_flag
         CONTINUE_IF_NC
 
-        jsr     _CloseDst       ; swap if necessary
+        ;; Swap
+        MLI_CALL CLOSE, close_dst_params
         jsr     _OpenSrc
 
         MLI_CALL SET_MARK, mark_src_params
@@ -11037,10 +11039,10 @@ eof:    SET_BIT7_FLAG src_eof_flag
     WHILE_NS                    ; always
 
         ;; EOF
-        jsr     _CloseDst
+        MLI_CALL CLOSE, close_dst_params
         bit     src_dst_exclusive_flag
     IF_NC
-        jsr     _CloseSrc
+        MLI_CALL CLOSE, close_src_params
     END_IF
         jmp     ApplySrcInfoToDst
 
@@ -11169,16 +11171,6 @@ retry:  MLI_CALL WRITE, write_dst_params
         MLI_CALL GET_MARK, mark_dst_params
         rts
 .endproc ; _WriteDst
-
-.proc _CloseDst
-        MLI_CALL CLOSE, close_dst_params
-        rts
-.endproc ; _CloseDst
-
-.proc _CloseSrc
-        MLI_CALL CLOSE, close_src_params
-        rts
-.endproc ; _CloseSrc
 
         ;; Set if src/dst can't be open simultaneously.
 src_dst_exclusive_flag:
