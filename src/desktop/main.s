@@ -10992,8 +10992,22 @@ Start:  lda     DEVNUM
 
         ;; Read a chunk
     DO
+        copy16  #kCopyBufferSize, read_src_params::request_count
         jsr     OpCheckCancel
-        jsr     _ReadSrc
+retry:  MLI_CALL READ, read_src_params
+      IF_CS
+        cmp     #ERR_END_OF_FILE
+        beq     eof
+        jsr     ShowErrorAlert
+        jmp     retry
+      END_IF
+
+        ;; EOF?
+        lda     read_src_params::trans_count
+        ora     read_src_params::trans_count+1
+        bne     :+
+eof:    SET_BIT7_FLAG src_eof_flag
+:       MLI_CALL GET_MARK, mark_src_params
 
         bit     src_dst_exclusive_flag
       IF_NS
@@ -11070,25 +11084,6 @@ finish:
 .endproc ; _OpenDstImpl
 _OpenDst := _OpenDstImpl::no_fail
 _OpenDstOrFail := _OpenDstImpl::fail_ok
-
-.proc _ReadSrc
-        copy16  #kCopyBufferSize, read_src_params::request_count
-retry:  MLI_CALL READ, read_src_params
-    IF_CS
-        cmp     #ERR_END_OF_FILE
-        beq     eof
-        jsr     ShowErrorAlert
-        jmp     retry
-    END_IF
-
-        ;; EOF?
-        lda     read_src_params::trans_count
-        ora     read_src_params::trans_count+1
-        bne     :+
-eof:    SET_BIT7_FLAG src_eof_flag
-:       MLI_CALL GET_MARK, mark_src_params
-        rts
-.endproc ; _ReadSrc
 
 .proc _WriteDst
         ;; Always start off at start of copy buffer
