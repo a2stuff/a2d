@@ -11006,7 +11006,7 @@ Start:  lda     DEVNUM
         sta     mark_dst_params::position+2
 
         jsr     _OpenSrc
-        jsr     _OpenDst
+        jsr     _OpenDstOrFail
     IF_NOT_ZERO
         ;; Destination not available; note it, can prompt later
         SET_BIT7_FLAG src_dst_exclusive_flag
@@ -11017,9 +11017,7 @@ read:   jsr     _ReadSrc
         bit     src_dst_exclusive_flag
         bpl     write
         jsr     _CloseSrc       ; swap if necessary
-    DO
         jsr     _OpenDst
-    WHILE_NOT_ZERO
         MLI_CALL SET_MARK, mark_dst_params
 
         ;; Write
@@ -11055,26 +11053,35 @@ retry:  MLI_CALL OPEN, open_src_params
         sta     read_src_params::ref_num
         sta     close_src_params::ref_num
         sta     mark_src_params::ref_num
-        return  #0
+        rts
 .endproc ; _OpenSrc
 
-.proc _OpenDst
+.proc _OpenDstImpl
+        ENTRY_POINTS_FOR_BIT7_FLAG fail_ok, no_fail, fail_ok_flag
+
 retry:  MLI_CALL OPEN, open_dst_params
     IF_CS
-      IF_A_NE   #ERR_VOL_NOT_FOUND
-        jsr     ShowErrorAlertDst
-        jmp     retry
+        fail_ok_flag := *+1
+        ldy     #SELF_MODIFIED_BYTE
+      IF_NS
+        cmp     #ERR_VOL_NOT_FOUND
+        beq     finish
       END_IF
         jsr     ShowErrorAlertDst
-        return  #ERR_VOL_NOT_FOUND
+        jmp     retry
     END_IF
 
-        lda     open_dst_params::ref_num
+finish:
+        pha                     ; A = result
+        lda     open_dst_params::ref_num ; harmless if failed
         sta     write_dst_params::ref_num
         sta     close_dst_params::ref_num
         sta     mark_dst_params::ref_num
-        return  #0
-.endproc ; _OpenDst
+        pla                     ; A = result, set N and Z
+        rts
+.endproc ; _OpenDstImpl
+_OpenDst := _OpenDstImpl::no_fail
+_OpenDstOrFail := _OpenDstImpl::fail_ok
 
 .proc _ReadSrc
         copy16  #kCopyBufferSize, read_src_params::request_count

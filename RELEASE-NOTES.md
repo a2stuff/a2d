@@ -64,6 +64,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix behavior after Special > Check Drive with non-ProDOS disks.
 * Fix locking/unlocking directories.
 * Fix capacity check when copying a volume.
+* Fix copying of files when disk swapping is required.
 
 ### Selector
 

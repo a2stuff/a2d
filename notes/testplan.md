@@ -582,6 +582,7 @@
 
 * Launch DeskTop. Open a volume window. Create a new empty folder. Drag it to another volume. Verify that it is copied.
 
+* Configure a system with removable disks, e.g. Disk II in S6D1, and prepare two ProDOS disks with volume names `SRC` and `DST`, and a small file (2K or less is ideal) on `SRC`. Mount `SRC`. Launch DeskTop. Open `SRC` and select the file. File > Copy To.... Eject the disk and insert `DST`. Click Drives. Select `DST` and click OK. When prompted, insert the appropriate source and destination disks until the copy is complete. Inspect the contents of the file and verify that it was copied byte-for-byte correctly.
 
 ## File Deletion
 
