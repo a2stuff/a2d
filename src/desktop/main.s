@@ -10975,7 +10975,6 @@ Start:  lda     DEVNUM
 .proc _CopyNormalFile
         lda     #0
         sta     src_dst_exclusive_flag
-        sta     src_eof_flag
         sta     mark_src_params::position
         sta     mark_src_params::position+1
         sta     mark_src_params::position+2
@@ -10994,10 +10993,11 @@ Start:  lda     DEVNUM
     DO
         copy16  #kCopyBufferSize, read_src_params::request_count
         jsr     OpCheckCancel
+
 retry:  MLI_CALL READ, read_src_params
       IF_CS
         cmp     #ERR_END_OF_FILE
-        beq     eof
+        beq     close
         jsr     ShowErrorAlert
         jmp     retry
       END_IF
@@ -11005,22 +11005,18 @@ retry:  MLI_CALL READ, read_src_params
         ;; EOF?
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
-        bne     :+
-eof:    SET_BIT7_FLAG src_eof_flag
-:       MLI_CALL GET_MARK, mark_src_params
+        beq     close
 
         bit     src_dst_exclusive_flag
       IF_NS
         ;; Swap
+        MLI_CALL GET_MARK, mark_src_params
         MLI_CALL CLOSE, close_src_params
        DO
         jsr     _OpenDst
        WHILE_NOT_ZERO
         MLI_CALL SET_MARK, mark_dst_params
       END_IF
-
-        bit     src_eof_flag
-        BREAK_IF_NS
 
         ;; Write the chunk
         jsr     OpCheckCancel
@@ -11031,20 +11027,20 @@ eof:    SET_BIT7_FLAG src_eof_flag
         ;; Swap
         MLI_CALL CLOSE, close_dst_params
         jsr     _OpenSrc
-
         MLI_CALL SET_MARK, mark_src_params
-        CONTINUE_IF_CC
 
-        SET_BIT7_FLAG src_eof_flag
-    WHILE_NS                    ; always
+    WHILE_CC                    ; always
 
-        ;; EOF
+        ;; Close source and destination
+close:
         MLI_CALL CLOSE, close_dst_params
         bit     src_dst_exclusive_flag
     IF_NC
         MLI_CALL CLOSE, close_src_params
     END_IF
         jmp     ApplySrcInfoToDst
+
+;;; --------------------------------------------------
 
 .proc _OpenSrc
 retry:  MLI_CALL OPEN, open_src_params
@@ -11059,6 +11055,8 @@ retry:  MLI_CALL OPEN, open_src_params
         sta     mark_src_params::ref_num
         rts
 .endproc ; _OpenSrc
+
+;;; --------------------------------------------------
 
 .proc _OpenDstImpl
         ENTRY_POINTS_FOR_BIT7_FLAG fail_ok, no_fail, fail_ok_flag
@@ -11086,6 +11084,8 @@ finish:
 .endproc ; _OpenDstImpl
 _OpenDst := _OpenDstImpl::no_fail
 _OpenDstOrFail := _OpenDstImpl::fail_ok
+
+;;; --------------------------------------------------
 
 .proc _WriteDst
         ;; Always start off at start of copy buffer
@@ -11160,6 +11160,7 @@ next_block:
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
     WHILE_NOT_ZERO
+        clc
         rts
 
 do_write:
@@ -11175,9 +11176,6 @@ retry:  MLI_CALL WRITE, write_dst_params
         ;; Set if src/dst can't be open simultaneously.
 src_dst_exclusive_flag:
         .byte   0
-
-src_eof_flag:
-        .byte   0               ; bit7
 
 .endproc ; _CopyNormalFile
 
