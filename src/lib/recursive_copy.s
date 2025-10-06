@@ -642,26 +642,13 @@ ok_dir: jsr     RemoveSrcPathSegment
 ;;; Errors: `OpHandleErrorCode` is invoked
 
 .proc _CopyNormalFile
-        ;; Open source
-        MLI_CALL OPEN, open_src_params
-        bcs     fail
-
-        ;; Open destination
-        MLI_CALL OPEN, open_dst_params
-        bcs     fail
-
-        lda     open_src_params::ref_num
-        sta     read_src_params::ref_num
-        sta     close_src_params::ref_num
-        lda     open_dst_params::ref_num
-        sta     write_dst_params::ref_num
-        sta     mark_dst_params::ref_num
-        sta     close_dst_params::ref_num
-
         lda     #0
         sta     mark_dst_params::position
         sta     mark_dst_params::position+1
         sta     mark_dst_params::position+2
+
+        jsr     _OpenSrc
+        jsr     _OpenDst
 
         ;; Read a chunk
     DO
@@ -675,6 +662,7 @@ fail:   jmp     OpHandleErrorCode
       END_IF
 
         ;; EOF?
+        ;; TODO: Is this needed?
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
         beq     close
@@ -686,7 +674,8 @@ fail:   jmp     OpHandleErrorCode
     WHILE_CC                    ; always
 
         ;; Close source and destination
-close:  MLI_CALL CLOSE, close_dst_params
+close:
+        MLI_CALL CLOSE, close_dst_params
         MLI_CALL CLOSE, close_src_params
 
         ;; Copy file info
@@ -697,6 +686,33 @@ close:  MLI_CALL CLOSE, close_dst_params
         copy8   #10, dst_file_info_params ; `GET_FILE_INFO` param_count
 
         rts
+
+;;; --------------------------------------------------
+
+.proc _OpenSrc
+        MLI_CALL OPEN, open_src_params
+        bcs     fail
+
+        lda     open_src_params::ref_num
+        sta     read_src_params::ref_num
+        sta     close_src_params::ref_num
+        rts
+.endproc ; _OpenSrc
+
+;;; --------------------------------------------------
+
+.proc _OpenDst
+        MLI_CALL OPEN, open_dst_params
+        bcs     fail
+
+        lda     open_dst_params::ref_num
+        sta     mark_dst_params::ref_num
+        sta     write_dst_params::ref_num
+        sta     close_dst_params::ref_num
+        rts
+.endproc ; _OpenDst
+
+;;; --------------------------------------------------
 
 ;;; Write the buffer to the destination file, being mindful of sparse blocks.
 .proc _WriteDst
