@@ -685,12 +685,6 @@ fail:   jmp     OpHandleErrorCode
 .endif
       END_IF
 
-        ;; EOF?
-        ;; TODO: Is this needed?
-        lda     read_src_params::trans_count
-        ora     read_src_params::trans_count+1
-        beq     close
-
 .if ::kCopyAllowSwap
         bit     src_dst_exclusive_flag
       IF_NS
