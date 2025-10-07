@@ -18,7 +18,6 @@
         jsr     EnumerateFiles
         bne     skip
 
-        copy16  file_count, total_count
         jsr     PrepWindowForCopy
 
         jsr     PrepSrcAndDstPaths
@@ -145,7 +144,7 @@ saved_stack:
     END_IF
         blocks := $06
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks
-        cmp16   blocks, blocks_total
+        cmp16   blocks, block_count
     IF_LT
         jmp     ShowDiskFullError
     END_IF
@@ -179,11 +178,11 @@ enum_jt:
 ;;; Initially populated during enumeration, used during copy for UI
 ;;; updates.
 
-file_count:
+file_count:                     ; increments during enumeration, decrements during op
         .word   0
-total_count:
+total_count:                    ; increments during enumeration
         .word   0
-blocks_total:
+block_count:                    ; totaled during enumeration
         .word   0
 
 ;;; ============================================================
@@ -202,8 +201,8 @@ blocks_total:
         lda     #$00
         sta     file_count
         sta     file_count+1
-        sta     blocks_total
-        sta     blocks_total+1
+        sta     block_count
+        sta     block_count+1
 
         jsr     CopyPathsFromBufsToSrcAndDst
 retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
@@ -218,15 +217,13 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; Visit the key file
         lda     src_file_info_params::storage_type
         pha                     ; A = `storage_type`
-        ldxy    #0              ; dummy value
-    IF_A_NE     #ST_VOLUME_DIRECTORY
-        ldxy    src_file_info_params::blocks_used ; actual value
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
+        copy16  #0, src_file_info_params::blocks_used ; dummy value
     END_IF
-        stxy    file_entry+FileEntry::blocks_used
-        jsr     EnumerateVisitFile ; needs `file_entry`'s `blocks_used`
+        jsr     EnumerateVisitFile
+        pla                     ; A = `storage_type`
 
         ;; Traverse if necessary
-        pla                     ; A = `storage_type`
     IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     ProcessDirectory
     END_IF
@@ -235,12 +232,15 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 .endproc ; EnumerateFiles
 
 ;;; ============================================================
-;;; Input: `file_entry+FileEntry::blocks_used` populated
-;;; Output: `file_count` and `blocks_total` updated
+;;; Input: `src_file_info_params::blocks_used` populated
+;;; Output: `file_count`, `total_count`, and `block_count` updated
 
 .proc EnumerateVisitFile
-        add16   blocks_total, file_entry+FileEntry::blocks_used, blocks_total
+        ;; Called with `src_file_info_params` pre-populated
+        add16   block_count, src_file_info_params::blocks_used, block_count
+
         inc16   file_count
+        copy16  file_count, total_count
         jmp     UpdateEnumerationProgress
 .endproc ; EnumerateVisitFile
 

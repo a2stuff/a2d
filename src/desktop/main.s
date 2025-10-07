@@ -10351,8 +10351,6 @@ operation_traversal_callbacks_for_copy:
         jmp     OpenProgressDialog
 
 .proc _CopyDialogEnumerationCallback
-        stax    file_count
-        stax    total_count
         jsr     SetPortForProgressDialog
         bit     move_flags
     IF_NC
@@ -10441,7 +10439,7 @@ retry:  jsr     GetSrcFileInfo
         bit     operations::operation_flags
         ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
     IF_NS
-        cmp16   dst_vol_blocks_free, op_block_count
+        cmp16   dst_vol_blocks_free, block_count
       IF_LT
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
         jmp     CloseFilesCancelDialogWithFailedResult
@@ -10689,8 +10687,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
 ;;; ============================================================
 
 .proc CopyUpdateProgress
-        jsr     DecrementOpFileCount
-        stax    file_count
+        jsr     DecrementFileCount
         jsr     SetPortForProgressDialog
 
         param_call CopyToBuf0, src_path_buf
@@ -11334,8 +11331,6 @@ operation_traversal_callbacks_for_delete:
         jmp     OpenProgressDialog
 
 .proc _DeleteDialogEnumerationCallback
-        stax    file_count
-        stax    total_count
         jsr     SetPortForProgressDialog
         param_call DrawProgressDialogLabel, 0, aux::str_delete_count
         jmp     DrawFileCountWithSuffix
@@ -11503,8 +11498,7 @@ next_file:
 ;;; ============================================================
 
 .proc DeleteUpdateProgress
-        jsr     DecrementOpFileCount
-        stax    file_count
+        jsr     DecrementFileCount
         FALL_THROUGH_TO DeleteRefreshProgress
 .endproc ; DeleteUpdateProgress
 
@@ -11541,10 +11535,10 @@ operation_traversal_callbacks_for_enumeration:
         COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_enumeration, operation_traversal_callbacks
 
         lda     #0
-        sta     op_file_count
-        sta     op_file_count+1
-        sta     op_block_count
-        sta     op_block_count+1
+        sta     file_count
+        sta     file_count+1
+        sta     block_count
+        sta     block_count+1
         sta     do_op_flag
 
         rts
@@ -11574,6 +11568,7 @@ retry:  jsr     GetSrcFileInfo
         bit     move_flags      ; same volume relink move?
         RTS_IF_VS
 
+        ;; Traverse if necessary
     IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     ProcessDirectory
     END_IF
@@ -11587,29 +11582,19 @@ retry:  jsr     GetSrcFileInfo
 
 .proc EnumerationProcessDirectoryEntry
         ;; Called with `src_file_info_params` pre-populated
-        add16   op_block_count, src_file_info_params::blocks_used, op_block_count
+        add16   block_count, src_file_info_params::blocks_used, block_count
 
-        inc16   op_file_count
-        ldax    op_file_count
+        inc16   file_count
+        copy16  file_count, total_count
         jmp     operations::InvokeOperationEnumerationCallback
 .endproc ; EnumerationProcessDirectoryEntry
 
-;;; Count of files - increases during enumeration, decreases as
-;;; files are processed.
-op_file_count:
-        .word   0
-
-;;; Only used for "Copy to RAMCard" but computed regardless.
-op_block_count:
-        .word   0
-
 ;;; ============================================================
 
-.proc DecrementOpFileCount
-        dec16   op_file_count
-        ldax    op_file_count
+.proc DecrementFileCount
+        dec16   file_count
         rts
-.endproc ; DecrementOpFileCount
+.endproc ; DecrementFileCount
 
 ;;; ============================================================
 ;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`

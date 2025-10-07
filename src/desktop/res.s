@@ -473,9 +473,11 @@ the_disk_in_slot_format:
 str_kb_suffix:
         PASCAL_STRING res_string_kb_suffix       ; suffix for kilobytes
 
-file_count:
+file_count:                     ; increments during enumeration, decrements during op
         .word   0
-total_count:
+total_count:                    ; increments during enumeration
+        .word   0
+block_count:                    ; totaled during enumeration
         .word   0
 
 ;;; ============================================================
