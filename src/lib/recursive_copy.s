@@ -465,16 +465,17 @@ eof:    return  #$FF
 .endproc ; AppendFileEntryToPath
 
 ;;; ============================================================
+;;; Remove segment from path at A,X
 ;;; Input: A,X = path to modify
+;;; Output: A = length
 ;;; Trashes $06
 
 .proc RemovePathSegment
         path_ptr := $06
-
         stax    path_ptr
 
         ldy     #0
-        lda     (path_ptr),y
+        lda     (path_ptr),y    ; length
     IF_NOT_ZERO
         tay
       DO
@@ -490,6 +491,7 @@ eof:    return  #$FF
         ldy     #0
         sta     (path_ptr),y
     END_IF
+
         rts
 .endproc ; RemovePathSegment
 

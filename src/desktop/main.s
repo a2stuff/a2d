@@ -10257,6 +10257,37 @@ eof:    return  #$FF
 .endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
+;;; Remove segment from path at A,X
+;;; Input: A,X = path to modify
+;;; Output: A = length
+;;; Trashes $06
+
+.proc RemovePathSegment
+        path_ptr := $06
+        stax    path_ptr
+
+        ldy     #0
+        lda     (path_ptr),y    ; length
+    IF_NOT_ZERO
+        tay
+      DO
+        lda     (path_ptr),y
+        cmp     #'/'
+        beq     :+
+        dey
+      WHILE_NOT_ZERO
+        iny
+:
+        dey
+        tya
+        ldy     #0
+        sta     (path_ptr),y
+    END_IF
+
+        rts
+.endproc ; RemovePathSegment
+
+;;; ============================================================
 ;;; Generic Helpers
 ;;; ============================================================
 
@@ -12311,6 +12342,7 @@ ret:    return  #$FF
         DoCopyFile := operations::DoCopyFile
 
         DoGetInfo := operations::get_info::DoGetInfo
+        RemovePathSegment := operations::RemovePathSegment
 
 ;;; ============================================================
 
@@ -13206,39 +13238,6 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         ldx     #SELF_MODIFIED_BYTE
         rts
 .endproc ; AShiftX
-
-;;; ============================================================
-;;; Remove segment from path at A,X
-;;; Inputs: A,X = path
-;;; Output: A = length
-
-.proc RemovePathSegment
-        jsr     PushPointers
-
-        ptr := $06
-        stax    ptr
-
-        ldy     #0
-        lda     (ptr),y         ; length
-    IF_NOT_ZERO
-        tay
-      DO
-        lda     (ptr),y
-        cmp     #'/'
-        beq     :+
-        dey
-      WHILE_NOT_ZERO
-        iny
-:
-        dey
-        tya
-        ldy     #0
-        sta     (ptr),y
-    END_IF
-
-        jsr     PopPointers     ; do not tail-call optimize!
-        rts
-.endproc ; RemovePathSegment
 
 ;;; ============================================================
 ;;; Given a path and a prospective name, update the filesystem with
