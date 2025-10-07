@@ -393,7 +393,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
         bit     selected_index
     IF_NC
-        jsr     _StripPathBufSegment
+        jsr     StripPathBufSegment
     END_IF
 
         rts
@@ -510,7 +510,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     _IsCloseAllowed
     IF_CC
         ;; Remove last segment
-        jsr     _StripPathBufSegment
+        jsr     StripPathBufSegment
 
         lda     path_buf
       IF_ZERO
@@ -1045,7 +1045,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 
 ;;; ============================================================
 
-.proc _StripPathBufSegment
+.proc StripPathBufSegment
     DO
         ldx     path_buf
         BREAK_IF_EQ
@@ -1053,7 +1053,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         lda     path_buf,x
     WHILE_A_NE  #'/'
         rts
-.endproc ; _StripPathBufSegment
+.endproc ; StripPathBufSegment
 
 ;;; ============================================================
 
@@ -1558,6 +1558,7 @@ InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
 OpenWindow := file_dialog_impl::OpenWindow
 Init := file_dialog_impl::Init
 UpdateListFromPath := file_dialog_impl::UpdateListFromPath
+StripPathBufSegment := file_dialog_impl::StripPathBufSegment
 
 only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
 selection_requirement_flags := file_dialog_impl::selection_requirement_flags

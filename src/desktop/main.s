@@ -13163,8 +13163,6 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 ;;; Inputs: A,X = path
 ;;; Output: A = length
 
-        PROC_USED_IN_OVERLAY
-
 .proc RemovePathSegment
         jsr     PushPointers
 

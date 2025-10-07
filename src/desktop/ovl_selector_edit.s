@@ -77,7 +77,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         COPY_STRING path_buf0, file_dialog::path_buf
 
         ;; Strip to parent directory
-        param_call main::RemovePathSegment, file_dialog::path_buf
+        jsr     file_dialog::StripPathBufSegment
 
         ;; And populate `buffer` with filename
         ldx     file_dialog::path_buf
