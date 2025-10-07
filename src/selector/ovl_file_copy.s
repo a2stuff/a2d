@@ -73,18 +73,6 @@ kCopyBufferSize = $1F00 - copy_buffer
 ;;; is okay if it already exists.
 ::kCopyIgnoreDuplicateErrorOnCreate = 1
 
-;;; We do an enumeration pass before the copy, so this is not needed.
-::kCopyCheckSpaceAvailable = 0
-
-;;; No retries, just show error and abort.
-::kCopyAllowRetry = 0
-
-;;; No disk swapping.
-::kCopyAllowSwap = 0
-
-;;; Only copying to RAMDisk so destination is not AppleShare.
-::kCopyCheckAppleShare = 0
-
 ;;; --------------------------------------------------
 ;;; Callbacks
 ;;; --------------------------------------------------

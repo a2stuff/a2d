@@ -25,6 +25,9 @@
 ;;; * `::kCopyAllowRetry` (0 or 1)
 ;;; * `::kCopyAllowSwap` (0 or 1)
 ;;; * `::kCopyCheckAppleShare` (0 or 1)
+;;; * `::kCopyValidateStorageType` (0 or 1)
+;;; * `::kCopySupportMove` (0 or 1)
+;;; * `::kCopyUseOwnSetDstInfo` (0 or 1)
 ;;;
 ;;; ----------------------------------------
 ;;; Callbacks
@@ -73,6 +76,22 @@
         .assert .lobyte(dst_io_buffer) = 0, error, "I/O buffers must be page-aligned"
         .assert .lobyte(copy_buffer) = 0, error, "page-align copy buffer for better performance"
         .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
+
+;;; Build defaults
+.macro ZERO_IF_NOT_DEFINED ident
+.ifndef ident
+        ident = 0
+.endif
+.endmacro
+
+        ZERO_IF_NOT_DEFINED ::kCopyIgnoreDuplicateErrorOnCreate
+        ZERO_IF_NOT_DEFINED ::kCopyCheckSpaceAvailable
+        ZERO_IF_NOT_DEFINED ::kCopyAllowRetry
+        ZERO_IF_NOT_DEFINED ::kCopyAllowSwap
+        ZERO_IF_NOT_DEFINED ::kCopyCheckAppleShare
+        ZERO_IF_NOT_DEFINED ::kCopyValidateStorageType
+        ZERO_IF_NOT_DEFINED ::kCopySupportMove
+        ZERO_IF_NOT_DEFINED ::kCopyUseOwnSetDstInfo
 
 NoOp:   rts
 
@@ -541,12 +560,11 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 .endproc ; DoCopy
 
 ;;; ============================================================
-;;; Copy an entry in a directory - regular file or directory.
+;;; Called by `ProcessDirectory` to process a single file
 ;;; Inputs: `file_entry` populated with `FileEntry`
 ;;;         `src_file_info_params` populated
 ;;;         `pathname_src` has source directory path
 ;;;         `pathname_dst` has destination directory path
-;;; Errors: `OpHandleErrorCode` is invoked
 
 .proc CopyProcessDirectoryEntry
         jsr     AppendFileEntryToDstPath
@@ -556,18 +574,32 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
     IF_A_NE     #ST_LINKED_DIRECTORY
+
         ;; --------------------------------------------------
         ;; File
+
+.if ::kCopyValidateStorageType
+        jsr     ValidateStorageType
+        bcs     done
+.endif
+
         jsr     _CopyCreateFile
         bcs     done
 
         jsr     _CopyNormalFile
+.if ::kCopySupportMove
+        jsr     MaybeFinishFileMove
+.endif
+
     ELSE
+
         ;; --------------------------------------------------
         ;; Directory
+
         jsr     _CopyCreateFile
         bcc     ok_dir ; leave dst path segment in place for recursion
         SET_BIT7_FLAG entry_err_flag
+
     END_IF
 
         ;; --------------------------------------------------
@@ -744,6 +776,9 @@ close:
 .endif
 
         ;; Copy file info
+.if ::kCopyUseOwnSetDstInfo
+        jmp     ApplySrcInfoToDst
+.else
         COPY_BYTES $B, src_file_info_params::access, dst_file_info_params::access
 
         copy8   #7, dst_file_info_params ; `SET_FILE_INFO` param_count
@@ -751,6 +786,7 @@ close:
         copy8   #10, dst_file_info_params ; `GET_FILE_INFO` param_count
 
         rts
+.endif
 
 .if ::kCopyAllowSwap
         ;; Set if src/dst can't be open simultaneously.

@@ -9922,6 +9922,9 @@ OpUpdateCopyProgress := CopyUpdateProgress
 ::kCopyAllowRetry = 1
 ::kCopyAllowSwap = 1
 ::kCopyCheckAppleShare = 1
+::kCopyValidateStorageType = 1
+::kCopySupportMove = 1
+::kCopyUseOwnSetDstInfo = 1
 
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks and state
@@ -10500,6 +10503,10 @@ CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 
 ;;; ============================================================
 ;;; Called by `ProcessDirectory` to process a single file
+;;; Inputs: `file_entry` populated with `FileEntry`
+;;;         `src_file_info_params` populated
+;;;         `pathname_src` has source directory path
+;;;         `pathname_dst` has destination directory path
 
 .proc CopyProcessDirectoryEntry
         jsr     AppendFileEntryToDstPath
@@ -10509,22 +10516,32 @@ CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
     IF_A_NE     #ST_LINKED_DIRECTORY
+
         ;; --------------------------------------------------
         ;; File
+
+.if ::kCopyValidateStorageType
         jsr     ValidateStorageType
         bcs     done
+.endif
 
         jsr     _CopyCreateFile
         bcs     done
 
         jsr     _CopyNormalFile
+.if ::kCopySupportMove
         jsr     MaybeFinishFileMove
+.endif
+
     ELSE
+
         ;; --------------------------------------------------
         ;; Directory
+
         jsr     _CopyCreateFile
         bcc     ok_dir ; leave dst path segment in place for recursion
         SET_BIT7_FLAG entry_err_flag
+
     END_IF
 
         ;; --------------------------------------------------
@@ -11067,7 +11084,19 @@ close:
 .else
         MLI_CALL CLOSE, close_src_params
 .endif
+
+        ;; Copy file info
+.if ::kCopyUseOwnSetDstInfo
         jmp     ApplySrcInfoToDst
+.else
+        COPY_BYTES $B, src_file_info_params::access, dst_file_info_params::access
+
+        copy8   #7, dst_file_info_params ; `SET_FILE_INFO` param_count
+        MLI_CALL SET_FILE_INFO, dst_file_info_params
+        copy8   #10, dst_file_info_params ; `GET_FILE_INFO` param_count
+
+        rts
+.endif
 
 .if ::kCopyAllowSwap
         ;; Set if src/dst can't be open simultaneously.
