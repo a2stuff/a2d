@@ -10740,49 +10740,64 @@ retry:  MLI_CALL DESTROY, destroy_src_params
     END_IF
 
         ;; --------------------------------------------------
+        ;; Create the file
 
-        ;; TODO: Optimistically try creating before calling `GET_FILE_INFO`
-
-retry:  jsr     GetDstFileInfo
-        bcs     create
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     create
+retry:
+        MLI_CALL CREATE, create_params
+    IF_CS
+      IF_A_NE   #ERR_DUPLICATE_FILENAME
+        jsr     ShowErrorAlertDst
+        jmp     retry
+      END_IF
 
         ;; File exists
+        jsr     GetDstFileInfo
+      IF_CS
+        jsr     ShowErrorAlertDst
+        jmp     retry
+      END_IF
+
+        ;; Directory?
         lda     dst_file_info_params::storage_type
-    IF_A_EQ     #ST_LINKED_DIRECTORY
-        ;; TODO: In the future, prompt and recursively delete
+      IF_A_EQ   #ST_LINKED_DIRECTORY
+        ;; TODO: Prompt and recursively delete
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_no_overwrite_dir
         jsr     SetCursorWatch
         jmp     CloseFilesCancelDialogWithFailedResult
-    END_IF
-        ;; Prompt to replace
-        bit     operations::all_flag
-        bmi     yes
+      END_IF
 
+        ;; Regular file - prompt to replace
+        bit     operations::all_flag
+      IF_NC
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
         jsr     SetCursorWatch  ; preserves A
 
-        cmp     #kAlertResultYes
-        beq     yes
         cmp     #kAlertResultNo
         beq     failure
+
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialogWithFailedResult
+
         cmp     #kAlertResultAll
-        bne     cancel
+       IF_EQ
         SET_BIT7_FLAG operations::all_flag
-yes:
-        MLI_CALL DESTROY, destroy_dst_params
-        bcs     retry
+       END_IF
+      END_IF
+
+retry2: MLI_CALL DESTROY, destroy_dst_params
+      IF_CS
+       IF_A_EQ  #ERR_ACCESS_ERROR
+        jsr     UnlockDstFile
+        beq     retry2
+       END_IF
+        jsr     ShowErrorAlertDst
+        jmp     retry2
+      END_IF
+
+        jmp     retry
+    END_IF
 
         ;; --------------------------------------------------
-        ;; Create the file
-create:
-        MLI_CALL CREATE, create_params
-        bcc     success
-        jsr     ShowErrorAlertDst
-        jmp     retry
-
-success:
 
 .if ::kCopyCaseBits
         lda     case_bits
@@ -10795,11 +10810,15 @@ success:
         clc
         rts
 
+        ;; --------------------------------------------------
+
 failure:
         sec
         rts
 
-cancel: jmp     CloseFilesCancelDialogWithFailedResult
+        ;; --------------------------------------------------
+
+cancel:
 
 ;;; ============================================================
 ;;; Case Bits
@@ -11438,13 +11457,20 @@ error:  jsr     ShowErrorAlert
 .proc UnlockSrcFile
         jsr     GetSrcFileInfo
         lda     src_file_info_params::access
-        and     #ACCESS_D       ; destroy enabled bit set?
-    IF_ZERO                     ; no, need to unlock
-        copy8   #ACCESS_DEFAULT, src_file_info_params::access
+        ora     #LOCKED_MASK    ; all 1 = unlocked
+        sta     src_file_info_params::access
         jsr     SetSrcFileInfo
-    END_IF
         rts
 .endproc ; UnlockSrcFile
+
+.proc UnlockDstFile
+        jsr     GetDstFileInfo
+        lda     dst_file_info_params::access
+        ora     #LOCKED_MASK    ; all 1 = unlocked
+        sta     dst_file_info_params::access
+        jsr     SetDstFileInfo
+        rts
+.endproc ; UnlockDstFile
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
@@ -11864,13 +11890,7 @@ retry:  param_call_indirect GetFileInfo, src_ptr
 ;;; show "please insert source disk" (or destination, if flag set)
 
 .proc ShowErrorAlertImpl
-
-flag_set:
-        ldx     #$80
-        SKIP_NEXT_2_BYTE_INSTRUCTION
-flag_clear:
-        ldx     #0
-        stx     flag
+        ENTRY_POINTS_FOR_BIT7_FLAG dst, src, dst_flag
 
     IF_A_NE_ALL_OF #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
         ;; if err is "not found" prompt specifically for src/dst disk
@@ -11881,7 +11901,7 @@ flag_clear:
     END_IF
 
         ldax    #aux::str_alert_insert_source_disk
-        bit     flag
+        bit     dst_flag
     IF_NS
         ldax    #aux::str_alert_insert_destination
     END_IF
@@ -11897,11 +11917,11 @@ flag_clear:
 
 close:  jmp     CloseFilesCancelDialogWithFailedResult
 
-flag:   .byte   0
+dst_flag:       .byte   0       ; bit7
 
 .endproc ; ShowErrorAlertImpl
-ShowErrorAlert  := ShowErrorAlertImpl::flag_clear
-ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
+ShowErrorAlert := ShowErrorAlertImpl::src
+ShowErrorAlertDst := ShowErrorAlertImpl::dst
 
 ;;; ============================================================
 ;;; "Get Info" dialog state and logic

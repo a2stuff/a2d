@@ -1010,6 +1010,9 @@ ret:    rts
         jmp     OpHandleErrorCode
 .endif
     END_IF
+
+        ;; --------------------------------------------------
+
         clc                     ; treated as success
         rts
 .endproc ; _CopyCreateFile

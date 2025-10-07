@@ -584,6 +584,8 @@
 
 * Configure a system with removable disks, e.g. Disk II in S6D1, and prepare two ProDOS disks with volume names `SRC` and `DST`, and a small file (2K or less is ideal) on `SRC`. Mount `SRC`. Launch DeskTop. Open `SRC` and select the file. File > Copy To.... Eject the disk and insert `DST`. Click Drives. Select `DST` and click OK. When prompted, insert the appropriate source and destination disks until the copy is complete. Inspect the contents of the file and verify that it was copied byte-for-byte correctly.
 
+* Launch DeskTop. Drag a file to another volume to copy it. Open the volume and select the newly copied file. File > Get Info. Check Locked and click OK. Drag a file with a different type but the same name to the volume. When prompted to overwrite, click Yes. Verify that the file was replaced.
+
 ## File Deletion
 
 * Launch DeskTop. Open two windows. Select a file in one window. Activate the other window by clicking its title bar. File > Delete. Click OK. Verify that the window with the deleted file refreshes.
