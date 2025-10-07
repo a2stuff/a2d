@@ -16,9 +16,15 @@
 ;;; * `src_io_buffer`   - 1024 bytes for I/O
 ;;; * `dst_io_buffer`   - 1024 bytes for I/O
 ;;; * `copy_buffer` and `kCopyBufferSize` (integral number of blocks)
+;;;
+;;; ----------------------------------------
+;;; Build-time Options
+;;; ----------------------------------------
 ;;; * `::kCopyIgnoreDuplicateErrorOnCreate` (0 or 1)
 ;;; * `::kCopyCheckSpaceAvailable` (0 or 1)
 ;;; * `::kCopyAllowRetry` (0 or 1)
+;;; * `::kCopyAllowSwap` (0 or 1)
+;;; * `::kCopyCheckAppleShare` (0 or 1)
 ;;;
 ;;; ----------------------------------------
 ;;; Callbacks
@@ -593,8 +599,16 @@ ok_dir: jsr     RemoveSrcPathSegment
         sty     pathname_dst
 :
         ;; Get total blocks/used blocks on destination volume
-        MLI_CALL GET_FILE_INFO, dst_file_info_params
+retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
+.if ::kCopyAllowRetry
+    IF_NOT_ZERO
+        jsr     ShowErrorAlertDst
+        jmp     retry
+    END_IF
+.else
+        .refto retry
         jcs     OpHandleErrorCode
+.endif
 
         ;; Free = Total (aux) - Used
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, dst_vol_blocks_free

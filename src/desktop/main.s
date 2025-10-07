@@ -9918,6 +9918,7 @@ OpCheckCancel := CheckCancel
 OpCheckRetry  := CheckRetry
 OpUpdateCopyProgress := CopyUpdateProgress
 
+::kCopyCheckSpaceAvailable = 1
 ::kCopyAllowRetry = 1
 ::kCopyAllowSwap = 1
 ::kCopyCheckAppleShare = 1
@@ -10539,6 +10540,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 ;;; Input: `pathname_dst` is path on destination volume
 ;;; Output: `dst_vol_blocks_free` has the free block count
 
+.if ::kCopyCheckSpaceAvailable
 .proc _RecordDestVolBlocksFree
         ;; Isolate destination volume name
         lda     pathname_dst
@@ -10556,10 +10558,15 @@ ok_dir: jsr     RemoveSrcPathSegment
 :
         ;; Get total blocks/used blocks on destination volume
 retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
+.if ::kCopyAllowRetry
     IF_NOT_ZERO
         jsr     ShowErrorAlertDst
         jmp     retry
     END_IF
+.else
+        .refto retry
+        jcs     OpHandleErrorCode
+.endif
 
         ;; Free = Total (aux) - Used
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, dst_vol_blocks_free
@@ -10568,6 +10575,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         sta     pathname_dst
         rts
 .endproc ; _RecordDestVolBlocksFree
+.endif
 
 ;;; ============================================================
 ;;; Used when copying a single file.
