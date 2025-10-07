@@ -28,6 +28,7 @@
 ;;; * `::kCopyValidateStorageType` (0 or 1)
 ;;; * `::kCopySupportMove` (0 or 1)
 ;;; * `::kCopyUseOwnSetDstInfo` (0 or 1)
+;;; * `::kCopyCaseBits` (0 or 1)
 ;;;
 ;;; ----------------------------------------
 ;;; Callbacks
@@ -92,6 +93,7 @@
         ZERO_IF_NOT_DEFINED ::kCopyValidateStorageType
         ZERO_IF_NOT_DEFINED ::kCopySupportMove
         ZERO_IF_NOT_DEFINED ::kCopyUseOwnSetDstInfo
+        ZERO_IF_NOT_DEFINED ::kCopyCaseBits
 
 NoOp:   rts
 
@@ -985,13 +987,19 @@ ret:    rts
         ;; Copy `create_date`/`create_time`
         COPY_STRUCT DateTime, src_file_info_params::create_date, create_params::create_date
 
-        ;; If source is volume, create directory
+.if ::kCopyCaseBits
+        jsr     _ReadSrcCaseBits
+.endif
+
+        ;; If source is volume, create directory instead
         lda     create_params::storage_type
     IF_A_EQ     #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
+        ;; --------------------------------------------------
         ;; Create it
+
         MLI_CALL CREATE, create_params
     IF_CS
 .if ::kCopyIgnoreDuplicateErrorOnCreate

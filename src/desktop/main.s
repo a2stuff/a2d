@@ -9925,6 +9925,7 @@ OpUpdateCopyProgress := CopyUpdateProgress
 ::kCopyValidateStorageType = 1
 ::kCopySupportMove = 1
 ::kCopyUseOwnSetDstInfo = 1
+::kCopyCaseBits = 1
 
 ;;; ============================================================
 ;;; Directory enumeration parameter blocks and state
@@ -10728,15 +10729,20 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         ;; Copy `create_date`/`create_time`
         COPY_STRUCT DateTime, src_file_info_params::create_date, create_params::create_date
 
+.if ::kCopyCaseBits
         jsr     _ReadSrcCaseBits
+.endif
 
-        ;; If a volume, need to create a subdir instead
+        ;; If source is volume, create directory instead
         lda     create_params::storage_type
     IF_A_EQ     #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
         ;; --------------------------------------------------
+
+        ;; TODO: Optimistically try creating before calling `GET_FILE_INFO`
+
 retry:  jsr     GetDstFileInfo
         bcs     create
         cmp     #ERR_FILE_NOT_FOUND
@@ -10777,11 +10783,14 @@ create:
         jmp     retry
 
 success:
+
+.if ::kCopyCaseBits
         lda     case_bits
         ora     case_bits+1
     IF_NOT_ZERO
         jsr     _WriteDstCaseBits
     END_IF
+.endif
 
         clc
         rts
