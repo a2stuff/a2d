@@ -480,6 +480,9 @@ eof:    return  #$FF
         DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
         DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
         DEFINE_READWRITE_PARAMS write_dst_params, copy_buffer, kCopyBufferSize
+.if ::kCopyAllowSwap
+        DEFINE_SET_MARK_PARAMS mark_src_params, 0
+.endif
         DEFINE_SET_MARK_PARAMS mark_dst_params, 0
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
@@ -646,19 +649,40 @@ ok_dir: jsr     RemoveSrcPathSegment
         sta     mark_dst_params::position
         sta     mark_dst_params::position+1
         sta     mark_dst_params::position+2
+.if ::kCopyAllowSwap
+        sta     src_dst_exclusive_flag
+        sta     mark_src_params::position
+        sta     mark_src_params::position+1
+        sta     mark_src_params::position+2
+.endif
 
         jsr     _OpenSrc
+.if ::kCopyAllowSwap
+        jsr     _OpenDstOrFail
+    IF_NOT_ZERO
+        ;; Destination not available; note it, can prompt later
+        SET_BIT7_FLAG src_dst_exclusive_flag
+    END_IF
+.else
         jsr     _OpenDst
+.endif
 
         ;; Read a chunk
     DO
         copy16  #kCopyBufferSize, read_src_params::request_count
         jsr     OpCheckCancel
-        MLI_CALL READ, read_src_params
+
+retry:  MLI_CALL READ, read_src_params
       IF_CS
         cmp     #ERR_END_OF_FILE
         beq     close
+.if ::kCopyAllowRetry
+        jsr     ShowErrorAlert
+        jmp     retry
+.else
+        .refto retry
 fail:   jmp     OpHandleErrorCode
+.endif
       END_IF
 
         ;; EOF?
@@ -667,16 +691,49 @@ fail:   jmp     OpHandleErrorCode
         ora     read_src_params::trans_count+1
         beq     close
 
+.if ::kCopyAllowSwap
+        bit     src_dst_exclusive_flag
+      IF_NS
+        ;; Swap
+        MLI_CALL GET_MARK, mark_src_params
+        MLI_CALL CLOSE, close_src_params
+       DO
+        jsr     _OpenDst
+       WHILE_NOT_ZERO
+        MLI_CALL SET_MARK, mark_dst_params
+      END_IF
+.endif
+
         ;; Write the chunk
         jsr     OpCheckCancel
         jsr     _WriteDst
+.if !::kCopyAllowRetry
         bcs     fail
+.endif
+
+.if ::kCopyAllowSwap
+        bit     src_dst_exclusive_flag
+        CONTINUE_IF_NC
+
+        ;; Swap
+        MLI_CALL CLOSE, close_dst_params
+        jsr     _OpenSrc
+        MLI_CALL SET_MARK, mark_src_params
+.endif
+
     WHILE_CC                    ; always
 
         ;; Close source and destination
 close:
         MLI_CALL CLOSE, close_dst_params
+.if ::kCopyAllowSwap
+        bit     src_dst_exclusive_flag
+    IF_NC
         MLI_CALL CLOSE, close_src_params
+    END_IF
+.else
+        MLI_CALL CLOSE, close_src_params
+.endif
 
         ;; Copy file info
         COPY_BYTES $B, src_file_info_params::access, dst_file_info_params::access
@@ -687,30 +744,83 @@ close:
 
         rts
 
+.if ::kCopyAllowSwap
+        ;; Set if src/dst can't be open simultaneously.
+src_dst_exclusive_flag:
+        .byte   0
+.endif
+
 ;;; --------------------------------------------------
 
 .proc _OpenSrc
-        MLI_CALL OPEN, open_src_params
+retry:  MLI_CALL OPEN, open_src_params
+.if ::kCopyAllowRetry
+    IF_CS
+        jsr     ShowErrorAlert
+        jmp     retry
+    END_IF
+.else
+        .refto retry
         bcs     fail
+.endif
 
         lda     open_src_params::ref_num
         sta     read_src_params::ref_num
         sta     close_src_params::ref_num
+.if ::kCopyAllowSwap
+        sta     mark_src_params::ref_num
+.endif
         rts
 .endproc ; _OpenSrc
 
 ;;; --------------------------------------------------
 
+.if ::kCopyAllowSwap
+.proc _OpenDstImpl
+        ENTRY_POINTS_FOR_BIT7_FLAG fail_ok, no_fail, fail_ok_flag
+.else
 .proc _OpenDst
-        MLI_CALL OPEN, open_dst_params
-        bcs     fail
+.endif
 
-        lda     open_dst_params::ref_num
+retry:  MLI_CALL OPEN, open_dst_params
+.if ::kCopyAllowRetry
+    IF_CS
+  .if ::kCopyAllowSwap
+        fail_ok_flag := *+1
+        ldy     #SELF_MODIFIED_BYTE
+      IF_NS
+        cmp     #ERR_VOL_NOT_FOUND
+        beq     finish
+      END_IF
+  .endif
+        jsr     ShowErrorAlertDst
+        jmp     retry
+    END_IF
+.else
+        .refto retry
+        bcs     fail
+.endif
+
+finish:
+.if ::kCopyAllowSwap
+        pha                     ; A = result
+.endif
+        lda     open_dst_params::ref_num ; harmless if failed
         sta     mark_dst_params::ref_num
         sta     write_dst_params::ref_num
         sta     close_dst_params::ref_num
+.if ::kCopyAllowSwap
+        pla                     ; A = result, set N and Z
+.endif
         rts
+
+.if ::kCopyAllowSwap
+.endproc ; _OpenDstImpl
+_OpenDst := _OpenDstImpl::no_fail
+_OpenDstOrFail := _OpenDstImpl::fail_ok
+.else
 .endproc ; _OpenDst
+.endif
 
 ;;; --------------------------------------------------
 
@@ -723,8 +833,15 @@ close:
         ;; later determine we need to write it out block-by-block.
         copy16  read_src_params::trans_count, write_dst_params::request_count
 
+.if ::kCopyCheckAppleShare
+        ;; ProDOS Tech Note #30: AppleShare servers do not support
+        ;; sparse files. https://prodos8.com/docs/technote/30
+        bit     dst_is_appleshare_flag
+        bmi     do_write        ; ...and done!
+.else
         ;; Assert: We're only ever copying to a RAMDisk, not AppleShare.
         ;; https://prodos8.com/docs/technote/30
+.endif
 
         ;; Is there less than a full block? If so, just write it.
         lda     read_src_params::trans_count+1
@@ -772,7 +889,11 @@ close:
 
         ;; Block is not sparse, write it
         jsr     do_write
+.if ::kCopyAllowRetry
+        ;; `do_write` will exit on failure
+.else
         bcs     ret
+.endif
         FALL_THROUGH_TO next_block
 
         ;; Advance to next block
@@ -791,8 +912,17 @@ next_block:
         rts
 
 do_write:
-        MLI_CALL WRITE, write_dst_params
+retry:  MLI_CALL WRITE, write_dst_params
+.if ::kCopyAllowRetry
+        .refto ret
+    IF_CS
+        jsr     ShowErrorAlertDst
+        jmp     retry
+    END_IF
+.else
+        .refto retry
         bcs     ret
+.endif
         MLI_CALL GET_MARK, mark_dst_params
 ret:    rts
 .endproc ; _WriteDst

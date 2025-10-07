@@ -79,6 +79,12 @@ kCopyBufferSize = $1F00 - copy_buffer
 ;;; No retries, just show error and abort.
 ::kCopyAllowRetry = 0
 
+;;; No disk swapping.
+::kCopyAllowSwap = 0
+
+;;; Only copying to RAMDisk so destination is not AppleShare.
+::kCopyCheckAppleShare = 0
+
 ;;; --------------------------------------------------
 ;;; Callbacks
 ;;; --------------------------------------------------
