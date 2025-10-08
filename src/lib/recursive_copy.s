@@ -22,8 +22,7 @@
 ;;; ----------------------------------------
 ;;; * `::kCopyIgnoreDuplicateErrorOnCreate` (0 or 1)
 ;;; * `::kCopyCheckSpaceAvailable` (0 or 1)
-;;; * `::kCopyAllowRetry` (0 or 1)
-;;; * `::kCopyAllowSwap` (0 or 1)
+;;; * `::kCopyInteractive` (0 or 1) - allow retries/disk swapping
 ;;; * `::kCopyCheckAppleShare` (0 or 1)
 ;;; * `::kCopyValidateStorageType` (0 or 1)
 ;;; * `::kCopySupportMove` (0 or 1)
@@ -34,7 +33,7 @@
 ;;; Callbacks
 ;;; ----------------------------------------
 ;;; * `OpCheckCancel` - called regularly, allows caller to abort (close all open files, restore stack, hide UI)
-;;; * `OpCheckRetry` - if `::kCopyAllowRetry`, called on error; client returns Z=1 to retry
+;;; * `OpCheckRetry` - if `::kCopyInteractive`, called on error; client returns Z=1 to retry
 ;;; * `OpInsertSource` - called by `DoCopy`
 ;;; * `OpHandleErrorCode` - shows error, restores stack
 ;;; * `OpHandleNoSpace` - shows error, restores stack
@@ -87,8 +86,7 @@
 
         ZERO_IF_NOT_DEFINED ::kCopyIgnoreDuplicateErrorOnCreate
         ZERO_IF_NOT_DEFINED ::kCopyCheckSpaceAvailable
-        ZERO_IF_NOT_DEFINED ::kCopyAllowRetry
-        ZERO_IF_NOT_DEFINED ::kCopyAllowSwap
+        ZERO_IF_NOT_DEFINED ::kCopyInteractive
         ZERO_IF_NOT_DEFINED ::kCopyCheckAppleShare
         ZERO_IF_NOT_DEFINED ::kCopyValidateStorageType
         ZERO_IF_NOT_DEFINED ::kCopySupportMove
@@ -280,7 +278,7 @@ map:    .byte   FileEntry::access
 
 retry:  MLI_CALL OPEN, open_src_dir_params
     IF_CS
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
         jsr     OpCheckRetry
         beq     retry           ; always
 .else
@@ -297,7 +295,7 @@ fail:   jmp     OpHandleErrorCode
 
         ;; Skip over prev/next block pointers in header
 retry2: MLI_CALL READ, read_block_pointers_params
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
     IF_CS
         jsr     OpCheckRetry
         beq     retry2          ; always
@@ -322,7 +320,7 @@ retry2: MLI_CALL READ, read_block_pointers_params
 .proc _CloseSrcDir
 retry:  MLI_CALL CLOSE, close_src_dir_params
     IF_CS
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
         jsr     OpCheckRetry
         beq     retry           ; always
 .else
@@ -345,7 +343,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
         cmp     #ERR_END_OF_FILE
         beq     eof
 
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
         jsr     OpCheckRetry
         beq     retry           ; always
 .else
@@ -360,7 +358,7 @@ fail:   jmp     OpHandleErrorCode
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
       IF_CS
         jsr     OpCheckRetry
         beq     retry2          ; always
@@ -509,7 +507,7 @@ eof:    return  #$FF
         DEFINE_OPEN_PARAMS open_dst_params, pathname_dst, dst_io_buffer
         DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
         DEFINE_READWRITE_PARAMS write_dst_params, copy_buffer, kCopyBufferSize
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
 .endif
         DEFINE_SET_MARK_PARAMS mark_dst_params, 0
@@ -636,7 +634,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 :
         ;; Get total blocks/used blocks on destination volume
 retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
     IF_NOT_ZERO
         jsr     ShowErrorAlertDst
         jmp     retry
@@ -699,7 +697,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         sta     mark_dst_params::position
         sta     mark_dst_params::position+1
         sta     mark_dst_params::position+2
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         sta     src_dst_exclusive_flag
         sta     mark_src_params::position
         sta     mark_src_params::position+1
@@ -707,7 +705,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
 .endif
 
         jsr     _OpenSrc
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         jsr     _OpenDstOrFail
     IF_NOT_ZERO
         ;; Destination not available; note it, can prompt later
@@ -726,7 +724,7 @@ retry:  MLI_CALL READ, read_src_params
       IF_CS
         cmp     #ERR_END_OF_FILE
         beq     close
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
         jsr     ShowErrorAlert
         jmp     retry
 .else
@@ -735,7 +733,7 @@ fail:   jmp     OpHandleErrorCode
 .endif
       END_IF
 
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         bit     src_dst_exclusive_flag
       IF_NS
         ;; Swap
@@ -751,11 +749,11 @@ fail:   jmp     OpHandleErrorCode
         ;; Write the chunk
         jsr     OpCheckCancel
         jsr     _WriteDst
-.if !::kCopyAllowRetry
+.if !::kCopyInteractive
         bcs     fail
 .endif
 
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         bit     src_dst_exclusive_flag
         CONTINUE_IF_NC
 
@@ -770,7 +768,7 @@ fail:   jmp     OpHandleErrorCode
         ;; Close source and destination
 close:
         MLI_CALL CLOSE, close_dst_params
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         bit     src_dst_exclusive_flag
     IF_NC
         MLI_CALL CLOSE, close_src_params
@@ -792,7 +790,7 @@ close:
         rts
 .endif
 
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         ;; Set if src/dst can't be open simultaneously.
 src_dst_exclusive_flag:
         .byte   0
@@ -802,7 +800,7 @@ src_dst_exclusive_flag:
 
 .proc _OpenSrc
 retry:  MLI_CALL OPEN, open_src_params
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
     IF_CS
         jsr     ShowErrorAlert
         jmp     retry
@@ -815,7 +813,7 @@ retry:  MLI_CALL OPEN, open_src_params
         lda     open_src_params::ref_num
         sta     read_src_params::ref_num
         sta     close_src_params::ref_num
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         sta     mark_src_params::ref_num
 .endif
         rts
@@ -823,7 +821,7 @@ retry:  MLI_CALL OPEN, open_src_params
 
 ;;; --------------------------------------------------
 
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
 .proc _OpenDstImpl
         ENTRY_POINTS_FOR_BIT7_FLAG fail_ok, no_fail, fail_ok_flag
 .else
@@ -831,9 +829,9 @@ retry:  MLI_CALL OPEN, open_src_params
 .endif
 
 retry:  MLI_CALL OPEN, open_dst_params
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
     IF_CS
-  .if ::kCopyAllowSwap
+  .if ::kCopyInteractive
         fail_ok_flag := *+1
         ldy     #SELF_MODIFIED_BYTE
       IF_NS
@@ -850,19 +848,19 @@ retry:  MLI_CALL OPEN, open_dst_params
 .endif
 
 finish:
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         pha                     ; A = result
 .endif
         lda     open_dst_params::ref_num ; harmless if failed
         sta     mark_dst_params::ref_num
         sta     write_dst_params::ref_num
         sta     close_dst_params::ref_num
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
         pla                     ; A = result, set N and Z
 .endif
         rts
 
-.if ::kCopyAllowSwap
+.if ::kCopyInteractive
 .endproc ; _OpenDstImpl
 _OpenDst := _OpenDstImpl::no_fail
 _OpenDstOrFail := _OpenDstImpl::fail_ok
@@ -937,7 +935,7 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
 
         ;; Block is not sparse, write it
         jsr     do_write
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
         ;; `do_write` will exit on failure
 .else
         bcs     ret
@@ -961,7 +959,7 @@ next_block:
 
 do_write:
 retry:  MLI_CALL WRITE, write_dst_params
-.if ::kCopyAllowRetry
+.if ::kCopyInteractive
         .refto ret
     IF_CS
         jsr     ShowErrorAlertDst
