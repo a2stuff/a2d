@@ -1,3 +1,7 @@
+;;; ============================================================
+;;; Option Picker ToolKit
+;;; ============================================================
+
 .scope OPTK
 
 .struct OptionPickerRecord
@@ -17,6 +21,7 @@ on_sel_change   .addr            ; +$10 called when `selected_index` has changed
 .endstruct                       ; length = $12
 ASSERT_EQUALS .sizeof(OptionPickerRecord), $12
 
+;;; Macro for defining an `OptionPickerRecord`
 .macro DEFINE_OPTION_PICKER name, _window_id, _left, _top, _num_rows, _num_cols, _item_width, _item_height, _hoffset, _voffset, _is_entry_proc, _draw_entry_proc, _on_sel_change
         WARN_IF_SHADOWING name
 .params name
@@ -53,6 +58,7 @@ on_sel_change:  .addr   _on_sel_change
 .endmacro
 
 ;;; ============================================================
+;;; Calls
 
 Draw            = $00
 ;;; .addr       record
@@ -79,20 +85,49 @@ SetSelection    = $04
 
 ;;; ============================================================
 
+.struct OptionPickerParams
+record          .addr
+.union
+
+.struct ; Click
+.union
+coords          .tag MGTK::Point
+.struct
+xcoord          .word
+ycoord          .word
+.endstruct
+.endunion
+.endstruct
+
+.struct ; Key
+key             .byte
+.endstruct
+
+.struct ; SetSelection
+new_selection   .byte
+.endstruct
+
+.endunion
+.endstruct
+
+;;; ============================================================
+
+;;; Macro for defining a call parameter block for a specific record
 .macro DEFINE_OPTION_PICKER_PARAMS name, _record
         WARN_IF_SHADOWING name
 .params name
 record: .addr   _record
-;;; For `OPTK::SetSelection` calls:
-new_selection := *+0
-;;; For `OPTK::Key` calls:
-key           := *+0
-;;; For `OPTK::Click` calls:
-coords        := *+0
-xcoord        := *+0
-ycoord        := *+2
 
-        .res 4
+;;; For `OPTK::SetSelection` calls:
+new_selection := name + OptionPickerParams::new_selection
+;;; For `OPTK::Key` calls:
+key           := name + OptionPickerParams::key
+;;; For `OPTK::Click` calls:
+coords        := name + OptionPickerParams::coords
+xcoord        := name + OptionPickerParams::xcoord
+ycoord        := name + OptionPickerParams::ycoord
+
+        .res .sizeof(OptionPickerParams) - 2
 
         .refto record
         .refto new_selection

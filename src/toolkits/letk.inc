@@ -44,6 +44,7 @@ caret_counter   .word
 kLineEditOptionsNormal   = %00000000
 kLineEditOptionsCentered = %10000000
 
+;;; Macro for defining a `LineEditRecord`
 .macro DEFINE_LINE_EDIT name, winid, buf, left, top, width, maxlen, options_param
         WARN_IF_SHADOWING name
 .params name
@@ -70,8 +71,8 @@ dirty_flag:     .byte   0
 .assert .sizeof(name) = .sizeof(LETK::LineEditRecord), error, "struct size"
 .endmacro
 
-
 ;;; ============================================================
+;;; Calls
 
 Init            = $00           ; Initialize LineEditRecord members
 ;;; .addr       record
@@ -104,18 +105,45 @@ Update          = $06           ; Redraw control, e.g. after control moves or te
 
 ;;; ============================================================
 
-.macro DEFINE_LINE_EDIT_PARAMS name, rec
+.struct LineEditParams
+record          .addr
+.union
+
+.struct ; Click
+.union
+coords          .tag MGTK::Point
+.struct
+xcoord          .word
+ycoord          .word
+.endstruct
+.endunion
+.endstruct
+
+.struct ; Key
+key             .byte
+modifiers       .byte
+.endstruct
+
+.endunion
+.endstruct
+
+;;; ============================================================
+
+;;; Macro for defining a call parameter block for a specific record
+.macro DEFINE_LINE_EDIT_PARAMS name, _record
         WARN_IF_SHADOWING name
 .params name
-record: .addr   rec
+record: .addr   _record
+
 ;;; For `LETK::Key` calls:
-key       := * + 0
-modifiers := * + 1
+key       := name + LineEditParams::key
+modifiers := name + LineEditParams::modifiers
 ;;; For `LETK::Click` calls:
-coords  := * + 0
-xcoord  := * + 0
-ycoord  := * + 2
-        .res 4
+coords    := name + LineEditParams::coords
+xcoord    := name + LineEditParams::xcoord
+ycoord    := name + LineEditParams::ycoord
+
+        .res .sizeof(LineEditParams) - 2
 
         .refto record
         .refto key
@@ -128,12 +156,16 @@ ycoord  := * + 2
 
 ;;; ============================================================
 
-
 ;;; Scopes define their own LETKEntry identifiers
 ;;; This allows for helpers that e.g. bank switch before calling.
-.macro LETK_CALL call, addr
+.macro LETK_CALL call, addr, label
         jsr     LETKEntry
         .byte   call
+
+    .if .paramcount > 2
+        label := *
+    .endif
+
     .if .paramcount > 1
         .addr   addr
     .else

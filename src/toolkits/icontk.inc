@@ -11,8 +11,8 @@ InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize,
 AllocIcon       = $01   ; { .byte icon, .addr IconEntry }
 HighlightIcon   = $02   ; { .byte icon }
 DrawIconRaw     = $03   ; { .byte icon }
-FreeIcon      = $04   ; { .byte icon }
-FreeAll       = $05   ; { .byte window_id }
+FreeIcon        = $04   ; { .byte icon }
+FreeAll         = $05   ; { .byte window_id }
 FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
 DragHighlighted = $07   ; { .byte icon/target, .word mousex, .word mousey, .byte fixed }
                         ; Input: specific icon being dragged, mouse coords

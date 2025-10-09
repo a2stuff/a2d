@@ -7,7 +7,7 @@
 .struct ButtonRecord
 
 ;;; --------------------------------------------------
-;;; These fields are:
+;;; These fields:
 ;;; * don't change within calls
 ;;; * are adjacent
 ;;; * order matters
@@ -33,10 +33,14 @@ kButtonStateNormal   = %00000000
 kButtonStateDisabled = %10000000 ; push buttons
 kButtonStateChecked  = %10000000 ; checkboxes/radio buttons
 
+;;; Macro for defining a `ButtonRecord`
 .macro DEFINE_BUTTON name, winid, label, shortcut, left, top, width, height
         WARN_IF_SHADOWING name
 .params name
 window_id:      .byte   winid
+
+.local str_label
+.local str_shortcut
 
 .ifnblank label
 a_label:        .addr   str_label
@@ -60,13 +64,14 @@ a_shortcut:     .addr   0
 .endif
 
 state:          .byte   0
-        .res    .sizeof(BTK::ButtonRecord) - (*-window_id)
 
         .refto window_id
         .refto a_label
         .refto a_shortcut
         .refto rect
         .refto state
+.endparams
+.assert .sizeof(name) = .sizeof(BTK::ButtonRecord), error, "struct size"
 
         ;; TODO: Use a string pool for these, somehow
 .ifnblank label
@@ -75,10 +80,10 @@ str_label:      PASCAL_STRING {label}
 .ifnblank shortcut
 str_shortcut:   PASCAL_STRING {shortcut}
 .endif
-.endparams
 .endmacro
 
 ;;; ============================================================
+;;; Calls
 
 Draw            = $00           ; Draw button
 ;;; .addr       record

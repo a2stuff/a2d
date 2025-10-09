@@ -14,6 +14,7 @@ on_sel_change   .addr            ; +$07 called when `selected_index` has changed
 on_no_change    .addr            ; +$09 called on click when `selected_index` has not changed
 .endstruct                       ; length = $0B
 
+;;; Macro for defining a `ListBoxRecord`
 .macro DEFINE_LIST_BOX name, _winfo, _num_rows, _num_items, _draw_entry_proc, _on_sel_change, _on_no_change
         WARN_IF_SHADOWING name
 .params name
@@ -38,6 +39,7 @@ on_no_change:   .addr   _on_no_change
 .endmacro
 
 ;;; ============================================================
+;;; Calls
 
 Init            = $00
 ;;; .addr       record
@@ -66,23 +68,57 @@ SetSize         = $04
 
 ;;; ============================================================
 
+.struct ListBoxParams
+record          .addr
+.union
+
+.struct ; Click
+.union
+coords          .tag MGTK::Point
+.struct
+xcoord          .word
+ycoord          .word
+.endstruct
+.endunion
+.endstruct
+
+.struct ; Key
+key             .byte
+modifiers       .byte
+.endstruct
+
+.struct ; SetSelection
+new_selection   .byte
+.endstruct
+
+.struct ; SetSize
+new_size        .byte
+.endstruct
+
+.endunion
+.endstruct
+
+;;; ============================================================
+
+;;; Macro for defining a call parameter block for a specific record
 .macro DEFINE_LIST_BOX_PARAMS name, _record
         WARN_IF_SHADOWING name
 .params name
 record: .addr   _record
-;;; For `LBTK::SetSelection` calls:
-new_selection := *+0
-;;; For `LBTK::SetSize` calls:
-new_size      := *+0
-;;; For `LBTK::Key` calls:
-key           := *+0
-modifiers     := *+1
-;;; For `LBTK::Click` calls:
-coords        := *+0
-xcoord        := *+0
-ycoord        := *+2
 
-        .res 4
+;;; For `LBTK::SetSelection` calls:
+new_selection := name + ListBoxParams::new_selection
+;;; For `LBTK::SetSize` calls:
+new_size      := name + ListBoxParams::new_size
+;;; For `LBTK::Key` calls:
+key           := name + ListBoxParams::key
+modifiers     := name + ListBoxParams::modifiers
+;;; For `LBTK::Click` calls:
+coords        := name + ListBoxParams::coords
+xcoord        := name + ListBoxParams::xcoord
+ycoord        := name + ListBoxParams::ycoord
+
+        .res .sizeof(ListBoxParams) - 2
 
         .refto record
         .refto new_selection
@@ -97,6 +133,7 @@ ycoord        := *+2
 
 ;;; ============================================================
 
+;;; Macro for defining a list box's window
 .macro DEFINE_LIST_BOX_WINFO name, id, left, top, width, height, font
         WARN_IF_SHADOWING name
 .params name
