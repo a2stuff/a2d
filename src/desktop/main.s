@@ -11943,38 +11943,25 @@ write_protected_flag:
         ;; --------------------------------------------------
         ;; Size/Blocks
 
-        ;; Compose "12345K" or "12345K / 67890K" string
         copy8   #0, text_input_buf
 
-        lda     selected_window_id ; volume?
-        beq     volume             ; yes
-
-        ;; A file, so just show the size
         ldax    src_file_info_params::blocks_used
-        jmp     append_size
-
-        ;; A volume.
-volume:
+        ldy     src_file_info_params::storage_type
+    IF_Y_EQ     #ST_VOLUME_DIRECTORY
         ;; ProDOS TRM 4.4.5:
         ;; "When file information about a volume directory is requested, the
         ;; total number of blocks on the volume is returned in the aux_type
         ;; field and the total blocks for all files is returned in blocks_used.
-
-        ldax    src_file_info_params::blocks_used
         stax    vol_used_blocks
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
-        param_call AppendToTextInputBuf, aux::str_info_size_slash
+        copy16  src_file_info_params::aux_type, vol_total_blocks
 
-        ;; Load up the total volume size...
-        ldax    src_file_info_params::aux_type
-        stax    vol_total_blocks
-
-        ;; Compute "12345K" (either volume size or file size)
-append_size:
+        ;; Display will be handled later via `_GetDirSize`
+    ELSE
+        ;; A regular file, so just show the size
         jsr     ComposeSizeString
         param_call AppendToTextInputBuf, text_buffer2
         param_call DrawDialogLabel, 3 | DDL_VALUE, text_input_buf
+    END_IF
 
         ;; --------------------------------------------------
         ;; Created date
