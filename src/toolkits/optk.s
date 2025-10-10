@@ -61,9 +61,7 @@ END_PARAM_BLOCK
         pla
         sta     params_hi
         adc     #>3
-        pha
-        txa
-        pha
+        phax
 
         ;; Save ZP
         PUSH_BYTES kBytesToSave, zp_start
@@ -490,9 +488,7 @@ ret:    rts
         adc     oprc_top
 
         tay                     ; Y coord
-        pla
-        tax                     ; X coord hi
-        pla                     ; X coord lo
+        plax                    ; X coord
 
         rts
 .endproc ; _GetOptionPos

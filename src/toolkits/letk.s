@@ -57,9 +57,7 @@ END_PARAM_BLOCK
         pla
         sta     params_hi
         adc     #>3
-        pha
-        txa
-        pha
+        phax
 
         ;; Save ZP
         PUSH_BYTES kBytesToSave, zp_start

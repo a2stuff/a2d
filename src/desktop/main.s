@@ -1499,15 +1499,9 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 ;;; Input: A,X = relative path to append
 ;;; Output: `INVOKER_INTERPRETER` has absolute path
 .proc _MakeRelPathAbsoluteIntoInvokerInterpreter
-        pha
-        txa
-        pha
-
+        phax
         MLI_CALL GET_PREFIX, get_prefix_params
-
-        pla
-        tax
-        pla
+        plax
         FALL_THROUGH_TO _AppendToInvokerInterpreter
 .endproc ; _MakeRelPathAbsoluteIntoInvokerInterpreter
 
@@ -1554,14 +1548,10 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 ;;; Inputs: A,X = relative path to DA; `src_path_buf` is file to preview
 
 .proc _InvokePreview
-        pha
-        txa
-        pha
+        phax
         param_call IconToAnimate, src_path_buf
         tay
-        pla
-        tax
-        pla
+        plax
         jmp     InvokeDeskAccWithIcon
 .endproc ; _InvokePreview
 
@@ -3204,13 +3194,9 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         MGTK_CALL MGTK::StopDeskTop
 
         ;; Switch back to main ZP/LC, preserving return address.
-        pla
-        tax
-        pla
+        plax
         sta     ALTZPOFF
-        pha
-        txa
-        pha
+        phax
 
         ;; Exit graphics mode entirely
         bit     ROMIN2
@@ -12126,9 +12112,7 @@ num_blocks:
 ;;; Append aux type (in A,X) to `text_input_buf`
 
 .proc _AppendAuxType
-        pha
-        txa
-        pha
+        phax
         param_call AppendToTextInputBuf, aux::str_auxtype_prefix
 
         ;; Append type
@@ -13662,9 +13646,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 ;;; Y = row number (0, 1, 2, ... )
 
 .proc DrawProgressDialogLabel
-        pha
-        txa
-        pha
+        phax
 
         ;; y = base + aux::kDialogLabelHeight * line
         tya                     ; low byte
@@ -13674,9 +13656,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
         addax   #kProgressDialogLabelBaseY, progress_dialog_label_pos::ycoord
         MGTK_CALL MGTK::MoveTo, progress_dialog_label_pos
 
-        pla
-        tax
-        pla
+        plax
         jmp     DrawString
 .endproc ; DrawProgressDialogLabel
 
@@ -14098,9 +14078,7 @@ mli_relay_checkevents_flag:     ; bit7
         pla
         sta     params_src+1
         adc     #>3
-        pha
-        txa
-        pha
+        phax
 
         ;; Copy the params here
         ldy     #3      ; ptr is off by 1

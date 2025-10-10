@@ -319,16 +319,12 @@ ret:    rts
 ;;; As above, but select filename passed in A,X
 .ifdef FD_EXTENDED
 .proc UpdateListFromPathAndSelectFile
-        pha
-        txa
-        pha
+        phax
 
         jsr     _ReadDir
         jsr     _UpdateDiskAndDirNames
 
-        pla
-        tax
-        pla
+        plax
         jsr     _FindFilenameIndex
         sta     selected_index
 
@@ -796,9 +792,7 @@ found:  return  index
 .proc OpenWindow
 
         ;; Save title string param
-        pha
-        txa
-        pha
+        phax
 
 .ifdef FD_EXTENDED
         ;; Set correct sizes for the windows (dialog and listbox) based on options.
@@ -846,9 +840,8 @@ found:  return  index
         copy16  file_dialog_res::winfo::maprect::x2, file_dialog_res::pos_title::xcoord
         lsr16   file_dialog_res::pos_title::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
-        pla
-        tax
-        pla
+
+        plax
         jsr     _DrawStringCentered
 
         jsr     _IsOKAllowed
@@ -948,13 +941,11 @@ ret:    rts
 
 .ifdef FD_EXTENDED
 .proc DrawLineEditLabel
-        pha                     ; save A,X
-        txa
-        pha
+        phax
+
         MGTK_CALL MGTK::MoveTo, file_dialog_res::line_edit_label_pos
-        pla                     ; restore A,X
-        tax
-        pla
+
+        plax
         jmp     DrawString
 .endproc ; DrawLineEditLabel
 .endif

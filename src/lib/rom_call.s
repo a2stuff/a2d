@@ -22,9 +22,7 @@
         pla
         sta     params+1
         adc     #>2
-        pha
-        txa
-        pha
+        phax
 
         ;; Copy the actual address
         ldy     #2      ; ptr is off by 1

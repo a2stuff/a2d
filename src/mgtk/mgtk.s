@@ -104,9 +104,7 @@ adjust_stack:                   ; Adjust stack to account for params
         pla
         sta     params_addr+1
         adc     #>3
-        pha
-        txa
-        pha
+        phax
 
         tsx
         stx     stack_ptr_stash
@@ -7812,18 +7810,14 @@ window_id   .byte
 return_no_window:
         ldx     #0
 return_result:
-        pha
-        txa
-        pha
+        phax
 
         ;; `RestoreParamsActivePort` isn't needed, and is
         ;; very slow, so do the minimum here.
         asl     preserve_zp_flag
         copy16  params_addr_save, params_addr
 
-        pla
-        tax
-        pla
+        plax
         ldy     #params::which_area - params
         jmp     store_xa_at_y
 

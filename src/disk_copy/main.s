@@ -58,9 +58,7 @@ volume_bitmap   := $4000
         pla
         sta     params_src+1
         adc     #>3
-        pha
-        txa
-        pha
+        phax
 
         ;; Copy the params here
         ldy     #3      ; ptr is off by 1

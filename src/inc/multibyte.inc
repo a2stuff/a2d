@@ -851,6 +851,28 @@ skip:
 skip:   dec     arg
 .endmacro
 
+;;; Push 16-bit value in A,X
+.macro phax
+        pha
+        txa
+        pha
+.endmacro
+
+;;; Pull 16-bit value to A,X
+.macro plax
+        pla
+        tax
+        pla
+.endmacro
+
+;;; Push a 16-bit value
+.macro push16 arg
+        _op_lo  lda, {arg}
+        pha
+        _op_hi  lda, {arg}
+        pha
+.endmacro
+
 ;;; ============================================================
 ;;; 24-bit pseudo-ops
 

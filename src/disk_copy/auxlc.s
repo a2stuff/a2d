@@ -1068,9 +1068,7 @@ ret:    rts
         pla
         sta     params_src+1
         adc     #>3
-        pha
-        txa
-        pha
+        phax
 
         ;; Copy the params here
         ldy     #3              ; ptr is off by 1
@@ -1693,15 +1691,11 @@ tmp:    .byte   0
 ;;; ============================================================
 
 .proc DrawStatus
-        pha
-        txa
-        pha
+        phax
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_status
         MGTK_CALL MGTK::MoveTo, point_status
-        pla
-        tax
-        pla
+        plax
         jmp     DrawStringCentered
 .endproc ; DrawStatus
 
