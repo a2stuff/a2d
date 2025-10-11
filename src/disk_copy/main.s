@@ -465,12 +465,12 @@ need_move:
 
         bit     write_flag
     IF_NC
-        jsr     ReadBlockToLcbank1
+        jsr     ReadBlockToLCBank1
         bmi     error
         jmp     loop
     END_IF
 
-        jsr     WriteBlockFromLcbank1
+        jsr     WriteBlockFromLCBank1
         bmi     error
         jmp     loop
 
@@ -495,12 +495,12 @@ use_auxmem:
 use_lcbank2:
         bit     write_flag
     IF_NC
-        jsr     ReadBlockToLcbank2
+        jsr     ReadBlockToLCBank2
         bmi     error
         jmp     loop
     END_IF
 
-        jsr     WriteBlockFromLcbank2
+        jsr     WriteBlockFromLCBank2
         bmi     error
         jmp     loop
 .endproc ; _ReadOrWriteBlock
@@ -831,7 +831,7 @@ done:   rts
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc ReadBlockToLcbank1
+.proc ReadBlockToLCBank1
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
     IF_ZERO
@@ -839,14 +839,14 @@ done:   rts
         lda     #0              ; success
     END_IF
         rts
-.endproc ; ReadBlockToLcbank1
+.endproc ; ReadBlockToLCBank1
 
 ;;; ============================================================
 ;;; Read block (w/ retries) to aux LCBANK2 memory
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc ReadBlockToLcbank2
+.proc ReadBlockToLCBank2
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
     IF_ZERO
@@ -861,7 +861,7 @@ done:   rts
         lda     #0              ; success
     END_IF
         rts
-.endproc ; ReadBlockToLcbank2
+.endproc ; ReadBlockToLCBank2
 
 ;;; ============================================================
 ;;; Copies block from `default_block_buffer`
@@ -909,19 +909,19 @@ done:   rts
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc WriteBlockFromLcbank1
+.proc WriteBlockFromLCBank1
         jsr     PrepBlockPtrs
         jsr     CopyToBlockBuffer
 
         jmp     WriteBlockWithRetry
-.endproc ; WriteBlockFromLcbank1
+.endproc ; WriteBlockFromLCBank1
 
 ;;; ============================================================
 ;;; Write block (w/ retries) from aux LCBANK2 memory
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc WriteBlockFromLcbank2
+.proc WriteBlockFromLCBank2
         jsr     PrepBlockPtrs
 
         bit     LCBANK2
@@ -933,7 +933,7 @@ done:   rts
         bit     LCBANK1
 
         jmp     WriteBlockWithRetry
-.endproc ; WriteBlockFromLcbank2
+.endproc ; WriteBlockFromLCBank2
 
 ;;; ============================================================
 ;;; Copies block to `default_block_buffer`

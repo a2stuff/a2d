@@ -55,7 +55,7 @@ start:
         copy16  #kSegmentAuxLCLength, read_params::request_count
         MLI_CALL READ, read_params
         bcs     fail
-        jsr     CopyToLc
+        jsr     CopyToLC
 
         copy16  #kSegmentMainOffset, set_mark_params::position
         MLI_CALL SET_MARK, set_mark_params
@@ -81,7 +81,7 @@ fail:   jmp     fail
 ;;; ============================================================
 ;;; Copy first chunk to the Language Card
 
-.proc CopyToLc
+.proc CopyToLC
         src := $6
         end := $8
         dst := $A
@@ -119,7 +119,7 @@ fail:   jmp     fail
         sta     ALTZPOFF
         bit     ROMIN2
         rts
-.endproc ; CopyToLc
+.endproc ; CopyToLC
 
 ;;; ============================================================
 

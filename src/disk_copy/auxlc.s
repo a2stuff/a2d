@@ -639,6 +639,10 @@ dest_ok:
         copy16  #default_block_buffer, main::block_params::data_buffer
         jsr     main::ReadBlock
         bcs     use_sd
+
+        ;; TODO: Use `IsDOS33BootBlock`, add another alert message
+        ;; confirming erasure.
+
         jsr     IsPascalBootBlock
         bcs     use_sd
 
@@ -1150,7 +1154,7 @@ fail:   return  #$FF
 try_dos33:
         jsr     IsDOS33BootBlock
         bcs     fail
-        FALL_THROUGH_TO GetDos33VolName
+        FALL_THROUGH_TO GetDOS33VolName
 .endproc ; NameNonProDOSVolume
 
 ;;; ============================================================
@@ -1159,7 +1163,7 @@ try_dos33:
 ;;; Inputs: `num_drives` and `main::block_params::unit_num` are set
 ;;; Outputs: Nth `drive_name_table` entry is populated
 
-.proc GetDos33VolName
+.proc GetDOS33VolName
         ;; Mask off slot and drive, inject into template
         lda     main::block_params::unit_num
         pha
@@ -1183,7 +1187,7 @@ try_dos33:
     WHILE_POS
 
         return  #0
-.endproc ; GetDos33VolName
+.endproc ; GetDOS33VolName
 
 ;;; ============================================================
 ;;; Input: A = table index
@@ -2143,7 +2147,7 @@ start:
     END_IF
 
     IF_A_EQ     #kAlertMsgConfirmEraseSlotDrive
-        jsr     _SetConfirmEraseSdSlotDrive
+        jsr     _SetConfirmEraseSlotDrive
         lda     #kAlertMsgConfirmEraseSlotDrive
         FALL_THROUGH_TO find_in_alert_table
     END_IF
@@ -2205,7 +2209,7 @@ find_in_alert_table:
 ;;; --------------------------------------------------
 ;;; Inputs: X = %DSSSxxxx
 
-.proc _SetConfirmEraseSdSlotDrive
+.proc _SetConfirmEraseSlotDrive
         txa
         jsr     UnitNumToSlotDigit
         sta     str_confirm_erase_sd  + kStrConfirmEraseSDSlotOffset
@@ -2213,7 +2217,7 @@ find_in_alert_table:
         jsr     UnitNumToDriveDigit
         sta     str_confirm_erase_sd + kStrConfirmEraseSDDriveOffset
         rts
-.endproc ; _SetConfirmEraseSdSlotDrive
+.endproc ; _SetConfirmEraseSlotDrive
 
 ;;; --------------------------------------------------
 
