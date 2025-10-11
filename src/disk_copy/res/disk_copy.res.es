@@ -22,9 +22,7 @@
 .define res_string_slot_drive_pattern "Ranura #  Unidad #"
 .define res_const_slot_drive_pattern_offset1 8
 .define res_const_slot_drive_pattern_offset2 18
-.define res_string_dos33_s_d_pattern "DOS 3.3 R#, U# "
-.define res_const_dos33_s_d_pattern_offset1 10
-.define res_const_dos33_s_d_pattern_offset2 14
+.define res_string_dos33 "DOS 3.3"
 .define res_string_dos33_disk_copy "Copia de Disco DOS 3.3"
 .define res_string_pascal_disk_copy "Copia de Disco Pascal"
 .define res_string_prodos_disk_copy "Copia de Disco ProDOS"

@@ -11,6 +11,8 @@
 
 kShortcutReadDisk = res_char_button_read_drive_shortcut
 
+default_block_buffer := main::default_block_buffer
+
 ;;; ============================================================
 
 ;;; number of alert messages
@@ -372,10 +374,8 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 str_slot_drive_pattern:
         PASCAL_STRING res_string_slot_drive_pattern
 
-str_dos33_s_d:
-        PASCAL_STRING res_string_dos33_s_d_pattern
-        kStrDOS33SlotOffset = res_const_dos33_s_d_pattern_offset1
-        kStrDOS33DriveOffset = res_const_dos33_s_d_pattern_offset2
+str_dos33:
+        PASCAL_STRING res_string_dos33
 
 str_dos33_disk_copy:
         PASCAL_STRING res_string_dos33_disk_copy
@@ -1127,69 +1127,6 @@ ignore: return  #$FF
 .endproc ; SetCursorPointer
 
 ;;; ============================================================
-;;; Populate `drive_name_table` for a non-ProDOS volume
-;;; Input: A=unit number
-;;; Output: Z=1 if successful
-
-default_block_buffer := main::default_block_buffer
-
-.proc NameNonProDOSVolume
-        sta     main::block_params::unit_num
-        copy16  #0, main::block_params::block_num
-        copy16  #default_block_buffer, main::block_params::data_buffer
-        jsr     main::ReadBlock
-        bcs     fail
-
-        jsr     IsPascalBootBlock
-        bne     try_dos33
-
-        ;; Find slot for string in table
-        lda     num_drives
-        jsr     GetDriveNameTableSlot
-        jsr     GetPascalVolName
-        return  #$00
-
-fail:   return  #$FF
-
-try_dos33:
-        jsr     IsDOS33BootBlock
-        bcs     fail
-        FALL_THROUGH_TO GetDOS33VolName
-.endproc ; NameNonProDOSVolume
-
-;;; ============================================================
-;;; Construct DOS 3.3 volume name (referencing slot/drive)
-;;; Uses `str_dos33_s_d` template to construct volume name
-;;; Inputs: `num_drives` and `main::block_params::unit_num` are set
-;;; Outputs: Nth `drive_name_table` entry is populated
-
-.proc GetDOS33VolName
-        ;; Mask off slot and drive, inject into template
-        lda     main::block_params::unit_num
-        pha
-        jsr     UnitNumToSlotDigit
-        sta     str_dos33_s_d + kStrDOS33SlotOffset
-        pla
-        jsr     UnitNumToDriveDigit
-        sta     str_dos33_s_d + kStrDOS33DriveOffset
-
-        ;; Find slot for string in table
-        ptr := $06
-        lda     num_drives
-        jsr     GetDriveNameTableSlot
-        stax    ptr
-
-        ;; Copy the string in
-        ldy     str_dos33_s_d
-    DO
-        copy8   str_dos33_s_d,y, (ptr),y
-        dey
-    WHILE_POS
-
-        return  #0
-.endproc ; GetDOS33VolName
-
-;;; ============================================================
 ;;; Input: A = table index
 ;;; Output: A,X = address in `drive_name_table`
 
@@ -1208,6 +1145,29 @@ try_dos33:
 
         rts
 .endproc ; GetDriveNameTableSlot
+
+;;; ============================================================
+;;; Input: A,X = source string, `num_drives` must be valid
+
+.proc AssignDriveName
+        src_ptr := $06
+        dst_ptr := $08
+
+        stax    src_ptr
+
+        lda     num_drives
+        jsr     GetDriveNameTableSlot
+        stax    dst_ptr
+
+        ldy     #0
+        lda     (src_ptr),y
+        tay
+      DO
+        copy8   (src_ptr),y, (dst_ptr),y
+        dey
+      WHILE_POS
+        rts
+.endproc ; AssignDriveName
 
 ;;; ============================================================
 ;;; Check block at `default_block_buffer` for Pascal signature
@@ -1459,79 +1419,83 @@ loop:   lda     device_index    ; <16
         ;; Check first byte of record
         ldy     #0
         lda     (on_line_ptr),y
-        and     #NAME_LENGTH_MASK
-        bne     is_prodos
+        RTS_IF_ZERO             ; 0 indicates end of valid records
 
-        lda     (on_line_ptr),y ; 0?
-        beq     done            ; done!
-
-        iny                     ; name_len=0 signifies an error
-        lda     (on_line_ptr),y ; error code in second byte
-        cmp     #ERR_DEVICE_NOT_CONNECTED
-        bne     non_prodos
-        dey
-        lda     (on_line_ptr),y
-        jsr     IsDiskII
-        jne     next_device
-        lda     #ERR_DEVICE_NOT_CONNECTED
-        bne     non_prodos      ; always
-
-done:   rts
-
-non_prodos:
-        pha
-        ldy     #0
-        lda     (on_line_ptr),y
+        ;; Tentatively add to table; doesn't count until we inc `num_drives`
+        pha                     ; A = unit number / name length
         and     #UNIT_NUM_MASK
         ldx     num_drives
         sta     drive_unitnum_table,x
+        pla                     ; A = unit number / name length
 
-        pla
-    IF_A_EQ     #ERR_NOT_PRODOS_VOLUME
+        and     #NAME_LENGTH_MASK
+    IF_ZERO
+        ;; Not ProDOS
+
+        ;; name_len=0 signifies an error, with error code in second byte
+        iny                     ; Y = 1
+        lda     (on_line_ptr),y
+      IF_A_EQ   #ERR_DEVICE_NOT_CONNECTED
+        ;; Device Not Connected - skip, unless it's a Disk II device
+        dey                     ; Y = 0
+        lda     (on_line_ptr),y ; A = unmasked unit number
+        jsr     IsDiskII
+        bne     next_device
+
+        lda     #ERR_DEVICE_NOT_CONNECTED
+      END_IF
+
+      IF_A_EQ   #ERR_NOT_PRODOS_VOLUME
+        ldx     num_drives
         lda     drive_unitnum_table,x
-        jsr     NameNonProDOSVolume
-        beq     next
-    END_IF
+
+        ;; Read boot block
+        sta     main::block_params::unit_num
+        copy16  #0, main::block_params::block_num
+        copy16  #default_block_buffer, main::block_params::data_buffer
+        jsr     main::ReadBlock
+        bcs     next_device     ; failure
+
+        jsr     IsPascalBootBlock
+       IF_EQ
+        ;; Pascal
+        lda     num_drives
+        jsr     GetDriveNameTableSlot ; result in A,X
+        jsr     GetPascalVolName      ; A,X is buffer to populate
+        jmp     next
+       END_IF
+
+        jsr     IsDOS33BootBlock
+       IF_CC
+        ;; DOS 3.3
+        ldax    #str_dos33
+        jsr     AssignDriveName
+        jmp     next
+       END_IF
+      END_IF
 
         ;; Unknown
-        lda     num_drives
-        jsr     GetDriveNameTableSlot
-        stax    $06
-        ldy     str_unknown
-    DO
-        copy8   str_unknown,y, ($06),y
-        dey
-    WHILE_POS
+        ldax    #str_unknown
+        jsr     AssignDriveName
 
 next:   inc     num_drives
-        jmp     next_device
 
+    ELSE
         ;; Valid ProDOS volume
-is_prodos:
-        ldy     #0
-        lda     (on_line_ptr),y
-        and     #UNIT_NUM_MASK
+
         ldx     num_drives
-        sta     drive_unitnum_table,x
-
-    IF_A_EQ     DISK_COPY_INITIAL_UNIT_NUM
+        lda     drive_unitnum_table,x
+      IF_A_EQ   DISK_COPY_INITIAL_UNIT_NUM
         copy8   num_drives, current_drive_selection
-    END_IF
-
-        name_ptr := $08
+      END_IF
 
         ldax    on_line_ptr
         jsr     AdjustOnLineEntryCase
-        lda     num_drives
-        jsr     GetDriveNameTableSlot
-        stax    name_ptr
-        ldy     #kMaxFilenameLength
-    DO
-        copy8   (on_line_ptr),y, (name_ptr),y
-        dey
-    WHILE_POS
+        ldax    on_line_ptr
+        jsr     AssignDriveName
 
         inc     num_drives
+    END_IF
 
 next_device:
         inc     device_index
@@ -1543,6 +1507,7 @@ next_device:
 
 device_index:
         .byte   0
+
 .endproc ; EnumerateDevices
 
 ;;; ============================================================
