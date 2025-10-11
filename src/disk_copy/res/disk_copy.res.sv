@@ -33,6 +33,9 @@
 .define res_string_prompt_insert_destination "S{tt i m}lskivan och klicka p} OK."
 .define res_string_prompt_erase_prefix "[r du s{ker att du vill radera \x22"
 .define res_string_prompt_erase_suffix "\x22?"
+.define res_string_prompt_erase_dos33_pattern "[r du s{ker att du vill radera DOS 3.3-skivan i kortplats # enhet #?"
+.define res_const_prompt_erase_dos33_pattern_offset1 59
+.define res_const_prompt_erase_dos33_pattern_offset2 67
 .define res_string_prompt_erase_slot_drive_pattern "[r du s{ker att du vill radera disken i kortplats # enhet #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 51
 .define res_const_prompt_erase_slot_drive_pattern_offset2 59

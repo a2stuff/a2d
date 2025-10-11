@@ -33,6 +33,9 @@
 .define res_string_prompt_insert_destination "Plaats de doelschijf en klik op OK."
 .define res_string_prompt_erase_prefix "Weet je zeker dat je wilt wissen \x22"
 .define res_string_prompt_erase_suffix "\x22?"
+.define res_string_prompt_erase_dos33_pattern "Weet je zeker dat je wilt u de DOS 3.3-schijf in slot # station # wissen?"
+.define res_const_prompt_erase_dos33_pattern_offset1 55
+.define res_const_prompt_erase_dos33_pattern_offset2 65
 .define res_string_prompt_erase_slot_drive_pattern "Weet je zeker dat je wilt u de schijf in slot # station # wissen?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 47
 .define res_const_prompt_erase_slot_drive_pattern_offset2 57

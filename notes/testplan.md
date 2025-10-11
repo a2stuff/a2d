@@ -1420,7 +1420,7 @@ For the following cases, start by using DeskTop to create an alias for a program
 
 * Launch DeskTop. Special > Copy Disk.... Verify that ProDOS disk names in the device list have adjusted case (e.g. "Volume" not "VOLUME"). Verify that GS/OS disk names in the device list have correct case (e.g. "GS.OS.disk" not "Gs.Os.Disk").
 * Launch DeskTop. Special > Copy Disk.... Verify that Pascal disk names in the device list do not have adjusted case (e.g. "TGP:" not "Tgp:").
-* Launch DeskTop. Special > Copy Disk.... Verify that DOS 3.3 disk names in the device list appear as "DOS 3.3 Sn, Dn" and do not have adjusted case.
+* Launch DeskTop. Special > Copy Disk.... Verify that DOS 3.3 disk names in the device list appear as "DOS 3.3" and do not have adjusted case.
 
 * Launch DeskTop. Special > Copy Disk.... Select a ProDOS disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name has adjusted case (e.g. "Volume" not "VOLUME").
 * Launch DeskTop. Special > Copy Disk.... Select a GS/OS disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name has correct case (e.g. "GS.OS.disk" not "Gs.Os.Disk").
@@ -1430,7 +1430,8 @@ For the following cases, start by using DeskTop to create an alias for a program
 * Launch DeskTop. Special > Copy Disk.... Select a ProDOS disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
 * Launch DeskTop. Special > Copy Disk.... Select a GS/OS disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the name has correct case (e.g. "GS.OS.disk" not "Gs.Os.Disk"), and the name is quoted.
 * Launch DeskTop. Special > Copy Disk.... Select a Pascal disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
-* Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the prompt describes the disk as DOS 3.3 using slot and drive, and is not quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a CP/M disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
 
 * Configure Virtual II with two OmniDisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Copy Disk.... Select the OmniDisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Are you sure you want to erase ...?" confirmation prompt is shown.
 

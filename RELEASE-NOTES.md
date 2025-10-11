@@ -78,6 +78,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Disk Copy
 
 * Preselect volume if one was selected in DeskTop. ([#849](https://github.com/a2stuff/a2d/issues/849))
+* Simplify/improve naming/prompts for DOS 3.3 disks.
 
 ### Desk Accessories
 

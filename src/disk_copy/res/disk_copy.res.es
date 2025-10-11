@@ -33,6 +33,9 @@
 .define res_string_prompt_insert_destination "Inserte disco de destino y presione OK."
 .define res_string_prompt_erase_prefix "]Est\x10s seguro de que quieres borrar \x22"
 .define res_string_prompt_erase_suffix "\x22?"
+.define res_string_prompt_erase_dos33_pattern "]Est\x10s seguro de que quieres borrar el disco DOS 3.3 en la ranura # unidad #?"
+.define res_const_prompt_erase_dos33_pattern_offset1 70
+.define res_const_prompt_erase_dos33_pattern_offset2 79
 .define res_string_prompt_erase_slot_drive_pattern "]Est\x10s seguro de que quieres borrar el disco en la ranura # unidad #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 62
 .define res_const_prompt_erase_slot_drive_pattern_offset2 71

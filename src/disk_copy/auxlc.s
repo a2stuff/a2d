@@ -16,7 +16,7 @@ default_block_buffer := main::default_block_buffer
 ;;; ============================================================
 
 ;;; number of alert messages
-kNumAlertMessages = 11
+kNumAlertMessages = 12
 
 kAlertMsgInsertSource           = 0 ; No bell, *
 kAlertMsgInsertDestination      = 1 ; No bell, *
@@ -25,10 +25,11 @@ kAlertMsgDestinationFormatFail  = 3 ; Bell
 kAlertMsgFormatError            = 4 ; Bell
 kAlertMsgDestinationProtected   = 5 ; Bell
 kAlertMsgConfirmEraseSlotDrive  = 6 ; No bell, X = unit number
-kAlertMsgCopySuccessful         = 7 ; No bell
-kAlertMsgCopyFailure            = 8 ; No bell
-kAlertMsgInsertSourceOrCancel   = 9 ; No bell, *
-kAlertMsgInsertDestinationOrCancel = 10 ; No bell, *
+kAlertMsgConfirmEraseDOS33      = 7 ; No bell, X = unit number
+kAlertMsgCopySuccessful         = 8 ; No bell
+kAlertMsgCopyFailure            = 9 ; No bell
+kAlertMsgInsertSourceOrCancel   = 10 ; No bell, *
+kAlertMsgInsertDestinationOrCancel = 11 ; No bell, *
 ;;; "Bell" or "No bell" determined by the `MaybeBell` proc.
 ;;; * = the 'InsertXOrCancel' variants are selected automatically when
 ;;; InsertX is specified if X flag is non-zero, and the unit number in
@@ -632,34 +633,40 @@ dest_ok:
         lda     main::on_line_buffer2
         and     #NAME_LENGTH_MASK
     IF_ZERO
-        ;; Not ProDOS - try to read Pascal name
+        ;; Not ProDOS - try to identify disk type
         ldx     dest_drive_index
         copy8   drive_unitnum_table,x, main::block_params::unit_num
         copy16  #0, main::block_params::block_num
         copy16  #default_block_buffer, main::block_params::data_buffer
         jsr     main::ReadBlock
-        bcs     use_sd
+      IF_CC
 
-        ;; TODO: Use `IsDOS33BootBlock`, add another alert message
-        ;; confirming erasure.
-
+        ;; Pascal?
         jsr     IsPascalBootBlock
-        bcs     use_sd
-
+       IF_CC
         param_call GetPascalVolName, main::on_line_buffer2
-        ldxy    #main::on_line_buffer2
-        lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
-        jmp     show
+        jmp     buf2
+       END_IF
 
-use_sd:
-        ;; No name, use slot/drive
+        ;; DOS 3.3?
+        jsr     IsDOS33BootBlock
+       IF_EQ
+        ldx     dest_drive_index
+        lda     drive_unitnum_table,x
+        tax                     ; slot/drive
+        lda     #kAlertMsgConfirmEraseDOS33 ; X = unit number
+        bne     show            ; always
+       END_IF
+      END_IF
+
+        ;; Unknown, just use slot/drive
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         tax                     ; slot/drive
         lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
     ELSE
         param_call AdjustOnLineEntryCase, main::on_line_buffer2
-        ldxy    #main::on_line_buffer2
+buf2:   ldxy    #main::on_line_buffer2
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
     END_IF
 show:   jsr     ShowAlertDialog
@@ -1998,7 +2005,12 @@ str_format_error:
 str_dest_protected:
         PASCAL_STRING res_string_errmsg_dest_protected
 
-;;; This string is seen when copying over a non-ProDOS/non-Pascal disk.
+;;; This string is seen when copying over a DOS 3.3 disk.
+str_confirm_erase_dos33:
+        PASCAL_STRING res_string_prompt_erase_dos33_pattern
+        kStrConfirmEraseDOS33SlotOffset = res_const_prompt_erase_dos33_pattern_offset1
+        kStrConfirmEraseDOS33DriveOffset = res_const_prompt_erase_dos33_pattern_offset2
+;;; This string is seen when copying over a non-ProDOS/non-Pascal/non-DOS 3.3 disk.
 str_confirm_erase_sd:
         PASCAL_STRING res_string_prompt_erase_slot_drive_pattern
         kStrConfirmEraseSDSlotOffset = res_const_prompt_erase_slot_drive_pattern_offset1
@@ -2021,6 +2033,7 @@ alert_table:
         .byte   kAlertMsgFormatError
         .byte   kAlertMsgDestinationProtected
         .byte   kAlertMsgConfirmEraseSlotDrive
+        .byte   kAlertMsgConfirmEraseDOS33
         .byte   kAlertMsgCopySuccessful
         .byte   kAlertMsgCopyFailure
         .byte   kAlertMsgInsertSourceOrCancel
@@ -2035,6 +2048,7 @@ message_table:
         .addr   str_format_error
         .addr   str_dest_protected
         .addr   str_confirm_erase_sd
+        .addr   str_confirm_erase_dos33
         .addr   str_copy_success
         .addr   str_copy_fail
         .addr   str_insert_source_or_cancel
@@ -2049,6 +2063,7 @@ alert_button_options_table:
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgFormatError
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgDestinationProtected
         .byte   AlertButtonOptions::OKCancel    ; kAlertMsgConfirmEraseSlotDrive
+        .byte   AlertButtonOptions::OKCancel    ; kAlertMsgConfirmEraseDOS33
         .byte   AlertButtonOptions::OK          ; kAlertMsgCopySuccessful
         .byte   AlertButtonOptions::OK          ; kAlertMsgCopyFailure
         .byte   AlertButtonOptions::OK          ; kAlertMsgInsertSourceOrCancel
@@ -2063,6 +2078,7 @@ alert_options_table:
         .byte   AlertOptions::Beep      ; kAlertMsgFormatError
         .byte   AlertOptions::Beep      ; kAlertMsgDestinationProtected
         .byte   0                       ; kAlertMsgConfirmEraseSlotDrive
+        .byte   0                       ; kAlertMsgConfirmEraseDOS33
         .byte   0                       ; kAlertMsgCopySuccessful
         .byte   0                       ; kAlertMsgCopyFailure
         .byte   0                       ; kAlertMsgInsertSourceOrCancel
@@ -2111,9 +2127,10 @@ start:
         bne     find_in_alert_table ; always
     END_IF
 
-    IF_A_EQ     #kAlertMsgConfirmEraseSlotDrive
+    IF_A_EQ_ONE_OF #kAlertMsgConfirmEraseSlotDrive, #kAlertMsgConfirmEraseDOS33
+        pha
         jsr     _SetConfirmEraseSlotDrive
-        lda     #kAlertMsgConfirmEraseSlotDrive
+        pla
         FALL_THROUGH_TO find_in_alert_table
     END_IF
 
@@ -2178,9 +2195,11 @@ find_in_alert_table:
         txa
         jsr     UnitNumToSlotDigit
         sta     str_confirm_erase_sd  + kStrConfirmEraseSDSlotOffset
+        sta     str_confirm_erase_dos33  + kStrConfirmEraseDOS33SlotOffset
         txa
         jsr     UnitNumToDriveDigit
         sta     str_confirm_erase_sd + kStrConfirmEraseSDDriveOffset
+        sta     str_confirm_erase_dos33 + kStrConfirmEraseDOS33DriveOffset
         rts
 .endproc ; _SetConfirmEraseSlotDrive
 
