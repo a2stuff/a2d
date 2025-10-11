@@ -6699,11 +6699,11 @@ found_windows_list:
 ;;; ============================================================
 
 .proc CreateFileRecordsForWindowImpl
-        DEFINE_OPEN_PARAMS open_params, src_path_buf, $800
+        DEFINE_OPEN_PARAMS open_params, src_path_buf, DIR_READ_IO_BUFFER
 
-        dir_buffer := $C00
+        dir_buffer := DIR_READ_DATA_BUFFER
 
-        DEFINE_READWRITE_PARAMS read_params, dir_buffer, $200
+        DEFINE_READWRITE_PARAMS read_params, dir_buffer, kDirReadDataBufferSize
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; Copy of data from directory header

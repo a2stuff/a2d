@@ -967,6 +967,10 @@ unit_num:
         ;; Restore state from previous session
         jsr     RestoreWindows
 
+        ;; Window restoration can safely trash anything before this
+        ;; point, but needs to be able to return here to finish up.
+        .assert * >= (DIR_READ_DATA_BUFFER + kDirReadDataBufferSize), error, "data/code clash"
+
         ;; Display any pending error messages
         lda     main::pending_alert
     IF_NOT_ZERO

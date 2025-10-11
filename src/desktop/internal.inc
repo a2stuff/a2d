@@ -179,6 +179,12 @@ IO_BUFFER := $1C00
 
 SELECTOR_FILE_BUF := $0C00
 
+;;; Memory areas used when reading directories to populate windows.
+
+DIR_READ_IO_BUFFER := $800
+DIR_READ_DATA_BUFFER := $C00
+kDirReadDataBufferSize = $200
+
 ;;; ============================================================
 ;;; Menu Constants
 
