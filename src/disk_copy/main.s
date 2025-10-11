@@ -232,8 +232,8 @@ fail:   copy8   #$81, auxlc::source_disk_format ; Other
         copy16  block_count_div8, auxlc::block_count_div8
         bit     auxlc::source_disk_format
         bmi     :+              ; not ProDOS
-        lda     auxlc::disk_copy_flag
-        bne     :+
+        bit     auxlc::disk_copy_flag
+        bmi     :+
         jmp     QuickCopy
 :
 
@@ -348,7 +348,6 @@ IsDriveEjectable := IsDriveEjectableImpl::start
 ;;; Input: C = write flag (0=reading, 1=writing)
 .proc CopyBlocks
         ror     write_flag
-        and     #$FF
 
     IF_NEG
         copy16  auxlc::start_block_div8, auxlc::block_num_div8
