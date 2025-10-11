@@ -7386,8 +7386,6 @@ k_available             .word
 width_num_items         .word
 width_k_in_disk         .word
 width_k_available       .word
-
-ptr_str_items_suffix    .addr
 END_PARAM_BLOCK
 
         ;; --------------------------------------------------
@@ -7436,15 +7434,8 @@ END_PARAM_BLOCK
         ;; Cache values
         lda     cached_window_id
         jsr     GetFileRecordCountForWindow
-        ldx     #0
+        ldx     #0              ; hi
         stax    num_items
-
-        tay
-        ldax    #str_items_suffix
-    IF_Y_EQ     #1
-        ldax    #str_item_suffix
-    END_IF
-        stax    ptr_str_items_suffix
 
         ldx     cached_window_id
         dex                     ; index 0 is window 1
@@ -7459,23 +7450,17 @@ END_PARAM_BLOCK
         stax    k_available
 
         ;; Measure strings
-        ldax    num_items
-        jsr     _MeasureIntString
+        jsr     _PrepItems
+        jsr     _Measure
         stax    width_num_items
-        param_call_indirect _MeasureString, ptr_str_items_suffix
-        addax   width_num_items
 
-        ldax    k_in_disk
-        jsr     _MeasureIntString
+        jsr     _PrepInDisk
+        jsr     _Measure
         stax    width_k_in_disk
-        param_call _MeasureString, str_k_in_disk
-        addax   width_k_in_disk
 
-        ldax    k_available
-        jsr     _MeasureIntString
+        jsr     _PrepAvailable
+        jsr     _Measure
         stax    width_k_available
-        param_call _MeasureString, str_k_available
-        addax   width_k_available
 
         ;; Determine gap for centering
         gap := header_text_delta::xcoord
@@ -7490,36 +7475,52 @@ END_PARAM_BLOCK
         copy16  #kWindowHeaderSpacingX, gap ; yes, use the minimum
     END_IF
 
-        ;; Draw "XXX items"
         add16_8 viewport+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
         add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
+
+        ;; Draw "XXX items"
         MGTK_CALL MGTK::MoveTo, header_text_pos
-        ldax    num_items
-        jsr     _DrawIntString
-        param_call_indirect DrawString, ptr_str_items_suffix
+        jsr     _PrepItems
+        jsr     draw
 
         ;; Draw "XXXK in disk"
         MGTK_CALL MGTK::Move, header_text_delta
-        ldax    k_in_disk
-        jsr     _DrawIntString
-        param_call DrawString, str_k_in_disk
+        jsr     _PrepInDisk
+        jsr     draw
 
         ;; Draw "XXXK available"
         MGTK_CALL MGTK::Move, header_text_delta
-        ldax    k_available
-        jsr     _DrawIntString
-        param_jump DrawString, str_k_available
+        jsr     _PrepAvailable
+draw:   param_jump DrawString, text_input_buf
 
-.proc _DrawIntString
-        jsr     IntToStringWithSeparators
-        param_jump DrawString, str_from_int
-.endproc ; _DrawIntString
+.proc _PrepItems
+        push16  num_items
+        ldax    num_items
+        jsr     IsPlural
+    IF_CS
+        FORMAT_MESSAGE 1, aux::str_item_count_singular_format
+        rts
+    END_IF
+        FORMAT_MESSAGE 1, aux::str_item_count_plural_format
+        rts
+.endproc ; _PrepItems
 
-.proc _MeasureIntString
-        jsr     IntToStringWithSeparators
-        ldax    #str_from_int
+.proc _PrepInDisk
+        push16  k_in_disk
+        FORMAT_MESSAGE 1, aux::str_k_in_disk_format
+        rts
+.endproc ; _PrepInDisk
+
+.proc _PrepAvailable
+        push16  k_available
+        FORMAT_MESSAGE 1, aux::str_k_available_format
+        rts
+.endproc ; _PrepAvailable
+
+.proc _Measure
+        ldax    #text_input_buf
         FALL_THROUGH_TO _MeasureString
-.endproc ; _MeasureIntString
+.endproc ; _Measure
 
 ;;; Measure text, pascal string address in A,X; result in A,X
 ;;; String must be in LC area (visible to both main and aux code)
@@ -8380,118 +8381,96 @@ set_pos:
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc ComposeDateString
-        copy8   #0, text_buffer2
-        copy16  #text_buffer2, $8
         lda     datetime_for_conversion ; any bits set?
         ora     datetime_for_conversion+1
-        bne     append_date_strings
-        sta     month           ; 0 is "no date" string
-        jmp     _AppendMonthString
+    IF_ZERO
+        COPY_STRING str_no_date, text_buffer2
+        rts
+    END_IF
 
-append_date_strings:
         copy16  #parsed_date, $0A
         ldax    #datetime_for_conversion
         jsr     ParseDatetime
 
-        jsr     _AppendDateString
-        param_call _ConcatenateDatePart, str_at
-        param_call MakeTimeString, parsed_date
-        param_jump _ConcatenateDatePart, str_time
+        ;; --------------------------------------------------
+        ;; Date
 
-        tmp_date := $0A
-
-.proc _AppendDateString
         ecmp16  datetime_for_conversion, DATELO
     IF_EQ
-        param_jump _ConcatenateDatePart, str_today
+        ldax    #str_today
+        jmp     finish_date
     END_IF
+
+        tmp_date := $A
 
         copy16  datetime_for_conversion, tmp_date
         jsr     _DecP8Date
         ecmp16  DATELO, tmp_date
     IF_EQ
-        param_jump _ConcatenateDatePart, str_tomorrow
+        ldax    #str_tomorrow
+        jmp     finish_date
     END_IF
 
         copy16  DATELO, tmp_date
         jsr     _DecP8Date
         ecmp16  datetime_for_conversion, tmp_date
     IF_EQ
-        param_jump _ConcatenateDatePart, str_yesterday
+        ldax    #str_yesterday
+        jmp     finish_date
     END_IF
+
+        ;; arg0 = day
+        lda     day
+        pha
+        lda     #0
+        pha
+
+        ;; arg1 = month
+        lda     month
+        asl     a
+        tay
+        lda     month_table,y
+        pha
+        lda     month_table+1,y
+        pha
+
+        ;; arg2 = year
+        push16  year
 
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         ASSERT_EQUALS DeskTopSettings::kDateOrderMDY, 0
     IF_EQ
         ;; Month Day, Year
-        jsr     _AppendMonthString
-        param_call _ConcatenateDatePart, str_space
-        jsr     _AppendDayString
-        param_call _ConcatenateDatePart, str_comma
+        FORMAT_MESSAGE 3, str_mdy_format
     ELSE
         ;; Day Month Year
-        jsr     _AppendDayString
-        param_call _ConcatenateDatePart, str_space
-        jsr     _AppendMonthString
-        param_call _ConcatenateDatePart, str_space
+        FORMAT_MESSAGE 3, str_dmy_format
     END_IF
-        jmp     _AppendYearString
-.endproc ; _AppendDateString
 
-.proc _AppendDayString
-        lda     day
-        ldx     #0
-        jsr     IntToString
+        COPY_STRING text_input_buf, text_buffer2
+        ldax    #text_buffer2
 
-        param_jump _ConcatenateDatePart, str_from_int
-.endproc ; _AppendDayString
+finish_date:
+        ;; arg0 = date
+        phax
 
-.proc _AppendMonthString
-        lda     month
-        asl     a
-        tay
-        ldax    month_table,y
+        ;; --------------------------------------------------
+        ;; Time
 
-        jmp     _ConcatenateDatePart
-.endproc ; _AppendMonthString
+        ;; arg1 = time
+        param_call MakeTimeString, parsed_date
+        push16  #str_time
 
-.proc _AppendYearString
-        ldax    year
-        jsr     IntToString
-        param_jump _ConcatenateDatePart, str_from_int
-.endproc ; _AppendYearString
+        FORMAT_MESSAGE 2, str_datetime_format
+        COPY_STRING text_input_buf, text_buffer2
+        rts
 
 year    := parsed_date + ParsedDateTime::year
 month   := parsed_date + ParsedDateTime::month
 day     := parsed_date + ParsedDateTime::day
 hour    := parsed_date + ParsedDateTime::hour
 min     := parsed_date + ParsedDateTime::minute
-
-.proc _ConcatenateDatePart
-        stax    $06
-        ldy     #$00
-        copy8   ($08),y, concat_len
-        clc
-        adc     ($06),y
-        sta     ($08),y
-        copy8   ($06),y, compare_y
-    DO
-        inc     concat_len
-        iny
-        lda     ($06),y
-        sty     tmp
-        concat_len := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        sta     ($08),y
-        tmp := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        compare_y := *+1
-        cpy     #SELF_MODIFIED_BYTE
-    WHILE_LT
-        rts
-.endproc ; _ConcatenateDatePart
-
 
 .proc _DecP8Date
         DATELO := tmp_date
@@ -11209,13 +11188,16 @@ operation_traversal_callbacks_for_delete:
 .endproc ; _DeleteDialogEnumerationCallback
 
 .proc _DeleteDialogConfirmCallback
-        ;; `text_input_buf` is used rather than `text_buffer2` due to size
-        jsr ComposeFileCountString
-        copy8   #0, text_input_buf
-        param_call AppendToTextInputBuf, aux::str_delete_confirm_prefix
-        param_call AppendToTextInputBuf, str_file_count
-        param_call_indirect AppendToTextInputBuf, ptr_str_files_suffix
-        param_call AppendToTextInputBuf, aux::str_delete_confirm_suffix
+        ;; arg0 = count
+        push16  file_count
+
+        ldax    file_count
+        jsr     IsPlural
+    IF_CS
+        FORMAT_MESSAGE 1, aux::str_delete_confirm_singular_format
+    ELSE
+        FORMAT_MESSAGE 1, aux::str_delete_confirm_plural_format
+    END_IF
 
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, text_input_buf
         jsr     SetCursorWatch  ; preserves A
@@ -11534,9 +11516,16 @@ src_path_slash_index:
 
 ;;; `file_count` must be populated
 .proc DrawFileCountWithSuffix
-        jsr     ComposeFileCountString
-        param_call DrawString, str_file_count
-        param_jump_indirect DrawString, ptr_str_files_suffix
+        push16  file_count
+
+        ldax    file_count
+        jsr     IsPlural
+    IF_CS
+        FORMAT_MESSAGE 1, aux::str_file_count_singular_format
+    ELSE
+        FORMAT_MESSAGE 1, aux::str_file_count_plural_format
+    END_IF
+        param_jump DrawString, text_input_buf
 .endproc ; DrawFileCountWithSuffix
 
 ;;; `file_count` must be populated
@@ -11544,9 +11533,10 @@ src_path_slash_index:
         MGTK_CALL MGTK::MoveTo, progress_dialog_remaining_pos
         param_call DrawString, aux::str_files_remaining
 
-        jsr     ComposeFileCountString
-        param_call DrawString, str_file_count
-        param_call DrawString, str_2_spaces
+        ldax    file_count
+        jsr     IntToStringWithSeparators
+        param_call DrawString, str_from_int
+        param_call DrawString, str_4_spaces
 
         ;; Update progress bar
         sub16   total_count, file_count, progress_muldiv_params::numerator
@@ -11925,41 +11915,40 @@ write_protected_flag:
         lda     selected_window_id
     IF_ZERO
         ;; Volume
-        param_call DrawDialogLabel, 2 | DDL_VALUE, aux::str_volume
+        param_call DrawDialogLabel, 2 | DDL_VALUE, aux::str_info_type_volume
     ELSE
         ;; File
         lda     src_file_info_params::file_type
-        pha
+      IF_A_EQ   #FT_DIRECTORY
+        param_call DrawDialogLabel, 2 | DDL_VALUE, aux::str_info_type_dir
+      ELSE
+        lda     src_file_info_params::file_type
         jsr     ComposeFileTypeString
-        COPY_STRING str_file_type, text_input_buf
-        pla                     ; A = file type
-      IF_A_NE   #FT_DIRECTORY
-        ldax    src_file_info_params::aux_type
-        jsr     _AppendAuxType
-      END_IF
+        push16  #str_file_type
+        push16  src_file_info_params::aux_type
+        FORMAT_MESSAGE 2, aux::str_info_type_auxtype_format
         param_call DrawDialogLabel, 2 | DDL_VALUE, text_input_buf
+      END_IF
     END_IF
 
         ;; --------------------------------------------------
         ;; Size/Blocks
-
-        copy8   #0, text_input_buf
 
         ldax    src_file_info_params::blocks_used
         ldy     src_file_info_params::storage_type
     IF_Y_EQ     #ST_VOLUME_DIRECTORY
         ;; ProDOS TRM 4.4.5:
         ;; "When file information about a volume directory is requested, the
-        ;; total number of blocks on the volume is returned in the aux_type
-        ;; field and the total blocks for all files is returned in blocks_used.
+        ;; total number of blocks on the volume is returned in the `aux_type`
+        ;; field and the total blocks for all files is returned in `blocks_used`.
         stax    vol_used_blocks
         copy16  src_file_info_params::aux_type, vol_total_blocks
 
         ;; Display will be handled later via `_GetDirSize`
     ELSE
         ;; A regular file, so just show the size
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
+        phax
+        FORMAT_MESSAGE 1, aux::str_info_size_file_format
         param_call DrawDialogLabel, 3 | DDL_VALUE, text_input_buf
     END_IF
 
@@ -12045,47 +12034,33 @@ operation_traversal_callbacks_for_getinfo:
 
 .proc _UpdateDirSizeDisplay
         ;; Dir: "<size>K for <count> file(s)"
-        ;; Vol: "<size>K for <count> file(s) / <total>K>"
-        copy8   #0, text_input_buf
+        ;; Vol: "<size>K for <count> file(s) / <total>K"
 
-        ;; "<size>K"
-        ldax    num_blocks
-        ldy     selected_window_id
-    IF_ZERO
-        ldax    vol_used_blocks
-    END_IF
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
+        ;; arg0 = size
+        push16  num_blocks
 
-        ;; " for "
-        param_call AppendToTextInputBuf, aux::str_info_size_infix
+        ;; arg1 = count
+        push16  file_count
 
-        ;; "<count> "
-        jsr     ComposeFileCountString
-        param_call AppendToTextInputBuf, str_file_count
-
-        ;; "file(s)"
-        ldax    #aux::str_info_size_suffix
-        ldy     file_count+1
-    IF_ZERO
-        ldy     file_count
-      IF_Y_EQ   #1
-        ldax    #aux::str_info_size_suffix_singular
-      END_IF
-    END_IF
-        jsr     AppendToTextInputBuf
+        ldax    file_count
+        jsr     IsPlural        ; sets C
 
         lda     selected_window_id
     IF_ZERO
-        ;; " / "
-        param_call AppendToTextInputBuf, aux::str_info_size_slash
-        ;; "<total>K"
-        ldax    vol_total_blocks
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
+        ;; arg3 = vol size
+        push16  vol_total_blocks
+      IF_CS                     ; C from `IsPlural` above
+        FORMAT_MESSAGE 3, aux::str_info_size_vol_singular_format
+      ELSE
+        FORMAT_MESSAGE 3, aux::str_info_size_vol_plural_format
+      END_IF
+    ELSE
+      IF_CS                     ; C from `IsPlural` above
+        FORMAT_MESSAGE 2, aux::str_info_size_dir_singular_format
+      ELSE
+        FORMAT_MESSAGE 2, aux::str_info_size_dir_plural_format
+      END_IF
     END_IF
-        ;; In case it shrank
-        param_call AppendToTextInputBuf, str_2_spaces
 
         jsr     SetPortForDialogWindow
         param_jump DrawDialogLabel, 3 | DDL_VALUE, text_input_buf
@@ -12094,39 +12069,6 @@ operation_traversal_callbacks_for_getinfo:
 num_blocks:
         .word   0
 .endproc ; _GetDirSize
-
-;;; ------------------------------------------------------------
-;;; Append aux type (in A,X) to `text_input_buf`
-
-.proc _AppendAuxType
-        phax
-        param_call AppendToTextInputBuf, aux::str_auxtype_prefix
-
-        ;; Append type
-        pla
-        jsr     do_byte
-        pla
-        FALL_THROUGH_TO do_byte
-
-do_byte:
-        pha
-        lsr
-        lsr
-        lsr
-        lsr
-        jsr     do_nibble
-        pla
-        FALL_THROUGH_TO do_nibble
-
-do_nibble:
-        and     #%00001111
-        tax
-        lda     hex_digits,x
-        inc     text_input_buf
-        ldx     text_input_buf
-        sta     text_input_buf,x
-        rts
-.endproc ; _AppendAuxType
 
 ;;; ------------------------------------------------------------
 ;;; Input loop and (hooked) event handlers
@@ -14309,43 +14251,21 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; Adjusted to point at file/files (singular/plural)
-ptr_str_files_suffix:
-        .addr   str_files_suffix
+;;; Input: A,X = number
+;;; Output: C=0 if plural, C=1 if singular; A,X unchanged
+.proc IsPlural
+        cpx     #0              ; >= 256?
+        bne     plural          ; yes, so plural
+        cmp     #1              ; == 1?
+        bne     plural          ; no, so plural
 
-;;; ============================================================
-;;; Populate `str_file_count` based on `file_count`. As a side
-;;; effect, adjusts `ptr_str_files_suffix` as well, on the
-;;; assumption it may be output as well.
-
-.proc ComposeFileCountString
-        ;; Populate `str_file_count`
-        ldax    file_count
-        jsr     IntToStringWithSeparators
-
-        ldx     #0
-    DO
-        inx
-        copy8   str_from_int,x, str_file_count,x
-    WHILE_X_NE str_from_int
-
-        inx
-        copy8   #' ', str_file_count,x
-        stx     str_file_count
-
-        ;; Adjust `ptr_str_files_suffix`
-        lda     file_count+1    ; > 255?
-    IF_ZERO
-        lda     file_count
-      IF_A_EQ   #1
-        copy16  #str_file_suffix, ptr_str_files_suffix ; singular
+        ;; singular
+        sec
         rts
-      END_IF
-    END_IF
 
-        copy16  #str_files_suffix, ptr_str_files_suffix ; plural
+plural: clc
         rts
-.endproc ; ComposeFileCountString
+.endproc ; IsPlural
 
 ;;; ============================================================
 
@@ -15081,11 +15001,6 @@ trash_icon_num:  .byte   0
 
 ;;; ============================================================
 
-hex_digits:
-        .byte   "0123456789ABCDEF"
-
-;;; ============================================================
-
 ;;; High bit set if menu dispatch via mouse with option, clear otherwise.
 menu_modified_click_flag:
         .byte   0
@@ -15197,6 +15112,10 @@ str_date_and_time:
         DetectDoubleClick := main::DetectDoubleClick
         AdjustOnLineEntryCase := main::AdjustOnLineEntryCase
         AdjustFileEntryCase := main::AdjustFileEntryCase
+
+        IntToString := main::IntToString
+        IntToStringWithSeparators := main::IntToStringWithSeparators
+        ComposeSizeString := main::ComposeSizeString
 
 ;;; ============================================================
 

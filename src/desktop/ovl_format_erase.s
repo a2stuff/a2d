@@ -170,11 +170,8 @@ loop2:
         lda     unit_num
         jsr     GetVolName      ; populates `ovl_string_buf`
 
-        copy8   #0, text_input_buf
-        param_call AppendToTextInputBuf, aux::str_confirm_erase_prefix
-        param_call AppendToTextInputBuf, ovl_string_buf
-        param_call AppendToTextInputBuf, aux::str_confirm_erase_suffix
-
+        push16  #ovl_string_buf
+        FORMAT_MESSAGE 1, aux::str_confirm_erase_format
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, text_input_buf
         cmp     #kAlertResultOK
         jne     cancel
@@ -917,17 +914,15 @@ prodos_loader_blocks:
         ;; Unknown, just use slot and drive
 unknown:
         lda     read_block_params::unit_num
-        jsr     _GetSlotChar
-        sta     the_disk_in_slot_label + kTheDiskInSlotSlotCharOffset
-        lda     read_block_params::unit_num
-        jsr     _GetDriveChar
-        sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
+        jsr     _GetSlotNum
+        phax
 
-        ldx     the_disk_in_slot_label
-    DO
-        copy8   the_disk_in_slot_label,x, ovl_string_buf,x
-        dex
-    WHILE_POS
+        lda     read_block_params::unit_num
+        jsr     _GetDriveNum
+        phax
+
+        FORMAT_MESSAGE 2, the_disk_in_slot_format
+        COPY_STRING text_input_buf, ovl_string_buf
         rts
 
         ;; Pascal
@@ -944,32 +939,36 @@ maybe_dos:
 
         ;; DOS 3.3, use slot and drive
         lda     read_block_params::unit_num
-        jsr     _GetSlotChar
-        sta     the_dos_33_disk_label + kTheDos33DiskSlotCharOffset
+        jsr     _GetSlotNum
+        phax
+
         lda     read_block_params::unit_num
-        jsr     _GetDriveChar
-        sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
-        COPY_STRING the_dos_33_disk_label, ovl_string_buf
+        jsr     _GetDriveNum
+        phax
+
+        FORMAT_MESSAGE 2, the_dos_33_disk_format
+        COPY_STRING text_input_buf, ovl_string_buf
         rts
 
-.proc _GetSlotChar
+;;; Returns slot number in A,X
+.proc _GetSlotNum
+        ldx     #0              ; hi
         and     #$70
         lsr     a
         lsr     a
         lsr     a
-        lsr     a
-        clc
-        adc     #'0'
+        lsr     a               ; lo
         rts
-.endproc ; _GetSlotChar
+.endproc ; _GetSlotNum
 
-.proc _GetDriveChar
-        and     #$80
-        asl     a
-        rol     a
-        adc     #'1'
+;;; Returns the drive number in A,X
+.proc _GetDriveNum
+        ldx     #0              ; hi
+        asl     a               ; drive bit into C
+        txa
+        adc     #1              ; lo
         rts
-.endproc ; _GetDriveChar
+.endproc ; _GetDriveNum
 
 ;;; Handle Pascal disk - name suffixed with ':'
 pascal_disk:

@@ -296,6 +296,12 @@ str_about7:  PASCAL_STRING res_string_about_text_line7
 str_about8:  PASCAL_STRING kBuildDate
 str_about9:  PASCAL_STRING .sprintf(res_string_noprod_version_format_long,::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix)
 
+;;; Used in progress dialogs: "Copying: N file(s)"
+str_file_count_singular_format:
+        PASCAL_STRING res_string_file_count_singular_format
+str_file_count_plural_format:
+        PASCAL_STRING res_string_file_count_plural_format
+
 str_files_remaining:
         PASCAL_STRING res_string_label_files_remaining
 
@@ -321,10 +327,10 @@ str_no_overwrite_dir:
         PASCAL_STRING res_string_errmsg_overwrite_dir
 
         ;; "Delete" dialog strings
-str_delete_confirm_prefix:
-        PASCAL_STRING res_string_prompt_delete_confirm_prefix
-str_delete_confirm_suffix:
-        PASCAL_STRING res_string_prompt_delete_confirm_suffix
+str_delete_confirm_singular_format:
+        PASCAL_STRING res_string_prompt_delete_confirm_singular_format
+str_delete_confirm_plural_format:
+        PASCAL_STRING res_string_prompt_delete_confirm_plural_format
 str_delete_count:
         PASCAL_STRING res_string_label_delete_count
 str_file_colon:
@@ -351,18 +357,23 @@ str_info_yes:
         PASCAL_STRING res_string_get_info_label_yes
 str_info_no:
         PASCAL_STRING res_string_get_info_label_no
-str_info_size_infix:
-        PASCAL_STRING res_string_get_info_label_size_infix
-str_info_size_suffix:
-        PASCAL_STRING res_string_get_info_label_size_suffix
-str_info_size_suffix_singular:
-        PASCAL_STRING res_string_get_info_label_size_suffix_singular
-str_info_size_slash:
-        PASCAL_STRING res_string_get_info_label_size_slash
-str_auxtype_prefix:
-        PASCAL_STRING res_string_auxtype_prefix
-str_volume:
+
+str_info_size_file_format:
+        PASCAL_STRING res_string_get_info_size_file_format
+str_info_size_dir_singular_format:
+        PASCAL_STRING res_string_get_info_size_dir_singular_format
+str_info_size_dir_plural_format:
+        PASCAL_STRING res_string_get_info_size_dir_plural_format
+str_info_size_vol_singular_format:
+        PASCAL_STRING res_string_get_info_size_vol_singular_format
+str_info_size_vol_plural_format:
+        PASCAL_STRING res_string_get_info_size_vol_plural_format
+str_info_type_volume:
         PASCAL_STRING res_string_volume
+str_info_type_dir:
+        PASCAL_STRING res_string_folder
+str_info_type_auxtype_format:
+        PASCAL_STRING res_string_auxtype_format
 
         ;; Format / Erase dialog strings
 str_select_format:
@@ -378,10 +389,8 @@ str_formatting_error:
 
 str_select_erase:
         PASCAL_STRING res_string_erase_disk_label_select
-str_confirm_erase_prefix:
-        PASCAL_STRING res_string_erase_disk_prompt_erase_prefix
-str_confirm_erase_suffix:
-        PASCAL_STRING res_string_erase_disk_prompt_erase_suffix
+str_confirm_erase_format:
+        PASCAL_STRING res_string_erase_disk_prompt_erase_format
 str_erasing:
         PASCAL_STRING res_string_erase_disk_status_erasing
 str_erasing_error:
@@ -389,6 +398,20 @@ str_erasing_error:
 
 str_tip_prodos:
         PASCAL_STRING res_string_tip_copy_prodos
+
+str_sd_name_format:
+        PASCAL_STRING res_string_sd_name_format
+
+;;; Window header
+
+str_item_count_singular_format:
+        PASCAL_STRING res_string_window_header_item_count_singular_format
+str_item_count_plural_format:
+        PASCAL_STRING res_string_window_header_item_count_plural_format
+str_k_in_disk_format:
+        PASCAL_STRING res_string_window_header_k_used_format
+str_k_available_format:
+        PASCAL_STRING res_string_window_header_k_available_format
 
 ;;; Miscellaneous alert strings
 

@@ -334,32 +334,262 @@ op:     lda     SELF_MODIFIED
 
 ;;; ============================================================
 
-;;; From main, concatenate aux-visible string to `text_input_buf`
-;;; Assert: Main is banked in
-.proc AppendToTextInputBuf
-        jsr     BankInAux
-        jsr     PushPointers
-        ptr := $06
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        iny
-        ldx     text_input_buf
-        inx
-    DO
-        copy8   (ptr),y, text_input_buf,x
-        len := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        BREAK_IF_EQ
-        inx
-        iny
-    WHILE_NOT_ZERO              ; always
-        stx     text_input_buf
+;;; Write formatted data to a string.
+;;;
+;;; Called MLI style:
+;;;     jsr FormatMessage
+;;;     .byte argument_count
+;;;     .addr format_string
+;;;
+;;; Use the `FORMAT_MESSAGE` macro:
+;;;
+;;;     FORMAT_MESSAGE argument_count, format_string
+;;;
+;;; The format string must be aux-visible.
+;;;
+;;; Output: `text_input_buf` has the resulting string.
+;;;
+;;; Message format is a length-prefixed string with percent sequences
+;;; of the form %<index><type>. Indexes start at 0.
+;;;
+;;; Types:
+;;;    d - decimal, positive integer, no separators, e.g. "12345"
+;;;    n - number, positive integer, separators, e.g. "12,456"
+;;;    k - size, from block count, in K, e.g. "8.5K"
+;;;    x - hex, hexadecimal word, e.g. "EF12"
+;;;    s - string (in main memory)
+;;;    c - character (in low byte of argument; high byte is ignored)
+;;;    otherwise a literal, e.g. %%
+;;;
+;;; Example: "Copying %0n files to %1s; %2d%% complete."
+;;;
+;;; Note that this is different than printf() which processes the
+;;; arguments in order encountered in the string; this is intentional
+;;; to support localization where the order of items in the string
+;;; could change.
+;;;
+;;; Trashes $06, $08
 
+.proc FormatMessage
+        out_buf := text_input_buf
+
+;;; format string assumed to be in aux
+
+        in_ptr  := $06
+        arg_ptr := $08
+
+;;; stack on entry; stack grows downwards from $1FF
+;;;     ...
+
+;;; $200
+;;;     ...
+;;;     arg_0_lo  <-- start of arguments / `stack_offset`
+;;;     arg_0_hi
+;;;     arg_1_lo
+;;;     arg_1_hi
+;;;     ...
+;;;     arg_N_lo
+;;;     arg_N_hi  <-- end of arguments
+;;;     rts_hi
+;;;     rts_lo    <-- stack pointer on entry
+;;;     ...
+;;; $100
+
+        ;; Adjust stack/stash
+        pla
+        sta     arg_ptr
+        clc
+        adc     #<3
+        sta     rts_lo
+        pla
+        sta     arg_ptr+1
+        adc     #>3
+        sta     rts_hi
+
+        ;; Get args
+        ldy     #1              ; Note: rts address is off-by-one
+        lda     (arg_ptr),y
+        pha                     ; A = arg count
+        iny
+        lda     (arg_ptr),y
+        sta     in_ptr
+        iny
+        lda     (arg_ptr),y
+        sta     in_ptr+1
+        pla                     ; A = arg count
+        tay
+
+        ;; Get pointer to start of arguments
+        tsx
+   DO
+        inx
+        inx
+        dey
+   WHILE_NOT_ZERO
+        stx     stack_offset
+
+        ;; Loop over string
+        ldx     #0
+        stx     out_buf         ; initial length is 0
+        dex
+        stx     in_pos          ; `read_byte` pre-increments
+
+        jsr     read_byte
+        sta     len
+
+        ;; Loop over all bytes in pattern string
+    DO
+        jsr     read_byte
+
+      IF_A_EQ   #'%'
+        ;; escape sequence: "%<index><type>"
+
+        ;; Get argument index, translate to stack ptr:
+        ;; Y = `stack_offset` - (index * 2)
+        jsr     read_byte       ; index
+        and     #%00001111      ; ASCII to digit
+        asl                     ; index * 2
+        eor     #$FF            ; negate; usually this is: CLC; ADC #1
+        sec                     ; but we're about to ADC anyway so
+        adc     stack_offset    ; add 1 via the SEC
+        tay
+
+        ;; Read the actual argument, stash on stack
+        lda     $100,y          ; lo
+        pha
+        lda     $100-1,y        ; hi
+        pha
+
+        ;; Get type
+        jsr     read_byte       ; type
+        tay
+
+        ;; Pull argument value off stack
+        plax
+
+        ;; Now Y = type, A,X = argument
+       IF_Y_EQ  #'d'            ; decimal - decimal integer
+        jsr     IntToString
+        param_jump append_string, str_from_int
+       END_IF
+
+       IF_Y_EQ  #'n'            ; number - decimal integer with separators
+        jsr     IntToStringWithSeparators
+        param_jump append_string, str_from_int
+       END_IF
+
+       IF_Y_EQ  #'k'            ; size - in K from blocks
+        jsr     PushPointers
+        jsr     ComposeSizeString
         jsr     PopPointers
-        jmp     BankInMain
-.endproc ; AppendToTextInputBuf
+        param_jump append_string, text_buffer2
+       END_IF
+
+       IF_Y_EQ  #'x'            ; hex - hexadecimal word
+        jsr     append_hex
+        jmp     resume
+       END_IF
+
+       IF_Y_EQ  #'s'            ; string pointer
+        jmp     append_string
+       END_IF
+
+        ;; If 'c', char in A is written, X is ignored
+       IF_Y_NE  #'c'            ; char
+        ;; Otherwise, so treat as literal (e.g. "%%")
+        tya
+       END_IF
+      END_IF
+
+        jsr     write_byte
+
+resume:
+        len := *+1
+        lda     #SELF_MODIFIED_BYTE
+    WHILE_A_NE  in_pos
+
+        ;; Adjust stack
+        stack_offset := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        txs
+
+        ;; Restore return address
+        rts_hi := *+1
+        lda     #SELF_MODIFIED_BYTE
+        pha
+        rts_lo := *+1
+        lda     #SELF_MODIFIED_BYTE
+        pha
+
+        rts
+
+;;; Preserves X
+read_byte:
+        jsr     BankInAux
+        inc     in_pos
+        in_pos := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        lda     (in_ptr),y
+        jsr     BankInMain
+        rts
+
+;;; Preserves X
+.proc write_byte
+        inc     out_buf
+        ldy     out_buf
+        sta     out_buf,y
+        rts
+.endproc ; write_byte
+
+.proc append_string
+        stax    arg_ptr
+        ldy     #0
+        lda     (arg_ptr),y
+        beq     resume
+
+        tax                     ; X = len
+    DO
+        iny                     ; Y = index
+        tya
+        pha
+        lda     (arg_ptr),y
+        jsr     write_byte      ; preserves X
+        pla
+        tay                     ; Y = index
+        dex
+    WHILE_NOT_ZERO
+        beq     resume          ; always
+.endproc ; append_string
+
+.proc append_hex
+        pha
+        txa
+        jsr     do_byte
+        pla
+        FALL_THROUGH_TO do_byte
+
+do_byte:
+        pha
+        lsr
+        lsr
+        lsr
+        lsr
+        jsr     do_nibble
+        pla
+        FALL_THROUGH_TO do_nibble
+
+do_nibble:
+        and     #%00001111
+        tax
+        lda     hex_digits,x
+        jsr     write_byte
+        rts
+
+hex_digits:
+        .byte   "0123456789ABCDEF"
+.endproc ; append_hex
+
+.endproc ; FormatMessage
 
 ;;; ============================================================
 

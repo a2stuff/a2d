@@ -61,6 +61,27 @@
 
         data_buf := $1200
         kDataBufferSize = $400
+;;; ============================================================
+
+        jmp     start
+
+;;; ============================================================
+;;; Resources and library code are here since they aren't needed by
+;;; `RestoreWindows` which trashes $800... $DFF
+
+str_volume_type_unknown:
+        PASCAL_STRING res_string_volume_type_unknown
+
+trash_name:
+        PASCAL_STRING res_string_trash_icon_name
+
+        .include "../lib/clear_dhr.s"
+        saved_ram_unitnum := main::saved_ram_unitnum
+        saved_ram_drvec   := main::saved_ram_drvec
+        saved_ram_buffer  := IO_BUFFER
+        .include "../lib/disconnect_ram.s"
+
+;;; ============================================================
 
 start:
 
@@ -701,62 +722,57 @@ next:
         tya                     ; Y = index
         pha                     ; A = index
 
-        devname_ptr := $08
+        lda     DEVLST,y
+        pha                     ; A = unmasked unit number
+
+        devname_ptr := $06
+
+        jsr     main::GetDeviceType ; A = unmasked unit number
+        stax    devname_ptr         ; A,X = device name (may be empty)
+        ;; Empty?
+        ldy     #0
+        lda     (devname_ptr),y
+      IF_ZERO
+        copy16  #str_volume_type_unknown, devname_ptr
+      END_IF
+
+        ;; arg0 = slot
+        pla                     ; A = unmasked unit number
+        tay
+        and     #%01110000      ; A = 0SSS0000
+        lsr                     ; A = 00SSS000
+        lsr                     ; A = 000SSS00
+        lsr                     ; A = 0000SSS0
+        lsr                     ; A = 00000SSS
+        pha                     ; arg0 lo
+        lda     #0
+        pha                     ; arg0 hi
+
+        ;; arg1 = drive
+        tya
+        asl                     ; drive bit into C
+        lda     #0
+        adc     #1              ; arg1 lo
+        pha
+        lda     #0
+        pha                     ; arg1 hi
+
+        ;; arg2 = name
+        push16  devname_ptr     ; arg2
+
+        FORMAT_MESSAGE 3, aux::str_sd_name_format
+
+        ;; Copy name into table
+        pla                     ; A = index
+        pha
+
         asl     a
         tax
         copy16  device_name_table,x, devname_ptr
 
-        lda     DEVLST,y
-        pha                     ; A = unmasked unit number
-
-        src := $06
-
-        jsr     main::GetDeviceType ; A = unmasked unit number
-        stax    src             ; A,X = device name (may be empty)
-
-        ;; Empty?
-        ldy     #0
-        lda     (src),y
-      IF_ZERO
-        copy16  #str_volume_type_unknown, src
-      END_IF
-
-        ;; Set final length
-        lda     (src),y         ; Y = 0
-        clc
-        adc     #kSDPrefixLength
-        sta     str_sdname_buffer
-
-        ;; Copy string into template, after prefix
-        lda     (src),y         ; Y = 0
-        tay                     ; Y = length
+        ldy     text_input_buf
       DO
-        copy8   (src),y, str_sdname_buffer + kSDPrefixLength,y
-        dey
-      WHILE_NOT_ZERO            ; leave length alone
-
-        ;; Insert Slot #
-        pla                     ; A = unmasked unit number
-        pha                     ; A = unmasked unit number
-        and     #UNIT_NUM_SLOT_MASK
-        lsr     a               ; 00111000
-        lsr     a               ; 00011100
-        lsr     a               ; 00001110
-        lsr     a               ; 00000111
-        ora     #'0'
-        sta     str_sdname_buffer + kDeviceTemplateSlotOffset
-
-        ;; Insert Drive #
-        pla                     ; A = unmasked unit number
-        rol     a               ; set carry to drive - 1
-        lda     #0              ; 0 + carry + '1'
-        adc     #'1'            ; convert to '1' or '2'
-        sta     str_sdname_buffer + kDeviceTemplateDriveOffset
-
-        ;; Copy name into table
-        ldy     str_sdname_buffer
-      DO
-        copy8   str_sdname_buffer,y, (devname_ptr),y
+        copy8   text_input_buf,y, (devname_ptr),y
         dey
       WHILE_POS
 
@@ -1078,29 +1094,9 @@ exit:   jmp     main::LoadDesktopEntryTable
 
 ;;; ============================================================
 
-kDeviceTemplateSlotOffset = res_const_sd_prefix_pattern_offset1
-kDeviceTemplateDriveOffset = res_const_sd_prefix_pattern_offset2
-
-kSDPrefixLength = .strlen(res_string_sd_prefix_pattern)
-str_sdname_buffer:
-        PASCAL_STRING res_string_sd_prefix_pattern ; "S#,D#: " prefix
-        .res    16, 0           ; space for actual name
-
-str_volume_type_unknown:
-        PASCAL_STRING res_string_volume_type_unknown
-
-trash_name:  PASCAL_STRING res_string_trash_icon_name
+        .assert * <= data_buf, error, "data/code clash"
 
 ;;; ============================================================
-
-        .include "../lib/clear_dhr.s"
-        saved_ram_unitnum := main::saved_ram_unitnum
-        saved_ram_drvec   := main::saved_ram_drvec
-        saved_ram_buffer  := IO_BUFFER
-        .include "../lib/disconnect_ram.s"
-
-;;; ============================================================
-
 
 .endscope ; init
 

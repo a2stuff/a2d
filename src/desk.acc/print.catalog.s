@@ -1011,7 +1011,6 @@ ysave:  .byte   0
 
 ReadSetting = JUMP_TABLE_READ_SETTING
 
-hex_digits:     .byte   "0123456789ABCDEF" ; Needed by ComposeFileTypeString
 str_from_int:   PASCAL_STRING "000,000"    ; Filled in by IntToString
 
 str_date:       PASCAL_STRING "DD-MMM-YY"

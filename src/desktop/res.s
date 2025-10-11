@@ -456,15 +456,11 @@ VolPickerSelChangeCallback:
         DEFINE_POINT vol_picker_line2_start, 7, winfo_prompt_dialog::kHeight-22
         DEFINE_POINT vol_picker_line2_end, winfo_prompt_dialog::kWidth - 8, winfo_prompt_dialog::kHeight-22
 
-the_dos_33_disk_label:
-        PASCAL_STRING res_string_the_dos_33_disk_suffix_pattern
-        kTheDos33DiskSlotCharOffset = res_const_the_dos_33_disk_suffix_pattern_offset1
-        kTheDos33DiskDriveCharOffset = res_const_the_dos_33_disk_suffix_pattern_offset2
+the_dos_33_disk_format:
+        PASCAL_STRING res_string_the_dos_33_disk_format
 
-the_disk_in_slot_label:
-        PASCAL_STRING res_string_the_disk_in_slot_suffix_pattern
-        kTheDiskInSlotSlotCharOffset = res_const_the_disk_in_slot_suffix_pattern_offset1
-        kTheDiskInSlotDriveCharOffset = res_const_the_disk_in_slot_suffix_pattern_offset2
+the_disk_in_slot_format:
+        PASCAL_STRING res_string_the_disk_in_slot_format
 
 ;;; ============================================================
 ;;; Name prompt dialog (used for Format/Erase)
@@ -473,18 +469,6 @@ the_disk_in_slot_label:
         DEFINE_LINE_EDIT_PARAMS prompt_le_params, prompt_line_edit_rec
 
 ;;; ============================================================
-
-str_file_suffix:
-        PASCAL_STRING res_string_file_suffix
-str_files_suffix:
-        PASCAL_STRING res_string_files_suffix
-
-str_file_count:                 ; populated with number of files
-        PASCAL_STRING " ##,### "
-
-;;; Used as suffix to handle `str_file_count` shrinking
-str_2_spaces:
-        PASCAL_STRING "  "
 
 str_kb_suffix:
         PASCAL_STRING res_string_kb_suffix       ; suffix for kilobytes
@@ -541,27 +525,30 @@ str_oct:PASCAL_STRING res_string_month_name_10
 str_nov:PASCAL_STRING res_string_month_name_11
 str_dec:PASCAL_STRING res_string_month_name_12
 
-month_table:
-        .addr   str_no_date
+month_table := *-2
         .addr   str_jan,str_feb,str_mar,str_apr,str_may,str_jun
         .addr   str_jul,str_aug,str_sep,str_oct,str_nov,str_dec
         ASSERT_ADDRESS_TABLE_SIZE month_table, 13
 
 str_no_date:
         PASCAL_STRING res_string_no_date
-
 str_space:
         PASCAL_STRING " "
-str_comma:
-        PASCAL_STRING res_string_comma_infix
-str_at:
-        PASCAL_STRING res_string_at_infix
 str_today:
         PASCAL_STRING res_string_today
 str_yesterday:
         PASCAL_STRING res_string_yesterday
 str_tomorrow:
         PASCAL_STRING res_string_tomorrow
+
+str_datetime_format:
+        PASCAL_STRING res_string_datetime_format
+
+str_mdy_format:
+        PASCAL_STRING res_string_mdy_format
+
+str_dmy_format:
+        PASCAL_STRING res_string_dmy_format
 
 ;;; ============================================================
 ;;; Shortcuts ("run list")
@@ -775,7 +762,7 @@ device_name_table:
         .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE device_name_table, kMaxVolumes + 1
 
-        kDeviceNameLength = 1 + 16 + .strlen(res_string_sd_prefix_pattern)
+        kDeviceNameLength = 16 + .strlen(res_string_sd_name_format) - 6
         .repeat kMaxVolumes+1, i
         .ident(.sprintf("dev%ds", i)) := *
         .res    kDeviceNameLength, 0
@@ -920,22 +907,11 @@ buflabel:       .res    16, 0
 ;;; ============================================================
 ;;; Resources for window header (Items/K in disk/K available)
 
-str_item_suffix:
-        PASCAL_STRING res_string_window_header_item_suffix
-str_items_suffix:
-        PASCAL_STRING res_string_window_header_items_suffix
-
         DEFINE_POINT header_text_pos, 0, 0
         DEFINE_POINT header_text_delta, 0, 0
 
         DEFINE_POINT header_line_left, 0, 0
         DEFINE_POINT header_line_right, 0, 0
-
-str_k_in_disk:
-        PASCAL_STRING res_string_window_header_k_used_suffix ; suffix for disk space used
-
-str_k_available:
-        PASCAL_STRING res_string_window_header_k_available_suffix ; suffix for disk space available
 
 str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator

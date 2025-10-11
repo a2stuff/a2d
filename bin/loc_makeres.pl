@@ -153,7 +153,7 @@ while (<STDIN>) {
       $str = check($lang, $label, $en, $str);
 
       if ($lang eq 'bg') {
-        $str =~ s/(%\w|\\r|\\x\w\w|.)/length $1 == 1 ? uc($1) : $1/eg;
+        $str =~ s/(%\d*\w|\\r|\\x\w\w|.)/length $1 == 1 ? uc($1) : $1/eg;
       }
 
       $str = encode($lang, $str);

@@ -1,10 +1,11 @@
 ;;; ============================================================
-;;; Requires: `hex_digits` to be defined as "0123456789ABCDEF"
-;;; ============================================================
 
 ;;; Populated by call to `ComposeFileTypeString`
 str_file_type:
         PASCAL_STRING "$00"
+
+;;; ============================================================
+
 
 ;;; Input: A = ProDOS file type
 ;;; Output: `str_file_type` populated (3 chars, length prefixed)
@@ -121,5 +122,8 @@ type_names_table:
         .byte   "REL" ; rel *
         .byte   "SYS" ; system *
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 3
+
+hex_digits:
+        .byte   "0123456789ABCDEF"
 
 .endproc ; ComposeFileTypeString
