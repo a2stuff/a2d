@@ -187,13 +187,13 @@ $D000 +------+-----------+  +------+-----------+  +-------------+
 $C000 +-------------+       +-------------+       +-------------+
       |.ProDOS.GP...|       | DeskTop     |
 $BF00 +-------------+       | Utilities & |
-      | DeskTop     |       | Resources   |
-      | App Code    |       |             |
-      |             |       | * Icon TK   |
-      |             |       | * LE TK     |
-      |             |       | * Alerts    |
+      | Copy Buffer |       | Resources   |
       |             |       |             |
-      |             |       |             |
+      |             |       | * ToolKits  |
+$__00 +-------------+       | * Alerts    |
+      | DeskTop     |       |             |
+      | Application |       |             |
+      | Code        |       |             |
       |             |       |             |
       |             |       |             |
       |             |       | Font        |

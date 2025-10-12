@@ -9809,10 +9809,14 @@ dst_is_appleshare_flag:
 ;;; ============================================================
 
 ;;; Memory Map
-;;; ...
+
+;;; $BF00 - $FFFF   - ProDOS
+;;; $__00 - $BEFF   - file data buffer
+;;; $4000 - $__FF   - DeskTop code
+;;; $2000 - $3FFF   - graphics page
 ;;; $1F80 - $1FFF   - dst path buffer
-;;; $1F00 - $1F7F   - unused
-;;; $1500 - $1EFF   - file data buffer
+;;; $1600 - $1F7F   - unused
+;;; $1500 - $15FF   - ON_LINE buffer
 ;;; $1100 - $14FF   - dst file I/O buffer
 ;;; $0D00 - $10FF   - src file I/O buffer
 ;;; $0C00 - $0CFF   - dir data buffer
@@ -9823,14 +9827,23 @@ dir_io_buffer   :=  $800        ; 1024 bytes for I/O
 dir_data_buffer :=  $C00        ; 256 bytes for directory data
 src_io_buffer   :=  $D00        ; 1024 bytes for I/O
 dst_io_buffer   := $1100        ; 1024 bytes for I/O
-copy_buffer     := $1500        ; Read/Write buffer
-kCopyBufferSize = $1F00 - copy_buffer
+on_line_buffer  := $1500        ; 256 bytes for ON_LINE call
 
-        .assert copy_buffer + kCopyBufferSize <= dst_path_buf, error, "Buffer overlap"
+;;; Memory from end of this segment through ProDOS MLI entry point is
+;;; used for the copy buffer. This is (currently) nearly twice the
+;;; size of the free memory in the $1500 - $1E00 range, permitting
+;;; faster copies.
+
+copy_buffer := kSegmentDeskTopMainAddress + kSegmentDeskTopMainLength
+kCopyBufferSize = ((MLI - copy_buffer) / BLOCK_SIZE) * BLOCK_SIZE
+
+        .assert .lobyte(dir_io_buffer) = 0, error, "I/O buffers must be page-aligned"
+        .assert .lobyte(src_io_buffer) = 0, error, "I/O buffers must be page-aligned"
+        .assert .lobyte(dst_io_buffer) = 0, error, "I/O buffers must be page-aligned"
+        .assert .lobyte(copy_buffer) = 0, error, "page-align copy buffer for better performance"
         .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
 
-        ;; TODO: Is $800 safe here, given this is called on retry?
-        DEFINE_ON_LINE_PARAMS on_line_all_drives_params,, $800
+        DEFINE_ON_LINE_PARAMS on_line_all_drives_params,, on_line_buffer
 
         block_buffer := copy_buffer
         DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
@@ -11910,13 +11923,13 @@ retry:  param_call_indirect GetFileInfo, src_ptr
         ENTRY_POINTS_FOR_BIT7_FLAG dst, src, dst_flag
 
     IF_A_NE_ALL_OF #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
-        ;; if err is "not found" prompt specifically for src/dst disk
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
         jmp     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
     END_IF
 
+        ;; if err is "not found" prompt specifically for src/dst disk
         ldax    #aux::str_alert_insert_source_disk
         bit     dst_flag
     IF_NS
