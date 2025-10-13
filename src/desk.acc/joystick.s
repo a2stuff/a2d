@@ -404,7 +404,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor

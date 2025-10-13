@@ -371,7 +371,7 @@ loop:   txa
         lda     (pos_ptr),y
         pha
         iny
-    WHILE Y NE  #4
+    WHILE Y <> #4
 
         ;; --------------------------------------------------
         ;; Update X coordinate and maybe delta

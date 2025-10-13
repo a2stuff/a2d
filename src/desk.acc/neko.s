@@ -578,9 +578,9 @@ skip:   .word   0
 
         ;; Beyond threshold?
         lda     x_delta
-    IF A LT     #kThreshold
+    IF A < #kThreshold
         lda     y_delta
-      IF A LT   #kThreshold
+      IF A < #kThreshold
         ldx     #0              ; no; null out the deltas
         beq     skip_encode     ; always
       END_IF
@@ -588,7 +588,7 @@ skip:   .word   0
 
         ;; Yes - do math to scale the deltas
         lda     x_delta
-    IF A GE     y_delta
+    IF A >= y_delta
         ;; x dominant:
         ;; * y_delta = kMove * y_delta / x_delta
         ;; * x_delta = kMove
@@ -621,7 +621,7 @@ skip:   .word   0
         ;;  00 = no, 01 = +ve, 10 = -ve, 11 = (not used)
         ldx     #0
         lda     x_delta
-    IF A GE     #kMove/2
+    IF A >= #kMove/2
         bit     x_neg
       IF NEG
         inx
@@ -634,7 +634,7 @@ skip:   .word   0
         tax
 
         lda     y_delta
-    IF A GE     #kMove/2
+    IF A >= #kMove/2
         bit     y_neg
       IF NEG
         inx
@@ -672,19 +672,19 @@ new_state:
         jmp     set_state_and_frame
       END_IF
 
-      IF Y LT   #$10            ; Y = random
+      IF Y < #$10               ; Y = random
         ldx     #NekoState::itch
         lda     #NekoFrame::itch1
         jmp     set_state_and_frame
       END_IF
 
-      IF Y LT   #$20            ; Y = random
+      IF Y < #$20               ; Y = random
         ldx     #NekoState::yawn
         lda     #NekoFrame::yawning
         jmp     set_state_and_frame
       END_IF
 
-      IF Y LT   #$30            ; Y = random
+      IF Y < #$30               ; Y = random
         lda     #NekoFrame::lick
         jmp     set_frame
       END_IF
@@ -707,7 +707,7 @@ new_state:
         SET_BIT7_FLAG moved_flag
 
         jsr     MoveAndClamp
-      IF Y NE   #0              ; Y = clamped
+      IF Y <> #0                ; Y = clamped
         copy8   dir, scratch_dir
         lda     #NekoState::scratch
         bne     new_state       ; always
@@ -725,7 +725,7 @@ new_state:
         ;; ------------------------------
     IF EQ
         lda     dir
-      IF A NE   scratch_dir
+      IF A <> scratch_dir
         ldx     #NekoState::chase
         lda     #NekoFrame::surprise
         jmp     set_state_and_frame
@@ -742,7 +742,7 @@ new_state:
         cmp     #NekoState::itch
         ;; ------------------------------
     IF EQ
-      IF Y LT   #$20            ; Y = random
+      IF Y < #$20               ; Y = random
         ldx     #NekoState::rest
         lda     #NekoFrame::sitting
         bne     set_state_and_frame ; always
@@ -757,7 +757,7 @@ new_state:
         cmp     #NekoState::yawn
         ;; ------------------------------
     IF EQ
-      IF Y LT   #$20            ; Y = random
+      IF Y < #$20               ; Y = random
         ldx     #NekoState::sleep
         lda     #NekoFrame::sleep1
         bne     set_state_and_frame ; always

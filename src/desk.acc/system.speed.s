@@ -379,13 +379,13 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
 
         inc     frame_counter
         lda     frame_counter
-    IF A EQ     #kNumAnimFrames * 4
+    IF A = #kNumAnimFrames * 4
         copy8   #0, frame_counter
     END_IF
 
         inc     run_pos
         lda     run_pos
-    IF A EQ     #kRunDistance
+    IF A = #kRunDistance
         copy8   #0, run_pos
 
         MGTK_CALL MGTK::SetPenMode, penXOR

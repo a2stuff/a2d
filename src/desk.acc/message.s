@@ -123,12 +123,12 @@ exit:
         cmp     #CHAR_ESCAPE
         beq     InputLoop::exit
 
-    IF A EQ     #CHAR_LEFT
+    IF A = #CHAR_LEFT
         dec16   delta
         jmp     InputLoop
     END_IF
 
-    IF A EQ     #CHAR_RIGHT
+    IF A = #CHAR_RIGHT
         inc16   delta
         jmp     InputLoop
     END_IF
@@ -143,7 +143,7 @@ printable:
 
         ldx     text_params::length
         dex
-    IF X LT     #kMaxStringLength-1
+    IF X < #kMaxStringLength-1
         sta     buf,x
         copy8   #kPadChar, buf+1,x
         inc     text_params::length
@@ -158,7 +158,7 @@ backspace:
         jsr     maybe_init
 
         lda     text_params::length
-    IF A GE     #3
+    IF A >= #3
         dec     text_params::length
         ldx     text_params::length
         copy8   #kPadChar, buf-1,x

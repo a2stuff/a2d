@@ -319,7 +319,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         cmp     #CHAR_ESCAPE
         beq     Exit
 
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, find_button
         jsr     DoFind
         jmp     InputLoop
@@ -417,7 +417,7 @@ loop:
         copy8   (ptr),y, lat,x
         iny
         inx
-    WHILE X NE  #4
+    WHILE X <> #4
         jmp     done
 
         ;; Advance pointer to next record

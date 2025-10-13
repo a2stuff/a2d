@@ -589,7 +589,7 @@ start:  lda     KBD
         jsr     ConstructKeyPoly
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF A NE     #MGTK::Error::window_obscured
+    IF A <> #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -673,7 +673,7 @@ return_flag:
         ptr := $06
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -719,8 +719,8 @@ return_flag:
         MGTK_CALL MGTK::FrameRect, tmp_rect
 
         lda     char
-       IF A GE  #' '
-        IF A LT #CHAR_DELETE
+       IF A >= #' '
+        IF A < #CHAR_DELETE
         MGTK_CALL MGTK::MoveTo, tmp_rect
         MGTK_CALL MGTK::Move, label_relpos
         MGTK_CALL MGTK::DrawText, drawtext_params_char
@@ -776,7 +776,7 @@ check:  sec
         lda     ZIDBYTE         ; $00 = IIc
     IF ZERO
         lda     ZIDBYTE2        ; $05 = IIc Plus
-      IF A EQ   #$05
+      IF A = #$05
         sec                     ; Yes, is a IIc+
         rts
       END_IF

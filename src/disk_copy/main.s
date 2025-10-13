@@ -330,7 +330,7 @@ start:
 
       IF CC
         lda     dib_buffer+SPDIB::Device_Type_Code
-       IF A EQ  #SPDeviceType::Disk35
+       IF A = #SPDeviceType::Disk35
         ;; Assume all 3.5" drives are ejectable
         return  #$80
        END_IF
@@ -383,7 +383,7 @@ loop:
 check:
         ;; Check for keypress
         lda     KBD
-    IF A EQ     #(CHAR_ESCAPE | $80)
+    IF A = #(CHAR_ESCAPE | $80)
         bit     KBDSTRB
         jmp     error
     END_IF
@@ -637,7 +637,7 @@ table:  .byte   7,6,5,4,3,2,1,0
 
 .proc AdvanceToNextBlockIndex
         jsr     ComputeMemoryPageSignature
-    IF Y NE     #0
+    IF Y <> #0
         pha
         jsr     _Next
         pla
@@ -686,7 +686,7 @@ ok:     clc
 
         ;; Now compute address to store in memory
         lda     auxlc::block_index_div8
-    IF A LT     #$10
+    IF A < #$10
 
         ;; $00-$0F is main pages $00...$FE
         ;; $10-$1F is aux  pages $00...$FE
@@ -704,7 +704,7 @@ calc:   asl     a               ; *= 16
         rts
     END_IF
 
-    IF A LT     #$20            ; 16-31
+    IF A < #$20                 ; 16-31
         sec
         sbc     #$10
         jmp     calc

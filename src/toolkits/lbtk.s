@@ -287,7 +287,7 @@ coords          .tag MGTK::Point
         return  #$FF            ; not an item
     END_IF
 
-    IF A NE     #MGTK::Ctl::not_a_control
+    IF A <> #MGTK::Ctl::not_a_control
         return  #$FF            ; not an item
     END_IF
 
@@ -302,14 +302,14 @@ coords          .tag MGTK::Point
         lda     divide_params::result
 
         ;; Validate
-    IF A GE     lbr_copy + LBTK::ListBoxRecord::num_items
+    IF A >= lbr_copy + LBTK::ListBoxRecord::num_items
         lda     #$FF
         jsr     _SetSelectionAndNotify
         return  #$FF            ; not an item
     END_IF
 
         ;; Update selection (if different)
-    IF A NE     lbr_copy + LBTK::ListBoxRecord::selected_index
+    IF A <> lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _SetSelectionAndNotify
     ELSE
         jsr     OnNoChange
@@ -340,7 +340,7 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-    IF A EQ     #MGTK::Part::up_arrow
+    IF A = #MGTK::Part::up_arrow
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -356,7 +356,7 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-    IF A EQ     #MGTK::Part::down_arrow
+    IF A = #MGTK::Part::down_arrow
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -375,11 +375,11 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-    IF A EQ     #MGTK::Part::page_up
+    IF A = #MGTK::Part::page_up
 repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
-    IF A LT     lbr_copy + LBTK::ListBoxRecord::num_rows
+    IF A < lbr_copy + LBTK::ListBoxRecord::num_rows
         lda     #0
         SKIP_NEXT_2_BYTE_INSTRUCTION
         ASSERT_NOT_EQUALS lbr_copy + LBTK::ListBoxRecord::num_rows, $C0, "bad BIT skip"
@@ -393,7 +393,7 @@ repeat:
 
         ;; --------------------------------------------------
 
-    IF A EQ     #MGTK::Part::page_down
+    IF A = #MGTK::Part::page_down
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -434,14 +434,14 @@ update: jmp     _UpdateThumbAndDraw
 
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
-    IF A EQ     #MGTK::EventKind::drag
+    IF A = #MGTK::EventKind::drag
         MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         ldy     #MGTK::Winfo::window_id
-      IF A EQ   (winfo_ptr),y
+      IF A = (winfo_ptr),y
         lda     findwindow_params::which_area
-       IF A EQ  #MGTK::Area::content
+       IF A = #MGTK::Area::content
         jsr     _FindControlIsVerticalScrollBar
         IF EQ
 
@@ -486,7 +486,7 @@ ret:    rts
 
         ;; Up/Down move selection
     IF ZERO
-      IF A EQ   #CHAR_UP
+      IF A = #CHAR_UP
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
        IF NS
@@ -513,8 +513,8 @@ ret:    rts
         ;; Double modifiers
 
         ;; Home/End move selection to first/last
-    IF X EQ     #3
-      IF A EQ   #CHAR_UP
+    IF X = #3
+      IF A = #CHAR_UP
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
         lda     #0
@@ -535,7 +535,7 @@ ret:    rts
 
         ;; --------------------------------------------------
         ;; Single modifier
-    IF A EQ     #CHAR_UP
+    IF A = #CHAR_UP
         lda     #MGTK::Part::page_up
         SKIP_NEXT_2_BYTE_INSTRUCTION
     END_IF
@@ -796,13 +796,13 @@ update:
         add16_8 tmp_point+MGTK::Point::ycoord, #kListItemHeight
 
         lda     index
-      IF A EQ   lbr_copy + LBTK::ListBoxRecord::selected_index
+      IF A = lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _HighlightIndex
       END_IF
 
         inc     index
         lda     index
-        BREAK_IF A EQ lbr_copy + LBTK::ListBoxRecord::num_items
+        BREAK_IF A = lbr_copy + LBTK::ListBoxRecord::num_items
         dec     rows
     WHILE NOT_ZERO
 

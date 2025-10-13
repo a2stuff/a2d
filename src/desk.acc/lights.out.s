@@ -145,12 +145,12 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-    IF A EQ     #MGTK::EventKind::button_down
+    IF A = #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
 
-    IF A EQ     #MGTK::EventKind::key_down
+    IF A = #MGTK::EventKind::key_down
         jsr     OnKey
         jmp     InputLoop
     END_IF
@@ -163,7 +163,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-    IF A EQ     #kDAWindowId
+    IF A = #kDAWindowId
         lda     findwindow_params::which_area
 
         cmp     #MGTK::Area::close_box
@@ -265,7 +265,7 @@ ret:    rts
         pla                     ; A = index
         tax
         inx
-    WHILE X NE  #kLights
+    WHILE X <> #kLights
 
         rts
 .endproc ; DoClick
@@ -516,7 +516,7 @@ ret:    rts
 .proc IndexToXY
         ldy     #0
     DO
-        BREAK_IF A LT #kCols
+        BREAK_IF A < #kCols
         iny
         sbc     #kCols
     WHILE POS                   ; always

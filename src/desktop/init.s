@@ -202,7 +202,7 @@ end:
         cmp     #SELF_MODIFIED_BYTE
         beq     found
         inx
-    WHILE X LT  DEVCNT
+    WHILE X < DEVCNT
         bcs     done            ; last one or not found
 
         ;; Save it
@@ -212,7 +212,7 @@ found:  ldy     DEVLST,x
     DO
         copy8   DEVLST+1,x, DEVLST,x
         inx
-    WHILE X NE  DEVCNT
+    WHILE X <> DEVCNT
 
         ;; Place it at the end
         tya
@@ -236,7 +236,7 @@ done:
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
         dex
-    WHILE X NE  #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE X <> #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
@@ -328,7 +328,7 @@ done:
         copy8   trash_name,x, (ptr),y
         iny
         inx
-    WHILE X NE  trash_name
+    WHILE X <> trash_name
         copy8   trash_name,x, (ptr),y
 
         ITK_CALL IconTK::DrawIcon, icon_param
@@ -393,7 +393,7 @@ loop:   lda     index
 done:
         ;; No separator if it is last
         lda     selector_menu
-    IF A EQ     #kSelectorMenuFixedItems
+    IF A = #kSelectorMenuFixedItems
         dec     selector_menu
     END_IF
         jmp     end_of_scope
@@ -519,7 +519,7 @@ process_block:
 
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-    IF A EQ     #kDAFileType    ; DA? (must match type/auxtype)
+    IF A = #kDAFileType         ; DA? (must match type/auxtype)
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
@@ -552,7 +552,7 @@ process_block:
         ;; If a directory, prepend name with folder glyphs
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-    IF A EQ     #FT_DIRECTORY   ; Directory?
+    IF A = #FT_DIRECTORY        ; Directory?
         ldy     name_buf
       DO
         copy8   name_buf,y, name_buf+3,y
@@ -573,7 +573,7 @@ process_block:
         tay
     DO
         lda     name_buf,y
-      IF A EQ   #'.'
+      IF A = #'.'
         lda     #' '
       END_IF
         sta     (da_ptr),y
@@ -597,7 +597,7 @@ next_entry:
         ;; Any more entries in block?
         inc     entry_in_block
         lda     entry_in_block
-    IF A EQ     entries_per_block
+    IF A = entries_per_block
         MLI_CALL READ, read_params
         copy16  #read_dir_buffer + 4, dir_ptr
 
@@ -633,7 +633,7 @@ name_buf:       .res    ::kDAMenuItemSize, 0
 end:
         ;; No separator if it is last
         lda     apple_menu
-    IF A EQ     #kAppleMenuFixedItems
+    IF A = #kAppleMenuFixedItems
         dec     apple_menu
     END_IF
 
@@ -654,7 +654,7 @@ end:
         pha                     ; A = unmasked unit number
 
         jsr     main::CreateVolumeIcon ; A = unmasked unit number, Y = device index
-      IF A EQ   #ERR_DEVICE_NOT_CONNECTED
+      IF A = #ERR_DEVICE_NOT_CONNECTED
         ;; If device is not connected, remove it from DEVLST
         ;; unless it's a Disk II.
         pla                     ; A = unmasked unit number
@@ -667,7 +667,7 @@ end:
         jmp     next
       END_IF
 
-      IF A EQ   #ERR_DUPLICATE_VOLUME
+      IF A = #ERR_DUPLICATE_VOLUME
         copy8   #kErrDuplicateVolName, main::pending_alert
       END_IF
 
@@ -893,7 +893,7 @@ slot_string_table:
 
 next:   inc     index
         lda     DEVCNT          ; continue while index <= DEVCNT
-    WHILE A GE  index
+    WHILE A >= index
 
         lda     count
         sta     main::removable_device_table
@@ -1034,9 +1034,9 @@ loop:   ldy     #0
         ldx     #1              ; past leading '/'
     DO
         lda     INVOKER_PREFIX+1,x
-        BREAK_IF A EQ #'/'      ; look for next '/'
+        BREAK_IF A = #'/'       ; look for next '/'
         inx
-    WHILE X NE  INVOKER_PREFIX
+    WHILE X <> INVOKER_PREFIX
 
         dex
         stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length

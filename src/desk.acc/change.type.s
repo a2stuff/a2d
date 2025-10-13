@@ -315,17 +315,17 @@ cursor_ibeam_flag: .byte   0
         jmp     InputLoop
     END_IF
 
-    IF A EQ     #CHAR_ESCAPE
+    IF A = #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     ExitCancel
     END_IF
 
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     ExitOK
     END_IF
 
-    IF A EQ     #CHAR_TAB
+    IF A = #CHAR_TAB
         bit     auxtype_focused_flag
       IF NC
         jsr     FocusAuxtype
@@ -421,7 +421,7 @@ yes:    clc
 .proc PadType
     DO
         lda     str_type
-        BREAK_IF A EQ #2
+        BREAK_IF A = #2
         copy8   str_type+1, str_type+2
         copy8   #'0', str_type+1
         inc     str_type
@@ -432,7 +432,7 @@ yes:    clc
 .proc PadAuxtype
     DO
         lda     str_auxtype
-        BREAK_IF A EQ #4
+        BREAK_IF A = #4
         copy8   str_auxtype+3, str_auxtype+4
         copy8   str_auxtype+2, str_auxtype+3
         copy8   str_auxtype+1, str_auxtype+2
@@ -493,7 +493,7 @@ yes:    clc
 ;;; Input: A = ASCII digit
 ;;; Output A = value in low nibble
 .proc DigitToNibble
-    IF A LT     #'9'+1
+    IF A < #'9'+1
         and     #%00001111
         rts
     END_IF
@@ -697,7 +697,7 @@ callback:
     ELSE
         ;; Rest - determine if same type/auxtype
         lda     gfi_params::file_type
-      IF A NE   data::type
+      IF A <> data::type
         CLEAR_BIT7_FLAG data::type_valid
       END_IF
 
@@ -732,13 +732,13 @@ callback:
       IF NE
         ;; type change - either one dir?
         lda     data::type
-       IF A EQ  #FT_DIRECTORY
+       IF A = #FT_DIRECTORY
         jsr     ShowDirError
         jmp     skip
        END_IF
 
         lda     gfi_params::file_type
-       IF A EQ  #FT_DIRECTORY
+       IF A = #FT_DIRECTORY
         jsr     ShowDirError
         jmp     skip
        END_IF
@@ -809,7 +809,7 @@ IterationCallback:
 
         inc     index
         jsr     JUMP_TABLE_GET_SEL_COUNT
-    WHILE A NE  index
+    WHILE A <> index
 
         rts
 

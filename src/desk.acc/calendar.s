@@ -343,7 +343,7 @@ fin:    jsr     UpdateWindow
 
 .proc InvertDec
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF A NE     #MGTK::Error::window_obscured
+    IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::InflateRect, shrink
@@ -394,7 +394,7 @@ fin:    jsr     UpdateWindow
 
 .proc InvertInc
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF A NE     #MGTK::Error::window_obscured
+    IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::InflateRect, shrink
@@ -471,7 +471,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -577,7 +577,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         lda     index
         clc
         adc     first_dow
-      IF A GE   #7
+      IF A >= #7
         ;; C=1
         sbc     #7
       END_IF
@@ -613,7 +613,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         clc
         adc     first_dow
     IF POS
-      IF A GE   #2
+      IF A >= #2
         ;; C=1
         sbc     #7
       END_IF
@@ -649,7 +649,7 @@ day_loop:
         lda     date
         ldx     #0
     DO
-        BREAK_IF A LT #10
+        BREAK_IF A < #10
         sbc     #10
         inx
     WHILE NOT_ZERO              ; always
@@ -671,7 +671,7 @@ draw_date:
         ;; Next
         inc     col
         lda     col
-    IF A EQ     #7
+    IF A = #7
         copy8   #0, col
         inc     row
         copy16  date_base::xcoord, date_pos

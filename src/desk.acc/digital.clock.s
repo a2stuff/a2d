@@ -175,7 +175,7 @@ last:   .tag    DateTime
         jsr     DrawVectorChar
 
         lda     idx
-        BREAK_IF A EQ str_time
+        BREAK_IF A = str_time
         inc     idx
     WHILE NOT_ZERO
 
@@ -269,7 +269,7 @@ more_flag:      .byte   0
         ;; Find index
         ldx     #0
     DO
-        BREAK_IF A EQ char_to_index,x
+        BREAK_IF A = char_to_index,x
         inx
     WHILE NOT_ZERO              ; always
 

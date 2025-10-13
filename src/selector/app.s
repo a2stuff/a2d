@@ -382,7 +382,7 @@ check_key:
         stax    entry_ptr
         ldy     #kSelectorEntryFlagsOffset
         lda     (entry_ptr),y
-    IF A NE     #kSelectorEntryCopyNever
+    IF A <> #kSelectorEntryCopyNever
         jsr     GetCopiedToRAMCardFlag
         beq     done_keys       ; no RAMCard, skip
         ldx     invoke_index
@@ -508,7 +508,7 @@ set_startup_menu_items:
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
         dex
-    WHILE X NE  #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE X <> #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
 
@@ -581,19 +581,19 @@ quick_boot_slot:
         jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-    IF A EQ     #MGTK::EventKind::button_down
+    IF A = #MGTK::EventKind::button_down
         jsr     HandleButtonDown
         jmp     EventLoop
     END_IF
 
-    IF A EQ     #MGTK::EventKind::key_down
+    IF A = #MGTK::EventKind::key_down
         ;; --------------------------------------------------
         ;; Key Down
         bit     desktop_available_flag
       IF NC
         lda     event_params::key
         jsr     ToUpperCase
-       IF A EQ  #kShortcutRunDeskTop
+       IF A = #kShortcutRunDeskTop
 
         BTK_CALL BTK::Flash, desktop_button
 retry:  param_call GetFileInfo, str_desktop_2
@@ -614,7 +614,7 @@ retry:  param_call GetFileInfo, str_desktop_2
 
         ;; --------------------------------------------------
 
-    IF A EQ     #MGTK::EventKind::update
+    IF A = #MGTK::EventKind::update
         jsr     ClearUpdates
     END_IF
 
@@ -628,14 +628,14 @@ CheckAndClearUpdates:
     DO
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
-        BREAK_IF A NE #MGTK::EventKind::update
+        BREAK_IF A <> #MGTK::EventKind::update
 
         MGTK_CALL MGTK::GetEvent, event_params
         FALL_THROUGH_TO ClearUpdates
 
 ClearUpdates:
         lda     event_params::window_id
-        CONTINUE_IF A NE #winfo::kDialogId
+        CONTINUE_IF A <> #winfo::kDialogId
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         CONTINUE_IF NOT_ZERO    ; obscured
@@ -794,15 +794,15 @@ cancel: jmp     LoadSelectorList
         ASSERT_EQUALS MGTK::Area::desktop, 0
         RTS_IF ZERO
 
-    IF A EQ     #MGTK::Area::menubar
+    IF A = #MGTK::Area::menubar
         MGTK_CALL MGTK::MenuSelect, menu_params
         jmp     HandleMenu
     END_IF
 
-        RTS_IF A NE #MGTK::Area::content
+        RTS_IF A <> #MGTK::Area::content
 
         lda     findwindow_params::window_id
-        RTS_IF A NE #winfo::kDialogId
+        RTS_IF A <> #winfo::kDialogId
 
         lda     #winfo::kDialogId
         jsr     GetWindowPort
@@ -862,7 +862,7 @@ ret:    rts
         lda     #BTK::kButtonStateDisabled
     END_IF
 
-    IF A NE     ok_button::state
+    IF A <> ok_button::state
         sta     ok_button::state
         BTK_CALL BTK::Hilite, ok_button
     END_IF
@@ -935,7 +935,7 @@ noop:   rts
         lda     #winfo::kDialogId
         jsr     GetWindowPort
         lda     event_params::key
-    IF A LT     #$1C            ; Control character?
+    IF A < #$1C                 ; Control character?
         jmp     control_char
     END_IF
 
@@ -943,12 +943,12 @@ noop:   rts
 
         ;; 1-8 to select entry
 
-        RTS_IF A LT #'1'
-        RTS_IF A GE #'8'+1
+        RTS_IF A < #'1'
+        RTS_IF A >= #'8'+1
 
         sec
         sbc     #'1'
-        RTS_IF A GE num_primary_run_list_entries
+        RTS_IF A >= num_primary_run_list_entries
 
         sta     op_params::new_selection
         OPTK_CALL OPTK::SetSelection, op_params
@@ -960,7 +960,7 @@ noop:   rts
         ;; Return ?
 
 control_char:
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     TryInvokeSelectedIndex
     END_IF
@@ -995,7 +995,7 @@ control_char:
 
         ldx     #0
     DO
-        BREAK_IF X EQ num_primary_run_list_entries
+        BREAK_IF X = num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
         inx
@@ -1003,7 +1003,7 @@ control_char:
 
         ldx     #0
     DO
-        BREAK_IF X EQ num_secondary_run_list_entries
+        BREAK_IF X = num_secondary_run_list_entries
         txa
         clc
         adc     #8
@@ -1111,7 +1111,7 @@ error:  lda     #AlertID::insert_system_disk
         cmp     #SELF_MODIFIED_BYTE
         beq     found
         inx
-    WHILE X LT  DEVCNT
+    WHILE X < DEVCNT
         bcs     done            ; last one or not found
 
         ;; Save it
@@ -1121,7 +1121,7 @@ found:  ldy     DEVLST,x
     DO
         copy8   DEVLST+1,x, DEVLST,x
         inx
-    WHILE X NE  DEVCNT
+    WHILE X <> DEVCNT
 
         ;; Place it at the end
         tya
@@ -1319,7 +1319,7 @@ hi:     .byte   0
         sta     text_params::length
 
         pla
-    IF A GE     #8              ; first 8?
+    IF A >= #8                  ; first 8?
         ;; Prefix with spaces
         lda     #' '
         sta     entry_string_buf+1
@@ -1505,13 +1505,13 @@ check_type:
         sta     INVOKER_BITSY_COMPAT
 
         lda     file_info_params::file_type
-    IF A EQ     #FT_LINK
+    IF A = #FT_LINK
         jsr     ReadLinkFile
         bcs     err
         bcc     retry
     END_IF
 
-    IF A EQ     #FT_BASIC
+    IF A = #FT_BASIC
         param_call CheckInterpreter, str_extras_basic
         bcc     check_path
         jsr     CheckBasicSystem ; try relative to launch path
@@ -1522,7 +1522,7 @@ check_type:
         jmp     ClearSelectedIndex
     END_IF
 
-    IF A EQ     #FT_INT
+    IF A = #FT_INT
         param_call CheckInterpreter, str_extras_intbasic
         bcc     check_path
         jsr     ShowAlert
@@ -1581,7 +1581,7 @@ check_path:
         iny
         inx
         copy8   INVOKER_PREFIX,y, INVOKER_FILENAME,x
-    WHILE Y NE  INVOKER_PREFIX
+    WHILE Y <> INVOKER_PREFIX
 
         stx     INVOKER_FILENAME
         pla
@@ -1744,7 +1744,7 @@ found_slash:
         inx
         iny
         copy8   str_basix_system,y, interp_path,x
-    WHILE Y NE  str_basix_system
+    WHILE Y <> str_basix_system
         stx     interp_path
         param_call GetFileInfo, interp_path
         bcs     pop_segment
@@ -1844,14 +1844,14 @@ str_extras_awlaunch:
         tay
     DO
         lda     (path_addr),y
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
 
         dey
     DO
         lda     (path_addr),y
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
 
@@ -1861,7 +1861,7 @@ str_extras_awlaunch:
         inx
         iny
         copy8   (path_addr),y, buf,x
-    WHILE Y NE  len
+    WHILE Y <> len
 
         stx     buf
         ldax    #buf
@@ -1911,7 +1911,7 @@ len:    .byte   0
         inc     loop_counter
         inc     loop_counter
         lda     loop_counter
-    IF A GE     #kMaxCounter
+    IF A >= #kMaxCounter
         copy8   #0, loop_counter
 
         jsr     ShowClock

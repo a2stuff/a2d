@@ -31,12 +31,12 @@
         ;; 24->12 hour clock?
         bit     clock_24hours
     IF NC
-      IF A GE   #12
+      IF A >= #12
         sec
         sbc     #12             ; 12...23 -> 0...11
       END_IF
 
-      IF A EQ     #0
+      IF A = #0
         lda     #12             ; 0 -> 12
       END_IF
     END_IF
@@ -109,7 +109,7 @@ clock_24hours:
 .proc _Split
         ldx     #0
     DO
-        BREAK_IF A LT #10
+        BREAK_IF A < #10
         sec
         sbc     #10
         inx
@@ -220,7 +220,7 @@ year:   lda     #0
         ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.28.html
 tn28:   lda     ytmp            ; ytmp is still just one byte
-    IF A LT     #40
+    IF A < #40
         adc     #100
         sta     ytmp
     END_IF

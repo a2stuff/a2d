@@ -520,7 +520,7 @@ scrambled_flag:                 ; bit7
     END_IF
 
         lda     event_params::kind
-    IF A EQ     #MGTK::EventKind::button_down
+    IF A = #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -546,7 +546,7 @@ bail:   rts
     END_IF
 
         ;; client area?
-    IF A EQ     #MGTK::Area::content
+    IF A = #MGTK::Area::content
         bit     scrambled_flag
       IF NC
         jmp     Scramble
@@ -558,7 +558,7 @@ bail:   rts
     END_IF
 
         ;; close port?
-    IF A EQ     #MGTK::Area::close_box
+    IF A = #MGTK::Area::close_box
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     bail
@@ -607,26 +607,26 @@ ret:    rts
         ldx     hole_x
         ldy     hole_y
 
-    IF A EQ     #CHAR_DOWN
+    IF A = #CHAR_DOWN
         dey
         bmi     ret
         bpl     move            ; always
     END_IF
 
-    IF A EQ     #CHAR_UP
+    IF A = #CHAR_UP
         iny
         cpy     #4
         bcs     ret
         bcc     move            ; always
     END_IF
 
-    IF A EQ     #CHAR_RIGHT
+    IF A = #CHAR_RIGHT
         dex
         bmi     ret
         bpl     move            ; always
     END_IF
 
-    IF A EQ     #CHAR_LEFT
+    IF A = #CHAR_LEFT
         inx
         cpx     #4
         bcs     ret
@@ -655,21 +655,21 @@ move:   stx     click_x
 
         cmp     #kRow1
         bcc     nope
-    IF A LT     #kRow2+1
+    IF A < #kRow2+1
         jsr     FindClickX
         bcc     nope
         lda     #0
         beq     yep             ; always
     END_IF
 
-    IF A LT     #kRow3+1
+    IF A < #kRow3+1
         jsr     FindClickX
         bcc     nope
         lda     #1
         bne     yep             ; always
     END_IF
 
-    IF A LT     #kRow4+1
+    IF A < #kRow4+1
         jsr     FindClickX
         bcc     nope
         lda     #2
@@ -693,17 +693,17 @@ nope:   clc
 .proc FindClickX
         cpx     #kCol1
         bcc     nope
-    IF X LT     #kCol2
+    IF X < #kCol2
         lda     #0
         beq     yep             ; always
     END_IF
 
-    IF X LT     #kCol3+1
+    IF X < #kCol3+1
         lda     #1
         bne     yep             ; always
     END_IF
 
-    IF X LT     #kCol4+1
+    IF X < #kCol4+1
         lda     #2
         bne     yep             ; always
     END_IF
@@ -923,7 +923,7 @@ after_click:
         clc
         adc     draw_inc
         tay
-    WHILE Y LT  draw_end
+    WHILE Y < draw_end
 
         MGTK_CALL MGTK::ShowCursor
         rts
@@ -984,17 +984,17 @@ ret:    rts
         cmp     position_table,y
         bne     nope
         iny
-    WHILE Y LT  #5
+    WHILE Y < #5
 
         ;; 5/6 are identical
         lda     position_table+5
-    IF A NE     #5
+    IF A <> #5
         cmp     #6
         bne     nope
     END_IF
 
         lda     position_table+6
-    IF A NE     #5
+    IF A <> #5
         cmp     #6
         bne     nope
     END_IF
@@ -1009,13 +1009,13 @@ ret:    rts
 
         ;; 9/10 are identical
         lda     position_table+9
-    IF A NE     #9
+    IF A <> #9
         cmp     #10
         bne     nope
     END_IF
 
         lda     position_table+10
-    IF A NE     #9
+    IF A <> #9
         cmp     #10
         bne     nope
     END_IF
@@ -1039,7 +1039,7 @@ ret:    rts
         cmp     position_table,y
         bne     nope
         iny
-    WHILE Y LT  #16
+    WHILE Y < #16
         rts
 
 nope:   clc
@@ -1053,7 +1053,7 @@ nope:   clc
         ldy     #15
     DO
         lda     position_table,y
-        BREAK_IF A EQ #kHolePiece
+        BREAK_IF A = #kHolePiece
         dey
     WHILE POS                   ; always
 
@@ -1063,7 +1063,7 @@ nope:   clc
 
         tya
     DO
-        BREAK_IF A LT #4
+        BREAK_IF A < #4
         sbc     #4
         inc     hole_y
     WHILE NOT_ZERO
@@ -1090,7 +1090,7 @@ redo:
       DO
         copy8   position_table+1,y, position_table,y
         iny
-      WHILE Y LT #15
+      WHILE Y < #15
 
         stx     position_table+15
         pla

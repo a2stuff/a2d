@@ -114,13 +114,13 @@ while (<STDIN>) {
 
       $_ = $opcode . ' ' . $arguments;
 
-    } elsif (m/^(\b(?:IF_\w+|ELSE_IF\w+|ELSE|END_IF|DO|REPEAT|WHILE_\w+|UNTIL_\w+)\b)\s*(.*)$/) {
+    } elsif (m/^(\b(?:IF(?:_\w+)?|ELSE_IF(?:_\w+)?|ELSE|END_IF|DO|REPEAT|WHILE(?:_\w+)?|UNTIL(?:_\w+)?)\b)\s*(.*)$/) {
 
       # conditional macros - dynamic indent
       my ($opcode, $arguments) = ($1 // '', $2 // '');
       $tabstop = 0;
 
-      if ($opcode =~ m/^(ELSE_IF_\w+|ELSE|END_IF|WHILE_\w+|UNTIL_\w+)$/) {
+      if ($opcode =~ m/^(ELSE_IF(?:_\w+)?|ELSE|END_IF|WHILE(?:_\w+)?|UNTIL(?:_\w+)?)$/) {
         dedent();
       }
 
@@ -129,11 +129,15 @@ while (<STDIN>) {
 
       if ($arguments) {
         $_ .= ' ';
-        $_ .= ' ' while length($_) < $OPERAND_COLUMN;
+        if ($opcode =~ m/^IF|ELSE_IF|WHILE|UNTIL$/) {
+          $arguments =~ s/ +/ /g;
+        } else {
+          $_ .= ' ' while length($_) < $OPERAND_COLUMN;
+        }
         $_ .= $arguments;
       }
 
-      if ($opcode =~ m/^(IF_\w+|ELSE|ELSE_IF_\w+|DO|REPEAT)$/) {
+      if ($opcode =~ m/^(IF(?:_\w+)?|ELSE|ELSE_IF(?:_\w+)?|DO|REPEAT)$/) {
         indent();
       }
 

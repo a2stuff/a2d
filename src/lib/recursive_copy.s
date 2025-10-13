@@ -354,7 +354,7 @@ fail:   jmp     OpHandleErrorCode
 
         inc     entry_index_in_block
         lda     entry_index_in_block
-    IF A GE     entries_per_block
+    IF A >= entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
@@ -454,7 +454,7 @@ eof:    return  #$FF
         iny
         copy8   file_entry+FileEntry::file_name,x, (path_ptr),y
         inx
-      WHILE X LT file_entry+FileEntry::storage_type_name_length
+      WHILE X < file_entry+FileEntry::storage_type_name_length
         tya
         ldy     #0
         sta     (path_ptr),y
@@ -575,7 +575,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
-    IF A NE     #ST_LINKED_DIRECTORY
+    IF A <> #ST_LINKED_DIRECTORY
 
         ;; --------------------------------------------------
         ;; File
@@ -629,7 +629,7 @@ ok_dir: jsr     RemoveSrcPathSegment
         cpy     pathname_dst
         bcs     :+
         lda     pathname_dst,y
-    WHILE A NE  #'/'
+    WHILE A <> #'/'
         sty     pathname_dst
 :
         ;; Get total blocks/used blocks on destination volume
@@ -667,7 +667,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
     IF CC
         ;; Assume those blocks will be freed
         add16   dst_vol_blocks_free, dst_file_info_params::blocks_used, dst_vol_blocks_free
-    ELSE_IF A NE #ERR_FILE_NOT_FOUND
+    ELSE_IF A <> #ERR_FILE_NOT_FOUND
         jmp     OpHandleErrorCode
     END_IF
 
@@ -993,7 +993,7 @@ ret:    rts
 
         ;; If source is volume, create directory instead
         lda     create_params::storage_type
-    IF A EQ     #ST_VOLUME_DIRECTORY
+    IF A = #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
@@ -1003,7 +1003,7 @@ ret:    rts
         MLI_CALL CREATE, create_params
     IF CS
 .if ::kCopyIgnoreDuplicateErrorOnCreate
-      IF A NE   #ERR_DUPLICATE_FILENAME
+      IF A <> #ERR_DUPLICATE_FILENAME
         jmp     OpHandleErrorCode
       END_IF
 .else

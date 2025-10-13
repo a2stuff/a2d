@@ -204,7 +204,7 @@ grafport_win:   .tag    MGTK::GrafPort
 
         tax                     ; X = index
         inx
-    WHILE X NE  max_entries
+    WHILE X <> max_entries
 
         rts
 .endproc ; UpdateImpl
@@ -293,14 +293,14 @@ key             .byte
     END_IF
 
     REPEAT
-      IF A EQ   max_entries_minus_one
+      IF A = max_entries_minus_one
         lda     #0              ; last, wrap to first
       ELSE
         clc
         adc     oprc_num_rows
       END_IF
 
-      IF A GE   max_entries
+      IF A >= max_entries
         sec
         sbc     max_entries_minus_one
       END_IF
@@ -369,7 +369,7 @@ last:   lda     max_entries_minus_one
     REPEAT
         clc
         adc     #1
-      IF A EQ   max_entries
+      IF A = max_entries
         lda     #0
       END_IF
         jsr     _CallIsEntryProc
@@ -418,7 +418,7 @@ new_selection   .byte
 ;;; ============================================================
 
 .proc _SetSelection
-        RTS_IF A EQ oprc_selected_index ; same as previous?
+        RTS_IF A = oprc_selected_index ; same as previous?
 
         pha                     ; A = new selection
         jsr     _SetPort

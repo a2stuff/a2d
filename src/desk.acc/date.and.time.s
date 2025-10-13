@@ -370,7 +370,7 @@ init_window:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-    IF A EQ     #MGTK::EventKind::button_down
+    IF A = #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -392,13 +392,13 @@ init_window:
         cmp     #kShortcutCloseWindow
         jeq     OnKeyOK
 
-      IF A EQ   #'1'
+      IF A = #'1'
         lda     #$00
         jsr     HandleOptionClick
         jmp     InputLoop
       END_IF
 
-      IF A EQ   #'2'
+      IF A = #'2'
         lda     #$80
         jsr     HandleOptionClick
         jmp     InputLoop
@@ -594,7 +594,7 @@ hit_target_jump_table:
 
         bit     clock_24hours
     IF NS
-        RTS_IF A EQ #Field::period
+        RTS_IF A = #Field::period
     END_IF
 
         jmp     SelectField
@@ -605,7 +605,7 @@ hit_target_jump_table:
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         lda     event_params::kind
-    IF A NE     #MGTK::EventKind::button_up
+    IF A <> #MGTK::EventKind::button_up
         jsr     DoIncOrDec
         jmp     loop
     END_IF
@@ -629,7 +629,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         bit     clock_24hours
     IF NC
         lda     hour
-      IF A LT   #12
+      IF A < #12
         copy8   #kHourMin, min_table + Field::hour - 1
         copy8   #11, max_table + Field::hour - 1
       ELSE
@@ -664,7 +664,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         beq     incr
 
         ;; Decrement
-    IF X EQ     min
+    IF X = min
         ldx     max
         inx
     END_IF
@@ -673,7 +673,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         ;; Increment
 incr:
-    IF X EQ     max
+    IF X = max
         ldx     min
         dex
     END_IF
@@ -691,7 +691,7 @@ finish:
         ;; If month changed, make sure day is in range and update if not.
         jsr     SetMonthLength
         lda     max_table+Field::day-1
-    IF A LT     day
+    IF A < day
         sta     day
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         jsr     PrepareDayString
@@ -712,7 +712,7 @@ hit_rect_index:
 .proc TogglePeriod
         ;; Flip to other period
         lda     hour
-    IF A LT     #12             ; also sets C correctly for adc/sbc
+    IF A < #12                  ; also sets C correctly for adc/sbc
         adc     #12
     ELSE
         sbc     #12
@@ -824,10 +824,10 @@ str_pm: PASCAL_STRING "PM"
         lda     hour
         bit     clock_24hours
     IF NC
-      IF A EQ   #0
+      IF A = #0
         lda     #12
       END_IF
-      IF A GE   #13
+      IF A >= #13
         sbc     #12
       END_IF
     END_IF
@@ -835,7 +835,7 @@ str_pm: PASCAL_STRING "PM"
         jsr     NumberToASCII
         bit     clock_24hours
     IF NC
-      IF A EQ   #'0'
+      IF A = #'0'
         lda     #' '
       END_IF
     END_IF
@@ -892,7 +892,7 @@ dialog_result:  .byte   0
         pla
         tax
         inx
-    WHILE X NE  #kNumHitRects+1
+    WHILE X <> #kNumHitRects+1
 
         ldx     #0
         rts
@@ -1014,7 +1014,7 @@ label_downarrow:
 ;;; A = field
 .proc DrawField
         pha
-    IF A EQ     selected_field
+    IF A = selected_field
         MGTK_CALL MGTK::SetTextBG, settextbg_black_params
     ELSE
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
@@ -1069,7 +1069,7 @@ label_downarrow:
         param_call DrawString, spaces_string
     ELSE
         lda     hour
-      IF A LT   #12
+      IF A < #12
         param_jump DrawString, str_am
       ELSE
         param_jump DrawString, str_pm
@@ -1191,7 +1191,7 @@ fill_period:
 .proc NumberToASCII
         ldy     #0
 loop:
-    IF A GE     #10
+    IF A >= #10
         sec
         sbc     #10
         iny
@@ -1211,7 +1211,7 @@ loop:
         ;; Month lengths
         ldx     month
         ldy     month_length_table-1,x
-    IF X EQ     #2              ; February?
+    IF X = #2                   ; February?
         lda     year            ; Handle leap years; interpreted as either
         and     #3              ; (1900+Y) or (Y<40 ? 2000+Y : 1900+Y) - which is
       IF ZERO                   ; correct for 1901 through 2199, so good enough.
@@ -1237,7 +1237,7 @@ loop:
         sta     dialog_result
 
         lda     selected_field
-    IF A EQ     #Field::period
+    IF A = #Field::period
         lda     #Field::minute
         jsr     SelectField
     END_IF
@@ -1405,7 +1405,7 @@ done:   rts
         inx
         iny
         copy8   filename,x, filename_buffer,y
-    WHILE X NE  filename
+    WHILE X <> filename
         sty     filename_buffer
         rts
 .endproc ; AppendFilename

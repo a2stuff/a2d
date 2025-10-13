@@ -358,7 +358,7 @@ ep_size = * - ep_start
         jsr     CopyEventDataToMain
 
         lda     findwindow_params::window_id
-    IF A EQ     #aux::kDAWindowId
+    IF A = #aux::kDAWindowId
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
@@ -778,7 +778,7 @@ CheckUserInput:
         jsr     CopyEventDataToMain
 
         lda     event_params::kind
-    IF A EQ     #MGTK::EventKind::button_down
+    IF A = #MGTK::EventKind::button_down
         jsr     ::HandleDown
         bpl     HandleKey       ; was a button, mapped to key event
         jmp     MainLoop
@@ -808,13 +808,13 @@ HandleKey:
         jeq     DoQuitAction
 
         ;; $4C = L (Continuous Play)
-    IF A EQ     #'L'
+    IF A = #'L'
         jsr     ToggleLoopMode
         jmp     MainLoop
     END_IF
 
         ;; $52 = R (Random Play)
-    IF A EQ     #'R'
+    IF A = #'R'
         jsr     ToggleRandomMode
         jmp     MainLoop
     END_IF
@@ -833,25 +833,25 @@ HandleKey:
         pla
 
         ;; $50 = P (Play)
-    IF A EQ     #'P'
+    IF A = #'P'
         jsr     DoPlayAction
         jmp     MainLoop
     END_IF
 
         ;; $53 = S (Stop)
-    IF A EQ     #'S'
+    IF A = #'S'
         jsr     DoStopAction
         jmp     MainLoop
     END_IF
 
         ;; $20 = Space (Pause)
-    IF A EQ     #' '
+    IF A = #' '
         jsr     DoPauseAction
         jmp     MainLoop
     END_IF
 
         ;; $08 = ^H, LA (Previous Track, Scan Backward)
-    IF A EQ     #CHAR_LEFT
+    IF A = #CHAR_LEFT
         lda     event_params::modifiers
       IF NOT_ZERO
         jsr     DoScanBackAction
@@ -863,7 +863,7 @@ HandleKey:
     END_IF
 
         ;; $15 = ^U, RA (Next Track/Scan Forward)
-    IF A EQ     #CHAR_RIGHT
+    IF A = #CHAR_RIGHT
         lda     event_params::modifiers
       IF NOT_ZERO
         jsr     DoScanFwdAction
@@ -875,7 +875,7 @@ HandleKey:
     END_IF
 
         ;; $45 = E (Eject)
-    IF A EQ     #'E'
+    IF A = #'E'
         jsr     C26Eject
     END_IF
 
@@ -1417,7 +1417,7 @@ ExitScanFwdAction:
 
 WrapCheck:
         lda     BCDRelTrack
-    IF A EQ     BCDFirstTrackTOC
+    IF A = BCDFirstTrackTOC
         ;; If we're not at the "first" track, just decrement track #
         ;; Otherwise, wrap to the "last" track instead
         lda     BCDLastTrackTOC
@@ -1475,7 +1475,7 @@ Counter:
 
 WrapCheck:
         lda     BCDRelTrack
-    IF A EQ     BCDLastTrackTOC
+    IF A = BCDLastTrackTOC
         ;; If we're not at the "last" track, just increment track #
         ;; Otherwise, wrap to the "first" track instead
         lda     BCDFirstTrackTOC
@@ -2139,7 +2139,7 @@ last_sec:
         ror
         ror
         ror
-    IF A LT     #10             ; stuffed with $AA to blank
+    IF A < #10                  ; stuffed with $AA to blank
         ora     #'0'
         rts
     END_IF
@@ -2149,7 +2149,7 @@ last_sec:
 
 .proc LowBCDDigitToASCII
         and     #$0F
-    IF A LT     #10             ; stuffed with $AA to blank
+    IF A < #10                  ; stuffed with $AA to blank
         ora     #'0'
         rts
     END_IF

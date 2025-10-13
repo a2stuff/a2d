@@ -239,11 +239,11 @@ port:           .addr   grafport_win
     END_IF
 
         ;; Not modified
-    IF A EQ     #CHAR_ESCAPE
+    IF A = #CHAR_ESCAPE
         jmp     Exit
     END_IF
 
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         jmp     Exit
     END_IF
 
@@ -259,7 +259,7 @@ port:           .addr   grafport_win
         bne     done
 
         lda     findwindow_params::window_id
-    IF A EQ     #kPickerWindowId
+    IF A = #kPickerWindowId
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
       IF NC
@@ -548,11 +548,11 @@ remainder:      .word   0                 ; (out)
     END_IF
 
         ;; Not modified
-    IF A EQ     #CHAR_ESCAPE
+    IF A = #CHAR_ESCAPE
         jmp     ExitOK
     END_IF
 
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         jmp     Import
     END_IF
 
@@ -568,7 +568,7 @@ remainder:      .word   0                 ; (out)
         bne     done
 
         lda     findwindow_params::window_id
-    IF A EQ     #kCatalogWindowId
+    IF A = #kCatalogWindowId
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
       IF NC
@@ -726,7 +726,7 @@ type_table:
         lsr     a
         BREAK_IF CS
         inx
-    WHILE X NE  #8
+    WHILE X <> #8
         rts
 .endproc ; clz
 
@@ -776,7 +776,7 @@ type_table:
 
         ;; TODO: Make this more elegant
         lda     str_from_int
-    IF A EQ     #1
+    IF A = #1
         copy8   str_from_int+1, str_from_int+3
         lda     #'0'
         sta     str_from_int+1
@@ -785,7 +785,7 @@ type_table:
         rts
     END_IF
 
-    IF A EQ     #2
+    IF A = #2
         copy8   str_from_int+2, str_from_int+3
         copy8   str_from_int+1, str_from_int+2
         copy8   #'0', str_from_int+1
@@ -956,12 +956,12 @@ file_loop:
         sta     entry_buf+aux::CatalogEntry::Name+1,x
         iny
         inx
-    WHILE X NE  #dos33::MaxFilenameLen
+    WHILE X <> #dos33::MaxFilenameLen
 
     DO
         dex
         lda     entry_buf+aux::CatalogEntry::Name+1,x
-    WHILE A EQ  #' '
+    WHILE A = #' '
         inx
         stx     entry_buf+aux::CatalogEntry::Name
 
@@ -1089,7 +1089,7 @@ start:
 
         ;; Truncate to 15 or less
         lda     str_name
-    IF A GE     #15
+    IF A >= #15
         lda     #15
     END_IF
         sta     str_name
@@ -1117,7 +1117,7 @@ start:
 
         ;; Can't start with non-alpha, replace with 'X'
         lda     str_name+1
-    IF A LT     #'A'
+    IF A < #'A'
         copy8   #'X', str_name+1
     END_IF
 
@@ -1128,7 +1128,7 @@ start:
         lda     prefix_path
         clc
         adc     str_name
-    IF A GE     #kMaxPathLength ; not +1 because we'll add '/'
+    IF A >= #kMaxPathLength     ; not +1 because we'll add '/'
         lda     #ERR_INVALID_PATHNAME
         rts
     END_IF
@@ -1143,7 +1143,7 @@ start:
         inx
         iny
         copy8   str_name,x, path_buf,y
-    WHILE X NE  str_name
+    WHILE X <> str_name
         sty     path_buf
 
         ;; NOTE: Can't show alerts, as that will trash aux $E00...$1FFF
@@ -1174,7 +1174,7 @@ start:
         and     #$7F
         pha                     ; A = type
 
-    IF A EQ     #dos33::FileTypeBinary
+    IF A = #dos33::FileTypeBinary
         ;; Binary header:
         ;; +$00 WORD address (low/high)
         ;; +$02 WORD length (low/high)
@@ -1186,7 +1186,7 @@ start:
         jmp     translate_type
     END_IF
 
-    IF A EQ     #dos33::FileTypeApplesoft
+    IF A = #dos33::FileTypeApplesoft
         ;; Applesoft BASIC header:
         ;; +$00 WORD length (low/high)
         copy16  #$0801, create_params::aux_type
@@ -1197,7 +1197,7 @@ start:
         jmp     translate_type
     END_IF
 
-    IF A EQ     #dos33::FileTypeInteger
+    IF A = #dos33::FileTypeInteger
         ;; Integer BASIC header:
         ;; +$00 WORD length (low/high)
         copy16  #$0000, create_params::aux_type
@@ -1324,7 +1324,7 @@ no:     sec
         lsr     a
         BREAK_IF CS
         inx
-    WHILE X NE  #8
+    WHILE X <> #8
         rts
 .endproc ; clz
 

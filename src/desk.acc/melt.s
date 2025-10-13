@@ -112,7 +112,7 @@ deltac: .byte   31
 
         dec     row
         ldx     row
-    WHILE X GE  delta
+    WHILE X >= delta
 
         ;; Black in at the top
     DO

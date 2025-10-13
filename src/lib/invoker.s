@@ -30,7 +30,7 @@
         lda     invoker::get_info_params::file_type
 
 ;;; Binary file (BIN) - load and invoke at A$=AuxType
-    IF A EQ     #FT_BINARY
+    IF A = #FT_BINARY
 
         lda     invoker::get_info_params::aux_type
         sta     jmp_addr
@@ -39,7 +39,7 @@
         sta     jmp_addr+1
         sta     invoker::read_params::data_buffer+1
 
-      IF A LT   #$0C            ; If loading at page < $0C00
+      IF A < #$0C               ; If loading at page < $0C00
         lda     #$BB            ; ... use a high address buffer ($BB00)
         SKIP_NEXT_2_BYTE_INSTRUCTION
       END_IF

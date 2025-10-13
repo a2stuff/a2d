@@ -159,7 +159,7 @@ saved_stack:
         iny
         inx
         copy8   filename,y, pathname_dst,x
-    WHILE Y NE filename
+    WHILE Y <> filename
         stx     pathname_dst
 
         jmp     DoCopy
@@ -217,7 +217,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; Visit the key file
         lda     src_file_info_params::storage_type
         pha                     ; A = `storage_type`
-    IF A EQ     #ST_VOLUME_DIRECTORY
+    IF A = #ST_VOLUME_DIRECTORY
         copy16  #0, src_file_info_params::blocks_used ; dummy value
     END_IF
         jsr     EnumerateVisitFile
@@ -264,11 +264,11 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     DO
         iny
         lda     src_path,y
-      IF A EQ   #'/'
+      IF A = #'/'
         sty     src_path_slash_index
       END_IF
         sta     pathname_src,y
-    WHILE Y NE  src_path
+    WHILE Y <> src_path
 
         ;; Copy `dst_path` to `pathname_dst`
         ldy     dst_path
@@ -289,7 +289,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ldy     src_path
     DO
         lda     src_path,y
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
         dey
@@ -297,7 +297,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 
     DO
         lda     src_path,y
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE POS
 
@@ -306,7 +306,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         iny
         inx
         copy8   src_path,y, filename,x
-    WHILE Y NE  src_path
+    WHILE Y <> src_path
         stx     filename
 
         param_call app::CopyRAMCardPrefix, dst_path
@@ -442,7 +442,7 @@ remainder:      .word   0                 ; (out)
 .proc UpdateCopyProgress
         dec     file_count
         lda     file_count
-    IF A EQ     #$FF
+    IF A = #$FF
         dec     file_count+1
     END_IF
 
@@ -496,7 +496,7 @@ display_path:
         lda     #AlertID::insert_source_disk
         jsr     app::ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
-    IF ZERO                         ; `kAlertResultCancel` = 1
+    IF ZERO                     ; `kAlertResultCancel` = 1
         jmp     app::SetCursorWatch ; try again
     END_IF
         jmp     RestoreStackAndReturn
@@ -540,7 +540,7 @@ display_path:
 .proc CheckCancel
         MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_params::kind
-    IF A EQ     #MGTK::EventKind::key_down
+    IF A = #MGTK::EventKind::key_down
         lda     app::event_params::key
         cmp     #CHAR_ESCAPE
         beq     RestoreStackAndReturn

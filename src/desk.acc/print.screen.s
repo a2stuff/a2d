@@ -81,7 +81,7 @@ no_device:
         lda     spacing_sequence,y
         jsr     COut
         iny
-    WHILE Y NE  #kLenSpacingSequence
+    WHILE Y <> #kLenSpacingSequence
         rts
 .endproc ; SendSpacing
 
@@ -91,7 +91,7 @@ no_device:
         lda     restore_sequence,y
         jsr     COut
         iny
-    WHILE Y NE  #kLenRestoreSequence
+    WHILE Y <> #kLenRestoreSequence
         rts
 .endproc ; SendRestoreState
 
@@ -101,7 +101,7 @@ no_device:
         lda     init_graphics,x
         jsr     COut
         inx
-    WHILE X NE  #kLenInitGraphics
+    WHILE X <> #kLenInitGraphics
         rts
 init_graphics:
         .byte   CHAR_ESCAPE,"G0560"     ; Graphics, 560 data bytes
@@ -154,7 +154,7 @@ col_loop:
 
         ;; Done all pixels across?
         lda     x_coord
-    IF A EQ     #<(kScreenWidth-1)
+    IF A = #<(kScreenWidth-1)
         lda     x_coord+1
         cmp     #>(kScreenWidth-1)
         beq     done
@@ -194,7 +194,7 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
         jsr     COut
 
         copy8   y_coord, y_row
-    WHILE A LT  #kScreenHeight
+    WHILE A < #kScreenHeight
 
         ;; Finish up
         lda     #CHAR_RETURN

@@ -267,25 +267,25 @@ title:  jsr     OnTitleBarClick
         lda     event_params::key
         jsr     ToUpperCase
 
-    IF X EQ     #3
+    IF X = #3
         ;; Double modifiers
-      IF A EQ   #CHAR_UP        ; OA+SA+Up = Home
+      IF A = #CHAR_UP           ; OA+SA+Up = Home
         jsr     ScrollTop
         jmp     InputLoop
       END_IF
 
-      IF A EQ   #CHAR_DOWN      ; OA+SA+Down = End
+      IF A = #CHAR_DOWN         ; OA+SA+Down = End
         jsr     ScrollBottom
         ;; jmp     InputLoop
       END_IF
     ELSE
         ;; Single modifier
-      IF A EQ   #CHAR_UP        ; Apple+Up = Page Up
+      IF A = #CHAR_UP           ; Apple+Up = Page Up
         jsr     PageUp
         jmp     InputLoop
       END_IF
 
-      IF A EQ   #CHAR_DOWN      ; Apple+Down = Page Down
+      IF A = #CHAR_DOWN         ; Apple+Down = Page Down
         jsr     PageDown
         ;; jmp     InputLoop
       END_IF
@@ -303,17 +303,17 @@ no_mod:
         cmp     #CHAR_ESCAPE
         jeq     DoClose
 
-    IF A EQ     #' '
+    IF A = #' '
         jsr     ToggleMode
         jmp     InputLoop
     END_IF
 
-    IF A EQ     #CHAR_UP
+    IF A = #CHAR_UP
         jsr     ScrollUp
         jmp     InputLoop
     END_IF
 
-    IF A EQ     #CHAR_DOWN
+    IF A = #CHAR_DOWN
         jsr     ScrollDown
         ;; jmp     InputLoop
     END_IF
@@ -774,7 +774,7 @@ loop:
         sta     (ptr),y
         cmp     #CHAR_RETURN
         beq     FinishTextRun
-    IF A EQ     #' '
+    IF A = #' '
         sty     L0F9B
     END_IF
 
@@ -797,7 +797,7 @@ loop:
 
         copy8   #0, tab_flag
         lda     L0F9B
-    IF A NE     #$FF
+    IF A <> #$FF
         sta     drawtext_params::textlen
     END_IF
         inc     drawtext_params::textlen
@@ -870,7 +870,7 @@ end:    rts
 
         ;; Pointing at second page already?
         lda     drawtext_params::textptr+1
-    IF A NE     #>default_buffer
+    IF A <> #>default_buffer
         ;; Yes, shift second page down.
         ldy     #0
       DO
@@ -1095,7 +1095,7 @@ filename:       .res    16
         ldy     INVOKE_PATH
     DO
         lda     INVOKE_PATH,y       ; find last '/'
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
 
@@ -1104,7 +1104,7 @@ filename:       .res    16
         copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-    WHILE Y NE  INVOKE_PATH
+    WHILE Y <> INVOKE_PATH
         stx     filename
 
         copy16  #filename, STARTLO

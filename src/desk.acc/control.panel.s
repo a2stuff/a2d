@@ -514,8 +514,8 @@ caret_blink_caret_bitmap:
         cmp     #kShortcutCloseWindow
         beq     Exit
 
-      IF A GE   #'1'
-       IF A LT  #'9'+1
+      IF A >= #'1'
+       IF A < #'9'+1
         sec
         sbc     #'1'
         tax
@@ -538,7 +538,7 @@ caret_blink_caret_bitmap:
         cmp     #CHAR_RIGHT
         jeq     HandleRArrClick
 
-    IF A EQ     #CHAR_CTRL_D
+    IF A = #CHAR_CTRL_D
         BTK_CALL BTK::Flash, pattern_button
         jmp     HandlePatternClick
     END_IF
@@ -694,7 +694,7 @@ shortcut_table_addr_hi:
         inc     pattern_index
 
         lda     pattern_index
-    IF A GE     #kPatternCount
+    IF A >= #kPatternCount
         copy8   #0, pattern_index
     END_IF
 
@@ -797,8 +797,8 @@ loop:   ldx     screentowindow_params::windowx
         jsr     MapCoords
         ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
-        BREAK_IF X NE lastx
-    WHILE Y EQ  lasty
+        BREAK_IF X <> lastx
+    WHILE Y = lasty
 
 moved:  stx     lastx
         sty     lasty
@@ -959,7 +959,7 @@ dblclick_speed: .word   0
         lda     pattern - DeskTopSettings::pattern,x
         jsr     WriteSetting
         dex
-    WHILE X NE  #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE X <> #AS_BYTE(DeskTopSettings::pattern-1)
 
         jsr     MarkDirty
 
@@ -1049,7 +1049,7 @@ notpencopy:     .byte   MGTK::notpencopy
         add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
         lda     arrow_num
-    WHILE A NE  #kNumArrows
+    WHILE A <> #kNumArrows
 .endscope
 
         BTK_CALL BTK::RadioDraw, dblclick_button1
@@ -1277,7 +1277,7 @@ xloop:  ror     row
         .assert MGTK::notpencopy <> $C0, error, "Bad BIT skip"
 zero:   lda     #MGTK::notpencopy
 store:
-    IF A NE mode
+    IF A <> mode
         sta     mode
         MGTK_CALL MGTK::SetPenMode, mode
     END_IF
@@ -1287,7 +1287,7 @@ store:
         ;; next x
         inc     xpos
         lda     xpos
-    IF A NE     #8
+    IF A <> #8
         add16_8 bitrect::x1, #kFatBitWidth
         add16_8 bitrect::x2, #kFatBitWidth
         jmp     xloop
@@ -1296,7 +1296,7 @@ store:
         ;; next y
         inc     ypos
         lda     ypos
-    IF A NE     #8
+    IF A <> #8
         add16_8 bitrect::y1, #kFatBitHeight
         add16_8 bitrect::y2, #kFatBitHeight
         jmp     yloop

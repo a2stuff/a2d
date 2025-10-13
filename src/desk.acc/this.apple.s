@@ -978,7 +978,7 @@ fail:   ldy     #0
 
 match:  tya
 
-    IF A EQ     #model::iie_original
+    IF A = #model::iie_original
         ;; Is it a Pravetz 8A/C?
         ldx     #kPravetz8ACSequenceLength-1
       DO
@@ -997,7 +997,7 @@ match:  tya
 
         ;; A has model; but now test for IIgs, TLC, and TK3000;
         ;; all masquerade as Enhanced IIe.
-    IF A EQ     #model::iie_enhanced
+    IF A = #model::iie_enhanced
 
         sec
         jsr     IDROUTINE
@@ -1214,7 +1214,7 @@ v_2x:   and     #$0F
 
         ldx     egg
         inx
-    IF X EQ     #kNumModels
+    IF X = #kNumModels
         ldx     #0
     END_IF
         stx     egg
@@ -1230,7 +1230,7 @@ egg:    .byte   0
 
 .proc ClearWindow
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::grafport + MGTK::GrafPort::maprect
@@ -1241,7 +1241,7 @@ egg:    .byte   0
 
 .proc DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
@@ -1324,7 +1324,7 @@ draw:   php
 
         ;; Special case for Slot 2
         lda     slot
-    IF A EQ     #2
+    IF A = #2
         jsr     SetSlotPtr
         param_call WithInterruptsDisabled, DetectTheCricket
       IF CS
@@ -1335,7 +1335,7 @@ draw:   php
 
         ;; Special case for Slot 3 cards
         lda     slot
-    IF A EQ     #3
+    IF A = #3
         bit     ROMIN2
         jsr     DetectLeChatMauveEve
         php
@@ -1910,7 +1910,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         copy16  #0, memory
         jsr     CheckRamworksMemory
         sty     memory          ; Y is number of 64k banks
-    IF Y EQ     #0              ; 0 means 256 banks
+    IF Y = #0                   ; 0 means 256 banks
         inc     memory+1
     END_IF
         inc16   memory          ; Main 64k memory
@@ -1993,7 +1993,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         eor     #$FF            ; complement as second signature
         sta     sigb1
         dex
-    WHILE X NE  #255
+    WHILE X <> #255
 .endscope
 
         ;; Iterate upwards, tallying valid banks.
@@ -2002,9 +2002,9 @@ write:  sta     $C080,x         ; self-modified to $C0n0
     DO
         stx     RAMWORKS_BANK   ; select bank
         txa
-      IF A EQ   sigb0           ; verify first signature
+      IF A = sigb0              ; verify first signature
         eor     #$FF
-       IF A EQ  sigb1           ; verify second signature
+       IF A = sigb1             ; verify second signature
         iny                     ; match - count it
        END_IF
       END_IF
@@ -2018,9 +2018,9 @@ write:  sta     $C080,x         ; self-modified to $C0n0
     DO
         stx     RAMWORKS_BANK   ; select bank
         txa
-      IF A EQ   sigb0           ; verify first signature
+      IF A = sigb0              ; verify first signature
         eor     #$FF
-       IF A EQ  sigb1           ; verify second signature
+       IF A = sigb1             ; verify second signature
         copy8   buf0,x, sigb0   ; match - restore it
         copy8   buf1,x, sigb1
        END_IF
@@ -2047,7 +2047,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
     IF CC
         .pushcpu
         .setcpu "65816"
-      IF Y NE   #0              ; Y = IIgs ROM revision
+      IF Y <> #0                ; Y = IIgs ROM revision
         ;; From the IIgs Memory Manager tool set source
         ;; c/o Antoine Vignau and Dagen Brock (ROM 1 & ROM 3)
         NumBanks := $E11624
@@ -2173,7 +2173,7 @@ str_from_int:
 
         ;; 65C02 - check for ZIP CHIP (except on IIc Plus)
         lda     model           ; cached
-    IF A NE     #model::iic_plus
+    IF A <> #model::iic_plus
         php                     ; timing sensitive
         sei
 
@@ -2188,10 +2188,10 @@ str_from_int:
         lda     ZC_REG_SLOTSPKR
         eor     #$FF
         sta     ZC_REG_SLOTSPKR
-      IF A EQ   ZC_REG_SLOTSPKR
+      IF A = ZC_REG_SLOTSPKR
         eor     #$FF
         sta     ZC_REG_SLOTSPKR
-       IF A EQ  ZC_REG_SLOTSPKR
+       IF A = ZC_REG_SLOTSPKR
 
         ;; Lock
         copy8   #kZCLock, ZC_REG_LOCK
@@ -2267,7 +2267,7 @@ start:
         copy8   #0, status_params::status_code
         jsr     SmartPortCall
         lda     dib_buffer+SPDIB::Number_Devices
-    IF A GE     #kMaxSmartportDevices
+    IF A >= #kMaxSmartportDevices
         lda     #kMaxSmartportDevices
     END_IF
         sta     num_devices
@@ -2290,7 +2290,7 @@ device_loop:
     IF NOT_ZERO
       DO
         lda     dib_buffer+SPDIB::Device_Name-1,y
-        BREAK_IF A NE #' '
+        BREAK_IF A <> #' '
         dey
       WHILE NOT_ZERO
     END_IF
@@ -2399,7 +2399,7 @@ num_devices:
         tax
       DO
         lda     str_current,x
-        BREAK_IF A NE str_last,x
+        BREAK_IF A <> str_last,x
         dex
       WHILE NOT_ZERO
     END_IF

@@ -95,13 +95,13 @@ loop:
         jsr     GetNextEvent
 
         ;; Did the mouse move?
-    IF A EQ     #kEventKindMouseMoved
+    IF A = #kEventKindMouseMoved
         jsr     ClearTypeDown   ; always returns Z=1
         beq     loop            ; just to `loop` because no state change
     END_IF
 
         ;; Is it a key down event?
-    IF A EQ     #MGTK::EventKind::key_down
+    IF A = #MGTK::EventKind::key_down
         jsr     HandleKeydown
         jmp     MainLoop
     END_IF
@@ -114,7 +114,7 @@ loop:
     END_IF
 
         ;; Is it an update event?
-    IF A EQ     #MGTK::EventKind::update
+    IF A = #MGTK::EventKind::update
         jsr     ClearUpdatesSkipGet
     END_IF
 
@@ -138,7 +138,7 @@ counter:
     DO
         jsr     PeekEvent
         lda     event_params::kind
-        BREAK_IF A NE #MGTK::EventKind::update
+        BREAK_IF A <> #MGTK::EventKind::update
 
         jsr     GetEvent        ; no need to synthesize events
 
@@ -151,7 +151,7 @@ skip_get:
       IF ZERO
         ;; Desktop
         ITK_CALL IconTK::DrawAll, event_params::window_id
-      ELSE_IF A LT #kMaxDeskTopWindows+1; 1...max are ours
+      ELSE_IF A < #kMaxDeskTopWindows+1; 1...max are ours
         ;; Directory Window
         jsr     UpdateWindow
       END_IF
@@ -174,7 +174,7 @@ ClearUpdatesSkipGet := ClearUpdates::skip_get
         inc     loop_counter
         loop_counter := *+1
         lda     #SELF_MODIFIED_BYTE
-    IF A GE     periodic_task_delay    ; for per-machine timing
+    IF A >= periodic_task_delay ; for per-machine timing
         copy8   #0, loop_counter
 
         jsr     ShowClock
@@ -256,7 +256,7 @@ modifiers:
         jsr     ClearTypeDown
 
         lda     event_params::modifiers
-    IF A EQ     #3              ; both Open-Apple + Solid-Apple ?
+    IF A = #3                   ; both Open-Apple + Solid-Apple ?
         ;; Double-modifier shortcuts
         lda     event_params::key
         jsr     ToUpperCase
@@ -458,7 +458,7 @@ offset_table:
         jmp     DragSelect
     END_IF
 
-    IF A EQ     #MGTK::Area::menubar  ; menu?
+    IF A = #MGTK::Area::menubar ; menu?
 
         ;; Maybe clock?
         lda     MACHID
@@ -503,7 +503,7 @@ offset_table:
 
 window_click:
 
-    IF A NE     #MGTK::Area::content
+    IF A <> #MGTK::Area::content
         pha                     ; A = MGTK::Area::*
         ;; Activate if needed
         lda     findwindow_params::window_id
@@ -535,7 +535,7 @@ window_click:
         copy8   clicked_window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowy
-      IF A LT   #kWindowHeaderHeight
+      IF A < #kWindowHeaderHeight
         jmp     _ActivateClickedWindow ; no-op if already active
       END_IF
 
@@ -559,9 +559,9 @@ window_click:
         jne     ActivateWindow
 
         lda     findcontrol_params::which_ctl
-        RTS_IF A EQ #MGTK::Ctl::dead_zone
+        RTS_IF A = #MGTK::Ctl::dead_zone
 
-    IF A EQ     #MGTK::Ctl::vertical_scroll_bar
+    IF A = #MGTK::Ctl::vertical_scroll_bar
         ;; Vertical scrollbar
 
         ;; Thumb?
@@ -601,7 +601,7 @@ window_click:
         ;; Check for control repeat
         jsr     PeekEvent
         lda     event_params::kind
-        BREAK_IF A NE #MGTK::EventKind::drag
+        BREAK_IF A <> #MGTK::EventKind::drag
 
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
@@ -671,7 +671,7 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
         lda     selected_icon_count
        IF NOT_ZERO
         lda     findicon_params::window_id
-        IF A EQ selected_window_id
+        IF A = selected_window_id
         lda     findicon_params::which_icon
         jsr     AddIconToSelection
         jmp     :+
@@ -703,16 +703,16 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
         copy8   findicon_params::which_icon, drag_drop_params::icon
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
 
-        RTS_IF A EQ #IconTK::kDragResultCanceled
+        RTS_IF A = #IconTK::kDragResultCanceled
 
-    IF A EQ     #IconTK::kDragResultNotADrag
+    IF A = #IconTK::kDragResultNotADrag
         jsr     _ActivateClickedWindow ; no-op if already active
         jmp     _CheckRenameClick
     END_IF
 
         ;; ----------------------------------------
 
-    IF A EQ     #IconTK::kDragResultMove
+    IF A = #IconTK::kDragResultMove
         jsr     RedrawSelectedIcons
 
         jsr     _ActivateClickedWindow ; no-op if already active
@@ -734,7 +734,7 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
         ;; * Single modifier - ignore
         ;; * Double modifiers - ignore
 
-    IF A EQ     #IconTK::kDragResultMoveModified
+    IF A = #IconTK::kDragResultMoveModified
         lda     selected_window_id
         RTS_IF ZERO
 
@@ -774,14 +774,14 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
         lda     drag_drop_params::target
 
         ;; Trash?
-    IF A EQ     trash_icon_num
+    IF A = trash_icon_num
         lda     selected_window_id
         jeq     CmdEject
         jmp     CmdDeleteSelection
     END_IF
 
         ;; Desktop?
-        RTS_IF A EQ #$80        ; ignore
+        RTS_IF A = #$80         ; ignore
 
         ;; Path for target
         jsr     SetPathBuf4FromDragDropResult
@@ -811,8 +811,8 @@ prev_selected_icon:
 ;;; be set to the result of `GetSingleSelectedIcon`.
 .proc _CheckRenameClick
         jsr     GetSingleSelectedIcon
-    IF A EQ     prev_selected_icon
-      IF A NE   trash_icon_num
+    IF A = prev_selected_icon
+      IF A <> trash_icon_num
         sta     icon_param
         ITK_CALL IconTK::GetRenameRect, icon_param
         MGTK_CALL MGTK::MoveTo, event_params::coords
@@ -832,7 +832,7 @@ prev_selected_icon:
         ;; --------------------------------------------------
         ;; (1/4) Canceled?
 
-        RTS_IF A EQ #kOperationCanceled
+        RTS_IF A = #kOperationCanceled
 
         ;; --------------------------------------------------
         ;; (2/4) Was a move?
@@ -893,9 +893,9 @@ clicked_window_id := _ActivateClickedWindow::window_id
 ;;; Inputs: A = window id to activate
 
 .proc ActivateWindow
-        RTS_IF A EQ active_window_id
+        RTS_IF A = active_window_id
 
-        RTS_IF A EQ #0
+        RTS_IF A = #0
 
         ;; Make the window active.
         sta     active_window_id
@@ -1136,7 +1136,7 @@ finish: pla
         ldx     selected_icon_count
     IF NOT_ZERO
         ;; Single?
-      IF X EQ   #1
+      IF X = #1
         ldx     selected_icon_list ; X = icon id
         cpx     trash_icon_num
         beq     set_flags       ; trash only - treat as no selection
@@ -1152,7 +1152,7 @@ finish: pla
         lda     (ptr),y
         tax                     ; X = icon type
         pla                     ; A = flags
-       IF X EQ  #IconType::link
+       IF X = #IconType::link
         ora     #kLinkSel       ; A = flags
        END_IF
       END_IF
@@ -1187,7 +1187,7 @@ set_flags:
         lda     table,y         ; flags
         flags := *+1
         and     #SELF_MODIFIED_BYTE
-      IF A EQ   table,y
+      IF A = table,y
         ldx     #MGTK::disableitem_enable
       END_IF
         stx     disableitem_params::disable
@@ -1354,7 +1354,7 @@ retry:  jsr     GetSrcFileInfo
         ;; Fallback - try BASIS.SYSTEM
 fallback:
         jsr     _CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
-    IF CC                         ; yes, continue below
+    IF CC                       ; yes, continue below
         SET_BIT7_FLAG INVOKER_BITSY_COMPAT
         bmi     launch          ; always
     END_IF
@@ -1468,7 +1468,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         ;; Pop off a path segment.
     DO
         param_call RemovePathSegment, interp_path
-        BREAK_IF A LT #2
+        BREAK_IF A < #2
         inc     interp_path     ; restore trailing '/'
 
         ;; Append BASI?.SYSTEM to path and check for file.
@@ -1524,7 +1524,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
         iny
         inx
         copy8   (ptr1),y, INVOKER_INTERPRETER,x
-    WHILE Y NE  len
+    WHILE Y <> len
         stx     INVOKER_INTERPRETER
 
         jsr     PopPointers     ; do not tail-call optimize!
@@ -1569,7 +1569,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 .proc _MakeSrcPathAbsolute
         ;; Already absolute?
         lda     src_path_buf+1
-    IF A NE     #'/'
+    IF A <> #'/'
         ;; Get prefix and append path
         ldax    #src_path_buf
         jsr     _MakeRelPathAbsoluteIntoInvokerInterpreter
@@ -1609,7 +1609,7 @@ LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
         bcs     err
 
         lda     read_params::trans_count
-    IF A GE     #kLinkFilePathLengthOffset
+    IF A >= #kLinkFilePathLengthOffset
 
         ldx     #kCheckHeaderLength-1
       DO
@@ -1768,7 +1768,7 @@ devlst_backup:
 .proc CmdSelectorAction
         ;; If adding, try to default to the current selection.
         lda     menu_click_params::item_num
-    IF A EQ     #kMenuItemIdSelectorAdd
+    IF A = #kMenuItemIdSelectorAdd
         copy8   #0, path_buf0
 
         ;; If there's a selection, put it in `path_buf0`
@@ -1787,7 +1787,7 @@ devlst_backup:
         bmi     done
 
         lda     menu_click_params::item_num
-    IF A LT     #SelectorAction::delete
+    IF A < #SelectorAction::delete
         ;; Add or Edit - need more overlays
         lda     #kDynamicRoutineShortcutEdit
         jsr     LoadDynamicRoutine
@@ -1811,7 +1811,7 @@ devlst_backup:
         bmi     done            ; N=1 for Cancel
 
         lda     menu_click_params::item_num
-    IF A EQ     #SelectorAction::run
+    IF A = #SelectorAction::run
         ;; "Run" command
         result := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -1871,9 +1871,9 @@ done:   rts
         jsr     _PrepEntryCopyPaths
         jsr     DoCopyToRAM
 
-        RTS_IF A EQ #kOperationCanceled
+        RTS_IF A = #kOperationCanceled
 
-    IF A EQ     #kOperationFailed
+    IF A = #kOperationFailed
         param_call CopyRAMCardPrefix, path_buf4
         jmp     RefreshWindowForPathBuf4
     END_IF
@@ -1952,7 +1952,7 @@ entry_num:
         ;; Walk back one segment
     DO
         lda     entry_path,y
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
         dey
@@ -1960,7 +1960,7 @@ entry_num:
         ;; Walk back a second segment
     DO
         lda     entry_path,y
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
         dey
@@ -1971,7 +1971,7 @@ entry_num:
         inx
         iny
         copy8   entry_path,y, src_path_buf,x
-    WHILE Y NE  entry_path
+    WHILE Y <> entry_path
 
         stx     src_path_buf
         ldax    #src_path_buf
@@ -1987,7 +1987,7 @@ entry_num:
 .proc _SetEntryPtr
         ptr := $06
 
-    IF A LT     #kSelectorListNumPrimaryRunListEntries
+    IF A < #kSelectorListNumPrimaryRunListEntries
         jsr     ATimes16
         addax   #run_list_entries, ptr
         rts
@@ -2007,7 +2007,7 @@ entry_num:
 .proc _SetEntryPathPtr
         ptr := $06
 
-    IF A LT     #kSelectorListNumPrimaryRunListEntries
+    IF A < #kSelectorListNumPrimaryRunListEntries
         jsr     ATimes64
         addax   #run_list_paths, ptr
         rts
@@ -2109,7 +2109,7 @@ skip:   iny
         lda     #'.'
       END_IF
         sta     path,x
-    WHILE Y NE  len
+    WHILE Y <> len
         stx     path
 
         ;; Allow arbitrary types in menu (e.g. folders)
@@ -2132,7 +2132,7 @@ CmdDeskAcc      := CmdDeskAccImpl::start
         lda     selected_icon_count
     IF NOT_ZERO
         lda     selected_icon_list ; first selected icon
-      IF A NE   trash_icon_num     ; ignore trash
+      IF A <> trash_icon_num    ; ignore trash
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
         jne     ShowAlert       ; too long
         param_call CopyToSrcPath, path_buf3
@@ -2283,7 +2283,7 @@ main_length:    .word   0
         cpy     pathlen
         beq     :+
         lda     (ptr),y
-    WHILE A NE  #'/'
+    WHILE A <> #'/'
         dey
 :
         tya
@@ -2321,7 +2321,7 @@ main_length:    .word   0
         param_call CopyPtr1ToBuf, path_buf4
         jsr     DoCopySelection
 
-        RTS_IF A EQ #kOperationCanceled
+        RTS_IF A = #kOperationCanceled
 
         FALL_THROUGH_TO RefreshWindowForPathBuf4
 
@@ -2363,7 +2363,7 @@ main_length:    .word   0
 .proc SplitPathBuf4
         param_call FindLastPathSegment, path_buf4
 
-    IF Y NE     path_buf4
+    IF Y <> path_buf4
         tya                     ; Y = position of last '/'
         pha
 
@@ -2373,7 +2373,7 @@ main_length:    .word   0
         iny                     ; +1 to skip past '/'
       DO
         copy8   path_buf4,y, filename_buf,x
-        BREAK_IF Y EQ path_buf4
+        BREAK_IF Y = path_buf4
         iny
         inx
       WHILE NOT_ZERO
@@ -2410,7 +2410,7 @@ main_length:    .word   0
         iny                     ; +1 to skip past '/'
     DO
         copy8   INVOKER_PREFIX,y, INVOKER_FILENAME,x
-        BREAK_IF Y EQ INVOKER_PREFIX
+        BREAK_IF Y = INVOKER_PREFIX
         iny
         inx
     WHILE NOT_ZERO              ; always
@@ -2650,7 +2650,7 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 .proc CmdCloseAll
 repeat:
         lda     active_window_id  ; current window
-        RTS_IF ZERO               ; nope, done!
+        RTS_IF ZERO             ; nope, done!
 
         jsr     CloseActiveWindow ; close it...
         jmp     repeat            ; and try again
@@ -2838,7 +2838,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
     DO
         index := *+1
         ldx     #SELF_MODIFIED_BYTE
-      IF X EQ   cached_window_entry_count
+      IF X = cached_window_entry_count
         ;; Not found
         lda     #0
         rts
@@ -2846,7 +2846,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
         ;; Compare with name from dialog
         lda     cached_window_entry_list,x
-      IF A NE   trash_icon_num
+      IF A <> trash_icon_num
 
         jsr     GetIconName
         stax    ptr_icon_name
@@ -2934,8 +2934,8 @@ stashed_name:
         ldx     stashed_name
     DO
         lda     stashed_name,x
-        BREAK_IF A LT #'0'
-        BREAK_IF A GE #'9'+1
+        BREAK_IF A < #'0'
+        BREAK_IF A >= #'9'+1
         iny
         sta     digits,y        ; stash digits as we go
         dex
@@ -2961,9 +2961,9 @@ stashed_name:
         bne     concatenate     ; done
         copy8   #'0', digits+1,x
         inx
-      WHILE X NE digits
+      WHILE X <> digits
         inc     digits
-    WHILE X NE  #13             ; max of 13 digits
+    WHILE X <> #13              ; max of 13 digits
         beq     SpinName        ; restart
 
         ;; --------------------------------------------------
@@ -2977,7 +2977,7 @@ concatenate:
         lda     #14
         sec
         sbc     digits
-    IF A LT     stashed_name
+    IF A < stashed_name
         sta     stashed_name
     END_IF
 
@@ -3105,7 +3105,7 @@ done:   rts
         pha
 
         lda     selection_list_copy,x
-      IF A NE   trash_icon_num
+      IF A <> trash_icon_num
         ldy     #$80            ; Y = show unexpected errors flag (do)
         bit     eject_flag
        IF NS
@@ -3120,7 +3120,7 @@ done:   rts
         pla                     ; A = index
         tax                     ; X = index
         inx
-    WHILE X NE  selection_count_copy
+    WHILE X <> selection_count_copy
 
         rts
 
@@ -3279,7 +3279,7 @@ entry2:
 entry3:
         ;; Clear selection if in the window
         lda     selected_window_id
-    IF A EQ     active_window_id
+    IF A = active_window_id
         lda     #0
         sta     selected_icon_count
         sta     selected_window_id
@@ -3305,7 +3305,7 @@ entry3:
 
 .proc _PreserveSelection
         lda     selected_window_id
-    IF A EQ     active_window_id
+    IF A = active_window_id
         lda     selected_icon_count
       IF NOT_ZERO
         sta     selection_preserved_count
@@ -3497,7 +3497,7 @@ found:  lda     DEVLST,x
 .proc IconToDeviceIndex
         ldx     #kMaxVolumes-1
     DO
-        BREAK_IF A EQ device_to_icon_map,x
+        BREAK_IF A = device_to_icon_map,x
         dex
     WHILE POS
 
@@ -3529,7 +3529,7 @@ ret:    rts
 
 .proc CmdDeleteSelection
         jsr     DoDeleteSelection
-        RTS_IF A EQ #kOperationCanceled
+        RTS_IF A = #kOperationCanceled
 
         SET_BIT7_FLAG validate_windows_flag
         jmp     UpdateActivateAndRefreshSelectedWindow
@@ -3594,7 +3594,7 @@ ep2:
         lda     selected_window_id
     IF NE
         jsr     GetSelectionViewBy
-      IF A EQ   #DeskTopSettings::kViewByName
+      IF A = #DeskTopSettings::kViewByName
         txa                     ; X = window id
         jsr     RefreshViewPreserveSelection
 
@@ -3656,7 +3656,7 @@ spin:   jsr     GetSelectionWindow
         jsr     DoCopyFile
         sta     result
 
-        RTS_IF A EQ #kOperationCanceled
+        RTS_IF A = #kOperationCanceled
 
         ;; Update name case bits on disk, if possible.
         param_call CopyToSrcPath, dst_path_buf
@@ -3861,7 +3861,7 @@ END_PARAM_BLOCK
 
     DO
         ldx     index
-        BREAK_IF X EQ cached_window_entry_count
+        BREAK_IF X = cached_window_entry_count
 
         lda     cached_window_entry_list,x
         sta     cur_icon
@@ -3929,7 +3929,7 @@ fallback:
         ;; ...except on desktop, since first is Trash.
         tay                     ; make last (Y) be Trash (0)
         inx                     ; and first (X) be 1st volume icon
-      IF X EQ   cached_window_entry_count ; unless there isn't one
+      IF X = cached_window_entry_count ; unless there isn't one
         dex
       END_IF
     END_IF
@@ -3980,7 +3980,7 @@ not_file_char:
 
 file_char:
         ldx     typedown_buf
-        RTS_IF X EQ #kMaxFilenameLength ; Z=1 to consume
+        RTS_IF X = #kMaxFilenameLength ; Z=1 to consume
 
         inx
         stx     typedown_buf
@@ -4000,7 +4000,7 @@ file_char:
 
         ;; Already the selection?
         jsr     GetSingleSelectedIcon
-      IF A NE   icon
+      IF A <> icon
         ;; Update the selection.
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -4051,7 +4051,7 @@ cloop:  lda     (ptr),y
 
 next:   inc     index
         lda     index
-    WHILE A NE  num_filenames
+    WHILE A <> num_filenames
 
         dec     index
 found:  return  index
@@ -4075,7 +4075,7 @@ typedown_buf:
         jsr     LoadActiveWindowEntryTable
         ldx     #0
     DO
-        BREAK_IF X EQ cached_window_entry_count
+        BREAK_IF X = cached_window_entry_count
         copy8   cached_window_entry_list,x, buffer+1,x
         inx
     WHILE NE                    ; always
@@ -4095,7 +4095,7 @@ typedown_buf:
 
         jsr     GetKeyboardSelectableIcons
 
-        RTS_IF X LT #2
+        RTS_IF X < #2
 
         ;; Selection sort. In each outer iteration, the highest
         ;; remaining element is moved to the end of the unsorted
@@ -4129,7 +4129,7 @@ typedown_buf:
 
         inc     inner
         lda     inner
-      WHILE A NE outer
+      WHILE A <> outer
 
         dec     outer
     WHILE NOT_ZERO
@@ -4268,7 +4268,7 @@ ret:    rts
         pla
         tax
         inx
-    WHILE X NE  selected_icon_count
+    WHILE X <> selected_icon_count
 
         ;; --------------------------------------------------
         ;; Repaint the icons
@@ -4300,7 +4300,7 @@ finish: rts
 
         ;; Need at least two windows to cycle.
         lda     num_open_windows
-    IF A GE     #2
+    IF A >= #2
         cpy     #'~'
         beq     reverse
 
@@ -4317,7 +4317,7 @@ finish: rts
         ;; with an increment
         ldx     active_window_id
       DO
-       IF X EQ  #kMaxDeskTopWindows
+       IF X = #kMaxDeskTopWindows
         ldx     #0
        END_IF
         lda     window_to_dir_icon_table,x
@@ -4376,17 +4376,17 @@ repeat: jsr     GetEvent        ; no need to synthesize events
 done:   rts
     END_IF
 
-    IF A EQ     #CHAR_RIGHT
+    IF A = #CHAR_RIGHT
         jsr     ScrollRight
         jmp     repeat
     END_IF
 
-    IF A EQ     #CHAR_LEFT
+    IF A = #CHAR_LEFT
         jsr     ScrollLeft
         jmp     repeat
     END_IF
 
-    IF A EQ     #CHAR_DOWN
+    IF A = #CHAR_DOWN
         jsr     ScrollDown
         jmp     repeat
     END_IF
@@ -4965,7 +4965,7 @@ close_loop:
         cmp     #ERR_IO_ERROR
         beq     ret
 
-    IF A EQ     #ERR_NOT_PRODOS_VOLUME
+    IF A = #ERR_NOT_PRODOS_VOLUME
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unreadable_format
         cmp     #kAlertResultCancel
         beq     ret
@@ -5094,7 +5094,7 @@ arbitrary_target:
         lda     stashed_name
         clc
         adc     #.strlen(kAliasSuffix)
-    IF A GE     #kMaxFilenameLength+1
+    IF A >= #kMaxFilenameLength+1
         lda     #kMaxFilenameLength
     END_IF
         tax
@@ -5271,13 +5271,13 @@ alert:  jmp     ShowAlert
         ldx     selected_icon_count
     DO
         dex
-    WHILE A NE  selected_icon_list,x
+    WHILE A <> selected_icon_list,x
 
         ;; Move everything down
     DO
         copy8   selected_icon_list+1,x, selected_icon_list,x
         inx
-    WHILE X NE  selected_icon_count
+    WHILE X <> selected_icon_count
 
         dec     selected_icon_count
     IF ZERO
@@ -5330,7 +5330,7 @@ exception_flag:
 
         ;; Bring window to front if needed
         pla                     ; A = window_id
-    IF A NE     active_window_id
+    IF A <> active_window_id
         sta     active_window_id
         MGTK_CALL MGTK::SelectWindow, active_window_id
     END_IF
@@ -5339,7 +5339,7 @@ exception_flag:
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
         pha                               ; A = obscured?
-    IF ZERO                               ; skip if obscured
+    IF ZERO                     ; skip if obscured
         MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
     END_IF
 
@@ -5411,7 +5411,7 @@ END_PARAM_BLOCK
         ;; Is this actually a drag?
         jsr     PeekEvent
         lda     event_params::kind
-    IF A NE     #MGTK::EventKind::drag
+    IF A <> #MGTK::EventKind::drag
         ;; No, just a click; optionally clear selection
         jsr     ExtendSelectionModifierDown
         jpl     ClearSelection  ; don't clear if mis-clicking
@@ -5446,14 +5446,14 @@ event_loop:
         ;; Done the drag?
         jsr     PeekEvent
         lda     event_params::kind
-    IF A NE     #MGTK::EventKind::drag
+    IF A <> #MGTK::EventKind::drag
 
         jsr     FrameTmpRect
 
         ;; Process all icons in window
         ldx     #0              ; X = index
       DO
-        RTS_IF X EQ cached_window_entry_count
+        RTS_IF X = cached_window_entry_count
         txa
         pha                     ; A = index
 
@@ -5684,7 +5684,7 @@ beyond:
 
         ;; Was it the active window?
         lda     cached_window_id
-    IF A EQ     active_window_id
+    IF A = active_window_id
         ;; Yes, record the new one
         MGTK_CALL MGTK::FrontWindow, active_window_id
     END_IF
@@ -5728,7 +5728,7 @@ validate_windows_flag:
         window_id := *+1
         ldx     #SELF_MODIFIED_BYTE
         lda     window_to_dir_icon_table-1,x
-       IF NOT_ZERO           ; isn't `kWindowToDirIconFree`
+       IF NOT_ZERO              ; isn't `kWindowToDirIconFree`
         ;; Get and copy its path somewhere useful
         txa
         jsr     GetWindowPath
@@ -5814,7 +5814,7 @@ validate_windows_flag:
 ;;; Z=0 and A=icon num if only one, Z=0 and A=0 otherwise
 .proc GetSingleSelectedIcon
         lda     selected_icon_count
-    IF A NE     #1
+    IF A <> #1
         lda     #0
         rts
     END_IF
@@ -5885,7 +5885,7 @@ for_path:
 no_win:
         ;; Is there a free window?
         lda     num_open_windows
-    IF A GE     #kMaxDeskTopWindows
+    IF A >= #kMaxDeskTopWindows
         ;; Nope, show error.
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_too_many_windows
         ldx     saved_stack
@@ -5958,7 +5958,7 @@ no_win:
         ldy     src_path_buf
     DO
         lda     src_path_buf,y
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE POS
 
@@ -5968,7 +5968,7 @@ no_win:
         iny
         inx
         copy8   src_path_buf,y, filename_buf,x
-    WHILE Y NE  src_path_buf
+    WHILE Y <> src_path_buf
         stx     filename_buf
 
         ;; Adjust ptr as if it's pointing at an IconEntry
@@ -6272,7 +6272,7 @@ err:    sec
 .proc FindIconForPath
         jsr     CopyToBuf4
         param_call FindLastPathSegment, path_buf4
-    IF Y EQ     path_buf4       ; was there a filename?
+    IF Y = path_buf4            ; was there a filename?
         ;; Volume - make it a filename
         ldx     path_buf4       ; Strip '/'
         dex
@@ -6386,7 +6386,7 @@ done:
         pla
         tax
         inx
-    WHILE X NE  selected_icon_count
+    WHILE X <> selected_icon_count
 
         ;; --------------------------------------------------
         ;; Repaint the icons
@@ -6410,7 +6410,7 @@ done:
 .proc RedrawSelectedIcons
         lda     selected_window_id
     IF NOT_ZERO                 ; Desktop
-      IF A EQ   active_window_id
+      IF A = active_window_id
         ;; --------------------------------------------------
         ;; Fast path. Since selection is in the top-most window,
         ;; drawing can be done using `IconTK::DrawIconRaw` in a
@@ -6437,7 +6437,7 @@ done:
         pla                     ; A = index
         tax
         inx
-       WHILE X NE selected_icon_count
+       WHILE X <> selected_icon_count
 
         jsr     PopPointers     ; do not tail-call optimize!
         rts
@@ -6457,7 +6457,7 @@ done:
         pla
         tax
         inx
-    WHILE X NE  selected_icon_count
+    WHILE X <> selected_icon_count
 
         rts
 .endproc ; RedrawSelectedIcons
@@ -6491,7 +6491,7 @@ done:
 
         ldx     #0              ; X = index
       DO
-        BREAK_IF X EQ cached_window_entry_count
+        BREAK_IF X = cached_window_entry_count
         txa
         pha                     ; A = index
 
@@ -6653,7 +6653,7 @@ start:  stax    ptr1
 
         window_num := *+1
         lda     #SELF_MODIFIED_BYTE
-      IF A GE   #kMaxDeskTopWindows+1 ; directory windows are 1-8
+      IF A >= #kMaxDeskTopWindows+1 ; directory windows are 1-8
         bit     exact_match_flag
        IF NS
         lda     #0
@@ -6734,7 +6734,7 @@ record_count:           .byte   0
     DO
         copy8   dir_buffer+SubdirectoryHeader::entry_length,x, dir_header,x
         inx
-    WHILE X NE  #.sizeof(dir_header)
+    WHILE X <> #.sizeof(dir_header)
 
         ;; Is there room for the files?
         lda     dir_header::file_count+1 ; > 255?
@@ -6811,7 +6811,7 @@ do_entry:
 
 next:   inc     index_in_block
         lda     index_in_block
-    IF A NE     dir_header::entries_per_block
+    IF A <> dir_header::entries_per_block
         add16_8 entry_ptr, dir_header::entry_length
     ELSE
         copy8   #$00, index_in_block
@@ -6847,7 +6847,7 @@ next:   inc     index_in_block
         ldy     file_entry_to_file_record_mapping_table-1,x
         copy8   (entry_ptr),y, record,x
         inx
-    WHILE X NE  #.sizeof(FileRecord)
+    WHILE X <> #.sizeof(FileRecord)
 
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         bit     LCBANK2
@@ -7033,7 +7033,7 @@ vol_kb_used:  .word   0
     DO
         inx
         copy8   window_id_to_filerecord_list_entries+1,x, window_id_to_filerecord_list_entries,x
-    WHILE X NE  window_id_to_filerecord_list_count
+    WHILE X <> window_id_to_filerecord_list_count
 
         ;; List is now shorter by one...
         dec     window_id_to_filerecord_list_count
@@ -7041,7 +7041,7 @@ vol_kb_used:  .word   0
         ;; Was that the last one?
         index := *+1
         lda     #SELF_MODIFIED_BYTE
-    IF A EQ     window_id_to_filerecord_list_count
+    IF A = window_id_to_filerecord_list_count
         asl     a               ; so update the start of free space
         tax
         copy16  window_filerecord_table,x, filerecords_free_start
@@ -7100,7 +7100,7 @@ vol_kb_used:  .word   0
 
     DO
         lda     index
-        BREAK_IF A EQ window_id_to_filerecord_list_count
+        BREAK_IF A = window_id_to_filerecord_list_count
 
         lda     index
         asl     a
@@ -7269,7 +7269,7 @@ assign_height:
 
 loop:   ldy     #ICTRecord::mask ; $00 if done
         lda     (ptr),y
-    IF A EQ     #kICTSentinel
+    IF A = #kICTSentinel
         jsr     PopPointers
         lda     #IconType::generic
         rts
@@ -7556,7 +7556,7 @@ draw:   param_jump DrawString, text_input_buf
     DO
         icon_num := *+1
         ldx     #SELF_MODIFIED_BYTE
-        BREAK_IF X EQ cached_window_entry_count
+        BREAK_IF X = cached_window_entry_count
 
         ;; Get the bounds
         copy8   cached_window_entry_list,x, icon_param
@@ -7852,7 +7852,7 @@ records_base_ptr:
         inc     icons_this_row
         ;; Next row?
         lda     icons_this_row
-    IF A EQ     icons_per_row
+    IF A = icons_per_row
         add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
         copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
         copy8   #0, icons_this_row
@@ -7870,7 +7870,7 @@ records_base_ptr:
 
         ;; If folder, see if there's an associated window
         lda     src_file_info_params::file_type
-    IF A EQ     #FT_DIRECTORY
+    IF A = #FT_DIRECTORY
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
@@ -7987,7 +7987,7 @@ scratch_space   := $804         ; can be used by comparison funcs
         sta     _CompareFileRecords_sort_by
 
         lda     cached_window_entry_count
-        RTS_IF A LT #2          ; can't sort < 2 records
+        RTS_IF A < #2           ; can't sort < 2 records
 
         sta     num_records
 
@@ -8042,7 +8042,7 @@ scratch_space   := $804         ; can be used by comparison funcs
 
         inc     inner
         lda     inner
-      WHILE A NE outer
+      WHILE A <> outer
 
         dec     outer
     WHILE NOT_ZERO
@@ -8087,12 +8087,12 @@ scratch_space   := $804         ; can be used by comparison funcs
         ;; Set by caller
         sort_by := *+1
         lda     #SELF_MODIFIED_BYTE
-    IF A EQ     #DeskTopSettings::kViewByName
+    IF A = #DeskTopSettings::kViewByName
         ASSERT_EQUALS FileRecord::name, 0
         jmp     CompareStrings
     END_IF
 
-    IF A EQ     #DeskTopSettings::kViewByDate
+    IF A = #DeskTopSettings::kViewByDate
 PARAM_BLOCK scratch, $804       ; `scratch_space`
 date_a  .tag    DateTime
 date_b  .tag    DateTime
@@ -8144,7 +8144,7 @@ END_PARAM_BLOCK
 done:   rts
     END_IF
 
-    IF A EQ     #DeskTopSettings::kViewBySize
+    IF A = #DeskTopSettings::kViewBySize
         ;; Copy sizes somewhere convenient
         size1 := $804
         size2 := $806
@@ -8158,11 +8158,11 @@ done:   rts
         ;; Treat directories as 0
         ldy     #FileRecord::file_type
         lda     (ptr1),y
-      IF A EQ   #FT_DIRECTORY
+      IF A = #FT_DIRECTORY
         copy16  #0, size1
       END_IF
         lda     (ptr2),y
-      IF A EQ   #FT_DIRECTORY
+      IF A = #FT_DIRECTORY
         copy16  #0, size2
       END_IF
 
@@ -8198,7 +8198,7 @@ _CompareFileRecords_sort_by := _CompareFileRecords::sort_by
 .proc _ComposeFileTypeStringForSorting
         jsr     ComposeFileTypeString
         lda     str_file_type+1
-    IF A EQ     #'$'
+    IF A = #'$'
         copy8   #$FF, str_file_type+1
     END_IF
         rts
@@ -8289,7 +8289,7 @@ set_pos:
         access := list_view_filerecord + FileRecord::access
         lda     access
         and     #ACCESS_DEFAULT
-    IF A NE     #ACCESS_DEFAULT
+    IF A <> #ACCESS_DEFAULT
         inc     text_buffer2
         copy8   #kGlyphLock, text_buffer2+1
     END_IF
@@ -8301,7 +8301,7 @@ set_pos:
         file_type := list_view_filerecord + FileRecord::file_type
 
         lda     file_type
-    IF A EQ     #FT_DIRECTORY
+    IF A = #FT_DIRECTORY
         copy8   #1, text_buffer2
         copy8   #'-', text_buffer2+1
         rts
@@ -8336,7 +8336,7 @@ set_pos:
         ror     frac_flag    ; If < 10k and odd, show ".5" suffix"
     ELSE
         lsr16   value       ; Convert blocks to K, rounding up
-      IF CS                 ; NOTE: divide then maybe inc, rather than
+      IF CS                     ; NOTE: divide then maybe inc, rather than
         inc16   value       ; always inc then divide, to handle $FFFF
       END_IF
     END_IF
@@ -8351,7 +8351,7 @@ set_pos:
         copy8   str_from_int+1,y, text_buffer2+1,x
         iny
         inx
-    WHILE Y NE  str_from_int
+    WHILE Y <> str_from_int
 
         ;; Append ".5" if needed
         frac_flag := *+1
@@ -8371,7 +8371,7 @@ set_pos:
         copy8   str_kb_suffix+1, y, text_buffer2+1,x
         iny
         inx
-    WHILE Y NE  str_kb_suffix
+    WHILE Y <> str_kb_suffix
 
         stx     text_buffer2
         rts
@@ -8992,7 +8992,7 @@ is_sp:  lda     block_params::unit_num
     IF NOT_ZERO
       DO
         lda     dib_buffer+SPDIB::Device_Name-1,y
-        BREAK_IF A NE #' '
+        BREAK_IF A <> #' '
         dey
       WHILE NOT_ZERO
     END_IF
@@ -9033,7 +9033,7 @@ done:   sty     dib_buffer+SPDIB::ID_String_Length
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer+SPDIB::Device_Type_Code
         ASSERT_EQUALS SPDeviceType::MemoryExpansionCard, 0
-    IF ZERO                   ; $00 = Memory Expansion Card (RAM Disk)
+    IF ZERO                     ; $00 = Memory Expansion Card (RAM Disk)
         ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #IconType::ramdisk
         rts
@@ -9053,7 +9053,7 @@ done:   sty     dib_buffer+SPDIB::ID_String_Length
 not_sp:
         ;; Not SmartPort - try AppleTalk
         MLI_CALL READ_BLOCK, block_params
-    IF A EQ     #ERR_NETWORK_ERROR
+    IF A = #ERR_NETWORK_ERROR
         ldax    #str_device_type_appletalk
         ldy     #IconType::fileshare
         rts
@@ -9250,7 +9250,7 @@ error:
         copy8   desktop_icon_coords_table,x, (icon_ptr),y
         inx
         iny
-    WHILE Y NE  #IconEntry::iconx + .sizeof(MGTK::Point)
+    WHILE Y <> #IconEntry::iconx + .sizeof(MGTK::Point)
 
         ;; Center it horizontally
         ldy     #IconResource::maprect + MGTK::Rect::x2
@@ -9315,7 +9315,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
         ldx     #kMaxVolumes-1
     DO
         dex
-    WHILE A NE  desktop_icon_usage_table,x
+    WHILE A <> desktop_icon_usage_table,x
         copy8   #0, desktop_icon_usage_table,x
         rts
 .endproc ; FreeDesktopIconPosition
@@ -9349,7 +9349,7 @@ remove:
 .proc FindWindowIndexForDirIcon
         ldx     #kMaxDeskTopWindows-1
     DO
-        BREAK_IF A EQ window_to_dir_icon_table,x
+        BREAK_IF A = window_to_dir_icon_table,x
         dex
     WHILE POS
         rts
@@ -9434,11 +9434,11 @@ kMaxAnimationStep = 7
         pla                     ; A = step
         tax                     ; X = step
         inx
-      WHILE X NE  #kMaxAnimationStep-1
+      WHILE X <> #kMaxAnimationStep-1
 
         iny
         iny
-    WHILE Y NE  #.sizeof(MGTK::Rect)
+    WHILE Y <> #.sizeof(MGTK::Rect)
 
         ;; --------------------------------------------------
         ;; Animate it
@@ -9474,7 +9474,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
     DO
         ;; If N in 0..11, draw N
         lda     step            ; draw the Nth
-      IF A LT   #kMaxAnimationStep+1
+      IF A < #kMaxAnimationStep+1
         jsr     FrameTableRect
       END_IF
 
@@ -9489,7 +9489,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         inc     step
         step := *+1
         lda     #SELF_MODIFIED_BYTE
-    WHILE A NE  #kMaxAnimationStep+3
+    WHILE A <> #kMaxAnimationStep+3
         rts
 .endproc ; AnimateWindowOpenImpl
 
@@ -9514,7 +9514,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         lda     step
         clc
         adc     #2
-      IF A LT   #kMaxAnimationStep+1
+      IF A < #kMaxAnimationStep+1
         jsr     FrameTableRect
       END_IF
 
@@ -9720,7 +9720,7 @@ iterate_selection:
         txa                     ; X = index
         pha                     ; A = index
         lda     selected_icon_list,x
-      IF A NE   trash_icon_num
+      IF A <> trash_icon_num
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
         jne     ShowErrorAlert  ; too long
 
@@ -9764,7 +9764,7 @@ iterate_selection:
         pla                     ; A = index
         tax                     ; X = index
         inx
-    WHILE X NE  selected_icon_count
+    WHILE X <> selected_icon_count
 
         ;; --------------------------------------------------
 
@@ -10188,7 +10188,7 @@ fail:   jmp     OpHandleErrorCode
 
         inc     entry_index_in_block
         lda     entry_index_in_block
-    IF A GE     entries_per_block
+    IF A >= entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
@@ -10311,7 +10311,7 @@ eof:    return  #$FF
 ;;; Exception: If user selects Cancel, `CloseFilesCancelDialogWithFailedResult` is invoked.
 ;;; Assert: Type is not `ST_VOLUME_DIRECTORY` or `ST_LINKED_DIRECTORY`
 .proc ValidateStorageType
-     IF A GE     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
+     IF A >= #ST_TREE_FILE+1    ; only seedling/sapling/tree supported
         ;; Unsupported type - show error, and either abort or return failure
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unsupported_type
         jsr     SetCursorWatch  ; preserves A
@@ -10343,7 +10343,7 @@ retry:  param_call GetFileInfo, path_buf4
         ;; Try to read a block off device; if AppleShare will fail.
         copy8   DEVNUM, vol_key_block_params::unit_num
         MLI_CALL READ_BLOCK, vol_key_block_params
-    IF A EQ     #ERR_NETWORK_ERROR
+    IF A = #ERR_NETWORK_ERROR
         SET_BIT7_FLAG dst_is_appleshare_flag
     END_IF
         rts
@@ -10561,7 +10561,7 @@ CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
-    IF A NE     #ST_LINKED_DIRECTORY
+    IF A <> #ST_LINKED_DIRECTORY
 
         ;; --------------------------------------------------
         ;; File
@@ -10615,7 +10615,7 @@ ok_dir: jsr     RemoveSrcPathSegment
         cpy     pathname_dst
         bcs     :+
         lda     pathname_dst,y
-    WHILE A NE  #'/'
+    WHILE A <> #'/'
         sty     pathname_dst
 :
         ;; Get total blocks/used blocks on destination volume
@@ -10650,7 +10650,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         ;; blocks used on the volume, which isn't useful for an
         ;; incremental copy.
         lda     src_file_info_params::storage_type
-    IF A EQ     #ST_VOLUME_DIRECTORY
+    IF A = #ST_VOLUME_DIRECTORY
         clc
         rts
     END_IF
@@ -10662,7 +10662,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         copy16  #0, dst_file_info_params::blocks_used
 retry:  jsr     GetDstFileInfo
     IF CS
-      IF A NE   #ERR_FILE_NOT_FOUND
+      IF A <> #ERR_FILE_NOT_FOUND
         jsr     ShowErrorAlertDst
         jmp     retry
       END_IF
@@ -10718,7 +10718,7 @@ retry:  jsr     GetDstFileInfo
         ;; Was a move - delete file
 retry:  MLI_CALL DESTROY, destroy_src_params
       IF CS
-       IF A EQ  #ERR_ACCESS_ERROR
+       IF A = #ERR_ACCESS_ERROR
         jsr     UnlockSrcFile
         beq     retry
         rts                     ; silently leave file
@@ -10779,7 +10779,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
 
         ;; If source is volume, create directory instead
         lda     create_params::storage_type
-    IF A EQ     #ST_VOLUME_DIRECTORY
+    IF A = #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
@@ -10789,7 +10789,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
 retry:
         MLI_CALL CREATE, create_params
     IF CS
-      IF A NE   #ERR_DUPLICATE_FILENAME
+      IF A <> #ERR_DUPLICATE_FILENAME
         jsr     ShowErrorAlertDst
         jmp     retry
       END_IF
@@ -10804,7 +10804,7 @@ retry:
 
         ;; Directory?
         lda     dst_file_info_params::storage_type
-      IF A EQ   #ST_LINKED_DIRECTORY
+      IF A = #ST_LINKED_DIRECTORY
         ;; TODO: Prompt and recursively delete
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_no_overwrite_dir
         jsr     SetCursorWatch
@@ -10831,7 +10831,7 @@ retry:
 
 retry2: MLI_CALL DESTROY, destroy_dst_params
       IF CS
-       IF A EQ  #ERR_ACCESS_ERROR
+       IF A = #ERR_ACCESS_ERROR
         jsr     UnlockDstFile
         beq     retry2
        END_IF
@@ -10874,7 +10874,7 @@ cancel:
         copy16  #0, case_bits   ; best effort
 
         lda     src_file_info_params::storage_type
-    IF A EQ     #ST_VOLUME_DIRECTORY
+    IF A = #ST_VOLUME_DIRECTORY
         ;; Volume
         copy8   DEVNUM, vol_key_block_params::unit_num
         MLI_CALL READ_BLOCK, vol_key_block_params
@@ -10999,7 +10999,7 @@ Start:  lda     DEVNUM
         ldy     #FileEntry::storage_type_name_length
         lda     (src_ptr),y
         and     #STORAGE_TYPE_MASK
-    IF A EQ     #ST_LINKED_DIRECTORY<<4
+    IF A = #ST_LINKED_DIRECTORY<<4
         ;; Identify the key blocks of the src/dst file
         ldy     #FileEntry::key_pointer
         copy8   (src_ptr),y, src_block_params::block_num
@@ -11440,7 +11440,7 @@ retry:  jsr     GetSrcFileInfo
         ;; Check if it's a regular file or directory
         lda     src_file_info_params::storage_type
         ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
-    IF A NE     #ST_LINKED_DIRECTORY
+    IF A <> #ST_LINKED_DIRECTORY
         jsr     ValidateStorageType
         bcc     do_destroy
         rts
@@ -11604,7 +11604,7 @@ retry:  jsr     GetSrcFileInfo
         ;; Visit the key file
         lda     src_file_info_params::storage_type
         pha                     ; A = `storage_type`
-    IF A EQ     #ST_VOLUME_DIRECTORY
+    IF A = #ST_VOLUME_DIRECTORY
         copy16  #0, src_file_info_params::blocks_used ; dummy value
     END_IF
         jsr     EnumerationProcessDirectoryEntry
@@ -11655,11 +11655,11 @@ retry:  jsr     GetSrcFileInfo
     DO
         iny
         lda     path_buf3,y
-      IF A EQ   #'/'
+      IF A = #'/'
         sty     src_path_slash_index
       END_IF
         sta     src_path_buf,y
-    WHILE Y NE  path_buf3
+    WHILE Y <> path_buf3
 
         ;; Copy `path_buf4` to `dst_path_buf`
         param_jump CopyToDstPath, path_buf4
@@ -11681,7 +11681,7 @@ src_path_slash_index:
         iny
         inx
         copy8   src_path_buf,y, dst_path_buf,x
-    WHILE Y NE  src_path_buf
+    WHILE Y <> src_path_buf
 
         stx     dst_path_buf
         rts
@@ -11759,7 +11759,7 @@ src_path_slash_index:
 
 .proc CheckCancel
         jsr     GetEvent        ; no need to synthesize events
-    IF A EQ     #MGTK::EventKind::key_down
+    IF A = #MGTK::EventKind::key_down
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     cancel
@@ -11842,7 +11842,7 @@ check:  cpy     #SELF_MODIFIED_BYTE
         bne     check_slash     ; always
       END_IF
 
-      IF Y GE   dst_buf         ; src is not done, is dst?
+      IF Y >= dst_buf           ; src is not done, is dst?
         iny
         lda     (src_ptr),y     ; is next char in src a slash?
         bne     check_slash     ; always
@@ -11889,7 +11889,7 @@ retry:  param_call_indirect GetFileInfo, src_ptr
         ;; Skip if source is volume; the contents are copied not the
         ;; item itself, so it doesn't make sense.
         lda     src_file_info_params::storage_type
-        RTS_IF A EQ #ST_VOLUME_DIRECTORY
+        RTS_IF A = #ST_VOLUME_DIRECTORY
 
         FALL_THROUGH_TO ApplySrcInfoToDst
 .endproc ; GetAndApplySrcInfoToDst
@@ -12022,7 +12022,7 @@ common: jsr     GetSrcFileInfo
         MLI_CALL READ_BLOCK, getinfo_block_params
        IF CC
         MLI_CALL WRITE_BLOCK, getinfo_block_params
-        IF A EQ #ERR_WRITE_PROTECTED
+        IF A = #ERR_WRITE_PROTECTED
         SET_BIT7_FLAG write_protected_flag
         END_IF
        END_IF
@@ -12075,7 +12075,7 @@ write_protected_flag:
         lda     #kPromptButtonsOKCancel
         ldx     icon_index
         inx
-    IF X EQ     selected_icon_count
+    IF X = selected_icon_count
         lda     #kPromptButtonsOKOnly
     END_IF
         jsr     OpenPromptWindow
@@ -12116,7 +12116,7 @@ write_protected_flag:
     ELSE
         ;; File
         lda     src_file_info_params::file_type
-      IF A EQ   #FT_DIRECTORY
+      IF A = #FT_DIRECTORY
         param_call DrawDialogLabel, 2 | DDL_VALUE, aux::str_info_type_dir
       ELSE
         lda     src_file_info_params::file_type
@@ -12133,7 +12133,7 @@ write_protected_flag:
 
         ldax    src_file_info_params::blocks_used
         ldy     src_file_info_params::storage_type
-    IF Y EQ     #ST_VOLUME_DIRECTORY
+    IF Y = #ST_VOLUME_DIRECTORY
         ;; ProDOS TRM 4.4.5:
         ;; "When file information about a volume directory is requested, the
         ;; total number of blocks on the volume is returned in the `aux_type`
@@ -12181,7 +12181,7 @@ write_protected_flag:
         ldx     #BTK::kButtonStateNormal
         lda     src_file_info_params::access
         and     #ACCESS_DEFAULT
-      IF A NE   #ACCESS_DEFAULT
+      IF A <> #ACCESS_DEFAULT
         ldx     #BTK::kButtonStateChecked ; locked
       END_IF
         stx     locked_button::state
@@ -12601,7 +12601,7 @@ DoRename        := DoRenameImpl::start
 .proc _DialogOpen
         ldy     #LETK::kLineEditOptionsNormal
         jsr     GetSelectionViewBy
-    IF A EQ     #DeskTopSettings::kViewByIcon
+    IF A = #DeskTopSettings::kViewByIcon
         ldy     #LETK::kLineEditOptionsCentered
     END_IF
         sty     rename_line_edit_rec::options
@@ -12636,7 +12636,7 @@ loop:   jsr     _InputLoop
         lda     path_buf0       ; full path okay?
         clc
         adc     text_input_buf
-    IF A GE     #::kMaxPathLength ; not +1 because we'll add '/'
+    IF A >= #::kMaxPathLength   ; not +1 because we'll add '/'
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
         jmp     loop
     END_IF
@@ -12676,9 +12676,9 @@ loop:   jsr     _InputLoop
         ;; Check if mouse is over window, change cursor appropriately.
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-    IF A EQ     #MGTK::Area::content
+    IF A = #MGTK::Area::content
         lda     findwindow_params::window_id
-      IF A EQ   #winfo_rename_dialog::kWindowId
+      IF A = #winfo_rename_dialog::kWindowId
 
         jsr     SetCursorIBeamWithFlag
         jmp     _InputLoop
@@ -12694,12 +12694,12 @@ loop:   jsr     _InputLoop
 .proc _ClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-    IF A NE     #MGTK::Area::content
+    IF A <> #MGTK::Area::content
         return  #PromptResult::ok
     END_IF
 
         lda     findwindow_params::window_id
-    IF A NE     #winfo_rename_dialog::kWindowId
+    IF A <> #winfo_rename_dialog::kWindowId
         return  #PromptResult::ok
     END_IF
 
@@ -12723,11 +12723,11 @@ loop:   jsr     _InputLoop
         bne     allow           ; pass through modified keys
 
         ;; No modifiers
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         return  #PromptResult::ok
     END_IF
 
-    IF A EQ     #CHAR_ESCAPE
+    IF A = #CHAR_ESCAPE
         return  #PromptResult::cancel
     END_IF
 
@@ -12860,7 +12860,7 @@ do_str2:
         .addr   status_params
       IF CC
         lda     dib_buffer+SPDIB::Device_Type_Code
-       IF A EQ  #SPDeviceType::Disk35
+       IF A = #SPDeviceType::Disk35
         ;; Execute SmartPort call
         control_dispatch := *+1
         jsr     SELF_MODIFIED
@@ -12983,7 +12983,7 @@ list:   .word   0               ; 0 items in list
         inx                     ; advance into suffix
         iny
         copy8   old_path,x, new_path,y
-    WHILE X NE  old_path
+    WHILE X <> old_path
         sty     new_path
 
         ;; Assign the new window path
@@ -13031,7 +13031,7 @@ assign: ldy     new_path
         lda     (ptr),y
         tay                     ; Y=target path length
         lda     (ptr),y
-    IF A EQ     #'/'
+    IF A = #'/'
         sta     slash_flag      ; need to restore it later, but
         ldy     #0              ; remove the '/' for now
         lda     (ptr),y
@@ -13283,7 +13283,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         copy8   DEVNUM, block_params::unit_num
 
         lda     src_file_info_params::storage_type
-    IF A NE     #ST_VOLUME_DIRECTORY
+    IF A <> #ST_VOLUME_DIRECTORY
         ;; --------------------------------------------------
         ;; File
 
@@ -13472,12 +13472,12 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
 .proc _ClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-    IF A NE     #MGTK::Area::content
+    IF A <> #MGTK::Area::content
         return  #$FF
     END_IF
 
         lda     findwindow_params::window_id
-    IF A NE     #winfo_prompt_dialog::kWindowId
+    IF A <> #winfo_prompt_dialog::kWindowId
         return  #$FF
     END_IF
 
@@ -13547,7 +13547,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         cmp     #CHAR_RETURN
         beq     _HandleKeyOK
 
-      IF A EQ   #CHAR_ESCAPE
+      IF A = #CHAR_ESCAPE
         bit     prompt_button_flags
         bpl     _HandleKeyCancel
         bmi     _HandleKeyOK    ; always
@@ -13678,8 +13678,8 @@ ignore: sec
     DO
         jsr     SystemTask
         jsr     GetNextEvent
-        BREAK_IF A EQ #MGTK::EventKind::button_down
-    WHILE A NE  #MGTK::EventKind::key_down
+        BREAK_IF A = #MGTK::EventKind::button_down
+    WHILE A <> #MGTK::EventKind::key_down
 
         MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jmp     ClearUpdates ; following CloseWindow
@@ -13853,7 +13853,7 @@ finish: ldy     #0              ; Write sentinel
         inx
         iny
         copy8   str_desktop_file,x, tmp_path_buf,y
-    WHILE X NE  str_desktop_file
+    WHILE X <> str_desktop_file
         sty     tmp_path_buf
 
         ;; Write the file
@@ -14006,7 +14006,7 @@ kEntriesPerBlock = $0D
         ldy     path_buf
     DO
         lda     path_buf,y      ; find last '/'
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         inx                     ; length of filename
         dey
     WHILE NOT_ZERO
@@ -14028,7 +14028,7 @@ kEntriesPerBlock = $0D
         lda     path_buf,y
         jsr     ToUpperCase
         sta     filename,x
-    WHILE Y NE  path_buf
+    WHILE Y <> path_buf
         stx     filename
 
         pla                     ; A = new path length
@@ -14128,7 +14128,7 @@ exit:
         ;; Skip prev/next block pointers
         addax8  #4
         ;; Iterate through entries
-    IF Y NE     #0
+    IF Y <> #0
       DO
         addax8  #.sizeof(FileEntry)
         dey
@@ -14286,7 +14286,7 @@ params:  .res    3
         and     #%11110000      ; A = flags
         beq     calc_y          ; DDL_LEFT
 
-    IF A EQ     #DDL_VALUE
+    IF A = #DDL_VALUE
         copy16  #kDialogValueLeft, dialog_label_pos::xcoord
         ASSERT_EQUALS .hibyte(::kDialogValueLeft), 0
         beq     calc_y
@@ -14303,13 +14303,13 @@ params:  .res    3
         MGTK_CALL MGTK::TextWidth, textwidth_params
         pla                     ; A = flags
 
-    IF A EQ     #DDL_CENTER
+    IF A = #DDL_CENTER
         sub16   #kPromptDialogWidth, result, dialog_label_pos::xcoord
         lsr16   dialog_label_pos::xcoord
         jmp     calc_y
     END_IF
 
-    IF A EQ     #DDL_RIGHT
+    IF A = #DDL_RIGHT
         sub16   #kPromptDialogWidth - kDialogLabelDefaultX, result, dialog_label_pos::xcoord
     ELSE
         ;; DDL_LRIGHT
@@ -14355,7 +14355,7 @@ calc_y:
     END_IF
 
 set_state:
-    IF A NE     ok_button::state
+    IF A <> ok_button::state
         sta     ok_button::state
         BTK_CALL BTK::Hilite, ok_button
     END_IF
@@ -14571,7 +14571,7 @@ done:   rts
         ldx     window_id_to_filerecord_list_count
         dex
     DO
-        BREAK_IF A EQ window_id_to_filerecord_list_entries,x
+        BREAK_IF A = window_id_to_filerecord_list_entries,x
         dex
     WHILE POS
         rts
@@ -14804,7 +14804,7 @@ shift_offsets:
         adc     #SELF_MODIFIED_BYTE
         sta     window_entry_offset_table,x
         inx
-    WHILE X NE  #kMaxDeskTopWindows+1
+    WHILE X <> #kMaxDeskTopWindows+1
 
 done_shift:
 

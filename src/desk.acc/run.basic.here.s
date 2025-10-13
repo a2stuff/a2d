@@ -122,7 +122,7 @@ quit:   MLI_CALL QUIT, quit_params
         iny
         inx
         copy8   str_extras_basic,y, bs_path,x
-    WHILE Y NE  str_extras_basic
+    WHILE Y <> str_extras_basic
         stx     bs_path
 
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
@@ -147,7 +147,7 @@ loop:
         inx
         iny
         copy8   str_basic_system,y, bs_path,x
-    WHILE Y NE  str_basic_system
+    WHILE Y <> str_basic_system
         stx     bs_path
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         bcs     not_found

@@ -152,7 +152,7 @@ loop:
         ;; Next frame
         inc     frame
         lda     frame
-    IF A EQ     #4              ; num frames
+    IF A = #4                   ; num frames
         copy8   #0, frame
     END_IF
 

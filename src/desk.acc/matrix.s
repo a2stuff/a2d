@@ -121,7 +121,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         inc     CV
         lda     CV
-    WHILE A NE  #24
+    WHILE A <> #24
 
         sta     CLR80STORE
         rts
@@ -156,7 +156,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         inc     CV
         lda     CV
-    WHILE A NE  #24
+    WHILE A <> #24
 
         sta     CLR80STORE
         rts
@@ -252,7 +252,7 @@ exit:   rts
         ;; Still on screen? If not, skip (until reset)
         ldy     #Cursor::vpos
         lda     (ptr),y
-        RTS_IF A GE #24
+        RTS_IF A >= #24
 
         ;; Set BASL/H
         sta     CV
@@ -312,7 +312,7 @@ exit:   rts
     DO
         jsr     Random
         and     #%00111111      ; 0...63
-    WHILE A GE  #40             ; retry if >= 40
+    WHILE A >= #40              ; retry if >= 40
         rts
 .endproc ; GetRandomH
 
@@ -323,7 +323,7 @@ exit:   rts
     DO
         jsr     Random
         and     #%01111111      ; 0...127
-    WHILE A LT  #' '+1          ; retry if control or space
+    WHILE A < #' '+1            ; retry if control or space
         rts
 .endproc ; GetRandomChar
 

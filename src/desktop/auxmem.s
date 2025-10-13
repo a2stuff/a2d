@@ -588,7 +588,7 @@ start:
         ;; %10...... e.g. $80 = Try Again, Cancel
         ;; %11...... e.g. $C0 = OK, Cancel
 
-    IF X NE     #0
+    IF X <> #0
         txa
         and     #$FE            ; ignore low bit, e.g. treat $01 as $00
         sta     alert_params+AlertParams::buttons
@@ -628,7 +628,7 @@ AlertById := AlertByIdImpl::start
         swap8   mgtk::hires_table_hi,x, mgtk::hires_table_hi,y
         dex
         iny
-    WHILE Y NE  #kScreenHeight/2
+    WHILE Y <> #kScreenHeight/2
 
         rts
 .endproc ; FlipMGTKHiresTable

@@ -347,7 +347,7 @@ common: bit     dragwindow_params::moved
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -368,7 +368,7 @@ common: bit     dragwindow_params::moved
 
         lda     #BTK::kButtonStateNormal
         ldx     current_view_index
-      IF X EQ   index
+      IF X = index
         lda     #BTK::kButtonStateChecked
       END_IF
 

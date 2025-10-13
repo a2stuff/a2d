@@ -204,7 +204,7 @@ pattern_plaid:
         pla
         clc
         adc     #1
-    WHILE A LT  #kSpeedMax+1
+    WHILE A < #kSpeedMax+1
 
         lda     #BTK::kButtonStateChecked
         sta     radio_60hz_button::state

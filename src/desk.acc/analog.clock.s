@@ -136,7 +136,7 @@ exit:
 
         inc     tindex
         lda     tindex
-    WHILE A NE  #60
+    WHILE A <> #60
 
         rts
 

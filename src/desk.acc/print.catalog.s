@@ -122,7 +122,7 @@ continue:
         lda     iw2_init,x
         jsr     COut
         inx
-    WHILE X NE  #kLenIW2Init
+    WHILE X <> #kLenIW2Init
 
         ;; Recurse and print
         jsr     PrintCatalog
@@ -138,7 +138,7 @@ PrintCatalog:
         lda     str_header+1,x
         jsr     COut
         inx
-    WHILE X NE  str_header
+    WHILE X <> str_header
         jsr     CROut
 
         ;; If we're doing multiple volumes, get started
@@ -156,7 +156,7 @@ next:
         lda     searchPath+1,x
         jsr     COut
         inx
-    WHILE X LT  searchPath
+    WHILE X < searchPath
         jsr     CROut
         copy8   #1, indent
 
@@ -211,7 +211,7 @@ iw2_init:
         iny
         and     (ptr),y
         iny
-        BREAK_IF A NE (ptr),y
+        BREAK_IF A <> (ptr),y
 
         dec     count
     WHILE NOT_ZERO
@@ -473,7 +473,7 @@ OpenDone:
         lda     #' '
     DO
         jsr     COut
-    WHILE X GE  ch
+    WHILE X >= ch
 
         jsr     PrintType
         jsr     PrintSize
@@ -524,7 +524,7 @@ OpenDone:
         lda     str_file_type+1,x
         jsr     COut
         inx
-    WHILE X NE  str_file_type
+    WHILE X <> str_file_type
 
         rts
 .endproc ; PrintType
@@ -548,7 +548,7 @@ OpenDone:
     DO
         jsr     COut
         dex
-    WHILE X NE  str_from_int
+    WHILE X <> str_from_int
 
         ;; Print it
         ldx     #0
@@ -556,7 +556,7 @@ OpenDone:
         lda     str_from_int+1,x
         jsr     COut
         inx
-    WHILE X NE  str_from_int
+    WHILE X <> str_from_int
 
         rts
 .endproc ; PrintSize
@@ -577,7 +577,7 @@ OpenDone:
         ldx     #0              ; hi
         jsr     IntToString
         lda     str_from_int
-    IF A EQ     #1
+    IF A = #1
         lda     #' '
         ldx     str_from_int+1
     ELSE
@@ -617,14 +617,14 @@ OpenDone:
         ldy     #FileEntry::mod_date+1
         lda     (entPtr),y
         lsr                     ; A = 0YYYYYYY
-    IF A GE     #100
+    IF A >= #100
         sec
         sbc     #100
     END_IF
         ldx     #0              ; hi
         jsr     IntToString
         lda     str_from_int
-    IF A EQ     #1
+    IF A = #1
         lda     #'0'
         ldx     str_from_int+1
     ELSE
@@ -648,7 +648,7 @@ OpenDone:
         lda     str_date+1,x
         jsr     COut
         inx
-    WHILE X NE  str_date
+    WHILE X <> str_date
 
         rts
 
@@ -671,7 +671,7 @@ tmp:    .byte   0
         kMaxRecursionDepth = 16
 
         lda     Depth
-    IF A LT     #kMaxRecursionDepth
+    IF A < #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
     END_IF
 
@@ -936,7 +936,7 @@ repeat: ldx     devidx
     DO
         copy8   on_line_buffer+1,x, searchPath+2,x
         inx
-    WHILE X NE  on_line_buffer
+    WHILE X <> on_line_buffer
 
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx

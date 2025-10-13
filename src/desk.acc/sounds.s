@@ -278,19 +278,19 @@ grafport_win:       .tag    MGTK::GrafPort
         jmp     InputLoop
     END_IF
 
-    IF X NE     #0
+    IF X <> #0
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         jeq     Exit
         jmp     InputLoop
     END_IF
 
-    IF A EQ     #CHAR_ESCAPE
+    IF A = #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     DoCancel
     END_IF
 
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     Exit
     END_IF
@@ -304,16 +304,16 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
         lda     findwindow_params::window_id
-    IF A EQ     winfo::window_id
+    IF A = winfo::window_id
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         beq     HandleDialogClick
         jmp     InputLoop
     END_IF
 
-    IF A EQ     winfo_listbox::window_id
+    IF A = winfo_listbox::window_id
         lda     findwindow_params::which_area
-      IF A EQ   #MGTK::Area::content
+      IF A = #MGTK::Area::content
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         jmp     InputLoop
@@ -1444,7 +1444,7 @@ done:   rts
         inx
         iny
         copy8   filename,x, filename_buffer,y
-    WHILE X NE  filename
+    WHILE X <> filename
         sty     filename_buffer
         rts
 .endproc ; AppendFilename

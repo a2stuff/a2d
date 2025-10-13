@@ -157,7 +157,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         inc     CV
         lda     CV
-    WHILE A NE  #24
+    WHILE A <> #24
 
         sta     CLR80STORE
         rts
@@ -195,7 +195,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         inc     CV
         lda     CV
-    WHILE A NE  #24
+    WHILE A <> #24
 
         sta     CLR80STORE
         rts

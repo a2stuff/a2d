@@ -266,9 +266,9 @@ done_buttons:
 advance:
     DO
         iny
-        BREAK_IF Y EQ len
+        BREAK_IF Y = len
         lda     (ptr),y
-    WHILE A NE  #' '
+    WHILE A <> #' '
 
         ;; Does this much fit?
 test:   sty     textwidth_params::length
@@ -361,19 +361,19 @@ finish_cancel:
     IF NOT_ZERO
         pla
 
-      IF A EQ   #kShortcutNo
+      IF A = #kShortcutNo
         BTK_CALL BTK::Flash, no_button
         lda     #kAlertResultNo
         jmp     finish
       END_IF
 
-      IF A EQ   #kShortcutYes
+      IF A = #kShortcutYes
         BTK_CALL BTK::Flash, yes_button
         lda     #kAlertResultYes
         jmp     finish
       END_IF
 
-      IF A EQ   #kShortcutAll
+      IF A = #kShortcutAll
         BTK_CALL BTK::Flash, all_button
         lda     #kAlertResultAll
         jmp     finish
@@ -384,7 +384,7 @@ finish_cancel:
         pla
 .endif ; AD_YESNOALL
 
-    IF A EQ     #kShortcutTryAgain
+    IF A = #kShortcutTryAgain
 do_try_again:
         BTK_CALL BTK::Flash, try_again_button
         lda     #kAlertResultTryAgain

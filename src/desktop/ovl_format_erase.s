@@ -126,7 +126,7 @@ skip_select:
         inx
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
-    WHILE A NE  unit_num
+    WHILE A <> unit_num
         ;; NOTE: Assertion violation if not found
 
         txa
@@ -224,7 +224,7 @@ l9:
 l12:    pha
         jsr     main::SetCursorPointer
         pla
-    IF A EQ     #ERR_WRITE_PROTECTED
+    IF A = #ERR_WRITE_PROTECTED
 
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
@@ -279,7 +279,7 @@ retry:
         beq     finish          ; always
     END_IF
 
-    IF A EQ     #ERR_WRITE_PROTECTED
+    IF A = #ERR_WRITE_PROTECTED
 
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
@@ -711,7 +711,7 @@ got_blocks:
 
         copy8   #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
         lda     lastblock       ; and check again
-      IF A LT   #15             ; Is it 15 or more? Skip ahead.
+      IF A < #15                ; Is it 15 or more? Skip ahead.
         and     #$07            ; Otherwise (7-14) take the low three bits
         tax
         lda     freemask,x      ; convert them to the correct VBM value using a lookup table
@@ -730,7 +730,7 @@ got_blocks:
 gowrite:
         jsr     WriteBlockAndZero
         lda     lastblock
-    WHILE A GE  write_block_params::block_num
+    WHILE A >= write_block_params::block_num
 
         ;; Success
         lda     #$00
@@ -899,7 +899,7 @@ prodos_loader_blocks:
         MLI_CALL READ_BLOCK, read_block_params
     IF CC
         lda     read_buffer + 1
-      IF A NE   #kPascalSig1    ; DOS 3.3?
+      IF A <> #kPascalSig1      ; DOS 3.3?
         jmp     maybe_dos       ; Maybe...
       END_IF
 

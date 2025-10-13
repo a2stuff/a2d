@@ -47,7 +47,7 @@
     DO
         dex
         lda     dir_path,x
-    WHILE A NE  #'/'
+    WHILE A <> #'/'
         dex
         txa
         pha                     ; A = new `dir_path` length
@@ -61,7 +61,7 @@
         lda     dir_path,x
         jsr     ToUpperCase
         sta     self_filename,y
-    WHILE X NE  dir_path
+    WHILE X <> dir_path
         sty     self_filename
 
         pla                     ; A = new `dir_path` length
@@ -81,7 +81,7 @@
         inx
         iny
         copy8   filename,y, dir_path,x
-    WHILE Y NE  filename
+    WHILE Y <> filename
         stx     dir_path
 
         ;; Inject JT call to stack

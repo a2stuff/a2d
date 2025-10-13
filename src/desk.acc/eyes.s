@@ -396,7 +396,7 @@ kMoveThresholdY = 5
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         ;; Defer until we have mouse coords
         lda     has_last_coords

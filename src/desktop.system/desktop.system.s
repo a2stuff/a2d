@@ -127,7 +127,7 @@ start:
 
         lda     MACHID
         and     #kMachIDHas128k
-        RTS_IF A EQ #kMachIDHas128k
+        RTS_IF A = #kMachIDHas128k
 
         ;;  If not 128k machine, just quit back to ProDOS
         jsr     HOME
@@ -225,7 +225,7 @@ str_128k_required:
       DO
         dex
         beq     ret
-      WHILE A NE PRODOS_SYS_PATH,x
+      WHILE A <> PRODOS_SYS_PATH,x
         dex
         stx     PRODOS_SYS_PATH
 
@@ -248,7 +248,7 @@ str_self_filename:
         MLI_CALL GET_FILE_INFO, file_info_params
     IF CC
         lda     file_info_params + 7 ; storage_type
-      IF A EQ   #ST_LINKED_DIRECTORY
+      IF A = #ST_LINKED_DIRECTORY
         copy8   #7, file_info_params + 0 ; SET_FILE_INFO param_count
         copy16  #$8000, file_info_params + 5 ; aux_type
         MLI_CALL SET_FILE_INFO, file_info_params
@@ -301,7 +301,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; IIc Plus?
         lda     ZIDBYTE2        ; ROM version
-      IF A EQ   #$05            ; IIc Plus = $05
+      IF A = #$05               ; IIc Plus = $05
         lda     #DeskTopSettings::kSysCapIsIIcPlus
         jsr     set_bit
       END_IF
@@ -310,7 +310,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; Laser 128?
         lda     IDBYTELASER128
-    IF A EQ     #$AC
+    IF A = #$AC
         lda     #DeskTopSettings::kSysCapIsLaser128
         jsr     set_bit
         jmp     done_machid
@@ -318,9 +318,9 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; Macintosh IIe Option Card?
         lda     ZIDBYTE
-    IF A EQ     #$E0            ; Enhanced IIe
+    IF A = #$E0                 ; Enhanced IIe
         lda     IDBYTEMACIIE
-      IF A EQ   #$02            ; Mac IIe Option Card
+      IF A = #$02               ; Mac IIe Option Card
         lda     #DeskTopSettings::kSysCapIsIIeCard
         jsr     set_bit
         jmp     done_machid
@@ -658,7 +658,7 @@ test_unit_num:
         iny
         inx
         copy8   str_slash_desktop,x, dst_path,y
-    WHILE X NE  str_slash_desktop
+    WHILE X <> str_slash_desktop
         sty     dst_path
 
         ;; Is it already present?
@@ -705,7 +705,7 @@ test_unit_num:
 
         MLI_CALL CREATE, create_dt_dir_params
     IF CS
-      IF A NE   #ERR_DUPLICATE_FILENAME
+      IF A <> #ERR_DUPLICATE_FILENAME
         jsr     DidNotCopy
       END_IF
     END_IF
@@ -736,7 +736,7 @@ test_unit_num:
         jsr     CopyFile
         inc     filenum
         lda     filenum
-    WHILE A NE #kNumFilenames
+    WHILE A <> #kNumFilenames
 
         jsr     UpdateProgress
         FALL_THROUGH_TO FinishDeskTopCopy
@@ -843,10 +843,10 @@ test_unit_num:
         copy8   #'/', src_path+1,y
       DO
         iny
-        BREAK_IF X GE filename_buf
+        BREAK_IF X >= filename_buf
         copy8   filename_buf+1,x, src_path+1,y
         inx
-      WHILE NOT_ZERO              ; always
+      WHILE NOT_ZERO            ; always
         sty     src_path
     END_IF
         rts
@@ -881,7 +881,7 @@ done:   dex
         copy8   #'/', dst_path+1,y
       DO
         iny
-        BREAK_IF X GE filename_buf
+        BREAK_IF X >= filename_buf
         copy8   filename_buf+1,x, dst_path+1,y
         inx
       WHILE NOT_ZERO            ; always
@@ -1010,7 +1010,7 @@ noop:
         inx
         iny
         copy8   str_sentinel_path,y, path_buf,x
-    WHILE Y NE  str_sentinel_path
+    WHILE Y <> str_sentinel_path
         stx     path_buf
 
         ;; ... and get info
@@ -1216,7 +1216,7 @@ entry_dir_name:
         iny
         inx
         copy8   entry_dir_name,y, GenericCopy::pathname_dst,x
-    WHILE Y NE  entry_dir_name
+    WHILE Y <> entry_dir_name
         stx     GenericCopy::pathname_dst
 
         ;; If already exists, consider that a success
@@ -1243,7 +1243,7 @@ entry_dir_name:
     DO
         iny
         copy8   entry_path2,y, GenericCopy::pathname_src,y
-    WHILE Y NE entry_path2
+    WHILE Y <> entry_path2
 
         ;; Copy `entry_path1` to `path1`
         ldy     entry_path1
@@ -1376,7 +1376,7 @@ bits:   .byte   $00
         ldy     entry_path2
         lda     #'/'
     DO
-        BREAK_IF A EQ entry_path2,y
+        BREAK_IF A = entry_path2,y
         dey
     WHILE NOT_ZERO
         dey
@@ -1384,7 +1384,7 @@ bits:   .byte   $00
 
         ;; Find offset of parent directory name, e.g. "APPLEWORKS"
     DO
-        BREAK_IF A EQ entry_path2,y
+        BREAK_IF A = entry_path2,y
         dey
     WHILE POS
 
@@ -1394,7 +1394,7 @@ bits:   .byte   $00
         iny
         inx
         copy8   entry_path2,y, entry_dir_name,x
-    WHILE Y NE  entry_path2
+    WHILE Y <> entry_path2
         stx     entry_dir_name
 
         ;; Prep `entry_path1` with `RAMCARD_PREFIX`
@@ -1453,7 +1453,7 @@ str_not_completed:
         param_call CoutString, str_insert
 
         jsr     WaitEnterEscape
-    IF A EQ     #$80|CHAR_ESCAPE
+    IF A = #$80|CHAR_ESCAPE
         ldx     saved_stack
         txs
         MLI_CALL CLOSE, close_everything_params
@@ -1777,8 +1777,8 @@ str_ram_not_empty:
         lda     KBD
       WHILE NC
         sta     KBDSTRB
-        BREAK_IF A EQ #$80|CHAR_ESCAPE
-    WHILE A NE  #$80|CHAR_RETURN
+        BREAK_IF A = #$80|CHAR_ESCAPE
+    WHILE A <> #$80|CHAR_RETURN
         rts
 .endproc ; WaitEnterEscape
 

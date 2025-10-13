@@ -233,7 +233,7 @@ ret:    rts
         ldy     INVOKE_PATH
     DO
         lda     INVOKE_PATH,y   ; find last '/'
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
 
@@ -242,7 +242,7 @@ ret:    rts
         copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-    WHILE Y NE  INVOKE_PATH
+    WHILE Y <> INVOKE_PATH
         stx     filename
 
         FALL_THROUGH_TO LoadFileAndRunDA
@@ -334,22 +334,22 @@ redo:
     IF NS
         bit     KBDSTRB         ; swallow the keypress
 
-      IF A EQ   #'1'|$80
+      IF A = #'1'|$80
         copy16  #Player, play_routine
         jmp     play
       END_IF
 
-      IF A EQ   #'2'|$80
+      IF A = #'2'|$80
         copy16  #Player2, play_routine
         jmp     play
       END_IF
 
-      IF A EQ   #'3'|$80
+      IF A = #'3'|$80
         copy16  #PlayerMockingboard, play_routine
         jmp     play
       END_IF
 
-      IF A EQ   #'4'|$80
+      IF A = #'4'|$80
         copy16  #PlayerCricket, play_routine
         jmp     play
       END_IF

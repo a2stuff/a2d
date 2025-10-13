@@ -202,13 +202,13 @@ on_key:
         cmp     #CHAR_RIGHT
         jeq     NextFile
 
-    IF A EQ     #'S'
+    IF A = #'S'
         cpy     #$00             ; Y = previous `slideshow_flag` state
         bne     InputLoop        ; Ignore (so toggle) if slideshow mode was on
         beq     SetSlideshowMode ; always
     END_IF
 
-    IF A EQ     #' '
+    IF A = #' '
         jsr     ToggleMode
     END_IF
 
@@ -291,7 +291,7 @@ fail:   rts
 
         lda     get_file_info_params::file_type
 
-        RTS_IF A EQ #FT_DIRECTORY ; C=1 signals failure
+        RTS_IF A = #FT_DIRECTORY ; C=1 signals failure
 
         cmp     #FT_PNT
         jeq     ShowPackedSHR
@@ -307,8 +307,8 @@ fail:   rts
         ldx     get_file_info_params::aux_type+1
 
         ;; auxtype $8066 - LZ4FH packed image
-    IF X EQ     #$80
-      IF A EQ   #$66
+    IF X = #$80
+      IF A = #$66
         jmp     ShowLZ4FHFile
       END_IF
     END_IF
@@ -601,7 +601,7 @@ next:
         pla
         clc
         adc     #1
-    WHILE A NE  #kRows
+    WHILE A <> #kRows
 
 done:   rts
 .endproc ; HRToDHR
@@ -724,12 +724,12 @@ convert:
         sta     hr_ptr+1
 
         iny                     ; next col
-      WHILE Y NE #kCols
+      WHILE Y <> #kCols
 
         pla                     ; A = row
         clc
         adc     #4
-    WHILE A LT #kRows
+    WHILE A < #kRows
 
         clc                     ; success
         rts
@@ -807,7 +807,7 @@ dorow:  ldx     #8
         clc
         jsr     PutBit1
         dex
-    WHILE X NE  #AS_BYTE(-7)    ; do 7 times == 7 bits
+    WHILE X <> #AS_BYTE(-7)     ; do 7 times == 7 bits
 
         dec     row
         bne     dorow
@@ -934,7 +934,7 @@ body:   lda     read_buf
         lda     read_buf,x
         jsr     Write
         inx
-    WHILE X NE  count
+    WHILE X <> count
 
         jmp     loop
 
@@ -1280,7 +1280,7 @@ packed_flag:                    ; bit7
         clc
         adc     #>kHiresSize
         sta     dest+1
-    WHILE A NE  #>(SHR_SCREEN+kSHRSize)
+    WHILE A <> #>(SHR_SCREEN+kSHRSize)
 
         rts
 .endproc ; LoadUnpackedSHR
@@ -1371,13 +1371,13 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         cmp     #FT_GRAPHICS
         jeq     yes
 
-    IF A EQ     #FT_PNT
+    IF A = #FT_PNT
         ecmp16  entry+FileEntry::aux_type, #$0001
         jeq     yes
         jmp     no
     END_IF
 
-    IF A EQ     #FT_PIC
+    IF A = #FT_PIC
         ecmp16  entry+FileEntry::aux_type, #$0000
         jeq     yes
         jne     no              ; always
@@ -1580,7 +1580,7 @@ saw_header_flag:                ; bit7
     DO
         dex
         lda     dir_path,x
-    WHILE A NE  #'/'
+    WHILE A <> #'/'
         dex
         stx     dir_path
 
@@ -1593,7 +1593,7 @@ saw_header_flag:                ; bit7
         lda     dir_path,x
         jsr     ToUpperCase
         sta     cur_filename,y
-    WHILE X NE  INVOKE_PATH
+    WHILE X <> INVOKE_PATH
         sty     cur_filename
 
         param_call EnumerateDirectory, callback

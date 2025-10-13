@@ -53,7 +53,7 @@ check_about_saving:
 
 DoAdd:  ldx     #kRunListPrimary
         lda     selector_menu
-    IF A GE     #kSelectorMenuFixedItems + 8
+    IF A >= #kSelectorMenuFixedItems + 8
         inx
     END_IF
         lda     #$00
@@ -96,7 +96,7 @@ DoAdd:  ldx     #kRunListPrimary
 
         copy16  selector_list, num_primary_run_list_entries
         lda     which_run_list
-    IF A EQ     #kRunListPrimary
+    IF A = #kRunListPrimary
         lda     num_primary_run_list_entries
         cmp     #kSelectorListNumPrimaryRunListEntries
         beq     ShowFullAlert
@@ -112,7 +112,7 @@ DoAdd:  ldx     #kRunListPrimary
     END_IF
 
         lda     num_secondary_run_list_entries
-    IF A NE     #kSelectorListNumSecondaryRunListEntries
+    IF A <> #kSelectorListNumSecondaryRunListEntries
         ldy     copy_when       ; Flags
         lda     num_secondary_run_list_entries
         clc
@@ -263,14 +263,14 @@ dialog_loop:
     END_IF
 
         lda     shortcut_picker_record::selected_index
-    IF A GE     #kSelectorListNumPrimaryRunListEntries
+    IF A >= #kSelectorListNumPrimaryRunListEntries
         ;; Was on secondary run list - is it still?
         lda     which_run_list
         cmp     #kRunListSecondary
         beq     reuse_same_index
 
         lda     num_primary_run_list_entries
-      IF A EQ   #kSelectorListNumPrimaryRunListEntries
+      IF A = #kSelectorListNumPrimaryRunListEntries
         jmp     ShowFullAlert
       END_IF
 
@@ -292,7 +292,7 @@ dialog_loop:
         beq     reuse_same_index
 
         lda     num_secondary_run_list_entries
-      IF A EQ   #kSelectorListNumSecondaryRunListEntries
+      IF A = #kSelectorListNumSecondaryRunListEntries
         jmp     ShowFullAlert
       END_IF
 
@@ -351,7 +351,7 @@ copy_when_conversion_table:
 
 .proc DoCancel
         lda     selector_action
-    IF A EQ     #SelectorAction::edit
+    IF A = #SelectorAction::edit
         lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
     END_IF
@@ -403,11 +403,11 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         BTK_CALL BTK::Draw, entry_picker_cancel_button
 
         lda     selector_action
-    IF A EQ     #SelectorAction::edit
+    IF A = #SelectorAction::edit
         param_jump DrawTitleCentered, label_edit
     END_IF
 
-    IF A EQ     #SelectorAction::delete
+    IF A = #SelectorAction::delete
         param_jump DrawTitleCentered, label_del
     END_IF
 
@@ -460,12 +460,12 @@ handle_button:
         return  #$FF
     END_IF
 
-    IF A NE     #MGTK::Area::content
+    IF A <> #MGTK::Area::content
         return  #$FF
     END_IF
 
         lda     findwindow_params::window_id
-    IF A NE     winfo_entry_picker
+    IF A <> winfo_entry_picker
         return  #$FF
     END_IF
 
@@ -511,7 +511,7 @@ handle_button:
 
 .proc HandleKey
         lda     event_params::modifiers
-    IF A EQ     #MGTK::event_modifier_solid_apple
+    IF A = #MGTK::event_modifier_solid_apple
         return  #$FF
     END_IF
 
@@ -562,7 +562,7 @@ handle_button:
         lda     #BTK::kButtonStateDisabled
     END_IF
 
-    IF A NE     entry_picker_ok_button::state
+    IF A <> entry_picker_ok_button::state
         sta     entry_picker_ok_button::state
         BTK_CALL BTK::Hilite, entry_picker_ok_button
     END_IF
@@ -581,7 +581,7 @@ handle_button:
 
         ldx     #0
     DO
-        BREAK_IF X EQ num_primary_run_list_entries
+        BREAK_IF X = num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
         inx
@@ -589,7 +589,7 @@ handle_button:
 
         ldx     #0
     DO
-        BREAK_IF X EQ num_secondary_run_list_entries
+        BREAK_IF X = num_secondary_run_list_entries
         txa
         clc
         adc     #8
@@ -750,7 +750,7 @@ secondary_run_list:
 loop:   lda     index
         sec
         sbc     #ptr2
-    IF A EQ     num_secondary_run_list_entries
+    IF A = num_secondary_run_list_entries
         dec     selector_list + kSelectorListNumSecondaryRunListOffset
         dec     num_secondary_run_list_entries
         jmp     WriteFile
@@ -851,7 +851,7 @@ finish:
         adc     #kSelectorMenuFixedItems
         sta     selector_menu
         ;; No separator if it is last
-    IF A EQ     #kSelectorMenuFixedItems
+    IF A = #kSelectorMenuFixedItems
         dec     selector_menu
     END_IF
 
@@ -985,7 +985,7 @@ filename:
         inx
         iny
         copy8   filename,x, filename_buffer,y
-    WHILE X NE  filename
+    WHILE X <> filename
         sty     filename_buffer
 
         copy8   #0, second_try_flag

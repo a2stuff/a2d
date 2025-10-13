@@ -441,7 +441,7 @@ op:     lda     SELF_MODIFIED
     DO
         jsr     read_byte
 
-      IF A EQ   #'%'
+      IF A = #'%'
         ;; escape sequence: "%<index><type>"
 
         ;; Get argument index, translate to stack ptr:
@@ -468,34 +468,34 @@ op:     lda     SELF_MODIFIED
         plax
 
         ;; Now Y = type, A,X = argument
-       IF Y EQ  #'d'            ; decimal - decimal integer
+       IF Y = #'d'              ; decimal - decimal integer
         jsr     IntToString
         param_jump append_string, str_from_int
        END_IF
 
-       IF Y EQ  #'n'            ; number - decimal integer with separators
+       IF Y = #'n'              ; number - decimal integer with separators
         jsr     IntToStringWithSeparators
         param_jump append_string, str_from_int
        END_IF
 
-       IF Y EQ  #'k'            ; size - in K from blocks
+       IF Y = #'k'              ; size - in K from blocks
         jsr     PushPointers
         jsr     ComposeSizeString
         jsr     PopPointers
         param_jump append_string, text_buffer2
        END_IF
 
-       IF Y EQ  #'x'            ; hex - hexadecimal word
+       IF Y = #'x'              ; hex - hexadecimal word
         jsr     append_hex
         jmp     resume
        END_IF
 
-       IF Y EQ  #'s'            ; string pointer
+       IF Y = #'s'              ; string pointer
         jmp     append_string
        END_IF
 
         ;; If 'c', char in A is written, X is ignored
-       IF Y NE  #'c'            ; char
+       IF Y <> #'c'             ; char
         ;; Otherwise, so treat as literal (e.g. "%%")
         tya
        END_IF
@@ -506,7 +506,7 @@ op:     lda     SELF_MODIFIED
 resume:
         len := *+1
         lda     #SELF_MODIFIED_BYTE
-    WHILE A NE  in_pos
+    WHILE A <> in_pos
 
         ;; Adjust stack
         stack_offset := *+1

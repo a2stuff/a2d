@@ -193,7 +193,7 @@ init_window:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-    IF A EQ     #MGTK::EventKind::button_down
+    IF A = #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -281,22 +281,22 @@ ret:    rts
 .proc OnKeyChar
         ldx     selected_field
 
-    IF X EQ     #Field::date
+    IF X = #Field::date
         ldx     #DeskTopSettings::intl_date_sep
         bne     update          ; always
     END_IF
 
-    IF X EQ     #Field::time
+    IF X = #Field::time
         ldx     #DeskTopSettings::intl_time_sep
         bne     update          ; always
     END_IF
 
-    IF X EQ     #Field::deci
+    IF X = #Field::deci
         ldx     #DeskTopSettings::intl_deci_sep
         bne     update          ; always
     END_IF
 
-    IF X EQ     #Field::thou
+    IF X = #Field::thou
         ldx     #DeskTopSettings::intl_thou_sep
         bne     update          ; always
     END_IF
@@ -609,7 +609,7 @@ char:   .byte   SELF_MODIFIED_BYTE
 ;;; A = field
 .proc DrawField
         pha
-    IF A EQ     selected_field
+    IF A = selected_field
         MGTK_CALL MGTK::SetTextBG, settextbg_black_params
         MGTK_CALL MGTK::SetPenMode, notpencopy
     ELSE
@@ -618,7 +618,7 @@ char:   .byte   SELF_MODIFIED_BYTE
     END_IF
         pla
 
-    IF A EQ     #Field::date
+    IF A = #Field::date
         ldx     #DeskTopSettings::intl_date_sep
         jsr     ReadSetting
         sta     drawchar_params::char
@@ -632,7 +632,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         param_jump DrawString, date_sample_label_str
     END_IF
 
-    IF A EQ     #Field::time
+    IF A = #Field::time
         ldx     #DeskTopSettings::intl_time_sep
         jsr     ReadSetting
         sta     drawchar_params::char
@@ -645,7 +645,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         param_jump DrawString, time_sample_label_str
     END_IF
 
-    IF A EQ     #Field::deci
+    IF A = #Field::deci
         ldx     #DeskTopSettings::intl_deci_sep
         jsr     ReadSetting
         sta     drawchar_params::char
@@ -658,7 +658,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         param_jump DrawString, deci_sample_label_str
     END_IF
 
-    IF A EQ     #Field::thou
+    IF A = #Field::thou
         ldx     #DeskTopSettings::intl_thou_sep
         jsr     ReadSetting
         sta     drawchar_params::char

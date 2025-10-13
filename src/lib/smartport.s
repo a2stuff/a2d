@@ -99,7 +99,7 @@ mirrored_slot   .byte
 
         lda     dispatch+1      ; $Cn
         and     #%00001111      ; $0n
-    IF A NE     mirrored_slot   ; equal = not mirrored
+    IF A <> mirrored_slot       ; equal = not mirrored
         iny                     ; now Y = 3 or 4
         iny
     END_IF

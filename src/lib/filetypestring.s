@@ -34,7 +34,7 @@ str_file_type:
         copy8   type_names_table,y, str_file_type+1,x
         iny
         inx
-       WHILE X NE #3
+       WHILE X <> #3
 
         rts
       END_IF

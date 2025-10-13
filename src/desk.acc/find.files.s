@@ -243,7 +243,7 @@ num_entries := listbox_rec::num_items
         jmp     InputLoop
     END_IF
 
-    IF X NE     #0
+    IF X <> #0
         ;; Modified
         lda     event_params::key
         jsr     ToUpperCase
@@ -251,7 +251,7 @@ num_entries := listbox_rec::num_items
         cmp     #kShortcutCloseWindow
         jeq     Exit
 
-      IF A EQ   #'O'
+      IF A = #'O'
         lda     selected_index
         bmi     InputLoop
         sta     show_index
@@ -263,12 +263,12 @@ num_entries := listbox_rec::num_items
     END_IF
 
         ;; Not modified
-    IF A EQ     #CHAR_ESCAPE
+    IF A = #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     Exit
     END_IF
 
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, search_button
         jmp     DoSearch
     END_IF
@@ -371,7 +371,7 @@ path_length:
         jsr     PrepDrawIncrementalResults
 
         lda     path_length
-    IF A EQ     #1
+    IF A = #1
         JSR_TO_MAIN ::main::InitVolumes
         JSR_TO_MAIN ::main::NextVolume
         bcs     finish
@@ -407,7 +407,7 @@ search:
         LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
 
         lda     path_length
-    IF A EQ     #1
+    IF A = #1
         lda     num_entries
         cmp     #kMaxFilePaths
         beq     finish
@@ -436,7 +436,7 @@ finish:
         jne     done
 
         lda     findwindow_params::window_id
-    IF A EQ     #kResultsWindowId
+    IF A = #kResultsWindowId
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
       IF NC
@@ -1059,7 +1059,7 @@ exit:   rts
         kMaxRecursionDepth = 16
 
         lda     Depth
-    IF A LT     #kMaxRecursionDepth
+    IF A < #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
     END_IF
 
@@ -1442,7 +1442,7 @@ repeat: ldx     devidx
     DO
         copy8   on_line_buffer+1,x, searchPath+2,x
         inx
-    WHILE X NE  on_line_buffer
+    WHILE X <> on_line_buffer
 
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx

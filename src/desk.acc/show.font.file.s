@@ -256,7 +256,7 @@ width   .word
 END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF A EQ #MGTK::Error::window_obscured
+        RTS_IF A = #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -287,7 +287,7 @@ END_PARAM_BLOCK
 
         inc     index
         lda     index
-    WHILE A NE  #kLineCount
+    WHILE A <> #kLineCount
 
         MGTK_CALL MGTK::ShowCursor
         rts
@@ -358,7 +358,7 @@ filename:       .res    16
         ;; Try to verify that this is a font file
 
         lda     font_buffer + MGTK::Font::fonttype ; $00 or $80
-    IF_A_NE_ALL_OF #$00, #$80 ; regular, double-width?
+    IF_A_NE_ALL_OF #$00, #$80   ; regular, double-width?
         jmp     exit
     END_IF
 
@@ -390,7 +390,7 @@ filename:       .res    16
         ldy     INVOKE_PATH
     DO
         lda     INVOKE_PATH,y       ; find last '/'
-        BREAK_IF A EQ #'/'
+        BREAK_IF A = #'/'
         dey
     WHILE NOT_ZERO
 
@@ -399,7 +399,7 @@ filename:       .res    16
         copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-    WHILE Y NE  INVOKE_PATH
+    WHILE Y <> INVOKE_PATH
         stx     filename
 
         copy16  #filename, STARTLO

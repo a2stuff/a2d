@@ -6200,7 +6200,7 @@ event_loop:
 
         ;; --------------------
 
-    IF A EQ     #MGTK::EventKind::button_up
+    IF A = #MGTK::EventKind::button_up
         bit     was_in_menu_flag
         jmi     handle_click
         lda     cur_open_menu_id
@@ -6210,7 +6210,7 @@ event_loop:
 
         ;; --------------------
 
-    IF A EQ     #MGTK::EventKind::key_down
+    IF A = #MGTK::EventKind::key_down
         ;; Set up `sel_menu_*`
         lda     menu_index    ; TODO: Verify this is valid
         sta     sel_menu_index
@@ -6257,7 +6257,7 @@ event_loop:
 
         ;; Did `sel_menu_index` change?
         ldx     sel_menu_index
-      IF X NE   last_menu_index
+      IF X <> last_menu_index
         lda     #0
         sta     cur_hilited_menu_item
         jsr     GetMenu         ; X = index
@@ -6267,7 +6267,7 @@ event_loop:
 
         ;; Did `sel_menu_item_index` change?
         ldx     sel_menu_item_index
-      IF X NE   cur_hilited_menu_item
+      IF X <> cur_hilited_menu_item
         jmp     imi_change
       END_IF
 
@@ -7929,8 +7929,8 @@ not_selected:
 
 .proc SelectWindowImpl
         jsr     WindowByIdOrExit
-    IF A EQ     current_window
-        RTS_IF X EQ current_window+1
+    IF A = current_window
+        RTS_IF X = current_window+1
     END_IF
 
         jsr     LinkWindow
@@ -8806,7 +8806,7 @@ activate:
 toggle: eor     params::activate
         and     #1
         eor     (window),y
-        RTS_IF A EQ (window),y  ; no-op if no change
+        RTS_IF A = (window),y   ; no-op if no change
         sta     (window),y
 
         jsr     HideCursorSaveParams
@@ -9519,7 +9519,7 @@ check_win:
 
         ldy     #MGTK::Winfo::vthumbpos
 :       lda     params::thumbpos
-        RTS_IF A EQ (window),y  ; no-op if no change
+        RTS_IF A = (window),y   ; no-op if no change
         sta     (window),y
 
         jsr     HideCursorSaveParams

@@ -405,7 +405,7 @@ ycoord  .word
         BREAK_IF CS
         inc     text_params+MGTK::TextWidthParams::length
         lda     text_params+MGTK::TextWidthParams::length
-        BREAK_IF A EQ len
+        BREAK_IF A = len
         MGTK_CALL MGTK::TextWidth, text_params
     WHILE ZERO                  ; always
 
@@ -445,7 +445,7 @@ ret:    rts
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y    ; A = caret_pos
         ldy     #0
-    IF A NE     (a_buf),y
+    IF A <> (a_buf),y
         clc
         adc     #1
         ldy     #LETK::LineEditRecord::caret_pos
@@ -481,7 +481,7 @@ ret:    rts
         lda     (a_record),y    ; A = caret_pos
 
         ldy     #0
-    IF A NE     (a_buf),y
+    IF A <> (a_buf),y
         jsr     _DeleteCharCommon
     END_IF
 
@@ -557,11 +557,11 @@ modified:
         ;; Is there room?
         ldy     #0
         lda     (a_buf),y
-    IF A LT     max_length
+    IF A < max_length
         ;; Move everything to right of caret up
         tay
       DO
-        BREAK_IF Y EQ caret_pos
+        BREAK_IF Y = caret_pos
         lda     (a_buf),y
         iny
         sta     (a_buf),y
@@ -666,7 +666,7 @@ ret:    rts
         lda     (a_record),y
         tay
     DO
-        BREAK_IF Y EQ len
+        BREAK_IF Y = len
         iny
         iny
         lda     (a_buf),y

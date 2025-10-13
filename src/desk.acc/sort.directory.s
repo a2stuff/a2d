@@ -470,7 +470,7 @@ rtcs:   sec
         jsr     JUMP_TABLE_GET_SEL_COUNT
     IF NOT_ZERO                 ; Must have selection
         jsr     JUMP_TABLE_GET_SEL_WIN
-      IF A EQ   window_id       ; Is selection in the active window?
+      IF A = window_id          ; Is selection in the active window?
         jmp     CompareSelectionOrders
       END_IF
     END_IF

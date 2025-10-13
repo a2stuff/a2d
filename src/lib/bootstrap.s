@@ -102,7 +102,7 @@ retry:
         lda     str_loading,y
         jsr     COUT
         iny
-    WHILE Y NE  #kLoadingStringLength
+    WHILE Y <> #kLoadingStringLength
 
         ;; Close all open files (just in case)
         MLI_CALL CLOSE, close_params
@@ -151,7 +151,7 @@ prompt_for_system_disk:
         lda     str_disk_prompt,y
         jsr     COUT
         iny
-    WHILE Y NE  #kDiskPromptLength
+    WHILE Y <> #kDiskPromptLength
 
 wait:
         sta     KBDSTRB

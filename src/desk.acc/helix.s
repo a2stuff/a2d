@@ -147,7 +147,7 @@ exit:
 
         ldx     cur_point
         inx
-    IF X EQ     #kNumPoints
+    IF X = #kNumPoints
         ldx     #0
     END_IF
         txa
@@ -221,7 +221,7 @@ exit:
 
         ldx     cur_point
         inx
-    IF X EQ     #kNumPoints
+    IF X = #kNumPoints
         ldx     #0
     END_IF
         stx     cur_point

@@ -550,7 +550,7 @@ prompt_insert_source:
         ldx     #0
         lda     #kAlertMsgInsertSource ; X=0 means just show alert
         jsr     ShowAlertDialog
-    IF A NE     #kAlertResultOK
+    IF A <> #kAlertResultOK
         jmp     InitDialog      ; Cancel
     END_IF
 
@@ -599,7 +599,7 @@ check_source_finish:
         ldx     #0
         lda     #kAlertMsgInsertDestination ; X=0 means just show alert
         jsr     ShowAlertDialog
-    IF A NE     #kAlertResultOK
+    IF A <> #kAlertResultOK
         jmp     InitDialog      ; Cancel
     END_IF
 
@@ -706,7 +706,7 @@ format: param_call DrawStatus, str_formatting
         jsr     main::FormatDevice
         bcc     do_copy
 
-    IF A NE     #ERR_WRITE_PROTECTED
+    IF A <> #ERR_WRITE_PROTECTED
         lda     #kAlertMsgFormatError ; no args
         jsr     ShowAlertDialog
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
@@ -789,7 +789,7 @@ copy_success:
         lda     drive_unitnum_table,x
         jsr     main::EjectDisk
         ldx     dest_drive_index
-    IF X NE     source_drive_index
+    IF X <> source_drive_index
         lda     drive_unitnum_table,x
         jsr     main::EjectDisk
     END_IF
@@ -832,7 +832,7 @@ check:  lda     current_drive_selection
         stx     message
 
         lda     source_drive_index
-    IF A EQ     dest_drive_index
+    IF A = dest_drive_index
 
         tax                     ; A = index
         lda     drive_unitnum_table,x
@@ -911,7 +911,7 @@ menu_offset_table:
         lda     event_params::modifiers
     IF ZERO
         lda     event_params::key
-      IF A NE   #CHAR_ESCAPE
+      IF A <> #CHAR_ESCAPE
         jmp     dialog_shortcuts
       END_IF
     END_IF
@@ -995,12 +995,12 @@ ret:    rts
         .assert MGTK::Area::desktop = 0, error, "enum mismatch"
         RTS_IF ZERO
 
-    IF A EQ     #MGTK::Area::menubar
+    IF A = #MGTK::Area::menubar
         MGTK_CALL MGTK::MenuSelect, menuselect_params
         jmp     HandleMenuSelection
     END_IF
 
-    IF A NE     #MGTK::Area::content
+    IF A <> #MGTK::Area::content
         return  #$FF
     END_IF
 
@@ -1008,7 +1008,7 @@ ret:    rts
         cmp     #winfo_dialog::kWindowId
         beq     HandleDialogClick
 
-    IF A EQ     winfo_drive_select
+    IF A = winfo_drive_select
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
 
@@ -1105,12 +1105,12 @@ params: .res    3
         lda     event_params::key
         jsr     ToUpperCase
 
-    IF A EQ     #kShortcutReadDisk
+    IF A = #kShortcutReadDisk
         BTK_CALL BTK::Flash, read_drive_button
         return  #1
     END_IF
 
-    IF A EQ     #CHAR_RETURN
+    IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, dialog_ok_button
         bmi     ignore          ; disabled
         return  #0
@@ -1249,7 +1249,7 @@ match:  clc
 
         ;; If less than 15 characters, increase len by one
         ldy     str_name
-    IF Y LT     #kMaxFilenameLength
+    IF Y < #kMaxFilenameLength
         iny
         tya
         ldy     #0
@@ -1352,7 +1352,7 @@ match:  clc
         sta     (ptr),y
       END_IF
         iny
-    WHILE Y LT  #16             ; bits
+    WHILE Y < #16               ; bits
         rts
 
         ;; --------------------------------------------------
@@ -1442,7 +1442,7 @@ loop:   lda     device_index    ; <16
         ;; name_len=0 signifies an error, with error code in second byte
         iny                     ; Y = 1
         lda     (on_line_ptr),y
-      IF A EQ   #ERR_DEVICE_NOT_CONNECTED
+      IF A = #ERR_DEVICE_NOT_CONNECTED
         ;; Device Not Connected - skip, unless it's a Disk II device
         dey                     ; Y = 0
         lda     (on_line_ptr),y ; A = unmasked unit number
@@ -1452,7 +1452,7 @@ loop:   lda     device_index    ; <16
         lda     #ERR_DEVICE_NOT_CONNECTED
       END_IF
 
-      IF A EQ   #ERR_NOT_PRODOS_VOLUME
+      IF A = #ERR_NOT_PRODOS_VOLUME
         ldx     num_drives
         lda     drive_unitnum_table,x
 
@@ -1492,7 +1492,7 @@ next:   inc     num_drives
 
         ldx     num_drives
         lda     drive_unitnum_table,x
-      IF A EQ   DISK_COPY_INITIAL_UNIT_NUM
+      IF A = DISK_COPY_INITIAL_UNIT_NUM
         copy8   num_drives, current_drive_selection
       END_IF
 
@@ -1604,7 +1604,7 @@ device_index:
         jsr     GetBlockCount
         inc     index
         lda     index
-    WHILE A NE  num_drives
+    WHILE A <> num_drives
         rts
 
 index:  .byte   0
@@ -1841,7 +1841,7 @@ show_name:
 .proc ShowBlockError
         stx     err_writing_flag
 
-    IF A EQ     #ERR_WRITE_PROTECTED
+    IF A = #ERR_WRITE_PROTECTED
         jsr     main::Bell
         lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
@@ -2109,7 +2109,7 @@ start:
         bne     find_in_alert_table ; always
     END_IF
 
-    IF A EQ     #kAlertMsgInsertDestination
+    IF A = #kAlertMsgInsertDestination
         cpx     #0
         beq     find_in_alert_table
         jsr     _IsDriveEjectable
@@ -2121,7 +2121,7 @@ start:
         bne     find_in_alert_table ; always
     END_IF
 
-    IF A EQ     #kAlertMsgConfirmErase
+    IF A = #kAlertMsgConfirmErase
         jsr     _AppendToConfirmErase
         lda     #kAlertMsgConfirmErase
         bne     find_in_alert_table ; always
@@ -2141,7 +2141,7 @@ find_in_alert_table:
         cmp     alert_table,y
         beq     :+
         iny
-    WHILE Y NE  #kNumAlertMessages
+    WHILE Y <> #kNumAlertMessages
         ldy     #0              ; default
 :
         ;; Y = index
@@ -2182,7 +2182,7 @@ find_in_alert_table:
         iny
         inx
         copy8   str_confirm_erase_suffix,x, str_confirm_erase,y
-    WHILE X NE  str_confirm_erase_suffix
+    WHILE X <> str_confirm_erase_suffix
 
         sty     str_confirm_erase
         rts

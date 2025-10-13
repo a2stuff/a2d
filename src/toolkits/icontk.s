@@ -368,7 +368,7 @@ END_PARAM_BLOCK
         ;; Next entry
         add16_8 table_ptr, #.sizeof(IconEntry)
         inx
-    WHILE X NE  #kMaxIconCount+1 ; allow up to the maximum
+    WHILE X <> #kMaxIconCount+1 ; allow up to the maximum
 
         ;; --------------------------------------------------
         ;; MaxDraggableItems = BufferSize / kIconPolySize
@@ -594,7 +594,7 @@ END_PARAM_BLOCK
 
         lda     icon_list,x
         jsr     GetIconWin      ; A = window_id
-      IF A EQ   params::window_id
+      IF A = params::window_id
         pla
         pha
         tax
@@ -634,7 +634,7 @@ END_PARAM_BLOCK
         jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
 
         ;; Matching window?
-       IF A EQ  params::window_id
+       IF A = params::window_id
         ;; In poly?
         jsr     CalcIconPoly    ; requires `icon_ptr` set
         MGTK_CALL MGTK::InRect, bounding_rect
@@ -691,7 +691,7 @@ END_PARAM_BLOCK
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
-    IF A NE     #MGTK::EventKind::drag
+    IF A <> #MGTK::EventKind::drag
         lda     #IconTK::kDragResultNotADrag
         jmp     exit_with_a
     END_IF
@@ -794,7 +794,7 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
 
         ;; Escape key?
         lda     KBD             ; MGTK doesn't process keys during drag
-    IF A EQ     #CHAR_ESCAPE | $80
+    IF A = #CHAR_ESCAPE | $80
         bit     KBDSTRB         ; consume the keypress
         copy8   #MGTK::EventKind::key_down, peekevent_params::kind
         jmp     not_drag
@@ -854,7 +854,7 @@ ploop:  ldy     #2              ; offset in poly to first vertex
         iny
         add16in (poly_ptr),y, poly_dy, (poly_ptr),y
         iny
-    WHILE Y NE #kIconPolySize
+    WHILE Y <> #kIconPolySize
 
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     (poly_ptr),y
@@ -1024,7 +1024,7 @@ last_highlighted_icon:
         inc     index
         index := *+1
         ldx     #SELF_MODIFIED_BYTE
-    WHILE X NE  num_icons
+    WHILE X <> num_icons
 
         rts
 .endproc ; _IterateHighlightedIcons
@@ -1831,7 +1831,7 @@ END_PARAM_BLOCK
         ldx     #AS_BYTE(-1)
     DO
         inx
-        BREAK_IF X EQ num_icons
+        BREAK_IF X = num_icons
         txa
         pha
 
@@ -1839,7 +1839,7 @@ END_PARAM_BLOCK
 
         ;; Is it in the target window?
         jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
-      IF A EQ params::window_id
+      IF A = params::window_id
         ;; In maprect?
         ITK_CALL IconTK::IconInRect, icon_in_rect_params
        IF NOT_ZERO
@@ -2030,7 +2030,7 @@ reserved:       .byte   0
         ;; Get window clip rect (in screen space)
         copy8   clip_window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
-        RTS_IF NE                                     ; obscured
+        RTS_IF NE               ; obscured
 
         viewloc := icon_grafport+MGTK::GrafPort::viewloc
         maprect := icon_grafport+MGTK::GrafPort::maprect
@@ -2241,7 +2241,7 @@ do_pt:  lda     pt_num
         copy8   pt1::xcoord,x, cwi_findwindow_params,y
         iny
         inx
-    WHILE Y NE  #4
+    WHILE Y <> #4
 
         inc     pt_num
         MGTK_CALL MGTK::FindWindow, cwi_findwindow_params

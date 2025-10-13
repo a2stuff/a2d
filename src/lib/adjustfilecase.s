@@ -106,7 +106,7 @@ apply_bits:
         sta     (ptr),y
       END_IF
         iny
-    WHILE Y LT  #16             ; bits
+    WHILE Y < #16               ; bits
         rts
 
 ;;; --------------------------------------------------
