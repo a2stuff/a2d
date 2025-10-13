@@ -384,7 +384,7 @@ search:
         ldy     buf_search
         copy8   #0, pattern,y   ; null-terminate
         cpy     #0
-    IF NOT_ZERO
+    IF NE
       DO
         lda     buf_search,y    ; copy characters
         jsr     ToUpperCase
@@ -1300,7 +1300,7 @@ string:         .res    16      ; 15 + null terminator
         tay
         copy8   #0, string,y    ; null-terminate
         cpy     #0
-    IF NOT_ZERO
+    IF NE
       DO
         lda     (entPtr),y      ; copy characters
         jsr     ToUpperCase

@@ -1900,7 +1900,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::SetPattern, SELF_MODIFIED, addr
     ELSE
         jsr     SetPortForWinIcon
-        RTS_IF NE               ; obscured!
+        RTS_IF NOT_ZERO         ; obscured!
         MGTK_CALL MGTK::SetPattern, white_pattern
     END_IF
 
@@ -2030,7 +2030,7 @@ reserved:       .byte   0
         ;; Get window clip rect (in screen space)
         copy8   clip_window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
-        RTS_IF NE               ; obscured
+        RTS_IF NOT_ZERO                               ; obscured
 
         viewloc := icon_grafport+MGTK::GrafPort::viewloc
         maprect := icon_grafport+MGTK::GrafPort::maprect

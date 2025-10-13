@@ -378,7 +378,7 @@ ep_size = * - ep_start
         jsr     CopyEventDataToMain
 
         lda     trackgoaway_params::clicked
-    IF NE
+    IF NOT_ZERO
         pla                     ; not returning to the caller
         pla
         jmp     Exit

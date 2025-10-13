@@ -1039,7 +1039,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 .proc StripPathBufSegment
     DO
         ldx     path_buf
-        BREAK_IF EQ
+        BREAK_IF ZERO
         dec     path_buf
         lda     path_buf,x
     WHILE A <> #'/'
@@ -1097,7 +1097,7 @@ do_entry:
         ldy     #FileEntry::access
         lda     (ptr),y
         and     #ACCESS_I
-      IF NE
+      IF NOT_ZERO
         dec     num_file_names  ; invisible, so skip
         jmp     done_entry
       END_IF

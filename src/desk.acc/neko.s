@@ -831,7 +831,7 @@ set_frame:
         sub16   win_rect::x2, win_rect::x1, tmp16
         sub16_8 tmp16, #kNekoWidth-1, tmp16
         cmp16   x_pos, tmp16
-    IF CS
+    IF GE
         copy16  tmp16, x_pos
         iny
     END_IF
@@ -839,7 +839,7 @@ set_frame:
         sub16   win_rect::y2, win_rect::y1, tmp16
         sub16_8 tmp16, #kNekoHeight + aux::kGrowBoxHeight, tmp16
         cmp16   y_pos, tmp16
-    IF CS
+    IF GE
         copy16  tmp16, y_pos
         iny
     END_IF

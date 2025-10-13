@@ -847,7 +847,7 @@ check:  lda     current_drive_selection
         jsr     ShowAlertDialog
 
         cmp     #kAlertResultOK
-      IF NOT_ZERO
+      IF NE
         pla                     ; Cancel
         pla
         jmp     InitDialog
@@ -2100,7 +2100,7 @@ start:
 
         pla                     ; A = alert id
         .assert kAlertMsgInsertSource = 0, error, "enum mismatch"
-    IF EQ                       ; kAlertMsgInsertSource
+    IF ZERO                     ; kAlertMsgInsertSource
         cpx     #0
         beq     find_in_alert_table
         jsr     _IsDriveEjectable

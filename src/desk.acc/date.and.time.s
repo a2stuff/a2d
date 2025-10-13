@@ -941,7 +941,7 @@ label_downarrow:
 
         ;; If there is a system clock, only draw the OK button.
         ldx     clock_flag
-    IF EQ
+    IF ZERO
         MGTK_CALL MGTK::MoveTo, label_uparrow_pos
         param_call DrawString, label_uparrow
         MGTK_CALL MGTK::FrameRect, up_arrow_rect
@@ -972,7 +972,7 @@ label_downarrow:
 
         ;; If there is a system clock, don't draw the highlight.
         ldx     clock_flag
-    IF EQ
+    IF ZERO
         lda     #Field::day
         jsr     SelectField
     END_IF

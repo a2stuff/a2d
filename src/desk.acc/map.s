@@ -384,7 +384,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
         ;; Erase old position
         jsr     SetPort
-    IF EQ
+    IF ZERO
         jsr     HidePositionIndicator
     END_IF
 
@@ -444,7 +444,7 @@ fail:   JSR_TO_MAIN JUMP_TABLE_BELL
 
 done:   ;; Update display
         jsr     SetPort
-    IF EQ
+    IF ZERO
         jsr     DrawLatLong
     END_IF
         rts
@@ -476,7 +476,7 @@ index:  .byte   0
 
         ;; Click in line edit?
         MGTK_CALL MGTK::InRect, input_rect
-    IF NE
+    IF NOT_ZERO
         COPY_STRUCT screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
         jmp     done
@@ -488,7 +488,7 @@ index:  .byte   0
 
         ;; Erase old position
         jsr     SetPort
-    IF EQ
+    IF ZERO
         jsr     HidePositionIndicator
     END_IF
 
@@ -506,7 +506,7 @@ index:  .byte   0
 
         ;; Update display
         jsr     SetPort
-    IF EQ
+    IF ZERO
         jsr     DrawLatLong
     END_IF
 
@@ -657,7 +657,7 @@ sflag:  .byte   0
     IF ZERO
         jsr     ResetBlinkCounter
         jsr     SetPort
-      IF EQ
+      IF ZERO
         jsr     XDrawPositionIndicator
       END_IF
     END_IF

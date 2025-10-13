@@ -278,14 +278,14 @@ port:           .addr   grafport_win
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-    IF NE
+    IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         bmi     done
         jmp     Exit
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF NE
+    IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         bmi     done
         copy8   #$FF, listbox_rec::selected_index
@@ -587,14 +587,14 @@ remainder:      .word   0                 ; (out)
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, import_button::rect
-    IF NE
+    IF NOT_ZERO
         BTK_CALL BTK::Track, import_button
         bmi     done
         jmp     Import
     END_IF
 
         MGTK_CALL MGTK::InRect, close_button::rect
-    IF NE
+    IF NOT_ZERO
         BTK_CALL BTK::Track, close_button
         bmi     done
         jmp     ExitOK
@@ -828,7 +828,7 @@ str_from_int:   PASCAL_STRING "000000" ; filled in by IntToString
 start:
         ;; Get active window's path
         jsr     GetWinPath
-    IF NE
+    IF NOT_ZERO
         lda     #kErrNoWindowsOpen
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
@@ -844,7 +844,7 @@ start:
         jsr     FetchControlBlock
 
         lda     control_block+ControlBlock::unit_num
-        RTS_IF EQ
+        RTS_IF ZERO
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         jsr     LoadCatalogEntries
@@ -854,7 +854,7 @@ start:
         pha                     ; A = error code (0 = success)
         jsr     FetchControlBlock
         pla                     ; A = error code (0 = success)
-    IF NE
+    IF NOT_ZERO
         jsr     JUMP_TABLE_SHOW_ALERT
     END_IF
 

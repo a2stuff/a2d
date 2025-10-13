@@ -563,9 +563,7 @@ skip:
 .define ZERO     ZS
 .define NE       ZC
 .define NOT_ZERO ZC
-.define MINUS    NS             ; TODO: Deprecate/remove
 .define NEG      NS
-.define PLUS     NC             ; TODO: Deprecate/remove
 .define POS      NC
 .define GE       CS
 .define LT       CC

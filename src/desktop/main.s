@@ -463,7 +463,7 @@ offset_table:
         ;; Maybe clock?
         lda     MACHID
         and     #kMachIDHasClock
-      IF NE
+      IF NOT_ZERO
         cmp16   event_params::xcoord, #460 ; TODO: Hard coded?
        IF GE
         param_jump InvokeDeskAccWithIcon, $FF, str_date_and_time
@@ -2701,7 +2701,7 @@ retry:
         ;; don't want to trash MGTK in aux memory. We restore just
         ;; enough for Disk Copy to disconnect/reconnect properly.
         lda     saved_ram_unitnum
-    IF NE
+    IF NOT_ZERO
         inc     DEVCNT
         ldx     DEVCNT
         sta     DEVLST,x
@@ -3549,7 +3549,7 @@ ret:    rts
 .proc CmdPaste
         ;; MacOS 6 behavior - no-op if clipboard is empty
         lda     clipboard
-        RTS_IF EQ
+        RTS_IF ZERO
 
         ldax    #clipboard
         ASSERT_NOT_EQUALS .hibyte(clipboard), 0
@@ -3592,7 +3592,7 @@ ep2:
 
         ;; If selection is in a window with View > by Name, refresh
         lda     selected_window_id
-    IF NE
+    IF NOT_ZERO
         jsr     GetSelectionViewBy
       IF A = #DeskTopSettings::kViewByName
         txa                     ; X = window id
@@ -4078,7 +4078,7 @@ typedown_buf:
         BREAK_IF X = cached_window_entry_count
         copy8   cached_window_entry_list,x, buffer+1,x
         inx
-    WHILE NE                    ; always
+    WHILE NOT_ZERO              ; always
 
         stx     buffer
         rts
@@ -5696,7 +5696,7 @@ beyond:
 
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
-    IF NE
+    IF NOT_ZERO
         jsr     MarkIconNotDimmedNoDraw
         ;; Assert: `icon` == `anim_icon`, and will get redrawn next.
     END_IF
@@ -6248,7 +6248,7 @@ ret:    rts
         lda     num_open_windows
         old := *+1
         cmp     #SELF_MODIFIED_BYTE
-    IF EQ
+    IF ZERO
         lda     active_window_id
         jsr     ActivateAndRefreshWindowOrClose
         bne     err
@@ -8440,7 +8440,7 @@ set_pos:
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         ASSERT_EQUALS DeskTopSettings::kDateOrderMDY, 0
-    IF EQ
+    IF ZERO
         ;; Month Day, Year
         FORMAT_MESSAGE 3, str_mdy_format
     ELSE
@@ -12922,7 +12922,7 @@ list:   .word   0               ; 0 items in list
 
         ;; Original Prefix
         jsr     GetCopiedToRAMCardFlag
-    IF MINUS
+    IF NS
         sta     ALTZPOFF
         bit     LCBANK2
         bit     LCBANK2
@@ -13015,7 +13015,7 @@ assign: ldy     new_path
         copy16  #src_path_buf, $06
         jsr     IsPathPrefixOf  ; Z=0 if a prefix
         php
-    IF NE
+    IF ZC
         ;; It's a prefix! Do the replacement
         param_call_indirect _UpdateTargetPath, ptr
     END_IF

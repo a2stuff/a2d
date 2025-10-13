@@ -525,7 +525,7 @@ handle_button:
 
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
-    IF NE
+    IF NOT_ZERO
         lda     event_params::key
       IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     shortcut_picker_params::key

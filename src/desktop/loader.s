@@ -141,7 +141,7 @@ continue:
         lda     segment_type_table,x
         beq     loop            ; type 0 = main, so done
         cmp     #2              ; carry set if banked, clear if aux
-    IF CS
+    IF GE
         ;; Handle bank-switched memory segment
         ;; Disable interrupts, since we may overwrite IRQ vector
         php

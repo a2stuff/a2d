@@ -350,7 +350,7 @@ last:   lda     max_entries_minus_one
         sbc     #1
       IF NEG
         lda     max_entries
-        CONTINUE_IF NE          ; always
+        CONTINUE_IF NOT_ZERO    ; always
       END_IF
         jsr     _CallIsEntryProc
     UNTIL NC

@@ -283,7 +283,7 @@ cursor_ibeam_flag: .byte   0
     END_IF
 
         MGTK_CALL MGTK::InRect, type_rect
-    IF NE
+    IF NOT_ZERO
         jsr     FocusType
         COPY_STRUCT screentowindow_params::window, type_le_params::coords
         LETK_CALL LETK::Click, type_le_params
@@ -291,7 +291,7 @@ cursor_ibeam_flag: .byte   0
     END_IF
 
         MGTK_CALL MGTK::InRect, auxtype_rect
-    IF NE
+    IF NOT_ZERO
         jsr     FocusAuxtype
         COPY_STRUCT screentowindow_params::window, auxtype_le_params::coords
         LETK_CALL LETK::Click, auxtype_le_params

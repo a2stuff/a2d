@@ -1342,7 +1342,7 @@ draw:   php
         bit     LCBANK1
         bit     LCBANK1
         plp
-      IF NE
+      IF ZC
         param_call DrawString, str_list_separator
         param_call DrawString, str_lcmeve
       ELSE
@@ -2345,7 +2345,7 @@ device_loop:
 
         ;; Need a comma?
         bit     empty_flag
-    IF PLUS
+    IF NC
         param_call DrawString, str_list_separator
     END_IF
         CLEAR_BIT7_FLAG empty_flag ; saw a unit!

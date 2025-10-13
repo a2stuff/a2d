@@ -915,10 +915,10 @@ dblclick_speed: .word   0
         bit     LCBANK1
         bit     LCBANK1
         cmp     #0              ; ZIDBYTE=0 for IIc / IIc+
-        IF ZERO
+    IF EQ
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
-        END_IF
+    END_IF
 
         MGTK_CALL MGTK::ScaleMouse, scalemouse_params
 

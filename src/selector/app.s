@@ -970,7 +970,7 @@ control_char:
 
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
-    IF NE
+    IF NOT_ZERO
         lda     event_params::key
       IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     op_params::key
@@ -1094,7 +1094,7 @@ error:  lda     #AlertID::insert_system_disk
         ;; Find the startup volume's unit number
         copy8   DEVNUM, target
         jsr     GetCopiedToRAMCardFlag
-    IF MINUS
+    IF NS
         param_call CopyDeskTopOriginalPrefix, INVOKER_PREFIX
         param_call GetFileInfo, INVOKER_PREFIX
       IF CC

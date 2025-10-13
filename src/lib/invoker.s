@@ -96,7 +96,7 @@ load_target:
 
         ;; If interpreter, copy filename to interpreter buffer.
         lda     INVOKER_INTERPRETER
-    IF NE
+    IF NOT_ZERO
         MLI_CALL SET_PREFIX, invoker::set_prefix_params
         bcs     exit
         ldy     INVOKER_FILENAME

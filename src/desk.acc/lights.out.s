@@ -416,7 +416,7 @@ ret:    rts
 
 .proc DrawWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF NE               ; obscured
+        RTS_IF NOT_ZERO         ; obscured
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetPenMode, notpencopy

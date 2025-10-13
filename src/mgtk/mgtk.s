@@ -8523,7 +8523,7 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         ;; erasing and posting updates is not required. But newly
         ;; active window may need redrawing.
         jsr     TopWindow
-      IF NE
+      IF NOT_ZERO
         jsr     SetDesktopPort
         jsr     DrawWindowPreserveContent
       END_IF

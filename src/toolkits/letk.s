@@ -390,7 +390,7 @@ ycoord  .word
         sta     len
 
         sub16   params::xcoord, pos + MGTK::Point::xcoord, params::xcoord
-    IF MINUS
+    IF NEG
         lda     #0
         beq     set             ; always
     END_IF
@@ -402,7 +402,7 @@ ycoord  .word
         sta     text_params+MGTK::TextWidthParams::length
     DO
         cmp16   text_params+MGTK::TextWidthParams::width, params::xcoord
-        BREAK_IF CS
+        BREAK_IF GE
         inc     text_params+MGTK::TextWidthParams::length
         lda     text_params+MGTK::TextWidthParams::length
         BREAK_IF A = len
@@ -672,7 +672,7 @@ ret:    rts
         lda     (a_buf),y
         dey
         sta     (a_buf),y
-    WHILE NE                    ; always
+    WHILE NOT_ZERO              ; always
 
         bit     options         ; bit7 = centered
     IF NS

@@ -428,7 +428,6 @@ done:   jmp     InputLoop
         lda     ZIDBYTE         ; IIc = 0
         bit     LCBANK1
         bit     LCBANK1
-        cmp     #0
 
 .macro SPIN_CPU
         ldx     #$20            ; IIgs slows to read VBL; spin
@@ -437,7 +436,7 @@ done:   jmp     InputLoop
 .endmacro
 
 
-    IF NE
+    IF A <> #0
         ;; IIe / IIgs
 
         ;; Wait one cycle
