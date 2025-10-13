@@ -90,9 +90,9 @@ xcoord  .word
 
 ## Flow control
 
-* **Do** use `IF_xx` / `ELSE_IF_yy` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
+* **Do** use `IF` / `ELSE_IF` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
 
-* **Do** use `DO` / `CONTINUE_IF_xx` / `BREAK_IF_xx` / `WHILE_yy` macros to avoid throw-away local labels.
+* **Do** use `DO` / `CONTINUE_IF` / `BREAK_IF` / `WHILE` macros to avoid throw-away local labels.
 
 * Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
 
@@ -230,8 +230,8 @@ The following macros should be used to improve code readability by eliminating r
 * structural:
   * `PAD_TO` to introduce padding to a known address
   * `COPY_xx` for fixed size copy loops
-  * `IF_xx`/`ELSE_IF_yy`/`ELSE`/`END_IF` for conditional sections, to avoid throw-away labels
-  * `DO`/`BREAK_IF_xx`/`WHILE_yy` for looping sections, to avoid throw-away labels
+  * `IF`/`ELSE_IF`/`ELSE`/`END_IF` for conditional sections, to avoid throw-away labels
+  * `DO`/`BREAK_IF`/`CONTINUE_IF`/`WHILE` for looping sections, to avoid throw-away labels
 * definitions:
   * `PASCAL_STRING` for length-prefixed strings
 

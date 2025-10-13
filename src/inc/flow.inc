@@ -5,24 +5,31 @@
 ;;; Macros that provide higher level flow control without resorting to
 ;;; throw-away labels.
 
-;;; * IF_* / ELSE_IF_* / ELSE / END_IF
+;;; * IF expr / ELSE_IF expr / ELSE / END_IF
 ;;;   * and IF_A_EQ_ONE_OF as a common case
 ;;;   * and IF_A_NE_ALL_OF as a common case
-;;; * DO / CONTINUE_IF_* / BREAK_IF_* / WHILE_*
-;;;   * or REPEAT / UNTIL_* if you prefer
-;;; * RTS_IF_*
+;;; * DO / CONTINUE_IF expr / BREAK_IF expr / WHILE expr
+;;;   * or REPEAT / UNTIL expr if you prefer
+;;; * RTS_IF expr
 ;;;
-;;; Conditions (the "*" above) take the form of flag tests or
-;;; register comparisons (with an argument):
+;;; Expressions take the form of flag tests or register comparisons.
 ;;;
 ;;; Flag tests: ZS ZC CS CC VS VC NS NC
 ;;; (Aliases: EQ, NE, ZERO, NOT_ZERO, LT, GE, POS, NEG, PLUS, MINUS)
 ;;;
-;;; Comparisons: A_EQ, A_NE, A_LT, A_GE; ditto for X and Y
+;;; Register comparisons: <register> <operator> <argument>
+;;; e.g. "IF A = #25"
+;;; Operators: =, <>, <, >= (aliases: EQ, NE, LT, GE)
 
 ;;; ============================================================
 ;;; Flow control infrastructure
 ;;; ============================================================
+
+;;; Set context
+.macro _FLOW_STATEMENT name
+    .define __flow_statement__ name
+    __FLOW_LOG__ name
+.endmacro
 
 ;;; Increment a numeric variable; if not initialized, treated as 0
 .macro __INC_IDENT__ ident
@@ -47,23 +54,165 @@
     .endif
 .endmacro
 
+;;; ============================================================
+;;; Expression Parsing
+;;; ============================================================
+
+.macro __SET_BOPS__ bop1, bop2
+  .undef __flow_branchOp1__
+  .undef __flow_branchOp2__
+  .define __flow_branchOp1__ bop1
+  .define __flow_branchOp2__ bop2
+.endmacro
+
+.macro __SET_COP__ reg, cop
+  .define __flow_register_name__ reg
+  .undef __flow_compareOp__
+  .define __flow_compareOp__ cop
+.endmacro
+
+.macro __RESULT_FLAG_TEST__ bop1, bop2
+  __SET_BOPS__ bop1, bop2
+  __flow_expr_type__ .set ::__flow_expr_type_flag_test__
+  __flow_break_loop_flag__ .set 1
+.endmacro
+
+.macro __RESULT_COMP_TEST__ bop1, bop2
+  __SET_BOPS__ bop1, bop2
+  __flow_expr_type__ .set ::__flow_expr_type_comparison__
+  __flow_break_loop_flag__ .set 1
+.endmacro
+
+::__flow_expr_type_flag_test__ = 1
+::__flow_expr_type_comparison__ = 2
+
+;;; FUTURE: Actually look at multiple expressions
+.macro _FLOW_PARSE_EXPR_LOOP expr, tindex
+  .define __flow_token__ .mid(tindex, 1, {expr})
+  .define __flow_next_token__ .mid(tindex+1, 1, {expr})
+  .define __flow_comparison_operand__
+
+;;; Flag tests
+
+  .if     .xmatch({__flow_token__}, ZS)
+    __RESULT_FLAG_TEST__ BEQ, BNE
+  .elseif .xmatch({__flow_token__}, ZC)
+    __RESULT_FLAG_TEST__ BNE, BEQ
+  .elseif .xmatch({__flow_token__}, CS)
+    __RESULT_FLAG_TEST__ BCS, BCC
+  .elseif .xmatch({__flow_token__}, CC)
+    __RESULT_FLAG_TEST__ BCC, BCS
+  .elseif .xmatch({__flow_token__}, NS)
+    __RESULT_FLAG_TEST__ BMI, BPL
+  .elseif .xmatch({__flow_token__}, NC)
+    __RESULT_FLAG_TEST__ BPL, BMI
+  .elseif .xmatch({__flow_token__}, VS)
+    __RESULT_FLAG_TEST__ BVS, BVC
+  .elseif .xmatch({__flow_token__}, VC)
+    __RESULT_FLAG_TEST__ BVC, BVS
+
+;;; Register compares
+
+  .elseif .xmatch({__flow_token__}, A) .or .xmatch({__flow_token__}, X) .or .xmatch({__flow_token__}, Y)
+
+        ;; Determine the compare opcodes from the register
+    .if .xmatch({__flow_token__}, A)
+      __SET_COP__ "A", CMP
+    .elseif .xmatch({__flow_token__}, X)
+      __SET_COP__ "X", CPX
+    .elseif .xmatch({__flow_token__}, Y)
+      __SET_COP__ "Y", CPY
+    .else
+      .fatal "unreachable"
+    .endif
+
+        ;; Determine the branch opcodes from the comparison operator
+    .if .xmatch({__flow_next_token__}, =) .or .xmatch({__flow_next_token__}, EQ)
+      __RESULT_COMP_TEST__ BEQ, BNE
+    .elseif .xmatch({__flow_next_token__}, <>) .or .xmatch({__flow_next_token__}, NE)
+      __RESULT_COMP_TEST__ BNE, BEQ
+    .elseif .xmatch({__flow_next_token__}, <) .or .xmatch({__flow_next_token__}, LT)
+      __RESULT_COMP_TEST__ BCC, BCS
+    .elseif .xmatch({__flow_next_token__}, >=) .or .xmatch({__flow_next_token__}, GE)
+      __RESULT_COMP_TEST__ BCS, BCC
+    .else
+      .error .sprintf("%s: No operator match after register %s", __flow_statement__, __flow_register_name__)
+    .endif
+
+    .undef __flow_comparison_operand__
+    .define __flow_comparison_operand__ .mid(__flow_current_index__+2, 9999, {expr})
+
+    .undef __flow_register_name__
+
+  .else
+    .error .sprintf("%s: No expression match", __flow_statement__)
+  .endif
+
+  .undef __flow_token__
+  .undef __flow_next_token__
+.endmacro
+
+.macro _FLOW_PARSE_EXPR expr, reg
+  .define __flow_compareOp__ __nothing__
+  .define __flow_branchOp1__ __nothing__
+  .define __flow_branchOp2__ __nothing__
+
+        ;; Parse expression
+  .ifblank expr
+    .error .sprintf("%s: empty expression", __flow_statement__)
+  .endif
+
+  __flow_expr_type__ .set 0
+  __flow_break_loop_flag__ .set 0
+
+  .repeat .tcount({expr}), tindex
+    .if .not(__flow_break_loop_flag__)
+    __flow_current_index__ .set tindex
+    _FLOW_PARSE_EXPR_LOOP {expr}, tindex
+    .endif
+  .endrepeat
+
+  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
+    .if .tcount({expr}) > __flow_current_index__ + 1
+      .error .sprintf("%s: Unexpected tokens after flag test '%s'", __flow_statement__, .string(.mid(__flow_current_index__, 1, {expr})))
+    .endif
+     .ifnblank reg
+       .error .sprintf("%s: Unexpected arguments after flag test '%s'", __flow_statement__, .string(.mid(__flow_current_index__, 1, {expr})))
+     .endif
+  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
+     ;; no validation
+  .else
+     .fatal "unreached"
+  .endif
+.endmacro
+
+.macro _FLOW_PARSE_CLEANUP
+  .undef __flow_compareOp__
+  .undef __flow_branchOp1__
+  .undef __flow_branchOp2__
+  .undef __flow_comparison_operand__
+.endmacro
+
+.macro _FLOW_END_STATEMENT
+  .undef __flow_statement__
+.endmacro
 
 ;;; ============================================================
-;;; IF_* / ELSE_IF_* / ELSE / END_IF
+;;; IF / ELSE_IF / ELSE / END_IF
 ;;; ============================================================
 ;;;
 ;;; Usage:
 ;;;     bit foo
-;;;     IF_NS
+;;;     IF NS
 ;;;     ...
-;;;     ELSE_IF_VS ; optional
+;;;     ELSE IF VS ; optional
 ;;;     ...
 ;;;     ELSE ; optional
 ;;;     ...
 ;;;     END_IF
 ;;;
 ;;;     lda     foo
-;;;     IF_A_EQ bar
+;;;     IF A = bar
 ;;;     ...
 ;;;     END_IF
 ;;;
@@ -76,24 +225,12 @@
 ;;;     END_IF
 ;;;
 ;;; Macros:
-;;;     IF_ZS           aliases: IF_ZERO, IF_EQ
-;;;     IF_ZC           aliases: IF_NOT_ZERO, IF_NE
-;;;     IF_CC           aliases: IF_LT
-;;;     IF_CS           aliases: IF_GE
-;;;     IF_VC
-;;;     IF_VS
-;;;     IF_NC           aliases: IF_POS, IF_PLUS
-;;;     IF_NS           aliases: IF_NEG, IF_MINUS
-;;; ... and ditto for ELSE_IF_*
-;;;
-;;;     IF_A_EQ / ELSE_IF_A_EQ
-;;;     IF_A_NE / ELSE_IF_A_NE
-;;;     IF_A_LT / ELSE_IF_A_LT
-;;;     IF_A_GE / ELSE_IF_A_GE
-;;; ... and ditto for *_X_* and *_Y_*
-;;;
+;;;     IF
 ;;;     IF_A_EQ_ONE_OF
 ;;;     IF_A_NE_ALL_OF
+;;;     ELSE_IF
+;;;     ELSE
+;;;     END_IF
 
 ;;; A numeric variable for the current nesting depth of flow control
 ;;; structures. Incremented when entering a structure, decremented
@@ -114,26 +251,49 @@
 .define __flow_branch_ident_counter__ __flow_branch_ident__ {"counter"}
 .define __flow_branch_ident_block__ __flow_branch_ident__ {.sprintf("eob%d", __flow_branch_ident_counter__)}
 
-.macro _IF_BOP_ branchOp
+.macro IF expr, reg
+  _FLOW_STATEMENT "IF"
+  _FLOW_PARSE_EXPR {expr}, reg
+
         __INC_IDENT__ __flow_branch_depth__
         __INC_IDENT__ __flow_branch_count_at_depth__
         __INC_IDENT__ __flow_branch_ident_counter__
-        __FLOW_LOG__ "if"
-        branchOp __flow_branch_ident_block__
+
+  .if __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank reg
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, reg
+     .endif
+  .endif
+
+        __flow_branchOp2__ __flow_branch_ident_block__
+
+  _FLOW_PARSE_CLEANUP
+  _FLOW_END_STATEMENT
 .endmacro
 
-.macro _IF_COP_BOP_ compareOp, branchOp, arg, reg
-        __INC_IDENT__ __flow_branch_depth__
-        __INC_IDENT__ __flow_branch_count_at_depth__
+.macro ELSE_IF expr, reg
+  _FLOW_STATEMENT "ELSE_IF"
+  _FLOW_PARSE_EXPR {expr}, reg
+
+        jmp     __flow_branch_ident__ {"endif"}
+        __flow_branch_ident_block__ := *
         __INC_IDENT__ __flow_branch_ident_counter__
-        __FLOW_LOG__ "if"
-    .ifblank reg
-        compareOp arg
-        branchOp __flow_branch_ident_block__
-    .else
-        compareOp arg,reg
-        branchOp __flow_branch_ident_block__
-    .endif
+
+
+  .if __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank reg
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, reg
+     .endif
+  .endif
+
+        __flow_branchOp2__ __flow_branch_ident_block__
+
+  _FLOW_PARSE_CLEANUP
+  _FLOW_END_STATEMENT
 .endmacro
 
 .macro IF_A_EQ_ONE_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
@@ -175,28 +335,6 @@
     .endif
 .endmacro
 
-.macro _ELSE_IF_BOP_ branchOp
-        __FLOW_LOG__ "else_if"
-        jmp     __flow_branch_ident__ {"endif"}
-        __flow_branch_ident_block__ := *
-        __INC_IDENT__ __flow_branch_ident_counter__
-        branchOp __flow_branch_ident_block__
-.endmacro
-
-.macro _ELSE_IF_COP_BOP_ compareOp, branchOp, arg, reg
-        __FLOW_LOG__ "else_if"
-        jmp     __flow_branch_ident__ {"endif"}
-        __flow_branch_ident_block__ := *
-        __INC_IDENT__ __flow_branch_ident_counter__
-    .ifblank reg
-        compareOp arg
-        branchOp __flow_branch_ident_block__
-    .else
-        compareOp arg,reg
-        branchOp __flow_branch_ident_block__
-    .endif
-.endmacro
-
 .macro ELSE
         __FLOW_LOG__ "else"
         jmp     __flow_branch_ident__ {"endif"}
@@ -224,75 +362,33 @@
 
 
 ;;; ============================================================
-;;; DO / CONTINUE_IF_* / BREAK_IF_* / WHILE_* or REPEAT / UNTIL_*
+;;; DO / CONTINUE_IF / BREAK_IF / WHILE or REPEAT / UNTIL
 ;;; ============================================================
 
 ;;; Usage:
 ;;;     ldx #17
 ;;;     DO
 ;;;     ...
-;;;     BREAK_IF_A_EQ #89
+;;;     BREAK_IF A = #89
 ;;;     ...
-;;;     CONTINUE_IF_VS
+;;;     CONTINUE_IF VS
 ;;;     ...
 ;;;     dex
 ;;;     WHILE_POS
 ;;;
 ;;;     REPEAT
 ;;;     ...
-;;;     BREAK_IF_Y_EQ #0
+;;;     BREAK_IF Y = #0
 ;;;     ...
-;;;     UNTIL_A_EQ #'/'
+;;;     UNTIL A = #'/'
 ;;;
 ;;; Macros:
 ;;;     DO                 aliases: REPEAT
+;;;     WHILE
+;;;     UNTIL
 ;;;
-;;;     WHILE_ZS           aliases: WHILE_EQ, WHILE_ZERO
-;;;     WHILE_ZC           aliases: WHILE_NE, WHILE_NOT_ZERO
-;;;     WHILE_CC           aliases: WHILE_LT
-;;;     WHILE_CS           aliases: WHILE_GE
-;;;     WHILE_VC
-;;;     WHILE_VS
-;;;     WHILE_NC           aliases: WHILE_POS, WHILE_PLUS
-;;;     WHILE_NS           aliases: WHILE_NEG, WHILE_MINUS
-;;; ... and ditto for UNTIL_*
-;;;
-;;;     WHILE_A_EQ
-;;;     WHILE_A_NE
-;;;     WHILE_A_LT
-;;;     WHILE_A_GE
-;;; ... and ditto for *_X_* and *_Y_*
-;;; ... and ditto for UNTIL_*
-;;;
-;;;     CONTINUE_IF_ZS     aliases: CONTINUE_IF_EQ, CONTINUE_IF_ZERO
-;;;     CONTINUE_IF_ZC     aliases: CONTINUE_IF_NE, CONTINUE_IF_NOT_ZERO
-;;;     CONTINUE_IF_CC     aliases: CONTINUE_IF_LT
-;;;     CONTINUE_IF_CS     aliases: CONTINUE_IF_GE
-;;;     CONTINUE_IF_VC
-;;;     CONTINUE_IF_VS
-;;;     CONTINUE_IF_NC     aliases: CONTINUE_IF_POS, CONTINUE_IF_PLUS
-;;;     CONTINUE_IF_NS     aliases: CONTINUE_IF_NEG, CONTINUE_IF_MINUS
-;;;
-;;;     CONTINUE_IF_A_EQ
-;;;     CONTINUE_IF_A_NE
-;;;     CONTINUE_IF_A_LT
-;;;     CONTINUE_IF_A_GE
-;;; ... and ditto for *_X_* and *_Y_*
-;;;
-;;;     BREAK_IF_ZS        aliases: BREAK_IF_EQ, BREAK_IF_ZERO
-;;;     BREAK_IF_ZC        aliases: BREAK_IF_NE, BREAK_IF_NOT_ZERO
-;;;     BREAK_IF_CC        aliases: BREAK_IF_LT
-;;;     BREAK_IF_CS        aliases: BREAK_IF_GE
-;;;     BREAK_IF_VC
-;;;     BREAK_IF_VS
-;;;     BREAK_IF_NC        aliases: BREAK_IF_POS, BREAK_IF_PLUS
-;;;     BREAK_IF_NS        aliases: BREAK_IF_NEG, BREAK_IF_MINUS
-;;;
-;;;     BREAK_IF_A_EQ
-;;;     BREAK_IF_A_NE
-;;;     BREAK_IF_A_LT
-;;;     BREAK_IF_A_GE
-;;; ... and ditto for *_X_* and *_Y_*
+;;;     CONTINUE_IF
+;;;     BREAK_IF
 
 ;;; A numeric variable for the current nesting depth of flow control
 ;;; structures. Incremented when entering a structure, decremented
@@ -323,34 +419,40 @@
 
 .define REPEAT DO
 
-.macro _CONTINUE_IF_BOP_ branchOp
-        __FLOW_LOG__ "continue_if"
-        branchOp __flow_loop_ident__ {"do_while"}
+.macro CONTINUE_IF expr, reg
+  _FLOW_STATEMENT "CONTINUE_IF"
+  _FLOW_PARSE_EXPR {expr}, reg
+
+  .if __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank reg
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, reg
+     .endif
+  .endif
+
+        __flow_branchOp1__ __flow_loop_ident__ {"do_while"}
+
+  _FLOW_PARSE_CLEANUP
+  _FLOW_END_STATEMENT
 .endmacro
 
-.macro _CONTINUE_IF_COP_BOP_ compareOp, branchOp, arg, reg
-        __FLOW_LOG__ "continue_if"
-      .ifblank reg
-        compareOp arg
-      .else
-        compareOp arg,reg
-      .endif
-        branchOp __flow_loop_ident__ {"do_while"}
-.endmacro
+.macro BREAK_IF expr, reg
+  _FLOW_STATEMENT "BREAK_IF"
+  _FLOW_PARSE_EXPR {expr}, reg
 
-.macro _BREAK_IF_BOP_ branchOp
-        __FLOW_LOG__ "break_if"
-        branchOp __flow_loop_ident__ {"break"}
-.endmacro
+  .if __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank reg
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, reg
+     .endif
+  .endif
 
-.macro _BREAK_IF_COP_BOP_ compareOp, branchOp, arg, reg
-        __FLOW_LOG__ "break_if"
-      .ifblank reg
-        compareOp arg
-      .else
-        compareOp arg,reg
-      .endif
-        branchOp __flow_loop_ident__ {"break"}
+        __flow_branchOp1__ __flow_loop_ident__ {"break"}
+
+  _FLOW_PARSE_CLEANUP
+  _FLOW_END_STATEMENT
 .endmacro
 
 .macro _WHILE_BOP_ branchOp
@@ -378,101 +480,158 @@
         __DEC_IDENT__ __flow_loop_depth__
 .endmacro
 
+.macro WHILE expr, reg
+  _FLOW_STATEMENT "WHILE"
+  _FLOW_PARSE_EXPR {expr}, reg
+
+  .if __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank reg
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, reg
+     .endif
+  .endif
+
+        __flow_branchOp1__ __flow_loop_ident__ {"do_while"}
+
+        __flow_loop_ident__ {"break"} := *
+        .refto __flow_loop_ident__ {"break"}
+
+        __DEC_IDENT__ __flow_loop_depth__
+
+  _FLOW_PARSE_CLEANUP
+  _FLOW_END_STATEMENT
+.endmacro
+
+.macro UNTIL expr, reg
+  _FLOW_STATEMENT "UNTIL"
+  _FLOW_PARSE_EXPR {expr}, reg
+
+  .if __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank reg
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, reg
+     .endif
+  .endif
+
+        __flow_branchOp2__ __flow_loop_ident__ {"do_while"}
+
+        __flow_loop_ident__ {"break"} := *
+        .refto __flow_loop_ident__ {"break"}
+
+        __DEC_IDENT__ __flow_loop_depth__
+
+  _FLOW_PARSE_CLEANUP
+  _FLOW_END_STATEMENT
+.endmacro
 
 ;;; ============================================================
-;;; RTS_IF_*
+;;; RTS_IF
 ;;; ============================================================
 
 ;;; Macros:
-;;;     RTS_IF_ZS           aliases: RTS_IF_EQ, RTS_IF_ZERO
-;;;     RTS_IF_ZC           aliases: RTS_IF_NE, RTS_IF_NOT_ZERO
-;;;     RTS_IF_CC           aliases: RTS_IF_LT
-;;;     RTS_IF_CS           aliases: RTS_IF_GE
-;;;     RTS_IF_VC
-;;;     RTS_IF_VS
-;;;     RTS_IF_NC           aliases: RTS_IF_POS, RTS_IF_PLUS
-;;;     RTS_IF_NS           aliases: RTS_IF_NEG, RTS_IF_MINUS
-;;;
-;;;     RTS_IF_A_EQ
-;;;     RTS_IF_A_NE
-;;;     RTS_IF_A_LT
-;;;     RTS_IF_A_GE
-;;; ... and ditto for *_X_* and *_Y_*
+;;;     RTS_IF
 
-.macro _RTS_IF_BOP_ branchOp
-        .local  skip
-        branchOp skip
+.macro RTS_IF expr, reg
+  _FLOW_STATEMENT "RTS_IF"
+  _FLOW_PARSE_EXPR {expr}, reg
+
+  .if __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank reg
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, reg
+     .endif
+  .endif
+
+        .local skip
+        __flow_branchOp2__ skip
         rts
 skip:
-.endmacro
 
-.macro _RTS_IF_COP_BOP_ compareOp, branchOp, arg, reg
-    .ifblank reg
-        compareOp arg
-    .else
-        compareOp arg,reg
-    .endif
-        .local  skip
-        branchOp skip
-        rts
-skip:
+  _FLOW_PARSE_CLEANUP
+  _FLOW_END_STATEMENT
 .endmacro
 
 
 ;;; ============================================================
-;;; Produce the actual user-friendly macros
+;;; Flag Aliases
 ;;; ============================================================
 
-.macro _FLOW_DEFINE_FLAG_MACROS_ cond, branchOp1, branchOp2
-        .define .ident(.sprintf("IF_%s", .string(cond))) _IF_BOP_ branchOp2
-        .define .ident(.sprintf("ELSE_IF_%s", .string(cond))) _ELSE_IF_BOP_ branchOp2
-        .define .ident(.sprintf("WHILE_%s", .string(cond))) _WHILE_BOP_ branchOp1
-        .define .ident(.sprintf("UNTIL_%s", .string(cond))) _WHILE_BOP_ branchOp2
-        .define .ident(.sprintf("CONTINUE_IF_%s", .string(cond))) _CONTINUE_IF_BOP_ branchOp1
-        .define .ident(.sprintf("BREAK_IF_%s", .string(cond))) _BREAK_IF_BOP_ branchOp1
-        .define .ident(.sprintf("RTS_IF_%s", .string(cond))) _RTS_IF_BOP_ branchOp2
+.define EQ       ZS
+.define ZERO     ZS
+.define NE       ZC
+.define NOT_ZERO ZC
+.define MINUS    NS             ; TODO: Deprecate/remove
+.define NEG      NS
+.define PLUS     NC             ; TODO: Deprecate/remove
+.define POS      NC
+.define GE       CS
+.define LT       CC
+
+;;; ============================================================
+;;; Compatibility Macros
+;;; ============================================================
+
+;;; e.g. IF_EQ, IF_A_LT, etc
+
+.macro _FLOW_DEFINE_FLAG_MACROS_ cond
+        .define .ident(.sprintf("IF_%s", cond)) IF .ident(cond)
+        .define .ident(.sprintf("ELSE_IF_%s", cond)) ELSE_IF .ident(cond)
+        .define .ident(.sprintf("WHILE_%s", cond)) WHILE .ident(cond)
+        .define .ident(.sprintf("UNTIL_%s", cond)) UNTIL .ident(cond)
+        .define .ident(.sprintf("CONTINUE_IF_%s", cond)) CONTINUE_IF .ident(cond)
+        .define .ident(.sprintf("BREAK_IF_%s", cond)) BREAK_IF .ident(cond)
+        .define .ident(.sprintf("RTS_IF_%s", cond)) RTS_IF .ident(cond)
 .endmacro
-.macro _FLOW_DEFINE_COMPARE_MACROS_ reg, cond, compareOp, branchOp1, branchOp2
-        .define .ident(.sprintf("IF_%s_%s", reg, .string(cond))) _IF_COP_BOP_ compareOp, branchOp2,
-        .define .ident(.sprintf("ELSE_IF_%s_%s", reg, .string(cond))) _ELSE_IF_COP_BOP_ compareOp, branchOp2,
-        .define .ident(.sprintf("WHILE_%s_%s", reg, .string(cond))) _WHILE_COP_BOP_ compareOp, branchOp1,
-        .define .ident(.sprintf("UNTIL_%s_%s", reg, .string(cond))) _WHILE_COP_BOP_ compareOp, branchOp2,
-        .define .ident(.sprintf("CONTINUE_IF_%s_%s", reg, .string(cond))) _CONTINUE_IF_COP_BOP_ compareOp, branchOp1,
-        .define .ident(.sprintf("BREAK_IF_%s_%s", reg, .string(cond))) _BREAK_IF_COP_BOP_ compareOp, branchOp1,
-        .define .ident(.sprintf("RTS_IF_%s_%s", reg, .string(cond))) _RTS_IF_COP_BOP_ compareOp, branchOp2,
+.macro _FLOW_DEFINE_COMPARE_MACROS_ cond
+        .define .ident(.sprintf("IF_A_%s", cond)) IF A .ident(cond)
+        .define .ident(.sprintf("ELSE_IF_A_%s", cond)) ELSE_IF A .ident(cond)
+        .define .ident(.sprintf("WHILE_A_%s", cond)) WHILE A .ident(cond)
+        .define .ident(.sprintf("UNTIL_A_%s", cond)) UNTIL A .ident(cond)
+        .define .ident(.sprintf("CONTINUE_IF_A_%s", cond)) CONTINUE_IF A .ident(cond)
+        .define .ident(.sprintf("BREAK_IF_A_%s", cond)) BREAK_IF A .ident(cond)
+        .define .ident(.sprintf("RTS_IF_A_%s", cond)) RTS_IF A .ident(cond)
+
+        .define .ident(.sprintf("IF_X_%s", cond)) IF X.ident(cond)
+        .define .ident(.sprintf("ELSE_IF_X_%s", cond)) ELSE_IF X.ident(cond)
+        .define .ident(.sprintf("WHILE_X_%s", cond)) WHILE X.ident(cond)
+        .define .ident(.sprintf("UNTIL_X_%s", cond)) UNTIL X.ident(cond)
+        .define .ident(.sprintf("CONTINUE_IF_X_%s", cond)) CONTINUE_IF X.ident(cond)
+        .define .ident(.sprintf("BREAK_IF_X_%s", cond)) BREAK_IF X.ident(cond)
+        .define .ident(.sprintf("RTS_IF_X_%s", cond)) RTS_IF X.ident(cond)
+
+        .define .ident(.sprintf("IF_Y_%s", cond)) IF Y .ident(cond)
+        .define .ident(.sprintf("ELSE_IF_Y_%s", cond)) ELSE_IF Y .ident(cond)
+        .define .ident(.sprintf("WHILE_Y_%s", cond)) WHILE Y .ident(cond)
+        .define .ident(.sprintf("UNTIL_Y_%s", cond)) UNTIL Y .ident(cond)
+        .define .ident(.sprintf("CONTINUE_IF_Y_%s", cond)) CONTINUE_IF Y .ident(cond)
+        .define .ident(.sprintf("BREAK_IF_Y_%s", cond)) BREAK_IF Y .ident(cond)
+        .define .ident(.sprintf("RTS_IF_Y_%s", cond)) RTS_IF Y .ident(cond)
 .endmacro
 
-_FLOW_DEFINE_FLAG_MACROS_ ZS, beq, bne
-_FLOW_DEFINE_FLAG_MACROS_ ZC, bne, beq
-_FLOW_DEFINE_FLAG_MACROS_ CS, bcs, bcc
-_FLOW_DEFINE_FLAG_MACROS_ CC, bcc, bcs
-_FLOW_DEFINE_FLAG_MACROS_ VS, bvs, bvc
-_FLOW_DEFINE_FLAG_MACROS_ VC, bvc, bvs
-_FLOW_DEFINE_FLAG_MACROS_ NS, bmi, bpl
-_FLOW_DEFINE_FLAG_MACROS_ NC, bpl, bmi
+_FLOW_DEFINE_FLAG_MACROS_ "ZS"
+_FLOW_DEFINE_FLAG_MACROS_ "ZC"
+_FLOW_DEFINE_FLAG_MACROS_ "CS"
+_FLOW_DEFINE_FLAG_MACROS_ "CC"
+_FLOW_DEFINE_FLAG_MACROS_ "VS"
+_FLOW_DEFINE_FLAG_MACROS_ "VC"
+_FLOW_DEFINE_FLAG_MACROS_ "NS"
+_FLOW_DEFINE_FLAG_MACROS_ "NC"
 
-_FLOW_DEFINE_FLAG_MACROS_ EQ,       beq, bne
-_FLOW_DEFINE_FLAG_MACROS_ ZERO,     beq, bne
-_FLOW_DEFINE_FLAG_MACROS_ NE,       bne, beq
-_FLOW_DEFINE_FLAG_MACROS_ NOT_ZERO, bne, beq
-_FLOW_DEFINE_FLAG_MACROS_ GE,       bcs, bcc
-_FLOW_DEFINE_FLAG_MACROS_ LT,       bcc, bcs
-_FLOW_DEFINE_FLAG_MACROS_ MINUS,    bmi, bpl
-_FLOW_DEFINE_FLAG_MACROS_ NEG,      bmi, bpl
-_FLOW_DEFINE_FLAG_MACROS_ PLUS,     bpl, bmi
-_FLOW_DEFINE_FLAG_MACROS_ POS,      bpl, bmi
+_FLOW_DEFINE_FLAG_MACROS_ "EQ"
+_FLOW_DEFINE_FLAG_MACROS_ "ZERO"
+_FLOW_DEFINE_FLAG_MACROS_ "NE"
+_FLOW_DEFINE_FLAG_MACROS_ "NOT_ZERO"
+_FLOW_DEFINE_FLAG_MACROS_ "GE"
+_FLOW_DEFINE_FLAG_MACROS_ "LT"
+_FLOW_DEFINE_FLAG_MACROS_ "MINUS"
+_FLOW_DEFINE_FLAG_MACROS_ "NEG"
+_FLOW_DEFINE_FLAG_MACROS_ "PLUS"
+_FLOW_DEFINE_FLAG_MACROS_ "POS"
 
-_FLOW_DEFINE_COMPARE_MACROS_ "A", EQ, cmp, beq, bne
-_FLOW_DEFINE_COMPARE_MACROS_ "A", NE, cmp, bne, beq
-_FLOW_DEFINE_COMPARE_MACROS_ "A", LT, cmp, bcc, bcs
-_FLOW_DEFINE_COMPARE_MACROS_ "A", GE, cmp, bcs, bcc
-
-_FLOW_DEFINE_COMPARE_MACROS_ "X", EQ, cpx, beq, bne
-_FLOW_DEFINE_COMPARE_MACROS_ "X", NE, cpx, bne, beq
-_FLOW_DEFINE_COMPARE_MACROS_ "X", LT, cpx, bcc, bcs
-_FLOW_DEFINE_COMPARE_MACROS_ "X", GE, cpx, bcs, bcc
-
-_FLOW_DEFINE_COMPARE_MACROS_ "Y", EQ, cpy, beq, bne
-_FLOW_DEFINE_COMPARE_MACROS_ "Y", NE, cpy, bne, beq
-_FLOW_DEFINE_COMPARE_MACROS_ "Y", LT, cpy, bcc, bcs
-_FLOW_DEFINE_COMPARE_MACROS_ "Y", GE, cpy, bcs, bcc
+_FLOW_DEFINE_COMPARE_MACROS_ "EQ"
+_FLOW_DEFINE_COMPARE_MACROS_ "NE"
+_FLOW_DEFINE_COMPARE_MACROS_ "LT"
+_FLOW_DEFINE_COMPARE_MACROS_ "GE"
