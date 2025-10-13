@@ -580,13 +580,11 @@ do_byte:
 
 do_nibble:
         and     #%00001111
-        tax
-        lda     hex_digits,x
-        jsr     write_byte
-        rts
-
-hex_digits:
-        .byte   "0123456789ABCDEF"
+        sed                     ; BCD Hex to ASCII trick c/o Lee Davison
+        cmp     #10             ; >= 10?
+        adc     #'0'            ; +$30 (i.e. '0') if < 10, +$40 (i.e. 'A') -10 if >= 10
+        cld
+        jmp     write_byte
 .endproc ; append_hex
 
 .endproc ; FormatMessage

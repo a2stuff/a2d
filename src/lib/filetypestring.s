@@ -50,14 +50,21 @@ str_file_type:
         lsr     a
         lsr     a
         lsr     a
-        tax
-        copy8   hex_digits,x, str_file_type+2
+        jsr     hex_to_ascii
+        sta     str_file_type+2
 
         pla                     ; A = file_type
-        and     #$0F
-        tax
-        copy8   hex_digits,x, str_file_type+3
+        jsr     hex_to_ascii
+        sta     str_file_type+3
 
+        rts
+
+hex_to_ascii:
+        and     #%00001111
+        sed                     ; BCD Hex to ASCII trick c/o Lee Davison
+        cmp     #10             ; >= 10?
+        adc     #'0'            ; +$30 (i.e. '0') if < 10, +$40 (i.e. 'A') -10 if >= 10
+        cld
         rts
 
 ;;; Map ProDOS file type to string (for listings/Get Info).
@@ -122,8 +129,5 @@ type_names_table:
         .byte   "REL" ; rel *
         .byte   "SYS" ; system *
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 3
-
-hex_digits:
-        .byte   "0123456789ABCDEF"
 
 .endproc ; ComposeFileTypeString
