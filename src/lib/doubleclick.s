@@ -8,7 +8,7 @@
     DO
         copy8   event_params+MGTK::Event::coords,x, coords,x
         dex
-    WHILE_POS
+    WHILE POS
 
         ldx     #DeskTopSettings::dblclick_speed
         jsr     ReadSetting
@@ -64,7 +64,7 @@ consume:
         sta     delta
         lda     event_params + MGTK::Event::xcoord+1
         sbc     xcoord+1
-    IF_NEG
+    IF NEG
         ;; is -delta < x < 0 ?
         lda     delta
         cmp     #AS_BYTE(-kDoubleClickDeltaX)
@@ -84,7 +84,7 @@ check_y:
         sta     delta
         lda     event_params+MGTK::Event::ycoord+1
         sbc     ycoord+1
-    IF_NEG
+    IF NEG
         ;; is -delta < y < 0 ?
         lda     delta
         cmp     #AS_BYTE(-kDoubleClickDeltaY)

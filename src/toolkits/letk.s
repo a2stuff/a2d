@@ -145,11 +145,11 @@ penXOR:         .byte   MGTK::penXOR
         add16_8 rect+MGTK::Rect::y1, #kTextBoxTextVOffset-1, pos+MGTK::Point::ycoord
 
         bit     options         ; bit7 = centered
-    IF_NS
+    IF NS
         add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
 
         jsr     _PrepTextParams
-      IF_NOT_ZERO
+      IF NOT_ZERO
         MGTK_CALL MGTK::TextWidth, text_params
       END_IF
 
@@ -210,7 +210,7 @@ a_record  .addr
 
         ldy     #LETK::LineEditRecord::active_flag
         lda     (a_record),y
-    IF_NC
+    IF NC
 ret:    rts
     END_IF
 
@@ -350,7 +350,7 @@ END_PARAM_BLOCK
         pla                     ; A = len
         sec
         sbc     caret_pos
-    IF_NOT_ZERO
+    IF NOT_ZERO
         sta     text_params+MGTK::TextWidthParams::length
         MGTK_CALL MGTK::DrawText, text_params
     END_IF
@@ -390,7 +390,7 @@ ycoord  .word
         sta     len
 
         sub16   params::xcoord, pos + MGTK::Point::xcoord, params::xcoord
-    IF_MINUS
+    IF MINUS
         lda     #0
         beq     set             ; always
     END_IF
@@ -402,12 +402,12 @@ ycoord  .word
         sta     text_params+MGTK::TextWidthParams::length
     DO
         cmp16   text_params+MGTK::TextWidthParams::width, params::xcoord
-        BREAK_IF_CS
+        BREAK_IF CS
         inc     text_params+MGTK::TextWidthParams::length
         lda     text_params+MGTK::TextWidthParams::length
-        BREAK_IF_A_EQ len
+        BREAK_IF A EQ len
         MGTK_CALL MGTK::TextWidth, text_params
-    WHILE_ZERO                  ; always
+    WHILE ZERO                  ; always
 
         lda     text_params+MGTK::TextWidthParams::length
 set:    pha
@@ -445,7 +445,7 @@ ret:    rts
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y    ; A = caret_pos
         ldy     #0
-    IF_A_NE     (a_buf),y
+    IF A NE     (a_buf),y
         clc
         adc     #1
         ldy     #LETK::LineEditRecord::caret_pos
@@ -462,7 +462,7 @@ ret:    rts
         ;; Anything to delete?
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y    ; A = caret_pos
-    IF_NOT_ZERO
+    IF NOT_ZERO
         sec
         sbc     #1
         sta     (a_record),y
@@ -481,7 +481,7 @@ ret:    rts
         lda     (a_record),y    ; A = caret_pos
 
         ldy     #0
-    IF_A_NE     (a_buf),y
+    IF A NE     (a_buf),y
         jsr     _DeleteCharCommon
     END_IF
 
@@ -557,17 +557,17 @@ modified:
         ;; Is there room?
         ldy     #0
         lda     (a_buf),y
-    IF_A_LT     max_length
+    IF A LT     max_length
         ;; Move everything to right of caret up
         tay
       DO
-        BREAK_IF_Y_EQ caret_pos
+        BREAK_IF Y EQ caret_pos
         lda     (a_buf),y
         iny
         sta     (a_buf),y
         dey
         dey
-      WHILE_NOT_ZERO            ; always
+      WHILE NOT_ZERO            ; always
 
         ;; Insert
         lda     char
@@ -580,7 +580,7 @@ modified:
         sta     (a_buf),y
 
         bit     options         ; bit7 = centered
-      IF_NS
+      IF NS
         ;; Redraw everything
         jsr     _ClearAndDrawText
       ELSE
@@ -666,16 +666,16 @@ ret:    rts
         lda     (a_record),y
         tay
     DO
-        BREAK_IF_Y_EQ len
+        BREAK_IF Y EQ len
         iny
         iny
         lda     (a_buf),y
         dey
         sta     (a_buf),y
-    WHILE_NE                    ; always
+    WHILE NE                    ; always
 
         bit     options         ; bit7 = centered
-    IF_NS
+    IF NS
         ;; Redraw everything
         jmp     _ClearAndDrawText
     END_IF
@@ -683,7 +683,7 @@ ret:    rts
         ;; Redraw everything to the right of the caret
         jsr     _RedrawRightOfCaret
         jsr     _PrepTextParams
-    IF_NOT_ZERO
+    IF NOT_ZERO
         MGTK_CALL MGTK::TextWidth, text_params
         add16   pos, text_params+MGTK::TextWidthParams::width, rect+MGTK::Rect::x1
     END_IF
@@ -698,7 +698,7 @@ ret:    rts
 
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
-    IF_NOT_ZERO
+    IF NOT_ZERO
         sta     text_params+MGTK::TextWidthParams::length
         MGTK_CALL MGTK::TextWidth, text_params
     END_IF
@@ -726,7 +726,7 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, pos
 
         jsr     _PrepTextParams
-    IF_NOT_ZERO
+    IF NOT_ZERO
         MGTK_CALL MGTK::DrawText, text_params
     END_IF
 
@@ -750,7 +750,7 @@ a_record  .addr
         lda     (a_buf),y
         ldy     #LETK::LineEditRecord::caret_pos
         cmp     (a_record),y    ; len >= caret_pos
-    IF_LT
+    IF LT
         sta     (a_record),y    ; no, clamp caret_pos
     END_IF
 

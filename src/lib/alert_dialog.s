@@ -166,7 +166,7 @@ start:
         lda     SELF_MODIFIED,x
         sta     alert_params,x
         dex
-    WHILE_POS
+    WHILE POS
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
 
@@ -176,7 +176,7 @@ start:
 
 .ifdef AD_SAVEBG
         bit     alert_params::options
-    IF_VS                       ; V = use save area
+    IF VS                       ; V = use save area
         MGTK_CALL MGTK::SaveScreenRect, alert_rect
     END_IF
 .endif ; AD_SAVEBG
@@ -201,7 +201,7 @@ start:
 
         ldax    #exclamation_bitmap
         ldy     alert_params::buttons
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ldax    #question_bitmap
     END_IF
         stax    alert_bitmap_params::mapbits
@@ -229,7 +229,7 @@ start:
         ;; Yes/No/All?
         lda     alert_params::buttons
         and     #$0F
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Draw, yes_button
         BTK_CALL BTK::Draw, no_button
         BTK_CALL BTK::Draw, all_button
@@ -266,15 +266,15 @@ done_buttons:
 advance:
     DO
         iny
-        BREAK_IF_Y_EQ len
+        BREAK_IF Y EQ len
         lda     (ptr),y
-    WHILE_A_NE  #' '
+    WHILE A NE  #' '
 
         ;; Does this much fit?
 test:   sty     textwidth_params::length
         MGTK_CALL MGTK::TextWidth, textwidth_params
         cmp16   textwidth_params::width, #kWrapWidth
-    IF_LT
+    IF LT
         ;; Yes, record possible split position, maybe continue.
         ldy     textwidth_params::length
         sty     split_pos
@@ -308,7 +308,7 @@ done:
         ;; Play bell
 
         bit     alert_params::options
-    IF_NS                       ; N = play sound
+    IF NS                       ; N = play sound
         jsr     Bell
     END_IF
 
@@ -318,7 +318,7 @@ done:
 event_loop:
 .ifdef AD_EJECTABLE
         bit     ejectable_flag
-    IF_NS
+    IF NS
         jsr     WaitForDiskOrEsc
         jeq     finish_ok
         jmp     finish_cancel
@@ -343,7 +343,7 @@ event_loop:
         bpl     check_only_ok
 
         cmp     #CHAR_ESCAPE
-    IF_EQ
+    IF EQ
         ;; Cancel
         BTK_CALL BTK::Flash, cancel_button
 finish_cancel:
@@ -358,22 +358,22 @@ finish_cancel:
         pha
         lda     alert_params::buttons
         and     #$0F
-    IF_NOT_ZERO
+    IF NOT_ZERO
         pla
 
-      IF_A_EQ   #kShortcutNo
+      IF A EQ   #kShortcutNo
         BTK_CALL BTK::Flash, no_button
         lda     #kAlertResultNo
         jmp     finish
       END_IF
 
-      IF_A_EQ   #kShortcutYes
+      IF A EQ   #kShortcutYes
         BTK_CALL BTK::Flash, yes_button
         lda     #kAlertResultYes
         jmp     finish
       END_IF
 
-      IF_A_EQ   #kShortcutAll
+      IF A EQ   #kShortcutAll
         BTK_CALL BTK::Flash, all_button
         lda     #kAlertResultAll
         jmp     finish
@@ -384,7 +384,7 @@ finish_cancel:
         pla
 .endif ; AD_YESNOALL
 
-    IF_A_EQ     #kShortcutTryAgain
+    IF A EQ     #kShortcutTryAgain
 do_try_again:
         BTK_CALL BTK::Flash, try_again_button
         lda     #kAlertResultTryAgain
@@ -418,7 +418,7 @@ HandleButtonDown:
 
         ;; Cancel
         MGTK_CALL MGTK::InRect, cancel_button+BTK::ButtonRecord::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         jne     was_no_button
         lda     #kAlertResultCancel
@@ -432,10 +432,10 @@ HandleButtonDown:
 .ifdef AD_YESNOALL
         lda     alert_params::buttons
         and     #$0F
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Yes & No & All
         MGTK_CALL MGTK::InRect, yes_button+BTK::ButtonRecord::rect
-      IF_NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, yes_button
         bne     was_no_button
         lda     #kAlertResultYes
@@ -444,7 +444,7 @@ HandleButtonDown:
       END_IF
 
         MGTK_CALL MGTK::InRect, no_button+BTK::ButtonRecord::rect
-      IF_NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, no_button
         bne     was_no_button
         lda     #kAlertResultNo
@@ -489,7 +489,7 @@ was_no_button:
 finish:
 .ifdef AD_SAVEBG
         bit     alert_params::options
-    IF_VS                       ; V = use save area
+    IF VS                       ; V = use save area
         pha
         MGTK_CALL MGTK::RestoreScreenRect, alert_rect
         pla

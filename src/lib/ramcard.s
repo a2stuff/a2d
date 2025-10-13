@@ -51,7 +51,7 @@
         addr := *+1
         sta     SELF_MODIFIED,x
         dex
-    WHILE_POS
+    WHILE POS
 
 .ifdef RC_AUXMEM
         sta     ALTZPON
@@ -85,7 +85,7 @@
         addr := *+1
         sta     SELF_MODIFIED,x
         dex
-    WHILE_POS
+    WHILE POS
 
 .ifdef RC_AUXMEM
         sta     ALTZPON

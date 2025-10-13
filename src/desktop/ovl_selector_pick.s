@@ -53,7 +53,7 @@ check_about_saving:
 
 DoAdd:  ldx     #kRunListPrimary
         lda     selector_menu
-    IF_A_GE     #kSelectorMenuFixedItems + 8
+    IF A GE     #kSelectorMenuFixedItems + 8
         inx
     END_IF
         lda     #$00
@@ -90,13 +90,13 @@ DoAdd:  ldx     #kRunListPrimary
 :
         sta     copy_when
         jsr     ReadFile
-    IF_NEG
+    IF NEG
         jmp     Exit::ret
     END_IF
 
         copy16  selector_list, num_primary_run_list_entries
         lda     which_run_list
-    IF_A_EQ     #kRunListPrimary
+    IF A EQ     #kRunListPrimary
         lda     num_primary_run_list_entries
         cmp     #kSelectorListNumPrimaryRunListEntries
         beq     ShowFullAlert
@@ -105,14 +105,14 @@ DoAdd:  ldx     #kRunListPrimary
         inc     selector_list + kSelectorListNumPrimaryRunListOffset
         jsr     AssignEntryData
         jsr     WriteFile
-      IF_NEG
+      IF NEG
         jmp     Exit::ret
       END_IF
         jmp     Exit
     END_IF
 
         lda     num_secondary_run_list_entries
-    IF_A_NE     #kSelectorListNumSecondaryRunListEntries
+    IF A NE     #kSelectorListNumSecondaryRunListEntries
         ldy     copy_when       ; Flags
         lda     num_secondary_run_list_entries
         clc
@@ -120,7 +120,7 @@ DoAdd:  ldx     #kRunListPrimary
         jsr     AssignSecondaryRunListEntryData
         inc     selector_list + kSelectorListNumSecondaryRunListOffset
         jsr     WriteFile
-      IF_NEG
+      IF NEG
         jmp     Exit::ret
       END_IF
         jmp     Exit
@@ -147,7 +147,7 @@ copy_when:
 
         jsr     OpenWindow
         jsr     ReadFile
-    IF_NS
+    IF NS
         jmp     DoCancel
     END_IF
 
@@ -187,7 +187,7 @@ dialog_loop:
 
         lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
-    IF_ZS                       ; Z set on success
+    IF ZS                       ; Z set on success
         inc     clean_flag      ; mark as "dirty"
     END_IF
 
@@ -216,7 +216,7 @@ dialog_loop:
         ldx     #kRunListPrimary
         lda     shortcut_picker_record::selected_index
         cmp     #kSelectorListNumPrimaryRunListEntries
-    IF_GE
+    IF GE
         inx                     ; #kRunListSecondary
     END_IF
 
@@ -249,7 +249,7 @@ dialog_loop:
         pla
         tax
         pla
-        RTS_IF_NOT_ZERO
+        RTS_IF NOT_ZERO
 
         inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
@@ -258,25 +258,25 @@ dialog_loop:
         lda     copy_when_conversion_table-1,y
         sta     copy_when
         jsr     ReadFile
-    IF_NS
+    IF NS
         jmp     CloseWindow
     END_IF
 
         lda     shortcut_picker_record::selected_index
-    IF_A_GE     #kSelectorListNumPrimaryRunListEntries
+    IF A GE     #kSelectorListNumPrimaryRunListEntries
         ;; Was on secondary run list - is it still?
         lda     which_run_list
         cmp     #kRunListSecondary
         beq     reuse_same_index
 
         lda     num_primary_run_list_entries
-      IF_A_EQ   #kSelectorListNumPrimaryRunListEntries
+      IF A EQ   #kSelectorListNumPrimaryRunListEntries
         jmp     ShowFullAlert
       END_IF
 
         lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
-      IF_ZC
+      IF ZC
         jmp     CloseWindow
       END_IF
 
@@ -292,13 +292,13 @@ dialog_loop:
         beq     reuse_same_index
 
         lda     num_secondary_run_list_entries
-      IF_A_EQ   #kSelectorListNumSecondaryRunListEntries
+      IF A EQ   #kSelectorListNumSecondaryRunListEntries
         jmp     ShowFullAlert
       END_IF
 
         lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
-      IF_ZC
+      IF ZC
         jmp     CloseWindow
       END_IF
 
@@ -319,7 +319,7 @@ reuse_same_index:
         ldy     copy_when
         jsr     AssignEntryData
         jsr     WriteFile
-    IF_ZC
+    IF ZC
         jmp     CloseWindow
     END_IF
 
@@ -351,7 +351,7 @@ copy_when_conversion_table:
 
 .proc DoCancel
         lda     selector_action
-    IF_A_EQ     #SelectorAction::edit
+    IF A EQ     #SelectorAction::edit
         lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
     END_IF
@@ -403,11 +403,11 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         BTK_CALL BTK::Draw, entry_picker_cancel_button
 
         lda     selector_action
-    IF_A_EQ     #SelectorAction::edit
+    IF A EQ     #SelectorAction::edit
         param_jump DrawTitleCentered, label_edit
     END_IF
 
-    IF_A_EQ     #SelectorAction::delete
+    IF A EQ     #SelectorAction::delete
         param_jump DrawTitleCentered, label_del
     END_IF
 
@@ -456,16 +456,16 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 handle_button:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-    IF_ZERO
+    IF ZERO
         return  #$FF
     END_IF
 
-    IF_A_NE     #MGTK::Area::content
+    IF A NE     #MGTK::Area::content
         return  #$FF
     END_IF
 
         lda     findwindow_params::window_id
-    IF_A_NE     winfo_entry_picker
+    IF A NE     winfo_entry_picker
         return  #$FF
     END_IF
 
@@ -475,18 +475,18 @@ handle_button:
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, entry_picker_ok_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_ok_button
-      IF_NC
+      IF NC
         lda     #$00            ; OK selected
       END_IF
         rts
     END_IF
 
         MGTK_CALL MGTK::InRect, entry_picker_cancel_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_cancel_button
-      IF_NC
+      IF NC
         lda     #$01            ; cancel selected
       END_IF
         rts
@@ -494,9 +494,9 @@ handle_button:
 
         COPY_STRUCT screentowindow_params::window, shortcut_picker_params::coords
         OPTK_CALL OPTK::Click, shortcut_picker_params
-    IF_NC
+    IF NC
         jsr     DetectDoubleClick
-      IF_NC
+      IF NC
         pha
         BTK_CALL BTK::Flash, entry_picker_ok_button
         pla
@@ -511,7 +511,7 @@ handle_button:
 
 .proc HandleKey
         lda     event_params::modifiers
-    IF_A_EQ     #MGTK::event_modifier_solid_apple
+    IF A EQ     #MGTK::event_modifier_solid_apple
         return  #$FF
     END_IF
 
@@ -525,7 +525,7 @@ handle_button:
 
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
-    IF_NE
+    IF NE
         lda     event_params::key
       IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     shortcut_picker_params::key
@@ -540,7 +540,7 @@ handle_button:
 
 .proc HandleKeyReturn
         BTK_CALL BTK::Flash, entry_picker_ok_button
-    IF_NS
+    IF NS
         return  #$FF            ; ignore
     END_IF
         return  #0
@@ -558,11 +558,11 @@ handle_button:
 .proc UpdateOKButton
         lda     #BTK::kButtonStateNormal
         bit     shortcut_picker_record::selected_index
-    IF_NS
+    IF NS
         lda     #BTK::kButtonStateDisabled
     END_IF
 
-    IF_A_NE     entry_picker_ok_button::state
+    IF A NE     entry_picker_ok_button::state
         sta     entry_picker_ok_button::state
         BTK_CALL BTK::Hilite, entry_picker_ok_button
     END_IF
@@ -577,25 +577,25 @@ handle_button:
     DO
         sta     entries_flag_table,x
         dex
-    WHILE_POS
+    WHILE POS
 
         ldx     #0
     DO
-        BREAK_IF_X_EQ num_primary_run_list_entries
+        BREAK_IF X EQ num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
         inx
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     #0
     DO
-        BREAK_IF_X_EQ num_secondary_run_list_entries
+        BREAK_IF X EQ num_secondary_run_list_entries
         txa
         clc
         adc     #8
         sta     entries_flag_table+8,x
         inx
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         rts
 .endproc ; PopulateEntriesFlagTable
@@ -629,7 +629,7 @@ entries_flag_table:
     DO
         copy8   text_input_buf,y, (ptr_file),y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Assign flags to file
         ldy     #kSelectorEntryFlagsOffset
@@ -644,7 +644,7 @@ entries_flag_table:
     DO
         copy8   path_buf0,y, (ptr_file),y
         dey
-    WHILE_POS
+    WHILE POS
 
         jsr     UpdateMenuResources
 
@@ -675,7 +675,7 @@ index:  .byte   0
     DO
         copy8   text_input_buf,y, (ptr),y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Assign flags
         ldy     #kSelectorEntryFlagsOffset
@@ -690,7 +690,7 @@ index:  .byte   0
     DO
         copy8   path_buf0,y, (ptr),y
         dey
-    WHILE_POS
+    WHILE POS
         rts
 
 index:  .byte   0
@@ -750,7 +750,7 @@ secondary_run_list:
 loop:   lda     index
         sec
         sbc     #ptr2
-    IF_A_EQ     num_secondary_run_list_entries
+    IF A EQ     num_secondary_run_list_entries
         dec     selector_list + kSelectorListNumSecondaryRunListOffset
         dec     num_secondary_run_list_entries
         jmp     WriteFile
@@ -779,7 +779,7 @@ index:  .byte   0
     DO
         copy8   (ptr2),y, (ptr1),y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; And flags
         ldy     #kSelectorEntryFlagsOffset
@@ -798,7 +798,7 @@ index:  .byte   0
     DO
         copy8   (ptr2),y, (ptr1),y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; MoveEntryDown
@@ -851,7 +851,7 @@ finish:
         adc     #kSelectorMenuFixedItems
         sta     selector_menu
         ;; No separator if it is last
-    IF_A_EQ     #kSelectorMenuFixedItems
+    IF A EQ     #kSelectorMenuFixedItems
         dec     selector_menu
     END_IF
 
@@ -873,7 +873,7 @@ finish:
     DO
         copy8   (ptr_file),y, (ptr_res),y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; _CopyString
@@ -985,7 +985,7 @@ filename:
         inx
         iny
         copy8   filename,x, filename_buffer,y
-    WHILE_X_NE  filename
+    WHILE X NE  filename
         sty     filename_buffer
 
         copy8   #0, second_try_flag
@@ -996,7 +996,7 @@ retry:  MLI_CALL CREATE, create_origpfx_params
 
         ;; First time - ask if we should even try.
         lda     second_try_flag
-    IF_ZERO
+    IF ZERO
         inc     second_try_flag
         lda     #kErrSaveChanges
         jsr     ShowAlert
@@ -1066,10 +1066,10 @@ not_found:
       DO
         sta     (ptr),y
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inc     ptr+1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         return  #0
 .endproc ; ReadFile
 

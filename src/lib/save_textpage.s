@@ -33,13 +33,13 @@
         lda     (ptr_screen),y
         sta     (ptr_main_buf),y
         dey
-      WHILE_POS
+      WHILE POS
         jsr     IncPointers
         dex
-    WHILE_POS
+    WHILE POS
 
         pla
-    IF_NC
+    IF NC
         sta     CLR80STORE
     END_IF
         rts
@@ -63,13 +63,13 @@
         lda     (ptr_main_buf),y
         sta     (ptr_screen),y
         dey
-      WHILE_POS
+      WHILE POS
         jsr     IncPointers
         dex
-    WHILE_POS
+    WHILE POS
 
         pla
-    IF_NC
+    IF NC
         sta     CLR80STORE
     END_IF
         rts

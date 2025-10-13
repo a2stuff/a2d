@@ -66,14 +66,14 @@ fail:   jmp     JUMP_TABLE_SHOW_ALERT
 start:
         ;; Get active window's path
         jsr     GetWinPath
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #kErrNoWindowsOpen
         bne     fail            ; always
     END_IF
 
         ;; Find BASIC.SYSTEM
         jsr     CheckBasicSystem
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #kErrBasicSysNotFound
         bne     fail
     END_IF
@@ -122,11 +122,11 @@ quit:   MLI_CALL QUIT, quit_params
         iny
         inx
         copy8   str_extras_basic,y, bs_path,x
-    WHILE_Y_NE  str_extras_basic
+    WHILE Y NE  str_extras_basic
         stx     bs_path
 
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        RTS_IF_CC
+        RTS_IF CC
 
         ;; Not there - search from `prefix_path` upwards
         ldx     prefix_path
@@ -134,7 +134,7 @@ quit:   MLI_CALL QUIT, quit_params
     DO
         copy8   prefix_path,x, bs_path,x
         dex
-    WHILE_POS
+    WHILE POS
 
         inc     bs_path
         ldx     bs_path
@@ -147,7 +147,7 @@ loop:
         inx
         iny
         copy8   str_basic_system,y, bs_path,x
-    WHILE_Y_NE  str_basic_system
+    WHILE Y NE  str_basic_system
         stx     bs_path
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         bcs     not_found
@@ -161,7 +161,7 @@ not_found:
         cmp     #'/'
         beq     found_slash
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
 no_bs:  return  #$FF            ; non-zero is failure
 
@@ -203,7 +203,7 @@ str_basic_system:
     DO
         copy8   (ptr),y, prefix_path,y
         dey
-    WHILE_POS
+    WHILE POS
         return  #0
 
 fail:   return  #1

@@ -120,7 +120,7 @@ exit:
         cmp     last,x
         bne     diff
         dex
-    WHILE_POS
+    WHILE POS
         rts                     ; no change
 
         ;; Different! update
@@ -149,14 +149,14 @@ last:   .tag    DateTime
     DO
         add16_8 vector_cursor::xcoord, #kCharWidth+1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         dec16   vector_cursor::xcoord
         ldx     #kCharXShift    ; scale x
     DO
         asl16   vector_cursor::xcoord
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         sub16   #kScreenWidth, vector_cursor::xcoord, vector_cursor::xcoord
         asr16   vector_cursor::xcoord
@@ -175,9 +175,9 @@ last:   .tag    DateTime
         jsr     DrawVectorChar
 
         lda     idx
-        BREAK_IF_A_EQ str_time
+        BREAK_IF A EQ str_time
         inc     idx
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
 done:
         rts
@@ -216,13 +216,13 @@ ploop:  copy8   (ptr),y, num_verts ; A = num vertices
       DO
         asl16   cur::xcoord
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         ldx     #kCharYShift    ; scale y
       DO
         asl16   cur::ycoord
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         ;; Offset
         add16   vector_cursor::xcoord, cur::xcoord, cur::xcoord
@@ -232,7 +232,7 @@ ploop:  copy8   (ptr),y, num_verts ; A = num vertices
         pha
 
         lda     vindex
-      IF_ZERO
+      IF ZERO
         MGTK_CALL MGTK::MoveTo, cur
       ELSE
         MGTK_CALL MGTK::LineTo, cur
@@ -244,7 +244,7 @@ ploop:  copy8   (ptr),y, num_verts ; A = num vertices
         inc     vindex
 
         dec     num_verts
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         lda     (ptr),y         ; A = num vertices, 0 if done
         beq     advance         ; done
@@ -269,9 +269,9 @@ more_flag:      .byte   0
         ;; Find index
         ldx     #0
     DO
-        BREAK_IF_A_EQ char_to_index,x
+        BREAK_IF A EQ char_to_index,x
         inx
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
 
         ;; Get poly address
         txa
@@ -386,7 +386,7 @@ poly_colon:
 
         lda     MACHID
         and     #kMachIDHasClock
-    IF_ZERO
+    IF ZERO
         lda     #ERR_DEVICE_NOT_CONNECTED
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF

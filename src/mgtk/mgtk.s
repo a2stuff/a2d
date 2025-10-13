@@ -2001,7 +2001,7 @@ src_width_bytes:
         sta     $80
 
         jsr     ClipRect
-        RTS_IF_CC
+        RTS_IF CC
 
         jsr     SetUpFillMode
         lda     width_bytes
@@ -4588,7 +4588,7 @@ done:   rts
         jsr     CallMouse
 
         plp
-    IF_NS
+    IF NS
         bit     LCBANK1         ; Bank RAM back in if needed
         bit     LCBANK1
     END_IF
@@ -6200,7 +6200,7 @@ event_loop:
 
         ;; --------------------
 
-    IF_A_EQ     #MGTK::EventKind::button_up
+    IF A EQ     #MGTK::EventKind::button_up
         bit     was_in_menu_flag
         jmi     handle_click
         lda     cur_open_menu_id
@@ -6210,7 +6210,7 @@ event_loop:
 
         ;; --------------------
 
-    IF_A_EQ     #MGTK::EventKind::key_down
+    IF A EQ     #MGTK::EventKind::key_down
         ;; Set up `sel_menu_*`
         lda     menu_index    ; TODO: Verify this is valid
         sta     sel_menu_index
@@ -6229,13 +6229,13 @@ event_loop:
 
         ;; Done?
         bit     movement_cancel
-      IF_NS
+      IF NS
         ;; Menu selection or cancel
         jsr     close_menu
         jsr     RestoreParamsActivePort
 
         lda     sel_menu_item_index
-       IF_ZERO
+       IF ZERO
         ;; Cancel - just exit with 0,0
         tax
         jmp     store_xa_at_params
@@ -6246,7 +6246,7 @@ event_loop:
         lda     curmenu::menu_id
         pha                     ; A = menu id
         ldx     cur_hilited_menu_item ; left non-zero if selected
-       IF_ZERO
+       IF ZERO
         sta     HiliteMenuImpl::menu_param
         jsr     HiliteMenuImpl
        END_IF
@@ -6257,7 +6257,7 @@ event_loop:
 
         ;; Did `sel_menu_index` change?
         ldx     sel_menu_index
-      IF_X_NE   last_menu_index
+      IF X NE   last_menu_index
         lda     #0
         sta     cur_hilited_menu_item
         jsr     GetMenu         ; X = index
@@ -6267,7 +6267,7 @@ event_loop:
 
         ;; Did `sel_menu_item_index` change?
         ldx     sel_menu_item_index
-      IF_X_NE   cur_hilited_menu_item
+      IF X NE   cur_hilited_menu_item
         jmp     imi_change
       END_IF
 
@@ -7241,7 +7241,7 @@ end:    rts
         ;; if the window is not found.
 .proc WindowByIdOrExit
         jsr     WindowById
-        RTS_IF_NOT_ZERO
+        RTS_IF NOT_ZERO
 
         EXIT_CALL MGTK::Error::window_not_found
 .endproc ; WindowByIdOrExit
@@ -7581,7 +7581,7 @@ no_goaway:
 
         lda     current_winfo::options
         and     #MGTK::Option::go_away_box
-    IF_ZERO
+    IF ZERO
         ;; There was no "go away" box, so further offset left
         tya
         subax8  #kGoAwayLeft + kGoAwayWidth
@@ -7614,7 +7614,7 @@ no_goaway:
 :
 
         cmp16   right, left     ; skip if degenerate
-    IF_POS
+    IF POS
         jsr     PaintRectImpl
     END_IF
 
@@ -7929,8 +7929,8 @@ not_selected:
 
 .proc SelectWindowImpl
         jsr     WindowByIdOrExit
-    IF_A_EQ     current_window
-        RTS_IF_X_EQ current_window+1
+    IF A EQ     current_window
+        RTS_IF X EQ current_window+1
     END_IF
 
         jsr     LinkWindow
@@ -8049,7 +8049,7 @@ win:    jsr     WindowByIdOrExit
 
         asl     preserve_zp_flag
         plp
-        RTS_IF_CS
+        RTS_IF CS
 
         jsr     EndUpdateImpl
         FALL_THROUGH_TO err_obscured
@@ -8118,7 +8118,7 @@ win_port  .addr
         bpl     :-
 
         jsr     ClipRect
-        RTS_IF_CC
+        RTS_IF CC
 
         ;; Load window's grafport into current_grafport.
         ldy     #MGTK::Winfo::port
@@ -8518,12 +8518,12 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         sta     sel_window_id
 
         plp
-    IF_CC
+    IF CC
         ;; Port was not valid; the window was entirely offscreen, so
         ;; erasing and posting updates is not required. But newly
         ;; active window may need redrawing.
         jsr     TopWindow
-      IF_NE
+      IF NE
         jsr     SetDesktopPort
         jsr     DrawWindowPreserveContent
       END_IF
@@ -8806,7 +8806,7 @@ activate:
 toggle: eor     params::activate
         and     #1
         eor     (window),y
-        RTS_IF_A_EQ (window),y  ; no-op if no change
+        RTS_IF A EQ (window),y  ; no-op if no change
         sta     (window),y
 
         jsr     HideCursorSaveParams
@@ -9519,7 +9519,7 @@ check_win:
 
         ldy     #MGTK::Winfo::vthumbpos
 :       lda     params::thumbpos
-        RTS_IF_A_EQ (window),y  ; no-op if no change
+        RTS_IF A EQ (window),y  ; no-op if no change
         sta     (window),y
 
         jsr     HideCursorSaveParams
@@ -9718,7 +9718,7 @@ no_modifiers:
 
 .proc HandleKeyboardMouse
         lda     kbd_mouse_state
-        RTS_IF_ZERO
+        RTS_IF ZERO
 
         cmp     #kKeyboardMouseStateMouseKeys
         beq     KbdMouseMousekeys
@@ -10012,7 +10012,7 @@ yclamp: cmp     #<kScreenHeight
 
 .proc KbdMouseDoWindow
         jsr     GetKey
-        RTS_IF_CC
+        RTS_IF CC
 
         cmp     #CHAR_ESCAPE
         bne     :+

@@ -205,7 +205,7 @@ port:           .addr   grafport_win
 
 .proc Exit
         ldx     listbox_rec::selected_index
-    IF_NC
+    IF NC
         copy8   control_block+ControlBlock::dev_list,x, control_block+ControlBlock::unit_num
     END_IF
 
@@ -227,7 +227,7 @@ port:           .addr   grafport_win
     END_IF
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Modified
         lda     event_params::key
         jsr     ToUpperCase
@@ -239,11 +239,11 @@ port:           .addr   grafport_win
     END_IF
 
         ;; Not modified
-    IF_A_EQ     #CHAR_ESCAPE
+    IF A EQ     #CHAR_ESCAPE
         jmp     Exit
     END_IF
 
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         jmp     Exit
     END_IF
 
@@ -259,10 +259,10 @@ port:           .addr   grafport_win
         bne     done
 
         lda     findwindow_params::window_id
-    IF_A_EQ     #kPickerWindowId
+    IF A EQ     #kPickerWindowId
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
-      IF_NC
+      IF NC
         jsr     DetectDoubleClick
         jpl     Exit
       END_IF
@@ -278,14 +278,14 @@ port:           .addr   grafport_win
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-    IF_NE
+    IF NE
         BTK_CALL BTK::Track, ok_button
         bmi     done
         jmp     Exit
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF_NE
+    IF NE
         BTK_CALL BTK::Track, cancel_button
         bmi     done
         copy8   #$FF, listbox_rec::selected_index
@@ -536,7 +536,7 @@ remainder:      .word   0                 ; (out)
     END_IF
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Modified
         lda     event_params::key
         jsr     ToUpperCase
@@ -548,11 +548,11 @@ remainder:      .word   0                 ; (out)
     END_IF
 
         ;; Not modified
-    IF_A_EQ     #CHAR_ESCAPE
+    IF A EQ     #CHAR_ESCAPE
         jmp     ExitOK
     END_IF
 
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         jmp     Import
     END_IF
 
@@ -568,10 +568,10 @@ remainder:      .word   0                 ; (out)
         bne     done
 
         lda     findwindow_params::window_id
-    IF_A_EQ     #kCatalogWindowId
+    IF A EQ     #kCatalogWindowId
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
-      IF_NC
+      IF NC
         jsr     DetectDoubleClick
         jpl     Import
       END_IF
@@ -587,14 +587,14 @@ remainder:      .word   0                 ; (out)
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, import_button::rect
-    IF_NE
+    IF NE
         BTK_CALL BTK::Track, import_button
         bmi     done
         jmp     Import
     END_IF
 
         MGTK_CALL MGTK::InRect, close_button::rect
-    IF_NE
+    IF NE
         BTK_CALL BTK::Track, close_button
         bmi     done
         jmp     ExitOK
@@ -658,7 +658,7 @@ done:   rts
     DO
         copy8   (pt_ptr),y, pt,y
         dey
-    WHILE_POS
+    WHILE POS
         pla
 
         ;; Calculate address of `CatalogEntry`
@@ -675,7 +675,7 @@ done:   rts
         ;; Locked?
         ldy     #CatalogEntry::TypeFlags
         lda     (ptr),y
-    IF_NS
+    IF NS
         copy16  #kLockedX, pt::xcoord
         MGTK_CALL MGTK::MoveTo, pt
         param_call DrawString, str_locked
@@ -724,9 +724,9 @@ type_table:
         ldx     #0
     DO
         lsr     a
-        BREAK_IF_CS
+        BREAK_IF CS
         inx
-    WHILE_X_NE  #8
+    WHILE X NE  #8
         rts
 .endproc ; clz
 
@@ -776,7 +776,7 @@ type_table:
 
         ;; TODO: Make this more elegant
         lda     str_from_int
-    IF_A_EQ     #1
+    IF A EQ     #1
         copy8   str_from_int+1, str_from_int+3
         lda     #'0'
         sta     str_from_int+1
@@ -785,7 +785,7 @@ type_table:
         rts
     END_IF
 
-    IF_A_EQ     #2
+    IF A EQ     #2
         copy8   str_from_int+2, str_from_int+3
         copy8   str_from_int+1, str_from_int+2
         copy8   #'0', str_from_int+1
@@ -828,7 +828,7 @@ str_from_int:   PASCAL_STRING "000000" ; filled in by IntToString
 start:
         ;; Get active window's path
         jsr     GetWinPath
-    IF_NE
+    IF NE
         lda     #kErrNoWindowsOpen
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
@@ -844,7 +844,7 @@ start:
         jsr     FetchControlBlock
 
         lda     control_block+ControlBlock::unit_num
-        RTS_IF_EQ
+        RTS_IF EQ
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         jsr     LoadCatalogEntries
@@ -854,13 +854,13 @@ start:
         pha                     ; A = error code (0 = success)
         jsr     FetchControlBlock
         pla                     ; A = error code (0 = success)
-    IF_NE
+    IF NE
         jsr     JUMP_TABLE_SHOW_ALERT
     END_IF
 
 
         bit     dirty_flag
-        RTS_IF_NC               ; no change
+        RTS_IF NC               ; no change
 
         ;; Force window refresh
         window_id := $06
@@ -879,12 +879,12 @@ start:
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
         jsr     IsDiskII
-      IF_ZS
+      IF ZS
         ldx     index
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
         jsr     IsDOS33
-       IF_ZS
+       IF ZS
         ;; It is DOS 3.3 - append it to the list
         ldx     index
         lda     DEVLST,x
@@ -896,7 +896,7 @@ start:
        END_IF
       END_IF
         dec     index
-    WHILE_POS
+    WHILE POS
 
         rts
 
@@ -956,12 +956,12 @@ file_loop:
         sta     entry_buf+aux::CatalogEntry::Name+1,x
         iny
         inx
-    WHILE_X_NE  #dos33::MaxFilenameLen
+    WHILE X NE  #dos33::MaxFilenameLen
 
     DO
         dex
         lda     entry_buf+aux::CatalogEntry::Name+1,x
-    WHILE_A_EQ  #' '
+    WHILE A EQ  #' '
         inx
         stx     entry_buf+aux::CatalogEntry::Name
 
@@ -1089,7 +1089,7 @@ start:
 
         ;; Truncate to 15 or less
         lda     str_name
-    IF_A_GE     #15
+    IF A GE     #15
         lda     #15
     END_IF
         sta     str_name
@@ -1102,10 +1102,10 @@ start:
 
         ;; Digit is fine
         jsr     IsDigit
-      IF_CS
+      IF CS
         ;; Uppercase is fine
         jsr     IsUpperAlpha
-       IF_CS
+       IF CS
         ;; Anything else becomes '.'
         lda     #'.'
         sta     str_name,x
@@ -1113,11 +1113,11 @@ start:
       END_IF
 
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Can't start with non-alpha, replace with 'X'
         lda     str_name+1
-    IF_A_LT     #'A'
+    IF A LT     #'A'
         copy8   #'X', str_name+1
     END_IF
 
@@ -1128,7 +1128,7 @@ start:
         lda     prefix_path
         clc
         adc     str_name
-    IF_A_GE     #kMaxPathLength ; not +1 because we'll add '/'
+    IF A GE     #kMaxPathLength ; not +1 because we'll add '/'
         lda     #ERR_INVALID_PATHNAME
         rts
     END_IF
@@ -1143,7 +1143,7 @@ start:
         inx
         iny
         copy8   str_name,x, path_buf,y
-    WHILE_X_NE  str_name
+    WHILE X NE  str_name
         sty     path_buf
 
         ;; NOTE: Can't show alerts, as that will trash aux $E00...$1FFF
@@ -1156,7 +1156,7 @@ start:
         ldx     entry_buf+aux::CatalogEntry::Sector
         ldy     control_block+ControlBlock::unit_num
         jsr     RWTSRead
-        RTS_IF_CS
+        RTS_IF CS
         jsr     IncProgress
 
         ;; Load first file sector
@@ -1165,7 +1165,7 @@ start:
         ldx     TS_BUF+dos33::TSList::FirstDataS
         ldy     control_block+ControlBlock::unit_num
         jsr     RWTSRead
-        RTS_IF_CS
+        RTS_IF CS
         jsr     IncProgress
         copy8   #dos33::TSList::FirstDataT+2, tslist_offset
 
@@ -1174,7 +1174,7 @@ start:
         and     #$7F
         pha                     ; A = type
 
-    IF_A_EQ     #dos33::FileTypeBinary
+    IF A EQ     #dos33::FileTypeBinary
         ;; Binary header:
         ;; +$00 WORD address (low/high)
         ;; +$02 WORD length (low/high)
@@ -1186,7 +1186,7 @@ start:
         jmp     translate_type
     END_IF
 
-    IF_A_EQ     #dos33::FileTypeApplesoft
+    IF A EQ     #dos33::FileTypeApplesoft
         ;; Applesoft BASIC header:
         ;; +$00 WORD length (low/high)
         copy16  #$0801, create_params::aux_type
@@ -1197,7 +1197,7 @@ start:
         jmp     translate_type
     END_IF
 
-    IF_A_EQ     #dos33::FileTypeInteger
+    IF A EQ     #dos33::FileTypeInteger
         ;; Integer BASIC header:
         ;; +$00 WORD length (low/high)
         copy16  #$0000, create_params::aux_type
@@ -1222,9 +1222,9 @@ translate_type:
 
         ;; Create target file
         JUMP_TABLE_MLI_CALL CREATE, create_params
-        RTS_IF_CS
+        RTS_IF CS
         JUMP_TABLE_MLI_CALL OPEN, open_params
-        RTS_IF_CS
+        RTS_IF CS
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     set_eof_params::ref_num
@@ -1236,7 +1236,7 @@ translate_type:
 write_sector:
         JUMP_TABLE_MLI_CALL WRITE, write_params
         ;; TODO: CLOSE on error
-        RTS_IF_CS
+        RTS_IF CS
 
 read_sector:
         ;; Read next sector
@@ -1248,7 +1248,7 @@ read_sector:
         ldx     TS_BUF+1,y      ; Sector
         ldy     control_block+ControlBlock::unit_num
         jsr     RWTSRead
-        RTS_IF_CS
+        RTS_IF CS
         jsr     IncProgress
         inc     tslist_offset
         inc     tslist_offset
@@ -1269,7 +1269,7 @@ next_tslist_sector:
         ldx     TS_BUF+dos33::TSList::NextSector
         ldy     control_block+ControlBlock::unit_num
         jsr     RWTSRead
-        RTS_IF_CS
+        RTS_IF CS
         jsr     IncProgress
         copy8   #dos33::TSList::FirstDataT, tslist_offset
         jmp     read_sector
@@ -1283,7 +1283,7 @@ finish:
         JSR_TO_AUX aux::Catalog::UpdateProgressMeter
 
         bit     set_eof_flag
-    IF_NS
+    IF NS
         JUMP_TABLE_MLI_CALL SET_EOF, set_eof_params
     END_IF
         JUMP_TABLE_MLI_CALL CLOSE, close_params
@@ -1322,9 +1322,9 @@ no:     sec
         ldx     #0
     DO
         lsr     a
-        BREAK_IF_CS
+        BREAK_IF CS
         inx
-    WHILE_X_NE  #8
+    WHILE X NE  #8
         rts
 .endproc ; clz
 
@@ -1379,7 +1379,7 @@ prefix_path:    .res    ::kPathBufferSize, 0
     DO
         copy8   (ptr),y, prefix_path,y
         dey
-    WHILE_POS
+    WHILE POS
         return  #0
 
 fail:   return  #1
@@ -1397,10 +1397,10 @@ fail:   return  #1
 start:
         sta     read_block_params::unit_num
         JUMP_TABLE_MLI_CALL READ_BLOCK, read_block_params
-    IF_ZERO
+    IF ZERO
         lda     RWTS_BLOCK_BUF+1
         cmp     #$A5
-      IF_EQ
+      IF EQ
         lda     RWTS_BLOCK_BUF+2
         cmp     #$27
       END_IF
@@ -1440,14 +1440,14 @@ DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
 
         ;; Read the whole block
         JUMP_TABLE_MLI_CALL READ_BLOCK, block_params
-        RTS_IF_CS
+        RTS_IF CS
 
         ;; Copy sector data out from appropriate half
         ldy     #0
     DO
         copy8   (src_ptr),y, (dst_ptr),y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         clc
         rts
@@ -1470,14 +1470,14 @@ DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
 
         ;; Read the whole block
         JUMP_TABLE_MLI_CALL READ_BLOCK, block_params
-        RTS_IF_CS
+        RTS_IF CS
 
         ;; Copy sector data into place in appropriate half
         ldy     #0
     DO
         copy8   (src_ptr),y, (dst_ptr),y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Write the updated block back out
         JUMP_TABLE_MLI_CALL WRITE_BLOCK, block_params

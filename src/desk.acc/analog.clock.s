@@ -121,7 +121,7 @@ exit:
         copy16  ticks_outer_ys,x, pt1::ycoord
 
         lda     tfives
-      IF_ZERO
+      IF ZERO
         copy16  ticks_inner2_xs,x, pt2::xcoord
         copy16  ticks_inner2_ys,x, pt2::ycoord
         copy8   #4, tfives
@@ -136,7 +136,7 @@ exit:
 
         inc     tindex
         lda     tindex
-    WHILE_A_NE  #60
+    WHILE A NE  #60
 
         rts
 
@@ -158,7 +158,7 @@ tfives: .byte   0
         cmp     last,x
         bne     diff
         dex
-    WHILE_POS
+    WHILE POS
         rts                     ; no change
 
         ;; Different! update
@@ -250,7 +250,7 @@ min_offset:
 
         lda     MACHID
         and     #kMachIDHasClock
-    IF_ZERO
+    IF ZERO
         lda     #ERR_DEVICE_NOT_CONNECTED
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF

@@ -194,7 +194,7 @@ remainder:      .word   0       ; (out)
 
         ;; open file, get length
         JSR_TO_MAIN OpenFile
-        RTS_IF_NOT_ZERO
+        RTS_IF NOT_ZERO
 
         lda     open_params::ref_num
         sta     read_params::ref_num
@@ -267,25 +267,25 @@ title:  jsr     OnTitleBarClick
         lda     event_params::key
         jsr     ToUpperCase
 
-    IF_X_EQ     #3
+    IF X EQ     #3
         ;; Double modifiers
-      IF_A_EQ   #CHAR_UP        ; OA+SA+Up = Home
+      IF A EQ   #CHAR_UP        ; OA+SA+Up = Home
         jsr     ScrollTop
         jmp     InputLoop
       END_IF
 
-      IF_A_EQ   #CHAR_DOWN      ; OA+SA+Down = End
+      IF A EQ   #CHAR_DOWN      ; OA+SA+Down = End
         jsr     ScrollBottom
         ;; jmp     InputLoop
       END_IF
     ELSE
         ;; Single modifier
-      IF_A_EQ   #CHAR_UP        ; Apple+Up = Page Up
+      IF A EQ   #CHAR_UP        ; Apple+Up = Page Up
         jsr     PageUp
         jmp     InputLoop
       END_IF
 
-      IF_A_EQ   #CHAR_DOWN      ; Apple+Down = Page Down
+      IF A EQ   #CHAR_DOWN      ; Apple+Down = Page Down
         jsr     PageDown
         ;; jmp     InputLoop
       END_IF
@@ -303,17 +303,17 @@ no_mod:
         cmp     #CHAR_ESCAPE
         jeq     DoClose
 
-    IF_A_EQ     #' '
+    IF A EQ     #' '
         jsr     ToggleMode
         jmp     InputLoop
     END_IF
 
-    IF_A_EQ     #CHAR_UP
+    IF A EQ     #CHAR_UP
         jsr     ScrollUp
         jmp     InputLoop
     END_IF
 
-    IF_A_EQ     #CHAR_DOWN
+    IF A EQ     #CHAR_DOWN
         jsr     ScrollDown
         ;; jmp     InputLoop
     END_IF
@@ -525,7 +525,7 @@ ForceScrollBottom := ScrollBottom::force
         copy16  max_visible_line, muldiv_params::denominator
         MGTK_CALL MGTK::MulDiv, muldiv_params
         lda     muldiv_params::result+1
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #kVScrollMax
     ELSE
         lda     muldiv_params::result
@@ -534,7 +534,7 @@ ForceScrollBottom := ScrollBottom::force
 
         lda     winfo::vscroll
         and     #MGTK::Scroll::option_active
-    IF_NOT_ZERO
+    IF NOT_ZERO
         copy8   #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
     END_IF
@@ -572,7 +572,7 @@ end:    rts
         offset_ptr := $08
 
         bit     record_offsets_flag
-    IF_NS
+    IF NS
         ;; Render the whole file (visible and invisible), and record
         ;; offsets for every Nth line as we go.
         copy16  #0, line_offsets
@@ -592,14 +592,14 @@ end:    rts
     DO
         lsr16   current_line        ; /= `kLineOffsetDelta`
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         copy16  current_line, offset_ptr
         ldx     #kLineOffsetShift
     DO
         asl16   current_line        ; *= `kLineOffsetDelta`
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Use previously recorded offset into file.
         asl16   offset_ptr
@@ -618,7 +618,7 @@ end:    rts
 
         ;; Select appropriate font
         lda     fixed_mode_flag
-    IF_ZERO
+    IF ZERO
         MGTK_CALL MGTK::SetFont, DEFAULT_FONT
     ELSE
         MGTK_CALL MGTK::SetFont, fixed_font
@@ -652,9 +652,9 @@ do_line:
 
         copy8   #0, visible_flag
         cmp16   current_line, first_visible_line
-    IF_GE
+    IF GE
         cmp16   last_visible_line, current_line
-      IF_GE
+      IF GE
         inc     visible_flag
       END_IF
     END_IF
@@ -678,14 +678,14 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
         ;; End of line
 
         bit     record_offsets_flag
-    IF_NS
+    IF NS
         ;; Doing a full pass. Determine current file offset.
         sub16   ptr, #default_buffer, cur_offset
         add16   cur_offset, buf_mark, cur_offset
 
         ;; Maybe record it
         dec     offset_counter
-      IF_ZERO
+      IF ZERO
         ldy     #0
         copy16in cur_offset, (offset_ptr),y
         add16_8 offset_ptr, #2
@@ -713,9 +713,9 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
 done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
 
         bit     record_offsets_flag
-    IF_NS
+    IF NS
         sub16   current_line, #kLinesPerPage - 1, max_visible_line
-      IF_NEG
+      IF NEG
         copy16  #0, max_visible_line
       END_IF
     END_IF
@@ -745,7 +745,7 @@ cur_offset:
 .proc GetCharWidth
         tay
         lda     fixed_mode_flag
-    IF_ZERO
+    IF ZERO
         lda     DEFAULT_FONT + MGTK::Font::charwidth,y
     ELSE
         lda     fixed_font + MGTK::Font::charwidth,y
@@ -774,7 +774,7 @@ loop:
         sta     (ptr),y
         cmp     #CHAR_RETURN
         beq     FinishTextRun
-    IF_A_EQ     #' '
+    IF A EQ     #' '
         sty     L0F9B
     END_IF
 
@@ -790,14 +790,14 @@ loop:
 :
         ;; Is there room?
         cmp16   remaining_width, run_width
-    IF_GE
+    IF GE
         inc     drawtext_params::textlen
         jmp     loop
     END_IF
 
         copy8   #0, tab_flag
         lda     L0F9B
-    IF_A_NE     #$FF
+    IF A NE     #$FF
         sta     drawtext_params::textlen
     END_IF
         inc     drawtext_params::textlen
@@ -827,7 +827,7 @@ run_width:  .word   0
         add16   run_width, line_pos::left, line_pos::left
         ldx     #0
 loop:   cmp16   times70,x, line_pos::left
-    IF_LT
+    IF LT
         inx
         inx
         cpx     #14
@@ -870,13 +870,13 @@ end:    rts
 
         ;; Pointing at second page already?
         lda     drawtext_params::textptr+1
-    IF_A_NE     #>default_buffer
+    IF A NE     #>default_buffer
         ;; Yes, shift second page down.
         ldy     #0
       DO
         copy8   default_buffer+$100,y, default_buffer,y
         iny
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         ;; Adjust pointers down a page too.
         dec     drawtext_params::textptr+1
@@ -943,7 +943,7 @@ prep:   lda     #$00
         ldx     #MGTK::activatectl_activate
         lda     max_visible_line
         ora     max_visible_line+1
-    IF_ZERO
+    IF ZERO
         ;; File entirely fits; deactivate scrollbar
         ldx     #MGTK::activatectl_deactivate
     END_IF
@@ -1030,7 +1030,7 @@ window_id:      .byte   kDAWindowId
         text_width      := text_params + 3
 
         lda     fixed_mode_flag
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ldax    #fixed_str
     ELSE
         ldax    #prop_str
@@ -1095,16 +1095,16 @@ filename:       .res    16
         ldy     INVOKE_PATH
     DO
         lda     INVOKE_PATH,y       ; find last '/'
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     #0
     DO
         copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-    WHILE_Y_NE  INVOKE_PATH
+    WHILE Y NE  INVOKE_PATH
         stx     filename
 
         copy16  #filename, STARTLO

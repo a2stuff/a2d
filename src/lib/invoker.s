@@ -30,7 +30,7 @@
         lda     invoker::get_info_params::file_type
 
 ;;; Binary file (BIN) - load and invoke at A$=AuxType
-    IF_A_EQ     #FT_BINARY
+    IF A EQ     #FT_BINARY
 
         lda     invoker::get_info_params::aux_type
         sta     jmp_addr
@@ -39,7 +39,7 @@
         sta     jmp_addr+1
         sta     invoker::read_params::data_buffer+1
 
-      IF_A_LT   #$0C            ; If loading at page < $0C00
+      IF A LT   #$0C            ; If loading at page < $0C00
         lda     #$BB            ; ... use a high address buffer ($BB00)
         SKIP_NEXT_2_BYTE_INSTRUCTION
       END_IF
@@ -96,7 +96,7 @@ load_target:
 
         ;; If interpreter, copy filename to interpreter buffer.
         lda     INVOKER_INTERPRETER
-    IF_NE
+    IF NE
         MLI_CALL SET_PREFIX, invoker::set_prefix_params
         bcs     exit
         ldy     INVOKER_FILENAME
@@ -104,7 +104,7 @@ load_target:
         lda     INVOKER_FILENAME,y
         sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol
         dey
-      WHILE_POS
+      WHILE POS
 
         ;; ProDOS 2.4's Bitsy Bye populates $380 with the path to the
         ;; interpreter, so set both for good measure.
@@ -117,19 +117,19 @@ load_target:
         sta     PRODOS_SYS_PATH,x
         sta     BITSY_SYS_PATH,x
         dex
-      WHILE_POS
+      WHILE POS
 
         ;; When launching BASIS.SYSTEM, ProDOS 2.4's Bitsy Bye populates
         ;; $280 with the path containing the target file.
         BITSY_DIR_PATH := $280
         bit     INVOKER_BITSY_COMPAT
-      IF_NS
+      IF NS
         ldy     INVOKER_PREFIX
        DO
         lda     INVOKER_PREFIX,y
         sta     BITSY_DIR_PATH,y
         dey
-       WHILE_POS
+       WHILE POS
       END_IF
 
     END_IF

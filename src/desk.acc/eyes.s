@@ -229,7 +229,7 @@ eye_rect:
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
@@ -282,7 +282,7 @@ test:
         ;; Compute absolute X delta
         sub16   event_params::xcoord, screentowindow_params::screen::xcoord, delta
         lda     delta+1
-    IF_NEG
+    IF NEG
         sub16   #0, delta, delta ; negate
     END_IF
         cmp16   delta, #kMoveThresholdX
@@ -291,7 +291,7 @@ test:
         ;; Compute absolute Y delta
         sub16   event_params::ycoord, screentowindow_params::screen::ycoord, delta
         lda     delta+1
-    IF_NEG
+    IF NEG
         sub16   #0, delta, delta ; negate
     END_IF
         cmp16   delta, #kMoveThresholdY
@@ -320,7 +320,7 @@ delta:  .word   0
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 common:
         lda     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -396,11 +396,11 @@ kMoveThresholdY = 5
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         ;; Defer until we have mouse coords
         lda     has_last_coords
-        RTS_IF_ZERO
+        RTS_IF ZERO
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -715,14 +715,14 @@ oval := $50
         ;; if (ovalWidth [16.0] < 0)
         ;;   ovalWidth [16.0] = 0
         bit     ovalWidth+1
-    IF_NEG
+    IF NEG
         copy16  #0, ovalWidth
     END_IF
 
         ;; if (ovalHeight [16.0] < 0)
         ;;   ovalHeight [16.0] = 0
         bit     ovalHeight+1
-    IF_NEG
+    IF NEG
         copy16  #0, ovalHeight
     END_IF
 
@@ -735,7 +735,7 @@ oval := $50
         ;; if (ovalWidth [16.0] > d0 [16.0])
         ;;   ovalWidth [16.0] = d0 [16.0]
         cmp16   ovalWidth, d0
-    IF_LT
+    IF LT
         copy16  d0, ovalWidth
     END_IF
 
@@ -745,7 +745,7 @@ oval := $50
         ;; if (ovalHeight [16.0] > d0 [16.0])
         ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
         cmp16   ovalHeight, d0
-    IF_LT
+    IF LT
         copy16  d0, ovalHeight
     END_IF
 
@@ -824,13 +824,13 @@ oval := $50
         tax
         lda     remainder+1
         sbc     divisor+1
-      IF_CS
+      IF CS
         stx     remainder
         sta     remainder+1
         inc     quotient
       END_IF
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 .endscope ; fixed_div
 
 
@@ -937,12 +937,12 @@ rotate:
         ;; if (vert [16.0] < oval.top [16.0])
         ;;   return;
         cmp16   vert, oval+OvalRec::top
-        RTS_IF_LT
+        RTS_IF LT
 
         ;; if (vert [16.0] >= oval.bottom [16.0])
         ;;   return;
         cmp16   vert, oval+OvalRec::bottom
-        RTS_IF_GE
+        RTS_IF GE
 
         ;; d0 [16.0] = oval.y [16.0];
         copy16  oval+OvalRec::yy, d0
@@ -1003,7 +1003,7 @@ endloop2:
         copy16  d0, temp        ; temp = d0
         lda     #0
         bit     temp+1          ; sign-extend
-    IF_NS
+    IF NS
         lda     #$FF
     END_IF
         sta     temp+2
@@ -1030,7 +1030,7 @@ endloop2:
     DO
         copy8   oval,y, (ptr),y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; SaveOval
@@ -1043,7 +1043,7 @@ endloop2:
     DO
         copy8   (ptr),y, oval,y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; LoadOval

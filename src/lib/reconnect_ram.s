@@ -7,7 +7,7 @@
 .proc ReconnectRAM
         ;; Did we detach S3D2 /RAM?
         lda     saved_ram_unitnum
-    IF_NOT_ZERO
+    IF NOT_ZERO
         inc     DEVCNT
         ldx     DEVCNT
         sta     DEVLST,x

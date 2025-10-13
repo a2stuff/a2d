@@ -29,7 +29,7 @@
 
         tax                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIgs
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ResumeSpeed::saved_cyareg := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     CYAREG
@@ -39,7 +39,7 @@
         ;; Restore speed on Mac IIe Option Card
         txa                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIeCard
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ResumeSpeed::saved_maciie := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     MACIIE
@@ -49,7 +49,7 @@
         ;; Restore speed on Laser 128
         txa                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsLaser128
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ResumeSpeed::saved_laserreg := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     LASER128EX_CFG
@@ -67,7 +67,7 @@
         ;; Slow down on IIgs
         tax                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIgs
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     CYAREG
         sta     ResumeSpeed::saved_cyareg
         and     #%01111111      ; clear bit 7
@@ -81,7 +81,7 @@
         ;; Restore speed on Mac IIe Option Card
         txa                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIeCard
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     MACIIE
         sta     ResumeSpeed::saved_maciie
         and     #%11111011      ; clear bit 2
@@ -92,7 +92,7 @@
         ;; Slow down on Laser 128 (EX or EX/2)
         txa                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsLaser128
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     LASER128EX_CFG
         sta     ResumeSpeed::saved_laserreg
         and     #$3F            ; mask off

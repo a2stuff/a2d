@@ -30,13 +30,13 @@
 
         ;; 24->12 hour clock?
         bit     clock_24hours
-    IF_NC
-      IF_A_GE   #12
+    IF NC
+      IF A GE   #12
         sec
         sbc     #12             ; 12...23 -> 0...11
       END_IF
 
-      IF_A_EQ     #0
+      IF A EQ     #0
         lda     #12             ; 0 -> 12
       END_IF
     END_IF
@@ -45,7 +45,7 @@
         pha
         txa                     ; tens (if > 0)
         bit     clock_24hours
-    IF_NC
+    IF NC
         cmp     #0              ; if 12-hour clock && 0, skip
         beq     ones
     END_IF
@@ -109,11 +109,11 @@ clock_24hours:
 .proc _Split
         ldx     #0
     DO
-        BREAK_IF_A_LT #10
+        BREAK_IF A LT #10
         sec
         sbc     #10
         inx
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
         rts
 .endproc ; _Split
 
@@ -176,7 +176,7 @@ month_offset_table:
     DO
         sta     (parsed_ptr),y
         dey
-    WHILE_POS
+    WHILE POS
         rts
 
 not_null:
@@ -220,7 +220,7 @@ year:   lda     #0
         ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.28.html
 tn28:   lda     ytmp            ; ytmp is still just one byte
-    IF_A_LT     #40
+    IF A LT     #40
         adc     #100
         sta     ytmp
     END_IF
@@ -330,7 +330,7 @@ prodos_2_5:
     DO
         lsr16   ytmp
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         lda     ytmp
         and     #%00011111      ; should be unnecessary

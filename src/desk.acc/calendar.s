@@ -232,7 +232,7 @@ first_dow:
         ;; If it is valid, parse it
         lda     auxdt::DATELO
         ora     auxdt::DATEHI
-    IF_NOT_ZERO
+    IF NOT_ZERO
         copy16  #datetime, $A   ; populate this struct
         ldax    #auxdt          ; use current date
         jsr     ParseDatetime
@@ -283,7 +283,7 @@ first_dow:
         jeq     IncDate
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
@@ -319,7 +319,7 @@ first_dow:
 
         lda     BUTN0
         and     BUTN1
-    IF_NS
+    IF NS
         sub16_8 datetime + ParsedDateTime::year, #10
         jmp     check
     END_IF
@@ -343,7 +343,7 @@ fin:    jsr     UpdateWindow
 
 .proc InvertDec
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_A_NE     #MGTK::Error::window_obscured
+    IF A NE     #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::InflateRect, shrink
@@ -368,7 +368,7 @@ fin:    jsr     UpdateWindow
 
         lda     BUTN0
         and     BUTN1
-    IF_NS
+    IF NS
         add16_8 datetime + ParsedDateTime::year, #10
         jmp     check
     END_IF
@@ -394,7 +394,7 @@ fin:    jsr     UpdateWindow
 
 .proc InvertInc
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_A_NE     #MGTK::Error::window_obscured
+    IF A NE     #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::InflateRect, shrink
@@ -429,7 +429,7 @@ fin:    jsr     UpdateWindow
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 common:
         bit     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -471,7 +471,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -481,7 +481,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         ;; Leap year adjustment (NOTE: only handles mod-4 rule, not mod-100 rule)
         lda     datetime + ParsedDateTime::year ; low byte
         and     #3              ; modulo 4
-    IF_ZERO
+    IF ZERO
         lda     #29
     ELSE
         lda     #28
@@ -511,7 +511,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         ;; Erase background if needed
         bit     full_flag
-    IF_NC
+    IF NC
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintRect, rect_month_year
     END_IF
@@ -527,7 +527,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         ;; Grid lines
 
         bit     full_flag
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPenSize, grid_pen
 
@@ -558,14 +558,14 @@ notpenXOR:      .byte   MGTK::notpenXOR
         MGTK_CALL MGTK::LineTo, SELF_MODIFIED, pt_end
 
         dec     index
-      WHILE_POS
+      WHILE POS
     END_IF
 
         ;; --------------------------------------------------
         ;; Day names
 
         bit full_flag
-    IF_NS
+    IF NS
         copy8   #6, index
       DO
         lda     index
@@ -577,7 +577,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         lda     index
         clc
         adc     first_dow
-      IF_A_GE   #7
+      IF A GE   #7
         ;; C=1
         sbc     #7
       END_IF
@@ -592,7 +592,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         jsr     DrawString
 
         dec     index
-      WHILE_POS
+      WHILE POS
     END_IF
 
         ;; --------------------------------------------------
@@ -612,8 +612,8 @@ notpenXOR:      .byte   MGTK::notpenXOR
         sbc     tmp
         clc
         adc     first_dow
-    IF_POS
-      IF_A_GE   #2
+    IF POS
+      IF A GE   #2
         ;; C=1
         sbc     #7
       END_IF
@@ -649,15 +649,15 @@ day_loop:
         lda     date
         ldx     #0
     DO
-        BREAK_IF_A_LT #10
+        BREAK_IF A LT #10
         sbc     #10
         inx
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
 
         ora     #'0'            ; convert to digit
         sta     str_date+2      ; units place
         txa
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ora     #'0'            ; convert to digit
         sta     str_date+1      ; tens place
     END_IF
@@ -671,7 +671,7 @@ draw_date:
         ;; Next
         inc     col
         lda     col
-    IF_A_EQ     #7
+    IF A EQ     #7
         copy8   #0, col
         inc     row
         copy16  date_base::xcoord, date_pos
@@ -687,7 +687,7 @@ draw_date:
         ;; Left/right arrow buttons
 
         bit     full_flag
-    IF_NS
+    IF NS
         BTK_CALL BTK::Draw, left_button
         BTK_CALL BTK::Draw, right_button
     END_IF
@@ -738,7 +738,7 @@ UpdateWindow := PaintWindow::update
     DO
         inx
         sub16   tmp, #1000, tmp
-    WHILE_CS
+    WHILE CS
         add16   tmp, #1000, tmp
         txa
         ora     #'0'            ; convert to digit
@@ -749,7 +749,7 @@ UpdateWindow := PaintWindow::update
     DO
         inx
         sub16   tmp, #100, tmp
-    WHILE_CS
+    WHILE CS
         add16   tmp, #100, tmp
         txa
         ora     #'0'            ; convert to digit
@@ -760,7 +760,7 @@ UpdateWindow := PaintWindow::update
     DO
         inx
         sub16   tmp, #10, tmp
-    WHILE_CS
+    WHILE CS
         add16   tmp, #10, tmp
         txa
         ora     #'0'            ; convert to digit

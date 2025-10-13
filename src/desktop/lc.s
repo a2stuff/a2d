@@ -71,7 +71,7 @@ ASSERT_EQUALS *, WriteSettingFromAux, "entry point"
     DO
         copy8   (params_src),y, params-1,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Bank and call
         jsr     BankInAux
@@ -153,14 +153,14 @@ params: .res    3
     DO
         copy8   (port_ptr),y, desktop_grafport,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Determine if the update's maprect is already below the header; if
         ;; not, we need to offset the maprect below the header to prevent
         ;; icons from drawing over the header when vertically scrolled.
         sub16   desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, tmpw
         scmp16  tmpw, #kWindowHeaderHeight
-    IF_NEG
+    IF NEG
         ;; Adjust grafport to account for header
         add16   window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
         add16   window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
@@ -274,7 +274,7 @@ op:     lda     SELF_MODIFIED
         lda     $06 + 4,x
         pha
         inx
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Restore return address
         hi := *+1
@@ -313,7 +313,7 @@ op:     lda     SELF_MODIFIED
         pla
         sta     $06,x
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Restore return address to stack
         hi := *+1
@@ -425,7 +425,7 @@ op:     lda     SELF_MODIFIED
         inx
         inx
         dey
-   WHILE_NOT_ZERO
+   WHILE NOT_ZERO
         stx     stack_offset
 
         ;; Loop over string
@@ -441,7 +441,7 @@ op:     lda     SELF_MODIFIED
     DO
         jsr     read_byte
 
-      IF_A_EQ   #'%'
+      IF A EQ   #'%'
         ;; escape sequence: "%<index><type>"
 
         ;; Get argument index, translate to stack ptr:
@@ -468,34 +468,34 @@ op:     lda     SELF_MODIFIED
         plax
 
         ;; Now Y = type, A,X = argument
-       IF_Y_EQ  #'d'            ; decimal - decimal integer
+       IF Y EQ  #'d'            ; decimal - decimal integer
         jsr     IntToString
         param_jump append_string, str_from_int
        END_IF
 
-       IF_Y_EQ  #'n'            ; number - decimal integer with separators
+       IF Y EQ  #'n'            ; number - decimal integer with separators
         jsr     IntToStringWithSeparators
         param_jump append_string, str_from_int
        END_IF
 
-       IF_Y_EQ  #'k'            ; size - in K from blocks
+       IF Y EQ  #'k'            ; size - in K from blocks
         jsr     PushPointers
         jsr     ComposeSizeString
         jsr     PopPointers
         param_jump append_string, text_buffer2
        END_IF
 
-       IF_Y_EQ  #'x'            ; hex - hexadecimal word
+       IF Y EQ  #'x'            ; hex - hexadecimal word
         jsr     append_hex
         jmp     resume
        END_IF
 
-       IF_Y_EQ  #'s'            ; string pointer
+       IF Y EQ  #'s'            ; string pointer
         jmp     append_string
        END_IF
 
         ;; If 'c', char in A is written, X is ignored
-       IF_Y_NE  #'c'            ; char
+       IF Y NE  #'c'            ; char
         ;; Otherwise, so treat as literal (e.g. "%%")
         tya
        END_IF
@@ -506,7 +506,7 @@ op:     lda     SELF_MODIFIED
 resume:
         len := *+1
         lda     #SELF_MODIFIED_BYTE
-    WHILE_A_NE  in_pos
+    WHILE A NE  in_pos
 
         ;; Adjust stack
         stack_offset := *+1
@@ -557,7 +557,7 @@ read_byte:
         pla
         tay                     ; Y = index
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         beq     resume          ; always
 .endproc ; append_string
 

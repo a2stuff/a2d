@@ -43,11 +43,11 @@ PREDEFINE_SCOPE UpdateProgress
         lda     #'V'|$80
         jsr     COUT
         dex
-        BREAK_IF_ZERO
+        BREAK_IF ZERO
         lda     #'W'|$80
         jsr     COUT
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Disable MouseText
         lda     #$18|$80
@@ -75,7 +75,7 @@ done:   rts
     DO
         jsr     COUT
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         rts
 .endproc ; UpdateProgress

@@ -98,7 +98,7 @@ start:
 
         ;; Open this system file
         MLI_CALL OPEN, open_params
-    IF_CS
+    IF CS
         brk                     ; crash
     END_IF
         lda     open_params::ref_num
@@ -115,7 +115,7 @@ segment_num := * + 1
 
         ;; Close
         MLI_CALL CLOSE, close_params
-    IF_CS
+    IF CS
         brk                     ; crash
     END_IF
         jmp     kSegmentInitializerAddress
@@ -125,14 +125,14 @@ continue:
         copy8   segment_offset_table_high,x, set_mark_params::position+1
         copy8   segment_offset_table_bank,x, set_mark_params::position+2
         MLI_CALL SET_MARK, set_mark_params
-    IF_CS
+    IF CS
         brk                     ; crash
     END_IF
 
         copylohi segment_addr_table_low,x, segment_addr_table_high,x, read_params::data_buffer
         copylohi segment_size_table_low,x, segment_size_table_high,x, read_params::request_count
         MLI_CALL READ, read_params
-    IF_CS
+    IF CS
         brk                     ; crash
     END_IF
 
@@ -141,7 +141,7 @@ continue:
         lda     segment_type_table,x
         beq     loop            ; type 0 = main, so done
         cmp     #2              ; carry set if banked, clear if aux
-    IF_CS
+    IF CS
         ;; Handle bank-switched memory segment
         ;; Disable interrupts, since we may overwrite IRQ vector
         php
@@ -179,7 +179,7 @@ continue:
 
         ldy     segment_size_table_high,x ; Y = number of pages
         lda     segment_size_table_low,x  ; fractional?
-    IF_NOT_ZERO
+    IF NOT_ZERO
         iny                     ; if so, round up
     END_IF
 
@@ -188,7 +188,7 @@ continue:
         sta     RAMWRTON
         jsr     CopySegment
         sta     RAMWRTOFF
-    IF_CS                       ; carry set if banked
+    IF CS                       ; carry set if banked
         COPY_BYTES kIntVectorsSize, vector_buf, VECTORS
         sta     ALTZPOFF
         bit     ROMIN2
@@ -207,11 +207,11 @@ vector_buf:
     DO
         copy8   (src),y, (dst),y
         iny
-        CONTINUE_IF_NOT_ZERO
+        CONTINUE_IF NOT_ZERO
         inc     src+1
         inc     dst+1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; CopySegment
 

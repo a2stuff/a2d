@@ -204,7 +204,7 @@ pattern_plaid:
         pla
         clc
         adc     #1
-    WHILE_A_LT  #kSpeedMax+1
+    WHILE A LT  #kSpeedMax+1
 
         lda     #BTK::kButtonStateChecked
         sta     radio_60hz_button::state
@@ -223,7 +223,7 @@ pattern_plaid:
 
 .proc InputLoop
         dec     probe_count
-    IF_ZERO
+    IF ZERO
         jsr     UpdateMeter
     END_IF
 
@@ -249,7 +249,7 @@ probe_count:
         jsr     ToUpperCase
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         cmp     #res_char_shortcut_apple_5
         jeq     OnClick50Hz
 
@@ -364,7 +364,7 @@ done:   jmp     InputLoop
 
         copy16  counter, progress_muldiv_params::numerator
         bit     radio_60hz_button::state
-    IF_NS
+    IF NS
         copy16  #kSpeedMax * kSpeedDefault60Hz, progress_muldiv_params::denominator
     ELSE
         copy16  #kSpeedMax * kSpeedDefault50Hz, progress_muldiv_params::denominator
@@ -374,7 +374,7 @@ done:   jmp     InputLoop
 
         ;; Max out the meter
         cmp16   progress_muldiv_params::result, #kMeterWidth
-    IF_GE
+    IF GE
         copy16  #kMeterWidth, progress_muldiv_params::result
         MGTK_CALL MGTK::SetPattern, pattern_plaid
     END_IF
@@ -437,7 +437,7 @@ done:   jmp     InputLoop
 .endmacro
 
 
-    IF_NE
+    IF NE
         ;; IIe / IIgs
 
         ;; Wait one cycle
@@ -451,13 +451,13 @@ done:   jmp     InputLoop
         inc16   counter
         SPIN_CPU
         bit     RDVBLBAR
-      WHILE_NC
+      WHILE NC
 
       DO
         inc16   counter
         SPIN_CPU
         bit     RDVBLBAR
-      WHILE_NS
+      WHILE NS
     ELSE
         ;; IIc
 
@@ -482,16 +482,16 @@ done:   jmp     InputLoop
         inc16   counter
         SPIN_CPU
         bit     RDVBLBAR
-      WHILE_NC
+      WHILE NC
         bit     IOUDISON        ; = RDIOUDIS (since PTRIG would slow)
 
         pla                     ; restore VBL interrupt state
-      IF_NC
+      IF NC
         sta     DISVBL
       END_IF
 
         pla                     ; restore IOUDIS state
-      IF_NC
+      IF NC
         sta     IOUDISON
       END_IF
     END_IF

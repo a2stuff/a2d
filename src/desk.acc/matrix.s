@@ -46,7 +46,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         ;; IIgs: set green-on-black
         sec
         jsr     IDROUTINE
-    IF_CC
+    IF CC
         .pushcpu
         .setcpu "65816"
         lda     TBCOLOR         ; save text fg/bg
@@ -66,7 +66,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         ;; IIgs: restore color
         sec
         jsr     IDROUTINE
-    IF_CC
+    IF CC
         .pushcpu
         .setcpu "65816"
         pla                     ; restore border
@@ -117,11 +117,11 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     PAGE2OFF
 
         dey
-      WHILE_POS
+      WHILE POS
 
         inc     CV
         lda     CV
-    WHILE_A_NE  #24
+    WHILE A NE  #24
 
         sta     CLR80STORE
         rts
@@ -152,11 +152,11 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     PAGE2OFF
 
         dey
-      WHILE_POS
+      WHILE POS
 
         inc     CV
         lda     CV
-    WHILE_A_NE  #24
+    WHILE A NE  #24
 
         sta     CLR80STORE
         rts
@@ -203,7 +203,7 @@ kNumCursors = 4
         copy16  list,x, ptr
         jsr     ResetCursor
         dec     index
-    WHILE_POS
+    WHILE POS
 
         ;; --------------------------------------------------
 
@@ -234,14 +234,14 @@ MainLoop:
 
         jsr     Random
         and     #%00011111      ; 1/32 chance of reset
-      IF_ZERO
+      IF ZERO
         jsr     ResetCursor
       ELSE
         jsr     AdvanceCursor
       END_IF
 
         dec     index
-    WHILE_POS
+    WHILE POS
         bmi     MainLoop        ; always
 
 exit:   rts
@@ -252,7 +252,7 @@ exit:   rts
         ;; Still on screen? If not, skip (until reset)
         ldy     #Cursor::vpos
         lda     (ptr),y
-        RTS_IF_A_GE #24
+        RTS_IF A GE #24
 
         ;; Set BASL/H
         sta     CV
@@ -262,7 +262,7 @@ exit:   rts
         ldy     #Cursor::mode
         lda     (ptr),y
         and     #%00000001      ; Use low bit
-    IF_ZERO
+    IF ZERO
         lda     #' '
     ELSE
         jsr     GetRandomChar
@@ -312,7 +312,7 @@ exit:   rts
     DO
         jsr     Random
         and     #%00111111      ; 0...63
-    WHILE_A_GE  #40             ; retry if >= 40
+    WHILE A GE  #40             ; retry if >= 40
         rts
 .endproc ; GetRandomH
 
@@ -323,7 +323,7 @@ exit:   rts
     DO
         jsr     Random
         and     #%01111111      ; 0...127
-    WHILE_A_LT  #' '+1          ; retry if control or space
+    WHILE A LT  #' '+1          ; retry if control or space
         rts
 .endproc ; GetRandomChar
 

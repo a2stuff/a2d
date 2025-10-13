@@ -147,7 +147,7 @@ exit:
 
         ldx     cur_point
         inx
-    IF_X_EQ     #kNumPoints
+    IF X EQ     #kNumPoints
         ldx     #0
     END_IF
         txa
@@ -173,22 +173,22 @@ exit:
         add16   x1pos,x, deltax1, pt1+MGTK::Point::xcoord
         add16   y1pos,x, deltay1, pt1+MGTK::Point::ycoord
         scmp16   pt1+MGTK::Point::xcoord, #0
-    IF_NEG
+    IF NEG
         copy16  #0, pt1+MGTK::Point::xcoord
         sub16   #0, deltax1, deltax1
     END_IF
         scmp16   pt1+MGTK::Point::xcoord, #kScreenWidth
-    IF_POS
+    IF POS
         copy16  #kScreenWidth-1, pt1+MGTK::Point::xcoord
         sub16   #0, deltax1, deltax1
     END_IF
         scmp16   pt1+MGTK::Point::ycoord, #0
-    IF_NEG
+    IF NEG
         copy16  #0, pt1+MGTK::Point::ycoord
         sub16   #0, deltay1, deltay1
     END_IF
         scmp16   pt1+MGTK::Point::ycoord, #kScreenHeight
-    IF_POS
+    IF POS
         copy16  #kScreenHeight-1, pt1+MGTK::Point::ycoord
         sub16   #0, deltay1, deltay1
     END_IF
@@ -196,22 +196,22 @@ exit:
         add16   x2pos,x, deltax2, pt2+MGTK::Point::xcoord
         add16   y2pos,x, deltay2, pt2+MGTK::Point::ycoord
         scmp16   pt2+MGTK::Point::xcoord, #0
-    IF_NEG
+    IF NEG
         copy16  #0, pt2+MGTK::Point::xcoord
         sub16   #0, deltax2, deltax2
     END_IF
         scmp16   pt2+MGTK::Point::xcoord, #kScreenWidth
-    IF_POS
+    IF POS
         copy16  #kScreenWidth-1, pt2+MGTK::Point::xcoord
         sub16   #0, deltax2, deltax2
     END_IF
         scmp16   pt2+MGTK::Point::ycoord, #0
-    IF_NEG
+    IF NEG
         copy16  #0, pt2+MGTK::Point::ycoord
         sub16   #0, deltay2, deltay2
     END_IF
         scmp16   pt2+MGTK::Point::ycoord, #kScreenHeight
-    IF_POS
+    IF POS
         copy16  #kScreenHeight-1, pt2+MGTK::Point::ycoord
         sub16   #0, deltay2, deltay2
     END_IF
@@ -221,7 +221,7 @@ exit:
 
         ldx     cur_point
         inx
-    IF_X_EQ     #kNumPoints
+    IF X EQ     #kNumPoints
         ldx     #0
     END_IF
         stx     cur_point
@@ -256,9 +256,9 @@ exit:
         and     #%00001111      ; clamp to 0...15
         sec
         sbc     #8              ; map to -7...7
-    WHILE_ZERO                  ; retry if 0
+    WHILE ZERO                  ; retry if 0
 
-    IF_NEG
+    IF NEG
         ldx     #$FF            ; sign-extend into X
     END_IF
 

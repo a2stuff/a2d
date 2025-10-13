@@ -16,7 +16,7 @@
 
         lda     MACHID
         and     #kMachIDHasClock
-        RTS_IF_ZERO
+        RTS_IF ZERO
 
         MLI_CALL GET_TIME, 0
 
@@ -30,7 +30,7 @@
         cmp     last_dt,x
         bne     update
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Settings changed?
         ldx     #DeskTopSettings::clock_24hours

@@ -58,7 +58,7 @@ ellipsify:
         iny
         length := *+1
         cpy     #SELF_MODIFIED_BYTE
-    WHILE_NE
+    WHILE NE
 
         pla                     ; A = length/2
 

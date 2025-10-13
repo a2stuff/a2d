@@ -182,7 +182,7 @@ object_deltas:
         sub16   tmp, #16, object_deltas,x
         dex
         dex
-    WHILE_POS
+    WHILE POS
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
@@ -209,7 +209,7 @@ object_deltas:
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
@@ -303,7 +303,7 @@ finish: jmp     InputLoop
 
 .proc DrawWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_NOT_ZERO         ; obscured
+        RTS_IF NOT_ZERO         ; obscured
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::HideCursor
@@ -330,7 +330,7 @@ finish: jmp     InputLoop
       DO
         copy8   (pos_ptr),y, object_params::viewloc,y
         dey
-      WHILE_POS
+      WHILE POS
         MGTK_CALL MGTK::PaintBits, object_params
 
         add16_8 pos_ptr, #.sizeof(MGTK::Point)
@@ -338,7 +338,7 @@ finish: jmp     InputLoop
         pla
         tax
         dex
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; XDrawObjects
@@ -347,7 +347,7 @@ finish: jmp     InputLoop
 
 .proc AnimateObjects
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_NOT_ZERO         ; obscured
+        RTS_IF NOT_ZERO         ; obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
 
@@ -371,7 +371,7 @@ loop:   txa
         lda     (pos_ptr),y
         pha
         iny
-    WHILE_Y_NE  #4
+    WHILE Y NE  #4
 
         ;; --------------------------------------------------
         ;; Update X coordinate and maybe delta
@@ -380,7 +380,7 @@ loop:   txa
         add16in (pos_ptr),y, (delta_ptr),y, tmpw
 
         scmp16  tmpw, #0
-    IF_NEG
+    IF NEG
         copy16  #0, tmpw
 
         ldy     #MGTK::Point::xcoord
@@ -390,7 +390,7 @@ loop:   txa
         sub16   winfo::maprect+MGTK::Rect::x2, #kObjectWidth-1, dim
 
         scmp16  dim, tmpw
-    IF_NEG
+    IF NEG
         copy16  dim, tmpw
 
         ldy     #MGTK::Point::xcoord
@@ -407,7 +407,7 @@ loop:   txa
         add16in (pos_ptr),y, (delta_ptr),y, tmpw
 
         scmp16  tmpw, #0
-    IF_NEG
+    IF NEG
         copy16  #0, tmpw
 
         ldy     #MGTK::Point::ycoord
@@ -416,7 +416,7 @@ loop:   txa
 
         sub16   winfo::maprect+MGTK::Rect::y2, #kObjectHeight-1, dim
         scmp16  dim, tmpw
-    IF_NEG
+    IF NEG
         copy16  dim, tmpw
 
         ldy     #MGTK::Point::ycoord
@@ -434,7 +434,7 @@ loop:   txa
     DO
         copy8   (pos_ptr),y, object_params::viewloc,y
         dey
-    WHILE_POS
+    WHILE POS
         MGTK_CALL MGTK::ShieldCursor, object_params
         MGTK_CALL MGTK::PaintBits, object_params
         MGTK_CALL MGTK::UnshieldCursor
@@ -445,7 +445,7 @@ loop:   txa
         pla
         sta     object_params::viewloc,y
         dey
-    WHILE_POS
+    WHILE POS
         MGTK_CALL MGTK::ShieldCursor, object_params
         MGTK_CALL MGTK::PaintBits, object_params
         MGTK_CALL MGTK::UnshieldCursor

@@ -579,7 +579,7 @@ init:
     DO
         copy8   chrget_routine-1,x, CHRGET-1,x
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 .endproc ; CopyToB1
 
         lda     #0
@@ -620,7 +620,7 @@ init:
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-    IF_A_EQ     #MGTK::EventKind::button_down
+    IF A EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -645,13 +645,13 @@ init:
         bne     ret
 
         lda     findwindow_params::which_area
-    IF_A_EQ     #MGTK::Area::content ; Content area?
+    IF A EQ     #MGTK::Area::content ; Content area?
         jsr     MapClickToFunction
         beq     ret
         jmp     ProcessFunction
     END_IF
 
-    IF_A_EQ     #MGTK::Area::close_box ; Close box?
+    IF A EQ     #MGTK::Area::close_box ; Close box?
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     ret
@@ -660,7 +660,7 @@ init:
         jmp     ExitDA
     END_IF
 
-    IF_A_EQ     #MGTK::Area::dragbar ; Title bar?
+    IF A EQ     #MGTK::Area::dragbar ; Title bar?
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
@@ -683,8 +683,8 @@ ret:    rts
         jsr     ToUpperCase
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
-      IF_A_EQ   #kShortcutCloseWindow
+    IF NOT_ZERO
+      IF A EQ   #kShortcutCloseWindow
         pla                     ; pop OnKeyPress
         pla
         jmp     ExitDA
@@ -692,15 +692,15 @@ ret:    rts
         rts
     END_IF
 
-    IF_A_EQ     #'.'            ; allow either
+    IF A EQ     #'.'            ; allow either
         lda     intl_deci_sep
     END_IF
 
-    IF_A_EQ     #CHAR_ESCAPE
+    IF A EQ     #CHAR_ESCAPE
         lda     calc_p
-      IF_ZERO                   ; empty state?
+      IF ZERO                   ; empty state?
         lda     calc_l
-       IF_ZERO
+       IF ZERO
         pla                     ; pop OnKeyPress
         pla
         jmp     ExitDA
@@ -710,10 +710,10 @@ ret:    rts
         jmp     ProcessFunction
     END_IF
 
-    IF_A_EQ     #CHAR_DELETE
+    IF A EQ     #CHAR_DELETE
         ldy     calc_l
         beq     ret
-      IF_Y_EQ   #1
+      IF Y EQ   #1
         jsr     ResetBuffer1AndState
         jmp     DisplayBuffer1
       END_IF
@@ -721,13 +721,13 @@ ret:    rts
         dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-      IF_A_EQ   intl_deci_sep
+      IF A EQ   intl_deci_sep
         stx     calc_d
       END_IF
-      IF_A_EQ   #'E'
+      IF A EQ   #'E'
         stx     calc_e
       END_IF
-      IF_A_EQ   #'-'
+      IF A EQ   #'-'
         stx     calc_n
       END_IF
 
@@ -738,7 +738,7 @@ ret:    rts
         sta     text_buffer2+1,x
         dex
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         lda     #' '
         sta     text_buffer1+1,x
@@ -746,12 +746,12 @@ ret:    rts
         jmp     DisplayBuffer1
     END_IF
 
-    IF_A_EQ     #CHAR_CLEAR
+    IF A EQ     #CHAR_CLEAR
         lda     #Function::clear
         jmp     ProcessFunction
     END_IF
 
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         lda     #Function::equals
         jmp     ProcessFunction
     END_IF
@@ -842,7 +842,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 ;;; Inputs: A = Function enum member
 
 .proc ProcessFunction
-    IF_A_EQ     #Function::clear
+    IF A EQ     #Function::clear
         lda     #0
         ROM_CALL FLOAT
         ldxy    #farg
@@ -857,11 +857,11 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         jmp     ResetBuffersAndDisplay
     END_IF
 
-    IF_A_EQ     #Function::exp
+    IF A EQ     #Function::exp
         ldy     calc_e
         bne     ret2
         ldy     calc_l
-      IF_ZERO
+      IF ZERO
         inc     calc_l
         lda     #'1'
         sta     text_buffer1 + kTextBufferSize
@@ -873,11 +873,11 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 ret2:   rts
     END_IF
 
-    IF_A_EQ     #Function::op_subtract
+    IF A EQ     #Function::op_subtract
         lda     calc_e          ; negate vs. subtract
-      IF_NOT_ZERO
+      IF NOT_ZERO
         lda     calc_n
-       IF_ZERO
+       IF ZERO
         SET_BIT7_FLAG calc_n
         pla
         pha
@@ -889,12 +889,12 @@ ret2:   rts
         jmp     DoOp
     END_IF
 
-    IF_A_EQ     #Function::decimal
+    IF A EQ     #Function::decimal
         lda     calc_d
         ora     calc_e
         bne     ret3
         lda     calc_l
-      IF_ZERO
+      IF ZERO
         inc     calc_l
       END_IF
         copy8   intl_deci_sep, calc_d
@@ -912,11 +912,11 @@ ret3:   rts
 
 Insert: SET_BIT7_FLAG calc_g
         ldy     calc_l
-    IF_ZERO
+    IF ZERO
         pha
         jsr     ResetBuffer2
         pla
-      IF_A_EQ   #'0'
+      IF A EQ   #'0'
         jmp     DisplayBuffer1
       END_IF
     END_IF
@@ -937,7 +937,7 @@ Insert: SET_BIT7_FLAG calc_g
         sta     text_buffer2-1,x
         inx
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
 empty:  inc     calc_l
         pla
@@ -955,18 +955,18 @@ ret:   rts
         ;; Pending input we need to parse?
         pha
         lda     calc_g
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Parse `text_buffer1` into FAC.
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
       DO
         lda     text_buffer1,x
-       IF_A_EQ  intl_deci_sep
+       IF A EQ  intl_deci_sep
         lda     #'.'
        END_IF
         sta     FBUFFR,x
         dex
-      WHILE_POS
+      WHILE POS
         copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN
@@ -975,25 +975,25 @@ ret:   rts
 
         ;; --------------------------------------------------
         ;; Function? These modify the FAC in place
-    IF_A_EQ     #Function::fn_sin
+    IF A EQ     #Function::fn_sin
         jsr     DegToRad
         ROM_CALL SIN
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_cos
+    IF A EQ     #Function::fn_cos
         jsr     DegToRad
         ROM_CALL COS
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_tan
+    IF A EQ     #Function::fn_tan
         jsr     DegToRad
         ROM_CALL TAN
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_asin
+    IF A EQ     #Function::fn_asin
         ;; ASIN(x) = ATN(X/SQR(-X*X+1))
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
@@ -1011,7 +1011,7 @@ ret:   rts
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_acos
+    IF A EQ     #Function::fn_acos
         ;; ACOS(x) = -ATN(X/SQR(-X*X+l))+1.5708
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
@@ -1032,33 +1032,33 @@ ret:   rts
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_atan
+    IF A EQ     #Function::fn_atan
         ROM_CALL ATN
         jsr     RadToDeg
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_sqrt
+    IF A EQ     #Function::fn_sqrt
         ROM_CALL SQR
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_neg
+    IF A EQ     #Function::fn_neg
         ROM_CALL NEGOP
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_ln
+    IF A EQ     #Function::fn_ln
         ROM_CALL LOG
         jmp     PostFunc
     END_IF
 
-    IF_A_EQ     #Function::fn_exp
+    IF A EQ     #Function::fn_exp
         ROM_CALL EXP
         jmp     PostOp
     END_IF
 
-    IF_A_EQ     #Function::fn_inv
+    IF A EQ     #Function::fn_inv
         lday    #CON_ONE
         ROM_CALL FDIV
         jmp     PostFunc
@@ -1071,7 +1071,7 @@ ret:   rts
         ;; Look at last operation
         lda     calc_op
 
-    IF_A_EQ     #Function::equals
+    IF A EQ     #Function::equals
         lda     calc_g          ; last input was a digit insertion or func?
         ora     calc_f
         bne     do_op           ; reparsed above, proceed
@@ -1084,7 +1084,7 @@ ret:   rts
         ;; Was last an input or function?
         lda     calc_g
         ora     calc_f
-    IF_ZERO
+    IF ZERO
         ;; No, so last was an op, we're overriding it.
         ;; e.g.: 2 * +
         pla
@@ -1101,37 +1101,37 @@ do_op:
         sta     calc_op         ; save for later
         lday    #farg           ; A,Y = previous intermediate result
 
-    IF_X_EQ     #Function::op_add
+    IF X EQ     #Function::op_add
         ROM_CALL FADD           ; FAC = (Y,A) + FAC
         jmp     PostOp
     END_IF
 
-    IF_X_EQ     #Function::op_subtract
+    IF X EQ     #Function::op_subtract
         ROM_CALL FSUB           ; FAC = (Y,A) - FAC
         jmp     PostOp
     END_IF
 
-    IF_X_EQ     #Function::op_multiply
+    IF X EQ     #Function::op_multiply
         ROM_CALL FMULT          ; FAC = (Y,A) * FAC
         jmp     PostOp
     END_IF
 
-    IF_X_EQ     #Function::op_divide
+    IF X EQ     #Function::op_divide
         ROM_CALL FDIV           ; FAC = (Y,A) / FAC
         jmp     PostOp
     END_IF
 
-    IF_X_EQ     #Function::op_power
+    IF X EQ     #Function::op_power
         ROM_CALL LOAD_ARG       ; ARG = (Y,A)
         ROM_CALL FPWRT          ; FAC = ARG ^ FAC
         jmp     PostOp
     END_IF
 
-    IF_X_EQ     #Function::equals
+    IF X EQ     #Function::equals
         ldy     calc_f
-      IF_ZERO
+      IF ZERO
         ldy     calc_g
-       IF_ZERO
+       IF ZERO
         jmp     ResetBuffer1AndState
        END_IF
       END_IF
@@ -1155,24 +1155,24 @@ ep2:    jsr     PushFAC
         ldy     #0              ; count the size
     DO
         lda     FBUFFR,y
-        BREAK_IF_ZERO
+        BREAK_IF ZERO
         iny
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     #kTextBufferSize ; copy to text buffers
     DO
         lda     FBUFFR-1,y
-      IF_A_EQ   #'.'            ; map decimal character
+      IF A EQ   #'.'            ; map decimal character
         lda     intl_deci_sep
       END_IF
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Add leading zero if starting with decimal
-    IF_A_EQ     #'-'
+    IF A EQ     #'-'
         ;; skip leading '-' temporarily
         inx
         jsr     MaybeAddLeadingZero
@@ -1209,7 +1209,7 @@ end:    jsr     DisplayBuffer1
 
 .proc MaybeAddLeadingZero
         lda     text_buffer1+1,x
-    IF_A_EQ     intl_deci_sep
+    IF A EQ     intl_deci_sep
         lda     #'0'
         sta     text_buffer1,x
         sta     text_buffer2,x
@@ -1351,7 +1351,7 @@ kRegSize = 6
         stax    inrect_params
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
 
@@ -1390,7 +1390,7 @@ inside: lda     button_state    ; inside, and down
 
 done:   lda     button_state                    ; high bit set if button down
         pha
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     invert_rect                        ; Back to normal
     END_IF
         MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
@@ -1410,7 +1410,7 @@ invert_rect:
     DO
         copy8   #' ', text_buffer1-1,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         copy8   #'0', text_buffer1 + kTextBufferSize
         rts
 .endproc ; ResetBuffer1
@@ -1420,7 +1420,7 @@ invert_rect:
     DO
         copy8   #' ', text_buffer2-1,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         copy8   #'0', text_buffer2 + kTextBufferSize
         rts
 .endproc ; ResetBuffer2
@@ -1472,7 +1472,7 @@ end:    rts
 
 .proc DrawContent
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
 
@@ -1525,7 +1525,7 @@ label:  .addr   0
         jsr     ResetBuffersAndDisplay
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_A_NE     #MGTK::Error::window_obscured
+    IF A NE     #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos
         param_call DrawString, error_string
@@ -1549,7 +1549,7 @@ PROC_AT chrget_routine, ::CHRGET
 
         cmp     #'9'+1          ; after digits?
         bcs     end
-    WHILE_A_EQ  #' '            ; space? keep going
+    WHILE A EQ  #' '            ; space? keep going
 
         sec
         sbc     #'0'            ; convert to digit...

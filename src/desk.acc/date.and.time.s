@@ -314,7 +314,7 @@ init_window:
         ;; If null date, just leave the baked in default
         lda     auxdt::DATELO
         ora     auxdt::DATEHI
-    IF_NOT_ZERO
+    IF NOT_ZERO
 
         ;; Crack the date bytes. Format is:
         ;; |     DATEHI    | |    DATELO     |
@@ -370,7 +370,7 @@ init_window:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-    IF_A_EQ     #MGTK::EventKind::button_down
+    IF A EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -387,18 +387,18 @@ init_window:
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         jeq     OnKeyOK
 
-      IF_A_EQ   #'1'
+      IF A EQ   #'1'
         lda     #$00
         jsr     HandleOptionClick
         jmp     InputLoop
       END_IF
 
-      IF_A_EQ   #'2'
+      IF A EQ   #'2'
         lda     #$80
         jsr     HandleOptionClick
         jmp     InputLoop
@@ -451,7 +451,7 @@ init_window:
         sbc     #1
         bne     UpdateSelection
         bit     clock_24hours
-    IF_NC
+    IF NC
         lda     #Field::period
     ELSE
         lda     #Field::period-1
@@ -465,7 +465,7 @@ init_window:
         adc     #1
 
         bit     clock_24hours
-    IF_NC
+    IF NC
         cmp     #Field::period+1
     ELSE
         cmp     #Field::period
@@ -508,13 +508,13 @@ hit:
         jne     OnClickOK
 
         MGTK_CALL MGTK::InRect, clock_12hour_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #$00
         jmp     HandleOptionClick
     END_IF
 
         MGTK_CALL MGTK::InRect, clock_24hour_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #$80
         jmp     HandleOptionClick
     END_IF
@@ -546,7 +546,7 @@ hit_target_jump_table:
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-    IF_ZERO
+    IF ZERO
         pla                     ; pop OnClick
         pla
         jmp     OnOK
@@ -561,7 +561,7 @@ hit_target_jump_table:
 
 .proc OnOK
         lda     clock_flag
-    IF_ZERO
+    IF ZERO
         jsr     UpdateProDOS
     END_IF
         jmp     Destroy
@@ -593,8 +593,8 @@ hit_target_jump_table:
         txa
 
         bit     clock_24hours
-    IF_NS
-        RTS_IF_A_EQ #Field::period
+    IF NS
+        RTS_IF A EQ #Field::period
     END_IF
 
         jmp     SelectField
@@ -605,7 +605,7 @@ hit_target_jump_table:
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         lda     event_params::kind
-    IF_A_NE     #MGTK::EventKind::button_up
+    IF A NE     #MGTK::EventKind::button_up
         jsr     DoIncOrDec
         jmp     loop
     END_IF
@@ -627,9 +627,9 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         ;; Hour requires special handling for 12-hour clock; patch the
         ;; min/max table depending on clock setting and period.
         bit     clock_24hours
-    IF_NC
+    IF NC
         lda     hour
-      IF_A_LT   #12
+      IF A LT   #12
         copy8   #kHourMin, min_table + Field::hour - 1
         copy8   #11, max_table + Field::hour - 1
       ELSE
@@ -664,7 +664,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         beq     incr
 
         ;; Decrement
-    IF_X_EQ     min
+    IF X EQ     min
         ldx     max
         inx
     END_IF
@@ -673,7 +673,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         ;; Increment
 incr:
-    IF_X_EQ     max
+    IF X EQ     max
         ldx     min
         dex
     END_IF
@@ -691,7 +691,7 @@ finish:
         ;; If month changed, make sure day is in range and update if not.
         jsr     SetMonthLength
         lda     max_table+Field::day-1
-    IF_A_LT     day
+    IF A LT     day
         sta     day
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         jsr     PrepareDayString
@@ -712,7 +712,7 @@ hit_rect_index:
 .proc TogglePeriod
         ;; Flip to other period
         lda     hour
-    IF_A_LT     #12             ; also sets C correctly for adc/sbc
+    IF A LT     #12             ; also sets C correctly for adc/sbc
         adc     #12
     ELSE
         sbc     #12
@@ -789,7 +789,7 @@ month_length_table:
         copy8   month_name_table,x, (ptr),y
         dex
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; PrepareMonthString
@@ -823,19 +823,19 @@ str_pm: PASCAL_STRING "PM"
 .proc PrepareHourString
         lda     hour
         bit     clock_24hours
-    IF_NC
-      IF_A_EQ   #0
+    IF NC
+      IF A EQ   #0
         lda     #12
       END_IF
-      IF_A_GE   #13
+      IF A GE   #13
         sbc     #12
       END_IF
     END_IF
 
         jsr     NumberToASCII
         bit     clock_24hours
-    IF_NC
-      IF_A_EQ   #'0'
+    IF NC
+      IF A EQ   #'0'
         lda     #' '
       END_IF
     END_IF
@@ -866,7 +866,7 @@ dialog_result:  .byte   0
         ;; Dates in DeskTop list views may be invalidated, so if date
         ;; or settings changed, force a full redraw to avoid artifacts.
         lda     dialog_result
-    IF_NOT_ZERO
+    IF NOT_ZERO
         MGTK_CALL MGTK::RedrawDeskTop
     END_IF
 
@@ -892,7 +892,7 @@ dialog_result:  .byte   0
         pla
         tax
         inx
-    WHILE_X_NE  #kNumHitRects+1
+    WHILE X NE  #kNumHitRects+1
 
         ldx     #0
         rts
@@ -941,7 +941,7 @@ label_downarrow:
 
         ;; If there is a system clock, only draw the OK button.
         ldx     clock_flag
-    IF_EQ
+    IF EQ
         MGTK_CALL MGTK::MoveTo, label_uparrow_pos
         param_call DrawString, label_uparrow
         MGTK_CALL MGTK::FrameRect, up_arrow_rect
@@ -972,7 +972,7 @@ label_downarrow:
 
         ;; If there is a system clock, don't draw the highlight.
         ldx     clock_flag
-    IF_EQ
+    IF EQ
         lda     #Field::day
         jsr     SelectField
     END_IF
@@ -1003,7 +1003,7 @@ label_downarrow:
 .endproc ; UpdateOptionButtons
 
 .proc ZToButtonState
-    IF_ZC
+    IF ZC
         lda     #BTK::kButtonStateNormal
         rts
     END_IF
@@ -1014,7 +1014,7 @@ label_downarrow:
 ;;; A = field
 .proc DrawField
         pha
-    IF_A_EQ     selected_field
+    IF A EQ     selected_field
         MGTK_CALL MGTK::SetTextBG, settextbg_black_params
     ELSE
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
@@ -1065,11 +1065,11 @@ label_downarrow:
 .proc DrawPeriod
         MGTK_CALL MGTK::MoveTo, period_pos
         bit     clock_24hours
-    IF_NS
+    IF NS
         param_call DrawString, spaces_string
     ELSE
         lda     hour
-      IF_A_LT   #12
+      IF A LT   #12
         param_jump DrawString, str_am
       ELSE
         param_jump DrawString, str_pm
@@ -1178,10 +1178,10 @@ fill_period:
         pha
       DO
         sbc     #1
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         pla
         sbc     #1
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; Delay
 
@@ -1191,7 +1191,7 @@ fill_period:
 .proc NumberToASCII
         ldy     #0
 loop:
-    IF_A_GE     #10
+    IF A GE     #10
         sec
         sbc     #10
         iny
@@ -1211,10 +1211,10 @@ loop:
         ;; Month lengths
         ldx     month
         ldy     month_length_table-1,x
-    IF_X_EQ     #2              ; February?
+    IF X EQ     #2              ; February?
         lda     year            ; Handle leap years; interpreted as either
         and     #3              ; (1900+Y) or (Y<40 ? 2000+Y : 1900+Y) - which is
-      IF_ZERO                   ; correct for 1901 through 2199, so good enough.
+      IF ZERO                   ; correct for 1901 through 2199, so good enough.
         iny
       END_IF
     END_IF
@@ -1237,7 +1237,7 @@ loop:
         sta     dialog_result
 
         lda     selected_field
-    IF_A_EQ     #Field::period
+    IF A EQ     #Field::period
         lda     #Field::minute
         jsr     SelectField
     END_IF
@@ -1339,12 +1339,12 @@ current:
         sta     result
 
         bit     result
-    IF_NS
+    IF NS
         jsr     SaveDate
     END_IF
 
         bit     result
-    IF_VS
+    IF VS
         jsr     SaveSettings
     END_IF
 
@@ -1405,7 +1405,7 @@ done:   rts
         inx
         iny
         copy8   filename,x, filename_buffer,y
-    WHILE_X_NE  filename
+    WHILE X NE  filename
         sty     filename_buffer
         rts
 .endproc ; AppendFilename

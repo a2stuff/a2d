@@ -47,7 +47,7 @@
     DO
         dex
         lda     dir_path,x
-    WHILE_A_NE  #'/'
+    WHILE A NE  #'/'
         dex
         txa
         pha                     ; A = new `dir_path` length
@@ -61,7 +61,7 @@
         lda     dir_path,x
         jsr     ToUpperCase
         sta     self_filename,y
-    WHILE_X_NE  dir_path
+    WHILE X NE  dir_path
         sty     self_filename
 
         pla                     ; A = new `dir_path` length
@@ -71,7 +71,7 @@
     DO
         param_call EnumerateDirectory, callback
         lda     file_num
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Append filename to `dir_path`
         ldy     #0
@@ -81,7 +81,7 @@
         inx
         iny
         copy8   filename,y, dir_path,x
-    WHILE_Y_NE  filename
+    WHILE Y NE  filename
         stx     dir_path
 
         ;; Inject JT call to stack
@@ -124,7 +124,7 @@
     DO
         copy8   (entry_ptr),y, filename,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         sec
         rts
@@ -178,7 +178,7 @@ nope:   sec
         cmp     self_filename,y
         bne     nope
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         clc
         rts
@@ -241,7 +241,7 @@ next_entry:
 
         ;; Header?
         bit     saw_header_flag
-    IF_NC
+    IF NC
         SET_BIT7_FLAG saw_header_flag
         bmi     next_entry      ; always
     END_IF

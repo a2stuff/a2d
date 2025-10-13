@@ -19,7 +19,7 @@
 .endif ; PRODOS_2_5
         beq     remove
         dex
-    WHILE_POS
+    WHILE POS
         rts
 
         ;; Remove it, shuffle everything else down.
@@ -33,7 +33,7 @@ remove: lda     DEVLST,x
 shift:  lda     DEVLST+1,x
         sta     DEVLST,x
         cpx     DEVCNT
-    IF_NOT_ZERO
+    IF NOT_ZERO
         inx
         bne     shift           ; always
     END_IF

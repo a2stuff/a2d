@@ -135,14 +135,14 @@ start:
 
         tax                     ; A = X = kSysCapXYZ bitmap
         ora     #DeskTopSettings::kSysCapIsIIgs | DeskTopSettings::kSysCapIsLaser128
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #kPeriodicTaskDelayIIgs
         bne     end             ; always
     END_IF
 
         txa                     ; A = X = kSysCapXYZ bitmap
         ora     #DeskTopSettings::kSysCapIsIIc
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #kPeriodicTaskDelayIIc
         bne     end             ; always
     END_IF
@@ -174,7 +174,7 @@ end:
     DO
         copy8   DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
         dex
-    WHILE_POS
+    WHILE POS
         ;; fall through
 .endscope
 
@@ -185,10 +185,10 @@ end:
         ;; Find the startup volume's unit number
         copy8   DEVNUM, target
         jsr     main::GetCopiedToRAMCardFlag
-    IF_NS
+    IF NS
         param_call main::CopyDeskTopOriginalPrefix, INVOKER_PREFIX
         MLI_CALL GET_FILE_INFO, main::src_file_info_params
-      IF_CC
+      IF CC
         copy8   DEVNUM, target
       END_IF
     END_IF
@@ -202,7 +202,7 @@ end:
         cmp     #SELF_MODIFIED_BYTE
         beq     found
         inx
-    WHILE_X_LT  DEVCNT
+    WHILE X LT  DEVCNT
         bcs     done            ; last one or not found
 
         ;; Save it
@@ -212,7 +212,7 @@ found:  ldy     DEVLST,x
     DO
         copy8   DEVLST+1,x, DEVLST,x
         inx
-    WHILE_X_NE  DEVCNT
+    WHILE X NE  DEVCNT
 
         ;; Place it at the end
         tya
@@ -236,7 +236,7 @@ done:
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
         dex
-    WHILE_X_NE  #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE X NE  #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
@@ -247,7 +247,7 @@ done:
         jsr     main::ShowClock
 
         lda     startdesktop_params::slot_num
-    IF_ZERO
+    IF ZERO
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         ora     #DeskTopSettings::kOptionsShowShortcuts
@@ -262,7 +262,7 @@ done:
         ;; Doubled if option selected
         ldx     #DeskTopSettings::mouse_tracking
         jsr     ReadSetting
-    IF_NOT_ZERO
+    IF NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
@@ -271,7 +271,7 @@ done:
         ldx     #DeskTopSettings::system_capabilities
         jsr     ReadSetting
         and     #DeskTopSettings::kSysCapIsIIc
-    IF_NOT_ZERO
+    IF NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
@@ -328,7 +328,7 @@ done:
         copy8   trash_name,x, (ptr),y
         iny
         inx
-    WHILE_X_NE  trash_name
+    WHILE X NE  trash_name
         copy8   trash_name,x, (ptr),y
 
         ITK_CALL IconTK::DrawIcon, icon_param
@@ -393,7 +393,7 @@ loop:   lda     index
 done:
         ;; No separator if it is last
         lda     selector_menu
-    IF_A_EQ     #kSelectorMenuFixedItems
+    IF A EQ     #kSelectorMenuFixedItems
         dec     selector_menu
     END_IF
         jmp     end_of_scope
@@ -413,7 +413,7 @@ count:  .byte   0
     DO
         copy8   (ptr1),y, (ptr2),y
         dey
-    WHILE_POS
+    WHILE POS
         rts
 .endproc ; _CopyPtr1ToPtr2
 
@@ -448,10 +448,10 @@ not_found:
       DO
         sta     (ptr),y
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inc     ptr+1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; _ReadSelectorList
 
@@ -519,7 +519,7 @@ process_block:
 
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-    IF_A_EQ     #kDAFileType    ; DA? (must match type/auxtype)
+    IF A EQ     #kDAFileType    ; DA? (must match type/auxtype)
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
@@ -547,17 +547,17 @@ process_block:
     DO
         copy8   (dir_ptr),y, name_buf,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; If a directory, prepend name with folder glyphs
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-    IF_A_EQ     #FT_DIRECTORY   ; Directory?
+    IF A EQ     #FT_DIRECTORY   ; Directory?
         ldy     name_buf
       DO
         copy8   name_buf,y, name_buf+3,y
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         copy8   #kGlyphFolderLeft, name_buf+1
         copy8   #kGlyphFolderRight, name_buf+2
@@ -573,12 +573,12 @@ process_block:
         tay
     DO
         lda     name_buf,y
-      IF_A_EQ   #'.'
+      IF A EQ   #'.'
         lda     #' '
       END_IF
         sta     (da_ptr),y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         inc     desk_acc_num
         inc     apple_menu      ; number of menu items
@@ -597,7 +597,7 @@ next_entry:
         ;; Any more entries in block?
         inc     entry_in_block
         lda     entry_in_block
-    IF_A_EQ     entries_per_block
+    IF A EQ     entries_per_block
         MLI_CALL READ, read_params
         copy16  #read_dir_buffer + 4, dir_ptr
 
@@ -633,7 +633,7 @@ name_buf:       .res    ::kDAMenuItemSize, 0
 end:
         ;; No separator if it is last
         lda     apple_menu
-    IF_A_EQ     #kAppleMenuFixedItems
+    IF A EQ     #kAppleMenuFixedItems
         dec     apple_menu
     END_IF
 
@@ -654,7 +654,7 @@ end:
         pha                     ; A = unmasked unit number
 
         jsr     main::CreateVolumeIcon ; A = unmasked unit number, Y = device index
-      IF_A_EQ   #ERR_DEVICE_NOT_CONNECTED
+      IF A EQ   #ERR_DEVICE_NOT_CONNECTED
         ;; If device is not connected, remove it from DEVLST
         ;; unless it's a Disk II.
         pla                     ; A = unmasked unit number
@@ -667,7 +667,7 @@ end:
         jmp     next
       END_IF
 
-      IF_A_EQ   #ERR_DUPLICATE_VOLUME
+      IF A EQ   #ERR_DUPLICATE_VOLUME
         copy8   #kErrDuplicateVolName, main::pending_alert
       END_IF
 
@@ -679,7 +679,7 @@ done_create:
 next:
         pla
         dec     device_index
-    WHILE_POS
+    WHILE POS
 
         copy8   #0, cached_window_id
         jsr     main::StoreWindowEntryTable
@@ -694,7 +694,7 @@ next:
         copy8   DEVLST+1,x, DEVLST,x
         copy8   main::device_to_icon_map+1,x, main::device_to_icon_map,x
         cpx     DEVCNT
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         dec     DEVCNT
 
         ;; ProDOS requires an ON_LINE call after a device is
@@ -732,7 +732,7 @@ next:
         ;; Empty?
         ldy     #0
         lda     (devname_ptr),y
-      IF_ZERO
+      IF ZERO
         copy16  #str_volume_type_unknown, devname_ptr
       END_IF
 
@@ -774,12 +774,12 @@ next:
       DO
         copy8   text_input_buf,y, (devname_ptr),y
         dey
-      WHILE_POS
+      WHILE POS
 
         pla                     ; A = index
         tay                     ; Y = index
         dey
-    WHILE_POS
+    WHILE POS
 
         FALL_THROUGH_TO PopulateStartupMenu
 
@@ -835,7 +835,7 @@ next:
         inx
 
 next:   dec     slot
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Set number of menu items.
         stx     startup_menu
@@ -893,7 +893,7 @@ slot_string_table:
 
 next:   inc     index
         lda     DEVCNT          ; continue while index <= DEVCNT
-    WHILE_A_GE  index
+    WHILE A GE  index
 
         lda     count
         sta     main::removable_device_table
@@ -902,11 +902,11 @@ next:   inc     index
 
         ;; Make copy of table
         ldx     main::disk_in_device_table
-    IF_NOT_ZERO
+    IF NOT_ZERO
       DO
         copy8   main::disk_in_device_table,x, main::last_disk_in_devices_table,x
         dex
-      WHILE_POS
+      WHILE POS
     END_IF
 
         jmp     end_of_scope
@@ -929,7 +929,7 @@ append:
         ldx     #DeskTopSettings::system_capabilities
         jsr     ReadSetting
         and     #DeskTopSettings::kSysCapIsIIcPlus
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     dispatch+1
         and     #%00001111      ; mask off slot
         cmp     #$05            ; is it slot 5?
@@ -941,7 +941,7 @@ append:
         ldx     #DeskTopSettings::system_capabilities
         jsr     ReadSetting
         and     #DeskTopSettings::kSysCapIsLaser128
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     dispatch+1      ; $Cs
         and     #%00001111      ; mask off slot
         cmp     #$07            ; is it slot 7?
@@ -989,7 +989,7 @@ unit_num:
 
         ;; Display any pending error messages
         lda     main::pending_alert
-    IF_NOT_ZERO
+    IF NOT_ZERO
         tay
         jsr     ShowAlert
     END_IF
@@ -1026,7 +1026,7 @@ loop:   ldy     #0
     DO
         copy8   (data_ptr),y, INVOKER_PREFIX,y
         dey
-    WHILE_POS
+    WHILE POS
 
         jsr     PushPointers
 
@@ -1034,9 +1034,9 @@ loop:   ldy     #0
         ldx     #1              ; past leading '/'
     DO
         lda     INVOKER_PREFIX+1,x
-        BREAK_IF_A_EQ #'/'      ; look for next '/'
+        BREAK_IF A EQ #'/'      ; look for next '/'
         inx
-    WHILE_X_NE  INVOKER_PREFIX
+    WHILE X NE  INVOKER_PREFIX
 
         dex
         stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length
@@ -1055,7 +1055,7 @@ loop:   ldy     #0
         copy8   (data_ptr),y, new_window_viewloc,x
         dey
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Copy bounds to `new_window_maprect`
         ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
@@ -1064,7 +1064,7 @@ loop:   ldy     #0
         copy8   (data_ptr),y, new_window_maprect,x
         dey
         dex
-    WHILE_POS
+    WHILE POS
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag

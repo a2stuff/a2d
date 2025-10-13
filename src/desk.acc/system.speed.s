@@ -231,7 +231,7 @@ frame_counter:
         jsr     ToUpperCase
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         cmp     #kShortcutCloseWindow
         beq     OnKeyOK
         jmp     InputLoop
@@ -312,7 +312,7 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
 
 .proc OnClickNorm
         BTK_CALL BTK::Track, norm_button
-    IF_ZERO
+    IF ZERO
         JSR_TO_MAIN DoNorm
     END_IF
         jmp     InputLoop
@@ -322,7 +322,7 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
 
 .proc OnClickFast
         BTK_CALL BTK::Track, fast_button
-    IF_ZERO
+    IF ZERO
         JSR_TO_MAIN DoFast
     END_IF
         jmp     InputLoop
@@ -379,13 +379,13 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
 
         inc     frame_counter
         lda     frame_counter
-    IF_A_EQ     #kNumAnimFrames * 4
+    IF A EQ     #kNumAnimFrames * 4
         copy8   #0, frame_counter
     END_IF
 
         inc     run_pos
         lda     run_pos
-    IF_A_EQ     #kRunDistance
+    IF A EQ     #kRunDistance
         copy8   #0, run_pos
 
         MGTK_CALL MGTK::SetPenMode, penXOR

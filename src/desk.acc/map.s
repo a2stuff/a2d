@@ -309,7 +309,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
@@ -319,7 +319,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         cmp     #CHAR_ESCAPE
         beq     Exit
 
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, find_button
         jsr     DoFind
         jmp     InputLoop
@@ -363,7 +363,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -384,7 +384,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
         ;; Erase old position
         jsr     SetPort
-    IF_EQ
+    IF EQ
         jsr     HidePositionIndicator
     END_IF
 
@@ -405,7 +405,7 @@ loop:
         cmp     (ptr),y
         bne     next
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Match!
         ldy     #0
@@ -417,7 +417,7 @@ loop:
         copy8   (ptr),y, lat,x
         iny
         inx
-    WHILE_X_NE  #4
+    WHILE X NE  #4
         jmp     done
 
         ;; Advance pointer to next record
@@ -444,7 +444,7 @@ fail:   JSR_TO_MAIN JUMP_TABLE_BELL
 
 done:   ;; Update display
         jsr     SetPort
-    IF_EQ
+    IF EQ
         jsr     DrawLatLong
     END_IF
         rts
@@ -466,9 +466,9 @@ index:  .byte   0
 
         ;; Click in button?
         MGTK_CALL MGTK::InRect, find_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, find_button
-      IF_NC
+      IF NC
         jsr     DoFind
       END_IF
         jmp     done
@@ -476,7 +476,7 @@ index:  .byte   0
 
         ;; Click in line edit?
         MGTK_CALL MGTK::InRect, input_rect
-    IF_NE
+    IF NE
         COPY_STRUCT screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
         jmp     done
@@ -488,7 +488,7 @@ index:  .byte   0
 
         ;; Erase old position
         jsr     SetPort
-    IF_EQ
+    IF EQ
         jsr     HidePositionIndicator
     END_IF
 
@@ -506,7 +506,7 @@ index:  .byte   0
 
         ;; Update display
         jsr     SetPort
-    IF_EQ
+    IF EQ
         jsr     DrawLatLong
     END_IF
 
@@ -523,7 +523,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
 .proc SetPort
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_ZERO
+    IF ZERO
         MGTK_CALL MGTK::SetPort, grafport_win
     END_IF
         rts
@@ -564,7 +564,7 @@ done:   jmp     InputLoop
 
         ;; Defer if content area is not visible
         jsr     SetPort
-    IF_ZERO
+    IF ZERO
         MGTK_CALL MGTK::HideCursor
 
         ;; ==============================
@@ -602,7 +602,7 @@ done:   jmp     InputLoop
         copy16  lat, tmp
         CLEAR_BIT7_FLAG sflag
         bit     tmp+1
-    IF_NS
+    IF NS
         SET_BIT7_FLAG sflag
         sub16   #0, tmp, tmp
     END_IF
@@ -613,7 +613,7 @@ done:   jmp     InputLoop
         param_call DrawString, str_from_int
         param_call DrawString, str_degree_suffix
         bit     sflag
-    IF_NC
+    IF NC
         param_call DrawString, str_n
     ELSE
         param_call DrawString, str_s
@@ -624,7 +624,7 @@ done:   jmp     InputLoop
         copy16  long, tmp
         CLEAR_BIT7_FLAG sflag
         bit     tmp+1
-    IF_NS
+    IF NS
         SET_BIT7_FLAG sflag
         sub16   #0, tmp, tmp
     END_IF
@@ -635,7 +635,7 @@ done:   jmp     InputLoop
         param_call DrawString, str_from_int
         param_call DrawString, str_degree_suffix
         bit     sflag
-    IF_NC
+    IF NC
         param_call DrawString, str_e
     ELSE
         param_call DrawString, str_w
@@ -654,10 +654,10 @@ sflag:  .byte   0
 .proc IdlePositionIndicator
         lda     blink_counter
         ora     blink_counter+1
-    IF_ZERO
+    IF ZERO
         jsr     ResetBlinkCounter
         jsr     SetPort
-      IF_EQ
+      IF EQ
         jsr     XDrawPositionIndicator
       END_IF
     END_IF
@@ -671,7 +671,7 @@ sflag:  .byte   0
 
 .proc ShowPositionIndicator
         bit     indicator_flag
-        RTS_IF_NC
+        RTS_IF NC
         FALL_THROUGH_TO XDrawPositionIndicator
 .endproc ; ShowPositionIndicator
 HidePositionIndicator := ShowPositionIndicator

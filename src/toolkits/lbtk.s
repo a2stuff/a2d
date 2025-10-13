@@ -187,14 +187,14 @@ UNSUPPRESS_SHADOW_WARNING
     DO
         copy8   (params_addr),y, command_data,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Cache static copy of the record in `lbr_copy`, for convenience
         ldy     #.sizeof(LBTK::ListBoxRecord)-1
     DO
         copy8   (a_record),y, lbr_copy,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Invoke the command
         dispatch := *+1
@@ -251,7 +251,7 @@ a_record        .addr
 
         jsr     _EnableScrollbar
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
-    IF_NS
+    IF NS
         lda     #0
     END_IF
         sec                     ; force draw
@@ -282,12 +282,12 @@ coords          .tag MGTK::Point
         COPY_STRUCT params::coords, event_params::coords
 
         jsr     _FindControlIsVerticalScrollBar
-    IF_EQ
+    IF EQ
         jsr     _HandleListScroll
         return  #$FF            ; not an item
     END_IF
 
-    IF_A_NE     #MGTK::Ctl::not_a_control
+    IF A NE     #MGTK::Ctl::not_a_control
         return  #$FF            ; not an item
     END_IF
 
@@ -302,14 +302,14 @@ coords          .tag MGTK::Point
         lda     divide_params::result
 
         ;; Validate
-    IF_A_GE     lbr_copy + LBTK::ListBoxRecord::num_items
+    IF A GE     lbr_copy + LBTK::ListBoxRecord::num_items
         lda     #$FF
         jsr     _SetSelectionAndNotify
         return  #$FF            ; not an item
     END_IF
 
         ;; Update selection (if different)
-    IF_A_NE     lbr_copy + LBTK::ListBoxRecord::selected_index
+    IF A NE     lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _SetSelectionAndNotify
     ELSE
         jsr     OnNoChange
@@ -332,7 +332,7 @@ coords          .tag MGTK::Point
         lda     (winfo_ptr),y
         ASSERT_EQUALS MGTK::Scroll::option_active, %00000001
         ror                     ; C = "active?"
-    IF_CC
+    IF CC
 ret:    rts
     END_IF
 
@@ -340,7 +340,7 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-    IF_A_EQ     #MGTK::Part::up_arrow
+    IF A EQ     #MGTK::Part::up_arrow
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -356,7 +356,7 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-    IF_A_EQ     #MGTK::Part::down_arrow
+    IF A EQ     #MGTK::Part::down_arrow
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -375,11 +375,11 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-    IF_A_EQ     #MGTK::Part::page_up
+    IF A EQ     #MGTK::Part::page_up
 repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
-    IF_A_LT     lbr_copy + LBTK::ListBoxRecord::num_rows
+    IF A LT     lbr_copy + LBTK::ListBoxRecord::num_rows
         lda     #0
         SKIP_NEXT_2_BYTE_INSTRUCTION
         ASSERT_NOT_EQUALS lbr_copy + LBTK::ListBoxRecord::num_rows, $C0, "bad BIT skip"
@@ -393,7 +393,7 @@ repeat:
 
         ;; --------------------------------------------------
 
-    IF_A_EQ     #MGTK::Part::page_down
+    IF A EQ     #MGTK::Part::page_down
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -434,16 +434,16 @@ update: jmp     _UpdateThumbAndDraw
 
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
-    IF_A_EQ     #MGTK::EventKind::drag
+    IF A EQ     #MGTK::EventKind::drag
         MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         ldy     #MGTK::Winfo::window_id
-      IF_A_EQ   (winfo_ptr),y
+      IF A EQ   (winfo_ptr),y
         lda     findwindow_params::which_area
-       IF_A_EQ  #MGTK::Area::content
+       IF A EQ  #MGTK::Area::content
         jsr     _FindControlIsVerticalScrollBar
-        IF_EQ
+        IF EQ
 
         lda     findcontrol_params::which_part
         ctl := *+1
@@ -474,7 +474,7 @@ modifiers       .byte
         END_PARAM_BLOCK
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
-    IF_ZERO
+    IF ZERO
 ret:    rts
     END_IF
 
@@ -485,11 +485,11 @@ ret:    rts
         ;; No modifiers
 
         ;; Up/Down move selection
-    IF_ZERO
-      IF_A_EQ   #CHAR_UP
+    IF ZERO
+      IF A EQ   #CHAR_UP
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
-       IF_NS
+       IF NS
         ldx     lbr_copy + LBTK::ListBoxRecord::num_items
        END_IF
         dex
@@ -498,7 +498,7 @@ ret:    rts
       END_IF
         ;; CHAR_DOWN
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
-      IF_NS
+      IF NS
         lda     #0
         beq     _SetSelectionAndNotify ; always
       END_IF
@@ -513,8 +513,8 @@ ret:    rts
         ;; Double modifiers
 
         ;; Home/End move selection to first/last
-    IF_X_EQ     #3
-      IF_A_EQ   #CHAR_UP
+    IF X EQ     #3
+      IF A EQ   #CHAR_UP
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
         lda     #0
@@ -522,7 +522,7 @@ ret:    rts
       END_IF
         ;; CHAR_DOWN
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
-      IF_NC
+      IF NC
         inx
         cpx     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     ret
@@ -535,7 +535,7 @@ ret:    rts
 
         ;; --------------------------------------------------
         ;; Single modifier
-    IF_A_EQ     #CHAR_UP
+    IF A EQ     #CHAR_UP
         lda     #MGTK::Part::page_up
         SKIP_NEXT_2_BYTE_INSTRUCTION
     END_IF
@@ -577,7 +577,7 @@ new_selection   .byte
         pla                     ; A = new selection
         sta     (a_record),y
         sta     lbr_copy + LBTK::ListBoxRecord::selected_index ; keep copy in sync
-    IF_NC
+    IF NC
         clc                     ; not force draw
         bcc     _ScrollIntoView ; always
     END_IF
@@ -728,7 +728,7 @@ update:
         copy8   (winfo_ptr),y, tmp_rect,x
         dey
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Set y2 to height
         sub16   tmp_rect+MGTK::Rect::y2, tmp_rect+MGTK::Rect::y1, tmp_rect+MGTK::Rect::y2
@@ -749,7 +749,7 @@ update:
         copy8   tmp_rect,x, (winfo_ptr),y
         dey
         dex
-    WHILE_POS
+    WHILE POS
 
         add16   winfo_ptr, #MGTK::Winfo::port, setport_addr
         MGTK_CALL MGTK::SetPort, SELF_MODIFIED, setport_addr
@@ -796,15 +796,15 @@ update:
         add16_8 tmp_point+MGTK::Point::ycoord, #kListItemHeight
 
         lda     index
-      IF_A_EQ   lbr_copy + LBTK::ListBoxRecord::selected_index
+      IF A EQ   lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _HighlightIndex
       END_IF
 
         inc     index
         lda     index
-        BREAK_IF_A_EQ lbr_copy + LBTK::ListBoxRecord::num_items
+        BREAK_IF A EQ lbr_copy + LBTK::ListBoxRecord::num_items
         dec     rows
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
 finish: MGTK_CALL MGTK::ShowCursor
         rts

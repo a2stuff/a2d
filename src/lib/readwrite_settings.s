@@ -39,18 +39,18 @@ op:     lda     SETTINGS,x      ; self-modified
 
         ;; Restore banking
         plp
-    IF_NC
+    IF NC
         bit     LCBANK1         ; restore LCBANK1
         bit     LCBANK1
     END_IF
 
         plp
-    IF_NC
+    IF NC
         bit     ROMIN2          ; restore ROMIN2
     END_IF
 
         plp
-    IF_NS
+    IF NS
         sta     ALTZPON         ; restore ALTZPON
     END_IF
 

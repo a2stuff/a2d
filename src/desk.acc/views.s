@@ -236,7 +236,7 @@ view_by_table:
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
@@ -295,7 +295,7 @@ view_by_table:
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 common: bit     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -329,13 +329,13 @@ common: bit     dragwindow_params::moved
         add16_8 rect_addr, #BTK::ButtonRecord::rect
 
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
-      IF_NOT_ZERO
+      IF NOT_ZERO
 
         lda     index
         jmp     ToggleButton
       END_IF
         dec     index
-    WHILE_POS
+    WHILE POS
 
         ;; ----------------------------------------
 
@@ -347,7 +347,7 @@ common: bit     dragwindow_params::moved
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -368,7 +368,7 @@ common: bit     dragwindow_params::moved
 
         lda     #BTK::kButtonStateNormal
         ldx     current_view_index
-      IF_X_EQ   index
+      IF X EQ   index
         lda     #BTK::kButtonStateChecked
       END_IF
 
@@ -379,7 +379,7 @@ common: bit     dragwindow_params::moved
         BTK_CALL BTK::RadioDraw, SELF_MODIFIED, params_addr
 
         dec     index
-    WHILE_POS
+    WHILE POS
 
         ;; --------------------------------------------------
 

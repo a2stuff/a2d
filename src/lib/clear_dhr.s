@@ -19,9 +19,9 @@ clear:  copy16  #HIRES_ADDR, ptr
       DO
         sta     (ptr),y
         iny
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inc     ptr+1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; ClearDHRToBlack

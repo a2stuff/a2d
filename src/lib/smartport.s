@@ -83,7 +83,7 @@ mirrored_slot   .byte
         ;; Figure out SmartPort control unit number in Y
         ldy     #1              ; start with unit 1
         bit     unit_number     ; high bit is D
-    IF_NS
+    IF NS
         iny                     ; Y = 1 or 2 (for Drive 1 or 2)
     END_IF
 
@@ -99,7 +99,7 @@ mirrored_slot   .byte
 
         lda     dispatch+1      ; $Cn
         and     #%00001111      ; $0n
-    IF_A_NE     mirrored_slot   ; equal = not mirrored
+    IF A NE     mirrored_slot   ; equal = not mirrored
         iny                     ; now Y = 3 or 4
         iny
     END_IF
@@ -166,12 +166,12 @@ mirrored:
 
         ;; Restore banking
         plp
-    IF_NC
+    IF NC
         bit     ROMIN2          ; restore ROMIN2
     END_IF
 
         plp
-    IF_NS
+    IF NS
         sta     ALTZPON         ; restore ALTZPON
     END_IF
 
@@ -203,14 +203,14 @@ mirrored:
         ;; ProDOS 2.x SmartPort mirroring?
         ldy     #(SPVecLP24 - DevAdrP24)
         cmp     #<DevAdrP24
-    IF_EQ
+    IF EQ
         cpx     #>DevAdrP24
         beq     mirrored
     END_IF
 
         ldy     #(SPVecLP20x - DevAdrP20x)
         cmp     #<DevAdrP20x
-    IF_EQ
+    IF EQ
         cpx     #>DevAdrP20x
         beq     mirrored
     END_IF

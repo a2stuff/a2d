@@ -76,7 +76,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         ;; IIgs: save text & border colors & set white-on-black text
         sec
         jsr     IDROUTINE
-    IF_CC
+    IF CC
         .pushcpu
         .setcpu "65816"
         lda     TBCOLOR         ; save text fg/bg
@@ -95,7 +95,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         ;; IIgs: restore original border color
         sec
         jsr     IDROUTINE
-    IF_CC
+    IF CC
         .pushcpu
         .setcpu "65816"
         lda     #$0F
@@ -153,11 +153,11 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     PAGE2OFF
 
         dey
-      WHILE_POS
+      WHILE POS
 
         inc     CV
         lda     CV
-    WHILE_A_NE  #24
+    WHILE A NE  #24
 
         sta     CLR80STORE
         rts
@@ -191,11 +191,11 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     PAGE2OFF
 
         dey
-      WHILE_POS
+      WHILE POS
 
         inc     CV
         lda     CV
-    WHILE_A_NE  #24
+    WHILE A NE  #24
 
         sta     CLR80STORE
         rts
@@ -426,7 +426,7 @@ bcnt:   dex
         ;; If IIgs, set border to plot color
         sec
         jsr     IDROUTINE
-    IF_CC
+    IF CC
         .pushcpu
         .setcpu "65816"
         lda     #$0F

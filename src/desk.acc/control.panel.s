@@ -509,13 +509,13 @@ caret_blink_caret_bitmap:
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
 
-      IF_A_GE   #'1'
-       IF_A_LT  #'9'+1
+      IF A GE   #'1'
+       IF A LT  #'9'+1
         sec
         sbc     #'1'
         tax
@@ -538,7 +538,7 @@ caret_blink_caret_bitmap:
         cmp     #CHAR_RIGHT
         jeq     HandleRArrClick
 
-    IF_A_EQ     #CHAR_CTRL_D
+    IF A EQ     #CHAR_CTRL_D
         BTK_CALL BTK::Flash, pattern_button
         jmp     HandlePatternClick
     END_IF
@@ -588,7 +588,7 @@ shortcut_table_addr_hi:
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -622,7 +622,7 @@ shortcut_table_addr_hi:
         jne     HandlePatternClick
 
         MGTK_CALL MGTK::InRect, pattern_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, pattern_button
         jmi     InputLoop
         jmp     HandlePatternClick
@@ -634,19 +634,19 @@ shortcut_table_addr_hi:
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, dblclick_button1::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #1
         jmp     HandleDblclickClick
     END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button2::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #2
         jmp     HandleDblclickClick
     END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button3::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #3
         jmp     HandleDblclickClick
     END_IF
@@ -654,13 +654,13 @@ shortcut_table_addr_hi:
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, tracking_slow_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #0
         jmp     HandleTrackingClick
     END_IF
 
         MGTK_CALL MGTK::InRect, tracking_fast_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #1
         jmp     HandleTrackingClick
     END_IF
@@ -668,19 +668,19 @@ shortcut_table_addr_hi:
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, caret_blink_button1::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #1
         jmp     HandleCaretBlinkClick
     END_IF
 
         MGTK_CALL MGTK::InRect, caret_blink_button2::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #2
         jmp     HandleCaretBlinkClick
     END_IF
 
         MGTK_CALL MGTK::InRect, caret_blink_button3::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #3
         jmp     HandleCaretBlinkClick
     END_IF
@@ -694,7 +694,7 @@ shortcut_table_addr_hi:
         inc     pattern_index
 
         lda     pattern_index
-    IF_A_GE     #kPatternCount
+    IF A GE     #kPatternCount
         copy8   #0, pattern_index
     END_IF
 
@@ -704,7 +704,7 @@ shortcut_table_addr_hi:
 .proc HandleLArrClick
         dec     pattern_index
 
-    IF_NEG
+    IF NEG
         copy8   #kPatternCount-1, pattern_index
     END_IF
 
@@ -721,10 +721,10 @@ shortcut_table_addr_hi:
     DO
         copy8   (ptr),y, pattern,y
         dey
-    WHILE_POS
+    WHILE POS
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_ZERO                     ; not obscured
+    IF ZERO                     ; not obscured
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::HideCursor
@@ -763,13 +763,13 @@ loop:   ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
         lda     pattern,y
         bit     flag
-    IF_NS
+    IF NS
         ora     mask1,x         ; set bit
     ELSE
         and     mask2,x         ; clear bit
     END_IF
         cmp     pattern,y       ; did it change?
-    IF_NE
+    IF NE
         sta     pattern,y
 
         ldx     screentowindow_params::windowx
@@ -792,13 +792,13 @@ loop:   ldx     screentowindow_params::windowx
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
-        CONTINUE_IF_ZERO
+        CONTINUE_IF ZERO
 
         jsr     MapCoords
         ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
-        BREAK_IF_X_NE lastx
-    WHILE_Y_EQ  lasty
+        BREAK_IF X NE lastx
+    WHILE Y EQ  lasty
 
 moved:  stx     lastx
         sty     lasty
@@ -822,13 +822,13 @@ lasty:  .byte   0
     DO
         lsr16   screentowindow_params::windowx
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldy     #kFatBitHeightShift
     DO
         lsr16   screentowindow_params::windowy
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         rts
 .endproc ; MapCoords
@@ -844,7 +844,7 @@ lasty:  .byte   0
         ldx     #kDblClickSpeedTableSize * 2
     DO
         ecmp16  dblclick_speed, dblclick_speed_table-2,x
-      IF_EQ
+      IF EQ
         ;; Found a match
         txa
         lsr                     ; /= 2
@@ -854,7 +854,7 @@ lasty:  .byte   0
 
         dex
         dex
-    WHILE_POS
+    WHILE POS
         copy8   #0, dblclick_selection ; not found
         rts
 
@@ -904,7 +904,7 @@ dblclick_speed: .word   0
 
         ;; Doubled if option selected
         pla
-    IF_NOT_ZERO
+    IF NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
@@ -915,7 +915,7 @@ dblclick_speed: .word   0
         bit     LCBANK1
         bit     LCBANK1
         cmp     #0              ; ZIDBYTE=0 for IIc / IIc+
-        IF_ZERO
+        IF ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
         END_IF
@@ -947,7 +947,7 @@ dblclick_speed: .word   0
     DO
         copy8   (ptr),y, pattern,y
         dey
-    WHILE_POS
+    WHILE POS
         rts
 .endproc ; InitPattern
 
@@ -959,7 +959,7 @@ dblclick_speed: .word   0
         lda     pattern - DeskTopSettings::pattern,x
         jsr     WriteSetting
         dex
-    WHILE_X_NE  #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE X NE  #AS_BYTE(DeskTopSettings::pattern-1)
 
         jsr     MarkDirty
 
@@ -986,7 +986,7 @@ notpencopy:     .byte   MGTK::notpencopy
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_NOT_ZERO         ; obscured
+        RTS_IF NOT_ZERO         ; obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -1043,13 +1043,13 @@ notpencopy:     .byte   MGTK::notpencopy
         lda     SELF_MODIFIED,y
         sta     darrow_params::viewloc,y
         dey
-      WHILE_POS
+      WHILE POS
 
         MGTK_CALL MGTK::PaintBitsHC, darrow_params
         add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
         lda     arrow_num
-    WHILE_A_NE  #kNumArrows
+    WHILE A NE  #kNumArrows
 .endscope
 
         BTK_CALL BTK::RadioDraw, dblclick_button1
@@ -1059,7 +1059,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowShortcuts
-    IF_NOT_ZERO
+    IF NOT_ZERO
         MGTK_CALL MGTK::MoveTo, dblclick_shortcut1_label_pos
         param_call DrawString, dblclick_shortcut1_label_str
         MGTK_CALL MGTK::MoveTo, dblclick_shortcut2_label_pos
@@ -1110,7 +1110,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowShortcuts
-    IF_NOT_ZERO
+    IF NOT_ZERO
         MGTK_CALL MGTK::MoveTo, caret_blink_button1_shortcut_label_pos
         param_call DrawString, caret_blink_button1_shortcut_label_str
         MGTK_CALL MGTK::MoveTo, caret_blink_button2_shortcut_label_pos
@@ -1129,7 +1129,7 @@ arrow_num:
 .endproc ; DrawWindow
 
 .proc ZToButtonState
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #BTK::kButtonStateNormal
         rts
     END_IF
@@ -1231,9 +1231,9 @@ arrow_num:
         cmp     #$80
         rol     rotated_pattern,x
         dex
-      WHILE_POS
+      WHILE POS
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Draw it
 
@@ -1277,7 +1277,7 @@ xloop:  ror     row
         .assert MGTK::notpencopy <> $C0, error, "Bad BIT skip"
 zero:   lda     #MGTK::notpencopy
 store:
-    IF_A_NE mode
+    IF A NE mode
         sta     mode
         MGTK_CALL MGTK::SetPenMode, mode
     END_IF
@@ -1287,7 +1287,7 @@ store:
         ;; next x
         inc     xpos
         lda     xpos
-    IF_A_NE     #8
+    IF A NE     #8
         add16_8 bitrect::x1, #kFatBitWidth
         add16_8 bitrect::x2, #kFatBitWidth
         jmp     xloop
@@ -1296,7 +1296,7 @@ store:
         ;; next y
         inc     ypos
         lda     ypos
-    IF_A_NE     #8
+    IF A NE     #8
         add16_8 bitrect::y1, #kFatBitHeight
         add16_8 bitrect::y2, #kFatBitHeight
         jmp     yloop
@@ -1328,13 +1328,13 @@ mode:   .byte   0
     DO
         asl16   bitrect::x1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     #kFatBitHeightShift
     DO
         asl16   bitrect::y1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
         add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
@@ -1343,7 +1343,7 @@ mode:   .byte   0
 
         lda     #MGTK::pencopy
         bit     mode
-    IF_NC
+    IF NC
         lda     #MGTK::notpencopy
     END_IF
         sta     mode
@@ -1588,7 +1588,7 @@ caret_blink_counter:
         ldx     #kCaretBlinkSpeedTableSize * 2
     DO
         ecmp16  caret_blink_speed, caret_blink_speed_table-2,x
-      IF_EQ
+      IF EQ
         ;; Found a match
         txa
         lsr                     ; /= 2
@@ -1598,7 +1598,7 @@ caret_blink_counter:
 
         dex
         dex
-    WHILE_POS
+    WHILE POS
         copy8   #0, caret_blink_selection ; not found
         rts
 

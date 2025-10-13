@@ -17,7 +17,7 @@
     DO
         dey
         beq     done
-      IF_NEG
+      IF NEG
 done:   rts
       END_IF
 
@@ -25,16 +25,16 @@ done:   rts
         cmp     #'A'
         bcs     check_alpha
         dey
-        CONTINUE_IF_POS         ; always
+        CONTINUE_IF POS         ; always
 
 check_alpha:
         iny
         lda     (ptr),y
         cmp     #'A'
-      IF_GE
+      IF GE
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
       END_IF
         dey
-    WHILE_POS                   ; always
+    WHILE POS                   ; always
 .endscope

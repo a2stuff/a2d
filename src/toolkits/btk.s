@@ -198,7 +198,7 @@ ret:
 .proc FlashImpl
         ;; If disabled, return canceled
         bit     state
-    IF_NS
+    IF NS
         return  #$80
     END_IF
 
@@ -230,7 +230,7 @@ skip_port:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowShortcuts
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Draw the string (left aligned)
         add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
@@ -239,7 +239,7 @@ skip_port:
         ;; Draw the shortcut (if present, right aligned)
         lda     a_shortcut
         ora     a_shortcut+1
-      IF_NOT_ZERO
+      IF NOT_ZERO
         @width := $9
         jsr     _MeasureShortcut
         stax    @width
@@ -262,7 +262,7 @@ skip_port:
     END_IF
 
         bit     state
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penOR
         MGTK_CALL MGTK::InflateRect, shrink_rect
@@ -295,7 +295,7 @@ END_PARAM_BLOCK
         stax    dt_params::textptr
         ldy     #0
         lda     (dt_params::textptr),y
-    IF_NOT_ZERO
+    IF NOT_ZERO
         sta     dt_params::textlen
         inc16   dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
@@ -329,7 +329,7 @@ END_PARAM_BLOCK
 
         ldy     #0
         lda     (tw_params::textptr),y
-    IF_ZERO
+    IF ZERO
         lda     #0
         tax
         rts
@@ -368,7 +368,7 @@ UNSUPPRESS_SHADOW_WARNING
 
         ;; If disabled, return canceled
         bit     state
-    IF_NS
+    IF NS
         return  #$80
     END_IF
 
@@ -386,7 +386,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         cmp     #MGTK::EventKind::button_up
         beq     exit
         lda     window_id
-    IF_ZERO
+    IF ZERO
         MGTK_CALL MGTK::MoveTo, event_params::coords
     ELSE
         sta     screentowindow_params::window_id
@@ -408,7 +408,7 @@ toggle: lda     down_flag
         jmp     loop_i          ; invert and continue
 
 exit:   lda     down_flag       ; was depressed?
-    IF_ZERO
+    IF ZERO
         jsr     _Invert
     END_IF
         ;; Note that we want N=0 and Z=1 if clicked, so bits<7 matter.
@@ -464,7 +464,7 @@ unchecked_rb_bitmap:
 
         lda     a_label
         ora     a_label+1
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Draw the label
         pos := $B
         add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
@@ -497,7 +497,7 @@ unchecked_rb_bitmap:
         COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, rb_params::viewloc
         ldax    #unchecked_rb_bitmap
         bit     state
-    IF_NS
+    IF NS
         ldax    #checked_rb_bitmap
     END_IF
         stax    rb_params::mapbits
@@ -551,7 +551,7 @@ unchecked_cb_bitmap:
 
         lda     a_label
         ora     a_label+1
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Draw the label
         pos := $B
         add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kCheckboxWidth, pos+MGTK::Point::xcoord
@@ -584,7 +584,7 @@ unchecked_cb_bitmap:
         COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, cb_params::viewloc
         ldax    #unchecked_cb_bitmap
         bit     state
-    IF_NS
+    IF NS
         ldax    #checked_cb_bitmap
     END_IF
         stax    cb_params::mapbits
@@ -602,10 +602,10 @@ unchecked_cb_bitmap:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowShortcuts
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     a_shortcut
         ora     a_shortcut+1
-      IF_NOT_ZERO
+      IF NOT_ZERO
         jsr     _DrawShortcut
 
         jsr     _MeasureShortcut
@@ -625,7 +625,7 @@ unchecked_cb_bitmap:
         copy8   rect,x, (params_addr),y
         dey
         dex
-    WHILE_POS
+    WHILE POS
         rts
 .endproc ; _WriteRectBackToButtonRecord
 

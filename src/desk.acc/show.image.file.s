@@ -183,7 +183,7 @@ on_key:
         jsr     ToUpperCase
 
         ldx     event_params + MGTK::Event::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         cmp     #kShortcutCloseWindow
         beq     Exit
         cmp     #CHAR_LEFT
@@ -202,13 +202,13 @@ on_key:
         cmp     #CHAR_RIGHT
         jeq     NextFile
 
-    IF_A_EQ     #'S'
+    IF A EQ     #'S'
         cpy     #$00             ; Y = previous `slideshow_flag` state
         bne     InputLoop        ; Ignore (so toggle) if slideshow mode was on
         beq     SetSlideshowMode ; always
     END_IF
 
-    IF_A_EQ     #' '
+    IF A EQ     #' '
         jsr     ToggleMode
     END_IF
 
@@ -248,7 +248,7 @@ restore_buffer_overlay_flag:
         jsr     MaybeCallExitHook
 
         bit     restore_buffer_overlay_flag
-    IF_NS
+    IF NS
         lda     #kDynamicRoutineRestoreBuffer
         jsr     JUMP_TABLE_RESTORE_OVL
     END_IF
@@ -268,7 +268,7 @@ restore_buffer_overlay_flag:
 .proc MaybeCallExitHook
         lda     hook
         ora     hook+1
-    IF_NOT_ZERO
+    IF NOT_ZERO
         hook := *+1
         jsr     $0000           ; self-modified; 0 = no hook
         copy16  #0, hook
@@ -285,13 +285,13 @@ exit_hook := MaybeCallExitHook::hook
 .proc ShowFile
         ;; Check file type
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-    IF_CS
+    IF CS
 fail:   rts
     END_IF
 
         lda     get_file_info_params::file_type
 
-        RTS_IF_A_EQ #FT_DIRECTORY ; C=1 signals failure
+        RTS_IF A EQ #FT_DIRECTORY ; C=1 signals failure
 
         cmp     #FT_PNT
         jeq     ShowPackedSHR
@@ -307,8 +307,8 @@ fail:   rts
         ldx     get_file_info_params::aux_type+1
 
         ;; auxtype $8066 - LZ4FH packed image
-    IF_X_EQ     #$80
-      IF_A_EQ   #$66
+    IF X EQ     #$80
+      IF A EQ   #$66
         jmp     ShowLZ4FHFile
       END_IF
     END_IF
@@ -330,7 +330,7 @@ get_eof:
 
         ;; Maybe LR/DLR?
         ecmp16  get_file_info_params::aux_type, #$400
-    IF_EQ
+    IF EQ
         ecmp24  get_eof_params::eof, #$400
         jeq     ShowLRFile
 
@@ -394,7 +394,7 @@ dhr:    jsr     CopyHiresToAux
 finish:
         lda     signature
         and     #kSigColor
-    IF_ZERO
+    IF ZERO
         jsr     SetBWMode
     END_IF
 
@@ -441,7 +441,7 @@ fail:   sec                     ; failure
 .proc ShowHRFile
         ;; If suffix is ".A2HR" show in mono mode
         param_call CheckSuffix, str_a2hr_suffix
-    IF_CC
+    IF CC
         jsr     SetBWMode
     END_IF
 
@@ -463,7 +463,7 @@ fail:   sec                     ; failure
 
         ;; If suffix is ".A2FM" show in mono mode
         param_call CheckSuffix, str_a2fm_suffix
-    IF_CC
+    IF CC
         jsr     SetBWMode
     END_IF
 
@@ -502,10 +502,10 @@ fail:   sec                     ; failure
       DO
         copy8   (ptr),y, (ptr),y
         iny
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inc     ptr+1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         sta     SET80STORE
         sta     RAMWRTOFF
@@ -596,12 +596,12 @@ next:
         sta     spill
 
         dey
-      WHILE_POS
+      WHILE POS
 
         pla
         clc
         adc     #1
-    WHILE_A_NE  #kRows
+    WHILE A NE  #kRows
 
 done:   rts
 .endproc ; HRToDHR
@@ -630,7 +630,7 @@ done:   rts
         ;; Main
         double_flag := *+1
         lda     #SELF_MODIFIED_BYTE
-    IF_NS
+    IF NS
         JUMP_TABLE_MLI_CALL READ, read_lores_params
     END_IF
         lda     #$80            ; main
@@ -668,7 +668,7 @@ convert:
         pla                     ; A = row
         pha                     ; A = row
         and     #%0000100
-       IF_ZERO
+       IF ZERO
         ;; Top nibble
         txa                     ; A = double pixel
         and     #%00001111      ; A = pixel
@@ -683,9 +683,9 @@ convert:
 
         ;; In double-lores, the aux-bank patterns are shifted
         bit     double_flag
-       IF_NS
+       IF NS
         bit     is_main
-        IF_NC
+        IF NC
         ;; rotate lo nibble left, A = 0000abcd
         asl                     ; A = 000abcd0
         adc     #%11110000      ; A = xxxxbcd0 C=a
@@ -719,17 +719,17 @@ convert:
         inc     hr_ptr+1
         inc     hr_ptr+1
         dex
-       WHILE_NOT_ZERO
+       WHILE NOT_ZERO
         pla                     ; restore ptr
         sta     hr_ptr+1
 
         iny                     ; next col
-      WHILE_Y_NE #kCols
+      WHILE Y NE #kCols
 
         pla                     ; A = row
         clc
         adc     #4
-    WHILE_A_LT #kRows
+    WHILE A LT #kRows
 
         clc                     ; success
         rts
@@ -798,7 +798,7 @@ dorow:  ldx     #8
         jsr     GetBit
         jsr     PutBit2
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; We've written out 88*2 bits = 176 bits.  This means 1 bit was shifted into
         ;; the last bit.  We need to get it from the MSB to the LSB, so it needs
@@ -807,7 +807,7 @@ dorow:  ldx     #8
         clc
         jsr     PutBit1
         dex
-    WHILE_X_NE  #AS_BYTE(-7)    ; do 7 times == 7 bits
+    WHILE X NE  #AS_BYTE(-7)    ; do 7 times == 7 bits
 
         dec     row
         bne     dorow
@@ -874,7 +874,7 @@ color_mode_flag:   .byte   0    ; bit7=0 = B&W, bit7=1 = color
 
 .proc SetColorMode
         bit     color_mode_flag
-    IF_NC
+    IF NC
         SET_BIT7_FLAG color_mode_flag
         jsr     JUMP_TABLE_COLOR_MODE
     END_IF
@@ -883,7 +883,7 @@ color_mode_flag:   .byte   0    ; bit7=0 = B&W, bit7=1 = color
 
 .proc SetBWMode
         bit     color_mode_flag
-    IF_NS
+    IF NS
         CLEAR_BIT7_FLAG color_mode_flag
         jsr     JUMP_TABLE_MONO_MODE
     END_IF
@@ -934,7 +934,7 @@ body:   lda     read_buf
         lda     read_buf,x
         jsr     Write
         inx
-    WHILE_X_NE  count
+    WHILE X NE  count
 
         jmp     loop
 
@@ -954,7 +954,7 @@ not_00: cmp     #%01000000
     DO
         jsr     Write
         dec     count
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         jmp     loop
 
@@ -980,7 +980,7 @@ not_01: cmp     #%10000000
         lda     read_buf+3
         jsr     Write
         dec     count
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         jmp     loop
 
@@ -1001,7 +1001,7 @@ not_10:
         jsr     Write
         jsr     Write
         dec     count
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         jmp     loop
 
@@ -1035,7 +1035,7 @@ UnpackRead := UnpackReadImpl::start
         param_call UnpackRead, Write
 
         bit     dhr_flags       ; if hires, need to convert
-    IF_NC
+    IF NC
         jsr     HRToDHR
     END_IF
 
@@ -1051,7 +1051,7 @@ UnpackRead := UnpackReadImpl::start
         ;; ASSERT: Y=0
         sta     (ptr),y
         inc     ptr
-        RTS_IF_NOT_ZERO
+        RTS_IF NOT_ZERO
 
         pha
 
@@ -1120,10 +1120,10 @@ clear:  copy16  #hires, ptr
       DO
         sta     (ptr),y
         iny
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inc     ptr+1
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 
 done:
@@ -1152,7 +1152,7 @@ done:
         dey
         beq     yes             ; out of suffix - it's a match
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
 no:     sec                     ; no match
         rts
@@ -1189,7 +1189,7 @@ is_iigs:
 
         jsr     InitSHR
         bit     packed_flag
-    IF_NS
+    IF NS
         jsr     LoadPackedSHR
     ELSE
         jsr     LoadUnpackedSHR
@@ -1280,7 +1280,7 @@ packed_flag:                    ; bit7
         clc
         adc     #>kHiresSize
         sta     dest+1
-    WHILE_A_NE  #>(SHR_SCREEN+kSHRSize)
+    WHILE A NE  #>(SHR_SCREEN+kSHRSize)
 
         rts
 .endproc ; LoadUnpackedSHR
@@ -1348,7 +1348,7 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
     DO
         copy8   (ptr),y, entry,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; TODO: Keep this logic in sync with DeskTop's
         ;; `ICT_RECORD` definitions for graphics files.
@@ -1371,13 +1371,13 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         cmp     #FT_GRAPHICS
         jeq     yes
 
-    IF_A_EQ     #FT_PNT
+    IF A EQ     #FT_PNT
         ecmp16  entry+FileEntry::aux_type, #$0001
         jeq     yes
         jmp     no
     END_IF
 
-    IF_A_EQ     #FT_PIC
+    IF A EQ     #FT_PIC
         ecmp16  entry+FileEntry::aux_type, #$0000
         jeq     yes
         jne     no              ; always
@@ -1388,7 +1388,7 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
 
         ;; Binary: Must match size/address
         ecmp16  entry+FileEntry::blocks_used, #33 ; DHR
-    IF_EQ
+    IF EQ
         ecmp16  entry+FileEntry::aux_type, #$2000
         jeq     yes
         ecmp16  entry+FileEntry::aux_type, #$4000
@@ -1396,7 +1396,7 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
     END_IF
 
         ecmp16  entry+FileEntry::blocks_used, #17 ; HR
-    IF_EQ
+    IF EQ
         ecmp16  entry+FileEntry::aux_type, #$2000
         beq     yes
         ecmp16  entry+FileEntry::aux_type, #$4000
@@ -1404,19 +1404,19 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
     END_IF
 
         ecmp16  entry+FileEntry::blocks_used, #3 ; MiniPix
-    IF_EQ
+    IF EQ
         ecmp16  entry+FileEntry::aux_type, #$5800
         beq     yes
     END_IF
 
         ecmp16  entry+FileEntry::blocks_used, #3 ; LR
-    IF_EQ
+    IF EQ
         ecmp16  entry+FileEntry::aux_type, #$400
         beq     yes
     END_IF
 
         ecmp16  entry+FileEntry::blocks_used, #5 ; DLR
-    IF_EQ
+    IF EQ
         ecmp16  entry+FileEntry::aux_type, #$400
         beq     yes
     END_IF
@@ -1449,7 +1449,7 @@ yes:    sec
         dey
         beq     yes             ; out of suffix - it's a match
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
 no:     sec                     ; no match
         rts
@@ -1508,7 +1508,7 @@ next_entry:
 
         ;; Header?
         bit     saw_header_flag
-    IF_NC
+    IF NC
         SET_BIT7_FLAG saw_header_flag
         bmi     next_entry      ; always
     END_IF
@@ -1580,7 +1580,7 @@ saw_header_flag:                ; bit7
     DO
         dex
         lda     dir_path,x
-    WHILE_A_NE  #'/'
+    WHILE A NE  #'/'
         dex
         stx     dir_path
 
@@ -1593,7 +1593,7 @@ saw_header_flag:                ; bit7
         lda     dir_path,x
         jsr     ToUpperCase
         sta     cur_filename,y
-    WHILE_X_NE  INVOKE_PATH
+    WHILE X NE  INVOKE_PATH
         sty     cur_filename
 
         param_call EnumerateDirectory, callback
@@ -1602,22 +1602,22 @@ saw_header_flag:                ; bit7
         ;; along with maybe `prev_filename` and `next_filename`.
         ;; Based on `flags`, pick the right file to show.
         bit     flags
-    IF_VS
-      IF_NS
+    IF VS
+      IF NS
         ldax    #last_filename
       ELSE
         ldax    #first_filename
       END_IF
-    ELSE_IF_NS
+    ELSE_IF NS
         lda     next_filename
-      IF_NOT_ZERO
+      IF NOT_ZERO
         ldax    #next_filename
       ELSE
         ldax    #first_filename
       END_IF
     ELSE
         lda     prev_filename
-      IF_NOT_ZERO
+      IF NOT_ZERO
         ldax    #prev_filename
       ELSE
         ldax    #last_filename
@@ -1640,7 +1640,7 @@ saw_header_flag:                ; bit7
         copy8   (fnptr),y, dir_path,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-    WHILE_NE
+    WHILE NE
         stx     dir_path
 
         COPY_STRING dir_path, INVOKE_PATH
@@ -1667,11 +1667,11 @@ fail:   jmp     Init
         jsr     ToUpperCase
         sta     last_filename,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; First seen? might need it
         lda     first_filename
-    IF_ZERO
+    IF ZERO
         COPY_STRING last_filename, first_filename
     END_IF
 
@@ -1684,7 +1684,7 @@ fail:   jmp     Init
         cmp     last_filename,x
         bne     not_cur
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         SET_BIT7_FLAG seen_flag
         rts
@@ -1694,14 +1694,14 @@ not_cur:
 
         ;; Seen the current file yet? If not, save it as previous
         bit     seen_flag
-    IF_NC
+    IF NC
         COPY_STRING last_filename, prev_filename
         rts
     END_IF
 
         ;; Yes... have we seen one after it? If not, save it as next
         lda     next_filename
-    IF_ZERO
+    IF ZERO
         COPY_STRING last_filename, next_filename
     END_IF
 

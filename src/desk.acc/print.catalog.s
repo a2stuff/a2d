@@ -53,11 +53,11 @@
 
         ;; Try to verify a printer card in slot 1
         param_call CheckSlot1Signature, sigtable_printer
-    IF_ZC
+    IF ZC
         param_call CheckSlot1Signature, sigtable_ssc
-      IF_ZC
+      IF ZC
         param_call CheckSlot1Signature, sigtable_parallel
-       IF_ZC
+       IF ZC
         lda     #ERR_DEVICE_NOT_CONNECTED
         jmp     JUMP_TABLE_SHOW_ALERT
        END_IF
@@ -84,7 +84,7 @@
     DO
         copy8   (ptr),y, searchPath,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Append '/' needed by algorithm
         ldy     searchPath
@@ -122,7 +122,7 @@ continue:
         lda     iw2_init,x
         jsr     COut
         inx
-    WHILE_X_NE  #kLenIW2Init
+    WHILE X NE  #kLenIW2Init
 
         ;; Recurse and print
         jsr     PrintCatalog
@@ -138,12 +138,12 @@ PrintCatalog:
         lda     str_header+1,x
         jsr     COut
         inx
-    WHILE_X_NE  str_header
+    WHILE X NE  str_header
         jsr     CROut
 
         ;; If we're doing multiple volumes, get started
         bit     vol_flag
-    IF_NS
+    IF NS
         jsr     InitVolumes
         jsr     NextVolume
         bcs     finish
@@ -156,7 +156,7 @@ next:
         lda     searchPath+1,x
         jsr     COut
         inx
-    WHILE_X_LT  searchPath
+    WHILE X LT  searchPath
         jsr     CROut
         copy8   #1, indent
 
@@ -165,7 +165,7 @@ next:
 
         ;; If we're doing multiple volumes, do the next one
         bit     vol_flag
-    IF_NS
+    IF NS
         jsr     NextVolume
         bcc     next
     END_IF
@@ -211,10 +211,10 @@ iw2_init:
         iny
         and     (ptr),y
         iny
-        BREAK_IF_A_NE (ptr),y
+        BREAK_IF A NE (ptr),y
 
         dec     count
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         rts
 
@@ -315,7 +315,7 @@ saved_stack:
     DO
         copy8   searchPath,y, nameBuffer,y
         dey
-    WHILE_POS
+    WHILE POS
 
         lda     #0              ; reset recursion/results state
         sta     Depth
@@ -389,7 +389,7 @@ ItsADir:
 
 nextEntry:
         lda     KBD
-    IF_NS
+    IF NS
         sta     KBDSTRB
         cmp     #$80|CHAR_ESCAPE
         beq     Terminate
@@ -459,12 +459,12 @@ OpenDone:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowInvisible
-    IF_ZERO
+    IF ZERO
         ;; Is the file visible?
         ldy     #FileEntry::access
         lda     (entPtr),y
         and     #ACCESS_I
-        RTS_IF_NOT_ZERO
+        RTS_IF NOT_ZERO
     END_IF
 
         jsr     PrintName
@@ -473,7 +473,7 @@ OpenDone:
         lda     #' '
     DO
         jsr     COut
-    WHILE_X_GE  ch
+    WHILE X GE  ch
 
         jsr     PrintType
         jsr     PrintSize
@@ -487,13 +487,13 @@ OpenDone:
 .proc PrintName
         ;; Print indentation
         ldx     indent
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #' '
       DO
         jsr     COut
         jsr     COut
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     END_IF
 
         ;; Print name
@@ -507,7 +507,7 @@ OpenDone:
         jsr     COut
         iny
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         rts
 .endproc ; PrintName
@@ -524,7 +524,7 @@ OpenDone:
         lda     str_file_type+1,x
         jsr     COut
         inx
-    WHILE_X_NE  str_file_type
+    WHILE X NE  str_file_type
 
         rts
 .endproc ; PrintType
@@ -548,7 +548,7 @@ OpenDone:
     DO
         jsr     COut
         dex
-    WHILE_X_NE  str_from_int
+    WHILE X NE  str_from_int
 
         ;; Print it
         ldx     #0
@@ -556,7 +556,7 @@ OpenDone:
         lda     str_from_int+1,x
         jsr     COut
         inx
-    WHILE_X_NE  str_from_int
+    WHILE X NE  str_from_int
 
         rts
 .endproc ; PrintSize
@@ -577,7 +577,7 @@ OpenDone:
         ldx     #0              ; hi
         jsr     IntToString
         lda     str_from_int
-    IF_A_EQ     #1
+    IF A EQ     #1
         lda     #' '
         ldx     str_from_int+1
     ELSE
@@ -617,14 +617,14 @@ OpenDone:
         ldy     #FileEntry::mod_date+1
         lda     (entPtr),y
         lsr                     ; A = 0YYYYYYY
-    IF_A_GE     #100
+    IF A GE     #100
         sec
         sbc     #100
     END_IF
         ldx     #0              ; hi
         jsr     IntToString
         lda     str_from_int
-    IF_A_EQ     #1
+    IF A EQ     #1
         lda     #'0'
         ldx     str_from_int+1
     ELSE
@@ -640,7 +640,7 @@ OpenDone:
     DO
         jsr     COut
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Print it
         ldx     #0
@@ -648,7 +648,7 @@ OpenDone:
         lda     str_date+1,x
         jsr     COut
         inx
-    WHILE_X_NE  str_date
+    WHILE X NE  str_date
 
         rts
 
@@ -671,7 +671,7 @@ tmp:    .byte   0
         kMaxRecursionDepth = 16
 
         lda     Depth
-    IF_A_LT     #kMaxRecursionDepth
+    IF A LT     #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
     END_IF
 
@@ -936,7 +936,7 @@ repeat: ldx     devidx
     DO
         copy8   on_line_buffer+1,x, searchPath+2,x
         inx
-    WHILE_X_NE  on_line_buffer
+    WHILE X NE  on_line_buffer
 
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx

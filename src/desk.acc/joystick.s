@@ -222,7 +222,7 @@ joystick_bitmap:
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
@@ -271,7 +271,7 @@ joystick_bitmap:
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 
         bit     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -300,7 +300,7 @@ notpencopy:     .byte   MGTK::notpencopy
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_ZERO                     ; not obscured
+    IF ZERO                     ; not obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
@@ -346,7 +346,7 @@ notpencopy:     .byte   MGTK::notpencopy
         lsr                     ; clamp range to 0...127
         sta     curr+InputState::pdl0,x
         dex
-    WHILE_POS
+    WHILE POS
 
         lsr     curr+InputState::pdl1 ; clamp Y to 0...63 (due to pixel aspect ratio)
         lsr     curr+InputState::pdl3 ; clamp Y to 0...63 (due to pixel aspect ratio)
@@ -372,7 +372,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; If last state was valid, see if joystick 2 registered
         ;; a change; if so, set a flag.
         bit     last+InputState::valid
-    IF_NS
+    IF NS
         lda     curr+InputState::pdl2
         cmp     last+InputState::pdl2
         bne     set
@@ -385,14 +385,14 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         ;; Changed? (or first time through)
         bit     force_draw_flag
-    IF_NC
+    IF NC
         ldx     #.sizeof(InputState)-1
       DO
         lda     curr,x
         cmp     last,x
         bne     :+              ; changed - draw
         dex
-      WHILE_POS
+      WHILE POS
         rts                     ; no change - skip
 :
     END_IF
@@ -404,7 +404,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -415,7 +415,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
         ;; Erase old
         MGTK_CALL MGTK::SetPenMode, penOR
         bit     joy2_valid_flag
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::PaintBitsHC, joy_marker2
     END_IF
         MGTK_CALL MGTK::PaintBitsHC, joy_marker
@@ -446,7 +446,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
         ;; Draw new
         MGTK_CALL MGTK::SetPenMode, notpencopy
         bit     joy2_valid_flag
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::PaintBitsHC, joy_marker2
     END_IF
         MGTK_CALL MGTK::PaintBitsHC, joy_marker
@@ -510,7 +510,7 @@ pdl3:   .byte   0
         tya
         sta     pdl0,x
         dex
-    WHILE_POS
+    WHILE POS
 
         JSR_TO_MAIN JUMP_TABLE_RESUME_SPEED
 
@@ -526,9 +526,9 @@ pdl3:   .byte   0
         nop                     ; https://github.com/a2stuff/a2d/issues/173
         nop
         nop
-        BREAK_IF_ZERO
+        BREAK_IF ZERO
         lda     PADDL0,x
-    WHILE_NS
+    WHILE NS
 
         ;; Read paddle
         ;; Per Technical Note: Apple IIe #6: The Apple II Paddle Circuits
@@ -541,7 +541,7 @@ pdl3:   .byte   0
         lda     PADDL0,X        ; 11 microsecond loop
         bpl     done
         iny
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         dey                     ; handle overflow
 
 done:   rts

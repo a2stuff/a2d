@@ -94,7 +94,7 @@ start:  tsx
         txs
 
         lda     window_id
-    IF_ZERO
+    IF ZERO
         lda     #kErrNoWindowsOpen
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
@@ -175,7 +175,7 @@ exit1:  jmp     Exit
         beq     exit1           ; nope, bail
 
         cmp     #kMaxDeskTopWindows+1 ; is it DeskTop window?
-    IF_GE
+    IF GE
         copy8   #0, window_id   ; nope, bail
         beq     exit1           ; always
     END_IF
@@ -192,7 +192,7 @@ exit1:  jmp     Exit
     DO
         copy8   (ptr),y, path_buf,y
         dey
-    WHILE_POS
+    WHILE POS
 
         FALL_THROUGH_TO ReadSortWrite
 .endproc ; Start2
@@ -232,7 +232,7 @@ loop:
         sta     block_num_table+1,x
 
         ora     block_num_table,x
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Move to next "block"
         inc     buf_ptr1_hi
         inc     buf_ptr1_hi
@@ -259,7 +259,7 @@ loop:
         ldy     #0
         lda     (ptr),y
         and     #STORAGE_TYPE_MASK ; skip deleted entries
-    WHILE_ZERO
+    WHILE ZERO
         ldy     #FileEntry::header_pointer
         copy16in (ptr),y, block_num_table
 .endscope ; read
@@ -376,14 +376,14 @@ start:  copy8   #0, flag
     DO
         copy16  ptr1, ptr2
         jsr     SetPtrToNextEntry
-        BREAK_IF_CS
+        BREAK_IF CS
 
         jsr     CompareFileEntries
-        CONTINUE_IF_LT
+        CONTINUE_IF LT
 
         jsr     SwapEntries
         copy8   #$FF, flag
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
 
         lda     flag
         bne     start
@@ -443,7 +443,7 @@ rtcs:   sec
     DO
         swap8   (ptr1),y, (ptr2),y
         dey
-    WHILE_POS
+    WHILE POS
         rts
 .endproc ; SwapEntries
 
@@ -468,9 +468,9 @@ rtcs:   sec
 
         ;; Are we sorting by selection order?
         jsr     JUMP_TABLE_GET_SEL_COUNT
-    IF_NOT_ZERO                 ; Must have selection
+    IF NOT_ZERO                 ; Must have selection
         jsr     JUMP_TABLE_GET_SEL_WIN
-      IF_A_EQ   window_id       ; Is selection in the active window?
+      IF A EQ   window_id       ; Is selection in the active window?
         jmp     CompareSelectionOrders
       END_IF
     END_IF
@@ -489,7 +489,7 @@ rtcs:   sec
         rol                     ; now low 2 bits have 0=yes, 1=no
         beq     sys             ; both, so compare as SYS
         cmp     #%00000011      ; neither, so continue
-    IF_NE
+    IF NE
         ror                     ; order back into C
         rts
     END_IF
@@ -654,7 +654,7 @@ match2: .byte   0
 
         lda     type2
         cmp     type0
-    IF_NE
+    IF NE
         lda     type1
         cmp     type0
         beq     rtcs
@@ -719,7 +719,7 @@ type0:  .byte   0
         cmp     str_system,x
         bne     fail
         cpx     str_system
-    WHILE_NE
+    WHILE NE
 
         clc
         rts
@@ -748,7 +748,7 @@ str_system:
         and     #NAME_LENGTH_MASK
         sta     len1
         cmp     len
-    IF_LT
+    IF LT
         sta     len
     END_IF
 

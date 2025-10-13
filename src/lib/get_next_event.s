@@ -20,14 +20,14 @@
 
         lda     event_params+MGTK::Event::kind
         .assert MGTK::EventKind::no_event = 0, error, "enum mismatch"
-    IF_ZERO
+    IF ZERO
         ldx     #.sizeof(MGTK::Point)-1
       DO
         lda     event_params+MGTK::Event::coords,x
         cmp     coords,x
         bne     diff
         dex
-      WHILE_POS
+      WHILE POS
         lda     #MGTK::EventKind::no_event
         beq     set             ; always
 

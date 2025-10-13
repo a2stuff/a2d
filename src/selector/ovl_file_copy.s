@@ -131,7 +131,7 @@ saved_stack:
     DO
         copy8   copy_jt,y, op_jt_addrs,y
         dey
-    WHILE_POS
+    WHILE POS
 
         tsx
         stx     saved_stack
@@ -139,13 +139,13 @@ saved_stack:
         ;; Is there enough space?
         jsr     CopyPathsFromBufsToSrcAndDst
         MLI_CALL GET_FILE_INFO, dst_file_info_params
-    IF_CS
+    IF CS
         jmp     HandleErrorCode
     END_IF
         blocks := $06
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks
         cmp16   blocks, block_count
-    IF_LT
+    IF LT
         jmp     ShowDiskFullError
     END_IF
 
@@ -159,7 +159,7 @@ saved_stack:
         iny
         inx
         copy8   filename,y, pathname_dst,x
-    WHILE_Y_NE filename
+    WHILE Y NE filename
         stx     pathname_dst
 
         jmp     DoCopy
@@ -193,7 +193,7 @@ block_count:                    ; totaled during enumeration
     DO
         copy8   enum_jt,y, op_jt_addrs,y
         dey
-    WHILE_POS
+    WHILE POS
 
         tsx
         stx     saved_stack
@@ -206,7 +206,7 @@ block_count:                    ; totaled during enumeration
 
         jsr     CopyPathsFromBufsToSrcAndDst
 retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
-    IF_CS
+    IF CS
       IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     ShowInsertSourceDiskPrompt
         jmp     retry
@@ -217,7 +217,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; Visit the key file
         lda     src_file_info_params::storage_type
         pha                     ; A = `storage_type`
-    IF_A_EQ     #ST_VOLUME_DIRECTORY
+    IF A EQ     #ST_VOLUME_DIRECTORY
         copy16  #0, src_file_info_params::blocks_used ; dummy value
     END_IF
         jsr     EnumerateVisitFile
@@ -264,18 +264,18 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     DO
         iny
         lda     src_path,y
-      IF_A_EQ   #'/'
+      IF A EQ   #'/'
         sty     src_path_slash_index
       END_IF
         sta     pathname_src,y
-    WHILE_Y_NE  src_path
+    WHILE Y NE  src_path
 
         ;; Copy `dst_path` to `pathname_dst`
         ldy     dst_path
     DO
         copy8   dst_path,y, pathname_dst,y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; CopyPathsFromBufsToSrcAndDst
@@ -289,24 +289,24 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ldy     src_path
     DO
         lda     src_path,y
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         dey
         sty     src_path
 
     DO
         lda     src_path,y
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dey
-    WHILE_POS
+    WHILE POS
 
         ldx     #0
     DO
         iny
         inx
         copy8   src_path,y, filename,x
-    WHILE_Y_NE  src_path
+    WHILE Y NE  src_path
         stx     filename
 
         param_call app::CopyRAMCardPrefix, dst_path
@@ -442,7 +442,7 @@ remainder:      .word   0                 ; (out)
 .proc UpdateCopyProgress
         dec     file_count
         lda     file_count
-    IF_A_EQ     #$FF
+    IF A EQ     #$FF
         dec     file_count+1
     END_IF
 
@@ -496,7 +496,7 @@ display_path:
         lda     #AlertID::insert_source_disk
         jsr     app::ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
-    IF_ZERO                         ; `kAlertResultCancel` = 1
+    IF ZERO                         ; `kAlertResultCancel` = 1
         jmp     app::SetCursorWatch ; try again
     END_IF
         jmp     RestoreStackAndReturn
@@ -540,7 +540,7 @@ display_path:
 .proc CheckCancel
         MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_params::kind
-    IF_A_EQ     #MGTK::EventKind::key_down
+    IF A EQ     #MGTK::EventKind::key_down
         lda     app::event_params::key
         cmp     #CHAR_ESCAPE
         beq     RestoreStackAndReturn

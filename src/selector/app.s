@@ -382,7 +382,7 @@ check_key:
         stax    entry_ptr
         ldy     #kSelectorEntryFlagsOffset
         lda     (entry_ptr),y
-    IF_A_NE     #kSelectorEntryCopyNever
+    IF A NE     #kSelectorEntryCopyNever
         jsr     GetCopiedToRAMCardFlag
         beq     done_keys       ; no RAMCard, skip
         ldx     invoke_index
@@ -440,7 +440,7 @@ done_keys:
         sta     slot_table,y
 
 next:   dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 .endscope
 
         ;; --------------------------------------------------
@@ -453,7 +453,7 @@ next:   dex
         cmp     slot_table,y
         jeq     StartupSlot
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         FALL_THROUGH_TO set_startup_menu_items
 
 set_startup_menu_items:
@@ -508,7 +508,7 @@ set_startup_menu_items:
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
         dex
-    WHILE_X_NE  #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE X NE  #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
 
@@ -527,7 +527,7 @@ set_startup_menu_items:
         MGTK_CALL MGTK::FlushEvents
 
         lda     startdesktop_params::slot_num
-    IF_ZERO
+    IF ZERO
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         ora     #DeskTopSettings::kOptionsShowShortcuts
@@ -540,13 +540,13 @@ set_startup_menu_items:
         ;; Doubled if option selected
         ldx     #DeskTopSettings::mouse_tracking
         jsr     ReadSetting
-    IF_NOT_ZERO
+    IF NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
         ;; Also doubled if a IIc
         lda     ZIDBYTE         ; ZIDBYTE=0 for IIc / IIc+
-    IF_ZERO
+    IF ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
@@ -581,23 +581,23 @@ quick_boot_slot:
         jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-    IF_A_EQ     #MGTK::EventKind::button_down
+    IF A EQ     #MGTK::EventKind::button_down
         jsr     HandleButtonDown
         jmp     EventLoop
     END_IF
 
-    IF_A_EQ     #MGTK::EventKind::key_down
+    IF A EQ     #MGTK::EventKind::key_down
         ;; --------------------------------------------------
         ;; Key Down
         bit     desktop_available_flag
-      IF_NC
+      IF NC
         lda     event_params::key
         jsr     ToUpperCase
-       IF_A_EQ  #kShortcutRunDeskTop
+       IF A EQ  #kShortcutRunDeskTop
 
         BTK_CALL BTK::Flash, desktop_button
 retry:  param_call GetFileInfo, str_desktop_2
-        IF_CS
+        IF CS
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
@@ -614,7 +614,7 @@ retry:  param_call GetFileInfo, str_desktop_2
 
         ;; --------------------------------------------------
 
-    IF_A_EQ     #MGTK::EventKind::update
+    IF A EQ     #MGTK::EventKind::update
         jsr     ClearUpdates
     END_IF
 
@@ -628,23 +628,23 @@ CheckAndClearUpdates:
     DO
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
-        BREAK_IF_A_NE #MGTK::EventKind::update
+        BREAK_IF A NE #MGTK::EventKind::update
 
         MGTK_CALL MGTK::GetEvent, event_params
         FALL_THROUGH_TO ClearUpdates
 
 ClearUpdates:
         lda     event_params::window_id
-        CONTINUE_IF_A_NE #winfo::kDialogId
+        CONTINUE_IF A NE #winfo::kDialogId
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
-        CONTINUE_IF_NOT_ZERO    ; obscured
+        CONTINUE_IF NOT_ZERO    ; obscured
 
         sec                     ; is update
         jsr     DrawWindow
         OPTK_CALL OPTK::Update, op_params
         MGTK_CALL MGTK::EndUpdate
-    WHILE_ZERO                  ; always
+    WHILE ZERO                  ; always
         rts
 
 ;;; ============================================================
@@ -756,7 +756,7 @@ retry:
 
         ;; Load file dialog overlay
         MLI_CALL OPEN, open_selector_params
-    IF_CC
+    IF CC
         lda     open_selector_params::ref_num
         sta     set_mark_overlay1_params::ref_num
         sta     read_overlay1_params::ref_num
@@ -792,17 +792,17 @@ cancel: jmp     LoadSelectorList
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         ASSERT_EQUALS MGTK::Area::desktop, 0
-        RTS_IF_ZERO
+        RTS_IF ZERO
 
-    IF_A_EQ     #MGTK::Area::menubar
+    IF A EQ     #MGTK::Area::menubar
         MGTK_CALL MGTK::MenuSelect, menu_params
         jmp     HandleMenu
     END_IF
 
-        RTS_IF_A_NE #MGTK::Area::content
+        RTS_IF A NE #MGTK::Area::content
 
         lda     findwindow_params::window_id
-        RTS_IF_A_NE #winfo::kDialogId
+        RTS_IF A NE #winfo::kDialogId
 
         lda     #winfo::kDialogId
         jsr     GetWindowPort
@@ -823,14 +823,14 @@ done:   rts
 
 check_desktop_btn:
         bit     desktop_available_flag
-    IF_NC
+    IF NC
         MGTK_CALL MGTK::InRect, desktop_button::rect
-      IF_NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, desktop_button
         bmi     done
 
 retry:  param_call GetFileInfo, str_desktop_2
-       IF_CS
+       IF CS
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         ASSERT_NOT_EQUALS kAlertResultCancel, 0
@@ -846,7 +846,7 @@ retry:  param_call GetFileInfo, str_desktop_2
         OPTK_CALL OPTK::Click, op_params
         bmi     ret
         jsr     DetectDoubleClick
-    IF_NC
+    IF NC
         BTK_CALL BTK::Flash, ok_button
         jmp     TryInvokeSelectedIndex
     END_IF
@@ -858,11 +858,11 @@ ret:    rts
 .proc UpdateOKButton
         lda     #BTK::kButtonStateNormal
         bit     op_record::selected_index
-    IF_NS
+    IF NS
         lda     #BTK::kButtonStateDisabled
     END_IF
 
-    IF_A_NE     ok_button::state
+    IF A NE     ok_button::state
         sta     ok_button::state
         BTK_CALL BTK::Hilite, ok_button
     END_IF
@@ -892,7 +892,7 @@ noop:   rts
 
 .proc RestoreSystem
         bit     desktop_started_flag
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::StopDeskTop
     END_IF
         jsr     RestoreTextMode
@@ -935,7 +935,7 @@ noop:   rts
         lda     #winfo::kDialogId
         jsr     GetWindowPort
         lda     event_params::key
-    IF_A_LT     #$1C            ; Control character?
+    IF A LT     #$1C            ; Control character?
         jmp     control_char
     END_IF
 
@@ -943,12 +943,12 @@ noop:   rts
 
         ;; 1-8 to select entry
 
-        RTS_IF_A_LT #'1'
-        RTS_IF_A_GE #'8'+1
+        RTS_IF A LT #'1'
+        RTS_IF A GE #'8'+1
 
         sec
         sbc     #'1'
-        RTS_IF_A_GE num_primary_run_list_entries
+        RTS_IF A GE num_primary_run_list_entries
 
         sta     op_params::new_selection
         OPTK_CALL OPTK::SetSelection, op_params
@@ -960,7 +960,7 @@ noop:   rts
         ;; Return ?
 
 control_char:
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     TryInvokeSelectedIndex
     END_IF
@@ -970,7 +970,7 @@ control_char:
 
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
-    IF_NE
+    IF NE
         lda     event_params::key
       IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     op_params::key
@@ -991,25 +991,25 @@ control_char:
     DO
         sta     entries_flag_table,x
         dex
-    WHILE_POS
+    WHILE POS
 
         ldx     #0
     DO
-        BREAK_IF_X_EQ num_primary_run_list_entries
+        BREAK_IF X EQ num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
         inx
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     #0
     DO
-        BREAK_IF_X_EQ num_secondary_run_list_entries
+        BREAK_IF X EQ num_secondary_run_list_entries
         txa
         clc
         adc     #8
         sta     entries_flag_table+8,x
         inx
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         rts
 .endproc ; PopulateEntriesFlagTable
@@ -1022,7 +1022,7 @@ entries_flag_table:
 
 .proc TryInvokeSelectedIndex
         lda     op_record::selected_index
-        RTS_IF_NS
+        RTS_IF NS
         jmp     InvokeEntry
 .endproc ; TryInvokeSelectedIndex
 
@@ -1089,15 +1089,15 @@ error:  lda     #AlertID::insert_system_disk
     DO
         copy8   DEVCNT,x, backup_devlst,x
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Find the startup volume's unit number
         copy8   DEVNUM, target
         jsr     GetCopiedToRAMCardFlag
-    IF_MINUS
+    IF MINUS
         param_call CopyDeskTopOriginalPrefix, INVOKER_PREFIX
         param_call GetFileInfo, INVOKER_PREFIX
-      IF_CC
+      IF CC
         copy8   DEVNUM, target
       END_IF
     END_IF
@@ -1111,7 +1111,7 @@ error:  lda     #AlertID::insert_system_disk
         cmp     #SELF_MODIFIED_BYTE
         beq     found
         inx
-    WHILE_X_LT  DEVCNT
+    WHILE X LT  DEVCNT
         bcs     done            ; last one or not found
 
         ;; Save it
@@ -1121,7 +1121,7 @@ found:  ldy     DEVLST,x
     DO
         copy8   DEVLST+1,x, DEVLST,x
         inx
-    WHILE_X_NE  DEVCNT
+    WHILE X NE  DEVCNT
 
         ;; Place it at the end
         tya
@@ -1140,7 +1140,7 @@ done:   rts
     DO
         copy8   backup_devlst,x, DEVCNT,x
         dex
-    WHILE_POS
+    WHILE POS
 
 ret:    rts
 .endproc ; RestoreDeviceList
@@ -1171,18 +1171,18 @@ backup_devlst:
         param_call DrawTitleString, str_selector_title
 
         plp
-    IF_CS
+    IF CS
         ;; Processing update event
         BTK_CALL BTK::Update, ok_button
         bit     desktop_available_flag
-      IF_NC
+      IF NC
         BTK_CALL BTK::Update, desktop_button
       END_IF
     ELSE
         ;; Non-update
         BTK_CALL BTK::Draw, ok_button
         bit     desktop_available_flag
-      IF_NC
+      IF NC
         BTK_CALL BTK::Draw, desktop_button
       END_IF
     END_IF
@@ -1309,7 +1309,7 @@ hi:     .byte   0
     DO
         copy8   (ptr),y, entry_string_buf+3,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Increase length by 3
         ldy     #0
@@ -1319,7 +1319,7 @@ hi:     .byte   0
         sta     text_params::length
 
         pla
-    IF_A_GE     #8              ; first 8?
+    IF A GE     #8              ; first 8?
         ;; Prefix with spaces
         lda     #' '
         sta     entry_string_buf+1
@@ -1378,7 +1378,7 @@ start:
         ;; --------------------------------------------------
         ;; Highlight entry in UI, if needed
         bit     invoked_during_boot_flag
-    IF_NC                       ; skip if there's no UI yet
+    IF NC                       ; skip if there's no UI yet
         jsr     SetCursorWatch
         jsr     ClearSelectedIndex
     END_IF
@@ -1386,7 +1386,7 @@ start:
         ;; --------------------------------------------------
         ;; Figure out entry path, given entry options and overrides
         bit     invoked_during_boot_flag
-    IF_NC
+    IF NC
         bit     BUTN0           ; if Open-Apple is down, skip RAMCard copy
         jmi     use_entry_path
 
@@ -1427,7 +1427,7 @@ start:
         jsr     LoadSelectorList
         jsr     CheckAndClearUpdates
         pla
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     SetCursorPointer
         jmp     ClearSelectedIndex ; canceled!
     END_IF
@@ -1441,7 +1441,7 @@ start:
         ;; `kSelectorEntryCopyOnBoot`
 on_boot:
         bit     invoked_during_boot_flag
-    IF_NC                       ; skip if no UI
+    IF NC                       ; skip if no UI
         ldx     invoke_index
         jsr     GetEntryCopiedToRAMCardFlag
         bpl     use_entry_path  ; wasn't copied!
@@ -1477,7 +1477,7 @@ retry:
         ;; Not present; maybe show a retry prompt
         tax
         bit     invoked_during_boot_flag
-    IF_NC
+    IF NC
         txa
         pha
         jsr     ShowAlert
@@ -1505,13 +1505,13 @@ check_type:
         sta     INVOKER_BITSY_COMPAT
 
         lda     file_info_params::file_type
-    IF_A_EQ     #FT_LINK
+    IF A EQ     #FT_LINK
         jsr     ReadLinkFile
         bcs     err
         bcc     retry
     END_IF
 
-    IF_A_EQ     #FT_BASIC
+    IF A EQ     #FT_BASIC
         param_call CheckInterpreter, str_extras_basic
         bcc     check_path
         jsr     CheckBasicSystem ; try relative to launch path
@@ -1522,7 +1522,7 @@ check_type:
         jmp     ClearSelectedIndex
     END_IF
 
-    IF_A_EQ     #FT_INT
+    IF A EQ     #FT_INT
         param_call CheckInterpreter, str_extras_intbasic
         bcc     check_path
         jsr     ShowAlert
@@ -1544,7 +1544,7 @@ check_type:
         beq     check_path
 
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
-    IF_EQ
+    IF EQ
         SET_BIT7_FLAG INVOKER_BITSY_COMPAT
         bmi     check_path      ; always
     END_IF
@@ -1564,7 +1564,7 @@ check_path:
         cmp     #'/'
         beq     :+
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
@@ -1581,7 +1581,7 @@ check_path:
         iny
         inx
         copy8   INVOKER_PREFIX,y, INVOKER_FILENAME,x
-    WHILE_Y_NE  INVOKER_PREFIX
+    WHILE Y NE  INVOKER_PREFIX
 
         stx     INVOKER_FILENAME
         pla
@@ -1610,7 +1610,7 @@ check_path:
 
 .proc ClearSelectedIndex
         bit     invoked_during_boot_flag
-    IF_NC
+    IF NC
         copy8   #$FF, op_params::new_selection
         OPTK_CALL OPTK::SetSelection, op_params
         jsr     UpdateOKButton
@@ -1633,7 +1633,7 @@ check_path:
     DO
         copy8   (ptr),y, INVOKER_PREFIX,y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; CopyPathToInvokerPrefix
@@ -1669,7 +1669,7 @@ check_path:
         cmp     check_header,x
         bne     err
         dex
-    WHILE_POS
+    WHILE POS
 
         COPY_STRING read_buf + kLinkFilePathLengthOffset, INVOKER_PREFIX
         clc
@@ -1714,7 +1714,7 @@ str_basix_system:
     DO
         copy8   launch_path,x, interp_path,x
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Pop off a path segment.
 pop_segment:
@@ -1725,7 +1725,7 @@ pop_segment:
         cmp     #'/'
         beq     found_slash
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
 no_bs:  copy8   #0, interp_path ; null out the path
         return  #$FF            ; non-zero is failure
@@ -1744,7 +1744,7 @@ found_slash:
         inx
         iny
         copy8   str_basix_system,y, interp_path,x
-    WHILE_Y_NE  str_basix_system
+    WHILE Y NE  str_basix_system
         stx     interp_path
         param_call GetFileInfo, interp_path
         bcs     pop_segment
@@ -1772,7 +1772,7 @@ CheckBasicSystem        := CheckBasixSystemImpl::basic
         copy8   (ptr),y, INVOKER_INTERPRETER,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-    WHILE_NE
+    WHILE NE
         stx     INVOKER_INTERPRETER
 
         param_jump GetFileInfo, INVOKER_INTERPRETER
@@ -1800,14 +1800,14 @@ CheckBasicSystem        := CheckBasixSystemImpl::basic
         stax    ptr
         ldy     #$00
         lda     (ptr),y
-    IF_NOT_ZERO
+    IF NOT_ZERO
         tay
       DO
         lda     (ptr),y
         jsr     ToUpperCase
         sta     (ptr),y
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     END_IF
         rts
 .endproc ; UpcaseString
@@ -1844,16 +1844,16 @@ str_extras_awlaunch:
         tay
     DO
         lda     (path_addr),y
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         dey
     DO
         lda     (path_addr),y
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         dey
         ldx     buf
@@ -1861,7 +1861,7 @@ str_extras_awlaunch:
         inx
         iny
         copy8   (path_addr),y, buf,x
-    WHILE_Y_NE  len
+    WHILE Y NE  len
 
         stx     buf
         ldax    #buf
@@ -1911,7 +1911,7 @@ len:    .byte   0
         inc     loop_counter
         inc     loop_counter
         lda     loop_counter
-    IF_A_GE     #kMaxCounter
+    IF A GE     #kMaxCounter
         copy8   #0, loop_counter
 
         jsr     ShowClock

@@ -52,7 +52,7 @@ sig_bytes:
         cmp     sig_bytes,y
         bne     no_device
         dey
-    WHILE_POS
+    WHILE POS
 
         hbasl := $6
         kScreenWidth  = 560
@@ -81,7 +81,7 @@ no_device:
         lda     spacing_sequence,y
         jsr     COut
         iny
-    WHILE_Y_NE  #kLenSpacingSequence
+    WHILE Y NE  #kLenSpacingSequence
         rts
 .endproc ; SendSpacing
 
@@ -91,7 +91,7 @@ no_device:
         lda     restore_sequence,y
         jsr     COut
         iny
-    WHILE_Y_NE  #kLenRestoreSequence
+    WHILE Y NE  #kLenRestoreSequence
         rts
 .endproc ; SendRestoreState
 
@@ -101,7 +101,7 @@ no_device:
         lda     init_graphics,x
         jsr     COut
         inx
-    WHILE_X_NE  #kLenInitGraphics
+    WHILE X NE  #kLenInitGraphics
         rts
 init_graphics:
         .byte   CHAR_ESCAPE,"G0560"     ; Graphics, 560 data bytes
@@ -132,7 +132,7 @@ col_loop:
         lsr     a               ; Even or odd column?
         tay
         sta     PAGE2OFF        ; By default, read main mem $2000-$3FFF
-      IF_CC                     ; But even columns come from aux, so...
+      IF CC                     ; But even columns come from aux, so...
         sta     PAGE2ON         ; Read aux mem $2000-$3FFF
       END_IF
         lda     (hbasl),y       ; Grab the whole byte
@@ -144,7 +144,7 @@ col_loop:
         ror     accum           ; Doubled
         inc     y_coord
         dec     count
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Send the 8 pixels to the printer.
         lda     accum           ; Now output it
@@ -154,7 +154,7 @@ col_loop:
 
         ;; Done all pixels across?
         lda     x_coord
-    IF_A_EQ     #<(kScreenWidth-1)
+    IF A EQ     #<(kScreenWidth-1)
         lda     x_coord+1
         cmp     #>(kScreenWidth-1)
         beq     done
@@ -162,7 +162,7 @@ col_loop:
 
         ;; Next pixel to the right
         asl     mask
-    IF_NS                       ; Only 7 pixels per column
+    IF NS                       ; Only 7 pixels per column
         copy8   #1, mask
         inc     col_num
     END_IF
@@ -194,7 +194,7 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
         jsr     COut
 
         copy8   y_coord, y_row
-    WHILE_A_LT  #kScreenHeight
+    WHILE A LT  #kScreenHeight
 
         ;; Finish up
         lda     #CHAR_RETURN

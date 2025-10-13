@@ -37,12 +37,12 @@ event_params:   .tag MGTK::Event
 
 .proc InputLoop
         dec     delta
-    IF_ZERO
+    IF ZERO
         copy8   #7, delta
     END_IF
 
         dec     deltac
-    IF_ZERO
+    IF ZERO
         copy8   #27, deltac
     END_IF
 
@@ -50,7 +50,7 @@ event_params:   .tag MGTK::Event
         lda     col
         sec
         sbc     deltac
-    IF_NEG
+    IF NEG
         clc
         adc     #kNumCols
     END_IF
@@ -112,7 +112,7 @@ deltac: .byte   31
 
         dec     row
         ldx     row
-    WHILE_X_GE  delta
+    WHILE X GE  delta
 
         ;; Black in at the top
     DO
@@ -129,7 +129,7 @@ deltac: .byte   31
         sta     (dst_ptr),y
 
         dex
-    WHILE_POS
+    WHILE POS
         rts
 
 row:    .byte   0

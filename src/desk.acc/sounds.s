@@ -278,19 +278,19 @@ grafport_win:       .tag    MGTK::GrafPort
         jmp     InputLoop
     END_IF
 
-    IF_X_NE     #0
+    IF X NE     #0
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         jeq     Exit
         jmp     InputLoop
     END_IF
 
-    IF_A_EQ     #CHAR_ESCAPE
+    IF A EQ     #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     DoCancel
     END_IF
 
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     Exit
     END_IF
@@ -304,16 +304,16 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
         lda     findwindow_params::window_id
-    IF_A_EQ     winfo::window_id
+    IF A EQ     winfo::window_id
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         beq     HandleDialogClick
         jmp     InputLoop
     END_IF
 
-    IF_A_EQ     winfo_listbox::window_id
+    IF A EQ     winfo_listbox::window_id
         lda     findwindow_params::which_area
-      IF_A_EQ   #MGTK::Area::content
+      IF A EQ   #MGTK::Area::content
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         jmp     InputLoop
@@ -336,14 +336,14 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         jeq     Exit
         jmp     InputLoop
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         jeq     DoCancel
         jmp     InputLoop
@@ -381,7 +381,7 @@ grafport_win:       .tag    MGTK::GrafPort
     DO
         copy8   (ptr),y, BELLDATA,y
         dey
-    WHILE_POS
+    WHILE POS
 
         sta     ALTZPON
         bit     LCBANK1
@@ -506,7 +506,7 @@ finish: sta     ALTZPON
         rol
 
         dey
-    WHILE_POS
+    WHILE POS
 
         hi := *+1
         ldx     #SELF_MODIFIED_BYTE
@@ -1344,7 +1344,7 @@ END_SOUND_PROC
 
 .proc OnListSelectionChange
         lda     listbox_rec::selected_index
-        RTS_IF_NS
+        RTS_IF NS
 
         jmp     PlayIndex
 .endproc ; OnListSelectionChange
@@ -1444,7 +1444,7 @@ done:   rts
         inx
         iny
         copy8   filename,x, filename_buffer,y
-    WHILE_X_NE  filename
+    WHILE X NE  filename
         sty     filename_buffer
         rts
 .endproc ; AppendFilename

@@ -42,7 +42,7 @@ LoadSettings:
 
         ;; IIc Plus?
         lda     ZIDBYTE         ; $00 = IIc or later
-    IF_ZERO
+    IF ZERO
         lda     ZIDBYTE2        ; IIc ROM Version
         cmp     #5
         beq     update          ; 4x speed

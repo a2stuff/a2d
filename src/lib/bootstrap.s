@@ -31,7 +31,7 @@
         inc16   src
         inc16   dst
         ecmp16  src, #QuitRoutine + sizeof_QuitRoutine
-    WHILE_NE
+    WHILE NE
 
         bit     ROMIN2
 
@@ -77,7 +77,7 @@ self:
         ;; IIgs: Reset shadowing
         sec
         jsr     IDROUTINE
-    IF_CC
+    IF CC
         .pushcpu
         .p816
         .a8
@@ -102,7 +102,7 @@ retry:
         lda     str_loading,y
         jsr     COUT
         iny
-    WHILE_Y_NE  #kLoadingStringLength
+    WHILE Y NE  #kLoadingStringLength
 
         ;; Close all open files (just in case)
         MLI_CALL CLOSE, close_params
@@ -114,7 +114,7 @@ retry:
     DO
         sta     BITMAP,x
         dex
-    WHILE_POS
+    WHILE POS
         copy8   #%00000001, BITMAP+BITMAP_SIZE-1 ; ProDOS global page
         copy8   #%11001111, BITMAP ; ZP, Stack, Text Page 1
 
@@ -151,7 +151,7 @@ prompt_for_system_disk:
         lda     str_disk_prompt,y
         jsr     COUT
         iny
-    WHILE_Y_NE  #kDiskPromptLength
+    WHILE Y NE  #kDiskPromptLength
 
 wait:
         sta     KBDSTRB

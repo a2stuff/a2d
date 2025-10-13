@@ -150,7 +150,7 @@ auxtype:        .word   SELF_MODIFIED
 
 .proc RunDA
         bit     data::type_valid
-    IF_NC
+    IF NC
         copy8   #0, str_type
     ELSE
         copy8   #2, str_type
@@ -161,7 +161,7 @@ auxtype:        .word   SELF_MODIFIED
     END_IF
 
         bit     data::auxtype_valid
-    IF_NC
+    IF NC
         copy8   #0, str_auxtype
     ELSE
         copy8   #4, str_auxtype
@@ -192,7 +192,7 @@ auxtype:        .word   SELF_MODIFIED
 
 .proc InputLoop
         bit     auxtype_focused_flag
-    IF_NC
+    IF NC
         LETK_CALL LETK::Idle, type_le_params
     ELSE
         LETK_CALL LETK::Idle, auxtype_le_params
@@ -221,13 +221,13 @@ auxtype:        .word   SELF_MODIFIED
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, type_rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     SetCursorIBeam
         jmp     InputLoop
     END_IF
 
         MGTK_CALL MGTK::InRect, auxtype_rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     SetCursorIBeam
         jmp     InputLoop
     END_IF
@@ -239,7 +239,7 @@ cursor_ibeam_flag: .byte   0
 
 .proc SetCursorIBeam
         bit     cursor_ibeam_flag
-        RTS_IF_NS
+        RTS_IF NS
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         SET_BIT7_FLAG cursor_ibeam_flag
@@ -248,7 +248,7 @@ cursor_ibeam_flag: .byte   0
 
 .proc SetCursorPointer
         bit     cursor_ibeam_flag
-        RTS_IF_NC
+        RTS_IF NC
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         CLEAR_BIT7_FLAG cursor_ibeam_flag
@@ -269,21 +269,21 @@ cursor_ibeam_flag: .byte   0
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         jpl     ExitOK
         jmp     InputLoop
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         jpl     ExitCancel
         jmp     InputLoop
     END_IF
 
         MGTK_CALL MGTK::InRect, type_rect
-    IF_NE
+    IF NE
         jsr     FocusType
         COPY_STRUCT screentowindow_params::window, type_le_params::coords
         LETK_CALL LETK::Click, type_le_params
@@ -291,7 +291,7 @@ cursor_ibeam_flag: .byte   0
     END_IF
 
         MGTK_CALL MGTK::InRect, auxtype_rect
-    IF_NE
+    IF NE
         jsr     FocusAuxtype
         COPY_STRUCT screentowindow_params::window, auxtype_le_params::coords
         LETK_CALL LETK::Click, auxtype_le_params
@@ -307,7 +307,7 @@ cursor_ibeam_flag: .byte   0
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         jeq     ExitCancel
@@ -315,19 +315,19 @@ cursor_ibeam_flag: .byte   0
         jmp     InputLoop
     END_IF
 
-    IF_A_EQ     #CHAR_ESCAPE
+    IF A EQ     #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     ExitCancel
     END_IF
 
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     ExitOK
     END_IF
 
-    IF_A_EQ     #CHAR_TAB
+    IF A EQ     #CHAR_TAB
         bit     auxtype_focused_flag
-      IF_NC
+      IF NC
         jsr     FocusAuxtype
       ELSE
         jsr     FocusType
@@ -336,15 +336,15 @@ cursor_ibeam_flag: .byte   0
     END_IF
 
         jsr     IsControlChar
-    IF_CS
+    IF CS
         jsr     IsHexChar
-      IF_CS
+      IF CS
         jmp     InputLoop
       END_IF
     END_IF
 
         bit     auxtype_focused_flag
-    IF_NC
+    IF NC
         sta     type_le_params::key
         copy8   event_params::modifiers, type_le_params::modifiers
         LETK_CALL LETK::Key, type_le_params
@@ -397,7 +397,7 @@ yes:    clc
 ;;; No-op if type already focused
 .proc FocusType
         bit     auxtype_focused_flag
-    IF_NS
+    IF NS
         LETK_CALL LETK::Deactivate, auxtype_le_params
         LETK_CALL LETK::Activate, type_le_params
         CLEAR_BIT7_FLAG auxtype_focused_flag
@@ -408,7 +408,7 @@ yes:    clc
 ;;; No-op if auxtype already focused
 .proc FocusAuxtype
         bit     auxtype_focused_flag
-    IF_NC
+    IF NC
         LETK_CALL LETK::Deactivate, type_le_params
         LETK_CALL LETK::Activate, auxtype_le_params
         SET_BIT7_FLAG auxtype_focused_flag
@@ -421,24 +421,24 @@ yes:    clc
 .proc PadType
     DO
         lda     str_type
-        BREAK_IF_A_EQ #2
+        BREAK_IF A EQ #2
         copy8   str_type+1, str_type+2
         copy8   #'0', str_type+1
         inc     str_type
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
         rts
 .endproc ; PadType
 
 .proc PadAuxtype
     DO
         lda     str_auxtype
-        BREAK_IF_A_EQ #4
+        BREAK_IF A EQ #4
         copy8   str_auxtype+3, str_auxtype+4
         copy8   str_auxtype+2, str_auxtype+3
         copy8   str_auxtype+1, str_auxtype+2
         copy8   #'0', str_auxtype+1
         inc     str_auxtype
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
         rts
 .endproc ; PadAuxtype
 
@@ -460,7 +460,7 @@ yes:    clc
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         lda     str_type
-    IF_ZERO
+    IF ZERO
         CLEAR_BIT7_FLAG data::type_valid
     ELSE
         SET_BIT7_FLAG data::type_valid
@@ -472,7 +472,7 @@ yes:    clc
     END_IF
 
         lda     str_auxtype
-    IF_ZERO
+    IF ZERO
         CLEAR_BIT7_FLAG data::auxtype_valid
     ELSE
         SET_BIT7_FLAG data::auxtype_valid
@@ -493,7 +493,7 @@ yes:    clc
 ;;; Input: A = ASCII digit
 ;;; Output A = value in low nibble
 .proc DigitToNibble
-    IF_A_LT     #'9'+1
+    IF A LT     #'9'+1
         and     #%00001111
         rts
     END_IF
@@ -632,12 +632,12 @@ saved_stack:
         stx     saved_stack
 
         jsr     JUMP_TABLE_GET_SEL_WIN
-    IF_ZERO
+    IF ZERO
         param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertNoFilesSelected
     END_IF
 
         jsr     JUMP_TABLE_GET_SEL_COUNT
-    IF_ZERO
+    IF ZERO
         param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertNoFilesSelected
     END_IF
 
@@ -650,7 +650,7 @@ saved_stack:
         jsr     AUXMOVE
 
         JSR_TO_AUX aux::RunDA
-        RTS_IF_NC               ; cancel
+        RTS_IF NC               ; cancel
 
         copy16  #aux::data, STARTLO
         copy16  #aux::data+.sizeof(data)-1, ENDLO
@@ -687,7 +687,7 @@ callback:
         pha                     ; A = index
         jsr     GetFileInfo
         pla
-    IF_ZERO
+    IF ZERO
         ;; First - use this type/auxtype
         copy8   gfi_params::file_type, data::type
         copy16  gfi_params::aux_type, data::auxtype
@@ -697,12 +697,12 @@ callback:
     ELSE
         ;; Rest - determine if same type/auxtype
         lda     gfi_params::file_type
-      IF_A_NE   data::type
+      IF A NE   data::type
         CLEAR_BIT7_FLAG data::type_valid
       END_IF
 
         ecmp16  gfi_params::aux_type, data::auxtype
-      IF_NE
+      IF NE
         CLEAR_BIT7_FLAG data::auxtype_valid
       END_IF
 
@@ -714,7 +714,7 @@ callback:
 .proc ApplyTypes
         lda     data::type_valid
         ora     data::auxtype_valid
-        RTS_IF_NC
+        RTS_IF NC
 
         copy16  #callback, IterationCallback
         jsr     IterateSelectedFiles
@@ -722,23 +722,23 @@ callback:
 
 callback:
         jsr     GetFileInfo
-        RTS_IF_NOT_ZERO
+        RTS_IF NOT_ZERO
 
         bit     data::type_valid
-    IF_NS
+    IF NS
         ;; Disallow changing type to/from directory
         lda     data::type
         cmp     gfi_params::file_type
-      IF_NE
+      IF NE
         ;; type change - either one dir?
         lda     data::type
-       IF_A_EQ  #FT_DIRECTORY
+       IF A EQ  #FT_DIRECTORY
         jsr     ShowDirError
         jmp     skip
        END_IF
 
         lda     gfi_params::file_type
-       IF_A_EQ  #FT_DIRECTORY
+       IF A EQ  #FT_DIRECTORY
         jsr     ShowDirError
         jmp     skip
        END_IF
@@ -749,7 +749,7 @@ callback:
 skip:
 
         bit     data::auxtype_valid
-    IF_NS
+    IF NS
         copy16  data::auxtype, gfi_params::aux_type
     END_IF
 
@@ -773,7 +773,7 @@ IterationCallback:
     DO
         copy8   (ptr),y, path,y
         dey
-    WHILE_POS
+    WHILE POS
 
     DO
         lda     path
@@ -796,7 +796,7 @@ IterationCallback:
         copy8   (ptr),y, path,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-      WHILE_NE
+      WHILE NE
         stx     path
 
         ;; Execute callback
@@ -809,7 +809,7 @@ IterationCallback:
 
         inc     index
         jsr     JUMP_TABLE_GET_SEL_COUNT
-    WHILE_A_NE  index
+    WHILE A NE  index
 
         rts
 
@@ -837,7 +837,7 @@ index:  .byte   0
 
 .proc ShowDirError
         bit     flag
-    IF_NC
+    IF NC
         param_call JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertDirectoriesNotOK
         SET_BIT7_FLAG flag
     END_IF

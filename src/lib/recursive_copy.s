@@ -161,7 +161,7 @@ dst_vol_blocks_free     .word
         jsr     _OpenSrcDir
 loop:
         jsr     _ReadFileEntry
-    IF_ZERO
+    IF ZERO
         param_call AdjustFileEntryCase, file_entry
 
         lda     file_entry + FileEntry::storage_type_name_length
@@ -194,7 +194,7 @@ loop:
     END_IF
 
         lda     recursion_depth
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     _AscendDirectory
         dec     recursion_depth
         bpl     loop            ; always
@@ -216,14 +216,14 @@ entry_err_flag:  .byte   0      ; bit7
         ldy     map,x
         copy8   file_entry,y, src_file_info_params::access,x
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Fix `storage_type`
         ldx     #4
     DO
         lsr     src_file_info_params::storage_type
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         rts
 
@@ -277,7 +277,7 @@ map:    .byte   FileEntry::access
         sta     entry_index_in_block
 
 retry:  MLI_CALL OPEN, open_src_dir_params
-    IF_CS
+    IF CS
 .if ::kCopyInteractive
         jsr     OpCheckRetry
         beq     retry           ; always
@@ -296,7 +296,7 @@ fail:   jmp     OpHandleErrorCode
         ;; Skip over prev/next block pointers in header
 retry2: MLI_CALL READ, read_block_pointers_params
 .if ::kCopyInteractive
-    IF_CS
+    IF CS
         jsr     OpCheckRetry
         beq     retry2          ; always
     END_IF
@@ -319,7 +319,7 @@ retry2: MLI_CALL READ, read_block_pointers_params
 
 .proc _CloseSrcDir
 retry:  MLI_CALL CLOSE, close_src_dir_params
-    IF_CS
+    IF CS
 .if ::kCopyInteractive
         jsr     OpCheckRetry
         beq     retry           ; always
@@ -339,7 +339,7 @@ retry:  MLI_CALL CLOSE, close_src_dir_params
         inc16   entry_index_in_dir
 
 retry:  MLI_CALL READ, read_src_dir_entry_params
-    IF_CS
+    IF CS
         cmp     #ERR_END_OF_FILE
         beq     eof
 
@@ -354,12 +354,12 @@ fail:   jmp     OpHandleErrorCode
 
         inc     entry_index_in_block
         lda     entry_index_in_block
-    IF_A_GE     entries_per_block
+    IF A GE     entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
 .if ::kCopyInteractive
-      IF_CS
+      IF CS
         jsr     OpCheckRetry
         beq     retry2          ; always
       END_IF
@@ -398,7 +398,7 @@ eof:    return  #$FF
         jsr     _OpenSrcDir
 
 :       cmp16   entry_index_in_dir, target_index
-    IF_LT
+    IF LT
         jsr     _ReadFileEntry
         jmp     :-
     END_IF
@@ -443,7 +443,7 @@ eof:    return  #$FF
         stax    path_ptr
 
         lda     file_entry+FileEntry::storage_type_name_length
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ldy     #0
         lda     (path_ptr),y
         tay
@@ -454,7 +454,7 @@ eof:    return  #$FF
         iny
         copy8   file_entry+FileEntry::file_name,x, (path_ptr),y
         inx
-      WHILE_X_LT file_entry+FileEntry::storage_type_name_length
+      WHILE X LT file_entry+FileEntry::storage_type_name_length
         tya
         ldy     #0
         sta     (path_ptr),y
@@ -474,14 +474,14 @@ eof:    return  #$FF
 
         ldy     #0
         lda     (path_ptr),y    ; length
-    IF_NOT_ZERO
+    IF NOT_ZERO
         tay
       DO
         lda     (path_ptr),y
         cmp     #'/'
         beq     :+
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         iny
 :
         dey
@@ -529,7 +529,7 @@ eof:    return  #$FF
 
         ;; Get source info
 retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
-    IF_CS
+    IF CS
       IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     OpInsertSource
         jmp     retry
@@ -575,7 +575,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
-    IF_A_NE     #ST_LINKED_DIRECTORY
+    IF A NE     #ST_LINKED_DIRECTORY
 
         ;; --------------------------------------------------
         ;; File
@@ -629,13 +629,13 @@ ok_dir: jsr     RemoveSrcPathSegment
         cpy     pathname_dst
         bcs     :+
         lda     pathname_dst,y
-    WHILE_A_NE  #'/'
+    WHILE A NE  #'/'
         sty     pathname_dst
 :
         ;; Get total blocks/used blocks on destination volume
 retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
 .if ::kCopyInteractive
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ShowErrorAlertDst
         jmp     retry
     END_IF
@@ -664,16 +664,16 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
 .proc _EnsureSpaceAvailable
         ;; Get destination size (in case of overwrite)
         MLI_CALL GET_FILE_INFO, dst_file_info_params
-    IF_CC
+    IF CC
         ;; Assume those blocks will be freed
         add16   dst_vol_blocks_free, dst_file_info_params::blocks_used, dst_vol_blocks_free
-    ELSE_IF_A_NE #ERR_FILE_NOT_FOUND
+    ELSE_IF A NE #ERR_FILE_NOT_FOUND
         jmp     OpHandleErrorCode
     END_IF
 
         ;; Does it fit? (free >= needed)
         cmp16   dst_vol_blocks_free, src_file_info_params::blocks_used
-    IF_LT
+    IF LT
         ;; Not enough room
         jmp     OpHandleNoSpace
     END_IF
@@ -707,7 +707,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         jsr     _OpenSrc
 .if ::kCopyInteractive
         jsr     _OpenDstOrFail
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; Destination not available; note it, can prompt later
         SET_BIT7_FLAG src_dst_exclusive_flag
     END_IF
@@ -721,7 +721,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         jsr     OpCheckCancel
 
 retry:  MLI_CALL READ, read_src_params
-      IF_CS
+      IF CS
         cmp     #ERR_END_OF_FILE
         beq     close
 .if ::kCopyInteractive
@@ -735,13 +735,13 @@ fail:   jmp     OpHandleErrorCode
 
 .if ::kCopyInteractive
         bit     src_dst_exclusive_flag
-      IF_NS
+      IF NS
         ;; Swap
         MLI_CALL GET_MARK, mark_src_params
         MLI_CALL CLOSE, close_src_params
        DO
         jsr     _OpenDst
-       WHILE_NOT_ZERO
+       WHILE NOT_ZERO
         MLI_CALL SET_MARK, mark_dst_params
       END_IF
 .endif
@@ -755,7 +755,7 @@ fail:   jmp     OpHandleErrorCode
 
 .if ::kCopyInteractive
         bit     src_dst_exclusive_flag
-        CONTINUE_IF_NC
+        CONTINUE_IF NC
 
         ;; Swap
         MLI_CALL CLOSE, close_dst_params
@@ -763,14 +763,14 @@ fail:   jmp     OpHandleErrorCode
         MLI_CALL SET_MARK, mark_src_params
 .endif
 
-    WHILE_CC                    ; always
+    WHILE CC                    ; always
 
         ;; Close source and destination
 close:
         MLI_CALL CLOSE, close_dst_params
 .if ::kCopyInteractive
         bit     src_dst_exclusive_flag
-    IF_NC
+    IF NC
         MLI_CALL CLOSE, close_src_params
     END_IF
 .else
@@ -801,7 +801,7 @@ src_dst_exclusive_flag:
 .proc _OpenSrc
 retry:  MLI_CALL OPEN, open_src_params
 .if ::kCopyInteractive
-    IF_CS
+    IF CS
         jsr     ShowErrorAlert
         jmp     retry
     END_IF
@@ -830,11 +830,11 @@ retry:  MLI_CALL OPEN, open_src_params
 
 retry:  MLI_CALL OPEN, open_dst_params
 .if ::kCopyInteractive
-    IF_CS
+    IF CS
   .if ::kCopyInteractive
         fail_ok_flag := *+1
         ldy     #SELF_MODIFIED_BYTE
-      IF_NS
+      IF NS
         cmp     #ERR_VOL_NOT_FOUND
         beq     finish
       END_IF
@@ -907,7 +907,7 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
         lda     mark_dst_params::position+1
         and     #%11111100
         ora     mark_dst_params::position+2
-      IF_NOT_ZERO
+      IF NOT_ZERO
         ;; Is this block all zeros? Scan all $200 bytes
         ;; (Note: coded for size, not speed, since we're I/O bound)
         ptr := $06
@@ -917,14 +917,14 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
        DO
         ora     (ptr),y
         iny
-       WHILE_NOT_ZERO
+       WHILE NOT_ZERO
         inc     ptr+1           ; second half
        DO
         ora     (ptr),y
         iny
-       WHILE_NOT_ZERO
+       WHILE NOT_ZERO
         tay
-       IF_ZERO
+       IF ZERO
         ;; Block is all zeros, skip over it
         add16_8 mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
         MLI_CALL SET_EOF, mark_dst_params
@@ -953,7 +953,7 @@ next_block:
         ;; Anything left to write?
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         clc
         rts
 
@@ -961,7 +961,7 @@ do_write:
 retry:  MLI_CALL WRITE, write_dst_params
 .if ::kCopyInteractive
         .refto ret
-    IF_CS
+    IF CS
         jsr     ShowErrorAlertDst
         jmp     retry
     END_IF
@@ -993,7 +993,7 @@ ret:    rts
 
         ;; If source is volume, create directory instead
         lda     create_params::storage_type
-    IF_A_EQ     #ST_VOLUME_DIRECTORY
+    IF A EQ     #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
@@ -1001,9 +1001,9 @@ ret:    rts
         ;; Create it
 
         MLI_CALL CREATE, create_params
-    IF_CS
+    IF CS
 .if ::kCopyIgnoreDuplicateErrorOnCreate
-      IF_A_NE   #ERR_DUPLICATE_FILENAME
+      IF A NE   #ERR_DUPLICATE_FILENAME
         jmp     OpHandleErrorCode
       END_IF
 .else

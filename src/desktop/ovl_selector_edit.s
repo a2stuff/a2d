@@ -50,7 +50,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
         ldax    #label_edit
         bit     is_add_flag
-    IF_NS
+    IF NS
         ldax    #label_add
     END_IF
         jsr     file_dialog::OpenWindow
@@ -71,7 +71,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0
-    IF_ZERO
+    IF ZERO
         jsr     file_dialog::InitPathWithDefaultDevice
     ELSE
         COPY_STRING path_buf0, file_dialog::path_buf
@@ -87,7 +87,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         inx
         iny
         copy8   path_buf0,x, buffer,y
-      WHILE_X_NE path_buf0
+      WHILE X NE path_buf0
         sty     buffer
     END_IF
         param_call file_dialog::UpdateListFromPathAndSelectFile, buffer
@@ -143,26 +143,26 @@ jt_callbacks:
 
         ;; If name is empty, use last path segment
         lda     text_input_buf
-    IF_ZERO
+    IF ZERO
         ldx     path_buf0
       DO
         lda     path_buf0,x
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dex
-      WHILE_NOT_ZERO            ; always, since path is valid
+      WHILE NOT_ZERO            ; always, since path is valid
         inx
 
         ldy     #1
       DO
         copy8   path_buf0,x, text_input_buf,y
-        BREAK_IF_X_EQ path_buf0
+        BREAK_IF X EQ path_buf0
         inx
         iny
-      WHILE_NOT_ZERO            ; always
+      WHILE NOT_ZERO            ; always
 
         ;; Truncate if necessary
         cpy     #kSelectorMaxNameLength+1
-      IF_GE
+      IF GE
         ldy     #kSelectorMaxNameLength
       END_IF
         sty     text_input_buf
@@ -238,7 +238,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickPrimaryRunListCtrl
         lda     which_run_list
-    IF_A_NE     #kRunListPrimary
+    IF A NE     #kRunListPrimary
         clc
         jsr     UpdateRunListButton
         copy8   #kRunListPrimary, which_run_list
@@ -250,7 +250,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickSecondaryRunListCtrl
         lda     which_run_list
-    IF_A_NE     #kRunListSecondary
+    IF A NE     #kRunListSecondary
         clc
         jsr     UpdateRunListButton
         copy8   #kRunListSecondary, which_run_list
@@ -262,7 +262,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickAtFirstBootCtrl
         lda     copy_when
-    IF_A_NE     #kCopyOnBoot
+    IF A NE     #kCopyOnBoot
         clc
         jsr     DrawCopyWhenButton
         lda     #kCopyOnBoot
@@ -275,7 +275,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickAtFirstUseCtrl
         lda     copy_when
-    IF_A_NE     #kCopyOnUse
+    IF A NE     #kCopyOnUse
         clc
         jsr     DrawCopyWhenButton
         lda     #kCopyOnUse
@@ -288,7 +288,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickNeverCtrl
         lda     copy_when
-    IF_A_NE     #kCopyNever
+    IF A NE     #kCopyNever
         clc
         jsr     DrawCopyWhenButton
         lda     #kCopyNever
@@ -303,11 +303,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc UpdateRunListButton
         ldx     #BTK::kButtonStateNormal
-    IF_CS
+    IF CS
         ldx     #BTK::kButtonStateChecked
     END_IF
 
-    IF_A_EQ     #kRunListPrimary
+    IF A EQ     #kRunListPrimary
         stx     primary_run_list_button::state
         BTK_CALL BTK::RadioUpdate, primary_run_list_button
     ELSE
@@ -320,17 +320,17 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc DrawCopyWhenButton
         ldx     #BTK::kButtonStateNormal
-    IF_CS
+    IF CS
         ldx     #BTK::kButtonStateChecked
     END_IF
 
-    IF_A_EQ     #kCopyOnBoot
+    IF A EQ     #kCopyOnBoot
         stx     at_first_boot_button::state
         BTK_CALL BTK::RadioUpdate, at_first_boot_button
         rts
     END_IF
 
-    IF_A_EQ     #kCopyOnUse
+    IF A EQ     #kCopyOnUse
         stx     at_first_use_button::state
         BTK_CALL BTK::RadioUpdate, at_first_use_button
         rts
@@ -345,7 +345,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc HandleKey
         lda     event_params::modifiers
-        RTS_IF_ZERO
+        RTS_IF ZERO
 
         lda     event_params::key
         cmp     #res_char_shortcut_apple_1

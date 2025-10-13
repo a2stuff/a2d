@@ -36,13 +36,13 @@
         ;; Restore banking
         rdaltzp_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
-    IF_NC
+    IF NC
         stx     ALTZPOFF        ; restore ALTZOFF
     END_IF
 
         rdpage2_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
-    IF_NC
+    IF NC
         bit     PAGE2OFF        ; restore PAGE2OFF
     END_IF
 

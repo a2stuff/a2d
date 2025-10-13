@@ -133,26 +133,26 @@ loop:
 
         ;; Wrap Y
         cmp16   ypos, #kScreenHeight
-    IF_VS
+    IF VS
         eor     #$80
     END_IF
-    IF_NC
+    IF NC
         copy16  #AS_WORD(-kToasterHeight), ypos
     END_IF
 
         ;; Wrap X
         cmp16   xpos, #AS_WORD(-kToasterWidth)
-    IF_VS
+    IF VS
         eor     #$80
     END_IF
-    IF_NS
+    IF NS
         copy16  #kScreenWidth+kToasterWidth, xpos
     END_IF
 
         ;; Next frame
         inc     frame
         lda     frame
-    IF_A_EQ     #4              ; num frames
+    IF A EQ     #4              ; num frames
         copy8   #0, frame
     END_IF
 

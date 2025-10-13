@@ -133,7 +133,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
         sta     name_buf,x
         inx
         dey
-    WHILE_POS
+    WHILE POS
 
         MGTK_CALL MGTK::OpenWindow, winfo
 
@@ -233,16 +233,16 @@ ret:    rts
         ldy     INVOKE_PATH
     DO
         lda     INVOKE_PATH,y   ; find last '/'
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     #0
     DO
         copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-    WHILE_Y_NE  INVOKE_PATH
+    WHILE Y NE  INVOKE_PATH
         stx     filename
 
         FALL_THROUGH_TO LoadFileAndRunDA
@@ -260,7 +260,7 @@ ret:    rts
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         JUMP_TABLE_MLI_CALL OPEN, open_params
-    IF_CS
+    IF CS
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
     END_IF
@@ -300,12 +300,12 @@ exit:   rts
 
 .proc PlayFile
         jsr     FindTheCricket
-    IF_CS
+    IF CS
         copy16  #PlayerCricket, play_routine
     END_IF
 
         jsr     FindMockingboard
-    IF_CS
+    IF CS
         copy16  #PlayerMockingboard, play_routine
 
         ;; When Virtual ][ is running at accelerated speed it seems to
@@ -331,25 +331,25 @@ play:   ldax    #data_buf
 redo:
         ;; If a key was pressed, maybe restart with alt player
         lda     KBD
-    IF_NS
+    IF NS
         bit     KBDSTRB         ; swallow the keypress
 
-      IF_A_EQ   #'1'|$80
+      IF A EQ   #'1'|$80
         copy16  #Player, play_routine
         jmp     play
       END_IF
 
-      IF_A_EQ   #'2'|$80
+      IF A EQ   #'2'|$80
         copy16  #Player2, play_routine
         jmp     play
       END_IF
 
-      IF_A_EQ   #'3'|$80
+      IF A EQ   #'3'|$80
         copy16  #PlayerMockingboard, play_routine
         jmp     play
       END_IF
 
-      IF_A_EQ   #'4'|$80
+      IF A EQ   #'4'|$80
         copy16  #PlayerCricket, play_routine
         jmp     play
       END_IF
@@ -836,7 +836,7 @@ TEMP:   .byte 0
         ptr := $06
         copy16  #$C700, ptr
 probe:  param_call WithInterruptsDisabled, DetectMockingboard
-    IF_CS
+    IF CS
         ;; Found
         lda     ptr+1
         .repeat 22, i

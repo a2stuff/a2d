@@ -965,12 +965,12 @@ pravetz_8ac_sequence:
         inx
         @lsb := *+1
         cmp     MODEL_ID_PAGE   ; self-modified
-      WHILE_EQ                  ; match, keep looking
+      WHILE EQ                  ; match, keep looking
 
         ;; No match, so skip to end of this entry
 :       inx
         lda     model_lookup_table-1,x
-    WHILE_ZERO
+    WHILE ZERO
         inx
         bne     :-
 
@@ -978,7 +978,7 @@ fail:   ldy     #0
 
 match:  tya
 
-    IF_A_EQ     #model::iie_original
+    IF A EQ     #model::iie_original
         ;; Is it a Pravetz 8A/C?
         ldx     #kPravetz8ACSequenceLength-1
       DO
@@ -986,7 +986,7 @@ match:  tya
         cmp     pravetz_8ac_sequence,x
         bne     :+
         dex
-      WHILE_POS
+      WHILE POS
         lda     #model::pravetz
         bne     found           ; always
 :
@@ -997,11 +997,11 @@ match:  tya
 
         ;; A has model; but now test for IIgs, TLC, and TK3000;
         ;; all masquerade as Enhanced IIe.
-    IF_A_EQ     #model::iie_enhanced
+    IF A EQ     #model::iie_enhanced
 
         sec
         jsr     IDROUTINE
-      IF_CC
+      IF CC
         ;; Is IIgs; Y holds ROM revision
         tya
         ora     #'0'            ; convert to ASCII digit
@@ -1017,7 +1017,7 @@ match:  tya
         cmp     tlc_sequence,x
         bne     :+
         dex
-      WHILE_POS
+      WHILE POS
         lda     #model::tlc
         bne     found           ; always
 :
@@ -1028,7 +1028,7 @@ match:  tya
         cmp     tk3000_sequence,x
         bne     :+
         dex
-      WHILE_POS
+      WHILE POS
         lda     #model::tk3000
         bne     found           ; always
 :
@@ -1144,7 +1144,7 @@ v_2x:   and     #$0F
         jsr     ToUpperCase
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         cmp     #kShortcutCloseWindow
         beq     Exit
         jmp     InputLoop
@@ -1194,7 +1194,7 @@ v_2x:   and     #$0F
         jsr     CopyEventDataToMain
 
         lda     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons.
         jsr     JUMP_TABLE_CLEAR_UPDATES
 
@@ -1214,7 +1214,7 @@ v_2x:   and     #$0F
 
         ldx     egg
         inx
-    IF_X_EQ     #kNumModels
+    IF X EQ     #kNumModels
         ldx     #0
     END_IF
         stx     egg
@@ -1230,7 +1230,7 @@ egg:    .byte   0
 
 .proc ClearWindow
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::grafport + MGTK::GrafPort::maprect
@@ -1241,7 +1241,7 @@ egg:    .byte   0
 
 .proc DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
@@ -1263,7 +1263,7 @@ egg:    .byte   0
         param_call DrawString, str_memory_prefix
         param_call DrawString, str_from_int
         bit     memory_is_mb_flag
-    IF_NS
+    IF NS
         param_call DrawString, str_memory_mb_suffix
     ELSE
         param_call DrawString, str_memory_kb_suffix
@@ -1293,7 +1293,7 @@ loop:   lda     slot
         ;; Check ProDOS slot bit mask
         lda     SLTBYT
         and     mask
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; ProDOS thinks there's a card...
         lda     slot
         jsr     ProbeSlot       ; check for matching firmware
@@ -1315,7 +1315,7 @@ loop:   lda     slot
 draw:   php
         jsr     DrawString
         plp
-    IF_VS
+    IF VS
         ;; V=1 means smartport - print out the names
         lda     slot
         jsr     SetSlotPtr
@@ -1324,10 +1324,10 @@ draw:   php
 
         ;; Special case for Slot 2
         lda     slot
-    IF_A_EQ     #2
+    IF A EQ     #2
         jsr     SetSlotPtr
         param_call WithInterruptsDisabled, DetectTheCricket
-      IF_CS
+      IF CS
         param_call DrawString, str_list_separator
         param_call DrawString, str_cricket
       END_IF
@@ -1335,21 +1335,21 @@ draw:   php
 
         ;; Special case for Slot 3 cards
         lda     slot
-    IF_A_EQ     #3
+    IF A EQ     #3
         bit     ROMIN2
         jsr     DetectLeChatMauveEve
         php
         bit     LCBANK1
         bit     LCBANK1
         plp
-      IF_NE
+      IF NE
         param_call DrawString, str_list_separator
         param_call DrawString, str_lcmeve
       ELSE
         lda     slot
         jsr     SetSlotPtr
         param_call WithInterruptsDisabled, DetectUthernet2
-       IF_CS
+       IF CS
         param_call DrawString, str_list_separator
         param_call DrawString, str_uthernet2
        END_IF
@@ -1418,18 +1418,18 @@ mask:   .byte   0
 
         ldax    #sigtable_prodos_device
         jsr     SigCheck
-    IF_CS
+    IF CS
 
 ;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
 ;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.21.html
         COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
-      IF_EQ
+      IF EQ
         return16 #str_diskii
       END_IF
 
         ;; Smartport?
         COMPARE_FWB $07, $00    ; $Cn07 == $00 ?
-      IF_EQ
+      IF EQ
         sec
         bit     ret             ; set V flag to signal SmartPort
         ldax    #str_smartport
@@ -1439,19 +1439,19 @@ ret:    rts
         ;; Block devices - a few signatures
         ldax    #sigtable_nvram
         jsr     SigCheck
-      IF_CS
+      IF CS
         return16 #str_nvram
       END_IF
 
         ldax    #sigtable_booti
         jsr     SigCheck
-      IF_CS
+      IF CS
         return16 #str_booti
       END_IF
 
         ldax    #sigtable_xdrive
         jsr     SigCheck
-      IF_CS
+      IF CS
         return16 #str_xdrive
       END_IF
 
@@ -1465,7 +1465,7 @@ ret:    rts
 
         ldax    #sigtable_vidhd
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_vidhd
     END_IF
 
@@ -1488,7 +1488,7 @@ ret:    rts
         ;; so test a few more after the Pascal 1.1 firmware signature
         ldax    #sigtable_workstation
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_workstation
     END_IF
 
@@ -1496,7 +1496,7 @@ ret:    rts
 
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
         cmp     #byte
-    IF_EQ
+    IF EQ
         return16 #arg           ; C=1 implicitly if Z=1
     END_IF
 .endmacro
@@ -1533,7 +1533,7 @@ notpas:
 ;;; ThunderClock
         ldax    #sigtable_thunderclock
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_thunderclock
     END_IF
 
@@ -1543,35 +1543,35 @@ notpas:
 ;;; Silentype
         ldax    #sigtable_silentype
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_silentype
     END_IF
 
 ;;; Clock
         ldax    #sigtable_clock
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_clock
     END_IF
 
 ;;; Communications Card
         ldax    #sigtable_comm
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_comm
     END_IF
 
 ;;; Serial Card
         ldax    #sigtable_serial
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_serial
     END_IF
 
 ;;; Parallel Card
         ldax    #sigtable_parallel
         jsr     SigCheck
-    IF_CS
+    IF CS
         return16 #str_parallel
     END_IF
 
@@ -1598,7 +1598,7 @@ notpas:
         cmp     #SELF_MODIFIED_BYTE
         bne     no_match
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; match
         sec
@@ -1650,22 +1650,22 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
         jsr     SetSlotPtr
 
         param_call WithInterruptsDisabled, DetectMockingboard
-    IF_CS
+    IF CS
         return16 #str_mockingboard
     END_IF
 
         param_call WithInterruptsDisabled, DetectZ80
-    IF_CS
+    IF CS
         return16 #str_z80
     END_IF
 
         param_call WithInterruptsDisabled, DetectUthernet2
-    IF_CS
+    IF CS
         return16 #str_uthernet2
     END_IF
 
         param_call WithInterruptsDisabled, DetectPassportMIDI
-    IF_CS
+    IF CS
         return16 #str_passport
     END_IF
         clc
@@ -1725,7 +1725,7 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
     DO
         swap8   Z80Routine::target,x, Z80Routine,x
         dex
-    WHILE_POS
+    WHILE POS
         rts
 .endproc ; SwapRoutine
 .endproc ; DetectZ80
@@ -1910,7 +1910,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         copy16  #0, memory
         jsr     CheckRamworksMemory
         sty     memory          ; Y is number of 64k banks
-    IF_Y_EQ     #0              ; 0 means 256 banks
+    IF Y EQ     #0              ; 0 means 256 banks
         inc     memory+1
     END_IF
         inc16   memory          ; Main 64k memory
@@ -1920,20 +1920,20 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 
         lda     memory+1
         and     #%11111100
-    IF_ZERO
+    IF ZERO
         ;; Convert number of 64K banks to KB
         ldy     #6
       DO
         asl16   memory          ; * 64
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     ELSE
         ;; Convert number of 64K banks to MB
         ldy     #4
       DO
         lsr16   memory          ; / 16
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         SET_BIT7_FLAG memory_is_mb_flag
     END_IF
 
@@ -1993,7 +1993,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         eor     #$FF            ; complement as second signature
         sta     sigb1
         dex
-    WHILE_X_NE  #255
+    WHILE X NE  #255
 .endscope
 
         ;; Iterate upwards, tallying valid banks.
@@ -2002,14 +2002,14 @@ write:  sta     $C080,x         ; self-modified to $C0n0
     DO
         stx     RAMWORKS_BANK   ; select bank
         txa
-      IF_A_EQ   sigb0           ; verify first signature
+      IF A EQ   sigb0           ; verify first signature
         eor     #$FF
-       IF_A_EQ  sigb1           ; verify second signature
+       IF A EQ  sigb1           ; verify second signature
         iny                     ; match - count it
        END_IF
       END_IF
         inx                     ; next bank
-    WHILE_NOT_ZERO              ; if we hit 256 banks, make sure we exit
+    WHILE NOT_ZERO              ; if we hit 256 banks, make sure we exit
 .endscope
 
         ;; Iterate upwards, restoring valid banks.
@@ -2018,15 +2018,15 @@ write:  sta     $C080,x         ; self-modified to $C0n0
     DO
         stx     RAMWORKS_BANK   ; select bank
         txa
-      IF_A_EQ   sigb0           ; verify first signature
+      IF A EQ   sigb0           ; verify first signature
         eor     #$FF
-       IF_A_EQ  sigb1           ; verify second signature
+       IF A EQ  sigb1           ; verify second signature
         copy8   buf0,x, sigb0   ; match - restore it
         copy8   buf1,x, sigb1
        END_IF
       END_IF
         inx                     ; next bank
-    WHILE_NOT_ZERO              ; if we hit 256 banks, make sure we exit
+    WHILE NOT_ZERO              ; if we hit 256 banks, make sure we exit
 .endscope
 
         ;; Switch back to RW bank 0 (normal aux memory)
@@ -2044,10 +2044,10 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         jsr     IDROUTINE
         bit     LCBANK1
         bit     LCBANK1
-    IF_CC
+    IF CC
         .pushcpu
         .setcpu "65816"
-      IF_Y_NE   #0              ; Y = IIgs ROM revision
+      IF Y NE   #0              ; Y = IIgs ROM revision
         ;; From the IIgs Memory Manager tool set source
         ;; c/o Antoine Vignau and Dagen Brock (ROM 1 & ROM 3)
         NumBanks := $E11624
@@ -2089,7 +2089,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         cmp     sig_values,x
         bne     next
         dex
-      WHILE_POS
+      WHILE POS
 
         ;; Now look for device type
         ldy     #$FB            ; $CnFB is SmartPort ID Type byte
@@ -2121,17 +2121,17 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         ror     dib_buffer+SPDIB::Device_Size_Med
         ror     dib_buffer+SPDIB::Device_Size_Lo
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         ;; Rounding up if needed
-      IF_CS
+      IF CS
         inc16   dib_buffer+SPDIB::Device_Size_Lo
       END_IF
 
         add16   memory, dib_buffer+SPDIB::Device_Size_Lo, memory
 
 next:   dec     slot
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 
 sig_offsets:
@@ -2173,7 +2173,7 @@ str_from_int:
 
         ;; 65C02 - check for ZIP CHIP (except on IIc Plus)
         lda     model           ; cached
-    IF_A_NE     #model::iic_plus
+    IF A NE     #model::iic_plus
         php                     ; timing sensitive
         sei
 
@@ -2188,10 +2188,10 @@ str_from_int:
         lda     ZC_REG_SLOTSPKR
         eor     #$FF
         sta     ZC_REG_SLOTSPKR
-      IF_A_EQ   ZC_REG_SLOTSPKR
+      IF A EQ   ZC_REG_SLOTSPKR
         eor     #$FF
         sta     ZC_REG_SLOTSPKR
-       IF_A_EQ  ZC_REG_SLOTSPKR
+       IF A EQ  ZC_REG_SLOTSPKR
 
         ;; Lock
         copy8   #kZCLock, ZC_REG_LOCK
@@ -2229,7 +2229,7 @@ p658xx: bit     ROMIN2
         jsr     IDROUTINE
         bit     LCBANK1
         bit     LCBANK1
-    IF_CC
+    IF CC
         return16 #str_65816     ; Only IIgs supports 65816
     END_IF
         return16 #str_65802     ; Other boards support 65802
@@ -2267,11 +2267,11 @@ start:
         copy8   #0, status_params::status_code
         jsr     SmartPortCall
         lda     dib_buffer+SPDIB::Number_Devices
-    IF_A_GE     #kMaxSmartportDevices
+    IF A GE     #kMaxSmartportDevices
         lda     #kMaxSmartportDevices
     END_IF
         sta     num_devices
-    IF_ZERO
+    IF ZERO
         jmp     finish          ; no devices!
     END_IF
 
@@ -2287,12 +2287,12 @@ device_loop:
         ;; Trim trailing whitespace (seen in CFFA)
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
-    IF_NOT_ZERO
+    IF NOT_ZERO
       DO
         lda     dib_buffer+SPDIB::Device_Name-1,y
-        BREAK_IF_A_NE #' '
+        BREAK_IF A NE #' '
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     END_IF
         sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
@@ -2301,25 +2301,25 @@ device_loop:
         ;; Case-adjust
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
-    IF_NOT_ZERO
+    IF NOT_ZERO
         dey
-      IF_NOT_ZERO
+      IF NOT_ZERO
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
        DO
         lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
         jsr     IsAlpha
-        IF_EQ
+        IF EQ
         lda     dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
         jsr     IsAlpha
-         IF_EQ
+         IF EQ
         lda     dib_buffer+SPDIB::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
          END_IF
         END_IF
         dey
-       WHILE_NOT_ZERO
+       WHILE NOT_ZERO
       END_IF
     END_IF
 .endscope
@@ -2329,14 +2329,14 @@ device_loop:
 
         ;; Empty?
         lda     dib_buffer+SPDIB::ID_String_Length
-    IF_ZERO
+    IF ZERO
         .assert .strlen(res_string_unknown) < kMaxSPDeviceNameLength, error, "string length"
         COPY_STRING str_unknown, str_current
     END_IF
 
         ;; Same as last?
         jsr     CompareWithLast
-    IF_EQ
+    IF EQ
         inc     duplicate_count
         bne     next            ; always
     END_IF
@@ -2345,7 +2345,7 @@ device_loop:
 
         ;; Need a comma?
         bit     empty_flag
-    IF_PLUS
+    IF PLUS
         param_call DrawString, str_list_separator
     END_IF
         CLEAR_BIT7_FLAG empty_flag ; saw a unit!
@@ -2365,7 +2365,7 @@ finish:
 
         ;; If no units, populate with "(none)"
         bit     empty_flag
-    IF_NS
+    IF NS
         ldax    #str_none
         jsr     DrawString
     END_IF
@@ -2395,20 +2395,20 @@ num_devices:
 .proc CompareWithLast
         lda     str_current
         cmp     str_last
-    IF_EQ
+    IF EQ
         tax
       DO
         lda     str_current,x
-        BREAK_IF_A_NE str_last,x
+        BREAK_IF A NE str_last,x
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     END_IF
         rts
 .endproc ; CompareWithLast
 
 .proc MaybeDrawDuplicateSuffix
         ldx     duplicate_count
-    IF_NOT_ZERO
+    IF NOT_ZERO
         inx
         txa
         ora     #'0'
@@ -2455,7 +2455,7 @@ nope:   lda     #$FF
         stax    STARTLO
         ldy     #0
         lda     (textptr),y
-    IF_NOT_ZERO
+    IF NOT_ZERO
         sta     textlen
         copy16  #aux::buf_string+1, textptr
 

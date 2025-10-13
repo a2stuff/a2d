@@ -145,12 +145,12 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-    IF_A_EQ     #MGTK::EventKind::button_down
+    IF A EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
 
-    IF_A_EQ     #MGTK::EventKind::key_down
+    IF A EQ     #MGTK::EventKind::key_down
         jsr     OnKey
         jmp     InputLoop
     END_IF
@@ -163,7 +163,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-    IF_A_EQ     #kDAWindowId
+    IF A EQ     #kDAWindowId
         lda     findwindow_params::which_area
 
         cmp     #MGTK::Area::close_box
@@ -184,7 +184,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     DoQuit
@@ -195,7 +195,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         beq     DoQuit
 
         bit     scrambled_flag
-    IF_NC
+    IF NC
         jmp     Scramble
     END_IF
 
@@ -219,7 +219,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-    IF_NS
+    IF NS
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jsr     DrawWindow
     END_IF
@@ -241,7 +241,7 @@ ret:    rts
 
 .proc DoClick
         bit     scrambled_flag
-    IF_NC
+    IF NC
         jmp     Scramble
     END_IF
 
@@ -256,7 +256,7 @@ ret:    rts
         pha
 
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_ptr
-      IF_NOT_ZERO
+      IF NOT_ZERO
         pla                     ; A = index
         jmp     DoLightClick
       END_IF
@@ -265,7 +265,7 @@ ret:    rts
         pla                     ; A = index
         tax
         inx
-    WHILE_X_NE  #kLights
+    WHILE X NE  #kLights
 
         rts
 .endproc ; DoClick
@@ -281,7 +281,7 @@ ret:    rts
         jsr     IndexToXY
         inx
         jsr     IsXYValid
-    IF_CC
+    IF CC
         jsr     XYToIndex
         jsr     ToggleLight
     END_IF
@@ -291,7 +291,7 @@ ret:    rts
         jsr     IndexToXY
         dex
         jsr     IsXYValid
-    IF_CC
+    IF CC
         jsr     XYToIndex
         jsr     ToggleLight
     END_IF
@@ -301,7 +301,7 @@ ret:    rts
         jsr     IndexToXY
         iny
         jsr     IsXYValid
-    IF_CC
+    IF CC
         jsr     XYToIndex
         jsr     ToggleLight
     END_IF
@@ -311,7 +311,7 @@ ret:    rts
         jsr     IndexToXY
         dey
         jsr     IsXYValid
-    IF_CC
+    IF CC
         jsr     XYToIndex
         jsr     ToggleLight
     END_IF
@@ -327,7 +327,7 @@ ret:    rts
         bmi     ret             ; light on, so no
         add16_8 rec_ptr, #.sizeof(BTK::ButtonRecord)
         dex
-    WHILE_POS
+    WHILE POS
 
         ;; Yes, victory!
         ldx     #4
@@ -339,7 +339,7 @@ ret:    rts
         pla
         tax
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         CLEAR_BIT7_FLAG scrambled_flag
 
@@ -405,7 +405,7 @@ ret:    rts
     DO
         add16_8 ptr, #.sizeof(button_0_0)
         dex
-    WHILE_POS
+    WHILE POS
 
         pla                     ; A = index
         rts
@@ -416,7 +416,7 @@ ret:    rts
 
 .proc DrawWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_NE               ; obscured
+        RTS_IF NE               ; obscured
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -437,7 +437,7 @@ ret:    rts
         pla                     ; A = index
         tax
         dex
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; DrawWindow
@@ -451,7 +451,7 @@ ret:    rts
         pha                     ; A = index
 
         jsr     Random
-      IF_NS
+      IF NS
         pla                     ; A = index
         pha                     ; A = index
 
@@ -462,7 +462,7 @@ ret:    rts
         jsr     IndexToXY
         inx
         jsr     IsXYValid
-       IF_CC
+       IF CC
         jsr     XYToIndex
         jsr     ToggleLightNoRedraw
        END_IF
@@ -472,7 +472,7 @@ ret:    rts
         jsr     IndexToXY
         dex
         jsr     IsXYValid
-       IF_CC
+       IF CC
         jsr     XYToIndex
         jsr     ToggleLightNoRedraw
        END_IF
@@ -482,7 +482,7 @@ ret:    rts
         jsr     IndexToXY
         iny
         jsr     IsXYValid
-       IF_CC
+       IF CC
         jsr     XYToIndex
         jsr     ToggleLightNoRedraw
        END_IF
@@ -492,7 +492,7 @@ ret:    rts
         jsr     IndexToXY
         dey
         jsr     IsXYValid
-       IF_CC
+       IF CC
         jsr     XYToIndex
         jsr     ToggleLightNoRedraw
        END_IF
@@ -502,7 +502,7 @@ ret:    rts
         pla
         tax
         dex
-    WHILE_POS
+    WHILE POS
 
         SET_BIT7_FLAG scrambled_flag
 
@@ -516,10 +516,10 @@ ret:    rts
 .proc IndexToXY
         ldy     #0
     DO
-        BREAK_IF_A_LT #kCols
+        BREAK_IF A LT #kCols
         iny
         sbc     #kCols
-    WHILE_POS                   ; always
+    WHILE POS                   ; always
         tax
         rts
 
@@ -531,10 +531,10 @@ ret:    rts
         txa
     DO
         dey
-        BREAK_IF_NEG
+        BREAK_IF NEG
         clc
         adc     #kCols
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
         rts
 .endproc ; XYToIndex
 
@@ -572,7 +572,7 @@ delay2: dey
 
 .proc InvertWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_ZERO                     ; not obscured
+    IF ZERO                     ; not obscured
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetPattern, pattern_black

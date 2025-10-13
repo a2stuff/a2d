@@ -164,7 +164,7 @@ char_label:  .byte   0
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         jeq     Exit
@@ -214,7 +214,7 @@ char_label:  .byte   0
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         lda     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons (from Main)
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -256,7 +256,7 @@ width   .word
 END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -287,7 +287,7 @@ END_PARAM_BLOCK
 
         inc     index
         lda     index
-    WHILE_A_NE  #kLineCount
+    WHILE A NE  #kLineCount
 
         MGTK_CALL MGTK::ShowCursor
         rts
@@ -339,7 +339,7 @@ filename:       .res    16
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         JUMP_TABLE_MLI_CALL OPEN, open_params
-    IF_CS
+    IF CS
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
     END_IF
@@ -390,16 +390,16 @@ filename:       .res    16
         ldy     INVOKE_PATH
     DO
         lda     INVOKE_PATH,y       ; find last '/'
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     #0
     DO
         copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-    WHILE_Y_NE  INVOKE_PATH
+    WHILE Y NE  INVOKE_PATH
         stx     filename
 
         copy16  #filename, STARTLO
@@ -434,10 +434,10 @@ expected_size:
     DO
         add16_8 expected_size, font_buffer + MGTK::Font::height
         dex
-    WHILE_NOT_ZERO              ; = (lastchar + 1) * height
+    WHILE NOT_ZERO              ; = (lastchar + 1) * height
 
         bit     font_buffer + MGTK::Font::fonttype
-    IF_NS
+    IF NS
         asl16   expected_size   ; *= 2 if double width
     END_IF
 

@@ -243,7 +243,7 @@ num_entries := listbox_rec::num_items
         jmp     InputLoop
     END_IF
 
-    IF_X_NE     #0
+    IF X NE     #0
         ;; Modified
         lda     event_params::key
         jsr     ToUpperCase
@@ -251,7 +251,7 @@ num_entries := listbox_rec::num_items
         cmp     #kShortcutCloseWindow
         jeq     Exit
 
-      IF_A_EQ   #'O'
+      IF A EQ   #'O'
         lda     selected_index
         bmi     InputLoop
         sta     show_index
@@ -263,12 +263,12 @@ num_entries := listbox_rec::num_items
     END_IF
 
         ;; Not modified
-    IF_A_EQ     #CHAR_ESCAPE
+    IF A EQ     #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     Exit
     END_IF
 
-    IF_A_EQ     #CHAR_RETURN
+    IF A EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, search_button
         jmp     DoSearch
     END_IF
@@ -371,7 +371,7 @@ path_length:
         jsr     PrepDrawIncrementalResults
 
         lda     path_length
-    IF_A_EQ     #1
+    IF A EQ     #1
         JSR_TO_MAIN ::main::InitVolumes
         JSR_TO_MAIN ::main::NextVolume
         bcs     finish
@@ -384,13 +384,13 @@ search:
         ldy     buf_search
         copy8   #0, pattern,y   ; null-terminate
         cpy     #0
-    IF_NOT_ZERO
+    IF NOT_ZERO
       DO
         lda     buf_search,y    ; copy characters
         jsr     ToUpperCase
         sta     pattern-1,y
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     END_IF
 
         copy16  #pattern, STARTLO
@@ -407,7 +407,7 @@ search:
         LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
 
         lda     path_length
-    IF_A_EQ     #1
+    IF A EQ     #1
         lda     num_entries
         cmp     #kMaxFilePaths
         beq     finish
@@ -417,7 +417,7 @@ search:
 
 finish:
         bit     cursor_ibeam_flag
-    IF_NC
+    IF NC
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
     ELSE
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
@@ -436,12 +436,12 @@ finish:
         jne     done
 
         lda     findwindow_params::window_id
-    IF_A_EQ     #kResultsWindowId
+    IF A EQ     #kResultsWindowId
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
-      IF_NC
+      IF NC
         jsr     DetectDoubleClick
-       IF_NC
+       IF NC
         copy8   selected_index, show_index
         jmp     Exit
        END_IF
@@ -459,14 +459,14 @@ finish:
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, search_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, search_button
         bmi     done
         jmp     DoSearch
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         bmi     done
         jmp     Exit
@@ -607,7 +607,7 @@ NoOp:   rts
     DO
         asl16   offset
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #::main::entries_buffer, offset
@@ -666,7 +666,7 @@ entry:
     DO
         copy8   (ptr),y, searchPath,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Append '/' needed by algorithm
         ldy     searchPath
@@ -693,7 +693,7 @@ continue:
         JSR_TO_AUX aux::RunDA
 
         ;; Show an entry?
-    IF_POS
+    IF POS
         ;; Copy entry path to `INVOKER_PREFIX`
         jsr     GetEntryAddr
         stax    $06
@@ -703,7 +703,7 @@ continue:
       DO
         copy8   ($06),y, INVOKER_PREFIX,y
         dey
-      WHILE_POS
+      WHILE POS
 
         ;; Inject JT call to stack
         pla
@@ -736,7 +736,7 @@ continue:
     DO
         asl16   offset
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #entries_buffer, offset
 
@@ -846,7 +846,7 @@ num_entries:
     DO
         copy8   searchPath,y, nameBuffer,y
         dey
-    WHILE_POS
+    WHILE POS
 
         lda     #0              ; reset recursion/results state
         sta     Depth
@@ -993,7 +993,7 @@ OpenDone:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowInvisible
-    IF_ZERO
+    IF ZERO
         ;; Is the file visible?
         ldy     #FileEntry::access
         lda     (entPtr),y
@@ -1003,7 +1003,7 @@ OpenDone:
 
         ;; Does the file match the search pattern?
         lda     pattern         ; Skip if pattern is empty
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     IsMatch
         bcc     exit            ; No match
     END_IF
@@ -1023,7 +1023,7 @@ OpenDone:
     DO
         copy8   (dirName),y, (ptr),y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         lda     (dirName),y     ; Y is 0...
         tax
@@ -1059,7 +1059,7 @@ exit:   rts
         kMaxRecursionDepth = 16
 
         lda     Depth
-    IF_A_LT     #kMaxRecursionDepth
+    IF A LT     #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
     END_IF
 
@@ -1300,14 +1300,14 @@ string:         .res    16      ; 15 + null terminator
         tay
         copy8   #0, string,y    ; null-terminate
         cpy     #0
-    IF_NOT_ZERO
+    IF NOT_ZERO
       DO
         lda     (entPtr),y      ; copy characters
         jsr     ToUpperCase
 
         sta     string-1,y
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     END_IF
 .endscope
 
@@ -1442,7 +1442,7 @@ repeat: ldx     devidx
     DO
         copy8   on_line_buffer+1,x, searchPath+2,x
         inx
-    WHILE_X_NE  on_line_buffer
+    WHILE X NE  on_line_buffer
 
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx

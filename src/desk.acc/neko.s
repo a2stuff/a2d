@@ -311,7 +311,7 @@ frame:  .byte   0
         ror     tmp+1
         ror     tmp
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         rol     tmp
         rol     tmp+1
@@ -323,7 +323,7 @@ frame:  .byte   0
         copy8   tmp, (dst),y
 
         dec     count
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; FrameDouble
 
@@ -415,7 +415,7 @@ ep_size := * - ep_start
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
@@ -529,7 +529,7 @@ skip:   .word   0
         ;; Throttle animation
         lda     skip
         ora     skip+1
-    IF_NOT_ZERO
+    IF NOT_ZERO
         dec16   skip
         jmp     InputLoop
     END_IF
@@ -562,7 +562,7 @@ skip:   .word   0
         sub16   screentowindow_params::windowx, x_pos, x_delta
         sub16   x_delta, #kNekoWidth / 2, x_delta
         copy8   x_delta+1, x_neg
-    IF_NEG
+    IF NEG
         sub16   #0, x_delta, x_delta
     END_IF
         lsr16   x_delta          ; force down to 8 bits
@@ -571,16 +571,16 @@ skip:   .word   0
         sub16   screentowindow_params::windowy, y_pos, y_delta
         sub16   y_delta, #kNekoHeight / 2, y_delta
         copy8   y_delta+1, y_neg
-    IF_NEG
+    IF NEG
         sub16   #0, y_delta, y_delta
     END_IF
         lsr16   y_delta          ; force down to 8 bits
 
         ;; Beyond threshold?
         lda     x_delta
-    IF_A_LT     #kThreshold
+    IF A LT     #kThreshold
         lda     y_delta
-      IF_A_LT   #kThreshold
+      IF A LT   #kThreshold
         ldx     #0              ; no; null out the deltas
         beq     skip_encode     ; always
       END_IF
@@ -588,7 +588,7 @@ skip:   .word   0
 
         ;; Yes - do math to scale the deltas
         lda     x_delta
-    IF_A_GE     y_delta
+    IF A GE     y_delta
         ;; x dominant:
         ;; * y_delta = kMove * y_delta / x_delta
         ;; * x_delta = kMove
@@ -621,9 +621,9 @@ skip:   .word   0
         ;;  00 = no, 01 = +ve, 10 = -ve, 11 = (not used)
         ldx     #0
         lda     x_delta
-    IF_A_GE     #kMove/2
+    IF A GE     #kMove/2
         bit     x_neg
-      IF_NEG
+      IF NEG
         inx
       END_IF
         inx
@@ -634,9 +634,9 @@ skip:   .word   0
         tax
 
         lda     y_delta
-    IF_A_GE     #kMove/2
+    IF A GE     #kMove/2
         bit     y_neg
-      IF_NEG
+      IF NEG
         inx
       END_IF
         inx
@@ -664,27 +664,27 @@ new_state:
         ;; ------------------------------
         cmp     #NekoState::rest
         ;; ------------------------------
-    IF_EQ
+    IF EQ
         lda     dir
-      IF_NOT_ZERO
+      IF NOT_ZERO
         ldx     #NekoState::chase
         lda     #NekoFrame::surprise
         jmp     set_state_and_frame
       END_IF
 
-      IF_Y_LT   #$10            ; Y = random
+      IF Y LT   #$10            ; Y = random
         ldx     #NekoState::itch
         lda     #NekoFrame::itch1
         jmp     set_state_and_frame
       END_IF
 
-      IF_Y_LT   #$20            ; Y = random
+      IF Y LT   #$20            ; Y = random
         ldx     #NekoState::yawn
         lda     #NekoFrame::yawning
         jmp     set_state_and_frame
       END_IF
 
-      IF_Y_LT   #$30            ; Y = random
+      IF Y LT   #$30            ; Y = random
         lda     #NekoFrame::lick
         jmp     set_frame
       END_IF
@@ -696,9 +696,9 @@ new_state:
         ;; ------------------------------
         cmp     #NekoState::chase
         ;; ------------------------------
-    IF_EQ
+    IF EQ
         lda     dir
-      IF_ZERO
+      IF ZERO
         ldx     #NekoState::rest
         lda     #NekoFrame::sitting
         jmp     set_state_and_frame
@@ -707,7 +707,7 @@ new_state:
         SET_BIT7_FLAG moved_flag
 
         jsr     MoveAndClamp
-      IF_Y_NE   #0              ; Y = clamped
+      IF Y NE   #0              ; Y = clamped
         copy8   dir, scratch_dir
         lda     #NekoState::scratch
         bne     new_state       ; always
@@ -723,9 +723,9 @@ new_state:
         ;; ------------------------------
         cmp     #NekoState::scratch
         ;; ------------------------------
-    IF_EQ
+    IF EQ
         lda     dir
-      IF_A_NE   scratch_dir
+      IF A NE   scratch_dir
         ldx     #NekoState::chase
         lda     #NekoFrame::surprise
         jmp     set_state_and_frame
@@ -741,8 +741,8 @@ new_state:
         ;; ------------------------------
         cmp     #NekoState::itch
         ;; ------------------------------
-    IF_EQ
-      IF_Y_LT   #$20            ; Y = random
+    IF EQ
+      IF Y LT   #$20            ; Y = random
         ldx     #NekoState::rest
         lda     #NekoFrame::sitting
         bne     set_state_and_frame ; always
@@ -756,8 +756,8 @@ new_state:
         ;; ------------------------------
         cmp     #NekoState::yawn
         ;; ------------------------------
-    IF_EQ
-      IF_Y_LT   #$20            ; Y = random
+    IF EQ
+      IF Y LT   #$20            ; Y = random
         ldx     #NekoState::sleep
         lda     #NekoFrame::sleep1
         bne     set_state_and_frame ; always
@@ -770,9 +770,9 @@ new_state:
         ;; ------------------------------
         ;; cmp     #NekoState::sleep
         ;; ------------------------------
-        ;; IF_EQ
+        ;; IF EQ
         lda     dir
-      IF_NOT_ZERO
+      IF NOT_ZERO
         ldx     #NekoState::chase
         lda     #NekoFrame::surprise
         bne     set_state_and_frame ; always
@@ -797,7 +797,7 @@ set_frame:
         ;; Move
         asl     x_delta
         bit     x_neg
-    IF_POS
+    IF POS
         add16_8 x_pos, x_delta
     ELSE
         sub16_8 x_pos, x_delta
@@ -805,7 +805,7 @@ set_frame:
         lsr     x_delta
 
         bit     y_neg
-    IF_POS
+    IF POS
         add16_8 y_pos, y_delta
     ELSE
         sub16_8 y_pos, y_delta
@@ -815,13 +815,13 @@ set_frame:
         ldy     #0
 
         lda     x_pos+1
-    IF_NEG
+    IF NEG
         copy16  #0, x_pos
         iny
     END_IF
 
         lda     y_pos+1
-    IF_NEG
+    IF NEG
         copy16  #0, y_pos
         iny
     END_IF
@@ -831,7 +831,7 @@ set_frame:
         sub16   win_rect::x2, win_rect::x1, tmp16
         sub16_8 tmp16, #kNekoWidth-1, tmp16
         cmp16   x_pos, tmp16
-    IF_CS
+    IF CS
         copy16  tmp16, x_pos
         iny
     END_IF
@@ -839,7 +839,7 @@ set_frame:
         sub16   win_rect::y2, win_rect::y1, tmp16
         sub16_8 tmp16, #kNekoHeight + aux::kGrowBoxHeight, tmp16
         cmp16   y_pos, tmp16
-    IF_CS
+    IF CS
         copy16  tmp16, y_pos
         iny
     END_IF
@@ -918,7 +918,7 @@ scratch_frame_table:
 
 .proc DrawWindow
         jsr     GetSetPort
-    IF_ZERO                     ; not obscured
+    IF ZERO                     ; not obscured
         JSR_TO_AUX aux::DrawGrowBox
     END_IF
         rts
@@ -930,7 +930,7 @@ scratch_frame_table:
 .proc GetSetPort
         ;; Defer if content area is not visible
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-    IF_ZERO
+    IF ZERO
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
     END_IF
         rts
@@ -950,10 +950,10 @@ cur_frame:                      ; NekoFrame::XXX
 
 .proc DrawCurrentFrame
         jsr     GetSetPort
-    IF_ZERO
+    IF ZERO
         ;; Erase if needed
         bit     moved_flag
-      IF_NS
+      IF NS
         JSR_TO_AUX aux::EraseFrame
       END_IF
 

@@ -524,7 +524,7 @@ tmp_poly:
         ;; Invert Carry if modifier is down
         lda     BUTN0
         ora     BUTN1
-    IF_NS
+    IF NS
         rol
         eor     #$01
         ror
@@ -589,7 +589,7 @@ start:  lda     KBD
         jsr     ConstructKeyPoly
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_A_NE     #MGTK::Error::window_obscured
+    IF A NE     #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -597,7 +597,7 @@ start:  lda     KBD
 
 :
         bit     KBDSTRB
-      IF_NS
+      IF NS
         lda     KBD
         and     #CHAR_MASK
         cmp     last_char
@@ -655,7 +655,7 @@ return_flag:
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 
         lda     dragwindow_params::moved
-    IF_NS
+    IF NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -673,7 +673,7 @@ return_flag:
         ptr := $06
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF_A_EQ #MGTK::Error::window_obscured
+        RTS_IF A EQ #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -701,7 +701,7 @@ return_flag:
         copy8   char, char_label
         tax
         ldy     key_mode,x
-      IF_NC
+      IF NC
         ;; Compute address of key record
         sta     ptr
         copy8   #0, ptr+1
@@ -714,13 +714,13 @@ return_flag:
        DO
         copy8   (ptr),y, tmp_rect,y
         dey
-       WHILE_POS
+       WHILE POS
 
         MGTK_CALL MGTK::FrameRect, tmp_rect
 
         lda     char
-       IF_A_GE  #' '
-        IF_A_LT #CHAR_DELETE
+       IF A GE  #' '
+        IF A LT #CHAR_DELETE
         MGTK_CALL MGTK::MoveTo, tmp_rect
         MGTK_CALL MGTK::Move, label_relpos
         MGTK_CALL MGTK::DrawText, drawtext_params_char
@@ -730,10 +730,10 @@ return_flag:
 
         dec     char
         lda     char
-    WHILE_POS
+    WHILE POS
 
         bit     extended_layout_flag
-    IF_NS
+    IF NS
         ;; Extended layout's non-rectangular Return key
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, winfo::pattern
@@ -767,16 +767,16 @@ char:   .byte   0
         ;; Is IIgs?
 check:  sec
         jsr     IDROUTINE       ; Clears carry if IIgs
-    IF_CC
+    IF CC
         sec                     ; Yes, is a IIgs
         rts
     END_IF
 
         ;; Is IIc+?
         lda     ZIDBYTE         ; $00 = IIc
-    IF_ZERO
+    IF ZERO
         lda     ZIDBYTE2        ; $05 = IIc Plus
-      IF_A_EQ   #$05
+      IF A EQ   #$05
         sec                     ; Yes, is a IIc+
         rts
       END_IF
@@ -797,9 +797,9 @@ check:  sec
         ptr := $06
 
         cmp     #CHAR_RETURN
-    IF_EQ
+    IF EQ
         bit     extended_layout_flag
-      IF_NS
+      IF NS
         ;; Special key
         COPY_BYTES      2 + 7 * .sizeof(MGTK::Point), poly_new_ret_inner, tmp_poly
         rts
@@ -820,7 +820,7 @@ check:  sec
     DO
         copy8   (ptr),y, tmp_rect,y
         dey
-    WHILE_POS
+    WHILE POS
 
         copy8   #5, tmp_poly+0  ; # vertices
         copy8   #0, tmp_poly+1  ; no more polys

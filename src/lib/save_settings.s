@@ -66,7 +66,7 @@ done:   rts
         iny
         lda     filename,x
         sta     filename_buffer,y
-    WHILE_X_NE  filename
+    WHILE X NE  filename
         sty     filename_buffer
         rts
 .endproc ; _AppendFilename

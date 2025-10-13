@@ -497,7 +497,7 @@ scrambled_flag:                 ; bit7
         sta     position_table,y
         sta     swapped_table,y
         dey
-    WHILE_POS
+    WHILE POS
 
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -515,12 +515,12 @@ scrambled_flag:                 ; bit7
         MGTK_CALL MGTK::GetEvent, event_params
 
         bit     scrambled_flag
-    IF_NC
+    IF NC
         jsr     PreScramble
     END_IF
 
         lda     event_params::kind
-    IF_A_EQ     #MGTK::EventKind::button_down
+    IF A EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -541,14 +541,14 @@ scrambled_flag:                 ; bit7
         bne     bail
 
         lda     findwindow_params::which_area
-    IF_ZERO
+    IF ZERO
 bail:   rts
     END_IF
 
         ;; client area?
-    IF_A_EQ     #MGTK::Area::content
+    IF A EQ     #MGTK::Area::content
         bit     scrambled_flag
-      IF_NC
+      IF NC
         jmp     Scramble
       END_IF
 
@@ -558,7 +558,7 @@ bail:   rts
     END_IF
 
         ;; close port?
-    IF_A_EQ     #MGTK::Area::close_box
+    IF A EQ     #MGTK::Area::close_box
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     bail
@@ -576,7 +576,7 @@ destroy:
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-    IF_NS
+    IF NS
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawWindow
     END_IF
@@ -589,7 +589,7 @@ ret:    rts
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     OnClick::destroy
@@ -600,33 +600,33 @@ ret:    rts
         beq     OnClick::destroy
 
         bit     scrambled_flag
-    IF_NC
+    IF NC
         jmp     Scramble
     END_IF
 
         ldx     hole_x
         ldy     hole_y
 
-    IF_A_EQ     #CHAR_DOWN
+    IF A EQ     #CHAR_DOWN
         dey
         bmi     ret
         bpl     move            ; always
     END_IF
 
-    IF_A_EQ     #CHAR_UP
+    IF A EQ     #CHAR_UP
         iny
         cpy     #4
         bcs     ret
         bcc     move            ; always
     END_IF
 
-    IF_A_EQ     #CHAR_RIGHT
+    IF A EQ     #CHAR_RIGHT
         dex
         bmi     ret
         bpl     move            ; always
     END_IF
 
-    IF_A_EQ     #CHAR_LEFT
+    IF A EQ     #CHAR_LEFT
         inx
         cpx     #4
         bcs     ret
@@ -655,21 +655,21 @@ move:   stx     click_x
 
         cmp     #kRow1
         bcc     nope
-    IF_A_LT     #kRow2+1
+    IF A LT     #kRow2+1
         jsr     FindClickX
         bcc     nope
         lda     #0
         beq     yep             ; always
     END_IF
 
-    IF_A_LT     #kRow3+1
+    IF A LT     #kRow3+1
         jsr     FindClickX
         bcc     nope
         lda     #1
         bne     yep             ; always
     END_IF
 
-    IF_A_LT     #kRow4+1
+    IF A LT     #kRow4+1
         jsr     FindClickX
         bcc     nope
         lda     #2
@@ -693,17 +693,17 @@ nope:   clc
 .proc FindClickX
         cpx     #kCol1
         bcc     nope
-    IF_X_LT     #kCol2
+    IF X LT     #kCol2
         lda     #0
         beq     yep             ; always
     END_IF
 
-    IF_X_LT     #kCol3+1
+    IF X LT     #kCol3+1
         lda     #1
         bne     yep             ; always
     END_IF
 
-    IF_X_LT     #kCol4+1
+    IF X LT     #kCol4+1
         lda     #2
         bne     yep             ; always
     END_IF
@@ -729,12 +729,12 @@ nope:   clc
 
         lda     #0
         ldy     hole_y
-    IF_NOT_ZERO
+    IF NOT_ZERO
       DO
         clc
         adc     #4
         dey
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
     END_IF
 
         sta     draw_rc
@@ -754,7 +754,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         lda     click_x
         cmp     hole_x
         beq     miss
-    IF_LT
+    IF LT
         lda     hole_x          ; click before of hole
         sec
         sbc     click_x
@@ -763,7 +763,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         copy8   position_table-1,y, position_table,y
         dey
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         beq     row             ; always
     END_IF
 
@@ -775,7 +775,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         copy8   position_table+1,y, position_table,y
         iny
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         beq     row             ; always
 .endproc ; ClickInRow
 
@@ -797,7 +797,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         dey
         dey
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         beq     col
 
 after:  lda     click_y         ; click after hole
@@ -811,7 +811,7 @@ after:  lda     click_y         ; click after hole
         iny
         iny
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 .endproc ; ClickInCol
 
 col:    copy8   #kHolePiece, position_table,y
@@ -835,7 +835,7 @@ done:   jsr     CheckVictory
         pla
         tax
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         CLEAR_BIT7_FLAG scrambled_flag
 .endproc ; OnVictory
 
@@ -848,7 +848,7 @@ after_click:
 
 .proc DrawWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_ZERO                     ; not obscured
+    IF ZERO                     ; not obscured
         MGTK_CALL MGTK::SetPort, setport_params
 
         MGTK_CALL MGTK::SetPattern, pattern_speckles
@@ -896,7 +896,7 @@ after_click:
         tya
         pha
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ;; obscured
         pla
         rts
@@ -923,7 +923,7 @@ after_click:
         clc
         adc     draw_inc
         tay
-    WHILE_Y_LT  draw_end
+    WHILE Y LT  draw_end
 
         MGTK_CALL MGTK::ShowCursor
         rts
@@ -972,7 +972,7 @@ ret:    rts
 .proc CheckVictory        ; Allows for swapped indistinct pieces, etc.
         ;; 0/12 can be swapped
         lda     position_table
-    IF_NOT_ZERO
+    IF NOT_ZERO
         cmp     #12
         bne     nope
     END_IF
@@ -984,17 +984,17 @@ ret:    rts
         cmp     position_table,y
         bne     nope
         iny
-    WHILE_Y_LT  #5
+    WHILE Y LT  #5
 
         ;; 5/6 are identical
         lda     position_table+5
-    IF_A_NE     #5
+    IF A NE     #5
         cmp     #6
         bne     nope
     END_IF
 
         lda     position_table+6
-    IF_A_NE     #5
+    IF A NE     #5
         cmp     #6
         bne     nope
     END_IF
@@ -1009,13 +1009,13 @@ ret:    rts
 
         ;; 9/10 are identical
         lda     position_table+9
-    IF_A_NE     #9
+    IF A NE     #9
         cmp     #10
         bne     nope
     END_IF
 
         lda     position_table+10
-    IF_A_NE     #9
+    IF A NE     #9
         cmp     #10
         bne     nope
     END_IF
@@ -1027,7 +1027,7 @@ ret:    rts
 
         ;; 0/12 can be swapped
         lda     position_table+12
-    IF_NOT_ZERO
+    IF NOT_ZERO
         cmp     #12
         bne     nope
     END_IF
@@ -1039,7 +1039,7 @@ ret:    rts
         cmp     position_table,y
         bne     nope
         iny
-    WHILE_Y_LT  #16
+    WHILE Y LT  #16
         rts
 
 nope:   clc
@@ -1053,9 +1053,9 @@ nope:   clc
         ldy     #15
     DO
         lda     position_table,y
-        BREAK_IF_A_EQ #kHolePiece
+        BREAK_IF A EQ #kHolePiece
         dey
-    WHILE_POS                   ; always
+    WHILE POS                   ; always
 
         lda     #0
         sta     hole_x
@@ -1063,10 +1063,10 @@ nope:   clc
 
         tya
     DO
-        BREAK_IF_A_LT #4
+        BREAK_IF A LT #4
         sbc     #4
         inc     hole_y
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         sta     hole_x
         rts
@@ -1090,13 +1090,13 @@ redo:
       DO
         copy8   position_table+1,y, position_table,y
         iny
-      WHILE_Y_LT #15
+      WHILE Y LT #15
 
         stx     position_table+15
         pla
         tay
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         swap8   position_table, position_table+1
 
@@ -1126,7 +1126,7 @@ redo:
     DO
         swap8   position_table,y, swapped_table,y
         dey
-    WHILE_POS
+    WHILE POS
         rts
 .endproc ; SwapTables
 

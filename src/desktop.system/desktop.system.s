@@ -117,17 +117,17 @@ start:
 .proc Check128K
         lda     MACHID
         and     #kMachIDHasClock
-    IF_ZERO
+    IF ZERO
         lda     DATELO          ; Any date already set?
         ora     DATEHI
-      IF_ZERO
+      IF ZERO
         COPY_STRUCT DateTime, header_date, DATELO
       END_IF
     END_IF
 
         lda     MACHID
         and     #kMachIDHas128k
-        RTS_IF_A_EQ #kMachIDHas128k
+        RTS_IF A EQ #kMachIDHas128k
 
         ;;  If not 128k machine, just quit back to ProDOS
         jsr     HOME
@@ -135,7 +135,7 @@ start:
         sta     KBDSTRB
     DO
         lda     KBD
-    WHILE_NC
+    WHILE NC
         sta     KBDSTRB
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
@@ -172,7 +172,7 @@ str_128k_required:
         sta     $700,x
         sta     $780,x
         dex
-    WHILE_POS
+    WHILE POS
         sta     RAMWRTOFF
 
         ;; Turn on 80-column mode
@@ -182,7 +182,7 @@ str_128k_required:
         ;; IIgs: Reset shadowing
         sec
         jsr     IDROUTINE
-    IF_CC
+    IF CC
         .pushcpu
         .p816
         .a8
@@ -208,7 +208,7 @@ str_128k_required:
         ;; NOTE: If everything followed the convention, we could
         ;; skip this and set the prefix unconditionally.
         MLI_CALL GET_FILE_INFO, get_file_info_params
-    IF_CS
+    IF CS
 
         ;; Ensure path has high bits clear. Workaround for Bitsy Bye bug:
         ;; https://github.com/ProDOS-8/ProDOS8-Testing/issues/68
@@ -217,7 +217,7 @@ str_128k_required:
         asl     PRODOS_SYS_PATH,x
         lsr     PRODOS_SYS_PATH,x
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
 
         ;; Strip last filename segment
         ldx     PRODOS_SYS_PATH
@@ -225,7 +225,7 @@ str_128k_required:
       DO
         dex
         beq     ret
-      WHILE_A_NE PRODOS_SYS_PATH,x
+      WHILE A NE PRODOS_SYS_PATH,x
         dex
         stx     PRODOS_SYS_PATH
 
@@ -246,9 +246,9 @@ str_self_filename:
 .proc BrandSystemFolder
         MLI_CALL GET_PREFIX, get_prefix_params
         MLI_CALL GET_FILE_INFO, file_info_params
-    IF_CC
+    IF CC
         lda     file_info_params + 7 ; storage_type
-      IF_A_EQ   #ST_LINKED_DIRECTORY
+      IF A EQ   #ST_LINKED_DIRECTORY
         copy8   #7, file_info_params + 0 ; SET_FILE_INFO param_count
         copy16  #$8000, file_info_params + 5 ; aux_type
         MLI_CALL SET_FILE_INFO, file_info_params
@@ -287,7 +287,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
         ;; IIgs?
         sec                     ; Follow detection protocol
         jsr     IDROUTINE       ; RTS on pre-IIgs
-    IF_CC
+    IF CC
         lda     #DeskTopSettings::kSysCapIsIIgs
         jsr     set_bit
         jmp     done_machid
@@ -295,13 +295,13 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; IIc?
         lda     ZIDBYTE         ; $00 = IIc or later
-    IF_ZERO
+    IF ZERO
         lda     #DeskTopSettings::kSysCapIsIIc
         jsr     set_bit
 
         ;; IIc Plus?
         lda     ZIDBYTE2        ; ROM version
-      IF_A_EQ   #$05            ; IIc Plus = $05
+      IF A EQ   #$05            ; IIc Plus = $05
         lda     #DeskTopSettings::kSysCapIsIIcPlus
         jsr     set_bit
       END_IF
@@ -310,7 +310,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; Laser 128?
         lda     IDBYTELASER128
-    IF_A_EQ     #$AC
+    IF A EQ     #$AC
         lda     #DeskTopSettings::kSysCapIsLaser128
         jsr     set_bit
         jmp     done_machid
@@ -318,9 +318,9 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; Macintosh IIe Option Card?
         lda     ZIDBYTE
-    IF_A_EQ     #$E0            ; Enhanced IIe
+    IF A EQ     #$E0            ; Enhanced IIe
         lda     IDBYTEMACIIE
-      IF_A_EQ   #$02            ; Mac IIe Option Card
+      IF A EQ   #$02            ; Mac IIe Option Card
         lda     #DeskTopSettings::kSysCapIsIIeCard
         jsr     set_bit
         jmp     done_machid
@@ -331,14 +331,14 @@ done_machid:
 
         ;; Le Chat Mauve Eve?
         jsr     DetectLeChatMauveEve
-    IF_NOT_ZERO                 ; non-zero if LCM Eve detected
+    IF NOT_ZERO                 ; non-zero if LCM Eve detected
         lda     #DeskTopSettings::kSysCapLCMEve
         jsr     set_bit
     END_IF
 
         ;; Mega II?
         jsr     DetectMegaII
-    IF_ZERO                     ; Z=1 if Mega II, Z=0 otherwise
+    IF ZERO                     ; Z=1 if Mega II, Z=0 otherwise
         lda     #DeskTopSettings::kSysCapMegaII
         jsr     set_bit
     END_IF
@@ -555,7 +555,7 @@ str_slash_desktop:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsSkipRAMCard
-    IF_ZERO
+    IF ZERO
         ;; Skip RAMCard install if button is down
         lda     BUTN0
         ora     BUTN1
@@ -616,7 +616,7 @@ str_slash_desktop:
 
 next_unit:
         dec     devnum
-    WHILE_POS
+    WHILE POS
         jmp     DidNotCopy
 
         ;; Have a prospective device.
@@ -642,7 +642,7 @@ test_unit_num:
     DO
         copy8   on_line_buffer,y, dst_path+1,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Record that candidate device is found.
         lda     #$C0
@@ -658,7 +658,7 @@ test_unit_num:
         iny
         inx
         copy8   str_slash_desktop,x, dst_path,y
-    WHILE_X_NE  str_slash_desktop
+    WHILE X NE  str_slash_desktop
         sty     dst_path
 
         ;; Is it already present?
@@ -683,7 +683,7 @@ test_unit_num:
     DO
         copy8   src_path,y, header_orig_prefix,y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; SetHeaderOrigPrefix
@@ -704,8 +704,8 @@ test_unit_num:
         ;; Create desktop directory, e.g. "/RAM/DESKTOP"
 
         MLI_CALL CREATE, create_dt_dir_params
-    IF_CS
-      IF_A_NE   #ERR_DUPLICATE_FILENAME
+    IF CS
+      IF A NE   #ERR_DUPLICATE_FILENAME
         jsr     DidNotCopy
       END_IF
     END_IF
@@ -732,11 +732,11 @@ test_unit_num:
       DO
         copy8   (ptr),y, filename_buf,y
         dey
-      WHILE_POS
+      WHILE POS
         jsr     CopyFile
         inc     filenum
         lda     filenum
-    WHILE_A_NE #kNumFilenames
+    WHILE A NE #kNumFilenames
 
         jsr     UpdateProgress
         FALL_THROUGH_TO FinishDeskTopCopy
@@ -744,7 +744,7 @@ test_unit_num:
 
 .proc FinishDeskTopCopy
         lda     copied_flag
-    IF_NOT_ZERO
+    IF NOT_ZERO
         sta     dst_path
         MLI_CALL SET_PREFIX, set_prefix_params
     END_IF
@@ -759,7 +759,7 @@ test_unit_num:
     DO
         sta     BITMAP,x
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         copy8   #%00000001, BITMAP+BITMAP_SIZE-1 ; ProDOS global page
         copy8   #%11001111, BITMAP ; ZP, Stack, Text Page 1
 
@@ -807,7 +807,7 @@ test_unit_num:
     DO
         copy8   (ptr),y, target,y
         dey
-    WHILE_POS
+    WHILE POS
 
         bit     ROMIN2
         rts
@@ -827,7 +827,7 @@ test_unit_num:
     DO
         copy8   (ptr),y, target,y
         dey
-    WHILE_POS
+    WHILE POS
 
         bit     ROMIN2
         rts
@@ -837,16 +837,16 @@ test_unit_num:
 
 .proc AppendFilenameToSrcPath
         lda     filename_buf
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ldx     #0
         ldy     src_path
         copy8   #'/', src_path+1,y
       DO
         iny
-        BREAK_IF_X_GE filename_buf
+        BREAK_IF X GE filename_buf
         copy8   filename_buf+1,x, src_path+1,y
         inx
-      WHILE_NOT_ZERO              ; always
+      WHILE NOT_ZERO              ; always
         sty     src_path
     END_IF
         rts
@@ -856,13 +856,13 @@ test_unit_num:
 
 .proc RemoveFilenameFromSrcPath
         ldx     src_path
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #'/'
       DO
         cmp     src_path,x
         beq     done
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inx
 
 done:   dex
@@ -875,16 +875,16 @@ done:   dex
 
 .proc AppendFilenameToDstPath
         lda     filename_buf
-    IF_NOT_ZERO
+    IF NOT_ZERO
         ldx     #0
         ldy     dst_path
         copy8   #'/', dst_path+1,y
       DO
         iny
-        BREAK_IF_X_GE filename_buf
+        BREAK_IF X GE filename_buf
         copy8   filename_buf+1,x, dst_path+1,y
         inx
-      WHILE_NOT_ZERO            ; always
+      WHILE NOT_ZERO            ; always
         sty     dst_path
     END_IF
         rts
@@ -894,14 +894,14 @@ done:   dex
 
 .proc RemoveFilenameFromDstPath
         ldx     dst_path
-    IF_NOT_ZERO
+    IF NOT_ZERO
 
         lda     #'/'
       DO
         cmp     dst_path,x
         beq     done
         dex
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inx
 
 done:   dex
@@ -928,7 +928,7 @@ done:   dex
 
         ;; Tip
         bit     supports_mousetext
-    IF_NS
+    IF NS
         copy8   #kHtabCopyingTip, OURCH
         lda     #kVtabCopyingTip
         jsr     VTABZ
@@ -958,7 +958,7 @@ done:   dex
         jsr     AppendFilenameToDstPath
         jsr     AppendFilenameToSrcPath
         MLI_CALL GET_FILE_INFO, get_file_info_params
-    IF_CS
+    IF CS
         cmp     #ERR_FILE_NOT_FOUND
         beq     cleanup
         jmp     DidNotCopy
@@ -969,14 +969,14 @@ done:   dex
     DO
         copy8   src_path,y, GenericCopy::pathname_src,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Set up destination path
         ldy     dst_path
     DO
         copy8   dst_path,y, GenericCopy::pathname_dst,y
         dey
-    WHILE_POS
+    WHILE POS
 
         copy16  #FailCopy, GenericCopy::hook_handle_error_code
         copy16  #FailCopy, GenericCopy::hook_handle_no_space
@@ -1010,12 +1010,12 @@ noop:
         inx
         iny
         copy8   str_sentinel_path,y, path_buf,x
-    WHILE_Y_NE  str_sentinel_path
+    WHILE Y NE  str_sentinel_path
         stx     path_buf
 
         ;; ... and get info
         MLI_CALL GET_FILE_INFO, get_file_info_params4
-    IF_CC
+    IF CC
         cmp16   #2, get_file_info_params4::blocks_used
         ;; Ensure at least something was written to the file
         ;; (uses 1 block at creation)
@@ -1039,7 +1039,7 @@ str_self_filename:
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
-    IF_CC
+    IF CC
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
@@ -1107,7 +1107,7 @@ saved_stack:
     DO
         sta     ENTRY_COPIED_FLAGS,x
         dex
-    WHILE_POS
+    WHILE POS
         bit     ROMIN2
 
         ;; Load and iterate over the selector file
@@ -1216,12 +1216,12 @@ entry_dir_name:
         iny
         inx
         copy8   entry_dir_name,y, GenericCopy::pathname_dst,x
-    WHILE_Y_NE  entry_dir_name
+    WHILE Y NE  entry_dir_name
         stx     GenericCopy::pathname_dst
 
         ;; If already exists, consider that a success
         MLI_CALL GET_FILE_INFO, gfi_params
-        RTS_IF_CC
+        RTS_IF CC
 
         ;; Install callbacks and invoke
         copy16  #HandleErrorCode, GenericCopy::hook_handle_error_code
@@ -1243,14 +1243,14 @@ entry_dir_name:
     DO
         iny
         copy8   entry_path2,y, GenericCopy::pathname_src,y
-    WHILE_Y_NE entry_path2
+    WHILE Y NE entry_path2
 
         ;; Copy `entry_path1` to `path1`
         ldy     entry_path1
     DO
         copy8   entry_path1,y, GenericCopy::pathname_dst,y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; PreparePathsFromEntryPaths
@@ -1300,7 +1300,7 @@ str_selector_list:
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
-    IF_CC
+    IF CC
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
@@ -1370,23 +1370,23 @@ bits:   .byte   $00
     DO
         copy8   (ptr),y, entry_path2,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Strip last segment, e.g. ".../APPLEWORKS/AW.SYSTEM" -> ".../APPLEWORKS"
         ldy     entry_path2
         lda     #'/'
     DO
-        BREAK_IF_A_EQ entry_path2,y
+        BREAK_IF A EQ entry_path2,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         dey
         sty     entry_path2
 
         ;; Find offset of parent directory name, e.g. "APPLEWORKS"
     DO
-        BREAK_IF_A_EQ entry_path2,y
+        BREAK_IF A EQ entry_path2,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; ... and copy to `entry_dir_name`
         ldx     #0
@@ -1394,7 +1394,7 @@ bits:   .byte   $00
         iny
         inx
         copy8   entry_path2,y, entry_dir_name,x
-    WHILE_Y_NE  entry_path2
+    WHILE Y NE  entry_path2
         stx     entry_dir_name
 
         ;; Prep `entry_path1` with `RAMCARD_PREFIX`
@@ -1404,7 +1404,7 @@ bits:   .byte   $00
     DO
         copy8   RAMCARD_PREFIX,y, entry_path1,y
         dey
-    WHILE_POS
+    WHILE POS
         bit     ROMIN2
 
         rts
@@ -1453,7 +1453,7 @@ str_not_completed:
         param_call CoutString, str_insert
 
         jsr     WaitEnterEscape
-    IF_A_EQ     #$80|CHAR_ESCAPE
+    IF A EQ     #$80|CHAR_ESCAPE
         ldx     saved_stack
         txs
         MLI_CALL CLOSE, close_everything_params
@@ -1572,7 +1572,7 @@ start:  MLI_CALL CLOSE, close_everything_params
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsSkipSelector
-    IF_ZERO
+    IF ZERO
         MLI_CALL OPEN, open_selector_params
         bcc     selector
     END_IF
@@ -1628,7 +1628,7 @@ PROC_AT quit_restore_proc, ::quit_code_addr
         copy8   quit_code_save + ($100 * i),x, SELECTOR + ($100 * i),x
         .endrepeat
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         bit     ROMIN2
 
@@ -1656,7 +1656,7 @@ start:  bit     LCBANK2
         copy8   SELECTOR + ($100 * i),x, quit_code_save + ($100 * i),x
         .endrepeat
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         bit     ROMIN2
 
@@ -1664,7 +1664,7 @@ start:  bit     LCBANK2
         copy16  DATELO, create_params::create_date
         copy16  TIMELO, create_params::create_time
         MLI_CALL CREATE, create_params
-    IF_CS
+    IF CS
         cmp     #ERR_DUPLICATE_FILENAME
         bne     done
     END_IF
@@ -1698,7 +1698,7 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
 .endif ; PRODOS_2_5
         beq     found
         dex
-    WHILE_POS
+    WHILE POS
 
         rts                     ; not found
 
@@ -1755,7 +1755,7 @@ str_ram_not_empty:
         stax    ptr
         ldy     #0
         copy8   (ptr),y, len
-    IF_NOT_ZERO
+    IF NOT_ZERO
       DO
         iny
         lda     ($06),y
@@ -1763,7 +1763,7 @@ str_ram_not_empty:
         jsr     COUT
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-      WHILE_NE
+      WHILE NE
     END_IF
         rts
 .endproc ; CoutString
@@ -1775,10 +1775,10 @@ str_ram_not_empty:
     DO
       DO
         lda     KBD
-      WHILE_NC
+      WHILE NC
         sta     KBDSTRB
-        BREAK_IF_A_EQ #$80|CHAR_ESCAPE
-    WHILE_A_NE  #$80|CHAR_RETURN
+        BREAK_IF A EQ #$80|CHAR_ESCAPE
+    WHILE A NE  #$80|CHAR_RETURN
         rts
 .endproc ; WaitEnterEscape
 

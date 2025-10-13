@@ -46,7 +46,7 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         jsr     JUMP_TABLE_HILITE_MENU
 
         JUMP_TABLE_MLI_CALL CREATE, create_params
-    IF_CS
+    IF CS
         cmp     #ERR_DUPLICATE_FILENAME
         bne     done
     END_IF
@@ -85,14 +85,14 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         lda     (ptr),y
         sta     BLOCK_BUFFER,y
         iny
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inc     ptr+1
 
       DO
         lda     (ptr),y
         sta     BLOCK_BUFFER+$100,y
         iny
-      WHILE_NOT_ZERO
+      WHILE NOT_ZERO
         inc     ptr+1
 
         sta     PAGE2OFF
@@ -101,7 +101,7 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         JUMP_TABLE_MLI_CALL WRITE, write_block_params
 
         lda     ptr+1
-    WHILE_A_NE  #$40
+    WHILE A NE  #$40
 
         ;; ----------------------------------------
         ;; Write main segment

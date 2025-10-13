@@ -81,7 +81,7 @@ options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 .endparams
 
 start:  bit     app::invoked_during_boot_flag ; if no UI, just return cancel
-    IF_NS
+    IF NS
         return  #kAlertResultCancel
     END_IF
 
@@ -96,7 +96,7 @@ start:  bit     app::invoked_during_boot_flag ; if no UI, just return cancel
         cmp     alert_table,y
         beq     :+
         dey
-    WHILE_POS
+    WHILE POS
         ldy     #0              ; default
 :
 

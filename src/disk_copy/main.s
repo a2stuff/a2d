@@ -65,7 +65,7 @@ volume_bitmap   := $4000
     DO
         copy8   (params_src),y, params-1,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ;; Bank and call
         sta     ALTZPOFF
@@ -197,7 +197,7 @@ EjectDisk := EjectDiskImpl::start
 
         ;; Pascal?
         jsr     auxlc::IsPascalBootBlock
-    IF_CC
+    IF CC
         param_call auxlc::GetPascalVolName, on_line_buffer2
         copy8   #$C0, auxlc::source_disk_format ; Pascal
         rts
@@ -205,7 +205,7 @@ EjectDisk := EjectDiskImpl::start
 
         ;; DOS 3.3?
         jsr     auxlc::IsDOS33BootBlock
-    IF_CC
+    IF CC
         copy8   #$80,auxlc::source_disk_format ; DOS 3.3
         rts
     END_IF
@@ -251,7 +251,7 @@ fail:   copy8   #$81, auxlc::source_disk_format ; Other
         tya
         sta     (ptr),y
         ecmp16  ptr, #volume_bitmap
-    WHILE_NE
+    WHILE NE
 
         ;; Now mark block-pages used in memory bitmap
         page := $07          ; high byte of `volume_bitmap` from above
@@ -288,20 +288,20 @@ loop:   lda     page
         lda     block_params::data_buffer+1
         jsr     MarkUsedInMemoryBitmap
         jsr     ReadBlock
-      IF_CS
+      IF CS
         brk                     ; rude!
       END_IF
 
         sub16   block_count_div8, #$200, block_count_div8
-        RTS_IF_NEG
+        RTS_IF NEG
 
         lda     block_count_div8
-        RTS_IF_ZERO
+        RTS_IF ZERO
 
         add16   block_params::data_buffer, #$200, block_params::data_buffer
 
         inc     block_params::block_num
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
 .endproc ; QuickCopy
 .endproc ; ReadVolumeBitmap
 
@@ -318,7 +318,7 @@ loop:   lda     page
 
 start:
         jsr     FindSmartportDispatchAddress
-    IF_CC
+    IF CC
         stax    dispatch
         sty     status_params::unit_num
 
@@ -328,9 +328,9 @@ start:
         .byte   SPCall::Status
         .addr   status_params
 
-      IF_CC
+      IF CC
         lda     dib_buffer+SPDIB::Device_Type_Code
-       IF_A_EQ  #SPDeviceType::Disk35
+       IF A EQ  #SPDeviceType::Disk35
         ;; Assume all 3.5" drives are ejectable
         return  #$80
        END_IF
@@ -349,7 +349,7 @@ IsDriveEjectable := IsDriveEjectableImpl::start
 .proc CopyBlocks
         ror     write_flag
 
-    IF_NEG
+    IF NEG
         copy16  auxlc::start_block_div8, auxlc::block_num_div8
         copy8   auxlc::start_block_shift, auxlc::block_num_shift
         ldx     auxlc::dest_drive_index
@@ -373,7 +373,7 @@ IsDriveEjectable := IsDriveEjectableImpl::start
 loop:
         ;; Update displayed counts
         bit     write_flag
-    IF_NC
+    IF NC
         jsr     auxlc::IncAndDrawBlocksRead
     ELSE
         jsr     auxlc::IncAndDrawBlocksWritten
@@ -383,7 +383,7 @@ loop:
 check:
         ;; Check for keypress
         lda     KBD
-    IF_A_EQ     #(CHAR_ESCAPE | $80)
+    IF A EQ     #(CHAR_ESCAPE | $80)
         bit     KBDSTRB
         jmp     error
     END_IF
@@ -394,8 +394,8 @@ check:
         bmi     continue
 
         jsr     AdvanceToNextBlockIndex
-    IF_CS
-      IF_ZERO
+    IF CS
+      IF ZERO
         cpx     #$00
         beq     success
       END_IF
@@ -406,7 +406,7 @@ check:
         stax    mem_block_addr
         jsr     AdvanceToNextBlock
         bcc     _ReadOrWriteBlock
-      IF_ZERO
+      IF ZERO
         cpx     #$00
         beq     continue
       END_IF
@@ -440,7 +440,7 @@ error:  return  #1
         ;; $00-$0F = 0/$0000 - 0/$FFFF
 
         bit     write_flag
-    IF_NC
+    IF NC
         jsr     ReadBlockToMain
         bmi     error
         jmp     loop
@@ -464,7 +464,7 @@ need_move:
         ;; $1D-$1F = 1/$D000 - 1/$FFFF
 
         bit     write_flag
-    IF_NC
+    IF NC
         jsr     ReadBlockToLCBank1
         bmi     error
         jmp     loop
@@ -479,7 +479,7 @@ need_move:
         ;; $10-$1C = 1/$0000 - 1/$CFFF
 use_auxmem:
         bit     write_flag      ; 16-28
-    IF_NC
+    IF NC
         jsr     auxlc::ReadBlockToAuxmem
         bmi     error
         jmp     loop
@@ -494,7 +494,7 @@ use_auxmem:
         ;; $20+ = 1b/$D000 - 1b/$DFFF
 use_lcbank2:
         bit     write_flag
-    IF_NC
+    IF NC
         jsr     ReadBlockToLCBank2
         bmi     error
         jmp     loop
@@ -590,7 +590,7 @@ bloop:  asl
         sta     count+1
 
         ecmp16  ptr, #volume_bitmap
-    WHILE_NE
+    WHILE NE
 
         ldax    count
         rts
@@ -637,7 +637,7 @@ table:  .byte   7,6,5,4,3,2,1,0
 
 .proc AdvanceToNextBlockIndex
         jsr     ComputeMemoryPageSignature
-    IF_Y_NE     #0
+    IF Y NE     #0
         pha
         jsr     _Next
         pla
@@ -653,7 +653,7 @@ table:  .byte   7,6,5,4,3,2,1,0
 ;;; Advance to next
 .proc _Next
         dec     auxlc::block_index_shift
-    IF_POS
+    IF POS
 ok:     clc
         rts
     END_IF
@@ -686,7 +686,7 @@ ok:     clc
 
         ;; Now compute address to store in memory
         lda     auxlc::block_index_div8
-    IF_A_LT     #$10
+    IF A LT     #$10
 
         ;; $00-$0F is main pages $00...$FE
         ;; $10-$1F is aux  pages $00...$FE
@@ -704,7 +704,7 @@ calc:   asl     a               ; *= 16
         rts
     END_IF
 
-    IF_A_LT     #$20            ; 16-31
+    IF A LT     #$20            ; 16-31
         sec
         sbc     #$10
         jmp     calc
@@ -834,7 +834,7 @@ done:   rts
 .proc ReadBlockToLCBank1
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
-    IF_ZERO
+    IF ZERO
         jsr     CopyFromBlockBuffer
         lda     #0              ; success
     END_IF
@@ -849,7 +849,7 @@ done:   rts
 .proc ReadBlockToLCBank2
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
-    IF_ZERO
+    IF ZERO
         bit     LCBANK2
         bit     LCBANK2
 
@@ -879,7 +879,7 @@ done:   rts
         lda     default_block_buffer+$100,y
         sta     (ptr2),y
         iny
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; CopyFromBlockBuffer
 
@@ -951,7 +951,7 @@ done:   rts
         lda     (ptr2),y
         sta     default_block_buffer+$100,y
         iny
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; CopyToBlockBuffer
 

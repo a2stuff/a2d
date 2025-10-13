@@ -15,7 +15,7 @@
 
         ;; `BELLPROC` starting with 0 byte (BRK) signals silent bell
         lda     BELLPROC
-    IF_ZERO
+    IF ZERO
         MGTK_CALL MGTK::FlashMenuBar
 
         ;; Hit Slot 6, which causes accelerators e.g. Zip Chip
@@ -71,22 +71,22 @@ loop:   dec     ptr
     DO
         swap8   BELLPROC,y, BELLDATA,y
         dey
-    WHILE_POS
+    WHILE POS
 
         ;; Restore banking
         plp
-    IF_NC
+    IF NC
         bit     LCBANK1         ; restore LCBANK1
         bit     LCBANK1
     END_IF
 
         plp
-    IF_NC
+    IF NC
         bit     ROMIN2          ; restore ROMIN2
     END_IF
 
         plp
-    IF_NS
+    IF NS
         sta     ALTZPON         ; restore ALTZPON
     END_IF
 

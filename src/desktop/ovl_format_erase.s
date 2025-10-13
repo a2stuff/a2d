@@ -63,7 +63,7 @@ Exec:
 
         ldax    #aux::label_format_disk
         bit     erase_flag
-    IF_NS
+    IF NS
         ldax    #aux::label_erase_disk
     END_IF
         jsr     main::DrawDialogTitle
@@ -74,7 +74,7 @@ Exec:
         MGTK_CALL MGTK::MoveTo, vol_picker_select_pos
         ldax    #aux::str_select_format
         bit     erase_flag
-    IF_NS
+    IF NS
         ldax    #aux::str_select_erase
     END_IF
         jsr     main::DrawString
@@ -95,7 +95,7 @@ Exec:
 
     DO
         jsr     main::PromptInputLoop
-    WHILE_NS                    ; not done
+    WHILE NS                    ; not done
         jne     cancel          ; cancel
 
         jsr     GetSelectedUnitNum
@@ -126,7 +126,7 @@ skip_select:
         inx
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
-    WHILE_A_NE  unit_num
+    WHILE A NE  unit_num
         ;; NOTE: Assertion violation if not found
 
         txa
@@ -224,7 +224,7 @@ l9:
 l12:    pha
         jsr     main::SetCursorPointer
         pla
-    IF_A_EQ     #ERR_WRITE_PROTECTED
+    IF A EQ     #ERR_WRITE_PROTECTED
 
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
@@ -274,12 +274,12 @@ retry:
         pha
         jsr     main::SetCursorPointer
         pla
-    IF_ZERO
+    IF ZERO
         lda     #$00
         beq     finish          ; always
     END_IF
 
-    IF_A_EQ     #ERR_WRITE_PROTECTED
+    IF A EQ     #ERR_WRITE_PROTECTED
 
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
@@ -324,9 +324,9 @@ finish:
 .proc HandleClick
         COPY_STRUCT screentowindow_params::window, vol_picker_params::coords
         OPTK_CALL OPTK::Click, vol_picker_params
-    IF_NC
+    IF NC
         jsr     DetectDoubleClick
-      IF_NC
+      IF NC
         pha
         BTK_CALL BTK::Flash, ok_button
         pla
@@ -419,20 +419,20 @@ no:     lda     #$80
     DO
         copy8   (ptr),y, path+1,y
         dey
-    WHILE_POS
+    WHILE POS
         clc
         adc     #1
         sta     path
         copy8   #'/', path+1
 
         MLI_CALL GET_FILE_INFO, get_file_info_params
-    IF_CC
+    IF CC
         ;; A volume with that name exists... but is it the one
         ;; we're about to format/erase?
         lda     DEVNUM
         unit_num := *+1
         cmp     #SELF_MODIFIED_BYTE
-      IF_NE
+      IF NE
         ;; Not the same device, so a match. Return C=1
         sec
         rts
@@ -487,7 +487,7 @@ path:
         sta     unit_num
 
         jsr     main::IsDiskII
-    IF_EQ
+    IF EQ
         ;; Format as Disk II
         lda     unit_num
         jmp     FormatDiskII
@@ -522,7 +522,7 @@ path:
         sta     unit_num
 
         jsr     main::IsDiskII
-    IF_NE
+    IF NE
         ;; Check if the driver is firmware ($CnXX).
         lda     unit_num
         jsr     GetDriverAddress
@@ -530,12 +530,12 @@ path:
         txa                     ; high byte
         and     #$F0            ; look at high nibble
         cmp     #$C0            ; firmware? ($Cn)
-      IF_EQ                     ; TODO: Should we guess yes or no here???
+      IF EQ                     ; TODO: Should we guess yes or no here???
         ;; Check the firmware status byte
         addr := *+1
         lda     $C0FE           ; $CnFE, high byte is self-modified above
         and     #%00001000      ; Bit 3 = Supports format
-       IF_ZERO
+       IF ZERO
 
         return  #$FF            ; no, does not support format
        END_IF
@@ -563,7 +563,7 @@ unit_num:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsSetCaseBits
-    IF_ZERO
+    IF ZERO
         ldax    #0
     ELSE
         param_call_indirect main::CalculateCaseBits, $06
@@ -578,7 +578,7 @@ unit_num:
         ;; Check if it's a Disk II
         lda     unit_num
         jsr     main::IsDiskII
-    IF_NE
+    IF NE
         ;; Not Disk II - use the driver.
         lda     unit_num
         jsr     GetDriverAddress
@@ -631,20 +631,20 @@ got_blocks:
     DO
         copy8   vol_name_buf,y, block_buffer + VolumeDirectoryHeader::file_name - 1,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldy     #kNumKeyBlockHeaderBytes-1 ; other header bytes
     DO
         copy8   key_block_header_bytes,y, block_buffer+kKeyBlockHeaderOffset,y
         dey
-    WHILE_POS
+    WHILE POS
 
         MLI_CALL GET_TIME       ; Apply timestamp
         ldy     #3
     DO
         copy8   DATELO,y, block_buffer + VolumeDirectoryHeader::creation_date,y
         dey
-    WHILE_POS
+    WHILE POS
 
         copy16  case_bits, block_buffer + VolumeDirectoryHeader::case_bits
 
@@ -711,7 +711,7 @@ got_blocks:
 
         copy8   #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
         lda     lastblock       ; and check again
-      IF_A_LT   #15             ; Is it 15 or more? Skip ahead.
+      IF A LT   #15             ; Is it 15 or more? Skip ahead.
         and     #$07            ; Otherwise (7-14) take the low three bits
         tax
         lda     freemask,x      ; convert them to the correct VBM value using a lookup table
@@ -730,7 +730,7 @@ got_blocks:
 gowrite:
         jsr     WriteBlockAndZero
         lda     lastblock
-    WHILE_A_GE  write_block_params::block_num
+    WHILE A GE  write_block_params::block_num
 
         ;; Success
         lda     #$00
@@ -772,7 +772,7 @@ lastblock:
         sta     block_buffer,y  ; Fill this entire block
         sta     block_buffer+$100,y ; with $FF bytes
         iny
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         lda     write_block_params::block_num
         cmp     lastblock       ; Is this the last block?
@@ -837,7 +837,7 @@ zero_buffers:
         sta     block_buffer,y
         sta     block_buffer+$100,y
         dey
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 .endproc ; WriteBlockAndZero
 
@@ -897,9 +897,9 @@ prodos_loader_blocks:
         sta     read_block_params::unit_num
         copy16  #0, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
-    IF_CC
+    IF CC
         lda     read_buffer + 1
-      IF_A_NE   #kPascalSig1    ; DOS 3.3?
+      IF A NE   #kPascalSig1    ; DOS 3.3?
         jmp     maybe_dos       ; Maybe...
       END_IF
 
@@ -974,7 +974,7 @@ maybe_dos:
 pascal_disk:
         copy16  #kVolumeDirKeyBlock, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
-    IF_CS
+    IF CS
         ;; Pascal disk, empty name - use " :" (weird, but okay?)
         copy8   #2, ovl_string_buf
         copy8   #' ', ovl_string_buf+1
@@ -988,7 +988,7 @@ pascal_disk:
     DO
         copy8   read_buffer + 6,x, ovl_string_buf,x
         dex
-    WHILE_POS
+    WHILE POS
         inc     ovl_string_buf
         ldx     ovl_string_buf
         copy8   #':', ovl_string_buf,x
@@ -1014,7 +1014,7 @@ pascal_disk:
     DO
         copy8   on_line_buffer,x, ovl_string_buf,x
         dex
-    WHILE_POS
+    WHILE POS
 
         jmp     EnquoteStringBuf
 
@@ -1030,7 +1030,7 @@ non_pro:
     DO
         copy8   ovl_string_buf,x, ovl_string_buf+1,x
         dex
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         ldx     ovl_string_buf
         inx

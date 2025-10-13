@@ -44,7 +44,7 @@ start:
 
         ;; Open up Selector itself
         MLI_CALL OPEN, open_params
-    IF_CS
+    IF CS
         brk
     END_IF
 
@@ -101,7 +101,7 @@ start:
         sta     alert_final_addr + ($100 * i),x
         .endrepeat
         inx
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
 
         sta     ALTZPOFF
         bit     ROMIN2

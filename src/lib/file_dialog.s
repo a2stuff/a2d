@@ -150,31 +150,31 @@ key_handler_hook:
 .proc EventLoop
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
-    IF_NS
+    IF NS
         LETK_CALL LETK::Idle, file_dialog_res::le_params
     END_IF
 .endif
         jsr     SystemTask
         jsr     GetNextEvent
 
-    IF_A_EQ     #MGTK::EventKind::key_down
+    IF A EQ     #MGTK::EventKind::key_down
         jsr     _HandleKeyEvent
         jmp     EventLoop
     END_IF
 
-    IF_A_EQ     #MGTK::EventKind::button_down
+    IF A EQ     #MGTK::EventKind::button_down
         ldx     #0              ; Clear type-down
         stx     type_down_buf
         jsr     _HandleButtonDown
         jmp     EventLoop
     END_IF
 
-    IF_A_EQ     #kEventKindMouseMoved
+    IF A EQ     #kEventKindMouseMoved
         ldx     #0              ; Clear type-down
         stx     type_down_buf
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
-      IF_NS
+      IF NS
         jsr     _MoveToWindowCoords
         MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
         ASSERT_EQUALS MGTK::inrect_outside, 0
@@ -205,13 +205,13 @@ out:    jsr     _UnsetCursorIBeam
 .proc _HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params+MGTK::FindWindowParams::which_area
-    IF_A_NE     #MGTK::Area::content
+    IF A NE     #MGTK::Area::content
 ret:    rts
     END_IF
 
         ;; Dialog window?
         lda     findwindow_params+MGTK::FindWindowParams::window_id
-    IF_A_NE     #file_dialog_res::kFilePickerDlgWindowID
+    IF A NE     #file_dialog_res::kFilePickerDlgWindowID
         ;; No, assume list box (will fail gracefully if not)
         COPY_STRUCT MGTK::Point, event_params+MGTK::Event::coords, file_dialog_res::lb_params::coords
         LBTK_CALL LBTK::Click, file_dialog_res::lb_params
@@ -220,7 +220,7 @@ ret:    rts
         bmi     ret
         ldx     selected_index
         lda     file_list_index,x
-      IF_NC
+      IF NC
         ;; File - accept it.
         BTK_CALL BTK::Flash, file_dialog_res::ok_button
         jmp     HandleOK
@@ -236,9 +236,9 @@ ret:    rts
         ;; Drives button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::drives_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::drives_button
-        RTS_IF_NS
+        RTS_IF NS
         jmp     _DoDrives
     END_IF
 
@@ -246,9 +246,9 @@ ret:    rts
         ;; Open button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::open_button
-        RTS_IF_NS
+        RTS_IF NS
         jmp     _DoOpen
     END_IF
 
@@ -256,9 +256,9 @@ ret:    rts
         ;; Close button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::close_button
-        RTS_IF_NS
+        RTS_IF NS
         jmp     _DoClose
     END_IF
 
@@ -266,9 +266,9 @@ ret:    rts
         ;; OK button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::ok_button
-        RTS_IF_NS
+        RTS_IF NS
         jmp     HandleOK
     END_IF
 
@@ -276,9 +276,9 @@ ret:    rts
         ;; Cancel button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button::rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::cancel_button
-        RTS_IF_NS
+        RTS_IF NS
         jmp     HandleCancel
     END_IF
 
@@ -287,10 +287,10 @@ ret:    rts
         ;; Extra controls
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
-    IF_NS
+    IF NS
         ;; Text Edit
         MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
-      IF_NOT_ZERO
+      IF NOT_ZERO
         COPY_STRUCT MGTK::Point, screentowindow_params+MGTK::ScreenToWindowParams::window, file_dialog_res::le_params::coords
         LETK_CALL LETK::Click, file_dialog_res::le_params
         rts
@@ -338,7 +338,7 @@ ret:    rts
 .ifdef FD_EXTENDED
 .proc _SetCursorIBeam
         bit     cursor_ibeam_flag
-    IF_NC
+    IF NC
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         SET_BIT7_FLAG cursor_ibeam_flag
     END_IF
@@ -347,7 +347,7 @@ ret:    rts
 
 .proc _UnsetCursorIBeam
         bit     cursor_ibeam_flag
-    IF_NS
+    IF NS
         jsr     _SetCursorPointer
         CLEAR_BIT7_FLAG cursor_ibeam_flag
     END_IF
@@ -374,7 +374,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
         ;; Any selection?
         bit     selected_index
-    IF_NC
+    IF NC
         ;; Append filename temporarily
         jsr     _AppendSelectedFilename
     END_IF
@@ -385,10 +385,10 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         ptr := *+1
         sta     SELF_MODIFIED,y
         dey
-    WHILE_POS
+    WHILE POS
 
         bit     selected_index
-    IF_NC
+    IF NC
         jsr     StripPathBufSegment
     END_IF
 
@@ -471,7 +471,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         .assert kSelectionRequiredDirsOK     & $80 = $80, error, "enum mismatch"
 
         bit     selection_requirement_flags
-    IF_NS
+    IF NS
         ;; Selection required
         bit     selected_index
         bmi     _ReturnNotAllowed ; no selection
@@ -504,12 +504,12 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 .proc _DoClose
         jsr     _IsCloseAllowed
-    IF_CC
+    IF CC
         ;; Remove last segment
         jsr     StripPathBufSegment
 
         lda     path_buf
-      IF_ZERO
+      IF ZERO
         jsr     _SetRootPath
       END_IF
 
@@ -534,7 +534,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         rts
     END_IF
 
-    IF_X_NE     #0
+    IF X NE     #0
         ;; With modifiers
         jsr     _CheckTypeDown
         jeq     exit
@@ -545,10 +545,10 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
-      IF_NS
+      IF NS
         ;; Hook for clients
-       IF_A_GE  #'0'
-        IF_A_LT #'9'+1
+       IF A GE  #'0'
+        IF A LT #'9'+1
         jmp     (key_handler_hook)
         END_IF
        END_IF
@@ -564,7 +564,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jeq     exit
 .else
         bit     extra_controls_flag
-      IF_NC
+      IF NC
         jsr     _CheckTypeDown
         jeq     exit
       END_IF
@@ -573,33 +573,33 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         copy8   #0, type_down_buf
         lda     event_params+MGTK::Event::key
 
-      IF_A_EQ   #CHAR_RETURN
+      IF A EQ   #CHAR_RETURN
         BTK_CALL BTK::Flash, file_dialog_res::ok_button
-        RTS_IF_NS
+        RTS_IF NS
         jmp     HandleOK
       END_IF
 
-      IF_A_EQ   #CHAR_ESCAPE
+      IF A EQ   #CHAR_ESCAPE
         BTK_CALL BTK::Flash, file_dialog_res::cancel_button
         ;; always enabled
         jmp     HandleCancel
       END_IF
 
-      IF_A_EQ   #CHAR_CTRL_O
+      IF A EQ   #CHAR_CTRL_O
         BTK_CALL BTK::Flash, file_dialog_res::open_button
-        RTS_IF_NS
+        RTS_IF NS
         jmp     _DoOpen
       END_IF
 
-      IF_A_EQ   #CHAR_CTRL_D
+      IF A EQ   #CHAR_CTRL_D
         BTK_CALL BTK::Flash, file_dialog_res::drives_button
         ;; always enabled
         jmp     _DoDrives
       END_IF
 
-      IF_A_EQ   #CHAR_CTRL_C
+      IF A EQ   #CHAR_CTRL_C
         jsr     _IsCloseAllowed
-        RTS_IF_NS
+        RTS_IF NS
         jmp     _DoClose
       END_IF
 
@@ -607,7 +607,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
-      IF_NS
+      IF NS
         ;; Edit control
         copy8   event_params+MGTK::Event::key, file_dialog_res::le_params::key
         copy8   event_params+MGTK::Event::modifiers, file_dialog_res::le_params::modifiers
@@ -643,15 +643,15 @@ not_file_char:
 
 file_char:
         ldx     type_down_buf
-        RTS_IF_X_EQ #kMaxFilenameLength ; Z=1 to consume
+        RTS_IF X EQ #kMaxFilenameLength ; Z=1 to consume
 
         inx
         stx     type_down_buf
         sta     type_down_buf,x
 
         jsr     _FindMatch
-    IF_NC
-      IF_A_NE   selected_index
+    IF NC
+      IF A NE   selected_index
         sta     file_dialog_res::lb_params::new_selection
         LBTK_CALL LBTK::SetSelection, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
@@ -662,7 +662,7 @@ file_char:
 
 .proc _FindMatch
         lda     num_file_names
-    IF_ZERO
+    IF ZERO
         return  #$FF
     END_IF
 
@@ -698,7 +698,7 @@ cloop:  lda     ($06),y
 
 next:   inc     index
         lda     index
-    WHILE_A_NE  num_file_names
+    WHILE A NE  num_file_names
         dec     index
 found:  return  index
 
@@ -751,7 +751,7 @@ found:  return  index
         lda     #0
         ror                     ; C into high bit
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-    IF_A_NE     file_dialog_res::ok_button::state
+    IF A NE     file_dialog_res::ok_button::state
         sta     file_dialog_res::ok_button::state
         BTK_CALL BTK::Hilite, file_dialog_res::ok_button
     END_IF
@@ -762,7 +762,7 @@ found:  return  index
         lda     #0
         ror                     ; C into high bit
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-    IF_A_NE     file_dialog_res::open_button::state
+    IF A NE     file_dialog_res::open_button::state
         sta     file_dialog_res::open_button::state
         BTK_CALL BTK::Hilite, file_dialog_res::open_button
     END_IF
@@ -773,7 +773,7 @@ found:  return  index
         lda     #0
         ror                     ; C into high bit
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-    IF_A_NE     file_dialog_res::close_button::state
+    IF A NE     file_dialog_res::close_button::state
         sta     file_dialog_res::close_button::state
         BTK_CALL BTK::Hilite, file_dialog_res::close_button
     END_IF
@@ -799,7 +799,7 @@ found:  return  index
         ldx     #.sizeof(MGTK::Point)-1
     DO
         bit     extra_controls_flag
-      IF_NS
+      IF NS
         copy8   file_dialog_res::extra_viewloc,x, file_dialog_res::winfo::viewloc,x
         copy8   file_dialog_res::extra_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
         copy8   file_dialog_res::extra_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
@@ -809,7 +809,7 @@ found:  return  index
         copy8   file_dialog_res::normal_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
       END_IF
         dex
-    WHILE_POS
+    WHILE POS
 .endif
 
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
@@ -819,7 +819,7 @@ found:  return  index
 
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::FrameRect, file_dialog_res::line_edit_rect
     END_IF
 .endif
@@ -828,7 +828,7 @@ found:  return  index
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
 .else
         bit     extra_controls_flag
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_ex_frame_rect
     ELSE
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
@@ -872,7 +872,7 @@ found:  return  index
 
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
@@ -999,7 +999,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         stax    ptr
 
         ldx     path_buf
-    IF_X_NE     #1
+    IF X NE     #1
         lda     #'/'
         sta     path_buf+1,x
         inc     path_buf
@@ -1013,7 +1013,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 
         ;; Enough room?
         cmp     #kPathBufferSize
-    IF_GE
+    IF GE
         dec     path_buf
         rts                     ; C=1 failure
     END_IF
@@ -1025,7 +1025,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         sta     path_buf,x
         dey
         dex
-    WHILE_X_NE  path_buf
+    WHILE X NE  path_buf
 
         pla
         sta     path_buf
@@ -1039,10 +1039,10 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 .proc StripPathBufSegment
     DO
         ldx     path_buf
-        BREAK_IF_EQ
+        BREAK_IF EQ
         dec     path_buf
         lda     path_buf,x
-    WHILE_A_NE  #'/'
+    WHILE A NE  #'/'
         rts
 .endproc ; StripPathBufSegment
 
@@ -1058,7 +1058,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_params
-    IF_CS
+    IF CS
 err:    jsr     _SetRootPath
         jmp     _ReadDrives
     END_IF
@@ -1093,11 +1093,11 @@ do_entry:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowInvisible
-    IF_ZERO
+    IF ZERO
         ldy     #FileEntry::access
         lda     (ptr),y
         and     #ACCESS_I
-      IF_NE
+      IF NE
         dec     num_file_names  ; invisible, so skip
         jmp     done_entry
       END_IF
@@ -1145,7 +1145,7 @@ close:  MLI_CALL CLOSE, close_params
         rts
 
 next:   lda     entry_in_block
-    IF_A_NE     entries_per_block
+    IF A NE     entries_per_block
         add16_8 ptr, entry_length
         jmp     do_entry
     END_IF
@@ -1183,7 +1183,7 @@ entries_per_block:
 loop:   ldy     #0
         lda     (ptr),y         ; A = unit_num | name_len
         and     #NAME_LENGTH_MASK
-    IF_ZERO
+    IF ZERO
         iny                     ; 0 signals error or complete
         lda     (ptr),y
         bne     next            ; error, so skip
@@ -1235,7 +1235,7 @@ finish:
         lda     (src_ptr),y
         sta     (dst_ptr),y
         dey
-    WHILE_POS
+    WHILE POS
 
         rts
 .endproc ; _CopyIntoNthFilename
@@ -1256,7 +1256,7 @@ finish:
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 
         jsr     _IsRootPath
-    IF_NE
+    IF NE
         copy16  #path_buf, $06
 
         ldy     #3
@@ -1265,12 +1265,12 @@ finish:
         ldx     #2              ; skip leading slash
       DO
         lda     path_buf,x
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         iny
         sta     file_dialog_res::filename_buf,y
-        BREAK_IF_X_EQ path_buf
+        BREAK_IF X EQ path_buf
         inx
-      WHILE_NOT_ZERO            ; always
+      WHILE NOT_ZERO            ; always
         sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
@@ -1284,17 +1284,17 @@ finish:
         copy16  #path_buf, $06
 
         jsr     _IsRootPath
-    IF_NE
+    IF NE
         ;; Copy last segment
         ldx     path_buf
       DO
         lda     path_buf,x
-        BREAK_IF_A_EQ #'/'
+        BREAK_IF A EQ #'/'
         dex
-      WHILE_NOT_ZERO            ; always
+      WHILE NOT_ZERO            ; always
         inx
 
-      IF_X_NE   #2
+      IF X NE   #2
         copy8   #kGlyphFolderLeft, file_dialog_res::filename_buf+1
         copy8   #kGlyphFolderRight, file_dialog_res::filename_buf+2
       END_IF
@@ -1303,10 +1303,10 @@ finish:
       DO
         lda     path_buf,x
         sta     file_dialog_res::filename_buf,y
-        BREAK_IF_X_EQ path_buf
+        BREAK_IF X EQ path_buf
         iny
         inx
-      WHILE_NOT_ZERO            ; always
+      WHILE NOT_ZERO            ; always
         sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
@@ -1322,7 +1322,7 @@ finish:
 
 .proc _SortFileNames
         lda     num_file_names
-        RTS_IF_A_LT #2          ; can't sort < 2 records
+        RTS_IF A LT #2          ; can't sort < 2 records
 
         ;; --------------------------------------------------
         ;; Selection sort
@@ -1348,7 +1348,7 @@ finish:
         stax    ptr1
 
         jsr     _CompareStrings
-       IF_GE
+       IF GE
         ;; Swap
         ldx     inner
         ldy     outer
@@ -1361,10 +1361,10 @@ finish:
 
         inc     inner
         lda     inner
-      WHILE_A_NE outer
+      WHILE A NE outer
 
         dec     outer
-    WHILE_NOT_ZERO
+    WHILE NOT_ZERO
         rts
 
 .proc _CalcPtr
@@ -1395,7 +1395,7 @@ finish:
         ;; End of string 1?
         len1 := *+1
         cpy     #SELF_MODIFIED_BYTE
-      IF_EQ
+      IF EQ
         cpy     len2            ; 1<2 or 1=2 ?
         rts
       END_IF
@@ -1405,7 +1405,7 @@ finish:
         cpy     #SELF_MODIFIED_BYTE
         beq     gt              ; 1>2
         iny
-    WHILE_NOT_ZERO              ; always
+    WHILE NOT_ZERO              ; always
 
 gt:     lda     #$FF            ; Z=0
         sec
@@ -1453,7 +1453,7 @@ found:  ldx     num_file_names
         dex
         lda     file_list_index,x
         and     #$7F
-    WHILE_A_NE  index
+    WHILE A NE  index
         txa
         rts
 .endproc ; _FindFilenameIndex
@@ -1498,7 +1498,7 @@ selected_index := file_dialog_res::listbox_rec::selected_index
         lda     (pt_ptr),y
         sta     file_dialog_res::item_pos,y
         dey
-    WHILE_POS
+    WHILE POS
         pla
 
         tax
@@ -1514,7 +1514,7 @@ selected_index := file_dialog_res::listbox_rec::selected_index
         lda     SELF_MODIFIED,x
         sta     file_dialog_res::filename_buf,x
         dex
-    WHILE_POS
+    WHILE POS
         copy16  #kListViewNameX, file_dialog_res::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
         param_call DrawString, file_dialog_res::filename_buf
@@ -1523,11 +1523,11 @@ selected_index := file_dialog_res::listbox_rec::selected_index
         copy16  #kListViewIconX, file_dialog_res::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
         pla
-    IF_NS
+    IF NS
         ldax    #file_dialog_res::str_folder
 
         ldy     path_buf
-      IF_Y_EQ   #1
+      IF Y EQ   #1
         ldax    #file_dialog_res::str_vol
       END_IF
 

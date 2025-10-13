@@ -193,7 +193,7 @@ init_window:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-    IF_A_EQ     #MGTK::EventKind::button_down
+    IF A EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -212,7 +212,7 @@ init_window:
         lda     event_params::key
 
         ldx     event_params::modifiers
-    IF_NOT_ZERO
+    IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         jeq     OnKeyOK
@@ -281,22 +281,22 @@ ret:    rts
 .proc OnKeyChar
         ldx     selected_field
 
-    IF_X_EQ     #Field::date
+    IF X EQ     #Field::date
         ldx     #DeskTopSettings::intl_date_sep
         bne     update          ; always
     END_IF
 
-    IF_X_EQ     #Field::time
+    IF X EQ     #Field::time
         ldx     #DeskTopSettings::intl_time_sep
         bne     update          ; always
     END_IF
 
-    IF_X_EQ     #Field::deci
+    IF X EQ     #Field::deci
         ldx     #DeskTopSettings::intl_deci_sep
         bne     update          ; always
     END_IF
 
-    IF_X_EQ     #Field::thou
+    IF X EQ     #Field::thou
         ldx     #DeskTopSettings::intl_thou_sep
         bne     update          ; always
     END_IF
@@ -360,25 +360,25 @@ hit:
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::InRect, date_rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #Field::date
         jmp     SelectField
     END_IF
 
         MGTK_CALL MGTK::InRect, time_rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #Field::time
         jmp     SelectField
     END_IF
 
         MGTK_CALL MGTK::InRect, deci_rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #Field::deci
         jmp     SelectField
     END_IF
 
         MGTK_CALL MGTK::InRect, thou_rect
-    IF_NOT_ZERO
+    IF NOT_ZERO
         lda     #Field::thou
         jmp     SelectField
     END_IF
@@ -469,7 +469,7 @@ dialog_result:  .byte   0
         ;; Dates in DeskTop list views may be invalidated, so if any
         ;; settings changed, force a full redraw to avoid artifacts.
         bit     dialog_result
-    IF_NS
+    IF NS
         MGTK_CALL MGTK::RedrawDeskTop
     END_IF
 
@@ -590,7 +590,7 @@ dialog_result:  .byte   0
 .endproc ; UpdateFirstDOWOptionButtons
 
 .proc ZToButtonState
-    IF_ZC
+    IF ZC
         lda     #BTK::kButtonStateNormal
         rts
     END_IF
@@ -609,7 +609,7 @@ char:   .byte   SELF_MODIFIED_BYTE
 ;;; A = field
 .proc DrawField
         pha
-    IF_A_EQ     selected_field
+    IF A EQ     selected_field
         MGTK_CALL MGTK::SetTextBG, settextbg_black_params
         MGTK_CALL MGTK::SetPenMode, notpencopy
     ELSE
@@ -618,7 +618,7 @@ char:   .byte   SELF_MODIFIED_BYTE
     END_IF
         pla
 
-    IF_A_EQ     #Field::date
+    IF A EQ     #Field::date
         ldx     #DeskTopSettings::intl_date_sep
         jsr     ReadSetting
         sta     drawchar_params::char
@@ -632,7 +632,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         param_jump DrawString, date_sample_label_str
     END_IF
 
-    IF_A_EQ     #Field::time
+    IF A EQ     #Field::time
         ldx     #DeskTopSettings::intl_time_sep
         jsr     ReadSetting
         sta     drawchar_params::char
@@ -645,7 +645,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         param_jump DrawString, time_sample_label_str
     END_IF
 
-    IF_A_EQ     #Field::deci
+    IF A EQ     #Field::deci
         ldx     #DeskTopSettings::intl_deci_sep
         jsr     ReadSetting
         sta     drawchar_params::char
@@ -658,7 +658,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         param_jump DrawString, deci_sample_label_str
     END_IF
 
-    IF_A_EQ     #Field::thou
+    IF A EQ     #Field::thou
         ldx     #DeskTopSettings::intl_thou_sep
         jsr     ReadSetting
         sta     drawchar_params::char

@@ -123,12 +123,12 @@ exit:
         cmp     #CHAR_ESCAPE
         beq     InputLoop::exit
 
-    IF_A_EQ     #CHAR_LEFT
+    IF A EQ     #CHAR_LEFT
         dec16   delta
         jmp     InputLoop
     END_IF
 
-    IF_A_EQ     #CHAR_RIGHT
+    IF A EQ     #CHAR_RIGHT
         inc16   delta
         jmp     InputLoop
     END_IF
@@ -143,7 +143,7 @@ printable:
 
         ldx     text_params::length
         dex
-    IF_X_LT     #kMaxStringLength-1
+    IF X LT     #kMaxStringLength-1
         sta     buf,x
         copy8   #kPadChar, buf+1,x
         inc     text_params::length
@@ -158,7 +158,7 @@ backspace:
         jsr     maybe_init
 
         lda     text_params::length
-    IF_A_GE     #3
+    IF A GE     #3
         dec     text_params::length
         ldx     text_params::length
         copy8   #kPadChar, buf-1,x
@@ -171,7 +171,7 @@ backspace:
         ;; Preserves A
 maybe_init:
         bit     placeholder_flag
-    IF_NS
+    IF NS
         ldx     #0
         stx     placeholder_flag
         ldx     #2
@@ -190,7 +190,7 @@ maybe_init:
         MGTK_CALL MGTK::MoveTo, text_pos
 
         lda     text_params::length
-    IF_ZERO
+    IF ZERO
         copy16  #0, rect::x1
         copy16  #kScreenWidth-1, rect::x2
         MGTK_CALL MGTK::PaintRect, rect
@@ -202,14 +202,14 @@ maybe_init:
         copy16  #0, rect::x1
         sub16   text_pos::xcoord, #1, rect::x2
         scmp16  rect::x1, rect::x2
-      IF_NEG
+      IF NEG
         MGTK_CALL MGTK::PaintRect, rect
       END_IF
 
         add16   text_pos::xcoord, text_params::width, rect::x1
         copy16  #kScreenWidth-1, rect::x2
         scmp16  rect::x1, rect::x2
-      IF_NEG
+      IF NEG
         MGTK_CALL MGTK::PaintRect, rect
       END_IF
 
@@ -218,16 +218,16 @@ maybe_init:
         add16   text_pos::xcoord, delta, text_pos::xcoord
 
         lda     delta+1
-    IF_NS
+    IF NS
         tmp := $06
         add16   text_pos::xcoord, text_params::width, tmp
         lda     tmp+1
-      IF_NS
+      IF NS
         copy16  #kScreenWidth-1, text_pos::xcoord
       END_IF
     ELSE
         scmp16  text_pos::xcoord, #kScreenWidth
-      IF_POS
+      IF POS
         sub16   #0, text_params::width, text_pos::xcoord
       END_IF
     END_IF
