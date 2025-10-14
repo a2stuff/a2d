@@ -238,7 +238,7 @@ num_entries := listbox_rec::num_items
         sta     lb_params::key
         stx     lb_params::modifiers
 
-    IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
+    IF A IN #CHAR_UP, #CHAR_DOWN
         LBTK_CALL LBTK::Key, lb_params
         jmp     InputLoop
     END_IF

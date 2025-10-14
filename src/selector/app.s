@@ -972,7 +972,7 @@ control_char:
         ora     num_secondary_run_list_entries
     IF NOT_ZERO
         lda     event_params::key
-      IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
+      IF A IN #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     op_params::key
         OPTK_CALL OPTK::Key, op_params
         rts
@@ -1529,7 +1529,7 @@ check_type:
         jmp     ClearSelectedIndex
     END_IF
 
-    IF_A_EQ_ONE_OF #FT_AWP, #FT_ASP, #FT_ADB
+    IF A IN #FT_AWP, #FT_ASP, #FT_ADB
         param_call CheckInterpreter, str_extras_awlaunch
         bcc     check_path
         jsr     ShowAlert

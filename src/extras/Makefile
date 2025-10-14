@@ -3,7 +3,8 @@ HEADERS = $(COMMON_HEADERS) \
 
 include ../common/Makefile.common
 
-TARGETS = $(OUTDIR)/awlaunch.system.SYS
+TARGETS = $(OUTDIR)/awlaunch.system.SYS \
+	$(OUTDIR)/asmtest.system.SYS
 
 .PHONY: clean all
 all: $(OUTDIR) $(TARGETS)

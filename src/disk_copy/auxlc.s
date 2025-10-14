@@ -899,7 +899,7 @@ menu_offset_table:
         bit     listbox_enabled_flag
     IF NS
         lda     event_params::key
-      IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
+      IF A IN #CHAR_UP, #CHAR_DOWN
         sta     lb_params::key
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
@@ -2127,7 +2127,7 @@ start:
         bne     find_in_alert_table ; always
     END_IF
 
-    IF_A_EQ_ONE_OF #kAlertMsgConfirmEraseSlotDrive, #kAlertMsgConfirmEraseDOS33
+    IF A IN #kAlertMsgConfirmEraseSlotDrive, #kAlertMsgConfirmEraseDOS33
         pha
         jsr     _SetConfirmEraseSlotDrive
         pla

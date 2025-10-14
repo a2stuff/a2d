@@ -338,7 +338,7 @@ finish:
 ;;; ============================================================
 
 .proc HandleKey
-    IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
+    IF A IN #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     vol_picker_params::key
         OPTK_CALL OPTK::Key, vol_picker_params
     END_IF

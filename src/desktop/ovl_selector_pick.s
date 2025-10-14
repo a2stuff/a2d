@@ -527,7 +527,7 @@ handle_button:
         ora     num_secondary_run_list_entries
     IF NOT_ZERO
         lda     event_params::key
-      IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
+      IF A IN #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     shortcut_picker_params::key
         OPTK_CALL OPTK::Key, shortcut_picker_params
       END_IF

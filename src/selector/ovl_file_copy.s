@@ -207,7 +207,7 @@ block_count:                    ; totaled during enumeration
         jsr     CopyPathsFromBufsToSrcAndDst
 retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     IF CS
-      IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
+      IF A IN #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     ShowInsertSourceDiskPrompt
         jmp     retry
       END_IF
@@ -224,7 +224,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         pla                     ; A = `storage_type`
 
         ;; Traverse if necessary
-    IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+    IF A IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     ProcessDirectory
     END_IF
 

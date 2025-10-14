@@ -107,7 +107,7 @@ loop:
     END_IF
 
         ;; Is it a button-down event? (including w/ modifiers)
-    IF_A_EQ_ONE_OF #MGTK::EventKind::button_down, #MGTK::EventKind::apple_key
+    IF A IN #MGTK::EventKind::button_down, #MGTK::EventKind::apple_key
         jsr     HandleClick
         jsr     ClearTypeDown   ; always returns Z=1
         beq     MainLoop        ; always
@@ -290,7 +290,7 @@ modifiers:
         cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
         jeq     CmdScroll
 
-      IF_A_EQ_ONE_OF #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
+      IF A IN #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
         jmp     CmdCycleWindows
       END_IF
     END_IF
@@ -4372,7 +4372,7 @@ repeat: jsr     GetEvent        ; no need to synthesize events
 
         lda     event_params::key
 
-    IF_A_EQ_ONE_OF #CHAR_RETURN, #CHAR_ESCAPE
+    IF A IN #CHAR_RETURN, #CHAR_ESCAPE
 done:   rts
     END_IF
 
@@ -8929,7 +8929,7 @@ start:
         sta     block_params::unit_num
 
         ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM
-    IF_A_EQ_ONE_OF #kRamDrvSystemUnitNum, #kRamAuxSystemUnitNum
+    IF A IN #kRamDrvSystemUnitNum, #kRamAuxSystemUnitNum
         ldax    #str_device_type_ramdisk
         ldy     #IconType::ramdisk
         rts
@@ -10495,7 +10495,7 @@ retry:  jsr     GetSrcFileInfo
 
         ;; Regular file or directory?
         lda     src_file_info_params::storage_type
-    IF_A_NE_ALL_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+    IF A NOT_IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
 
         ;; --------------------------------------------------
         ;; File
@@ -11614,7 +11614,7 @@ retry:  jsr     GetSrcFileInfo
         RTS_IF VS
 
         ;; Traverse if necessary
-    IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+    IF A IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     ProcessDirectory
     END_IF
 
@@ -11922,7 +11922,7 @@ retry:  param_call_indirect GetFileInfo, src_ptr
 .proc ShowErrorAlertImpl
         ENTRY_POINTS_FOR_BIT7_FLAG dst, src, dst_flag
 
-    IF_A_NE_ALL_OF #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
+    IF A NOT_IN #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
@@ -12038,7 +12038,7 @@ common: jsr     GetSrcFileInfo
         ;; Descendant size/file count
 
         lda     src_file_info_params::storage_type
-    IF_A_EQ_ONE_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+    IF A IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     SetCursorWatch
         jsr     _GetDirSize
         jsr     SetCursorPointer
@@ -13301,7 +13301,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         ;; Is AppleWorks?
         ldy     #FileEntry::file_type
         lda     (block_ptr),y
-      IF_A_NE_ALL_OF #FT_ADB, #FT_AWP, #FT_ASP
+      IF A NOT_IN #FT_ADB, #FT_AWP, #FT_ASP
 
         ;; --------------------------------------------------
         ;; Non-AppleWorks file

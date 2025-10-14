@@ -358,7 +358,7 @@ filename:       .res    16
         ;; Try to verify that this is a font file
 
         lda     font_buffer + MGTK::Font::fonttype ; $00 or $80
-    IF_A_NE_ALL_OF #$00, #$80   ; regular, double-width?
+    IF A NOT_IN #$00, #$80   ; regular, double-width?
         jmp     exit
     END_IF
 

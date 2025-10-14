@@ -523,14 +523,14 @@ eof:    return  #$FF
 .proc DoCopy
         ;; Check destination
         MLI_CALL GET_FILE_INFO, dst_file_info_params
-    IF_A_NE_ALL_OF #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
+    IF A NOT_IN #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
         jmp     OpHandleErrorCode
     END_IF
 
         ;; Get source info
 retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     IF CS
-      IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
+      IF A IN #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
         jsr     OpInsertSource
         jmp     retry
       END_IF
@@ -543,7 +543,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 
         ;; Regular file or directory?
         lda     src_file_info_params::storage_type
-    IF_A_NE_ALL_OF #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+    IF A NOT_IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
 
         ;; --------------------------------------------------
         ;; File
