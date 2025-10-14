@@ -455,31 +455,6 @@
   _FLOW_END_STATEMENT
 .endmacro
 
-.macro _WHILE_BOP_ branchOp
-        __FLOW_LOG__ "while"
-        branchOp __flow_loop_ident__ {"do_while"}
-
-        __flow_loop_ident__ {"break"} := *
-        .refto __flow_loop_ident__ {"break"}
-
-        __DEC_IDENT__ __flow_loop_depth__
-.endmacro
-
-.macro _WHILE_COP_BOP_ compareOp, branchOp, arg, reg
-        __FLOW_LOG__ "while"
-      .ifblank reg
-        compareOp arg
-      .else
-        compareOp arg,reg
-      .endif
-        branchOp __flow_loop_ident__ {"do_while"}
-
-        __flow_loop_ident__ {"break"} := *
-        .refto __flow_loop_ident__ {"break"}
-
-        __DEC_IDENT__ __flow_loop_depth__
-.endmacro
-
 .macro WHILE expr, reg
   _FLOW_STATEMENT "WHILE"
   _FLOW_PARSE_EXPR {expr}, reg
