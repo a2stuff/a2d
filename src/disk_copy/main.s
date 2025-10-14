@@ -265,10 +265,9 @@ loop:   lda     page
         inc     count
         inc     count
 
-        lda     count
-        cmp     auxlc::block_count_div8+1
-        beq     loop            ; TODO: `BLE` macro?
-        bcc     loop
+        lda     auxlc::block_count_div8+1
+        cmp     count
+        bcs     loop
         rts
 .endscope
 
@@ -736,11 +735,10 @@ loop:   lda     page_num
         inc     count
         inc     count
 
+        lda     auxlc::block_count_div8+1
         count := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     auxlc::block_count_div8+1
-        beq     loop            ; TODO: `BLE` macro?
-        bcc     loop
+        cmp     #SELF_MODIFIED_BYTE
+        bcs     loop
         rts
 
 .proc _MarkFreeInMemoryBitmap

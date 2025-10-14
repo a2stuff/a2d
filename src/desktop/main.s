@@ -4033,21 +4033,19 @@ file_char:
         ldy     #0
         copy8   (ptr),y, len
 
-        ldy     #1
-cloop:  lda     (ptr),y
+cloop:  iny
+        lda     (ptr),y
         jsr     ToUpperCase
         cmp     typedown_buf,y
         bcc     next
-        beq     :+              ; TODO: `BGT` ?
+        beq     :+
         bcs     found
 :
         cpy     typedown_buf
         beq     found
 
-        iny
         cpy     len
-        bcc     cloop           ; TODO: `BLE` ?
-        beq     cloop
+        bcc     cloop
 
 next:   inc     index
         lda     index

@@ -635,11 +635,10 @@ new_size        .byte
         lda     #0
         jsr     _UpdateThumb
 
-        lda     lbr_copy + LBTK::ListBoxRecord::num_items
-        cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
-        beq     :+              ; TODO: `BGT` ?
-        bcs     greater
-:
+        lda     lbr_copy + LBTK::ListBoxRecord::num_rows
+        cmp     lbr_copy + LBTK::ListBoxRecord::num_items
+        bcc     greater         ; inverted comparison
+
         ;; Deactivate
         lda     #MGTK::activatectl_deactivate
         ASSERT_EQUALS MGTK::activatectl_deactivate, 0

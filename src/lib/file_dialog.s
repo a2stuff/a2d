@@ -679,22 +679,21 @@ file_char:
         lda     ($06),y
         sta     len
 
-        ldy     #1              ; compare strings (length >= 1)
-cloop:  lda     ($06),y
+        ;; compare strings (length >= 1)
+cloop:  iny
+        lda     ($06),y
         jsr     _ToUpperCase
         cmp     type_down_buf,y
         bcc     next
-        beq     :+              ; TODO: `BGT` ?
+        beq     :+
         bcs     found
 :
         cpy     type_down_buf
         beq     found
 
-        iny
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bcc     cloop           ; TODO: `BLE` ?
-        beq     cloop
+        bcc     cloop
 
 next:   inc     index
         lda     index
