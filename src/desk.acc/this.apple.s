@@ -2430,15 +2430,12 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 
 .proc IsAlpha
         jsr     ToUpperCase
-        cmp     #'A'
-        bcc     nope
-        cmp     #'Z'+1
-        bcs     nope
-
+    IF A BETWEEN #'A', #'Z'
         lda     #0
         rts
+    END_IF
 
-nope:   lda     #$FF
+        lda     #$FF
         rts
 .endproc ; IsAlpha
 

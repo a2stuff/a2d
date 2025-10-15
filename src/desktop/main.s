@@ -1670,15 +1670,12 @@ check_header:
 
 .proc IsAlpha
         jsr     ToUpperCase
-        cmp     #'A'
-        bcc     nope
-        cmp     #'Z'+1
-        bcs     nope
-
+    IF A BETWEEN #'A', #'Z'
         lda     #0
         rts
+    END_IF
 
-nope:   lda     #$FF
+        lda     #$FF
         rts
 .endproc ; IsAlpha
 
@@ -2934,8 +2931,7 @@ stashed_name:
         ldx     stashed_name
     DO
         lda     stashed_name,x
-        BREAK_IF A < #'0'
-        BREAK_IF A >= #'9'+1
+        BREAK_IF A NOT_BETWEEN #'0', #'9'
         iny
         sta     digits,y        ; stash digits as we go
         dex

@@ -356,13 +356,12 @@ check_key_down:
         bmi     :+
         bit     BUTN1           ; Solid Apple?
         bpl     check_key
-:       cmp     #'1'            ; Apple + 1...7 = boot slot
-        bcc     check_key
-        cmp     #'7'+1
-        bcs     check_key
+:
+    IF A BETWEEN #'1', #'7'     ; Apple + 1...7 = boot slot
         and     #%00001111      ; ASCII to number
         sta     quick_boot_slot
         jmp     done_keys
+    END_IF
 
 check_key:
         cmp     #kShortcutRunDeskTop ; If key is down, try launching DeskTop
@@ -943,8 +942,7 @@ noop:   rts
 
         ;; 1-8 to select entry
 
-        RTS_IF A < #'1'
-        RTS_IF A >= #'8'+1
+        RTS_IF A NOT_BETWEEN #'1', #'8'
 
         sec
         sbc     #'1'

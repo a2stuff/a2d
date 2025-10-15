@@ -9,12 +9,9 @@
 ;;; Output: A = Uppercased if in 'a'...'z', otherwise unchanged
 .proc ToUpperCase
 .if kBuildSupportsLowercase
-        cmp     #'a'
-        bcc     ret
-        cmp     #'z'+1
-        bcs     ret
+    IF A BETWEEN #'a', #'z'
         and     #CASE_MASK      ; guarded by `kBuildSupportsLowercase`
-ret:
+    END_IF
 .endif
         rts
 .endproc ; ToUpperCase

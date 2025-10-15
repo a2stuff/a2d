@@ -514,8 +514,7 @@ caret_blink_caret_bitmap:
         cmp     #kShortcutCloseWindow
         beq     Exit
 
-      IF A >= #'1'
-       IF A < #'9'+1
+      IF A BETWEEN #'1', #'9'
         sec
         sbc     #'1'
         tax
@@ -523,7 +522,6 @@ caret_blink_caret_bitmap:
         lda     shortcut_table_values,x
         addr := *+1
         jmp     SELF_MODIFIED
-       END_IF
       END_IF
 
         jmp     InputLoop

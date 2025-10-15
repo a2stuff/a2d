@@ -178,3 +178,77 @@
         RTS_IF X NOT_IN #1, #2, #3
         nop
 
+;;; --------------------------------------------------
+;;; BETWEEN
+;;; --------------------------------------------------
+
+        ;; IF ... BETWEEN / NOT_BETWEEN
+    IF A BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+    IF A NOT_BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+        ;; ELSE_IF ... BETWEEN / NOT_BETWEEN
+    IF CS
+        nop
+    ELSE_IF A BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+    IF CS
+        nop
+    ELSE_IF A NOT_BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+        ;; WHILE ... BETWEEN / NOT_BETWEEN
+    DO
+        nop
+    WHILE A BETWEEN #'A', #'Z'
+
+    DO
+        nop
+    WHILE A NOT_BETWEEN #'A', #'Z'
+
+        ;; UNTIL ... BETWEEN / NOT_BETWEEN
+    REPEAT
+        nop
+    UNTIL A BETWEEN #'A', #'Z'
+
+    REPEAT
+        nop
+    UNTIL A NOT_BETWEEN #'A', #'Z'
+
+        ;; BREAK_IF ... BETWEEN / NOT_BETWEEN
+    DO
+        nop
+        BREAK_IF A BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+    DO
+        nop
+        BREAK_IF A NOT_BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+        ;; CONTINUE_IF ... BETWEEN / NOT_BETWEEN
+    DO
+        nop
+        CONTINUE_IF A BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+    DO
+        nop
+        CONTINUE_IF A NOT_BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+        ;; RTS_IF ... BETWEEN / NOT_BETWEEN
+        RTS_IF A BETWEEN #'0', #'9'
+
+        RTS_IF A NOT_BETWEEN #'0', #'9'

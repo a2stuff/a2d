@@ -547,10 +547,8 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         bit     extra_controls_flag
       IF NS
         ;; Hook for clients
-       IF A >= #'0'
-        IF A < #'9'+1
+       IF A BETWEEN #'0', #'9'
         jmp     (key_handler_hook)
-        END_IF
        END_IF
       END_IF
 .endif

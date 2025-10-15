@@ -19,7 +19,7 @@
 ;;; e.g. "IF A = #25"
 ;;; Operators: =, <>, <, >= (aliases: EQ, NE, LT, GE)
 ;;;
-;;; Also: IN and NOT_IN
+;;; Also: IN, NOT_IN, BETWEEN, NOT_BETWEEN
 ;;; e.g. "IF A IN #1, #2, #3"
 
 ;;; ============================================================
@@ -94,16 +94,29 @@
   __flow_break_loop_flag__ .set 1
 .endmacro
 
+.macro __RESULT_BETWEEN__
+  __flow_expr_type__ .set ::__flow_expr_type_between__
+  __flow_break_loop_flag__ .set 1
+.endmacro
+
+.macro __RESULT_NOT_BETWEEN__
+  __flow_expr_type__ .set ::__flow_expr_type_not_between__
+  __flow_break_loop_flag__ .set 1
+.endmacro
+
 ::__flow_expr_type_flag_test__ = 1
 ::__flow_expr_type_comparison__ = 2
 ::__flow_expr_type_in_list__ = 3
 ::__flow_expr_type_not_in_list__ = 4
+::__flow_expr_type_between__ = 5
+::__flow_expr_type_not_between__ = 6
 
 ;;; FUTURE: Actually look at multiple expressions
 .macro _FLOW_PARSE_EXPR_LOOP expr, tindex
   .define __flow_token__ .mid(tindex, 1, {expr})
   .define __flow_next_token__ .mid(tindex+1, 1, {expr})
   .define __flow_comparison_operand__
+  .define __flow_comparison_operator__
 
 ;;; Flag tests
 
@@ -144,6 +157,10 @@
       __RESULT_IN__
     .elseif .xmatch({__flow_next_token__}, NOT_IN)
       __RESULT_NOT_IN__
+    .elseif .xmatch({__flow_next_token__}, BETWEEN)
+      __RESULT_BETWEEN__
+    .elseif .xmatch({__flow_next_token__}, NOT_BETWEEN)
+      __RESULT_NOT_BETWEEN__
     .elseif .xmatch({__flow_next_token__}, =) .or .xmatch({__flow_next_token__}, EQ)
       __RESULT_COMPARISON__ BEQ, BNE
     .elseif .xmatch({__flow_next_token__}, <>) .or .xmatch({__flow_next_token__}, NE)
@@ -158,6 +175,9 @@
 
     .undef __flow_comparison_operand__
     .define __flow_comparison_operand__ .mid(__flow_current_index__+2, 9999, {expr})
+
+    .undef __flow_comparison_operator__
+    .define __flow_comparison_operator__ __flow_next_token__
 
     .undef __flow_register_name__
 
@@ -198,18 +218,27 @@
        .error .sprintf("%s: Unexpected arguments after flag test '%s'", __flow_statement__, .string(.mid(__flow_current_index__, 1, {expr})))
      .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifnblank reg
-       .if .not(.xmatch({reg}, X) .or .xmatch({reg}, Y))
-         .error .sprintf("%s: Unexpected non-index register after comparison", __flow_statement__)
-       .endif
-     .endif
-     .ifnblank arg2
-       .error .sprintf("%s: Unexpected arguments after comparison", __flow_statement__)
-     .endif
+    .ifnblank reg
+      .if .not(.xmatch({reg}, X) .or .xmatch({reg}, Y))
+        .error .sprintf("%s: Unexpected non-index register after comparison", __flow_statement__)
+      .endif
+    .endif
+    .ifnblank arg2
+      .error .sprintf("%s: Unexpected arguments after comparison", __flow_statement__)
+    .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-     ;; no validation
+    ;; no validation
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-     ;; no validation
+    ;; no validation
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__ .or __flow_expr_type__ = ::__flow_expr_type_not_between__
+    .if .not(.xmatch (.mid (0, 1, {__flow_comparison_operand__}), #))
+      .error .sprintf("%s: Expected immediate argument for %s", __flow_statement__, .string(__flow_comparison_operator__))
+    .endif
+    .ifblank reg
+      .error .sprintf("%s: Expected argument after %s", __flow_statement__, .string(__flow_comparison_operator__))
+    .elseif .not(.xmatch (.mid (0, 1, {reg}), #))
+      .error .sprintf("%s: Expected immediate argument for %s", __flow_statement__, .string(__flow_comparison_operator__))
+    .endif
   .else
      .fatal "unreached"
   .endif
@@ -220,6 +249,7 @@
   .undef __flow_branchOp1__
   .undef __flow_branchOp2__
   .undef __flow_comparison_operand__
+  .undef __flow_comparison_operator__
 .endmacro
 
 .macro _FLOW_END_STATEMENT
@@ -228,9 +258,9 @@
 
 ;;; Helper for branching to `target` when a value is not in a list.
 .macro _NOT_IN_HELPER target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        .local skip
-        _NOT_IN_HELPER2 skip,target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-skip:
+        .local stay
+        _NOT_IN_HELPER2 stay,target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+stay:
 .endmacro
 .macro _NOT_IN_HELPER2 eq_target,ne_target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         __flow_compareOp__ arg1
@@ -249,6 +279,24 @@ skip:
     .ifnblank arg2
         _IN_HELPER target,arg2,arg3,arg4,arg5,arg6,arg7,arg8
     .endif
+.endmacro
+
+;;; Helper for branching to `target` when a value is between two values
+.macro _BETWEEN_HELPER target,lower,upper
+        .local stay
+        __flow_compareOp__ lower
+        BCC     stay
+        __flow_compareOp__ upper+1
+        BCC     target
+stay:
+.endmacro
+
+;;; Helper for branching to `target` when a value is not between two values
+.macro _NOT_BETWEEN_HELPER target,lower,upper
+        __flow_compareOp__ lower
+        BCC     target
+        __flow_compareOp__ upper+1
+        BCS     target
 .endmacro
 
 ;;; ============================================================
@@ -314,6 +362,10 @@ skip:
         _NOT_IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
         _IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _NOT_BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
+  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
+        _BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -345,6 +397,10 @@ skip:
         _NOT_IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
         _IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _NOT_BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
+  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
+        _BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -456,6 +512,10 @@ skip:
         _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
         _NOT_IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
+  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
+        _NOT_BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -483,6 +543,10 @@ skip:
         _IN_HELPER break,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
         _NOT_IN_HELPER break,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _BETWEEN_HELPER break,__flow_comparison_operand__,arg2
+  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
+        _NOT_BETWEEN_HELPER break,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -510,6 +574,10 @@ skip:
         _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
         _NOT_IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
+  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
+        _NOT_BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
   .endif
 
         __flow_loop_ident__ {"break"} := *
@@ -546,6 +614,10 @@ skip:
         _NOT_IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
         _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _NOT_BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
+  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
+        _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
   .endif
 
         __flow_loop_ident__ {"break"} := *
@@ -583,6 +655,10 @@ skip:
         _NOT_IN_HELPER skip,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
         _IN_HELPER skip,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _NOT_BETWEEN_HELPER skip,__flow_comparison_operand__,arg2
+  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
+        _BETWEEN_HELPER skip,__flow_comparison_operand__,arg2
   .endif
 
         rts
