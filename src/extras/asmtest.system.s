@@ -252,3 +252,20 @@
         RTS_IF A BETWEEN #'0', #'9'
 
         RTS_IF A NOT_BETWEEN #'0', #'9'
+
+;;; ============================================================
+;;; Errors
+;;; ============================================================
+
+.if 0
+        RTS_IF                     ; RTS_IF: Empty expression
+        RTS_IF CS X                ; RTS_IF: Unexpected tokens after flag test 'CS'
+        RTS_IF CS,CC               ; RTS_IF: Unexpected arguments after flag test 'CS'
+        RTS_IF A > #123            ; RTS_IF: Greater-than operator ('>') not supported
+        RTS_IF A <= #123           ; RTS_IF: Less-than-or-equal operator ('<=') not supported
+        RTS_IF A >= $1234,A        ; RTS_IF: Unexpected non-index register after comparison '>='
+        RTS_IF A >= $1234,X,Y      ; RTS_IF: Unexpected arguments after comparison '>='
+        RTS_IF A BETWEEN '0', #'9' ; RTS_IF: Expected immediate 1st argument for 'BETWEEN'
+        RTS_IF A BETWEEN #'0'      ; RTS_IF: Expected 2nd argument for 'BETWEEN'
+        RTS_IF A BETWEEN #'0', '9' ; RTS_IF: Expected immediate 2nd argument for 'BETWEEN'
+.endif

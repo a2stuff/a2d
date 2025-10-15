@@ -72,34 +72,46 @@
   .define __flow_compareOp__ cop
 .endmacro
 
-.macro __RESULT_FLAG_TEST__ bop1, bop2
+.macro __RESULT_FLAG_TEST__ name, bop1, bop2
+  .undef __flow_flag_test_name__
+  .define __flow_flag_test_name__ name
   __SET_BOPS__ bop1, bop2
   __flow_expr_type__ .set ::__flow_expr_type_flag_test__
   __flow_break_loop_flag__ .set 1
 .endmacro
 
-.macro __RESULT_COMPARISON__ bop1, bop2
+.macro __RESULT_COMPARISON__ op, bop1, bop2
+  .undef __flow_comparison_operator_name__
+  .define __flow_comparison_operator_name__ op
   __SET_BOPS__ bop1, bop2
   __flow_expr_type__ .set ::__flow_expr_type_comparison__
   __flow_break_loop_flag__ .set 1
 .endmacro
 
-.macro __RESULT_IN__
+.macro __RESULT_IN__ op
+  .undef __flow_comparison_operator_name__
+  .define __flow_comparison_operator_name__ op
   __flow_expr_type__ .set ::__flow_expr_type_in_list__
   __flow_break_loop_flag__ .set 1
 .endmacro
 
-.macro __RESULT_NOT_IN__
+.macro __RESULT_NOT_IN__ op
+  .undef __flow_comparison_operator_name__
+  .define __flow_comparison_operator_name__ op
   __flow_expr_type__ .set ::__flow_expr_type_not_in_list__
   __flow_break_loop_flag__ .set 1
 .endmacro
 
-.macro __RESULT_BETWEEN__
+.macro __RESULT_BETWEEN__ op
+  .undef __flow_comparison_operator_name__
+  .define __flow_comparison_operator_name__ op
   __flow_expr_type__ .set ::__flow_expr_type_between__
   __flow_break_loop_flag__ .set 1
 .endmacro
 
-.macro __RESULT_NOT_BETWEEN__
+.macro __RESULT_NOT_BETWEEN__ op
+  .undef __flow_comparison_operator_name__
+  .define __flow_comparison_operator_name__ op
   __flow_expr_type__ .set ::__flow_expr_type_not_between__
   __flow_break_loop_flag__ .set 1
 .endmacro
@@ -115,27 +127,25 @@
 .macro _FLOW_PARSE_EXPR_LOOP expr, tindex
   .define __flow_token__ .mid(tindex, 1, {expr})
   .define __flow_next_token__ .mid(tindex+1, 1, {expr})
-  .define __flow_comparison_operand__
-  .define __flow_comparison_operator__
 
 ;;; Flag tests
 
   .if     .xmatch({__flow_token__}, ZS)
-    __RESULT_FLAG_TEST__ BEQ, BNE
+    __RESULT_FLAG_TEST__ "ZS", BEQ, BNE
   .elseif .xmatch({__flow_token__}, ZC)
-    __RESULT_FLAG_TEST__ BNE, BEQ
+    __RESULT_FLAG_TEST__ "ZC", BNE, BEQ
   .elseif .xmatch({__flow_token__}, CS)
-    __RESULT_FLAG_TEST__ BCS, BCC
+    __RESULT_FLAG_TEST__ "CS", BCS, BCC
   .elseif .xmatch({__flow_token__}, CC)
-    __RESULT_FLAG_TEST__ BCC, BCS
+    __RESULT_FLAG_TEST__ "CC", BCC, BCS
   .elseif .xmatch({__flow_token__}, NS)
-    __RESULT_FLAG_TEST__ BMI, BPL
+    __RESULT_FLAG_TEST__ "NS", BMI, BPL
   .elseif .xmatch({__flow_token__}, NC)
-    __RESULT_FLAG_TEST__ BPL, BMI
+    __RESULT_FLAG_TEST__ "NC", BPL, BMI
   .elseif .xmatch({__flow_token__}, VS)
-    __RESULT_FLAG_TEST__ BVS, BVC
+    __RESULT_FLAG_TEST__ "VS", BVS, BVC
   .elseif .xmatch({__flow_token__}, VC)
-    __RESULT_FLAG_TEST__ BVC, BVS
+    __RESULT_FLAG_TEST__ "VC", BVC, BVS
 
 ;;; Register compares
 
@@ -154,30 +164,31 @@
 
         ;; Determine the branch opcodes from the comparison operator
     .if .xmatch({__flow_next_token__}, IN)
-      __RESULT_IN__
+      __RESULT_IN__ "IN"
     .elseif .xmatch({__flow_next_token__}, NOT_IN)
-      __RESULT_NOT_IN__
+      __RESULT_NOT_IN__ "NOT_IN"
     .elseif .xmatch({__flow_next_token__}, BETWEEN)
-      __RESULT_BETWEEN__
+      __RESULT_BETWEEN__ "BETWEEN"
     .elseif .xmatch({__flow_next_token__}, NOT_BETWEEN)
-      __RESULT_NOT_BETWEEN__
+      __RESULT_NOT_BETWEEN__ "NOT_BETWEEN"
     .elseif .xmatch({__flow_next_token__}, =) .or .xmatch({__flow_next_token__}, EQ)
-      __RESULT_COMPARISON__ BEQ, BNE
+      __RESULT_COMPARISON__ "=", BEQ, BNE
     .elseif .xmatch({__flow_next_token__}, <>) .or .xmatch({__flow_next_token__}, NE)
-      __RESULT_COMPARISON__ BNE, BEQ
+      __RESULT_COMPARISON__ "<>", BNE, BEQ
     .elseif .xmatch({__flow_next_token__}, <) .or .xmatch({__flow_next_token__}, LT)
-      __RESULT_COMPARISON__ BCC, BCS
+      __RESULT_COMPARISON__ "<", BCC, BCS
     .elseif .xmatch({__flow_next_token__}, >=) .or .xmatch({__flow_next_token__}, GE)
-      __RESULT_COMPARISON__ BCS, BCC
+      __RESULT_COMPARISON__ ">=", BCS, BCC
+    .elseif .xmatch({__flow_next_token__}, >)
+      .error .sprintf("%s: Greater-than operator ('>') not supported", __flow_statement__)
+    .elseif .xmatch({__flow_next_token__}, <=)
+      .error .sprintf("%s: Less-than-or-equal operator ('<=') not supported", __flow_statement__)
     .else
       .error .sprintf("%s: No operator match after register %s", __flow_statement__, __flow_register_name__)
     .endif
 
     .undef __flow_comparison_operand__
     .define __flow_comparison_operand__ .mid(__flow_current_index__+2, 9999, {expr})
-
-    .undef __flow_comparison_operator__
-    .define __flow_comparison_operator__ __flow_next_token__
 
     .undef __flow_register_name__
 
@@ -193,6 +204,9 @@
   .define __flow_compareOp__ __nothing__
   .define __flow_branchOp1__ __nothing__
   .define __flow_branchOp2__ __nothing__
+  .define __flow_flag_test_name__ __nothing__ ; populated as a string
+  .define __flow_comparison_operand__ __nothing__
+  .define __flow_comparison_operator_name__ __nothing__ ; populated as a string
 
         ;; Parse expression
   .ifblank expr
@@ -212,32 +226,32 @@
         ;; Validation
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
     .if .tcount({expr}) > __flow_current_index__ + 1
-      .error .sprintf("%s: Unexpected tokens after flag test '%s'", __flow_statement__, .string(.mid(__flow_current_index__, 1, {expr})))
+      .error .sprintf("%s: Unexpected tokens after flag test '%s'", __flow_statement__, __flow_flag_test_name__)
     .endif
      .ifnblank reg
-       .error .sprintf("%s: Unexpected arguments after flag test '%s'", __flow_statement__, .string(.mid(__flow_current_index__, 1, {expr})))
+       .error .sprintf("%s: Unexpected arguments after flag test '%s'", __flow_statement__, __flow_flag_test_name__)
      .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
     .ifnblank reg
       .if .not(.xmatch({reg}, X) .or .xmatch({reg}, Y))
-        .error .sprintf("%s: Unexpected non-index register after comparison", __flow_statement__)
+        .error .sprintf("%s: Unexpected non-index register after comparison '%s'", __flow_statement__, __flow_comparison_operator_name__)
       .endif
     .endif
     .ifnblank arg2
-      .error .sprintf("%s: Unexpected arguments after comparison", __flow_statement__)
+      .error .sprintf("%s: Unexpected arguments after comparison '%s'", __flow_statement__, __flow_comparison_operator_name__)
     .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
     ;; no validation
   .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
     ;; no validation
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__ .or __flow_expr_type__ = ::__flow_expr_type_not_between__
-    .if .not(.xmatch (.mid (0, 1, {__flow_comparison_operand__}), #))
-      .error .sprintf("%s: Expected immediate argument for %s", __flow_statement__, .string(__flow_comparison_operator__))
+    .if .not(.xmatch(.mid(0, 1, {__flow_comparison_operand__}), #))
+      .error .sprintf("%s: Expected immediate 1st argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
     .endif
     .ifblank reg
-      .error .sprintf("%s: Expected argument after %s", __flow_statement__, .string(__flow_comparison_operator__))
-    .elseif .not(.xmatch (.mid (0, 1, {reg}), #))
-      .error .sprintf("%s: Expected immediate argument for %s", __flow_statement__, .string(__flow_comparison_operator__))
+      .error .sprintf("%s: Expected 2nd argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
+    .elseif .not(.xmatch(.mid(0, 1, {reg}), #))
+      .error .sprintf("%s: Expected immediate 2nd argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
     .endif
   .else
      .fatal "unreached"
@@ -248,8 +262,9 @@
   .undef __flow_compareOp__
   .undef __flow_branchOp1__
   .undef __flow_branchOp2__
+  .undef __flow_flag_test_name__
   .undef __flow_comparison_operand__
-  .undef __flow_comparison_operator__
+  .undef __flow_comparison_operator_name__
 .endmacro
 
 .macro _FLOW_END_STATEMENT
