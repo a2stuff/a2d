@@ -68,6 +68,7 @@ DoAdd:  ldx     #kRunListPrimary
         pha
         tya
         pha
+        COPY_STRING text_input_buf, main::stashed_name
         lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
         jsr     main::ClearUpdates ; Add File Dialog close
@@ -241,6 +242,7 @@ dialog_loop:
         pha
         tya
         pha
+        COPY_STRING text_input_buf, main::stashed_name
         lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
         jsr     main::ClearUpdates ; Edit File Dialog close
@@ -609,7 +611,7 @@ entries_flag_table:
 ;;; and (if it's in the primary run list) also updates the
 ;;; resource data (used for menus, etc).
 ;;; Inputs: A=entry index, Y=new flags
-;;;         `text_input_buf` is name, `path_buf0` is path
+;;;         `main::stashed_name` is name, `path_buf0` is path
 
 .proc AssignEntryData
         cmp     #8
@@ -621,13 +623,13 @@ entries_flag_table:
 
         ptr_file = $06          ; pointer into file buffer
 
-        ;; Assign name in `text_input_buf` to file
+        ;; Assign name in `main::stashed_name` to file
         lda     index
         jsr     GetFileEntryAddr
         stax    ptr_file
-        ldy     text_input_buf
+        ldy     main::stashed_name
     DO
-        copy8   text_input_buf,y, (ptr_file),y
+        copy8   main::stashed_name,y, (ptr_file),y
         dey
     WHILE POS
 
@@ -656,7 +658,7 @@ index:  .byte   0
 ;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer.
 ;;; Inputs: A=entry index, Y=new flags
-;;;         `text_input_buf` is name, `path_buf0` is path
+;;;         `main::stashed_name` is name, `path_buf0` is path
 
 .proc AssignSecondaryRunListEntryData
         ptr := $06
@@ -671,9 +673,9 @@ index:  .byte   0
         stax    ptr
 
         ;; Assign name
-        ldy     text_input_buf
+        ldy     main::stashed_name
     DO
-        copy8   text_input_buf,y, (ptr),y
+        copy8   main::stashed_name,y, (ptr),y
         dey
     WHILE POS
 
