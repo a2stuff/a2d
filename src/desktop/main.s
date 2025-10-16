@@ -811,13 +811,15 @@ prev_selected_icon:
 ;;; be set to the result of `GetSingleSelectedIcon`.
 .proc _CheckRenameClick
         jsr     GetSingleSelectedIcon
-    IF A = prev_selected_icon
-      IF A <> trash_icon_num
+    IF NOT_ZERO
+      IF A = prev_selected_icon
+       IF A <> trash_icon_num
         sta     icon_param
         ITK_CALL IconTK::GetRenameRect, icon_param
         MGTK_CALL MGTK::MoveTo, event_params::coords
         MGTK_CALL MGTK::InRect, tmp_rect
         jne     CmdRename
+       END_IF
       END_IF
     END_IF
         rts

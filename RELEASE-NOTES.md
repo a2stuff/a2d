@@ -65,6 +65,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix locking/unlocking directories.
 * Fix capacity check when copying a volume.
 * Fix copying of files when disk swapping is required.
+* Fix memory corruption following multi-select.
 
 ### Selector
 
