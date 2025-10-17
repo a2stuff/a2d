@@ -115,12 +115,21 @@ loop:   lda     src,x
 
 ;;; --------------------------------------------------
 ;;; Pad if necessary to avoid a page boundary
+;;;
+;;; `opt_count` is the number of entries (words) in a jump table
 
-.macro PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY
+.macro PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY opt_count
+  .ifblank opt_count
     .if .lobyte(*) = $FF
         .out .sprintf("Padding 1 byte to avoid page boundary at $%04X", *)
         .res    1
     .endif
+  .else
+    .if (* & 1) .and .hibyte(*) <> .hibyte(* + (2 * opt_count))
+        .out .sprintf("Padding 1 byte to avoid page boundary at $%04X", *)
+        .res    1
+    .endif
+  .endif
 .endmacro
 
 

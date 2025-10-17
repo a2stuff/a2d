@@ -9856,7 +9856,7 @@ kCopyBufferSize = ((MLI - copy_buffer) / BLOCK_SIZE) * BLOCK_SIZE
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
-PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY
+PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY 4
 operation_lifecycle_callbacks:
 operation_enumeration_callback: .addr   SELF_MODIFIED
 operation_complete_callback:    .addr   SELF_MODIFIED
@@ -9866,6 +9866,7 @@ operation_prep_callback:        .addr   SELF_MODIFIED
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
+PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY 3
 operation_traversal_callbacks:
 op_process_selected_file_callback:      .addr   SELF_MODIFIED
 op_process_dir_entry_callback:          .addr   SELF_MODIFIED
