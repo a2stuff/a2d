@@ -868,7 +868,7 @@ color_mode_flag:   .byte   0    ; bit7=0 = B&W, bit7=1 = color
 
 .proc ToggleMode
         bit     color_mode_flag
-        bpl     SetBWMode
+        bmi     SetBWMode
         FALL_THROUGH_TO SetColorMode
 .endproc ; ToggleMode
 
