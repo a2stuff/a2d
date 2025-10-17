@@ -777,34 +777,37 @@ skip:
 ;;;    ecmp16 $1111,x, $2222,x ; indexed, indexed
 .macro ecmp16 arg1, arg2, arg3, arg4
     .local skip
+        ;; Note that high bytes are compared before low bytes because
+        ;; of the early exit when not equal - we want the high byte to
+        ;; domimate the ordering.
     .if (_is_register {arg2}) && (_is_register {arg4})
         ;; indexed, indexed
-        lda     arg1,arg2
-        cmp     arg3,arg4
-        bne     skip
         lda     arg1+1,arg2
         cmp     arg3+1,arg4
+        bne     skip
+        lda     arg1,arg2
+        cmp     arg3,arg4
     .elseif _is_register {arg2}
         ;; indexed, absolute/immediate
-        lda     arg1,arg2
-        _op_lo  cmp, {arg3}
-        bne     skip
         lda     arg1+1,arg2
         _op_hi  cmp, {arg3}
+        bne     skip
+        lda     arg1,arg2
+        _op_lo  cmp, {arg3}
     .elseif _is_register {arg3}
         ;; absolute/immediate, indexed
-        _op_lo  lda, {arg1}
-        cmp     arg2,arg3
-        bne     skip
         _op_hi  lda, {arg1}
         cmp     arg2+1,arg3
+        bne     skip
+        _op_lo  lda, {arg1}
+        cmp     arg2,arg3
     .else
         ;; absolute/immediate, absolute/immediate
-        _op_lo  lda, {arg1}
-        _op_lo  cmp, {arg2}
-        bne     skip
         _op_hi  lda, {arg1}
         _op_hi  cmp, {arg2}
+        bne     skip
+        _op_lo  lda, {arg1}
+        _op_lo  cmp, {arg2}
     .endif
 skip:
 .endmacro
