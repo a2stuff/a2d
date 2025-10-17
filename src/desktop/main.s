@@ -2922,9 +2922,6 @@ CmdNewFolder    := CmdNewFolderImpl::start
         rts
 .endproc ; MaybeUpdateDropTargetFromName
 
-stashed_name:
-        .res    16, 0
-
 ;;; ============================================================
 ;;; Take the name in `stashed_name` and "increment it":
 ;;; * If ends in dot-digits, increment (adjusting length if needed)
@@ -15095,6 +15092,9 @@ path_buf4:
 path_buf3:
         .res    ::kPathBufferSize, 0
 filename_buf:
+        .res    16, 0
+
+stashed_name:
         .res    16, 0
 
 ;;; ============================================================
