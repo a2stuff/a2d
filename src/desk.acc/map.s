@@ -306,6 +306,9 @@ buf_search:     .res    kBufSize, 0 ; search term
 ;;; ============================================================
 
 .proc HandleKey
+        copy8   event_params::key, le_params::key
+        copy8   event_params::modifiers, le_params::modifiers
+
         lda     event_params::key
 
         ldx     event_params::modifiers
@@ -313,6 +316,8 @@ buf_search:     .res    kBufSize, 0 ; search term
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
+
+        LETK_CALL LETK::Key, le_params
         jmp     InputLoop
     END_IF
 
@@ -325,8 +330,6 @@ buf_search:     .res    kBufSize, 0 ; search term
         jmp     InputLoop
     END_IF
 
-        copy8   event_params::key, le_params::key
-        copy8   event_params::modifiers, le_params::modifiers
         LETK_CALL LETK::Key, le_params
         jmp     InputLoop
 .endproc ; HandleKey

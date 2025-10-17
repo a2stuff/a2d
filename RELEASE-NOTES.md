@@ -111,7 +111,9 @@ Project Page: https://github.com/a2stuff/a2d
   * Refresh windows if date changes. ([#843](https://github.com/a2stuff/a2d/issues/843))
 * International: Add "first day of week" setting.
 * Benchmark: Don't overflow meter if over 16MHz.
-* Map: Fix indicator updated after window is moved.
+* Map
+  * Fix indicator updated after window is moved.
+  * Support Apple-Arrow keys in edit box.
 * Text Preview: Fix scrollbar behavior when toggling fixed/proportional.
 * Image Preview: Support lo-res and double lo-res graphics files.
 * Change Type: Prevent modifying directories.
