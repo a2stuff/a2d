@@ -154,6 +154,7 @@
 * Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
 
 * Launch DeskTop. Open a volume window with enough icons that a scrollbar appears. Click on an active part of the scrollbar. Verify that the scrollbar responds immediately, not after the double-click detection delay expires.
+* Launch DeskTop. Open a volume window where the vertical and horizontal scrollbars are inactive. Click on each inactive scrollbar. Verify nothing happens.
 
 * Use BASIC.SYSTEM to create a file with type $08 e.g. `CREATE TEST08,T$08`. Launch DeskTop. Open the appropriate window. Verify that an icon appears for the file.
 * Use BASIC.SYSTEM to create a file with type $01 e.g. `CREATE TEST01,T$01`. Launch DeskTop. Open the appropriate window. Verify that an icon appears for the file.

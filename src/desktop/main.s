@@ -575,8 +575,8 @@ window_click:
         beq     _TrackThumb
 
         ;; Other parts
-        lda     v_proc_lo-1,y   ; A = proc lo
-        ldx     v_proc_hi-1,y   ; X = proc hi
+        lda     v_proc_lo,y   ; A = proc lo
+        ldx     v_proc_hi,y   ; X = proc hi
         bne     _DoScrollbarPart ; always; Y = part
     END_IF
         ;; Horizontal scrollbar
@@ -587,8 +587,8 @@ window_click:
         beq     _TrackThumb
 
         ;; Other parts
-        lda     h_proc_lo-1,y     ; A = proc hi
-        ldx     h_proc_hi-1,y     ; X = proc hi
+        lda     h_proc_lo,y     ; A = proc hi
+        ldx     h_proc_hi,y     ; X = proc hi
         FALL_THROUGH_TO _DoScrollbarPart ; Y = part
 
 ;;; ------------------------------------------------------------
@@ -618,13 +618,16 @@ window_click:
         part := *+1
         cmp     #SELF_MODIFIED_BYTE
       WHILE EQ
-        rts
+        FALL_THROUGH_TO ScrollNoOp
 .endproc ; _DoScrollbarPart
 
-v_proc_lo:        .lobytes ScrollUp, ScrollDown, ScrollPageUp, ScrollPageDown
-v_proc_hi:        .hibytes ScrollUp, ScrollDown, ScrollPageUp, ScrollPageDown
-h_proc_lo:        .lobytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRight
-h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRight
+ScrollNoOp:
+        rts
+
+v_proc_lo:        .lobytes ScrollNoOp, ScrollUp, ScrollDown, ScrollPageUp, ScrollPageDown
+v_proc_hi:        .hibytes ScrollNoOp, ScrollUp, ScrollDown, ScrollPageUp, ScrollPageDown
+h_proc_lo:        .lobytes ScrollNoOp, ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRight
+h_proc_hi:        .hibytes ScrollNoOp, ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRight
 
 ;;; ------------------------------------------------------------
 
