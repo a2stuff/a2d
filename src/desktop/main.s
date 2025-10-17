@@ -485,16 +485,21 @@ offset_table:
         jmp     MenuDispatch
     END_IF
 
+        SET_BIT7_FLAG maybe_select_parent_flag
         jsr     window_click
 
+        maybe_select_parent_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+    IF NS
         lda     selected_icon_count
-    IF ZERO
+      IF ZERO
         ;; Try to select the window's parent icon.
         lda     active_window_id
-      IF NOT_ZERO
+       IF NOT_ZERO
         jsr     GetWindowPath
         jsr     IconToAnimate
         jmp     SelectIcon
+       END_IF
       END_IF
     END_IF
         rts
@@ -648,6 +653,10 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
         pha
         jsr     GetSingleSelectedIcon
         sta     prev_selected_icon
+
+        ;; Stash initial coords so dragging is accurate
+        COPY_STRUCT event_params::coords, drag_drop_params::coords
+
         pla
 
         jsr     IsIconSelected
@@ -659,6 +668,7 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
         ;; Modifier down - remove from selection
         lda     findicon_params::which_icon
         jsr     UnhighlightAndDeselectIcon
+        CLEAR_BIT7_FLAG maybe_select_parent_flag
         jmp     _ActivateClickedWindow ; no-op if already active
       END_IF
     ELSE
@@ -671,25 +681,23 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
         lda     selected_icon_count
        IF NOT_ZERO
         lda     findicon_params::window_id
-        IF A = selected_window_id
-        lda     findicon_params::which_icon
-        jsr     AddIconToSelection
-        jmp     :+
+        IF A <> selected_window_id
+        jsr     ClearSelection
         END_IF
        END_IF
+        copy8   findicon_params::window_id, selected_window_id
+        lda     findicon_params::which_icon
+        jsr     AddIconToSelection
+        jmp     check_drag
       END_IF
 
         ;; Otherwise, replace selection with clicked icon
         lda     findicon_params::which_icon
         jsr     SelectIcon
-:
     END_IF
 
         ;; --------------------------------------------------
-        ;; Stash initial coords so dragging is accurate,
-        ;; and check for double-click
-
-        COPY_STRUCT event_params::coords, drag_drop_params::coords
+        ;; Check for double-click
 
         jsr     DetectDoubleClick
     IF NC
@@ -699,6 +707,8 @@ h_proc_hi:        .hibytes ScrollLeft, ScrollRight, ScrollPageLeft, ScrollPageRi
 
         ;; --------------------------------------------------
         ;; Drag of icon?
+
+check_drag:
 
         copy8   findicon_params::which_icon, drag_drop_params::icon
         ITK_CALL IconTK::DragHighlighted, drag_drop_params

@@ -175,7 +175,8 @@
   * Launch DeskTop. Open a volume containing files. Select two file icons. Hold modifier and click on the window, not on an icon. Verify that selection is not cleared.
   * Launch DeskTop. Open a window. Select an icon. Hold modifier and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.
   * Launch DeskTop. Open a window. Select an icon. Hold modifier down and drag a selection rectangle around another icon. Verify that both are selected.
-  * Launch DeskTop. Open a window. Select one or more file icons. Hold modifier and click a selected file icon. Verify that it is deselected.
+  * Launch DeskTop. Open a volume window. Select two file icons. Hold modifier and click a selected file icon. Verify that it is deselected.
+  * Launch DeskTop. Open a volume window. Select one file icon. Hold modifier and click the selected file icon. Verify that it is deselected, and that the volume icon does not become selected.
   * Launch DeskTop. Open a window. Hold modifier and double-click on a non-selected file icon. Verify that it highlights then unhighlights, and does not open.
   * Launch DeskTop. Open a window. Select a file icon. Wait a few seconds for the double-click timer to expire. Hold modifier and double-click the selected file icon. Verify that it unhighlights then highlights, and does not open.
   * Launch DeskTop. Open a volume window. Hold modifier, and drag-select icons in the window. Release the modifier. Verify that the volume icon is no longer selected. Click an empty area in the window to clear selection. Verify that the selection in the window clears, and that the volume icon becomes selected.

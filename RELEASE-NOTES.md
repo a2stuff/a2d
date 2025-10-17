@@ -67,6 +67,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix copying of files when disk swapping is required.
 * Fix memory corruption following multi-select.
 * Improve type-down selection and sorted view performance.
+* Fix some edge cases around modified selection.
 
 ### Selector
 
