@@ -15,86 +15,88 @@
 ;;; --------------------------------------------------
 
 ;;; IF
-    IF A >= $1234
+    IF A >= #$12
         nop
     END_IF
 
 ;;; ELSE_IF
     IF CS
         nop
-    ELSE_IF A < $1234
+    ELSE_IF A < #$12
         nop
     END_IF
 
 ;;; WHILE
     DO
         nop
-    WHILE A < $1234
+    WHILE A < #$12
 
 ;;; UNTIL
     REPEAT
         nop
-    UNTIL A < $1234
+    UNTIL A < #$12
 
 ;;; BREAK
     DO
         nop
-        BREAK_IF A < $1234
+        BREAK_IF A < #$12
         nop
     WHILE CS
 
 ;;; CONTINUE
     DO
         nop
-        CONTINUE_IF A < $1234
+        CONTINUE_IF A < #$12
         nop
     WHILE CS
 
 ;;; RTS
-        RTS_IF A < $1234
+        RTS_IF A < #$12
 
 ;;; --------------------------------------------------
 ;;; Index Registers
 ;;; --------------------------------------------------
 
+table := *
+
 ;;; IF
-    IF A >= $1234,x
+    IF A >= table,x
         nop
     END_IF
 
 ;;; ELSE_IF
     IF CS
         nop
-    ELSE_IF A < $1234,y
+    ELSE_IF A < table,y
         nop
     END_IF
 
 ;;; WHILE
     DO
         nop
-    WHILE A < $1234,y
+    WHILE A < table,y
 
 ;;; UNTIL
     REPEAT
         nop
-    UNTIL A < $1234,y
+    UNTIL A < table,y
 
 ;;; BREAK
     DO
         nop
-        BREAK_IF A < $1234,y
+        BREAK_IF A < table,y
         nop
     WHILE CS
 
 ;;; CONTINUE
     DO
         nop
-        CONTINUE_IF A < $1234,y
+        CONTINUE_IF A < table,y
         nop
     WHILE CS
 
 ;;; RTS
-        RTS_IF A < $1234,y
+        RTS_IF A < table,y
 
 ;;; --------------------------------------------------
 ;;; IN / NOT_IN operators
@@ -263,8 +265,9 @@
         RTS_IF CS,CC               ; RTS_IF: Unexpected arguments after flag test 'CS'
         RTS_IF A > #123            ; RTS_IF: Greater-than operator ('>') not supported
         RTS_IF A <= #123           ; RTS_IF: Less-than-or-equal operator ('<=') not supported
-        RTS_IF A >= $1234,A        ; RTS_IF: Unexpected non-index register after comparison '>='
-        RTS_IF A >= $1234,X,Y      ; RTS_IF: Unexpected arguments after comparison '>='
+        RTS_IF A = 1               ; RTS_IF: Numeric literal in '=' comparison; did you mean '#1'?
+        RTS_IF A >= table,A        ; RTS_IF: Unexpected non-index register after comparison '>='
+        RTS_IF A >= table,X,Y      ; RTS_IF: Unexpected arguments after comparison '>='
         RTS_IF A BETWEEN '0', #'9' ; RTS_IF: Expected immediate 1st argument for 'BETWEEN'
         RTS_IF A BETWEEN #'0'      ; RTS_IF: Expected 2nd argument for 'BETWEEN'
         RTS_IF A BETWEEN #'0', '9' ; RTS_IF: Expected immediate 2nd argument for 'BETWEEN'

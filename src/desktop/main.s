@@ -3985,7 +3985,10 @@ file_char:
         sta     typedown_buf,x
 
         ;; Collect and sort the potential type-down matches
+    IF X = #1
         jsr     GetKeyboardSelectableIconsSorted
+    END_IF
+
         lda     num_filenames
     IF NOT_ZERO
 
