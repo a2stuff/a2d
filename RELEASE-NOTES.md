@@ -114,6 +114,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Map
   * Fix indicator updated after window is moved.
   * Support Apple-Arrow keys in edit box.
+  * Prevent mispaint when deleting if obscured.
 * Text Preview: Fix scrollbar behavior when toggling fixed/proportional.
 * Image Preview: Support lo-res and double lo-res graphics files.
 * Change Type: Prevent modifying directories.

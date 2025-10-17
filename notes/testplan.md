@@ -1554,6 +1554,7 @@ Repeat for each field:
  * Type a printable character.
    * Should insert a character at caret, unless invalid in context or length limit reached. Limits are:
      * File name: 15 characters; only alpha, numeric, and period accepted; only alpha at start
+     * Find Files: 15 characters; only alpha, numeric, period, and * and ? accepted
      * Shortcut name: 14 characters
    * Mouse cursor should be hidden until moved.
    * Test with caret at start, in middle, and at end of the string.

@@ -238,7 +238,7 @@ xcoord  .word
 ycoord  .word
 END_PARAM_BLOCK
 
-        jsr     _SetPort
+        jsr     _SetPort        ; aborts rest of this proc if obscured
 
         jsr     _CalcCaretPos
         stax    point::xcoord
@@ -327,7 +327,7 @@ a_record  .addr
 ;;; Internal proc: used as part of insert/delete procs
 
 .proc _RedrawRightOfCaret
-        jsr     _SetPort
+        jsr     _SetPort        ; aborts rest of this proc if obscured
 
 PARAM_BLOCK point, letk::tmp_space
 xcoord  .word
@@ -687,6 +687,7 @@ ret:    rts
         MGTK_CALL MGTK::TextWidth, text_params
         add16   pos, text_params+MGTK::TextWidthParams::width, rect+MGTK::Rect::x1
     END_IF
+        jsr     _SetPort        ; aborts rest of this proc if obscured
         jmp     _ClearRect
 .endproc ; _DeleteCharCommon
 
@@ -719,7 +720,7 @@ ret:    rts
 ;;; by the caller.
 
 .proc _ClearAndDrawText
-        jsr     _SetPort
+        jsr     _SetPort        ; aborts rest of this proc if obscured
 
         jsr     _ClearRect
         jsr     _CalcPos
