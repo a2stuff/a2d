@@ -9931,6 +9931,7 @@ stack_index             .byte
 entry_index_in_block    .byte
 dir_data_buffer_end     .byte
 
+src_vol_devnum          .byte
 dst_vol_blocks_free     .word
         END_PARAM_BLOCK
         .assert dir_data_buffer_end - dir_data_buffer <= 256, error, "too big"
@@ -10437,6 +10438,7 @@ retry:  jsr     GetSrcFileInfo
         jsr     ShowErrorAlert
         jmp     retry
     END_IF
+        copy8   DEVNUM, src_vol_devnum
 
         jsr     _RecordDestVolBlocksFree
 
@@ -10834,7 +10836,7 @@ cancel:
         lda     src_file_info_params::storage_type
     IF A = #ST_VOLUME_DIRECTORY
         ;; Volume
-        copy8   DEVNUM, vol_key_block_params::unit_num
+        copy8   src_vol_devnum, vol_key_block_params::unit_num
         MLI_CALL READ_BLOCK, vol_key_block_params
         bcs     ret
         copy16  block_buffer + VolumeDirectoryHeader::case_bits, case_bits

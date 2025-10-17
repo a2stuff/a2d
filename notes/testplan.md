@@ -722,6 +722,9 @@
   * Hold Solid-Apple and drag it to another volume to move it. Verify that the moved file retains the same mixed case name.
   * Hold Solid-Apple and drag it to another folder on the same volume to copy it. Verify that the copied file retains the same mixed case name.
 
+* Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". Rename one volume with mixed case e.g. "vol1.MIXED". Rename a second volume with differently mixed case, e.g. "VOL2.mixed". Drag the first volume to the second. Verify that the newly created folder is named with the same case as the dragged volume.
+
+
 ## Window Headers
 
 * Open a folder with no items. Verify window header says "0 Items"
