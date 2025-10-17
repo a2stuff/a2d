@@ -1324,6 +1324,14 @@ finish:
         ;; --------------------------------------------------
         ;; Selection sort
 
+        ;; Why not Quicksort? It turns out that for the limited number
+        ;; of files we have here (<= 128), with the low overhead to
+        ;; access the names (simple shift and add) this can sort all
+        ;; of the names in under 2 seconds even with O(n^2). In
+        ;; contrast, DeskTop has more complex storage which
+        ;; dramatically increases the constant overhead, so a more
+        ;; efficient sort is necessary.
+
         ptr1 := $06
         ptr2 := $08
 

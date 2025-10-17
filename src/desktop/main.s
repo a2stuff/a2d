@@ -4089,51 +4089,22 @@ typedown_buf:
 
 .proc GetKeyboardSelectableIconsSorted
         buffer := $1800
-        ptr1 := $06
-        ptr2 := $08
 
         jsr     GetKeyboardSelectableIcons
 
         RTS_IF X < #2
 
-        ;; Selection sort. In each outer iteration, the highest
-        ;; remaining element is moved to the end of the unsorted
-        ;; region, and the region is reduced by one. O(n^2)
-        dex
-        stx     outer
+        copy16  #GetNthSelectableIconName, Quicksort_GetPtrProc
+        copy16  #CompareStrings, Quicksort_CompareProc
+        copy16  #_SwapProc, Quicksort_SwapProc
 
-    DO
-        outer := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     GetNthSelectableIconName
-        stax    ptr2
+        txa
+        jmp     Quicksort       ; A = count
 
-        copy8   #0, inner
-      DO
-        inner := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     GetNthSelectableIconName
-        stax    ptr1
-
-        jsr     CompareStrings
-       IF GE
-        ;; Swap
-        ldx     inner
-        ldy     outer
+.proc _SwapProc
         swap8   buffer+1,x, buffer+1,y
-        tya
-        jsr     GetNthSelectableIconName
-        stax    ptr2
-       END_IF
-
-        inc     inner
-        lda     inner
-      WHILE A <> outer
-
-        dec     outer
-    WHILE NOT_ZERO
-
         rts
+.endproc ; _SwapProc
 .endproc ; GetKeyboardSelectableIconsSorted
 
 ;;; Assuming selectable icon buffer at $1800 is populated by the
@@ -7977,7 +7948,6 @@ records_base_ptr:
 ;;; Inputs: A=DeskTopSettings::kViewBy* for `cached_window_id`
 
 .proc SortRecords
-        ptr := $06
 
 list_start_ptr  := $801
 num_records     := $803
@@ -7992,34 +7962,17 @@ scratch_space   := $804         ; can be used by comparison funcs
 
         lda     cached_window_id
         jsr     GetFileRecordListForWindow
-        stax    ptr             ; point past the count
         stax    list_start_ptr
-        inc16   ptr
         inc16   list_start_ptr
 
-        ;; --------------------------------------------------
-        ;; Selection sort
+        copy16  #_CalcPtr, Quicksort_GetPtrProc
+        copy16  #_CompareProc, Quicksort_CompareProc
+        copy16  #_SwapProc, Quicksort_SwapProc
 
-        ptr1 := $06
-        ptr2 := $08
+        lda     num_records
+        jmp     Quicksort
 
-        ldx     num_records
-        dex
-        stx     outer
-    DO
-        outer := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     _CalcPtr
-        stax    ptr2
-
-        copy8   #0, inner
-
-      DO
-        inner := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     _CalcPtr
-        stax    ptr1
-
+.proc _CompareProc
         bit     LCBANK2
         bit     LCBANK2
         jsr     _CompareFileRecords
@@ -8027,30 +7980,18 @@ scratch_space   := $804         ; can be used by comparison funcs
         bit     LCBANK1
         bit     LCBANK1
         plp
-
-       IF GE
-        ;; Swap
-        ldx     inner
-        ldy     outer
-        swap8   cached_window_entry_list,x, cached_window_entry_list,y
-
-        lda     outer
-        jsr     _CalcPtr
-        stax    ptr2
-       END_IF
-
-        inc     inner
-        lda     inner
-      WHILE A <> outer
-
-        dec     outer
-    WHILE NOT_ZERO
-
         rts
+.endproc ; _CompareProc
+
+.proc _SwapProc
+        swap8   cached_window_entry_list,x, cached_window_entry_list,y
+        rts
+.endproc ; _SwapProc
 
 ;;; --------------------------------------------------
 ;;; Input: A = index in list being sorted
 ;;; Output: A,X = pointer to FileRecord
+;;; Assert: LCBANK1 banked in so `cached_window_entry_list` is visible
 
 .proc _CalcPtr
         ;; Map from sorting list index to FileRecord index
@@ -8185,9 +8126,13 @@ done:   rts
         copy16  #scratch, $06
         copy16  #str_file_type, $08
         jsr     CompareStrings
+        php                     ; preserve Z,C
+        pla
         jsr     PopPointers
         bit     LCBANK2
         bit     LCBANK2
+        pha
+        plp                     ; restore Z,C
 
         rts
 
@@ -14903,6 +14848,7 @@ END_PARAM_BLOCK
         .include "../lib/speed.s"
         .include "../lib/bell.s"
         .include "../lib/uppercase.s"
+        .include "../lib/quicksort.s"
 
 ;;; ============================================================
 ;;; Resources (that are only used from Main, i.e. not MGTK)
