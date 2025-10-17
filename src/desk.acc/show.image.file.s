@@ -203,9 +203,9 @@ on_key:
         jeq     NextFile
 
     IF A = #'S'
-        cpy     #$00             ; Y = previous `slideshow_flag` state
-        bne     InputLoop        ; Ignore (so toggle) if slideshow mode was on
-        beq     SetSlideshowMode ; always
+        tya               ; Y = previous `slideshow_flag` state
+        bmi     InputLoop        ; Ignore (so toggle) if slideshow mode was on
+        bpl     SetSlideshowMode ; always
     END_IF
 
     IF A = #' '
