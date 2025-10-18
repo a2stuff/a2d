@@ -6073,8 +6073,8 @@ no_win:
         ;; Windowed (folder) icon
         asl     a
         tax
-        copy16  window_k_used_table-2,x, vol_kb_used ; 1-based to 0-based
-        copy16  window_k_free_table-2,x, vol_kb_free
+        copy16  window_blocks_used_table-2,x, vol_blocks_used ; 1-based to 0-based
+        copy16  window_blocks_free_table-2,x, vol_blocks_free
       END_IF
     END_IF
 
@@ -6082,11 +6082,11 @@ no_win:
         lda     cached_window_id
         asl     a
         tax
-        copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
-        copy16  vol_kb_free, window_k_free_table-2,x
+        copy16  vol_blocks_used, window_blocks_used_table-2,x ; 1-based to 0-based
+        copy16  vol_blocks_free, window_blocks_free_table-2,x
 
-        copy16  window_k_used_table-2,x, window_draw_k_used_table-2,x ; 1-based to 0-based
-        copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
+        copy16  window_blocks_used_table-2,x, window_draw_blocks_used_table-2,x ; 1-based to 0-based
+        copy16  window_blocks_free_table-2,x, window_draw_blocks_free_table-2,x
 
         ;; --------------------------------------------------
         ;; Create window and icons
@@ -6506,8 +6506,8 @@ done:
         lda     active_window_id
         asl
         tax
-        copy16  window_k_used_table-2,x, window_draw_k_used_table-2,x ; 1-based to 0-based
-        copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
+        copy16  window_blocks_used_table-2,x, window_draw_blocks_used_table-2,x ; 1-based to 0-based
+        copy16  window_blocks_free_table-2,x, window_draw_blocks_free_table-2,x
         rts
 .endproc ; UpdateWindowUsedFreeDisplayValues
 
@@ -6549,8 +6549,8 @@ done:
         lda     found_windows_list-1,y
         asl     a
         tax
-        copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
-        copy16  vol_kb_free, window_k_free_table-2,x
+        copy16  vol_blocks_used, window_blocks_used_table-2,x ; 1-based to 0-based
+        copy16  vol_blocks_free, window_blocks_free_table-2,x
         dey
        WHILE NOT_ZERO
       END_IF
@@ -6962,7 +6962,7 @@ CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
 
 ;;; ============================================================
 ;;; Inputs: `src_path_buf` set to full path (not modified)
-;;; Outputs: Z=1 on success, `vol_kb_used` and `vol_kb_free` updated.
+;;; Outputs: Z=1 on success, `vol_blocks_used` and `vol_blocks_free` updated.
 ;;; TODO: Skip if same-vol windows already have data.
 
 .proc GetVolUsedFreeViaPath
@@ -6983,19 +6983,15 @@ CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
     END_IF
 
         ;; aux = total blocks
-        copy16  src_file_info_params::blocks_used, vol_kb_used
+        copy16  src_file_info_params::blocks_used, vol_blocks_used
         ;; total - used = free
-        sub16   src_file_info_params::aux_type, vol_kb_used, vol_kb_free
-
-        ;; Blocks to K
-        lsr16   vol_kb_free
-        lsr16   vol_kb_used
+        sub16   src_file_info_params::aux_type, vol_blocks_used, vol_blocks_free
 
         return  #0              ; success
 .endproc ; GetVolUsedFreeViaPath
 
-vol_kb_free:  .word   0
-vol_kb_used:  .word   0
+vol_blocks_free:  .word   0
+vol_blocks_used:  .word   0
 
 ;;; ============================================================
 ;;; Remove the FileRecord entries for a window, and free/compact
@@ -7360,8 +7356,8 @@ next:   add16_8 ptr, #.sizeof(ICTRecord)
 ;;; Local variables on ZP
 PARAM_BLOCK, $50
 num_items               .word
-k_in_disk               .word
-k_available             .word
+blocks_in_disk          .word
+blocks_available        .word
 
 width_num_items         .word
 width_k_in_disk         .word
@@ -7422,12 +7418,12 @@ END_PARAM_BLOCK
         txa
         asl     a
         tay
-        lda     window_draw_k_used_table,y
-        ldx     window_draw_k_used_table+1,y
-        stax    k_in_disk
-        lda     window_draw_k_free_table,y
-        ldx     window_draw_k_free_table+1,y
-        stax    k_available
+        lda     window_draw_blocks_used_table,y
+        ldx     window_draw_blocks_used_table+1,y
+        stax    blocks_in_disk
+        lda     window_draw_blocks_free_table,y
+        ldx     window_draw_blocks_free_table+1,y
+        stax    blocks_available
 
         ;; Measure strings
         jsr     _PrepItems
@@ -7486,13 +7482,13 @@ draw:   param_jump DrawString, text_input_buf
 .endproc ; _PrepItems
 
 .proc _PrepInDisk
-        push16  k_in_disk
+        push16  blocks_in_disk
         FORMAT_MESSAGE 1, aux::str_k_in_disk_format
         rts
 .endproc ; _PrepInDisk
 
 .proc _PrepAvailable
-        push16  k_available
+        push16  blocks_available
         FORMAT_MESSAGE 1, aux::str_k_available_format
         rts
 .endproc ; _PrepAvailable
@@ -14886,13 +14882,13 @@ window_path_addr_table:
 ;;; Window used/free (in kilobytes)
 ;;; Two tables, 8 entries each
 ;;; Windows 1...8 (since 0 is desktop)
-window_k_used_table:  .res    ::kMaxDeskTopWindows*2, 0
-window_k_free_table:  .res    ::kMaxDeskTopWindows*2, 0
+window_blocks_used_table:  .res    ::kMaxDeskTopWindows*2, 0
+window_blocks_free_table:  .res    ::kMaxDeskTopWindows*2, 0
 
 ;;; To avoid artifacts, the values drawn are only updated when
 ;;; a window becomes active.
-window_draw_k_used_table:  .res    ::kMaxDeskTopWindows*2, 0
-window_draw_k_free_table:  .res    ::kMaxDeskTopWindows*2, 0
+window_draw_blocks_used_table:  .res    ::kMaxDeskTopWindows*2, 0
+window_draw_blocks_free_table:  .res    ::kMaxDeskTopWindows*2, 0
 
 ;;; ============================================================
 
