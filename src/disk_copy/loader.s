@@ -28,7 +28,6 @@ filename:   PASCAL_STRING kPathnameDiskCopy
 ;;; ============================================================
 
 start:
-        jsr     DisconnectRAM
 
         ;; Set stack pointers to arbitrarily low values for use when
         ;; interrupts occur. DeskTop does not utilize this convention,
@@ -66,6 +65,10 @@ start:
         bcs     fail
         MLI_CALL CLOSE, close_params
         bcs     fail
+
+        ;; Writes to `main::saved_ram_unitnum` etc. so must be after
+        ;; the segments are loaded.
+        jsr     DisconnectRAM
 
         sta     ALTZPON
         bit     LCBANK1
