@@ -1328,6 +1328,7 @@ With Sci.Calc:
 * Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. Apple Menu > Find Files. Type "*" and click Search. Double-click a file in the list that's inside the folder. Verify that the Find Files window closes, that a folder window is brought to the foreground, and that the file icon is selected.
 
 * Create a set of nested directories, 21 levels deep or more (e.g. `/VOL/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D`). Launch DeskTop and open the volume. Apple Menu > Find Files. Enter a search term (e.g. `*`) and click Search. Verify that the DA doesn't crash. (Not all files will be found, though.)
+* Create a file with path longer than 64 characters (e.g. by creating nested folders and file at the maximum length, then renaming the volume to something longer). Apple Menu > Find Files. Type *. Verify that the DA doesn't crash.
 
 * Launch DeskTop. Open a window with at least two files. Apple Menu > Find Files. Type "*" and click Search. Press Down Arrow once. Type Return. Press Down Arrow again. Verify that only one entry in the list appears highlighted.
 

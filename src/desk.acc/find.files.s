@@ -916,6 +916,20 @@ loop:
         and     #STORAGE_TYPE_MASK ; look at 4 high bits
         cmp     #0              ; inactive entry?
         beq     nextEntry       ; yes - bump to next one
+
+        ;; Check length
+        pha                     ; A = storage type
+        ASSERT_EQUALS FileEntry::storage_type_name_length, 0
+        clc
+        lda     (entPtr),y
+        and     #NAME_LENGTH_MASK
+        adc     (dirName),y
+    IF A >= #kMaxPathLength
+        pla                     ; A = storage type (ignored)
+        bne     nextEntry       ; always
+    END_IF
+        pla                     ; A = storage type
+
         cmp     #(ST_LINKED_DIRECTORY<<4) ; is it a directory?
         beq     ItsADir         ; yes, so call VisitDir
         jsr     VisitFile       ; no, it's a file
