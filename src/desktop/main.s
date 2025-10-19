@@ -8113,7 +8113,7 @@ done:   rts
       END_IF
 
         ;; Compare!
-        cmp16   size2, size1 ; order descending
+        ecmp16  size2, size1 ; order descending, with Z and C
         rts
     END_IF
 
