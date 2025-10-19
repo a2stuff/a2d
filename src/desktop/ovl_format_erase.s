@@ -343,7 +343,7 @@ finish:
         OPTK_CALL OPTK::Key, vol_picker_params
     END_IF
 
-        return  #$FF
+        return8 #$FF
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -537,12 +537,12 @@ path:
         and     #%00001000      ; Bit 3 = Supports format
        IF ZERO
 
-        return  #$FF            ; no, does not support format
+        return8 #$FF            ; no, does not support format
        END_IF
       END_IF
     END_IF
 
-        return  #$00            ; yes, supports format
+        return8 #$00            ; yes, supports format
 
 unit_num:
         .byte   0

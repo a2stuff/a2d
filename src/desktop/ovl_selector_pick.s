@@ -459,16 +459,16 @@ handle_button:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
     IF ZERO
-        return  #$FF
+        return8 #$FF
     END_IF
 
     IF A <> #MGTK::Area::content
-        return  #$FF
+        return8 #$FF
     END_IF
 
         lda     findwindow_params::window_id
     IF A <> winfo_entry_picker
-        return  #$FF
+        return8 #$FF
     END_IF
 
         lda     #winfo_entry_picker::kWindowId
@@ -514,7 +514,7 @@ handle_button:
 .proc HandleKey
         lda     event_params::modifiers
     IF A = #MGTK::event_modifier_solid_apple
-        return  #$FF
+        return8 #$FF
     END_IF
 
         lda     event_params::key
@@ -535,7 +535,7 @@ handle_button:
       END_IF
     END_IF
 
-        return  #$FF
+        return8 #$FF
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -543,16 +543,16 @@ handle_button:
 .proc HandleKeyReturn
         BTK_CALL BTK::Flash, entry_picker_ok_button
     IF NS
-        return  #$FF            ; ignore
+        return8 #$FF            ; ignore
     END_IF
-        return  #0
+        return8 #0
 .endproc ; HandleKeyReturn
 
 ;;; ============================================================
 
 .proc HandleKeyEscape
         BTK_CALL BTK::Flash, entry_picker_cancel_button
-        return  #1
+        return8 #1
 .endproc ; HandleKeyEscape
 
 ;;; ============================================================
@@ -1044,7 +1044,7 @@ retry:  MLI_CALL OPEN, open_curpfx_params
         jsr     ShowAlert
         cmp     #kAlertResultOK
         beq     retry
-        return  #$FF            ; failure
+        return8 #$FF            ; failure
 
 read:   lda     open_curpfx_params::ref_num
         sta     read_params::ref_num
@@ -1072,7 +1072,7 @@ not_found:
         inc     ptr+1
         dex
     WHILE NOT_ZERO
-        return  #0
+        return8 #0
 .endproc ; ReadFile
 
 ;;; ============================================================
@@ -1087,7 +1087,7 @@ not_found:
         jsr     ShowAlert
         cmp     #kAlertResultOK
         beq     @retry
-        return  #$FF
+        return8 #$FF
 
 write:  lda     open_curpfx_params::ref_num
         sta     write_params::ref_num

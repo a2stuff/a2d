@@ -637,7 +637,7 @@ exit:   rts
         bcc     file_char
 
 not_file_char:
-        return  #$FF
+        return8 #$FF
 
 file_char:
         ldx     type_down_buf
@@ -656,12 +656,12 @@ file_char:
       END_IF
     END_IF
 
-        return  #0
+        return8 #0
 
 .proc _FindMatch
         lda     num_file_names
     IF ZERO
-        return  #$FF
+        return8 #$FF
     END_IF
 
         copy8   #0, index
@@ -697,7 +697,7 @@ next:   inc     index
         lda     index
     WHILE A <> num_file_names
         dec     index
-found:  return  index
+found:  return8 index
 
 .endproc ; _FindMatch
 
@@ -1450,7 +1450,7 @@ loop:
         add16_8 curr_ptr, #16
         jmp     loop
 
-failed: return  #$FF
+failed: return8 #$FF
 
         ;; Now find index
 found:  ldx     num_file_names

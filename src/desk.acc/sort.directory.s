@@ -670,7 +670,7 @@ match2: .byte   0
         bcs     rtcs
 
 neither:
-        return  #$FF
+        return8 #$FF
 
 type2:  .byte   0
 type1:  .byte   0

@@ -228,7 +228,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         jsr     ProcessDirectory
     END_IF
 
-        return  #0
+        return8 #0
 .endproc ; EnumerateFiles
 
 ;;; ============================================================
@@ -524,7 +524,7 @@ display_path:
         MLI_CALL CLOSE, close_everything_params
         ldx     saved_stack
         txs
-        return  #$FF
+        return8 #$FF
 .endproc ; RestoreStackAndReturn
 
 ;;; ============================================================

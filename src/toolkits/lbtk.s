@@ -284,11 +284,11 @@ coords          .tag MGTK::Point
         jsr     _FindControlIsVerticalScrollBar
     IF EQ
         jsr     _HandleListScroll
-        return  #$FF            ; not an item
+        return8 #$FF            ; not an item
     END_IF
 
     IF A <> #MGTK::Ctl::not_a_control
-        return  #$FF            ; not an item
+        return8 #$FF            ; not an item
     END_IF
 
         ldy     #MGTK::Winfo::window_id
@@ -305,7 +305,7 @@ coords          .tag MGTK::Point
     IF A >= lbr_copy + LBTK::ListBoxRecord::num_items
         lda     #$FF
         jsr     _SetSelectionAndNotify
-        return  #$FF            ; not an item
+        return8 #$FF            ; not an item
     END_IF
 
         ;; Update selection (if different)
@@ -315,7 +315,7 @@ coords          .tag MGTK::Point
         jsr     OnNoChange
     END_IF
 
-        return  #0              ; an item
+        return8 #0              ; an item
 .endproc ; ClickImpl
 
 ;;; ============================================================

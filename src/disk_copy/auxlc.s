@@ -904,7 +904,7 @@ menu_offset_table:
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
         jsr     UpdateOKButton
-        return  #$FF
+        return8 #$FF
       END_IF
     END_IF
 
@@ -926,7 +926,7 @@ menu_offset_table:
 .proc HandleMenuSelection
         ldx     menuselect_params::menu_id
     IF ZERO
-        return  #$FF
+        return8 #$FF
     END_IF
 
         ;; Compute offset into command table - menu offset + item offset
@@ -1001,7 +1001,7 @@ ret:    rts
     END_IF
 
     IF A <> #MGTK::Area::content
-        return  #$FF
+        return8 #$FF
     END_IF
 
         lda     findwindow_params::window_id
@@ -1107,16 +1107,16 @@ params: .res    3
 
     IF A = #kShortcutReadDisk
         BTK_CALL BTK::Flash, read_drive_button
-        return  #1
+        return8 #1
     END_IF
 
     IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, dialog_ok_button
         bmi     ignore          ; disabled
-        return  #0
+        return8 #0
     END_IF
 
-ignore: return  #$FF
+ignore: return8 #$FF
 .endproc ; dialog_shortcuts
 
 ;;; ============================================================
@@ -1848,10 +1848,10 @@ show_name:
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
       IF ZERO
         jsr     DrawStatusWriting ; Try Again
-        return  #1
+        return8 #1
       END_IF
         jsr     main::FreeVolBitmapPages
-        return  #$80
+        return8 #$80
     END_IF
 
         jsr     main::Bell
@@ -1865,13 +1865,13 @@ show_name:
         MGTK_CALL MGTK::MoveTo, error_reading_label_pos
         param_call DrawString, error_reading_label_str
         jsr     DrawIntString
-        return  #0
+        return8 #0
     END_IF
 
         MGTK_CALL MGTK::MoveTo, error_writing_label_pos
         param_call DrawString, error_writing_label_str
         jsr     DrawIntString
-        return  #0
+        return8 #0
 
 err_writing_flag:
         .byte   0
@@ -2260,9 +2260,9 @@ ShowAlertDialog := ShowAlertDialogImpl::start
         lda     Alert::event_key
         cmp     #CHAR_ESCAPE
         bne     @retry
-        return  #$80
+        return8 #$80
 
-done:   return  #$00
+done:   return8 #$00
 .endproc ; WaitForDiskOrEsc
 
 .endscope ; alert_dialog

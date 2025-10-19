@@ -480,12 +480,12 @@ END_PARAM_BLOCK
         ;; Is it in `icon_list`?
         jsr     IsInIconList
     IF NOT_ZERO
-        return  #1              ; Not found
+        return8 #1              ; Not found
     END_IF
 .endif ; DEBUG
 
         jsr     FreeIconCommon ; A = icon id
-        return  #0
+        return8 #0
 .endproc ; FreeIconImpl
 
 ;;; ============================================================
@@ -1052,7 +1052,7 @@ last_highlighted_icon:
         jsr     _CheckRealContentArea
         bcc     find_icon
 
-fail:   return  #0              ; no icon
+fail:   return8 #0              ; no icon
 
         ;; --------------------------------------------------
         ;; On desktop - A=0, note that as window_id
@@ -1256,10 +1256,10 @@ start:
     WHILE POS
 
 inside:
-        return  #1
+        return8 #1
 
 outside:
-        return  #0
+        return8 #0
 .endproc ; IconInRectImplImpl
 IconInRectImpl := IconInRectImplImpl::start
 
@@ -1533,7 +1533,7 @@ ret:    rts
 
         MGTK_CALL MGTK::SetTextBG, settextbg_white
 
-        return  #0
+        return8 #0
 
 .proc _Shade
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -2091,7 +2091,7 @@ reserved:       .byte   0
         MGTK_CALL MGTK::SetPortBits, portbits
         rts
 
-empty:  return #$FF
+empty:  return8 #$FF
 .endproc ; DuplicateClipStructsAndSetPortBits
 
 ;;; ============================================================

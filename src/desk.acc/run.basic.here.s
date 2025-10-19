@@ -163,7 +163,7 @@ not_found:
         dex
     WHILE NOT_ZERO
 
-no_bs:  return  #$FF            ; non-zero is failure
+no_bs:  return8 #$FF            ; non-zero is failure
 
 found_slash:
         cpx     #1
@@ -204,9 +204,9 @@ str_basic_system:
         copy8   (ptr),y, prefix_path,y
         dey
     WHILE POS
-        return  #0
+        return8 #0
 
-fail:   return  #1
+fail:   return8 #1
 
 .endproc ; GetWinPath
 

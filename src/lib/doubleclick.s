@@ -47,9 +47,9 @@ loop:   dec16   counter
         ;; next event to ensure there isn't a lingering button event.
         ;; (Observed on real hardware, e.g. IIc+)
         MGTK_CALL MGTK::FlushEvents
-        return  #0              ; double-click
+        return8 #0              ; double-click
 
-exit:   return  #$FF            ; not double-click
+exit:   return8 #$FF            ; not double-click
 
 consume:
         MGTK_CALL MGTK::GetEvent, event_params
@@ -69,7 +69,7 @@ consume:
         lda     delta
         cmp     #AS_BYTE(-kDoubleClickDeltaX)
         bcs     check_y
-fail:   return  #$FF
+fail:   return8 #$FF
     END_IF
         ;; is 0 < x < delta ?
         lda     delta
@@ -95,7 +95,7 @@ check_y:
         cmp     #kDoubleClickDeltaY
         bcs     fail
 
-ok:     return  #0
+ok:     return8 #0
 .endproc ; _CheckDelta
 
 counter:

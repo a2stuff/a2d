@@ -53,7 +53,7 @@ saved_stack:
         txs
         ldy     #<buf_path
         ldx     #>buf_path
-        return  #$00
+        return8 #$00
 .endproc ; HandleOK
 
 ;;; ============================================================
@@ -62,7 +62,7 @@ saved_stack:
         jsr     CloseWindow
         ldx     saved_stack
         txs
-        return  #$FF
+        return8 #$FF
 .endproc ; HandleCancel
 
 ;;; ============================================================

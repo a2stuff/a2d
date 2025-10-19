@@ -189,7 +189,7 @@ ok:     jsr     file_dialog::CloseWindow
         txs
         ldx     which_run_list
         ldy     copy_when
-        return  #0
+        return8 #0
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
@@ -203,7 +203,7 @@ alert:  jmp     ShowAlert
         jsr     file_dialog::CloseWindow
         ldx     saved_stack
         txs
-        return  #$FF
+        return8 #$FF
 .endproc ; HandleCancel
 
 ;;; ============================================================
@@ -233,7 +233,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         MGTK_CALL MGTK::InRect, never_button::rect
         jne     ClickNeverCtrl
 
-        return  #0
+        return8 #0
 .endproc ; HandleClick
 
 .proc ClickPrimaryRunListCtrl
@@ -245,7 +245,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     UpdateRunListButton
     END_IF
-        return  #$FF
+        return8 #$FF
 .endproc ; ClickPrimaryRunListCtrl
 
 .proc ClickSecondaryRunListCtrl
@@ -257,7 +257,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     UpdateRunListButton
     END_IF
-        return  #$FF
+        return8 #$FF
 .endproc ; ClickSecondaryRunListCtrl
 
 .proc ClickAtFirstBootCtrl
@@ -270,7 +270,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     DrawCopyWhenButton
     END_IF
-        return  #$FF
+        return8 #$FF
 .endproc ; ClickAtFirstBootCtrl
 
 .proc ClickAtFirstUseCtrl
@@ -283,7 +283,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     DrawCopyWhenButton
     END_IF
-        return  #$FF
+        return8 #$FF
 .endproc ; ClickAtFirstUseCtrl
 
 .proc ClickNeverCtrl
@@ -296,7 +296,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     DrawCopyWhenButton
     END_IF
-        return  #$FF
+        return8 #$FF
 .endproc ; ClickNeverCtrl
 
 ;;; ============================================================

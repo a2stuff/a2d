@@ -331,12 +331,12 @@ start:
         lda     dib_buffer+SPDIB::Device_Type_Code
        IF A = #SPDeviceType::Disk35
         ;; Assume all 3.5" drives are ejectable
-        return  #$80
+        return8 #$80
        END_IF
       END_IF
     END_IF
 
-        return  #0
+        return8 #0
 
 .endproc ; IsDriveEjectableImpl
 
@@ -414,12 +414,12 @@ check:
         bne     _ReadOrWriteBlock
 
 continue:
-        return  #$80
+        return8 #$80
 
 success:
-        return  #0
+        return8 #0
 
-error:  return  #1
+error:  return8 #1
 
 .proc _ReadOrWriteBlock
         stax    block_params::block_num

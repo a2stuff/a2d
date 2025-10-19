@@ -1000,7 +1000,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
         dex
       WHILE NOT_ZERO
     END_IF
-        return  #0
+        return8 #0
 
 changed:
         copy8   disk_in_device_table,x, last_disk_in_devices_table,x
@@ -3984,7 +3984,7 @@ KeyboardHighlightUp    := KeyboardHighlightSpatialImpl::up
         bcc     file_char
 
 not_file_char:
-        return  #$FF            ; Z=0 to ignore
+        return8 #$FF            ; Z=0 to ignore
 
 file_char:
         ldx     typedown_buf
@@ -4063,7 +4063,7 @@ next:   inc     index
     WHILE A <> num_filenames
 
         dec     index
-found:  return  index
+found:  return8 index
 .endproc ; _FindMatch
 
 .endproc ; CheckTypeDown
@@ -5280,12 +5280,12 @@ alert:  jmp     ShowAlert
 
         bit     exception_flag
     IF NC
-        return  #0
+        return8 #0
     END_IF
 
         inc     num_open_windows ; was decremented on failure
         jsr     CloseSpecifiedWindow ; A = window id
-        return  #$FF
+        return8 #$FF
 
 .proc _TryActivateAndRefreshWindow
         SET_BIT7_FLAG exception_flag ; set bit7, preserving A
@@ -6655,7 +6655,7 @@ check_window:
       IF NS
         jsr     CompareStrings  ; Z=1 if equal
         CONTINUE_IF ZC
-        return  window_num
+        return8 window_num
       END_IF
 
         jsr     IsPathPrefixOf  ; Z=0 if prefix
@@ -6979,7 +6979,7 @@ CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
         sta     src_path_buf
 
     IF CS
-        return  #$FF            ; failure
+        return8 #$FF            ; failure
     END_IF
 
         ;; aux = total blocks
@@ -6987,7 +6987,7 @@ CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
         ;; total - used = free
         sub16   src_file_info_params::aux_type, vol_blocks_used, vol_blocks_free
 
-        return  #0              ; success
+        return8 #0              ; success
 .endproc ; GetVolUsedFreeViaPath
 
 vol_blocks_free:  .word   0
@@ -9216,7 +9216,7 @@ error:
         sub16in (icon_ptr),y, offset, (icon_ptr),y
 
         jsr     PopPointers
-        return  #0
+        return8 #0
 
 ;;; Compare a volume name against existing volume icons for drives.
 ;;; Inputs: String to compare against is in `cvi_data_buffer`
@@ -9594,7 +9594,7 @@ target_is_icon:
 .endproc ; DoCopyCommon
 
 FinishOperation:
-        return  #kOperationSucceeded
+        return8 #kOperationSucceeded
 
 ;;; Shortcuts > Run a Shortcut... w/ "Copy to RAMCard"/"at first use"
 ;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
@@ -9722,7 +9722,7 @@ iterate_selection:
         bit     do_op_flag
     IF NS
         jsr     InvokeOperationCompleteCallback
-        return  #0
+        return8 #0
     END_IF
 
         ;; No, we finished enumerating. Now do the real work.
@@ -10155,9 +10155,9 @@ retry2: MLI_CALL READ, read_padding_bytes_params
 .endif
     END_IF
 
-        return  #0
+        return8 #0
 
-eof:    return  #$FF
+eof:    return8 #$FF
 .endproc ; _ReadFileEntry
 
 ;;; ============================================================
@@ -12240,7 +12240,7 @@ num_blocks:
     IF NOT_ZERO
         jsr     _ToggleFileLock
     END_IF
-        return #$FF
+        return8 #$FF
 .endproc ; _HandleClick
 
 .proc _HandleKey
@@ -12291,7 +12291,7 @@ num_blocks:
 
         SET_BIT7_FLAG result_flag
 
-ret:    return  #$FF
+ret:    return8 #$FF
 .endproc ; _ToggleFileLock
 
 .endproc ; DoGetInfo
@@ -12343,7 +12343,7 @@ start:
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
     IF NE
         jsr     ShowAlert
-        return  result_flags
+        return8 result_flags
     END_IF
         param_call CopyToSrcPath, path_buf3
 
@@ -12364,7 +12364,7 @@ retry:  jsr     _DialogRun
         beq     success
 
         ;; Failure
-fail:   return  result_flags
+fail:   return8 result_flags
 
         ;; --------------------------------------------------
         ;; Success, new name in X,Y
@@ -12538,7 +12538,7 @@ end_filerecord_and_icon_update:
         ;; --------------------------------------------------
         ;; Totally done
 
-        return result_flags
+        return8 result_flags
 
 ;;; N bit ($80) set if a window title was changed
 result_flags:
@@ -12595,7 +12595,7 @@ loop:   jsr     _InputLoop
     END_IF
 
         ldxy    #text_input_buf
-        return  #0
+        return8 #0
 .endproc ; _DialogRun
 
 ;;; ============================================================
@@ -12604,7 +12604,7 @@ loop:   jsr     _InputLoop
         MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
         jsr     ClearUpdates     ; following CloseWindow
         jsr     SetCursorPointer ; when closing dialog
-        return  #1
+        return8 #1
 .endproc ; _DialogClose
 
 ;;; ============================================================
@@ -12648,12 +12648,12 @@ loop:   jsr     _InputLoop
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
     IF A <> #MGTK::Area::content
-        return  #PromptResult::ok
+        return8 #PromptResult::ok
     END_IF
 
         lda     findwindow_params::window_id
     IF A <> #winfo_rename_dialog::kWindowId
-        return  #PromptResult::ok
+        return8 #PromptResult::ok
     END_IF
 
         copy8   winfo_rename_dialog, event_params
@@ -12662,7 +12662,7 @@ loop:   jsr     _InputLoop
         COPY_STRUCT screentowindow_params::window, rename_le_params::coords
         LETK_CALL LETK::Click, rename_le_params
 
-        return  #$FF
+        return8 #$FF
 .endproc ; _ClickHandler
 
 ;;; Key handler for rename dialog
@@ -12677,11 +12677,11 @@ loop:   jsr     _InputLoop
 
         ;; No modifiers
     IF A = #CHAR_RETURN
-        return  #PromptResult::ok
+        return8 #PromptResult::ok
     END_IF
 
     IF A = #CHAR_ESCAPE
-        return  #PromptResult::cancel
+        return8 #PromptResult::cancel
     END_IF
 
         jsr     IsControlChar   ; pass through control characters
@@ -12691,7 +12691,7 @@ loop:   jsr     _InputLoop
         bcs     ignore
 allow:  LETK_CALL LETK::Key, rename_le_params
 ignore:
-        return  #$FF
+        return8 #$FF
 .endproc ; _KeyHandler
 
 .endscope ; rename
@@ -13055,9 +13055,9 @@ compare:
     WHILE NOT_ZERO
 
         ;; Self or subfolder
-        return  #$FF
+        return8 #$FF
 
-ok:     return  #0
+ok:     return8 #0
 .endproc ; IsPathPrefixOf
 
 ;;; ============================================================
@@ -13154,7 +13154,7 @@ retry:  MLI_CALL OPEN, open_params
         jsr     ShowAlertOption
         cmp     #kAlertResultOK
         beq     retry
-        return  #$FF            ; failed
+        return8 #$FF            ; failed
     END_IF
 
         lda     open_params::ref_num
@@ -13426,12 +13426,12 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
     IF A <> #MGTK::Area::content
-        return  #$FF
+        return8 #$FF
     END_IF
 
         lda     findwindow_params::window_id
     IF A <> #winfo_prompt_dialog::kWindowId
-        return  #$FF
+        return8 #$FF
     END_IF
 
         copy8   winfo_prompt_dialog, event_params
@@ -13472,7 +13472,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         LETK_CALL LETK::Click, prompt_le_params
     END_IF
 
-        return  #$FF
+        return8 #$FF
 .endproc ; _ClickHandler
 
 ;;; Key handler for prompt dialog
@@ -13491,7 +13491,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         jsr     UpdateOKButton
       ELSE
         jsr     KeyHookRelay
-        return  #$FF
+        return8 #$FF
       END_IF
 
     ELSE
@@ -13518,11 +13518,11 @@ allow:  LETK_CALL LETK::Key, prompt_le_params
 ignore:
       ELSE
         jsr     KeyHookRelay
-        return  #$FF
+        return8 #$FF
       END_IF
 
     END_IF
-        return  #$FF
+        return8 #$FF
 
         ;; --------------------------------------------------
 
@@ -13532,14 +13532,14 @@ KeyHookRelay:
 .proc _HandleKeyOK
         BTK_CALL BTK::Flash, ok_button
     IF NS
-        return  #$FF            ; ignore
+        return8 #$FF            ; ignore
     END_IF
-        return  #PromptResult::ok
+        return8 #PromptResult::ok
 .endproc ; _HandleKeyOK
 
 .proc _HandleKeyCancel
         BTK_CALL BTK::Flash, cancel_button
-        return  #PromptResult::cancel
+        return8 #PromptResult::cancel
 .endproc ; _HandleKeyCancel
 
 .endproc ; _KeyHandler

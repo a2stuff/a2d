@@ -1726,7 +1726,7 @@ pop_segment:
     WHILE NOT_ZERO
 
 no_bs:  copy8   #0, interp_path ; null out the path
-        return  #$FF            ; non-zero is failure
+        return8 #$FF            ; non-zero is failure
 
 found_slash:
         cpx     #1

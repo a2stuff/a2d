@@ -258,7 +258,7 @@ coords          .tag MGTK::Point
     END_IF
         jmp     _SetSelectionAndNotify
 
-fail:   return  #$FF
+fail:   return8 #$FF
 .endproc ; ClickImpl
 
 ;;; ============================================================

@@ -41,7 +41,7 @@ jt_callbacks:
         copy16  #path_buf0, $6
         ldx     saved_stack
         txs
-        return  #$00
+        return8 #$00
 .endproc ; HandleOK
 
 ;;; ============================================================
@@ -50,7 +50,7 @@ jt_callbacks:
         jsr     file_dialog::CloseWindow
         ldx     saved_stack
         txs
-        return  #$FF
+        return8 #$FF
 .endproc ; HandleCancel
 
 ;;; ============================================================

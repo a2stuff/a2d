@@ -5685,7 +5685,7 @@ modifiers  .byte
         END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetEvent, event
-        return  event
+        return8 event
 .endproc ; GetAndReturnEvent
 
 
@@ -5893,7 +5893,7 @@ loop:   jsr     GetMenu
         lda     curmenu::menu_id          ; search by menu id
         cmp     find_menu_id
         bne     next
-found:  return  curmenu::menu_id          ; reload to clear Z flag
+found:  return8 curmenu::menu_id          ; reload to clear Z flag
 
 :       ldax    cursor_pos::xcoord ; search by x coordinate bounds
         cpx     curmenu::x_min+1
@@ -5916,7 +5916,7 @@ next:   ldx     menu_index
         inx
         cpx     menu_count
         bne     loop
-        return  #0
+        return8 #0
 .endproc ; FindMenuById
 
 find_menu := FindMenuById::find_menu
@@ -10406,9 +10406,9 @@ found:
         asl     a
         asl     a
         sta     mouse_operand
-        return  #$00
+        return8 #$00
 
-nope:   return  #$80
+nope:   return8 #$80
 .endproc ; CheckMouseInA
 .endproc ; FindMouse
 

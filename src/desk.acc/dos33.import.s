@@ -1289,7 +1289,7 @@ finish:
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         SET_BIT7_FLAG dirty_flag
-        return  #0              ; success
+        return8 #0              ; success
 
 ;;; C=1 if false
 .proc IsUpperAlpha
@@ -1380,9 +1380,9 @@ prefix_path:    .res    ::kPathBufferSize, 0
         copy8   (ptr),y, prefix_path,y
         dey
     WHILE POS
-        return  #0
+        return8 #0
 
-fail:   return  #1
+fail:   return8 #1
 
 .endproc ; GetWinPath
 

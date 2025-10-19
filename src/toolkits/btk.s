@@ -199,7 +199,7 @@ ret:
         ;; If disabled, return canceled
         bit     state
     IF NS
-        return  #$80
+        return8 #$80
     END_IF
 
         jsr     _SetPort
@@ -369,7 +369,7 @@ UNSUPPRESS_SHADOW_WARNING
         ;; If disabled, return canceled
         bit     state
     IF NS
-        return  #$80
+        return8 #$80
     END_IF
 
         jsr     _SetPort

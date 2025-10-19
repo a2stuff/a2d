@@ -100,7 +100,7 @@
 ;;; 8-bit pseudo-ops
 
 ;;; Return a value in A - immediate or absolute
-.macro return arg
+.macro return8 arg
         lda     arg
         rts
 .endmacro

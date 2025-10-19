@@ -369,9 +369,9 @@ retry2: MLI_CALL READ, read_padding_bytes_params
 .endif
     END_IF
 
-        return  #0
+        return8 #0
 
-eof:    return  #$FF
+eof:    return8 #$FF
 .endproc ; _ReadFileEntry
 
 ;;; ============================================================
