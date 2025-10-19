@@ -11,11 +11,79 @@
 ;;; ============================================================
 
 ;;; --------------------------------------------------
+;;; Flag Tests
+;;; --------------------------------------------------
+
+;;; IF
+    IF NC
+        nop
+    END_IF
+
+    IF NOT NC
+        nop
+    END_IF
+
+;;; ELSE_IF
+    IF CS
+        nop
+    ELSE_IF NC
+        nop
+    END_IF
+
+    IF CS
+        nop
+    ELSE_IF NOT NC
+        nop
+    END_IF
+
+;;; WHILE
+    DO
+        nop
+    WHILE NC
+
+    DO
+        nop
+    WHILE NOT NC
+
+;;; UNTIL
+    REPEAT
+        nop
+    UNTIL NC
+
+    REPEAT
+        nop
+    UNTIL NOT NC
+
+;;; BREAK
+    DO
+        nop
+        BREAK_IF NC
+        BREAK_IF NOT NC
+        nop
+    WHILE CS
+
+;;; CONTINUE
+    DO
+        nop
+        CONTINUE_IF NC
+        CONTINUE_IF NOT NC
+        nop
+    WHILE CS
+
+;;; RTS
+        RTS_IF NC
+        RTS_IF NOT NC
+
+;;; --------------------------------------------------
 ;;; Register Comparisons
 ;;; --------------------------------------------------
 
 ;;; IF
     IF A >= #$12
+        nop
+    END_IF
+
+    IF NOT A >= #$12
         nop
     END_IF
 
@@ -26,20 +94,35 @@
         nop
     END_IF
 
+    IF CS
+        nop
+    ELSE_IF NOT A < #$12
+        nop
+    END_IF
+
 ;;; WHILE
     DO
         nop
     WHILE A < #$12
+
+    DO
+        nop
+    WHILE NOT A < #$12
 
 ;;; UNTIL
     REPEAT
         nop
     UNTIL A < #$12
 
+    REPEAT
+        nop
+    UNTIL NOT A < #$12
+
 ;;; BREAK
     DO
         nop
         BREAK_IF A < #$12
+        BREAK_IF NOT A < #$12
         nop
     WHILE CS
 
@@ -47,11 +130,13 @@
     DO
         nop
         CONTINUE_IF A < #$12
+        CONTINUE_IF NOT A < #$12
         nop
     WHILE CS
 
 ;;; RTS
         RTS_IF A < #$12
+        RTS_IF NOT A < #$12
 
 ;;; --------------------------------------------------
 ;;; Index Registers
@@ -111,6 +196,14 @@ table := *
         nop
     END_IF
 
+    IF NOT A IN #1, #2, #3
+        nop
+    END_IF
+
+    IF NOT A NOT_IN #1, #2, #3
+        nop
+    END_IF
+
 ;;; ELSE_IF ... IN / NOT_IN
     IF CS
         nop
@@ -124,6 +217,17 @@ table := *
         nop
     END_IF
 
+    IF CS
+        nop
+    ELSE_IF NOT A IN #1, #2, #3
+        nop
+    END_IF
+
+    IF CS
+        nop
+    ELSE_IF NOT A NOT_IN #1, #2, #3
+        nop
+    END_IF
 
 ;;; WHILE ... IN / NOT_IN
     DO
@@ -134,6 +238,13 @@ table := *
         nop
     WHILE A NOT_IN #1, #2, #3
 
+    DO
+        nop
+    WHILE NOT A IN #1, #2, #3
+
+    DO
+        nop
+    WHILE NOT A NOT_IN #1, #2, #3
 
 ;;; UNTIL ... IN / NOT_IN
     REPEAT
@@ -144,6 +255,13 @@ table := *
         nop
     UNTIL A NOT_IN #1, #2, #3
 
+    REPEAT
+        nop
+    UNTIL NOT A IN #1, #2, #3
+
+    REPEAT
+        nop
+    UNTIL NOT A NOT_IN #1, #2, #3
 
 ;;; BREAK_IF ... IN / NOT_IN
     DO
@@ -155,6 +273,18 @@ table := *
     DO
         nop
         BREAK_IF X NOT_IN #1, #2, #3
+        nop
+    WHILE CC
+
+    DO
+        nop
+        BREAK_IF NOT X IN #1, #2, #3
+        nop
+    WHILE CC
+
+    DO
+        nop
+        BREAK_IF NOT X NOT_IN #1, #2, #3
         nop
     WHILE CC
 
@@ -171,6 +301,18 @@ table := *
         nop
     WHILE CC
 
+    DO
+        nop
+        CONTINUE_IF NOT X IN #1, #2, #3
+        nop
+    WHILE CC
+
+    DO
+        nop
+        CONTINUE_IF NOT X NOT_IN #1, #2, #3
+        nop
+    WHILE CC
+
 ;;; RTS_IF ... IN / NOT_IN
         nop
         RTS_IF X IN #1, #2, #3
@@ -180,11 +322,19 @@ table := *
         RTS_IF X NOT_IN #1, #2, #3
         nop
 
+        nop
+        RTS_IF NOT X IN #1, #2, #3
+        nop
+
+        nop
+        RTS_IF NOT X NOT_IN #1, #2, #3
+        nop
+
 ;;; --------------------------------------------------
-;;; BETWEEN
+;;; BETWEEN / NOT_BETWEEN operators
 ;;; --------------------------------------------------
 
-        ;; IF ... BETWEEN / NOT_BETWEEN
+;;; IF ... BETWEEN / NOT_BETWEEN
     IF A BETWEEN #'0', #'9'
         nop
     END_IF
@@ -193,7 +343,15 @@ table := *
         nop
     END_IF
 
-        ;; ELSE_IF ... BETWEEN / NOT_BETWEEN
+    IF NOT A BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+    IF NOT A NOT_BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+;;; ELSE_IF ... BETWEEN / NOT_BETWEEN
     IF CS
         nop
     ELSE_IF A BETWEEN #'0', #'9'
@@ -206,7 +364,19 @@ table := *
         nop
     END_IF
 
-        ;; WHILE ... BETWEEN / NOT_BETWEEN
+    IF CS
+        nop
+    ELSE_IF NOT A BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+    IF CS
+        nop
+    ELSE_IF NOT A NOT_BETWEEN #'0', #'9'
+        nop
+    END_IF
+
+;;; WHILE ... BETWEEN / NOT_BETWEEN
     DO
         nop
     WHILE A BETWEEN #'A', #'Z'
@@ -215,7 +385,15 @@ table := *
         nop
     WHILE A NOT_BETWEEN #'A', #'Z'
 
-        ;; UNTIL ... BETWEEN / NOT_BETWEEN
+    DO
+        nop
+    WHILE NOT A BETWEEN #'A', #'Z'
+
+    DO
+        nop
+    WHILE NOT A NOT_BETWEEN #'A', #'Z'
+
+;;; UNTIL ... BETWEEN / NOT_BETWEEN
     REPEAT
         nop
     UNTIL A BETWEEN #'A', #'Z'
@@ -224,7 +402,15 @@ table := *
         nop
     UNTIL A NOT_BETWEEN #'A', #'Z'
 
-        ;; BREAK_IF ... BETWEEN / NOT_BETWEEN
+    REPEAT
+        nop
+    UNTIL NOT A BETWEEN #'A', #'Z'
+
+    REPEAT
+        nop
+    UNTIL NOT A NOT_BETWEEN #'A', #'Z'
+
+;;; BREAK_IF ... BETWEEN / NOT_BETWEEN
     DO
         nop
         BREAK_IF A BETWEEN #'A', #'Z'
@@ -237,7 +423,19 @@ table := *
         nop
     WHILE CS
 
-        ;; CONTINUE_IF ... BETWEEN / NOT_BETWEEN
+    DO
+        nop
+        BREAK_IF NOT A BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+    DO
+        nop
+        BREAK_IF NOT A NOT_BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+;;; CONTINUE_IF ... BETWEEN / NOT_BETWEEN
     DO
         nop
         CONTINUE_IF A BETWEEN #'A', #'Z'
@@ -250,10 +448,26 @@ table := *
         nop
     WHILE CS
 
-        ;; RTS_IF ... BETWEEN / NOT_BETWEEN
+    DO
+        nop
+        CONTINUE_IF NOT A BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+    DO
+        nop
+        CONTINUE_IF NOT A NOT_BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+;;; RTS_IF ... BETWEEN / NOT_BETWEEN
         RTS_IF A BETWEEN #'0', #'9'
 
         RTS_IF A NOT_BETWEEN #'0', #'9'
+
+        RTS_IF NOT A BETWEEN #'0', #'9'
+
+        RTS_IF NOT A NOT_BETWEEN #'0', #'9'
 
 ;;; ============================================================
 ;;; Errors

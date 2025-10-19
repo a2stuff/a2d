@@ -12,6 +12,8 @@
 ;;;
 ;;; Conditions take the form of flag tests or register comparisons.
 ;;;
+;;; Conditions can be prepended with NOT to invert meaning.
+;;;
 ;;; Flag tests: ZS ZC CS CC VS VC NS NC
 ;;; (Aliases: EQ, NE, ZERO, NOT_ZERO, LT, GE, POS, NEG, PLUS, MINUS)
 ;;;
@@ -19,8 +21,9 @@
 ;;; e.g. "IF A = #25"
 ;;; Operators: =, <>, <, >= (aliases: EQ, NE, LT, GE)
 ;;;
-;;; Also: IN, NOT_IN, BETWEEN, NOT_BETWEEN
+;;; Also: IN, BETWEEN (and NOT_IN, NOT_BETWEEN)
 ;;; e.g. "IF A IN #1, #2, #3"
+;;; e.g. "IF A BETWEEN #'A', #'Z'"
 
 ;;; ============================================================
 ;;; Flow control infrastructure
@@ -95,13 +98,6 @@
   __flow_break_loop_flag__ .set 1
 .endmacro
 
-.macro __RESULT_NOT_IN__ op
-  .undef __flow_comparison_operator_name__
-  .define __flow_comparison_operator_name__ op
-  __flow_expr_type__ .set ::__flow_expr_type_not_in_list__
-  __flow_break_loop_flag__ .set 1
-.endmacro
-
 .macro __RESULT_BETWEEN__ op
   .undef __flow_comparison_operator_name__
   .define __flow_comparison_operator_name__ op
@@ -109,28 +105,22 @@
   __flow_break_loop_flag__ .set 1
 .endmacro
 
-.macro __RESULT_NOT_BETWEEN__ op
-  .undef __flow_comparison_operator_name__
-  .define __flow_comparison_operator_name__ op
-  __flow_expr_type__ .set ::__flow_expr_type_not_between__
-  __flow_break_loop_flag__ .set 1
-.endmacro
-
 ::__flow_expr_type_flag_test__ = 1
 ::__flow_expr_type_comparison__ = 2
 ::__flow_expr_type_in_list__ = 3
-::__flow_expr_type_not_in_list__ = 4
-::__flow_expr_type_between__ = 5
-::__flow_expr_type_not_between__ = 6
+::__flow_expr_type_between__ = 4
 
 ;;; FUTURE: Actually look at multiple expressions
 .macro _FLOW_PARSE_EXPR_LOOP expr, tindex
   .define __flow_token__ .mid(tindex, 1, {expr})
   .define __flow_next_token__ .mid(tindex+1, 1, {expr})
 
+  .if .xmatch({__flow_token__}, NOT)
+    __flow_expr_invert_flag__ .set .not(__flow_expr_invert_flag__)
+
 ;;; Flag tests
 
-  .if     .xmatch({__flow_token__}, ZS)
+  .elseif .xmatch({__flow_token__}, ZS)
     __RESULT_FLAG_TEST__ "ZS", BEQ, BNE
   .elseif .xmatch({__flow_token__}, ZC)
     __RESULT_FLAG_TEST__ "ZC", BNE, BEQ
@@ -166,11 +156,13 @@
     .if .xmatch({__flow_next_token__}, IN)
       __RESULT_IN__ "IN"
     .elseif .xmatch({__flow_next_token__}, NOT_IN)
-      __RESULT_NOT_IN__ "NOT_IN"
+      __RESULT_IN__ "NOT_IN"
+      __flow_expr_invert_flag__ .set .not(__flow_expr_invert_flag__)
     .elseif .xmatch({__flow_next_token__}, BETWEEN)
       __RESULT_BETWEEN__ "BETWEEN"
     .elseif .xmatch({__flow_next_token__}, NOT_BETWEEN)
-      __RESULT_NOT_BETWEEN__ "NOT_BETWEEN"
+      __RESULT_BETWEEN__ "NOT_BETWEEN"
+      __flow_expr_invert_flag__ .set .not(__flow_expr_invert_flag__)
     .elseif .xmatch({__flow_next_token__}, =) .or .xmatch({__flow_next_token__}, EQ)
       __RESULT_COMPARISON__ "=", BEQ, BNE
     .elseif .xmatch({__flow_next_token__}, <>) .or .xmatch({__flow_next_token__}, NE)
@@ -201,21 +193,24 @@
 .endmacro
 
 .macro _FLOW_PARSE_EXPR expr, reg, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
-  .define __flow_compareOp__ __nothing__
-  .define __flow_branchOp1__ __nothing__
-  .define __flow_branchOp2__ __nothing__
-  .define __flow_flag_test_name__ __nothing__ ; populated as a string
-  .define __flow_comparison_operand__ __nothing__
-  .define __flow_comparison_operator_name__ __nothing__ ; populated as a string
+        ;; Non-numeric variables set during expression parsing
+  .define __flow_compareOp__ __nothing__ ; token, e.g. CMP
+  .define __flow_branchOp1__ __nothing__ ; token, e.g. BCC
+  .define __flow_branchOp2__ __nothing__ ; token, e.g. BCS - the opposite
+  .define __flow_flag_test_name__ __nothing__ ; string, e.g. "CS"
+  .define __flow_comparison_operand__ __nothing__ ; token list, e.g. var+Type::member
+  .define __flow_comparison_operator_name__ __nothing__ ; string, e.g. ">="
+
+        ;; Numeric variables set during expression parsing
+  __flow_expr_type__ .set 0
+  __flow_expr_invert_flag__ .set 0 ; flipped when "NOT" is seen
 
         ;; Parse expression
   .ifblank expr
     .error .sprintf("%s: empty expression", __flow_statement__)
   .endif
 
-  __flow_expr_type__ .set 0
   __flow_break_loop_flag__ .set 0
-
   .repeat .tcount({expr}), tindex
     .if .not(__flow_break_loop_flag__)
     __flow_current_index__ .set tindex
@@ -245,9 +240,7 @@
     .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
     ;; no validation
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-    ;; no validation
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__ .or __flow_expr_type__ = ::__flow_expr_type_not_between__
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
     .if .not(.xmatch(.mid(0, 1, {__flow_comparison_operand__}), #))
       .error .sprintf("%s: Expected immediate 1st argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
     .endif
@@ -274,33 +267,84 @@
   .undef __flow_statement__
 .endmacro
 
+;;; Helpers for branching to `target`
+.macro _BOP_HELPER target
+  .if !__flow_expr_invert_flag__
+        __flow_branchOp1__ target
+  .else
+        __flow_branchOp2__ target
+  .endif
+.endmacro
+.macro _NOT_BOP_HELPER target
+  .if !__flow_expr_invert_flag__
+        __flow_branchOp2__ target
+  .else
+        __flow_branchOp1__ target
+  .endif
+.endmacro
+
 ;;; Helper for branching to `target` when a value is not in a list.
+.macro _IN_HELPER target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .if !__flow_expr_invert_flag__
+        _IN_HELPER2 target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .else
+        _NOT_IN_HELPER2 target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .endif
+.endmacro
 .macro _NOT_IN_HELPER target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .if !__flow_expr_invert_flag__
+        _NOT_IN_HELPER2 target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .else
+        _IN_HELPER2 target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .endif
+.endmacro
+
+;;; Codegen for "branch if in list"
+.macro _IN_HELPER2 target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        __flow_compareOp__ arg1
+        BEQ     target
+    .ifnblank arg2
+        _IN_HELPER2 target,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+    .endif
+.endmacro
+
+;;; Codegen for "branch if not in list"
+.macro _NOT_IN_HELPER2 target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         .local stay
-        _NOT_IN_HELPER2 stay,target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        _NOT_IN_HELPER3 stay,target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
 stay:
 .endmacro
-.macro _NOT_IN_HELPER2 eq_target,ne_target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro _NOT_IN_HELPER3 eq_target,ne_target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         __flow_compareOp__ arg1
     .ifnblank arg2
         BEQ     eq_target
-        _NOT_IN_HELPER2 eq_target,ne_target,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
+        _NOT_IN_HELPER3 eq_target,ne_target,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
     .else
         BNE     ne_target
     .endif
 .endmacro
 
-;;; Helper for branching to `target` when a value is in a list.
-.macro _IN_HELPER target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        __flow_compareOp__ arg1
-        BEQ     target
-    .ifnblank arg2
-        _IN_HELPER target,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-    .endif
-.endmacro
 
 ;;; Helper for branching to `target` when a value is between two values
 .macro _BETWEEN_HELPER target,lower,upper
+  .if !__flow_expr_invert_flag__
+        _BETWEEN_HELPER2 target,lower,upper
+  .else
+        _NOT_BETWEEN_HELPER2 target,lower,upper
+  .endif
+.endmacro
+
+;;; Helper for branching to `target` when a value is not between two values
+.macro _NOT_BETWEEN_HELPER target,lower,upper
+  .if !__flow_expr_invert_flag__
+        _NOT_BETWEEN_HELPER2 target,lower,upper
+  .else
+        _BETWEEN_HELPER2 target,lower,upper
+  .endif
+.endmacro
+
+;;; Codegen for "branch if between"
+.macro _BETWEEN_HELPER2 target,lower,upper
         .local stay
         __flow_compareOp__ lower
         BCC     stay
@@ -309,8 +353,8 @@ stay:
 stay:
 .endmacro
 
-;;; Helper for branching to `target` when a value is not between two values
-.macro _NOT_BETWEEN_HELPER target,lower,upper
+;;; Codegen for "branch if not between"
+.macro _NOT_BETWEEN_HELPER2 target,lower,upper
         __flow_compareOp__ lower
         BCC     target
         __flow_compareOp__ upper+1
@@ -368,22 +412,18 @@ stay:
         no_match := __flow_branch_ident_block__
 
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        __flow_branchOp2__ no_match
+        _NOT_BOP_HELPER no_match
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
      .ifblank arg2              ; register
         __flow_compareOp__ __flow_comparison_operand__
      .else
         __flow_compareOp__ __flow_comparison_operand__, arg2
      .endif
-        __flow_branchOp2__ no_match
+        _NOT_BOP_HELPER no_match
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
         _NOT_IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-        _IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
         _NOT_BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
-        _BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -403,22 +443,18 @@ stay:
         no_match := __flow_branch_ident_block__
 
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        __flow_branchOp2__ no_match
+        _NOT_BOP_HELPER no_match
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
      .ifblank arg2              ; register
         __flow_compareOp__ __flow_comparison_operand__
      .else
         __flow_compareOp__ __flow_comparison_operand__, arg2
      .endif
-        __flow_branchOp2__ no_match
+        _NOT_BOP_HELPER no_match
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
         _NOT_IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-        _IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
         _NOT_BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
-        _BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -518,22 +554,18 @@ stay:
         continue := __flow_loop_ident__ {"do_while"}
 
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        __flow_branchOp1__ continue
+        _BOP_HELPER continue
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
      .ifblank arg2              ; register
         __flow_compareOp__ __flow_comparison_operand__
      .else
         __flow_compareOp__ __flow_comparison_operand__, arg2
      .endif
-        __flow_branchOp1__ continue
+        _BOP_HELPER continue
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
         _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-        _NOT_IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
         _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
-        _NOT_BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -549,22 +581,18 @@ stay:
         break := __flow_loop_ident__ {"break"}
 
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        __flow_branchOp1__ break
+        _BOP_HELPER break
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
      .ifblank arg2              ; register
         __flow_compareOp__ __flow_comparison_operand__
      .else
         __flow_compareOp__ __flow_comparison_operand__, arg2
      .endif
-        __flow_branchOp1__ break
+        _BOP_HELPER break
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
         _IN_HELPER break,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-        _NOT_IN_HELPER break,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
         _BETWEEN_HELPER break,__flow_comparison_operand__,arg2
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
-        _NOT_BETWEEN_HELPER break,__flow_comparison_operand__,arg2
   .endif
 
   _FLOW_PARSE_CLEANUP
@@ -580,22 +608,18 @@ stay:
   continue := __flow_loop_ident__ {"do_while"}
 
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        __flow_branchOp1__ continue
+        _BOP_HELPER continue
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
      .ifblank arg2              ; register
         __flow_compareOp__ __flow_comparison_operand__
      .else
         __flow_compareOp__ __flow_comparison_operand__, arg2
      .endif
-        __flow_branchOp1__ continue
+        _BOP_HELPER continue
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
         _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-        _NOT_IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
         _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
-        _NOT_BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
   .endif
 
         __flow_loop_ident__ {"break"} := *
@@ -620,22 +644,18 @@ stay:
   continue := __flow_loop_ident__ {"do_while"}
 
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        __flow_branchOp2__ continue
+        _NOT_BOP_HELPER continue
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
      .ifblank arg2              ; register
         __flow_compareOp__ __flow_comparison_operand__
      .else
         __flow_compareOp__ __flow_comparison_operand__, arg2
      .endif
-        __flow_branchOp2__ continue
+        _NOT_BOP_HELPER continue
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
         _NOT_IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-        _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
         _NOT_BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
-        _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
   .endif
 
         __flow_loop_ident__ {"break"} := *
@@ -661,22 +681,18 @@ stay:
   .local skip
 
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        __flow_branchOp2__ skip
+        _NOT_BOP_HELPER skip
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
      .ifblank arg2              ; register
         __flow_compareOp__ __flow_comparison_operand__
      .else
         __flow_compareOp__ __flow_comparison_operand__, arg2
      .endif
-        __flow_branchOp2__ skip
+        _NOT_BOP_HELPER skip
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
         _NOT_IN_HELPER skip,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_in_list__
-        _IN_HELPER skip,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
         _NOT_BETWEEN_HELPER skip,__flow_comparison_operand__,arg2
-  .elseif __flow_expr_type__ = ::__flow_expr_type_not_between__
-        _BETWEEN_HELPER skip,__flow_comparison_operand__,arg2
   .endif
 
         rts
