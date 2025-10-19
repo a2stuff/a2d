@@ -523,9 +523,15 @@ eof:    return  #$FF
 .proc DoCopy
         ;; Check destination
         MLI_CALL GET_FILE_INFO, dst_file_info_params
-    IF A NOT_IN #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
+.if ::kCopyIgnoreDuplicateErrorOnCreate
+    IF_CS
+.endif
+      IF A NOT_IN #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
         jmp     OpHandleErrorCode
+      END_IF
+.if ::kCopyIgnoreDuplicateErrorOnCreate
     END_IF
+.endif
 
         ;; Get source info
 retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
