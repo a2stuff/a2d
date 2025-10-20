@@ -4239,16 +4239,7 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Mark all icons as highlighted
 
-        ldx     #0
-    DO
-        txa
-        pha
-        copy8   selected_icon_list,x, icon_param
-        ITK_CALL IconTK::HighlightIcon, icon_param
-        pla
-        tax
-        inx
-    WHILE X <> selected_icon_count
+        ITK_CALL IconTK::HighlightAll, cached_window_id
 
         ;; --------------------------------------------------
         ;; Repaint the icons
@@ -6407,16 +6398,8 @@ done:
 
         ;; --------------------------------------------------
         ;; Mark the icons as not highlighted
-        ldx     #0
-    DO
-        txa
-        pha
-        copy8   selected_icon_list,x, icon_param
-        ITK_CALL IconTK::UnhighlightIcon, icon_param
-        pla
-        tax
-        inx
-    WHILE X <> selected_icon_count
+
+        ITK_CALL IconTK::UnhighlightAll
 
         ;; --------------------------------------------------
         ;; Repaint the icons
@@ -6460,6 +6443,9 @@ done:
         pha                     ; A = icon id
         jsr     GetIconEntry
         jsr     IconPtrScreenToWindow
+
+        ;; TODO: Use `IconTK::IconInRect` to exclude icons outside viewport
+
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
         pla                     ; A = icon id
         jsr     GetIconEntry

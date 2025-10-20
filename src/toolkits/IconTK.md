@@ -320,6 +320,26 @@ No error checking is done, no result codes.
 If there are no icons in the specified window, `rect` is not modified.
 
 
+### `IconTK::HighlightAll` ($13)
+
+Higlights (selects) all icons in the specified window.
+
+Parameters:
+```
+.byte       window_id       Window ID, or 0 for desktop
+```
+
+Note that it does not paint the icons. Callers must make subsequent calls to `IconTK::DrawIcon`, etc.
+
+### `IconTK::UnhighlightAll` ($14)
+
+Unhiglights (deselects) all selected icons.
+
+No parameters.
+
+Note that it does not paint the icons. Callers must make subsequent calls to `IconTK::DrawIcon`, etc.
+
+
 ## Convenience Macros
 
 * `ITK_CALL` can be used to make calls in the form `ITK_CALL command, params`, if `ITKEntry` is defined.

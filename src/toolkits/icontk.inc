@@ -30,6 +30,8 @@ GetRenameRect   = $0F   ; { .byte icon, rect bounds out }
 GetBitmapRect   = $10   ; { .byte icon, rect bounds out }
 OffsetAll       = $11   ; { .byte window_id, .word delta_x, .word delta_y }
 GetAllBounds    = $12   ; { .byte window_id, rect bounds out }
+HighlightAll    = $13   ; { .byte window_id }
+UnhighlightAll  = $14   ; no parameters
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 

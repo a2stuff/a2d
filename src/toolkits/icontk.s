@@ -129,6 +129,8 @@ jump_table_lo:
         .lobytes   GetBitmapRectImpl
         .lobytes   OffsetAllImpl
         .lobytes   GetAllBoundsImpl
+        .lobytes   HighlightAllImpl
+        .lobytes   UnhighlightAllImpl
 
 jump_table_hi:
         .hibytes   InitToolKitImpl
@@ -150,6 +152,8 @@ jump_table_hi:
         .hibytes   GetBitmapRectImpl
         .hibytes   OffsetAllImpl
         .hibytes   GetAllBoundsImpl
+        .hibytes   HighlightAllImpl
+        .hibytes   UnhighlightAllImpl
 
         ASSERT_EQUALS *-jump_table_hi, jump_table_hi-jump_table_lo
 .endproc ; Dispatch
@@ -467,6 +471,57 @@ END_PARAM_BLOCK
         pla                     ; A = icon
         jmp     MaybeMoveIconToTop
 .endproc ; HighlightIconImpl
+
+;;; ============================================================
+;;; HighlightAll / UnhighlightAll
+
+.proc HighlightAllImpl
+PARAM_BLOCK params, icontk::command_data
+window_id       .byte
+END_PARAM_BLOCK
+
+        ldx     num_icons
+        dex
+    DO
+        txa
+        pha
+
+        lda     icon_list,x
+        jsr     GetIconWin      ; A = window_id
+      IF A = params::window_id
+        ldy     #IconEntry::state
+        ora     #kIconEntryStateHighlighted
+        sta     (icon_ptr),y
+      END_IF
+
+        pla
+        tax
+        dex
+    WHILE POS
+        rts
+.endproc ; HighlightAllImpl
+
+;;; ============================================================
+;;; UnhighlightAll
+
+.proc UnhighlightAllImpl
+        ldx     num_icons
+        dex
+    DO
+        txa
+        pha
+
+        lda     icon_list,x
+        jsr     GetIconState
+        and     #AS_BYTE(~kIconEntryStateHighlighted)
+        sta     (icon_ptr),y
+
+        pla
+        tax
+        dex
+    WHILE POS
+        rts
+.endproc ; UnhighlightAllImpl
 
 ;;; ============================================================
 ;;; FreeIcon
