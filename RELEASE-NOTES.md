@@ -68,6 +68,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix memory corruption following multi-select.
 * Improve type-down selection and sorted view performance.
 * Fix some edge cases around modified selection.
+* Performance improvements for scrolling and selection.
 
 ### Selector
 

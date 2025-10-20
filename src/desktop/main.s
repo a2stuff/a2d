@@ -5420,14 +5420,7 @@ END_PARAM_BLOCK
     END_IF
 
         ;; Stash initial coords
-        ldx     #.sizeof(MGTK::Point)-1
-    DO
-        lda     event_params::coords,x
-        sta     tmp_rect::topleft,x
-        sta     tmp_rect::bottomright,x
-        sta     initial_pos,x
-        dex
-    WHILE POS
+        COPY_STRUCT MGTK::Point, event_params::coords, initial_pos
 
         ;; Is this actually a drag?
         jsr     PeekEvent
@@ -5457,6 +5450,15 @@ clear:  jsr     ClearSelection
     ELSE
         jsr     InitSetDesktopPort
     END_IF
+
+        ;; Any `ClearSelection` calls above may modify `tmp_rect`
+        ldx     #.sizeof(MGTK::Point)-1
+    DO
+        lda     initial_pos,x
+        sta     tmp_rect::topleft,x
+        sta     tmp_rect::bottomright,x
+        dex
+    WHILE POS
 
         jsr     FrameTmpRect
 
@@ -6435,6 +6437,8 @@ done:
         jsr     PushPointers
         jsr     PrepActiveWindowScreenMapping
 
+        COPY_STRUCT MGTK::Rect, window_grafport+MGTK::GrafPort::maprect, tmp_rect
+
         ldx     #0
        DO
         txa
@@ -6444,9 +6448,13 @@ done:
         jsr     GetIconEntry
         jsr     IconPtrScreenToWindow
 
-        ;; TODO: Use `IconTK::IconInRect` to exclude icons outside viewport
-
+        ITK_CALL IconTK::IconInRect, icon_param
+        IF_NOT_ZERO
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
+        ELSE
+        MGTK_CALL MGTK::CheckEvents
+        END_IF
+
         pla                     ; A = icon id
         jsr     GetIconEntry
         jsr     IconPtrWindowToScreen

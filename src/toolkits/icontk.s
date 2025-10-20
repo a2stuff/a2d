@@ -1908,6 +1908,8 @@ END_PARAM_BLOCK
         ITK_CALL IconTK::IconInRect, icon_in_rect_params
        IF NOT_ZERO
         ITK_CALL IconTK::DrawIconRaw, icon_in_rect_params::icon
+       ELSE
+        MGTK_CALL MGTK::CheckEvents
        END_IF
       END_IF
 
