@@ -26,7 +26,7 @@
 ;;; e.g. "IF A BETWEEN #'A', #'Z'"
 
 ;;; ============================================================
-;;; Flow control infrastructure
+;;; Infrastructure
 ;;; ============================================================
 
 ;;; Set context
@@ -57,6 +57,7 @@
         .out msg
     .endif
 .endmacro
+
 
 ;;; ============================================================
 ;;; Expression Parsing
@@ -152,7 +153,7 @@
       .fatal "unreachable"
     .endif
 
-        ;; Determine the branch opcodes from the comparison operator
+        ;; Determine the expression type from the comparison operator
     .if .xmatch({__flow_next_token__}, IN)
       __RESULT_IN__ "IN"
     .elseif .xmatch({__flow_next_token__}, NOT_IN)
@@ -267,6 +268,47 @@
   .undef __flow_statement__
 .endmacro
 
+
+;;; ============================================================
+;;; Code Generation
+;;; ============================================================
+
+;;; "Branch if true" generator (e.g. for WHILE where the body is repeated)
+.macro _FLOW_CODEGEN_BIT target,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
+        _BOP_HELPER target
+  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank arg2              ; register
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, arg2
+     .endif
+        _BOP_HELPER target
+  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
+        _IN_HELPER target,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _BETWEEN_HELPER target,__flow_comparison_operand__,arg2
+  .endif
+.endmacro
+
+;;; "Branch if false" generator (e.g. for IF where the body is skipped)
+.macro _FLOW_CODEGEN_BIF target,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
+        _NOT_BOP_HELPER target
+  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
+     .ifblank arg2              ; register
+        __flow_compareOp__ __flow_comparison_operand__
+     .else
+        __flow_compareOp__ __flow_comparison_operand__, arg2
+     .endif
+        _NOT_BOP_HELPER target
+  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
+        _NOT_IN_HELPER target,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
+        _NOT_BETWEEN_HELPER target,__flow_comparison_operand__,arg2
+  .endif
+.endmacro
+
 ;;; Helpers for branching to `target`
 .macro _BOP_HELPER target
   .if !__flow_expr_invert_flag__
@@ -324,7 +366,6 @@ stay:
     .endif
 .endmacro
 
-
 ;;; Helper for branching to `target` when a value is between two values
 .macro _BETWEEN_HELPER target,lower,upper
   .if !__flow_expr_invert_flag__
@@ -360,6 +401,26 @@ stay:
         __flow_compareOp__ upper+1
         BCS     target
 .endmacro
+
+
+;;; ============================================================
+;;; Glue it all together
+;;; ============================================================
+
+;;; Parse expression and generate code with "branch if true" semantics
+.macro _FLOW_PARSE_AND_GEN_BIT target,expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_CODEGEN_BIT target,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_PARSE_CLEANUP
+.endmacro
+
+;;; Parse expression and generate code with "branch if false" semantics
+.macro _FLOW_PARSE_AND_GEN_BIF target,expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_CODEGEN_BIF target,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_PARSE_CLEANUP
+.endmacro
+
 
 ;;; ============================================================
 ;;; IF / ELSE_IF / ELSE / END_IF
@@ -401,63 +462,31 @@ stay:
 
 .macro IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "IF"
-  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         __INC_IDENT__ __flow_branch_depth__
         __INC_IDENT__ __flow_branch_count_at_depth__
         __INC_IDENT__ __flow_branch_ident_counter__
 
-  .local no_match
-
+        .local no_match
         no_match := __flow_branch_ident_block__
 
-  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        _NOT_BOP_HELPER no_match
-  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifblank arg2              ; register
-        __flow_compareOp__ __flow_comparison_operand__
-     .else
-        __flow_compareOp__ __flow_comparison_operand__, arg2
-     .endif
-        _NOT_BOP_HELPER no_match
-  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-        _NOT_IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
-        _NOT_BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
-  .endif
+        _FLOW_PARSE_AND_GEN_BIF no_match,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  _FLOW_PARSE_CLEANUP
   _FLOW_END_STATEMENT
 .endmacro
 
 .macro ELSE_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "ELSE_IF"
-  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         jmp     __flow_branch_ident__ {"endif"}
         __flow_branch_ident_block__ := *
         __INC_IDENT__ __flow_branch_ident_counter__
 
-  .local no_match
-
+        .local no_match
         no_match := __flow_branch_ident_block__
 
-  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        _NOT_BOP_HELPER no_match
-  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifblank arg2              ; register
-        __flow_compareOp__ __flow_comparison_operand__
-     .else
-        __flow_compareOp__ __flow_comparison_operand__, arg2
-     .endif
-        _NOT_BOP_HELPER no_match
-  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-        _NOT_IN_HELPER no_match,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
-        _NOT_BETWEEN_HELPER no_match,__flow_comparison_operand__,arg2
-  .endif
+        _FLOW_PARSE_AND_GEN_BIF no_match,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  _FLOW_PARSE_CLEANUP
   _FLOW_END_STATEMENT
 .endmacro
 
@@ -547,123 +576,59 @@ stay:
 
 .macro CONTINUE_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "CONTINUE_IF"
-  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  .local continue
-
+        .local continue
         continue := __flow_loop_ident__ {"do_while"}
 
-  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        _BOP_HELPER continue
-  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifblank arg2              ; register
-        __flow_compareOp__ __flow_comparison_operand__
-     .else
-        __flow_compareOp__ __flow_comparison_operand__, arg2
-     .endif
-        _BOP_HELPER continue
-  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-        _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
-        _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
-  .endif
+        _FLOW_PARSE_AND_GEN_BIT continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  _FLOW_PARSE_CLEANUP
   _FLOW_END_STATEMENT
 .endmacro
 
 .macro BREAK_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "BREAK_IF"
-  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  .local break
-
+        .local break
         break := __flow_loop_ident__ {"break"}
 
-  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        _BOP_HELPER break
-  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifblank arg2              ; register
-        __flow_compareOp__ __flow_comparison_operand__
-     .else
-        __flow_compareOp__ __flow_comparison_operand__, arg2
-     .endif
-        _BOP_HELPER break
-  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-        _IN_HELPER break,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
-        _BETWEEN_HELPER break,__flow_comparison_operand__,arg2
-  .endif
+        _FLOW_PARSE_AND_GEN_BIT break,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  _FLOW_PARSE_CLEANUP
   _FLOW_END_STATEMENT
 .endmacro
 
 .macro WHILE expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "WHILE"
-  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  .local continue
+        .local continue
+        continue := __flow_loop_ident__ {"do_while"}
 
-  continue := __flow_loop_ident__ {"do_while"}
-
-  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        _BOP_HELPER continue
-  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifblank arg2              ; register
-        __flow_compareOp__ __flow_comparison_operand__
-     .else
-        __flow_compareOp__ __flow_comparison_operand__, arg2
-     .endif
-        _BOP_HELPER continue
-  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-        _IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
-        _BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
-  .endif
+        _FLOW_PARSE_AND_GEN_BIT continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
 
         __DEC_IDENT__ __flow_loop_depth__
 
-  _FLOW_PARSE_CLEANUP
   _FLOW_END_STATEMENT
 .endmacro
 
 .macro UNTIL expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "UNTIL"
-  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         ;; Note that "do_while" is still used for minting identifiers
         ;; so that DO and REPEAT remain synonyms and helpers can be
         ;; shared between WHILE and UNTIL.
 
-  .local continue
+        .local continue
+        continue := __flow_loop_ident__ {"do_while"}
 
-  continue := __flow_loop_ident__ {"do_while"}
-
-  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        _NOT_BOP_HELPER continue
-  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifblank arg2              ; register
-        __flow_compareOp__ __flow_comparison_operand__
-     .else
-        __flow_compareOp__ __flow_comparison_operand__, arg2
-     .endif
-        _NOT_BOP_HELPER continue
-  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-        _NOT_IN_HELPER continue,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
-        _NOT_BETWEEN_HELPER continue,__flow_comparison_operand__,arg2
-  .endif
+        _FLOW_PARSE_AND_GEN_BIF continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
 
         __DEC_IDENT__ __flow_loop_depth__
 
-  _FLOW_PARSE_CLEANUP
   _FLOW_END_STATEMENT
 .endmacro
 
@@ -676,29 +641,14 @@ stay:
 
 .macro RTS_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "RTS_IF"
-  _FLOW_PARSE_EXPR {expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-  .local skip
+        .local skip
 
-  .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
-        _NOT_BOP_HELPER skip
-  .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
-     .ifblank arg2              ; register
-        __flow_compareOp__ __flow_comparison_operand__
-     .else
-        __flow_compareOp__ __flow_comparison_operand__, arg2
-     .endif
-        _NOT_BOP_HELPER skip
-  .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
-        _NOT_IN_HELPER skip,__flow_comparison_operand__,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  .elseif __flow_expr_type__ = ::__flow_expr_type_between__
-        _NOT_BETWEEN_HELPER skip,__flow_comparison_operand__,arg2
-  .endif
+        _FLOW_PARSE_AND_GEN_BIF skip,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         rts
-skip:
+        skip := *
 
-  _FLOW_PARSE_CLEANUP
   _FLOW_END_STATEMENT
 .endmacro
 
