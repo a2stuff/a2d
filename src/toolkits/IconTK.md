@@ -292,6 +292,34 @@ MGTK::Rect  rect            (out) Bounding rect for bitmap
 No error checking is done, no result codes.
 
 
+### `IconTK::OffsetAll` ($11)
+
+Offsets the coordinates of the icons in the specified window by the specified amount.
+
+Parameters:
+```
+.byte       window_id       Window ID, or 0 for desktop
+.word       delta_x
+.word       delta_y
+```
+
+No error checking is done, no result codes.
+
+### `IconTK::GetAllBounds` ($12)
+
+Populates the `bounds` rectangle with a bounding rect surrounding the bitmap and label of all icons in the specified window.
+
+Parameters:
+```
+.byte       window_id       Window ID, or 0 for desktop
+MGTK::Rect  bounds          (out) Bounding rectangle
+```
+
+No error checking is done, no result codes.
+
+If there are no icons in the specified window, `rect` is not modified.
+
+
 ## Convenience Macros
 
 * `ITK_CALL` can be used to make calls in the form `ITK_CALL command, params`, if `ITKEntry` is defined.

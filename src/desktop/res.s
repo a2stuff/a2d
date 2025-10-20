@@ -687,6 +687,13 @@ id:     .byte   0
 addr:   .addr   0
 .endparams
 
+;;; Used for IconTK::OffsetAll
+.params offset_icons_params
+window_id:      .byte   0
+delta_x:        .word   0
+delta_y:        .word   0
+.endparams
+
 ;;; Used by DeskTop to pad `tmp_rect`
 .params bbox_pad_tmp_rect
         .addr   tmp_rect
@@ -694,16 +701,16 @@ addr:   .addr   0
 .endparams
 
 ;;; Used by DeskTop to compute bounding box for icons
-        DEFINE_RECT iconbb_rect, 0, 0, 0, 0
+.params get_iconbb
+window_id:      .byte   0
+rect:           .tag    MGTK::Rect
+.endparams
+iconbb_rect := get_iconbb::rect
 
-;;; Used by DeskTop to pad/expand `iconbb_rect`
+;;; Used by DeskTop to pad `iconbb_rect`
 .params bbox_pad_iconbb_rect
         .addr   iconbb_rect
         .word   kIconBBoxPaddingX, kIconBBoxPaddingY
-.endparams
-.params unionrects_tmp_iconbb
-        .addr   tmp_rect
-        .addr   iconbb_rect
 .endparams
 
 ;;; Used by DeskTop to expand `iconbb_rect` in `ScrollManager`

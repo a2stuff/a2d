@@ -28,6 +28,8 @@ DrawIcon        = $0D   ; { .byte icon }
 GetIconEntry    = $0E   ; { .byte icon, .addr IconEntry }
 GetRenameRect   = $0F   ; { .byte icon, rect bounds out }
 GetBitmapRect   = $10   ; { .byte icon, rect bounds out }
+OffsetAll       = $11   ; { .byte window_id, .word delta_x, .word delta_y }
+GetAllBounds    = $12   ; { .byte window_id, rect bounds out }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 
@@ -110,6 +112,14 @@ kIconEntryWinIdMask             = %00001111
 
 ;;; Metrics
 kIconRenameLineEditWidth = kMaxFilenameLength * kSystemFontWidth + kTextBoxTextHOffset * 2 - 1
+
+;;; For regular icons
+kMaxIconBitmapHeight    = 17    ; actual height varies
+kMaxIconBitmapWidth     = 28
+kIconLabelHeight        = kSystemFontHeight
+kIconLabelGapV          = 2
+kMaxIconTotalHeight     = kMaxIconBitmapHeight + kIconLabelGapV + kIconLabelHeight
+kMaxIconTotalWidth      = 115   ; width of " MMMMMMMMMMMMMMM "
 
 .struct IconResource
         ;; First part is MGTK::MapInfo without leading viewloc

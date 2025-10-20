@@ -70,7 +70,7 @@ kWindowYOffset = 27
 
 ;;; Min/Max window dimensions
 kMinWindowWidth = 170
-kMaxWindowWidth = kIconBBoxPaddingLeft + (kMaxIconTotalWidth - kIconBitmapWidth) / 2 + (kIconViewIconsPerRow - 1) * kIconViewSpacingX + (kMaxIconTotalWidth + kIconBitmapWidth) / 2 + kIconBBoxPaddingRight
+kMaxWindowWidth = kIconBBoxPaddingLeft + (kMaxIconTotalWidth - kMaxIconBitmapWidth) / 2 + (kIconViewIconsPerRow - 1) * kIconViewSpacingX + (kMaxIconTotalWidth + kMaxIconBitmapWidth) / 2 + kIconBBoxPaddingRight
 
 kMinWindowHeight = 50
 kMaxWindowHeight = kIconViewSpacingY * 3 + kWindowHeaderHeight - 1
@@ -95,13 +95,6 @@ kListViewRowHeight      = kListItemHeight
 
 ;;; --------------------------------------------------
 ;;; Icon view
-
-kMaxIconBitmapHeight    = 17    ; actual height varies
-kIconBitmapWidth        = 28
-kIconLabelHeight        = kSystemFontHeight
-kIconLabelGap           = 2
-kMaxIconTotalHeight     = kMaxIconBitmapHeight + kIconLabelGap + kIconLabelHeight
-kMaxIconTotalWidth      = 115   ; width of " MMMMMMMMMMMMMMM "
 
 kIconViewInitialLeft = kIconBBoxPaddingLeft
 kIconViewInitialTop  = kWindowHeaderHeight + kIconBBoxPaddingTop + kMaxIconBitmapHeight - 1

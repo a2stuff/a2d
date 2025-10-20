@@ -4397,8 +4397,22 @@ PARAM_BLOCK, $50
 ubox    .tag    MGTK::Rect
 
 ;;; Effective dimensions of the viewport
+.union
+viewport_size   .word   2
+.struct
 width   .word
 height  .word
+.endstruct
+.endunion
+
+;;; Bounding box dimensions
+.union
+bbox_size       .word   2
+.struct
+bbox_w  .word
+bbox_h  .word
+.endstruct
+.endunion
 
 ;;; Initial effective viewport top/left
 old     .tag    MGTK::Point
@@ -4417,6 +4431,7 @@ dimensions := width
 ;;; * `ubox` - union of icon bounding box and viewport
 ;;; * `tick_h` and `tick_v` sizes (based on view type)
 ;;; * `width` and `height` of the effective viewport
+;;; * `bbox_w` and `bbox_h` - size of icon bounding box
 ;;; * `old` - initial top/left of viewport (to detect changes)
 
 _Preamble:
@@ -4439,8 +4454,13 @@ _Preamble:
         jsr     ApplyActiveWinfoToWindowGrafport
         add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
         COPY_STRUCT MGTK::Point, viewport+MGTK::Rect::topleft, old
-        sub16   viewport+MGTK::Rect::x2, viewport+MGTK::Rect::x1, width
-        sub16   viewport+MGTK::Rect::y2, viewport+MGTK::Rect::y1, height
+
+        ldx     #2              ; loop over dimensions
+    DO
+        sub16   viewport+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::topleft,x, viewport_size,x
+        dex                     ; next dimension
+        dex
+    WHILE POS
 
         lda     cached_window_entry_count
     IF ZERO
@@ -4451,12 +4471,26 @@ _Preamble:
 
         ;; Make `ubox` bound both viewport and icons; needed to ensure
         ;; offset cases are handled.
-        jsr     CachedIconsScreenToWindow
+
         jsr     ComputeIconsBBox
-        jsr     CachedIconsWindowToScreen
+        lda     cached_window_id
+        jsr     PrepWindowScreenMapping
+
+        ldx     #2              ; loop over dimensions
+    DO
+        ;; stash bbox dimensions before union below
+        sub16   iconbb_rect+MGTK::Rect::bottomright,x, iconbb_rect+MGTK::Rect::topleft,x, bbox_size,x
+
+        ;; offset bbox
+        add16   map_delta_x,x, iconbb_rect+MGTK::Rect::topleft,x, iconbb_rect+MGTK::Rect::topleft,x
+        add16   map_delta_x,x, iconbb_rect+MGTK::Rect::bottomright,x, iconbb_rect+MGTK::Rect::bottomright,x
+
+        dex                     ; next dimension
+        dex
+    WHILE POS
 
         MGTK_CALL MGTK::UnionRects, unionrects_viewport_iconbb
-        COPY_BLOCK iconbb_rect, ubox
+        COPY_STRUCT MGTK::Rect, iconbb_rect, ubox
         rts
 
 ;;; --------------------------------------------------
@@ -4535,27 +4569,29 @@ _Preamble:
 
 .proc TrackHThumb
         jsr     _Preamble
-        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, tmpw
-        sub16   tmpw, width, track_muldiv_params::number
+        ldx     #0
         jsr     _TrackMulDiv
-        add16   track_muldiv_params::result, ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
-        add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
 .endproc ; TrackHThumb
 
 .proc TrackVThumb
         jsr     _Preamble
-        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, tmpw
-        sub16   tmpw, height, track_muldiv_params::number
+        ldx     #2
         jsr     _TrackMulDiv
-        add16   track_muldiv_params::result, ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
-        add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
 .endproc ; TrackVThumb
 
 .proc _TrackMulDiv
+        sub16   ubox+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::topleft,x, tmpw
+        sub16   tmpw, viewport_size,x, track_muldiv_params::number
         copy8   trackthumb_params::thumbpos, track_muldiv_params::numerator
+        txa
+        pha
         MGTK_CALL MGTK::MulDiv, track_muldiv_params
+        pla
+        tax
+        add16   track_muldiv_params::result, ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
+        add16   viewport+MGTK::Rect::topleft,x, viewport_size,x, viewport+MGTK::Rect::bottomright,x
         rts
 .endproc ; _TrackMulDiv
 
@@ -4630,10 +4666,11 @@ _Preamble:
         jsr     ClearAndDrawActiveWindowEntries
 
         ;; Handle offset case - may be able to deactivate scrollbar now
+        cmp16   width, bbox_w
+      IF GE
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
-        scmp16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
-      IF POS
-        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
+        ldx     #0
+        jsr     _CheckDeactivate
        IF POS
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         lda     #MGTK::activatectl_deactivate
@@ -4652,10 +4689,11 @@ _Preamble:
         jsr     ClearAndDrawActiveWindowEntries
 
         ;; Handle offset case - may be able to deactivate scrollbar now
+        cmp16   height, bbox_h
+      IF GE
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
-        scmp16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
-      IF POS
-        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
+        ldx     #2
+        jsr     _CheckDeactivate
        IF POS
         ldx     #MGTK::Ctl::vertical_scroll_bar
         lda     #MGTK::activatectl_deactivate
@@ -4666,12 +4704,18 @@ _Preamble:
         rts
 .endproc ; _MaybeUpdateVThumb
 
+.proc _CheckDeactivate
+        scmp16  ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
+    IF POS
+        scmp16  viewport+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::bottomright,x
+    END_IF
+        rts
+.endproc ; _CheckDeactivate
+
 ;;; Set hthumb position relative to `maprect` and `ubox`.
 .proc _SetHThumbFromViewport
-        sub16   viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1, setthumb_muldiv_params::number
-        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, tmpw
-        sub16   tmpw, width, setthumb_muldiv_params::denominator
-        MGTK_CALL MGTK::MulDiv, setthumb_muldiv_params
+        ldx     #0
+        jsr     _CalcThumbFromViewport
         lda     setthumb_muldiv_params::result
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         jmp     _UpdateThumb
@@ -4679,14 +4723,20 @@ _Preamble:
 
 ;;; Set vthumb position relative to `maprect` and `ubox`.
 .proc _SetVThumbFromViewport
-        sub16   viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1, setthumb_muldiv_params::number
-        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, tmpw
-        sub16   tmpw, height, setthumb_muldiv_params::denominator
-        MGTK_CALL MGTK::MulDiv, setthumb_muldiv_params
+        ldx     #2
+        jsr     _CalcThumbFromViewport
         lda     setthumb_muldiv_params::result
         ldx     #MGTK::Ctl::vertical_scroll_bar
         jmp     _UpdateThumb
 .endproc ; _SetVThumbFromViewport
+
+.proc _CalcThumbFromViewport
+        sub16   viewport+MGTK::Rect::topleft,x, ubox+MGTK::Rect::topleft,x, setthumb_muldiv_params::number
+        sub16   ubox+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::topleft,x, tmpw
+        sub16   tmpw, viewport_size,x, setthumb_muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, setthumb_muldiv_params
+        rts
+.endproc ; _CalcThumbFromViewport
 
 ;;; --------------------------------------------------
 ;;; Apply `maprect` back to active window's GrafPort
@@ -6445,50 +6495,32 @@ done:
 ;;; ============================================================
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
-.proc CachedIconsScreenToWindow
-        param_jump _CachedIconsXToY, IconPtrScreenToWindow
-.endproc ; CachedIconsScreenToWindow
-
-;;; ============================================================
-
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
-.proc CachedIconsWindowToScreen
-        param_jump _CachedIconsXToY, IconPtrWindowToScreen
-.endproc ; CachedIconsWindowToScreen
-
-;;; ============================================================
-
-;;; Inputs: A,X = proc to call for each icon
-;;; Note: No-op if `cached_window_id` = 0 (desktop)
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
-.proc _CachedIconsXToY
-        stax    proc
+.proc CachedIconsXToYImpl
+        ENTRY_POINTS_FOR_BIT7_FLAG s2w, w2s, s2w_flag
 
         jsr     PushPointers
         lda     cached_window_id
     IF NOT_ZERO
+        sta     offset_icons_params::window_id
         jsr     PrepWindowScreenMapping
 
-        ldx     #0              ; X = index
-      DO
-        BREAK_IF X = cached_window_entry_count
-        txa
-        pha                     ; A = index
+        s2w_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+      IF_NS
+        copy16  map_delta_x, offset_icons_params::delta_x
+        copy16  map_delta_y, offset_icons_params::delta_y
+      ELSE
+        sub16   #0, map_delta_x, offset_icons_params::delta_x
+        sub16   #0, map_delta_y, offset_icons_params::delta_y
+      END_IF
 
-        lda     cached_window_entry_list,x
-        jsr     GetIconEntry
-        proc := *+1
-        jsr     SELF_MODIFIED
-
-        pla                     ; A = index
-        tax                     ; X = index
-        inx
-      WHILE NOT_ZERO
+        ITK_CALL IconTK::OffsetAll, offset_icons_params
     END_IF
-
-        jsr     PopPointers     ; do not tail-call optimize!
+        jsr     PopPointers
         rts
-.endproc ; _CachedIconsXToY
+.endproc ; CachedIconsXToYImpl
+CachedIconsScreenToWindow := CachedIconsXToYImpl::s2w
+CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
 
 ;;; ============================================================
 ;;; Adjust grafport for header.
@@ -7124,7 +7156,6 @@ copy_new_window_bounds_flag:
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         sub16in bbox_dy, (winfo_ptr),y, bbox_dy
 
-
         ;; --------------------------------------------------
         ;; Width
 
@@ -7525,45 +7556,14 @@ draw:   param_jump DrawString, text_input_buf
         lda     cached_window_entry_count
         RTS_IF ZERO
 
-        ;; --------------------------------------------------
-
-        ;; For each icon...
-        copy8   #0, icon_num
-    DO
-        icon_num := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        BREAK_IF X = cached_window_entry_count
-
-        ;; Get the bounds
-        copy8   cached_window_entry_list,x, icon_param
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-
-        jsr     GetCachedWindowViewBy
-        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
-      IF ZERO
-        ;; Pretend icon is max height
-        sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
-      END_IF
-
-        lda     icon_num
-      IF ZERO
-        ;; First icon (index 0) - just use its coordinates as min/max
-        COPY_BLOCK tmp_rect, iconbb_rect
-      ELSE
-        ;; Expand bounding rect to encompass icon's rect
-        MGTK_CALL MGTK::UnionRects, unionrects_tmp_iconbb
-      END_IF
-
-        inc     icon_num
-    WHILE NOT_ZERO              ; always
-
-        ;; --------------------------------------------------
+        copy8   cached_window_id, get_iconbb::window_id
+        ITK_CALL IconTK::GetAllBounds, get_iconbb ; inits `iconbb_rect`
 
         ;; List view?
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF NS
         ;; max.x = kListViewWidth
-        add16   iconbb_rect::x1, #kListViewWidth, iconbb_rect::x2
+        add16   iconbb_rect+MGTK::Rect::x1, #kListViewWidth, iconbb_rect+MGTK::Rect::x2
     END_IF
 
         ;; Add padding around bbox
