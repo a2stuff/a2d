@@ -15,6 +15,7 @@ Project Page: https://github.com/a2stuff/a2d
 * New localization: Bulgarian
 * ProDOS "sparse" files are now copied correctly. ([#878](https://github.com/a2stuff/a2d/issues/878))
 * Issue ON_LINE call after disconnecting /RAM.
+* Fix flakiness entering/exiting MouseKeys mode.
 
 ### Launcher
 

@@ -5227,16 +5227,10 @@ irq_entry:
         jsr     CallBeforeEventsHook
         bcc     end
 
-        lda     BUTN1           ; Look at buttons (apple keys), compute modifiers
-        asl     a
-        lda     BUTN0
-        and     #$80
-        rol     a
-        rol     a
+        jsr     ComputeModifiers
         sta     input::modifiers
 
-        jsr     ActivateKeyboardMouse    ; check if keyboard mouse should be started
-        jsr     MoveCursor
+        jsr     MoveCursor      ; will consume keypress if in `kbd_mouse_state`
         lda     mouse_status    ; bit 7 = is down, bit 6 = was down, still down
         asl     a
         eor     mouse_status
@@ -5251,13 +5245,17 @@ irq_entry:
 
         .assert kKeyboardMouseStateInactive = 0, error, "kKeyboardMouseStateInactive must be 0"
         lda     kbd_mouse_state
-        bne     mouse
+        bne     mouse           ; key consumed in `MoveCursor`
 
         lda     KBD
         bpl     end             ; no key
         and     #CHAR_MASK
         sta     input::key
         bit     KBDSTRB         ; clear strobe
+
+        ;; Check if "MouseKeys" mode should be activated
+        jsr     CheckActivateMouseKeys
+        bcc     end
 
         lda     input::modifiers
         sta     input::kmods
@@ -9713,6 +9711,9 @@ scale_y:
 .endproc ; ComputeModifiers
 
 
+;;; Will consume keypress, so must not be called if processing keys
+;;; normally in `CheckEventsImpl`
+;;; Assert: `kbd_mouse_state` is not `kKeyboardMouseStateInactive`
 .proc GetKey
         jsr     ComputeModifiers
         sta     set_input_modifiers
@@ -9727,10 +9728,8 @@ no_modifiers:
 .endproc ; GetKey
 
 
+;;; Assert: `kbd_mouse_state` is not `kKeyboardMouseStateInactive`
 .proc HandleKeyboardMouse
-        lda     kbd_mouse_state
-        RTS_IF ZERO
-
         cmp     #kKeyboardMouseStateMouseKeys
         beq     KbdMouseMousekeys
 
@@ -9779,25 +9778,21 @@ stashed_addr:  .addr     0
 .endproc ; KbdMouseMousekeys
 
 
-.proc ActivateKeyboardMouse
-        lda     kbd_mouse_state
-        bne     in_kbd_mouse    ; branch away if keyboard mouse is active
-
+;;; Input: `input::modifiers` and `input::key` have been set
+.proc CheckActivateMouseKeys
         ;; Activate?
         bit     mouse_status
-        bmi     ret             ; branch away if button is down
+        bmi     ignore          ; branch away if button is down
 
         ;; Check for OA+SA+Space
-        jsr     ComputeModifiers
+        lda     input::modifiers
         cmp     #3
-        bne     ret
-        lda     KBD
-        bpl     ret
-        cmp     #' '|$80        ; space?
-        bne     ret             ; no, ignore
+        bne     ignore
+        lda     input::key
+        cmp     #' '            ; space?
+        bne     ignore
 
         ;; Give immediate feedback
-        bit     KBDSTRB
         jsr     PlayTone1
         jsr     PlayTone2
 
@@ -9812,25 +9807,24 @@ stashed_addr:  .addr     0
         sta     kbd_mouse_status ; reset mouse button status
         COPY_BYTES 3, cursor_pos, kbd_mouse_x
 
-ret:    rts
+        clc
+        rts
 
-        ;; Deactivate?
-in_kbd_mouse:
-        cmp     #kKeyboardMouseStateMouseKeys
-        bne     :+
+ignore:
+        sec
+        rts
 
-        lda     KBD
-        cmp     #CHAR_ESCAPE|$80
-        bne     :+
+.endproc ; CheckActivateMouseKeys
 
-        ;; Give immediate feedback
-        bit     KBDSTRB
+.proc EndMouseKeys
         jsr     PlayTone2
         jsr     PlayTone1
         lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
 
-:       rts
+        clc
+        rts
+.endproc ; EndMouseKeys
 
 .proc PlayTone1
         lda     #$00            ; pitch = 256
@@ -9856,9 +9850,6 @@ beeploop:
 
         rts
 .endproc ; PlayTone
-
-.endproc ; ActivateKeyboardMouse
-
 
 .proc KbdMouseSyncCursor
         bit     mouse_status
@@ -10048,6 +10039,9 @@ yclamp: cmp     #<kScreenHeight
 .endproc ; KbdMouseDoWindow
 
 .proc MousekeysInput
+        cmp     #CHAR_ESCAPE
+        jeq     EndMouseKeys
+
         cmp     #CHAR_UP
         bne     not_up
 
