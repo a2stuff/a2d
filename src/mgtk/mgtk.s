@@ -4472,6 +4472,7 @@ cursor_throttle:
         bit     use_interrupts
         bpl     :+
 
+        .assert kKeyboardMouseStateInactive = 0, error, "kKeyboardMouseStateInactive must be 0"
         lda     kbd_mouse_state
         bne     :+
         dec     cursor_throttle
@@ -4492,6 +4493,7 @@ cursor_throttle:
         lda     #0
         sta     mouse_status
 
+        .assert kKeyboardMouseStateInactive = 0, error, "kKeyboardMouseStateInactive must be 0"
 :       lda     kbd_mouse_state
         beq     :+
         jsr     HandleKeyboardMouse
@@ -5238,13 +5240,18 @@ irq_entry:
         lda     mouse_status    ; bit 7 = is down, bit 6 = was down, still down
         asl     a
         eor     mouse_status
-        bmi     :+              ; minus = (is down & !was down)
+        bmi     mouse           ; N = (is down & !was down)
+        bcs     end             ; C = is down
 
-        bcs     end             ; minus = is down
+        ;; --------------------------------------------------
+        ;; Keyboard event?
+
         bit     check_kbd_flag
-        bpl     :+
+        bpl     mouse
+
+        .assert kKeyboardMouseStateInactive = 0, error, "kKeyboardMouseStateInactive must be 0"
         lda     kbd_mouse_state
-        bne     :+
+        bne     mouse
 
         lda     KBD
         bpl     end             ; no key
@@ -5258,7 +5265,11 @@ irq_entry:
         sta     input::state
         bne     put_key_event   ; always
 
-:       bcc     up
+        ;; --------------------------------------------------
+        ;; Mouse event?
+
+mouse:
+        bcc     up
         lda     input::modifiers
         beq     :+
         lda     #MGTK::EventKind::apple_key
@@ -9751,7 +9762,7 @@ stashed_addr:  .addr     0
 
 
 .proc KbdMouseMousekeys
-        jsr     ComputeModifiers ; C=_ A=____ __SO
+        jsr     ComputeModifiers  ; C=_ A=____ __SO
         ror     a                 ; C=O A=____ ___S
         ror     a                 ; C=S A=O___ ____
         ror     kbd_mouse_status  ; shift solid apple into bit 7 of kbd_mouse_status
