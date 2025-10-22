@@ -27,6 +27,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Desk Accessories
 
+* About This Apple II: Add accessories to IIgs bitmap.
 
 ### Misc
 
