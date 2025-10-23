@@ -26,8 +26,7 @@
     .ifblank ident
         .error "CLEAR_BIT7_FLAG without identifier!"
     .endif
-        clc
-        ror     ident
+        lsr     ident
 .endmacro
 
 .macro ENTRY_POINTS_FOR_BIT7_FLAG ep_set, ep_clear, flag_name

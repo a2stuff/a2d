@@ -60,7 +60,7 @@ JT_GET_TICKS:           jmp     GetTickCount            ; *
         ASSERT_EQUALS ::JUMP_TABLE_LAST, *
 
 .macro PROC_USED_IN_OVERLAY
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, .sprintf("Routine used by overlays in overlay zone (at $%04X)", *)
 .endmacro
 
 ;;; ============================================================
@@ -13055,6 +13055,36 @@ ok:     return8 #0
 .endproc ; IsPathPrefixOf
 
 ;;; ============================================================
+;;; "About" dialog
+
+.proc AboutDialogProc
+
+        MGTK_CALL MGTK::OpenWindow, winfo_about_dialog
+        lda     #winfo_about_dialog::kWindowId
+        jsr     SafeSetPortFromWindowId
+        param_call DrawDialogFrame, aux::about_dialog_frame_rect
+        jsr     SetPenModeXOR
+        param_call DrawDialogTitle, aux::str_about1
+        param_call DrawDialogLabel, 1 | DDL_CENTER, aux::str_about2
+        param_call DrawDialogLabel, 2 | DDL_CENTER, aux::str_about3
+        param_call DrawDialogLabel, 3 | DDL_CENTER, aux::str_about4
+        param_call DrawDialogLabel, 5 | DDL_CENTER, aux::str_about5
+        param_call DrawDialogLabel, 6 | DDL_CENTER, aux::str_about6
+        param_call DrawDialogLabel, 7 | DDL_CENTER, aux::str_about7
+        param_call DrawDialogLabel, 9, aux::str_about8
+        param_call DrawDialogLabel, 9 | DDL_RIGHT, aux::str_about9
+
+    DO
+        jsr     SystemTask
+        jsr     GetNextEvent
+        BREAK_IF A = #MGTK::EventKind::button_down
+    WHILE A <> #MGTK::EventKind::key_down
+
+        MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
+        jmp     ClearUpdates ; following CloseWindow
+.endproc ; AboutDialogProc
+
+;;; ============================================================
 ;;; Dynamically load parts of Desktop
 
 ;;; Call `LoadDynamicRoutine` or `RestoreDynamicRoutine`
@@ -13601,36 +13631,6 @@ allow:  clc
 ignore: sec
         rts
 .endproc ; IsFilenameChar
-
-;;; ============================================================
-;;; "About" dialog
-
-.proc AboutDialogProc
-
-        MGTK_CALL MGTK::OpenWindow, winfo_about_dialog
-        lda     #winfo_about_dialog::kWindowId
-        jsr     SafeSetPortFromWindowId
-        param_call DrawDialogFrame, aux::about_dialog_frame_rect
-        jsr     SetPenModeXOR
-        param_call DrawDialogTitle, aux::str_about1
-        param_call DrawDialogLabel, 1 | DDL_CENTER, aux::str_about2
-        param_call DrawDialogLabel, 2 | DDL_CENTER, aux::str_about3
-        param_call DrawDialogLabel, 3 | DDL_CENTER, aux::str_about4
-        param_call DrawDialogLabel, 5 | DDL_CENTER, aux::str_about5
-        param_call DrawDialogLabel, 6 | DDL_CENTER, aux::str_about6
-        param_call DrawDialogLabel, 7 | DDL_CENTER, aux::str_about7
-        param_call DrawDialogLabel, 9, aux::str_about8
-        param_call DrawDialogLabel, 9 | DDL_RIGHT, aux::str_about9
-
-    DO
-        jsr     SystemTask
-        jsr     GetNextEvent
-        BREAK_IF A = #MGTK::EventKind::button_down
-    WHILE A <> #MGTK::EventKind::key_down
-
-        MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
-        jmp     ClearUpdates ; following CloseWindow
-.endproc ; AboutDialogProc
 
 ;;; ============================================================
 
