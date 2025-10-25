@@ -958,6 +958,9 @@ remainder:      .word   0               ; (out)
 
 ;;; ============================================================
 
+;;; Always tracks the front window, or 0 if none. Updated when a
+;;; window is opened (via `MGTK::OpenWindow`), closed (via
+;;; `MGTK::FrontWindow`), or activated (via `MGTK::SelectWindow`).
 active_window_id:
         .byte   0
 

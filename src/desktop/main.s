@@ -1300,12 +1300,8 @@ tmp_path_buf:
 ;;; Launch file (File > Open, Selector menu, or double-click)
 ;;; Inputs: Path in `src_path_buf` (a.k.a. `INVOKER_PREFIX`)
 
-.proc LaunchFileWithPath
-        clc
-        bcc     :+              ; always
-sys_disk:
-        sec
-:       ror     sys_prompt_flag
+.proc LaunchFileWithPathImpl
+        ENTRY_POINTS_FOR_BIT7_FLAG sys_disk, normal_disk, sys_prompt_flag
 
         jsr     SetCursorWatch  ; before invoking
 
@@ -1577,8 +1573,9 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 
-.endproc ; LaunchFileWithPath
-LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
+.endproc ; LaunchFileWithPathImpl
+LaunchFileWithPathOnSystemDisk := LaunchFileWithPathImpl::sys_disk
+LaunchFileWithPath := LaunchFileWithPathImpl::normal_disk
 
 ;;; ============================================================
 
@@ -5145,10 +5142,11 @@ alert:  jmp     ShowAlert
 
 .proc AddIconToSelection
         sta     icon_param
+        pha
         ITK_CALL IconTK::HighlightIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
 
-        lda     icon_param
+        pla
         FALL_THROUGH_TO AddToSelectionList
 .endproc ; AddIconToSelection
 
@@ -5593,12 +5591,8 @@ beyond:
         ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
         copy8   #0, window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
 
-        ;; Was it the active window?
-        lda     cached_window_id
-    IF A = active_window_id
-        ;; Yes, record the new one
+        ;; Record the new active window
         MGTK_CALL MGTK::FrontWindow, active_window_id
-    END_IF
 
         jsr     ClearUpdates ; following CloseWindow above
 
@@ -5812,33 +5806,32 @@ no_win:
         inx                     ; 0-based to 1-based
 
         txa
-        jsr     LoadWindowEntryTable
+        jsr     LoadWindowEntryTable ; sets `cached_window_id`
 
-        ;; Update View and other menus
         inc     num_open_windows
 
+        ;; Initial "View By" setting
         CALL    ReadSetting, X=#DeskTopSettings::default_view
-        sta     initial_view_by
+        ldx     cached_window_id
+        sta     win_view_by_table-1,x ; default
 
         lda     icon_param
     IF NC                       ; no source icon, use default
         jsr     GetIconWindow
       IF NOT_ZERO               ; not windowed, use default
         tax
-        copy8   win_view_by_table-1,x, initial_view_by
+        lda     win_view_by_table-1,x
+        ldx     cached_window_id
+        sta     win_view_by_table-1,x ; override by parent window
       END_IF
     END_IF
 
-        ldx     cached_window_id
-        initial_view_by := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     win_view_by_table-1,x
+        lda     icon_param ; set to `kWindowToDirIconNone` if opening via path
+    IF POS
+        jsr     MarkIconDimmed
+    END_IF
 
-        ;; This ensures `ptr` points at IconEntry (real or virtual)
-        ;; and marks/paints the icon (if there is one) as dimmed.
-        jsr     _UpdateIcon
-
-        ;; Set path (using `ptr`), size, contents, and volume free/used.
+        ;; Set path, name, size, contents, and volume free/used.
         jsr     _PrepareNewWindow
 
         ;; Create the window
@@ -5849,14 +5842,15 @@ no_win:
         jsr     DrawCachedWindowHeaderAndEntries
         jmp     ScrollUpdate
 
-;;; Common code to update the dir (vol/folder) icon.
-;;; * If `icon_param` is valid:
-;;;   Points `ptr` at IconEntry, marks it open and repaints it, and sets `ptr`.
-;;; * Otherwise:
-;;;   Points `ptr` at a virtual IconEntry, to allow referencing the icon name.
-.proc _UpdateIcon
-        lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
-        jpl     MarkIconDimmed
+;;; ------------------------------------------------------------
+;;; Set up path and coords for new window, contents and free/used.
+;;; Inputs: New window id in `cached_window_id`, `src_path_buf` has full path
+;;; Outputs: Winfo configured, window path table entry set
+
+.proc _PrepareNewWindow
+
+        ;; --------------------------------------------------
+        ;; Prepare window title
 
         ;; Find last '/'
         ldy     src_path_buf
@@ -5866,7 +5860,7 @@ no_win:
         dey
     WHILE POS
 
-        ;; Start building string
+        ;; Copy to `filename_buf`
         ldx     #0
     DO
         iny
@@ -5875,42 +5869,20 @@ no_win:
     WHILE Y <> src_path_buf
         stx     filename_buf
 
-        ;; Adjust ptr as if it's pointing at an IconEntry
-        copy16  #filename_buf - IconEntry::name, ptr
-        rts
-.endproc ; _UpdateIcon
-
-;;; ------------------------------------------------------------
-;;; Set up path and coords for new window, contents and free/used.
-;;; Inputs: IconEntry pointer in $06, new window id in `cached_window_id`,
-;;;         `src_path_buf` has full path
-;;; Outputs: Winfo configured, window path table entry set
-
-.proc _PrepareNewWindow
-        icon_ptr := $06
-
-        ;; Copy icon name to window title
-.scope
-        name_ptr := icon_ptr
+        ;; Copy into window title
         title_ptr := $08
-
-        jsr     PushPointers
-
         CALL    GetWindowTitle, A=cached_window_id
         stax    title_ptr
 
-        add16_8 icon_ptr, #IconEntry::name, name_ptr
-
         ldy     #kMaxFilenameLength
     DO
-        copy8   (name_ptr),y, (title_ptr),y
+        copy8   filename_buf,y, (title_ptr),y
         dey
     WHILE POS
 
-        jsr     PopPointers
-.endscope
-
         ;; --------------------------------------------------
+        ;; Prepare path
+
         path_ptr := $08
 
         ;; Copy previously composed path into window path
