@@ -73,12 +73,13 @@
 
 .macro __SET_BOPS__ bop1, bop2
   .undef __flow_branchOp1__
-  .undef __flow_branchOp2__
   .define __flow_branchOp1__ bop1
+  .undef __flow_branchOp2__
   .define __flow_branchOp2__ bop2
 .endmacro
 
 .macro __SET_COP__ reg, cop
+  .undef __flow_register_name__
   .define __flow_register_name__ reg
   .undef __flow_compareOp__
   .define __flow_compareOp__ cop
@@ -114,6 +115,7 @@
   __flow_break_loop_flag__ .set 1
 .endmacro
 
+::__flow_expr_type_error__ = 0
 ::__flow_expr_type_flag_test__ = 1
 ::__flow_expr_type_comparison__ = 2
 ::__flow_expr_type_in_list__ = 3
@@ -121,7 +123,9 @@
 
 ;;; FUTURE: Actually look at multiple expressions
 .macro _FLOW_PARSE_EXPR_LOOP expr, tindex
+  .undef __flow_token__
   .define __flow_token__ .mid(tindex, 1, {expr})
+  .undef __flow_next_token__
   .define __flow_next_token__ .mid(tindex+1, 1, {expr})
 
   .if .xmatch({__flow_token__}, NOT)
@@ -182,27 +186,27 @@
       __RESULT_COMPARISON__ ">=", BCS, BCC
     .elseif .xmatch({__flow_next_token__}, >)
       .error .sprintf("%s: Greater-than operator ('>') not supported", __flow_statement__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .elseif .xmatch({__flow_next_token__}, <=)
       .error .sprintf("%s: Less-than-or-equal operator ('<=') not supported", __flow_statement__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .else
       .error .sprintf("%s: No operator match after register %s", __flow_statement__, __flow_register_name__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .endif
 
     .undef __flow_comparison_operand__
     .define __flow_comparison_operand__ .mid(__flow_current_index__+2, 9999, {expr})
 
-    .undef __flow_register_name__
-
   .else
     .error .sprintf("%s: No expression match", __flow_statement__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
     .exitmacro
   .endif
 
-  .undef __flow_token__
-  .undef __flow_next_token__
 .endmacro
 
 .macro _FLOW_PARSE_EXPR expr, reg, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
@@ -213,6 +217,9 @@
   .define __flow_flag_test_name__ __nothing__ ; string, e.g. "CS"
   .define __flow_comparison_operand__ __nothing__ ; token list, e.g. var+Type::member
   .define __flow_comparison_operator_name__ __nothing__ ; string, e.g. ">="
+  .define __flow_token__ __nothing__
+  .define __flow_next_token__ __nothing__
+  .define __flow_register_name__ __nothing__
 
         ;; Numeric variables set during expression parsing
   __flow_expr_type__ .set 0
@@ -221,6 +228,7 @@
         ;; Parse expression
   .ifblank expr
     .error .sprintf("%s: empty expression", __flow_statement__)
+    __flow_expr_type__ .set ::__flow_expr_type_error__
     .exitmacro
   .endif
 
@@ -236,25 +244,30 @@
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
     .if .tcount({expr}) > __flow_current_index__ + 1
       .error .sprintf("%s: Unexpected tokens after flag test '%s'", __flow_statement__, __flow_flag_test_name__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .endif
      .ifnblank reg
        .error .sprintf("%s: Unexpected arguments after flag test '%s'", __flow_statement__, __flow_flag_test_name__)
+       __flow_expr_type__ .set ::__flow_expr_type_error__
        .exitmacro
      .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
     .if .match({__flow_comparison_operand__}, 0)
       .error .sprintf("%s: Numeric literal in '%s' comparison; did you mean '#%s'?", __flow_statement__, __flow_comparison_operator_name__, .string(__flow_comparison_operand__))
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .endif
     .ifnblank reg
       .if .not(.xmatch({reg}, X) .or .xmatch({reg}, Y))
         .error .sprintf("%s: Unexpected non-index register after comparison '%s'", __flow_statement__, __flow_comparison_operator_name__)
+        __flow_expr_type__ .set ::__flow_expr_type_error__
         .exitmacro
       .endif
     .endif
     .ifnblank arg2
       .error .sprintf("%s: Unexpected arguments after comparison '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
@@ -262,17 +275,22 @@
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
     .if .not(.xmatch(.mid(0, 1, {__flow_comparison_operand__}), #))
       .error .sprintf("%s: Expected immediate 1st argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .endif
     .ifblank reg
       .error .sprintf("%s: Expected 2nd argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .elseif .not(.xmatch(.mid(0, 1, {reg}), #))
       .error .sprintf("%s: Expected immediate 2nd argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      __flow_expr_type__ .set ::__flow_expr_type_error__
       .exitmacro
     .endif
+  .elseif __flow_expr_type__ = ::__flow_expr_type_error__
+        ;; hit if an error happens before __flow_expr_type__ is set
   .else
-     .fatal "unreached"
+    .fatal "unreached"
   .endif
 .endmacro
 
@@ -283,6 +301,9 @@
   .undef __flow_flag_test_name__
   .undef __flow_comparison_operand__
   .undef __flow_comparison_operator_name__
+  .undef __flow_register_name__
+  .undef __flow_token__
+  .undef __flow_next_token__
 .endmacro
 
 .macro _FLOW_END_STATEMENT
@@ -811,16 +832,29 @@ _FLOW_DEFINE_COMPARE_MACROS_ "GE"
         ;; nothing
     .elseif .xmatch({arg2},X) .or .xmatch({arg2},Y)
         ;; Allow calling like: A=table,x
+        _CALL_SETUP
         _CALL_EXPR {arg1,arg2}
+        _CALL_CLEANUP
         _CALL_HELPER {arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
     .else
+        _CALL_SETUP
         _CALL_EXPR {arg1}
+        _CALL_CLEANUP
         _CALL_HELPER {arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
     .endif
 .endmacro
 
 ::__flow_call_load_type_register__ = 1
 ::__flow_call_load_type_flag__ = 2
+
+.macro _CALL_SETUP
+    .define __flow_opcode__ __nothing__
+    .define __flow_register_name__ __nothing__
+.endmacro
+.macro _CALL_CLEANUP
+    .undef __flow_opcode__
+    .undef __flow_register_name__
+.endmacro
 
 .macro _CALL_EXPR arg
 
@@ -833,33 +867,47 @@ _FLOW_DEFINE_COMPARE_MACROS_ "GE"
     .local @__flow_call_load_type__
 
     .if .xmatch(.left(1,{arg}), A)
+      .undef __flow_register_name__
+      .undef __flow_opcode__
       .define __flow_register_name__ "A"
       .define __flow_opcode__ LDA
       @__flow_call_load_type__ .set ::__flow_call_load_type_register__
     .elseif .xmatch(.left(1,{arg}), X)
+      .undef __flow_register_name__
+      .undef __flow_opcode__
       .define __flow_register_name__ "X"
       .define __flow_opcode__ LDX
       @__flow_call_load_type__ .set ::__flow_call_load_type_register__
     .elseif .xmatch(.left(1,{arg}), Y)
+      .undef __flow_register_name__
+      .undef __flow_opcode__
       .define __flow_register_name__ "Y"
       .define __flow_opcode__ LDY
       @__flow_call_load_type__ .set ::__flow_call_load_type_register__
     .elseif .xmatch(.left(1,{arg}), AX)
+      .undef __flow_register_name__
+      .undef __flow_opcode__
       .define __flow_register_name__ "AX"
       .define __flow_opcode__ ldax
       @__flow_call_load_type__ .set ::__flow_call_load_type_register__
     .elseif .xmatch(.left(1,{arg}), AY)
+      .undef __flow_register_name__
+      .undef __flow_opcode__
       .define __flow_register_name__ "AY"
       .define __flow_opcode__ lday
       @__flow_call_load_type__ .set ::__flow_call_load_type_register__
     .elseif .xmatch(.left(1,{arg}), XY)
+      .undef __flow_register_name__
+      .undef __flow_opcode__
       .define __flow_register_name__ "XY"
       .define __flow_opcode__ ldxy
       @__flow_call_load_type__ .set ::__flow_call_load_type_register__
     .elseif .xmatch(.left(1,{arg}), C)
+      .undef __flow_register_name__
       .define __flow_register_name__ "C"
       @__flow_call_load_type__ .set ::__flow_call_load_type_flag__
     .elseif .xmatch(.left(1,{arg}), D)
+      .undef __flow_register_name__
       .define __flow_register_name__ "D"
       @__flow_call_load_type__ .set ::__flow_call_load_type_flag__
     .else
@@ -897,15 +945,19 @@ _FLOW_DEFINE_COMPARE_MACROS_ "GE"
         .exitmacro
       .elseif .mid(2,9999,{arg})
         .if .xmatch(__flow_register_name__, "C")
+          .undef __flow_opcode__
           .define __flow_opcode__ SEC
         .elseif .xmatch(__flow_register_name__, "D")
+          .undef __flow_opcode__
           .define __flow_opcode__ SED
         .endif
       .else
         .if .xmatch(__flow_register_name__, "C")
-           .define __flow_opcode__ CLC
+          .undef __flow_opcode__
+          .define __flow_opcode__ CLC
         .elseif .xmatch(__flow_register_name__, "D")
-           .define __flow_opcode__ CLD
+          .undef __flow_opcode__
+          .define __flow_opcode__ CLD
         .endif
       .endif
 
@@ -923,10 +975,4 @@ _FLOW_DEFINE_COMPARE_MACROS_ "GE"
     .else
       .fatal "unreached"
     .endif
-
-        ;; --------------------------------------------------
-        ;; Cleanup
-
-    .undef __flow_opcode__
-    .undef __flow_register_name__
 .endmacro
