@@ -81,8 +81,7 @@ not_found_with_restore:
         jsr     restore
         FALL_THROUGH_TO not_found
 not_found:
-        clc
-        rts
+        RETURN  C=0
 
 found:
         sec
@@ -121,14 +120,12 @@ check:  lda     (ptr),y
         bne     check
 
         pla
-        sec                     ; failed
-        rts
+        RETURN  C=1             ; failed
 
 ready:  pla
         ldy     #TDREG
         sta     (ptr),y         ; actually write to the register
-        clc
-        rts
+        RETURN  C=0
 .endproc ; _SendByte
 
         ;; Read byte into A, or carry set if timed out
@@ -150,13 +147,11 @@ check:  lda     (ptr),y         ; did we get it?
         dec     counter+1
         bne     check
 
-        sec                     ; failed
-        rts
+        RETURN  C=1             ; failed
 
 ready:  ldy     #RDREG
         lda     (ptr),y         ; actually read the register
-        clc
-        rts
+        RETURN  C=0
 .endproc ; _ReadByte
 
 ;;; SSC Signature

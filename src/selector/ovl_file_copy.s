@@ -228,7 +228,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         jsr     ProcessDirectory
     END_IF
 
-        return8 #0
+        RETURN  A=#0
 .endproc ; EnumerateFiles
 
 ;;; ============================================================
@@ -309,7 +309,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     WHILE Y <> src_path
         stx     filename
 
-        param_call app::CopyRAMCardPrefix, dst_path
+        CALL    app::CopyRAMCardPrefix, AX=#dst_path
 
         rts
 .endproc ; PrepSrcAndDstPaths
@@ -405,8 +405,7 @@ progress_pattern:
 
 .proc OpenWindow
         MGTK_CALL MGTK::OpenWindow, winfo
-        lda     #winfo::kWindowId
-        jsr     app::GetWindowPort
+        CALL    app::GetWindowPort, A=#winfo::kWindowId
 
         MGTK_CALL MGTK::SetPenMode, app::notpencopy
         MGTK_CALL MGTK::SetPenSize, app::pensize_frame
@@ -414,7 +413,7 @@ progress_pattern:
         MGTK_CALL MGTK::SetPenSize, app::pensize_normal
 
         MGTK_CALL MGTK::MoveTo, download_label_pos
-        param_call DrawString, download_label_str
+        CALL    DrawString, AX=#download_label_str
         rts
 .endproc ; OpenWindow
 
@@ -429,8 +428,7 @@ remainder:      .word   0                 ; (out)
 .endparams
 
 .proc PrepWindowForCopy
-        lda     #winfo::kWindowId
-        jsr     app::GetWindowPort
+        CALL    app::GetWindowPort, A=#winfo::kWindowId
         MGTK_CALL MGTK::PaintRect, rect_clear_details
 
         MGTK_CALL MGTK::SetPenMode, app::notpencopy
@@ -446,21 +444,19 @@ remainder:      .word   0                 ; (out)
         dec     file_count+1
     END_IF
 
-        lda     #winfo::kWindowId
-        jsr     app::GetWindowPort
+        CALL    app::GetWindowPort, A=#winfo::kWindowId
 
-        ldax    file_count
-        jsr     IntToString
+        CALL    IntToString, AX=file_count
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         MGTK_CALL MGTK::MoveTo, pos_copying
-        param_call DrawString, str_copying
+        CALL    DrawString, AX=#str_copying
         MGTK_CALL MGTK::MoveTo, pos_path
         COPY_STRING pathname_src, display_path
-        param_call DrawDialogPath, display_path
+        CALL    DrawDialogPath, AX=#display_path
         MGTK_CALL MGTK::MoveTo, pos_remaining
-        param_call DrawString, str_files_remaining
-        param_call DrawString, str_from_int
-        param_call DrawString, str_spaces
+        CALL    DrawString, AX=#str_files_remaining
+        CALL    DrawString, AX=#str_from_int
+        CALL    DrawString, AX=#str_spaces
 
         sub16   total_count, file_count, progress_muldiv_params::numerator
         copy16  total_count, progress_muldiv_params::denominator
@@ -479,22 +475,19 @@ display_path:
 ;;; ============================================================
 
 .proc UpdateEnumerationProgress
-        lda     #winfo::kWindowId
-        jsr     app::GetWindowPort
+        CALL    app::GetWindowPort, A=#winfo::kWindowId
 
-        ldax    file_count
-        jsr     IntToString
+        CALL    IntToString, AX=file_count
         MGTK_CALL MGTK::MoveTo, pos_copying
-        param_call DrawString, str_files_to_copy
-        param_call DrawString, str_from_int
-        param_jump DrawString, str_spaces
+        CALL    DrawString, AX=#str_files_to_copy
+        CALL    DrawString, AX=#str_from_int
+        TAIL_CALL DrawString, AX=#str_spaces
 .endproc ; UpdateEnumerationProgress
 
 ;;; ============================================================
 
 .proc ShowInsertSourceDiskPrompt
-        lda     #AlertID::insert_source_disk
-        jsr     app::ShowAlert
+        CALL    app::ShowAlert, A=#AlertID::insert_source_disk
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
     IF ZERO                     ; `kAlertResultCancel` = 1
         jmp     app::SetCursorWatch ; try again
@@ -505,16 +498,14 @@ display_path:
 ;;; ============================================================
 
 .proc ShowDiskFullError
-        lda     #AlertID::not_enough_room
-        jsr     app::ShowAlert
+        CALL    app::ShowAlert, A=#AlertID::not_enough_room
         jmp     RestoreStackAndReturn
 .endproc ; ShowDiskFullError
 
 ;;; ============================================================
 
 .proc HandleErrorCode
-        lda     #AlertID::copy_incomplete
-        jsr     app::ShowAlert
+        CALL    app::ShowAlert, A=#AlertID::copy_incomplete
         FALL_THROUGH_TO RestoreStackAndReturn
 .endproc ; HandleErrorCode
 
@@ -524,7 +515,7 @@ display_path:
         MLI_CALL CLOSE, close_everything_params
         ldx     saved_stack
         txs
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; RestoreStackAndReturn
 
 ;;; ============================================================

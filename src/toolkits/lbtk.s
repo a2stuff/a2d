@@ -254,8 +254,7 @@ a_record        .addr
     IF NS
         lda     #0
     END_IF
-        sec                     ; force draw
-        jmp     _ScrollIntoView
+        TAIL_CALL _ScrollIntoView, C=1 ; force draw
 .endproc ; InitImpl
 
 ;;; ============================================================
@@ -284,11 +283,11 @@ coords          .tag MGTK::Point
         jsr     _FindControlIsVerticalScrollBar
     IF EQ
         jsr     _HandleListScroll
-        return8 #$FF            ; not an item
+        RETURN  A=#$FF          ; not an item
     END_IF
 
     IF A <> #MGTK::Ctl::not_a_control
-        return8 #$FF            ; not an item
+        RETURN  A=#$FF          ; not an item
     END_IF
 
         ldy     #MGTK::Winfo::window_id
@@ -303,9 +302,8 @@ coords          .tag MGTK::Point
 
         ;; Validate
     IF A >= lbr_copy + LBTK::ListBoxRecord::num_items
-        lda     #$FF
-        jsr     _SetSelectionAndNotify
-        return8 #$FF            ; not an item
+        CALL    _SetSelectionAndNotify, A=#$FF
+        RETURN  A=#$FF          ; not an item
     END_IF
 
         ;; Update selection (if different)
@@ -315,7 +313,7 @@ coords          .tag MGTK::Point
         jsr     OnNoChange
     END_IF
 
-        return8 #0              ; an item
+        RETURN  A=#0            ; an item
 .endproc ; ClickImpl
 
 ;;; ============================================================
@@ -349,8 +347,7 @@ ret:    rts
         sec
         sbc     #1
         jsr     update
-        lda     #MGTK::Part::up_arrow
-        jsr     _CheckControlRepeat
+        CALL    _CheckControlRepeat, A=#MGTK::Part::up_arrow
         beq     @repeat         ; always
     END_IF
 
@@ -368,8 +365,7 @@ ret:    rts
         clc
         adc     #1
         jsr     update
-        lda     #MGTK::Part::down_arrow
-        jsr     _CheckControlRepeat
+        CALL    _CheckControlRepeat, A=#MGTK::Part::down_arrow
         beq     @repeat         ; always
     END_IF
 
@@ -386,8 +382,7 @@ repeat:
     END_IF
         sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
         jsr     update
-        lda     #MGTK::Part::page_up
-        jsr     _CheckControlRepeat
+        CALL    _CheckControlRepeat, A=#MGTK::Part::page_up
         beq     repeat          ; always
     END_IF
 
@@ -406,8 +401,7 @@ repeat:
         ;; Assert: Y = MGTK::Winfo::vthumbmax
         lda     (winfo_ptr),y
 @do:    jsr     update
-        lda     #MGTK::Part::page_down
-        jsr     _CheckControlRepeat
+        CALL    _CheckControlRepeat, A=#MGTK::Part::page_down
         beq     @repeat         ; always
     END_IF
 
@@ -571,8 +565,7 @@ new_selection   .byte
 
 .proc _SetSelection
         pha                     ; A = new selection
-        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
-        jsr     _HighlightIndex
+        CALL    _HighlightIndex, A=lbr_copy + LBTK::ListBoxRecord::selected_index
         ldy     #LBTK::ListBoxRecord::selected_index
         pla                     ; A = new selection
         sta     (a_record),y
@@ -632,8 +625,7 @@ new_size        .byte
 
 .proc _EnableScrollbar
         ;; Reset thumb pos
-        lda     #0
-        jsr     _UpdateThumb
+        CALL    _UpdateThumb, A=#0
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_rows
         cmp     lbr_copy + LBTK::ListBoxRecord::num_items
@@ -688,8 +680,7 @@ skip:
         lda     force_draw_flag
         bmi     _Draw ; will highlight selection
 
-        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
-        jmp     _HighlightIndex
+        TAIL_CALL _HighlightIndex, A=lbr_copy + LBTK::ListBoxRecord::selected_index
 
 update:
         jmp     _UpdateThumbAndDraw
@@ -789,8 +780,7 @@ update:
 
         index := *+1
         lda     #SELF_MODIFIED_BYTE
-        ldxy    #tmp_point
-        jsr     DrawEntryProc
+        CALL    DrawEntryProc, XY=#tmp_point
 
         add16_8 tmp_point+MGTK::Point::ycoord, #kListItemHeight
 
@@ -828,8 +818,7 @@ remainder:      .word   0       ; (out)
         stax    multiply_params::number
         sty     multiply_params::numerator ; high byte remains 0
         MGTK_CALL MGTK::MulDiv, multiply_params
-        ldax    multiply_params::result
-        rts
+        RETURN  AX=multiply_params::result
 .endproc ; _Multiply
 
 ;;; ============================================================

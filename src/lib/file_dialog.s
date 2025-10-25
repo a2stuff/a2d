@@ -441,13 +441,11 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 .endproc ; _IsOpenAllowed
 
 .proc _ReturnAllowed
-        clc
-        rts
+        RETURN  C=0
 .endproc ; _ReturnAllowed
 
 .proc _ReturnNotAllowed
-        sec
-        rts
+        RETURN  C=1
 .endproc ; _ReturnNotAllowed
 
 ;;; ============================================================
@@ -457,8 +455,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     _IsRootPath
         beq     _ReturnNotAllowed
 
-        clc
-        rts
+        RETURN  C=0
 .endproc ; _IsCloseAllowed
 
 ;;; ============================================================
@@ -619,8 +616,7 @@ exit:   rts
 ;;; ============================================================
 
 .proc _CheckTypeDown
-        lda     event_params+MGTK::Event::key
-        jsr     _ToUpperCase
+        CALL    _ToUpperCase, A=event_params+MGTK::Event::key
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1
@@ -637,7 +633,7 @@ exit:   rts
         bcc     file_char
 
 not_file_char:
-        return8 #$FF
+        RETURN  A=#$FF
 
 file_char:
         ldx     type_down_buf
@@ -656,12 +652,12 @@ file_char:
       END_IF
     END_IF
 
-        return8 #0
+        RETURN  A=#0
 
 .proc _FindMatch
         lda     num_file_names
     IF ZERO
-        return8 #$FF
+        RETURN  A=#$FF
     END_IF
 
         copy8   #0, index
@@ -679,8 +675,7 @@ file_char:
 
         ;; compare strings (length >= 1)
 cloop:  iny
-        lda     ($06),y
-        jsr     _ToUpperCase
+        CALL    _ToUpperCase, A=($06),y
         cmp     type_down_buf,y
         bcc     next
         beq     :+
@@ -697,7 +692,7 @@ next:   inc     index
         lda     index
     WHILE A <> num_file_names
         dec     index
-found:  return8 index
+found:  RETURN  A=index
 
 .endproc ; _FindMatch
 
@@ -968,10 +963,10 @@ retry:  ldx     #SELF_MODIFIED_BYTE
         copy8   DEVCNT, device_num
         jmp     retry
 
-found:  param_call AdjustOnLineEntryCase, on_line_buffer
+found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
         lda     #0
         sta     path_buf
-        param_jump _AppendToPathBuf, on_line_buffer
+        TAIL_CALL _AppendToPathBuf, AX=#on_line_buffer
 .endproc ; InitPathWithDefaultDevice
 
 ;;; ============================================================
@@ -1027,8 +1022,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         pla
         sta     path_buf
 
-        clc                     ; C=0 success
-        rts
+        RETURN  C=0             ; C=0 success
 .endproc ; _AppendToPathBuf
 
 ;;; ============================================================
@@ -1075,7 +1069,7 @@ err:    jsr     _SetRootPath
         copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr
 
 do_entry:
-        param_call_indirect AdjustFileEntryCase, ptr
+        CALL    AdjustFileEntryCase, AX=ptr
 
         ldy     #FileEntry::storage_type_name_length
         lda     (ptr),y
@@ -1087,8 +1081,7 @@ do_entry:
         sta     file_list_index,x
 
         ;; Invisible?
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowInvisible
     IF ZERO
         ldy     #FileEntry::access
@@ -1125,8 +1118,7 @@ not_dir:
         and     #NAME_LENGTH_MASK
         sta     (ptr),y
 
-        lda     entry_index
-        jsr     _CopyIntoNthFilename
+        CALL    _CopyIntoNthFilename, A=entry_index
 
         inc     entry_index
 
@@ -1138,8 +1130,7 @@ done_entry:
 
 close:  MLI_CALL CLOSE, close_params
         jsr     _SortFileNames
-        clc
-        rts
+        RETURN  C=0
 
 next:   lda     entry_in_block
     IF A <> entries_per_block
@@ -1187,10 +1178,9 @@ loop:   ldy     #0
         beq     finish          ; always
     END_IF
 
-        param_call_indirect AdjustOnLineEntryCase, ptr
+        CALL    AdjustOnLineEntryCase, AX=ptr
 
-        lda     num_file_names
-        jsr     _CopyIntoNthFilename
+        CALL    _CopyIntoNthFilename, A=num_file_names
 
 
         ldx     num_file_names
@@ -1211,8 +1201,7 @@ finish:
         CLEAR_BIT7_FLAG cursor_ibeam_flag
 .endif
 
-        clc
-        rts
+        RETURN  C=0
 .endproc ; _ReadDrives
 
 ;;; ============================================================
@@ -1271,7 +1260,7 @@ finish:
         sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
-        param_call _DrawStringCentered, file_dialog_res::filename_buf
+        CALL    _DrawStringCentered, AX=#file_dialog_res::filename_buf
     END_IF
 
         ;; --------------------------------------------------
@@ -1307,7 +1296,7 @@ finish:
         sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
-        param_call _DrawStringCentered, file_dialog_res::filename_buf
+        CALL    _DrawStringCentered, AX=#file_dialog_res::filename_buf
     END_IF
 
         rts
@@ -1359,8 +1348,7 @@ finish:
         ldy     outer
         swap8   file_list_index,x, file_list_index,y
 
-        lda     outer
-        jsr     _CalcPtr
+        CALL    _CalcPtr, A=outer
         stax    ptr2
        END_IF
 
@@ -1388,11 +1376,9 @@ finish:
         copy8   (ptr2),y, len2
         iny
     DO
-        lda     (ptr2),y
-        jsr     _ToUpperCase
+        CALL    _ToUpperCase, A=(ptr2),y
         sta     char
-        lda     (ptr1),y
-        jsr     _ToUpperCase
+        CALL    _ToUpperCase, A=(ptr1),y
         char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     ret             ; differ at Yth character
@@ -1450,7 +1436,7 @@ loop:
         add16_8 curr_ptr, #16
         jmp     loop
 
-failed: return8 #$FF
+failed: RETURN  A=#$FF
 
         ;; Now find index
 found:  ldx     num_file_names
@@ -1522,7 +1508,7 @@ selected_index := file_dialog_res::listbox_rec::selected_index
     WHILE POS
         copy16  #kListViewNameX, file_dialog_res::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
-        param_call DrawString, file_dialog_res::filename_buf
+        CALL    DrawString, AX=#file_dialog_res::filename_buf
 
         ;; Folder glyph?
         copy16  #kListViewIconX, file_dialog_res::item_pos+MGTK::Point::xcoord

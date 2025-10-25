@@ -32,8 +32,7 @@ datetime:
         copy16  #DATELO, STARTLO
         copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
         copy16  #datetime, DESTINATIONLO
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; GetDateTime
 
 ;;; ============================================================
@@ -170,7 +169,7 @@ last:   .tag    DateTime
 
 .proc Update
         copy16  #parsed, $A
-        param_call ParseDatetime, datetime
+        CALL    ParseDatetime, AX=#datetime
 
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
@@ -251,8 +250,7 @@ min_offset:
         lda     MACHID
         and     #kMachIDHasClock
     IF ZERO
-        lda     #ERR_DEVICE_NOT_CONNECTED
-        jmp     JUMP_TABLE_SHOW_ALERT
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#ERR_DEVICE_NOT_CONNECTED
     END_IF
 
         JSR_TO_AUX aux::Init

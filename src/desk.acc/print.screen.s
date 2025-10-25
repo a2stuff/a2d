@@ -72,14 +72,12 @@ sig_bytes:
 ret:    rts
 
 no_device:
-        lda     #ERR_DEVICE_NOT_CONNECTED
-        jmp     JUMP_TABLE_SHOW_ALERT
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#ERR_DEVICE_NOT_CONNECTED
 
 .proc SendSpacing
         ldy     #0
     DO
-        lda     spacing_sequence,y
-        jsr     COut
+        CALL    COut, A=spacing_sequence,y
         iny
     WHILE Y <> #kLenSpacingSequence
         rts
@@ -88,8 +86,7 @@ no_device:
 .proc SendRestoreState
         ldy     #0
     DO
-        lda     restore_sequence,y
-        jsr     COut
+        CALL    COut, A=restore_sequence,y
         iny
     WHILE Y <> #kLenRestoreSequence
         rts
@@ -98,8 +95,7 @@ no_device:
 .proc SendInitGraphics
         ldx     #0
     DO
-        lda     init_graphics,x
-        jsr     COut
+        CALL    COut, A=init_graphics,x
         inx
     WHILE X <> #kLenInitGraphics
         rts
@@ -125,8 +121,7 @@ col_loop:
 
         ;; Accumulate 8 pixels
     DO
-        lda     y_coord
-        jsr     ComputeHBASL    ; Row address in screen
+        CALL    ComputeHBASL, A=y_coord ; Row address in screen
 
         lda     col_num
         lsr     a               ; Even or odd column?
@@ -178,8 +173,7 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
 
 .proc PrintScreen
         ;; Init printer
-        ldy     #SSC::PInit
-        jsr     GoCard
+        CALL    GoCard, Y=#SSC::PInit
 
         jsr     SendSpacing
 
@@ -188,19 +182,15 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
         ;; Print a row (560x8), CR+LF
     DO
         jsr     SendRow
-        lda     #CHAR_RETURN
-        jsr     COut
-        lda     #CHAR_DOWN
-        jsr     COut
+        CALL    COut, A=#CHAR_RETURN
+        CALL    COut, A=#CHAR_DOWN
 
         copy8   y_coord, y_row
     WHILE A < #kScreenHeight
 
         ;; Finish up
-        lda     #CHAR_RETURN
-        jsr     COut
-        lda     #CHAR_DOWN
-        jsr     COut
+        CALL    COut, A=#CHAR_RETURN
+        CALL    COut, A=#CHAR_DOWN
 
         jsr     SendRestoreState
 
@@ -249,8 +239,7 @@ vector: jmp     SLOT1                    ; self-modified
         stx     xsave
         sty     ysave
 
-        ldy     #SSC::PWrite
-        jsr     GoCard
+        CALL    GoCard, Y=#SSC::PWrite
 
         lda     asave
         ldx     xsave

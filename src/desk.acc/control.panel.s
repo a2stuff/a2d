@@ -52,8 +52,7 @@
 
 .proc RunDA
         jsr     Init
-        lda     dialog_result
-        rts
+        RETURN  A=dialog_result
 .endproc ; RunDA
 
 ;;; High bit set when anything changes.
@@ -633,54 +632,46 @@ shortcut_table_addr_hi:
 
         MGTK_CALL MGTK::InRect, dblclick_button1::rect
     IF NOT_ZERO
-        lda     #1
-        jmp     HandleDblclickClick
+        TAIL_CALL HandleDblclickClick, A=#1
     END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button2::rect
     IF NOT_ZERO
-        lda     #2
-        jmp     HandleDblclickClick
+        TAIL_CALL HandleDblclickClick, A=#2
     END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button3::rect
     IF NOT_ZERO
-        lda     #3
-        jmp     HandleDblclickClick
+        TAIL_CALL HandleDblclickClick, A=#3
     END_IF
 
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, tracking_slow_button::rect
     IF NOT_ZERO
-        lda     #0
-        jmp     HandleTrackingClick
+        TAIL_CALL HandleTrackingClick, A=#0
     END_IF
 
         MGTK_CALL MGTK::InRect, tracking_fast_button::rect
     IF NOT_ZERO
-        lda     #1
-        jmp     HandleTrackingClick
+        TAIL_CALL HandleTrackingClick, A=#1
     END_IF
 
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, caret_blink_button1::rect
     IF NOT_ZERO
-        lda     #1
-        jmp     HandleCaretBlinkClick
+        TAIL_CALL HandleCaretBlinkClick, A=#1
     END_IF
 
         MGTK_CALL MGTK::InRect, caret_blink_button2::rect
     IF NOT_ZERO
-        lda     #2
-        jmp     HandleCaretBlinkClick
+        TAIL_CALL HandleCaretBlinkClick, A=#2
     END_IF
 
         MGTK_CALL MGTK::InRect, caret_blink_button3::rect
     IF NOT_ZERO
-        lda     #3
-        jmp     HandleCaretBlinkClick
+        TAIL_CALL HandleCaretBlinkClick, A=#3
     END_IF
 
         jmp     InputLoop
@@ -770,10 +761,7 @@ loop:   ldx     screentowindow_params::windowx
     IF NE
         sta     pattern,y
 
-        ldx     screentowindow_params::windowx
-        ldy     screentowindow_params::windowy
-        lda     flag
-        jsr     DrawBit
+        CALL    DrawBit, X=screentowindow_params::windowx, Y=screentowindow_params::windowy, A=flag
 
         jsr     DrawPreview
     END_IF
@@ -834,8 +822,7 @@ lasty:  .byte   0
 ;;; ============================================================
 
 .proc InitDblclick
-        ldx     #DeskTopSettings::dblclick_speed
-        jsr     ReadSettingWord
+        CALL    ReadSettingWord, X=#DeskTopSettings::dblclick_speed
         stax    dblclick_speed
 
         ;; Find matching index in word table, or 0
@@ -868,12 +855,8 @@ dblclick_speed: .word   0
 
         copy16  dblclick_speed_table,x, dblclick_speed
 
-        ldx     #DeskTopSettings::dblclick_speed
-        lda     dblclick_speed
-        jsr     WriteSetting
-        ldx     #DeskTopSettings::dblclick_speed+1
-        lda     dblclick_speed+1
-        jsr     WriteSetting
+        CALL    WriteSetting, X=#DeskTopSettings::dblclick_speed, A=dblclick_speed
+        CALL    WriteSetting, X=#DeskTopSettings::dblclick_speed+1, A=dblclick_speed+1
 
         jsr     MarkDirty
 
@@ -890,8 +873,7 @@ dblclick_speed: .word   0
         ;; Update Settings
 
         pha
-        ldx     #DeskTopSettings::mouse_tracking
-        jsr     WriteSetting
+        CALL    WriteSetting, X=#DeskTopSettings::mouse_tracking
         jsr     MarkDirty
 
         ;; --------------------------------------------------
@@ -954,8 +936,7 @@ dblclick_speed: .word   0
 
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
     DO
-        lda     pattern - DeskTopSettings::pattern,x
-        jsr     WriteSetting
+        CALL    WriteSetting, A=pattern - DeskTopSettings::pattern,x
         dex
     WHILE X <> #AS_BYTE(DeskTopSettings::pattern-1)
 
@@ -1027,7 +1008,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Double-Click Speed
 
         MGTK_CALL MGTK::MoveTo, dblclick_speed_label_pos
-        param_call DrawString, dblclick_speed_label_str
+        CALL    DrawString, AX=#dblclick_speed_label_str
 
 
         ;; Arrows
@@ -1054,16 +1035,15 @@ notpencopy:     .byte   MGTK::notpencopy
         BTK_CALL BTK::RadioDraw, dblclick_button2
         BTK_CALL BTK::RadioDraw, dblclick_button3
 
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF NOT_ZERO
         MGTK_CALL MGTK::MoveTo, dblclick_shortcut1_label_pos
-        param_call DrawString, dblclick_shortcut1_label_str
+        CALL    DrawString, AX=#dblclick_shortcut1_label_str
         MGTK_CALL MGTK::MoveTo, dblclick_shortcut2_label_pos
-        param_call DrawString, dblclick_shortcut2_label_str
+        CALL    DrawString, AX=#dblclick_shortcut2_label_str
         MGTK_CALL MGTK::MoveTo, dblclick_shortcut3_label_pos
-        param_call DrawString, dblclick_shortcut3_label_str
+        CALL    DrawString, AX=#dblclick_shortcut3_label_str
     END_IF
 
 
@@ -1075,7 +1055,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Mouse Tracking Speed
 
         MGTK_CALL MGTK::MoveTo, mouse_tracking_label_pos
-        param_call DrawString, mouse_tracking_label_str
+        CALL    DrawString, AX=#mouse_tracking_label_str
 
         BTK_CALL BTK::RadioDraw, tracking_slow_button
         BTK_CALL BTK::RadioDraw, tracking_fast_button
@@ -1087,34 +1067,33 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Caret Blinking
 
         MGTK_CALL MGTK::MoveTo, caret_blink1_label_pos
-        param_call DrawString, caret_blink1_label_str
+        CALL    DrawString, AX=#caret_blink1_label_str
 
         MGTK_CALL MGTK::MoveTo, caret_blink2_label_pos
-        param_call DrawString, caret_blink2_label_str
+        CALL    DrawString, AX=#caret_blink2_label_str
 
         MGTK_CALL MGTK::PaintBitsHC, caret_blink_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, caret_blink_slow_label_pos
-        param_call DrawString, caret_blink_slow_label_str
+        CALL    DrawString, AX=#caret_blink_slow_label_str
 
         MGTK_CALL MGTK::MoveTo, caret_blink_fast_label_pos
-        param_call DrawStringRight, caret_blink_fast_label_str
+        CALL    DrawStringRight, AX=#caret_blink_fast_label_str
 
         BTK_CALL BTK::RadioDraw, caret_blink_button1
         BTK_CALL BTK::RadioDraw, caret_blink_button2
         BTK_CALL BTK::RadioDraw, caret_blink_button3
         jsr     UpdateCaretBlinkButtons
 
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF NOT_ZERO
         MGTK_CALL MGTK::MoveTo, caret_blink_button1_shortcut_label_pos
-        param_call DrawString, caret_blink_button1_shortcut_label_str
+        CALL    DrawString, AX=#caret_blink_button1_shortcut_label_str
         MGTK_CALL MGTK::MoveTo, caret_blink_button2_shortcut_label_pos
-        param_call DrawStringCentered, caret_blink_button2_shortcut_label_str
+        CALL    DrawStringCentered, AX=#caret_blink_button2_shortcut_label_str
         MGTK_CALL MGTK::MoveTo, caret_blink_button3_shortcut_label_pos
-        param_call DrawStringRight, caret_blink_button3_shortcut_label_str
+        CALL    DrawStringRight, AX=#caret_blink_button3_shortcut_label_str
     END_IF
 
 
@@ -1128,11 +1107,9 @@ arrow_num:
 
 .proc ZToButtonState
     IF NOT_ZERO
-        lda     #BTK::kButtonStateNormal
-        rts
+        RETURN  A=#BTK::kButtonStateNormal
     END_IF
-        lda     #BTK::kButtonStateChecked
-        rts
+        RETURN  A=#BTK::kButtonStateChecked
 .endproc ; ZToButtonState
 
 .proc UpdateDblclickButtons
@@ -1158,15 +1135,13 @@ arrow_num:
 .endproc ; UpdateDblclickButtons
 
 .proc UpdateTrackingButtons
-        ldx     #DeskTopSettings::mouse_tracking
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::mouse_tracking
         cmp     #0
         jsr     ZToButtonState
         sta     tracking_slow_button::state
         BTK_CALL BTK::RadioUpdate, tracking_slow_button
 
-        ldx     #DeskTopSettings::mouse_tracking
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::mouse_tracking
         cmp     #1
         jsr     ZToButtonState
         sta     tracking_fast_button::state
@@ -1199,8 +1174,7 @@ arrow_num:
 .endproc ; UpdateCaretBlinkButtons
 
 .proc UpdateRGBCheckbox
-        ldx     #DeskTopSettings::rgb_color
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::rgb_color
         and     #$80
         .assert BTK::kButtonStateChecked = $80, error, "const mismatch"
         sta     rgb_color_button::state
@@ -1578,8 +1552,7 @@ caret_blink_counter:
         .word   kDefaultCaretBlinkSpeed
 
 .proc InitCaretBlink
-        ldx     #DeskTopSettings::caret_blink_speed
-        jsr     ReadSettingWord
+        CALL    ReadSettingWord, X=#DeskTopSettings::caret_blink_speed
         stax    caret_blink_speed
 
         ;; Find matching index in word table, or 0
@@ -1612,12 +1585,8 @@ caret_blink_speed: .word   0
 
         copy16  caret_blink_speed_table,x, caret_blink_speed
 
-        ldx     #DeskTopSettings::caret_blink_speed
-        lda     caret_blink_speed
-        jsr     WriteSetting
-        ldx     #DeskTopSettings::caret_blink_speed+1
-        lda     caret_blink_speed+1
-        jsr     WriteSetting
+        CALL    WriteSetting, X=#DeskTopSettings::caret_blink_speed, A=caret_blink_speed
+        CALL    WriteSetting, X=#DeskTopSettings::caret_blink_speed+1, A=caret_blink_speed+1
 
         jsr     MarkDirty
         jsr     ResetCaretBlinkCounter
@@ -1628,9 +1597,8 @@ caret_blink_speed: .word   0
 caret_blink_speed: .word   0
 .endproc ; HandleCaretBlinkClick
 
-.proc ResetCaretBlinkCounter
-        ldx     #DeskTopSettings::caret_blink_speed
-        jsr     ReadSettingWord
+        .proc ResetCaretBlinkCounter
+        CALL    ReadSettingWord, X=#DeskTopSettings::caret_blink_speed
         stax    caret_blink_counter
         rts
 .endproc ; ResetCaretBlinkCounter
@@ -1661,8 +1629,7 @@ done:   rts
 ;;; ============================================================
 
 .proc HandleRGBClick
-        ldx     #DeskTopSettings::rgb_color
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::rgb_color
         eor     #$80
         jsr     WriteSetting
         jsr     MarkDirty

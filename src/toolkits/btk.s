@@ -199,7 +199,7 @@ ret:
         ;; If disabled, return canceled
         bit     state
     IF NS
-        return8 #$80
+        RETURN  A=#$80
     END_IF
 
         jsr     _SetPort
@@ -227,8 +227,7 @@ skip_port:
         ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
         sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
 
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF NOT_ZERO
         ;; Draw the string (left aligned)
@@ -276,8 +275,7 @@ skip_port:
 
 ;;; Input: `a_shortcut` points at string
 .proc _DrawShortcut
-        ldax    a_shortcut
-        jmp     _DrawString
+        TAIL_CALL _DrawString, AX=a_shortcut
 .endproc ; _DrawShortcut
 
 ;;; Input: `a_label` points at string
@@ -306,8 +304,7 @@ END_PARAM_BLOCK
 ;;; Inputs: `a_shortcut` points at string
 ;;; Output: A,X = width
 .proc _MeasureShortcut
-        ldax    a_shortcut
-        jmp     _MeasureString
+        TAIL_CALL _MeasureString, AX=a_shortcut
 .endproc ; _MeasureShortcut
 
 ;;; Inputs: `a_label` points at string
@@ -338,8 +335,7 @@ END_PARAM_BLOCK
         sta     tw_params::textlen
         inc16   tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
-        ldax    tw_params::width
-        rts
+        RETURN  AX=tw_params::width
 .endproc ; _MeasureString
 
 ;;; ============================================================
@@ -369,7 +365,7 @@ UNSUPPRESS_SHADOW_WARNING
         ;; If disabled, return canceled
         bit     state
     IF NS
-        return8 #$80
+        RETURN  A=#$80
     END_IF
 
         jsr     _SetPort
@@ -412,7 +408,7 @@ exit:   lda     down_flag       ; was depressed?
         jsr     _Invert
     END_IF
         ;; Note that we want N=0 and Z=1 if clicked, so bits<7 matter.
-        lda     down_flag
+        lda     down_flag       ; set N and Z
         rts
 .endproc ; TrackImpl
 
@@ -599,8 +595,7 @@ unchecked_cb_bitmap:
 ;;; If option is enabled, and if `a_shortcut` is not null,
 ;;; draw it and add the width to `rect`.
 .proc _MaybeDrawAndMeasureShortcut
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF NOT_ZERO
         lda     a_shortcut

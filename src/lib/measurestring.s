@@ -12,6 +12,5 @@
         sta     len
         inc16   ptr
         MGTK_CALL MGTK::TextWidth, ptr
-        ldax    result
-        rts
+        RETURN  AX=result
 .endproc ; MeasureString

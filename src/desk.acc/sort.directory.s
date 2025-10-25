@@ -95,15 +95,12 @@ start:  tsx
 
         lda     window_id
     IF ZERO
-        lda     #kErrNoWindowsOpen
-        jmp     JUMP_TABLE_SHOW_ALERT
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#kErrNoWindowsOpen
     END_IF
 
-        lda     #kDynamicRoutineRestoreBuffer
-        jsr     JUMP_TABLE_RESTORE_OVL
+        CALL    JUMP_TABLE_RESTORE_OVL, A=#kDynamicRoutineRestoreBuffer
 
-        lda     window_id
-        jmp     JUMP_TABLE_ACTIVATE_WINDOW
+        TAIL_CALL JUMP_TABLE_ACTIVATE_WINDOW, A=window_id
 .endproc ; Exit
 
 ;;; ============================================================
@@ -415,11 +412,9 @@ flag:   .byte   0
         cmp     end_block_page
         bcs     rtcs
 
-rtcc:   clc
-        rts
+rtcc:   RETURN  C=0
 
-rtcs:   sec
-        rts
+rtcs:   RETURN  C=1
 .endproc ; SetPtrToNextEntry
 
 ;;; ============================================================
@@ -478,11 +473,9 @@ rtcs:   sec
         ;; Sorting by type then name
 
         ;; SYS files with ".SYSTEM" suffix sort first
-        ldax    ptr2
-        jsr     CheckSystemFile
+        CALL    CheckSystemFile, AX=ptr2
         php                     ; save first result (in C)
-        ldax    ptr1
-        jsr     CheckSystemFile
+        CALL    CheckSystemFile, AX=ptr1
         lda     #0              ; combine both results
         rol
         plp
@@ -495,18 +488,16 @@ rtcs:   sec
     END_IF
 
         ;; DIR next
-        lda     #FT_DIRECTORY
-        jsr     CompareEntryTypesAndNames
+        CALL    CompareEntryTypesAndNames, A=#FT_DIRECTORY
         beq     ret
 
         ;; TXT files next
-        lda     #FT_TEXT
-        jsr     CompareEntryTypesAndNames
+        CALL    CompareEntryTypesAndNames, A=#FT_TEXT
         beq     ret
 
         ;; SYS files next
-sys:    lda     #FT_SYSTEM
-        jsr     CompareEntryTypesAndNames
+sys:
+        CALL    CompareEntryTypesAndNames, A=#FT_SYSTEM
         beq     ret
 
         ;; Then order by type from $FD down
@@ -516,8 +507,7 @@ sys:    lda     #FT_SYSTEM
         bne     ret
         jmp     CompareEntryTypesAndNames
 
-rtcs:   sec
-        rts
+rtcs:   RETURN  C=1
 
 rtcc:   clc
 ret:    rts
@@ -626,11 +616,9 @@ done2:  stx     match2          ; match, or $FF if none
         rts                     ; otherwise carry is order
 
         ;; No match
-        sec
-        rts
+        RETURN  C=1
 
-clear:  clc
-        rts
+clear:  RETURN  C=0
 
 match:  .byte   0
 match2: .byte   0
@@ -670,18 +658,16 @@ match2: .byte   0
         bcs     rtcs
 
 neither:
-        return8 #$FF
+        RETURN  A=#$FF
 
 type2:  .byte   0
 type1:  .byte   0
 
 rtcc:   lda     #0
-        clc
-        rts
+        RETURN  C=0
 
 rtcs:   lda     #0
-        sec
-        rts
+        RETURN  C=1
 
 type0:  .byte   0
 .endproc ; CompareEntryTypesAndNames
@@ -721,11 +707,9 @@ type0:  .byte   0
         cpx     str_system
     WHILE NE
 
-        clc
-        rts
+        RETURN  C=0
 
-fail:   sec
-        rts
+fail:   RETURN  C=1
 
 str_system:
         PASCAL_STRING ".SYSTEM"
@@ -758,8 +742,7 @@ loop:   iny
         cmp     (ptr1),y
         beq     next
         bcc     rtcc
-rtcs:   sec
-        rts
+rtcs:   RETURN  C=1
 
         len := *+1
 next:   cpy     #SELF_MODIFIED_BYTE
@@ -769,8 +752,7 @@ next:   cpy     #SELF_MODIFIED_BYTE
         cmp     len1
         beq     rtcc
         bcs     rtcs
-rtcc:   clc
-        rts
+rtcc:   RETURN  C=0
 
 len2:   .byte   0
 len1:   .byte   0

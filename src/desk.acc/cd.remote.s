@@ -334,16 +334,14 @@ ep_size = * - ep_start
         copy16  #aux::event_params, STARTLO
         copy16  #aux::event_params+ep_size-1, ENDLO
         copy16  #event_params, DESTINATIONLO
-        clc                     ; aux>main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux>main
 .endproc ; CopyEventDataToMain
 
 .proc CopyEventDataToAux
         copy16  #event_params, STARTLO
         copy16  #event_params+ep_size-1, ENDLO
         copy16  #aux::event_params, DESTINATIONLO
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; CopyEventDataToAux
 
 ;;; ============================================================
@@ -522,7 +520,7 @@ set_key:
   .if .paramcount > 1
         bit     ::cdremote::flag
     IF NS
-        param_call InvertButton, aux::.ident(.sprintf("%s_button_rect", .string(name)))
+        CALL    InvertButton, AX=#aux::.ident(.sprintf("%s_button_rect", .string(name)))
     END_IF
   .endif
 .endmacro
@@ -560,14 +558,14 @@ str_time:
 ;;; Caller is responsible for setting port.
 .proc DrawTrack
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_track
-        param_call DrawString, str_track
-        param_jump DrawString, str_track_num
+        CALL    DrawString, AX=#str_track
+        TAIL_CALL DrawString, AX=#str_track_num
 .endproc ; DrawTrack
 
 ;;; Caller is responsible for setting port.
 .proc DrawTime
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_time
-        param_jump DrawString, str_time
+        TAIL_CALL DrawString, AX=#str_time
 .endproc ; DrawTime
 
 ;;; ============================================================
@@ -589,8 +587,7 @@ str_time:
 
         copy16  #aux::buf_string, DESTINATIONLO
         add16_8 STARTLO, textlen, ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
 done:   rts
@@ -613,8 +610,7 @@ done:   rts
         copy16  ptr, STARTLO
         add16_8 STARTLO, #.sizeof(MGTK::Rect)-1, ENDLO
         copy16  #rect, DESTINATIONLO
-        clc                     ; aux>main
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=0    ; aux>main
 
         ;; Deflate
         inc16   rect+MGTK::Rect::x1
@@ -626,8 +622,7 @@ done:   rts
         copy16  #rect, STARTLO
         copy16  #rect+.sizeof(MGTK::Rect)-1, ENDLO
         copy16  #aux::tmp_rect, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         ;; Invert it
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::penXOR
@@ -657,10 +652,9 @@ MAIN:                           ; "Null" out T/M/S values
                                 ; Locate an Apple SCSI card and CDSC/CDSC+ drive
         jsr     FindHardware
 .if !FAKE_HARDWARE
-        IF CS
-        lda     #ERR_DEVICE_NOT_CONNECTED
-        jmp     JUMP_TABLE_SHOW_ALERT
-        END_IF
+    IF CS
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#ERR_DEVICE_NOT_CONNECTED
+    END_IF
 .else ; FAKE_HARDWARE
         ;;         lda     #$38            ; SEC
         lda     #$18            ; CLC
@@ -2160,34 +2154,34 @@ last_sec:
 ;;; ============================================================
 
 ToggleUIStopButton:
-        param_jump      ::InvertButton, aux::stop_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::stop_button_rect
 
 ToggleUIPlayButton:
-        param_jump      ::InvertButton, aux::play_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::play_button_rect
 
 ToggleUIEjectButton:
-        param_jump      ::InvertButton, aux::eject_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::eject_button_rect
 
 ToggleUIPauseButton:
-        param_jump      ::InvertButton, aux::pause_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::pause_button_rect
 
 ToggleUINextButton:
-        param_jump      ::InvertButton, aux::next_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::next_button_rect
 
 ToggleUIPrevButton:
-        param_jump      ::InvertButton, aux::prev_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::prev_button_rect
 
 ToggleUIScanBackButton:
-        param_jump      ::InvertButton, aux::back_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::back_button_rect
 
 ToggleUIScanFwdButton:
-        param_jump      ::InvertButton, aux::fwd_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::fwd_button_rect
 
 ToggleUILoopButton:
-        param_jump      ::InvertButton, aux::loop_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::loop_button_rect
 
 ToggleUIRandButton:
-        param_jump      ::InvertButton, aux::shuffle_button_rect
+        TAIL_CALL ::InvertButton, AX=#aux::shuffle_button_rect
 
 ;;; ============================================================
 

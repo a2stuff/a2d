@@ -50,8 +50,7 @@
 
 .proc AuxEntry
         jsr     Init
-        lda     dialog_result
-        rts
+        RETURN  A=dialog_result
 .endproc ; AuxEntry
 
 ;;; High bit set when anything changes.
@@ -68,8 +67,7 @@ dialog_result:
 ;;; Cancel any changes, restore saved proc
 .proc DoCancel
         copy8   #$00, dialog_result
-        lda     original_index
-        jsr     InstallIndex
+        CALL    InstallIndex, A=original_index
         jmp     Exit
 .endproc ; DoCancel
 
@@ -425,7 +423,7 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, alert_sound_label_pos
-        param_call DrawString, alert_sound_label_str
+        CALL    DrawString, AX=#alert_sound_label_str
 
         BTK_CALL BTK::Draw, cancel_button
         BTK_CALL BTK::Draw, ok_button
@@ -440,9 +438,7 @@ grafport_win:       .tag    MGTK::GrafPort
         bit     LCBANK2
         bit     LCBANK2
 
-        ldax    #BELLDATA
-        ldy     #kChecksumLength
-        jsr     CRC
+        CALL    CRC, AX=#BELLDATA, Y=#kChecksumLength
         sta     crc_lo
         stx     crc_hi
 
@@ -453,10 +449,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         asl
         tay
-        lda     proc_table,y
-        ldx     proc_table+1,y
-        ldy     #kChecksumLength
-        jsr     CRC
+        CALL    CRC, {AX=proc_table,y}, Y=#kChecksumLength
 
         crc_lo := *+1
         cmp     #SELF_MODIFIED_BYTE

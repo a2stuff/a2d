@@ -683,11 +683,9 @@ move:   stx     click_x
         lda     #3
 
 yep:    sta     click_y
-        sec
-        rts
+        RETURN  C=1
 
-nope:   clc
-        rts
+nope:   RETURN  C=0
 .endproc ; FindClickPiece
 
 .proc FindClickX
@@ -713,11 +711,9 @@ nope:   clc
         lda     #3
 
 yep:    sta     click_x
-        sec
-        rts
+        RETURN  C=1
 
-nope:   clc
-        rts
+nope:   RETURN  C=0
 .endproc ; FindClickX
 
 ;;; ============================================================
@@ -1042,8 +1038,7 @@ ret:    rts
     WHILE Y < #16
         rts
 
-nope:   clc
-        rts
+nope:   RETURN  C=0
 .endproc ; CheckVictory
 
 ;;; ============================================================

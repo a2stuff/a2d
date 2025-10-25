@@ -59,11 +59,9 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 
         lda     which_run_list
-        sec
-        jsr     UpdateRunListButton
+        CALL    UpdateRunListButton, C=1
         lda     copy_when
-        sec
-        jsr     DrawCopyWhenButton
+        CALL    DrawCopyWhenButton, C=1
 
         copy16  #HandleClick, file_dialog::click_handler_hook
         copy16  #HandleKey, file_dialog::key_handler_hook
@@ -90,7 +88,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
       WHILE X <> path_buf0
         sty     buffer
     END_IF
-        param_call file_dialog::UpdateListFromPathAndSelectFile, buffer
+        CALL    file_dialog::UpdateListFromPathAndSelectFile, AX=#buffer
         jmp     file_dialog::EventLoop
 
 buffer: .res 16, 0
@@ -101,13 +99,13 @@ buffer: .res 16, 0
 
 .proc DrawControls
         MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
-        param_call file_dialog::DrawLineEditLabel, enter_the_name_to_appear_label
+        CALL    file_dialog::DrawLineEditLabel, AX=#enter_the_name_to_appear_label
 
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
-        param_call main::DrawString, add_a_new_entry_to_label_str
+        CALL    main::DrawString, AX=#add_a_new_entry_to_label_str
 
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
-        param_call main::DrawString, down_load_label_str
+        CALL    main::DrawString, AX=#down_load_label_str
 
         BTK_CALL BTK::RadioDraw, primary_run_list_button
         BTK_CALL BTK::RadioDraw, secondary_run_list_button
@@ -138,8 +136,8 @@ jt_callbacks:
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, main::tmp_path_buf
 
 .proc HandleOK
-        param_call file_dialog::GetPath, path_buf0
-        param_call file_dialog::GetPath, main::tmp_path_buf
+        CALL    file_dialog::GetPath, AX=#path_buf0
+        CALL    file_dialog::GetPath, AX=#main::tmp_path_buf
 
         ;; If name is empty, use last path segment
         lda     text_input_buf
@@ -189,7 +187,7 @@ ok:     jsr     file_dialog::CloseWindow
         txs
         ldx     which_run_list
         ldy     copy_when
-        return8 #0
+        RETURN  A=#0
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
@@ -203,7 +201,7 @@ alert:  jmp     ShowAlert
         jsr     file_dialog::CloseWindow
         ldx     saved_stack
         txs
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; HandleCancel
 
 ;;; ============================================================
@@ -233,70 +231,60 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         MGTK_CALL MGTK::InRect, never_button::rect
         jne     ClickNeverCtrl
 
-        return8 #0
+        RETURN  A=#0
 .endproc ; HandleClick
 
 .proc ClickPrimaryRunListCtrl
         lda     which_run_list
     IF A <> #kRunListPrimary
-        clc
-        jsr     UpdateRunListButton
+        CALL    UpdateRunListButton, C=0
         copy8   #kRunListPrimary, which_run_list
-        sec
-        jsr     UpdateRunListButton
+        CALL    UpdateRunListButton, C=1
     END_IF
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; ClickPrimaryRunListCtrl
 
 .proc ClickSecondaryRunListCtrl
         lda     which_run_list
     IF A <> #kRunListSecondary
-        clc
-        jsr     UpdateRunListButton
+        CALL    UpdateRunListButton, C=0
         copy8   #kRunListSecondary, which_run_list
-        sec
-        jsr     UpdateRunListButton
+	CALL    UpdateRunListButton, C=1
     END_IF
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; ClickSecondaryRunListCtrl
 
 .proc ClickAtFirstBootCtrl
         lda     copy_when
     IF A <> #kCopyOnBoot
-        clc
-        jsr     DrawCopyWhenButton
+        CALL    DrawCopyWhenButton, C=0
         lda     #kCopyOnBoot
         sta     copy_when
-        sec
-        jsr     DrawCopyWhenButton
+        CALL    DrawCopyWhenButton, C=1
     END_IF
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; ClickAtFirstBootCtrl
 
 .proc ClickAtFirstUseCtrl
         lda     copy_when
     IF A <> #kCopyOnUse
-        clc
-        jsr     DrawCopyWhenButton
+        CALL    DrawCopyWhenButton, C=0
         lda     #kCopyOnUse
         sta     copy_when
-        sec
-        jsr     DrawCopyWhenButton
+        CALL    DrawCopyWhenButton, C=1
     END_IF
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; ClickAtFirstUseCtrl
 
 .proc ClickNeverCtrl
         lda     copy_when
     IF A <> #kCopyNever
-        clc
-        jsr     DrawCopyWhenButton
+        CALL    DrawCopyWhenButton, C=0
         lda     #kCopyNever
         sta     copy_when
-        sec
-        jsr     DrawCopyWhenButton
+        CALL    DrawCopyWhenButton, C=1
     END_IF
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; ClickNeverCtrl
 
 ;;; ============================================================

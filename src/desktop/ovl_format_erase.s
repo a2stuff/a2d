@@ -57,8 +57,7 @@ Exec:
         ;; Prompt for device
 .scope
         CLEAR_BIT7_FLAG has_input_field_flag
-        lda     #kPromptButtonsOKCancel
-        jsr     main::OpenPromptWindow ; A = `prompt_button_flags`
+        CALL    main::OpenPromptWindow, A=#kPromptButtonsOKCancel
         jsr     main::SetPortForDialogWindow
 
         ldax    #aux::label_format_disk
@@ -118,7 +117,7 @@ skip_select:
         copy8   #0, text_input_buf
         CLEAR_BIT7_FLAG has_device_picker_flag
 
-        param_call main::DrawDialogLabel, 2, aux::str_location
+        CALL    main::DrawDialogLabel, Y=#2, AX=#aux::str_location
 
         ;; Find `DEVLST` index of selected/specified device
         ldx     #AS_BYTE(-1)
@@ -133,7 +132,7 @@ skip_select:
         jsr     GetDeviceNameForIndex
         jsr     main::DrawString
 
-        param_call main::DrawDialogLabel, 4, aux::str_new_volume
+        CALL    main::DrawDialogLabel, Y=#4, AX=#aux::str_new_volume
 
         LETK_CALL LETK::Init, prompt_le_params
         LETK_CALL LETK::Activate, prompt_le_params
@@ -147,14 +146,11 @@ loop2:
         jsr     main::SetCursorPointerWithFlag
 
         ;; Check for conflicting name
-        ldxy    #text_input_buf
-        lda     unit_num
-        jsr     CheckConflictingVolumeName
-        bcc     :+
-        lda     #ERR_DUPLICATE_FILENAME
-        jsr     ShowAlert
+        CALL    CheckConflictingVolumeName, XY=#text_input_buf, A=unit_num
+    IF_CS
+        CALL    ShowAlert, A=#ERR_DUPLICATE_FILENAME
         jmp     loop2
-:
+    END_IF
 .endscope
 
         ;; --------------------------------------------------
@@ -167,12 +163,11 @@ loop2:
         MGTK_CALL MGTK::PaintRect, ok_button::rect
         MGTK_CALL MGTK::PaintRect, cancel_button::rect
 
-        lda     unit_num
-        jsr     GetVolName      ; populates `ovl_string_buf`
+        CALL    GetVolName, A=unit_num ; populates `ovl_string_buf`
 
         push16  #ovl_string_buf
         FORMAT_MESSAGE 1, aux::str_confirm_erase_format
-        param_call ShowAlertParams, AlertButtonOptions::OKCancel, text_input_buf
+        CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#text_input_buf
         cmp     #kAlertResultOK
         jne     cancel
 .endscope
@@ -180,12 +175,10 @@ loop2:
         ;; Confirmed!
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
-        clc
-        rts
+        RETURN  C=0
 
 cancel:
-        sec
-        rts
+        RETURN  C=1
 
 ;;; High bit set if erase, otherwise format.
 erase_flag:
@@ -196,8 +189,7 @@ erase_flag:
 ;;; Format Disk
 
 .proc FormatDisk
-        clc                     ; C=0 = format
-        jsr     PromptForDeviceAndName
+        CALL    PromptForDeviceAndName, C=0 ; C=0 = format
         bcs     finish
         sta     unit_num
 
@@ -205,8 +197,8 @@ erase_flag:
         ;; Proceed with format
 retry:
         jsr     SetPortAndClear
-        param_call main::DrawDialogLabel, 1, aux::str_formatting
-        param_call main::DrawDialogLabel, 7, aux::str_tip_prodos
+        CALL    main::DrawDialogLabel, Y=#1, AX=#aux::str_formatting
+        CALL    main::DrawDialogLabel, Y=#7, AX=#aux::str_tip_prodos
         jsr     main::SetCursorWatch
 
         unit_num := *+1
@@ -214,12 +206,10 @@ retry:
         jsr     CheckSupportsFormat
         and     #$FF
         bne     l9
-        lda     unit_num
-        jsr     FormatUnit
+        CALL    FormatUnit, A=unit_num
         bcs     l12
 l9:
-        lda     unit_num
-        jmp     ::FormatEraseOverlay::EraseDisk::EP2
+        TAIL_CALL ::FormatEraseOverlay::EraseDisk::EP2, A=unit_num
 
 l12:    pha
         jsr     main::SetCursorPointer
@@ -232,7 +222,7 @@ l12:    pha
         beq     retry           ; `kAlertResultTryAgain` = 0
     END_IF
 
-        param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_formatting_error
+        CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#aux::str_formatting_error
         cmp     #kAlertResultCancel
         bne     retry
 
@@ -251,8 +241,7 @@ finish:
 ;;; Erase Disk
 
 .proc EraseDisk
-        sec                     ; C=1 = erase
-        jsr     PromptForDeviceAndName
+        CALL    PromptForDeviceAndName, C=1 ; C=1 = erase
         bcs     finish
 
 ;;; Entry point used after `FormatDisk`
@@ -263,8 +252,8 @@ EP2:
         ;; Proceed with erase
 retry:
         jsr     SetPortAndClear
-        param_call main::DrawDialogLabel, 1, aux::str_erasing
-        param_call main::DrawDialogLabel, 7, aux::str_tip_prodos
+        CALL    main::DrawDialogLabel, Y=#1, AX=#aux::str_erasing
+        CALL    main::DrawDialogLabel, Y=#7, AX=#aux::str_tip_prodos
         jsr     main::SetCursorWatch
 
         ldxy    #main::filename_buf
@@ -287,7 +276,7 @@ retry:
         beq     retry           ; `kAlertResultTryAgain` = 0
     END_IF
 
-        param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_erasing_error
+        CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#aux::str_erasing_error
         cmp     #kAlertResultCancel
         bne     retry
 
@@ -343,7 +332,7 @@ finish:
         OPTK_CALL OPTK::Key, vol_picker_params
     END_IF
 
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -354,10 +343,8 @@ finish:
         cmp     DEVCNT          ; num volumes - 1
         beq     yes             ; TODO: `BGT` ?
         bcs     no
-yes:    lda     #$00
-        rts
-no:     lda     #$80
-        rts
+yes:    RETURN  A=#$00
+no:     RETURN  A=#$80
 .endproc ; IsEntryCallback
 
 .proc DrawEntryCallback
@@ -383,8 +370,7 @@ no:     lda     #$80
 .proc GetDeviceNameForIndex
         asl     a
         tay
-        ldax    device_name_table,y ; now A,X has pointer
-        rts
+        RETURN  AX=device_name_table,y
 .endproc ; GetDeviceNameForIndex
 
 ;;; ============================================================
@@ -434,14 +420,12 @@ no:     lda     #$80
         cmp     #SELF_MODIFIED_BYTE
       IF NE
         ;; Not the same device, so a match. Return C=1
-        sec
-        rts
+        RETURN  C=1
       END_IF
     END_IF
 
         ;; No match we care about, so return C=0.
-        clc
-        rts
+        RETURN  C=0
 .endproc ; CheckConflictingVolumeName
 
 ;;; ============================================================
@@ -489,13 +473,11 @@ path:
         jsr     main::IsDiskII
     IF EQ
         ;; Format as Disk II
-        lda     unit_num
-        jmp     FormatDiskII
+        TAIL_CALL FormatDiskII, A=unit_num
     END_IF
 
         ;; Format using driver
-        lda     unit_num
-        jsr     GetDriverAddress
+        CALL    GetDriverAddress, A=unit_num
         stax    driver_addr
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs
@@ -524,8 +506,7 @@ path:
         jsr     main::IsDiskII
     IF NE
         ;; Check if the driver is firmware ($CnXX).
-        lda     unit_num
-        jsr     GetDriverAddress
+        CALL    GetDriverAddress, A=unit_num
         stx     addr+1          ; self-modify address below
         txa                     ; high byte
         and     #$F0            ; look at high nibble
@@ -537,12 +518,12 @@ path:
         and     #%00001000      ; Bit 3 = Supports format
        IF ZERO
 
-        return8 #$FF            ; no, does not support format
+        RETURN  A=#$FF          ; no, does not support format
        END_IF
       END_IF
     END_IF
 
-        return8 #$00            ; yes, supports format
+        RETURN  A=#$00          ; yes, supports format
 
 unit_num:
         .byte   0
@@ -553,35 +534,33 @@ unit_num:
 ;;; Inputs: A = unit number, X,Y = volume name
 
 .proc WriteHeaderBlocks
+        ptr := $06
         sta     unit_num
         sta     write_block_params::unit_num
-        stxy    $06
+        stxy    ptr
 
         ;; Copy name into volume directory key block data
-        param_call main::CopyPtr1ToBuf, vol_name_buf
+        CALL    main::CopyPtr1ToBuf, AX=#vol_name_buf
 
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsSetCaseBits
     IF ZERO
         ldax    #0
     ELSE
-        param_call_indirect main::CalculateCaseBits, $06
+        CALL    main::CalculateCaseBits, AX=ptr
     END_IF
         stax    case_bits
 
-        param_call main::UpcaseString, vol_name_buf
+        CALL    main::UpcaseString, AX=#vol_name_buf
 
         ;; --------------------------------------------------
         ;; Get the block count for the device
 
         ;; Check if it's a Disk II
-        lda     unit_num
-        jsr     main::IsDiskII
+        CALL    main::IsDiskII, A=unit_num
     IF NE
         ;; Not Disk II - use the driver.
-        lda     unit_num
-        jsr     GetDriverAddress
+        CALL    GetDriverAddress, A=unit_num
         stax    @driver
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs
@@ -735,11 +714,9 @@ gowrite:
         ;; Success
         lda     #$00
         sta     $08
-        clc
-        rts
+        RETURN  C=0
 
-fail:   sec
-        rts
+fail:   RETURN  C=1
 
 unit_num:
         .byte   0
@@ -818,8 +795,7 @@ pop_and_fail:
         pla
         pla
 fail2:
-        sec
-        rts
+        RETURN  C=1
 
 ;;; ============================================================
 
@@ -913,12 +889,10 @@ prodos_loader_blocks:
 
         ;; Unknown, just use slot and drive
 unknown:
-        lda     read_block_params::unit_num
-        jsr     _GetSlotNum
+        CALL    _GetSlotNum, A=read_block_params::unit_num
         phax
 
-        lda     read_block_params::unit_num
-        jsr     _GetDriveNum
+        CALL    _GetDriveNum, A=read_block_params::unit_num
         phax
 
         FORMAT_MESSAGE 2, the_disk_in_slot_format
@@ -926,7 +900,7 @@ unknown:
         rts
 
         ;; Pascal
-pascal: param_call pascal_disk, ovl_string_buf
+pascal: CALL    pascal_disk, AX=#ovl_string_buf
         jmp     EnquoteStringBuf
 
         ;; Maybe DOS 3.3, not sure yet...
@@ -938,12 +912,10 @@ maybe_dos:
         bne     unknown
 
         ;; DOS 3.3, use slot and drive
-        lda     read_block_params::unit_num
-        jsr     _GetSlotNum
+        CALL    _GetSlotNum, A=read_block_params::unit_num
         phax
 
-        lda     read_block_params::unit_num
-        jsr     _GetDriveNum
+        CALL    _GetDriveNum, A=read_block_params::unit_num
         phax
 
         FORMAT_MESSAGE 2, the_dos_33_disk_format
@@ -1008,7 +980,7 @@ pascal_disk:
         and     #NAME_LENGTH_MASK
         beq     non_pro
 
-        param_call AdjustOnLineEntryCase, on_line_buffer
+        CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
 
         ldx     on_line_buffer
     DO
@@ -1019,8 +991,7 @@ pascal_disk:
         jmp     EnquoteStringBuf
 
 non_pro:
-        lda     on_line_params::unit_num
-        jmp     GetNonProDOSVolName
+        TAIL_CALL GetNonProDOSVolName, A=on_line_params::unit_num
 .endproc ; GetVolName
 
 ;;; ============================================================

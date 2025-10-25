@@ -224,16 +224,19 @@ The following macros should be used to improve code readability by eliminating r
 * pseudo-ops:
   * `add16`/`sub16`/`cmp16`/`lsr16`/`asl16`/`inc16`/`dec16` for 16-bit operations
   * `ldax`/`ldxy`/`stax`/`stxy` for 16-bit load/stores
-  * `param_call`/`param_jump` for (tail) calls with an optional 8-bit param in Y and a required 16-bit address argument in A,X
-  * `return`/`return16` for returning A or A,X from a proc
+  * `copy8`/`copy16` for load-then-store
   * `jcc`/`jeq`/etc for long branches
-* structural:
-  * `PAD_TO` to introduce padding to a known address
+* memory:
   * `COPY_xx` for fixed size copy loops
-  * `IF`/`ELSE_IF`/`ELSE`/`END_IF` for conditional sections, to avoid throw-away labels
-  * `DO`/`BREAK_IF`/`CONTINUE_IF`/`WHILE` for looping sections, to avoid throw-away labels
+* flow control:
+  * `IF`/`ELSE_IF`/`ELSE`/`END_IF` for conditional branches, to avoid throw-away labels
+  * `DO`/`BREAK_IF`/`CONTINUE_IF`/`WHILE` for loopings, to avoid throw-away labels
+  * `CALL proc, AX=params, Y=#opt` (and `TAIL_CALL`) for more semantic function calls
+  * `RETURN C=1, AX=#val` for more semantic return values
 * definitions:
   * `PASCAL_STRING` for length-prefixed strings
+* misc:
+  * `PAD_TO` to introduce padding to a known address
 
 ## Param Blocks
 

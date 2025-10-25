@@ -162,7 +162,7 @@ dst_vol_blocks_free     .word
 loop:
         jsr     _ReadFileEntry
     IF ZERO
-        param_call AdjustFileEntryCase, file_entry
+        CALL    AdjustFileEntryCase, AX=#file_entry
 
         lda     file_entry + FileEntry::storage_type_name_length
         beq     loop            ; deleted
@@ -369,9 +369,9 @@ retry2: MLI_CALL READ, read_padding_bytes_params
 .endif
     END_IF
 
-        return8 #0
+        RETURN  A=#0
 
-eof:    return8 #$FF
+eof:    RETURN  A=#$FF
 .endproc ; _ReadFileEntry
 
 ;;; ============================================================
@@ -410,28 +410,28 @@ eof:    return8 #$FF
 ;;; Append name at `file_entry` to path at `pathname_src`
 
 .proc AppendFileEntryToSrcPath
-        param_jump AppendFileEntryToPath, pathname_src
+        TAIL_CALL AppendFileEntryToPath, AX=#pathname_src
 .endproc ; AppendFileEntryToSrcPath
 
 ;;; ============================================================
 ;;; Remove segment from path at `pathname_src`
 
 .proc RemoveSrcPathSegment
-        param_jump RemovePathSegment, pathname_src
+        TAIL_CALL RemovePathSegment, AX=#pathname_src
 .endproc ; RemoveSrcPathSegment
 
 ;;; ============================================================
 ;;; Append name at `file_entry` to path at `pathname_dst`
 
 .proc AppendFileEntryToDstPath
-        param_jump AppendFileEntryToPath, pathname_dst
+        TAIL_CALL AppendFileEntryToPath, AX=#pathname_dst
 .endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
 ;;; Remove segment from path at `pathname_dst`
 
 .proc RemoveDstPathSegment
-        param_jump RemovePathSegment, pathname_dst
+        TAIL_CALL RemovePathSegment, AX=#pathname_dst
 .endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
@@ -960,8 +960,7 @@ next_block:
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
     WHILE NOT_ZERO
-        clc
-        rts
+        RETURN  C=0
 
 do_write:
 retry:  MLI_CALL WRITE, write_dst_params
@@ -1019,6 +1018,5 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-        clc                     ; treated as success
-        rts
+        RETURN  C=0             ; treated as success
 .endproc ; _CopyCreateFile

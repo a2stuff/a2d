@@ -146,13 +146,13 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::FrameRect, frame_rect
 
         copy16  ypos_playing, pos::ycoord
-        param_call DrawCenteredString, str_playing
+        CALL    DrawCenteredString, AX=#str_playing
         copy16  ypos_credit1, pos::ycoord
-        param_call DrawCenteredString, str_credit1
+        CALL    DrawCenteredString, AX=#str_credit1
         copy16  ypos_credit2, pos::ycoord
-        param_call DrawCenteredString, str_credit2
+        CALL    DrawCenteredString, AX=#str_credit2
         copy16  ypos_instruct, pos::ycoord
-        param_call DrawCenteredString, str_instruct
+        CALL    DrawCenteredString, AX=#str_instruct
 
         MGTK_CALL MGTK::FlushEvents
 
@@ -281,8 +281,7 @@ ret:    rts
         copy16  #filename, STARTLO
         copy16  #filename+kMaxFilenameLength, ENDLO
         copy16  #aux::name_buf, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         ;; Show the UI
         JSR_TO_AUX aux::Init
@@ -835,7 +834,7 @@ TEMP:   .byte 0
 .proc ScanSlots
         ptr := $06
         copy16  #$C700, ptr
-probe:  param_call WithInterruptsDisabled, DetectMockingboard
+probe:  CALL    WithInterruptsDisabled, AX=#DetectMockingboard
     IF CS
         ;; Found
         lda     ptr+1
@@ -850,8 +849,7 @@ probe:  param_call WithInterruptsDisabled, DetectMockingboard
         cmp     #$C0
         bne     probe
 
-        clc                     ; C=0 is not found
-        rts
+        RETURN  C=0             ; C=0 is not found
 .endproc ; ScanSlots
 .endproc ; PlayerMockingboard
 FindMockingboard := PlayerMockingboard::ScanSlots
@@ -1002,7 +1000,7 @@ TEMP:   .byte   0
 .proc FindTheCricket
         ptr := $06
         copy16  #$C200, ptr
-        param_jump WithInterruptsDisabled, DetectMockingboard
+        TAIL_CALL WithInterruptsDisabled, AX=#DetectMockingboard
 .endproc ; FindTheCricket
 
 

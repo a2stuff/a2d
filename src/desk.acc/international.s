@@ -48,8 +48,7 @@
 
 .proc RunDA
         jsr     init_window
-        lda     dialog_result
-        rts
+        RETURN  A=dialog_result
 .endproc ; RunDA
 
 ;;; ============================================================
@@ -306,8 +305,7 @@ ret:    rts
 update:
         jsr     WriteSetting
         copy8   #$80, dialog_result
-        lda     selected_field
-        jmp     DrawField
+        TAIL_CALL DrawField, A=selected_field
 .endproc ; OnKeyChar
 
 .endproc ; OnKey
@@ -361,26 +359,22 @@ hit:
 
         MGTK_CALL MGTK::InRect, date_rect
     IF NOT_ZERO
-        lda     #Field::date
-        jmp     SelectField
+        TAIL_CALL SelectField, A=#Field::date
     END_IF
 
         MGTK_CALL MGTK::InRect, time_rect
     IF NOT_ZERO
-        lda     #Field::time
-        jmp     SelectField
+        TAIL_CALL SelectField, A=#Field::time
     END_IF
 
         MGTK_CALL MGTK::InRect, deci_rect
     IF NOT_ZERO
-        lda     #Field::deci
-        jmp     SelectField
+        TAIL_CALL SelectField, A=#Field::deci
     END_IF
 
         MGTK_CALL MGTK::InRect, thou_rect
     IF NOT_ZERO
-        lda     #Field::thou
-        jmp     SelectField
+        TAIL_CALL SelectField, A=#Field::thou
     END_IF
 
         rts
@@ -406,49 +400,37 @@ hit:
 ;;; ============================================================
 
 .proc OnClick12Hour
-        lda     #0
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     WriteSetting
+        CALL    WriteSetting, A=#0, X=#DeskTopSettings::clock_24hours
         copy8   #$80, dialog_result
         jmp     UpdateClockOptionButtons
 .endproc ; OnClick12Hour
 
 .proc OnClick24Hour
-        lda     #$80
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     WriteSetting
+        CALL    WriteSetting, A=#$80, X=#DeskTopSettings::clock_24hours
         copy8   #$80, dialog_result
         jmp     UpdateClockOptionButtons
 .endproc ; OnClick24Hour
 
 .proc OnClickMDY
-        lda     #DeskTopSettings::kDateOrderMDY
-        ldx     #DeskTopSettings::intl_date_order
-        jsr     WriteSetting
+        CALL    WriteSetting, A=#DeskTopSettings::kDateOrderMDY, X=#DeskTopSettings::intl_date_order
         copy8   #$80, dialog_result
         jmp     UpdateDateOptionButtons
 .endproc ; OnClickMDY
 
 .proc OnClickDMY
-        lda     #DeskTopSettings::kDateOrderDMY
-        ldx     #DeskTopSettings::intl_date_order
-        jsr     WriteSetting
+        CALL    WriteSetting, A=#DeskTopSettings::kDateOrderDMY, X=#DeskTopSettings::intl_date_order
         copy8   #$80, dialog_result
         jmp     UpdateDateOptionButtons
 .endproc ; OnClickDMY
 
 .proc OnClickSunday
-        lda     #0
-        ldx     #DeskTopSettings::intl_first_dow
-        jsr     WriteSetting
+        CALL    WriteSetting, A=#0, X=#DeskTopSettings::intl_first_dow
         copy8   #$80, dialog_result
         jmp     UpdateFirstDOWOptionButtons
 .endproc ; OnClickSunday
 
 .proc OnClickMonday
-        lda     #1
-        ldx     #DeskTopSettings::intl_first_dow
-        jsr     WriteSetting
+        CALL    WriteSetting, A=#1, X=#DeskTopSettings::intl_first_dow
         copy8   #$80, dialog_result
         jmp     UpdateFirstDOWOptionButtons
 .endproc ; OnClickMonday
@@ -488,29 +470,25 @@ dialog_result:  .byte   0
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, date_label_pos
-        param_call DrawString, date_label_str
+        CALL    DrawString, AX=#date_label_str
         MGTK_CALL MGTK::FrameRect, date_rect
 
         MGTK_CALL MGTK::MoveTo, time_label_pos
-        param_call DrawString, time_label_str
+        CALL    DrawString, AX=#time_label_str
         MGTK_CALL MGTK::FrameRect, time_rect
 
         MGTK_CALL MGTK::MoveTo, deci_label_pos
-        param_call DrawString, deci_label_str
+        CALL    DrawString, AX=#deci_label_str
         MGTK_CALL MGTK::FrameRect, deci_rect
 
         MGTK_CALL MGTK::MoveTo, thou_label_pos
-        param_call DrawString, thou_label_str
+        CALL    DrawString, AX=#thou_label_str
         MGTK_CALL MGTK::FrameRect, thou_rect
 
-        lda     #Field::date
-        jsr     DrawField
-        lda     #Field::time
-        jsr     DrawField
-        lda     #Field::deci
-        jsr     DrawField
-        lda     #Field::thou
-        jsr     DrawField
+        CALL    DrawField, A=#Field::date
+        CALL    DrawField, A=#Field::time
+        CALL    DrawField, A=#Field::deci
+        CALL    DrawField, A=#Field::thou
 
         BTK_CALL BTK::Draw, ok_button
         BTK_CALL BTK::RadioDraw, date_mdy_button
@@ -519,7 +497,7 @@ dialog_result:  .byte   0
         BTK_CALL BTK::RadioDraw, clock_24hour_button
 
         MGTK_CALL MGTK::MoveTo, first_dow_label_pos
-        param_call DrawString, first_dow_label_str
+        CALL    DrawString, AX=#first_dow_label_str
         BTK_CALL BTK::RadioDraw, sunday_button
         BTK_CALL BTK::RadioDraw, monday_button
 
@@ -533,8 +511,7 @@ dialog_result:  .byte   0
 .endproc ; UpdateOptionButtons
 
 .proc UpdateClockOptionButtons
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::clock_24hours
 
         pha
         cmp     #0
@@ -552,8 +529,7 @@ dialog_result:  .byte   0
 .endproc ; UpdateClockOptionButtons
 
 .proc UpdateDateOptionButtons
-        ldx     #DeskTopSettings::intl_date_order
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_date_order
 
         pha
         cmp     #DeskTopSettings::kDateOrderMDY
@@ -571,8 +547,7 @@ dialog_result:  .byte   0
 .endproc ; UpdateDateOptionButtons
 
 .proc UpdateFirstDOWOptionButtons
-        ldx     #DeskTopSettings::intl_first_dow
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_first_dow
 
         pha
         cmp     #0
@@ -591,11 +566,9 @@ dialog_result:  .byte   0
 
 .proc ZToButtonState
     IF ZC
-        lda     #BTK::kButtonStateNormal
-        rts
+        RETURN  A=#BTK::kButtonStateNormal
     END_IF
-        lda     #BTK::kButtonStateChecked
-        rts
+        RETURN  A=#BTK::kButtonStateChecked
 .endproc ; ZToButtonState
 
 ;;; ============================================================
@@ -619,8 +592,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         pla
 
     IF A = #Field::date
-        ldx     #DeskTopSettings::intl_date_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_date_sep
         sta     drawchar_params::char
         sta     date_sample_label_str+kDateSampleOffset1
         sta     date_sample_label_str+kDateSampleOffset2
@@ -629,12 +601,11 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, date_sample_label_pos
-        param_jump DrawString, date_sample_label_str
+        TAIL_CALL DrawString, AX=#date_sample_label_str
     END_IF
 
     IF A = #Field::time
-        ldx     #DeskTopSettings::intl_time_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_time_sep
         sta     drawchar_params::char
         sta     time_sample_label_str+kTimeSampleOffset
         MGTK_CALL MGTK::PaintRect, time_hilite
@@ -642,12 +613,11 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, time_sample_label_pos
-        param_jump DrawString, time_sample_label_str
+        TAIL_CALL DrawString, AX=#time_sample_label_str
     END_IF
 
     IF A = #Field::deci
-        ldx     #DeskTopSettings::intl_deci_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_deci_sep
         sta     drawchar_params::char
         sta     deci_sample_label_str+kDeciSampleOffset
         MGTK_CALL MGTK::PaintRect, deci_hilite
@@ -655,12 +625,11 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, deci_sample_label_pos
-        param_jump DrawString, deci_sample_label_str
+        TAIL_CALL DrawString, AX=#deci_sample_label_str
     END_IF
 
     IF A = #Field::thou
-        ldx     #DeskTopSettings::intl_thou_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_thou_sep
         sta     drawchar_params::char
         sta     thou_sample_label_str+kThouSampleOffset
         MGTK_CALL MGTK::PaintRect, thou_hilite
@@ -668,7 +637,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, thou_sample_label_pos
-        param_jump DrawString, thou_sample_label_str
+        TAIL_CALL DrawString, AX=#thou_sample_label_str
     END_IF
 
         rts
@@ -685,8 +654,7 @@ char:   .byte   SELF_MODIFIED_BYTE
         txa
         jsr     DrawField
 
-        lda     selected_field
-        jmp     DrawField
+        TAIL_CALL DrawField, A=selected_field
 .endproc ; SelectField
 
 ;;; ============================================================

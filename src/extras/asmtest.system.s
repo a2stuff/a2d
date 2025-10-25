@@ -7,7 +7,7 @@
         .include "../inc/macros.inc"
 
 ;;; ============================================================
-;;; Flow Control Macros
+;;; Flow Control Macros - Branch & Loop
 ;;; ============================================================
 
 ;;; --------------------------------------------------
@@ -469,6 +469,99 @@ table := *
 
         RTS_IF NOT A NOT_BETWEEN #'0', #'9'
 
+
+;;; ============================================================
+;;; Flow Control Macros - Functions
+;;; ============================================================
+
+var:
+target:
+kConstant = 12
+kClear = 0
+kSet = 1
+
+;;; CALL
+        CALL    target
+
+        CALL    target, A=#0
+        CALL    target, A=#kConstant
+        CALL    target, A=var
+        CALL    target, A=table,x
+
+        CALL    target, A=#0
+        CALL    target, X=#0
+        CALL    target, Y=#0
+        CALL    target, AX=#0
+        CALL    target, AY=#0
+        CALL    target, XY=#0
+
+        CALL    target, C=0
+        CALL    target, C=1
+        CALL    target, C=kClear
+        CALL    target, C=kSet
+
+        CALL    target, C=1
+        CALL    target, D=1
+
+        CALL    target, C=0, D=1, A=#0, X=#1, Y=#2
+        CALL    target, Y=#kConstant, AX=var
+        CALL    target, C=1, A=table,x, X=table,y
+
+;;; TAIL_CALL
+        TAIL_CALL target
+
+        TAIL_CALL target, A=#0
+        TAIL_CALL target, A=#kConstant
+        TAIL_CALL target, A=var
+        TAIL_CALL target, A=table,x
+
+        TAIL_CALL target, A=#0
+        TAIL_CALL target, X=#0
+        TAIL_CALL target, Y=#0
+        TAIL_CALL target, AX=#0
+        TAIL_CALL target, AY=#0
+        TAIL_CALL target, XY=#0
+
+        TAIL_CALL target, C=0
+        TAIL_CALL target, C=1
+        TAIL_CALL target, C=kClear
+        TAIL_CALL target, C=kSet
+
+        TAIL_CALL target, C=1
+        TAIL_CALL target, D=1
+
+        TAIL_CALL target, C=0, D=1, A=#0, X=#1, Y=#2
+        TAIL_CALL target, Y=#kConstant, AX=var
+        TAIL_CALL target, C=1, A=table,x, X=table,y
+
+;;; RETURN
+        RETURN
+
+        RETURN  A=#0
+        RETURN  A=#kConstant
+        RETURN  A=var
+        RETURN  A=table,x
+
+        RETURN  A=#0
+        RETURN  X=#0
+        RETURN  Y=#0
+        RETURN  AX=#0
+        RETURN  AY=#0
+        RETURN  XY=#0
+
+        RETURN  C=0
+        RETURN  C=1
+        RETURN  C=kClear
+        RETURN  C=kSet
+
+        RETURN  C=1
+        RETURN  D=1
+
+        RETURN  C=0, D=1, A=#0, X=#1, Y=#2
+        RETURN  Y=#kConstant, AX=var
+        RETURN  C=1, A=table,x, X=table,y
+
+
 ;;; ============================================================
 ;;; Errors
 ;;; ============================================================
@@ -485,4 +578,12 @@ table := *
         RTS_IF A BETWEEN '0', #'9' ; RTS_IF: Expected immediate 1st argument for 'BETWEEN'
         RTS_IF A BETWEEN #'0'      ; RTS_IF: Expected 2nd argument for 'BETWEEN'
         RTS_IF A BETWEEN #'0', '9' ; RTS_IF: Expected immediate 2nd argument for 'BETWEEN'
+
+        CALL    target, FOO=        ; CALL: Expected 'reg=...'
+        CALL    target, A           ; CALL: Expected 'A=...'
+        CALL    target, A=0         ; CALL: Numeric literal in 'A=expr' assignment; did you mean '#0'?
+        CALL    target, A=kConstant ; CALL: Constant in 'A=expr' assignment; did you mean '#kConstant'?
+        CALL    target, C=1 bad     ; CALL: Unexpected tokens after 'C=...'
+        CALL    target, C=var       ; CALL: Expected constant expression after 'C='
 .endif
+

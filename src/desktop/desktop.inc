@@ -188,11 +188,11 @@ CallMainToAux := $D000          ; A,X = target address in Aux
 CallAuxToMain := $D000+15       ; A,X = target address in Main
 
 .macro JSR_TO_AUX addr
-        param_call CallMainToAux, addr
+        CALL CallMainToAux, AX=#addr
 .endmacro
 
 .macro JSR_TO_MAIN addr
-        param_call CallAuxToMain, addr
+        CALL CallAuxToMain, AX=#addr
 .endmacro
 
 ;;; ============================================================

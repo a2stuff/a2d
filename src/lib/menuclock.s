@@ -33,22 +33,18 @@
     WHILE POS
 
         ;; Settings changed?
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::clock_24hours
         cmp     last_s1
         bne     update
-        ldx     #DeskTopSettings::intl_time_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_time_sep
         cmp     last_s2
         bne     update
         rts
 
 update: COPY_STRUCT DateTime, DATELO, last_dt
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::clock_24hours
         sta     last_s1
-        ldx     #DeskTopSettings::intl_time_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_time_sep
         sta     last_s2
 
         ;; --------------------------------------------------
@@ -66,24 +62,19 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         ;; Time
 
         copy16  #parsed_date, $0A
-        ldax    #DATELO
-        jsr     ParseDatetime
+        CALL    ParseDatetime, AX=#DATELO
 
-        ldax    #parsed_date
-        jsr     MakeTimeString
+        CALL    MakeTimeString, AX=#parsed_date
 
-        param_call DrawStringRight, str_time
-        param_call DrawStringRight, str_space
+        CALL    DrawStringRight, AX=#str_time
+        CALL    DrawStringRight, AX=#str_space
 
         ;; --------------------------------------------------
         ;; Day of Week
 
         ;; TODO: Make DOW calc work on ParsedDateTime
         sub16   parsed_date + ParsedDateTime::year, #1900, parsed_date + ParsedDateTime::year
-        ldy     parsed_date + ParsedDateTime::year
-        ldx     parsed_date + ParsedDateTime::month
-        lda     parsed_date + ParsedDateTime::day
-        jsr     DayOfWeek
+        CALL    DayOfWeek, Y=parsed_date + ParsedDateTime::year, X=parsed_date + ParsedDateTime::month, A=parsed_date + ParsedDateTime::day
         asl                     ; * 4
         asl
         clc
@@ -98,7 +89,7 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         ;; --------------------------------------------------
         ;; In case string got shorter
 
-        param_call DrawStringRight, str_4_spaces
+        CALL    DrawStringRight, AX=#str_4_spaces
 
         ;; --------------------------------------------------
         ;; Restore the previous GrafPort

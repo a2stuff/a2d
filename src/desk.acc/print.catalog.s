@@ -52,14 +52,13 @@
         ptr := $06
 
         ;; Try to verify a printer card in slot 1
-        param_call CheckSlot1Signature, sigtable_printer
+        CALL    CheckSlot1Signature, AX=#sigtable_printer
     IF ZC
-        param_call CheckSlot1Signature, sigtable_ssc
+        CALL    CheckSlot1Signature, AX=#sigtable_ssc
       IF ZC
-        param_call CheckSlot1Signature, sigtable_parallel
+        CALL    CheckSlot1Signature, AX=#sigtable_parallel
        IF ZC
-        lda     #ERR_DEVICE_NOT_CONNECTED
-        jmp     JUMP_TABLE_SHOW_ALERT
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#ERR_DEVICE_NOT_CONNECTED
        END_IF
       END_IF
     END_IF
@@ -113,14 +112,12 @@ continue:
         ;; SSC operations trash the text page (if 80 col firmware active?)
         jsr     SaveTextPage
 
-        ldy     #SSC::PInit
-        jsr     GoCard
+        CALL    GoCard, Y=#SSC::PInit
 
         ;; Init IW2 settings
         ldx     #0
     DO
-        lda     iw2_init,x
-        jsr     COut
+        CALL    COut, A=iw2_init,x
         inx
     WHILE X <> #kLenIW2Init
 
@@ -135,8 +132,7 @@ PrintCatalog:
         ;; Header
         ldx     #0
     DO
-        lda     str_header+1,x
-        jsr     COut
+        CALL    COut, A=str_header+1,x
         inx
     WHILE X <> str_header
         jsr     CROut
@@ -153,8 +149,7 @@ PrintCatalog:
 next:
         ldx     #0
     DO
-        lda     searchPath+1,x
-        jsr     COut
+        CALL    COut, A=searchPath+1,x
         inx
     WHILE X < searchPath
         jsr     CROut
@@ -328,8 +323,7 @@ saved_stack:
         tsx
         stx     saved_stack
 
-        ldax    #nameBuffer
-        jmp     ReadDir
+        TAIL_CALL ReadDir, AX=#nameBuffer
 .endproc ; Relay
 .endproc ; Start
 
@@ -371,8 +365,7 @@ ReadDir1:                       ; recursive entry point
         jmp     nextEntry       ; jump to the end of the loop
 
 loop:
-        ldax    entPtr
-        jsr     JUMP_TABLE_ADJUST_FILEENTRY
+        CALL    JUMP_TABLE_ADJUST_FILEENTRY, AX=entPtr
 
         ldy     #FileEntry::storage_type_name_length ; get type of current entry
         lda     (entPtr),y
@@ -456,8 +449,7 @@ OpenDone:
 ;;;******************************************************
 ;;;
 .proc VisitFile
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowInvisible
     IF ZERO
         ;; Is the file visible?
@@ -503,8 +495,7 @@ OpenDone:
         tax
         ldy     #1
     DO
-        lda     (entPtr),y
-        jsr     COut
+        CALL    COut, A=(entPtr),y
         iny
         dex
     WHILE NOT_ZERO
@@ -521,8 +512,7 @@ OpenDone:
         jsr     ComposeFileTypeString
         ldx     #0
     DO
-        lda     str_file_type+1,x
-        jsr     COut
+        CALL    COut, A=str_file_type+1,x
         inx
     WHILE X <> str_file_type
 
@@ -553,8 +543,7 @@ OpenDone:
         ;; Print it
         ldx     #0
     DO
-        lda     str_from_int+1,x
-        jsr     COut
+        CALL    COut, A=str_from_int+1,x
         inx
     WHILE X <> str_from_int
 
@@ -645,8 +634,7 @@ OpenDone:
         ;; Print it
         ldx     #0
     DO
-        lda     str_date+1,x
-        jsr     COut
+        CALL    COut, A=str_date+1,x
         inx
     WHILE X <> str_date
 
@@ -661,8 +649,7 @@ tmp:    .byte   0
 .proc VisitDir
 
         jsr     PrintName
-        lda     #'/'
-        jsr     COut
+        CALL    COut, A=#'/'
         jsr     CROut
 
         ;; 6 bytes + 3 return addresses = 12 bytes are pushed to stack on
@@ -930,7 +917,7 @@ repeat: ldx     devidx
         and     #NAME_LENGTH_MASK
         beq     repeat          ; error - try next one
 
-        param_call JUMP_TABLE_ADJUST_ONLINEENTRY, on_line_buffer
+        CALL    JUMP_TABLE_ADJUST_ONLINEENTRY, AX=#on_line_buffer
 
         ldx     #0
     DO
@@ -944,12 +931,10 @@ repeat: ldx     devidx
         stx     searchPath
 
         ;; Success!
-        clc
-        rts
+        RETURN  C=0
 
 fail:
-        sec
-        rts
+        RETURN  C=1
 .endproc ; NextVolume
 
 ;;; ============================================================
@@ -980,8 +965,7 @@ vector: jsr     SLOT1                    ; self-modified
 .proc CROut
         copy8   #0, ch
 
-        lda     #CHAR_RETURN
-        jsr     COut
+        CALL    COut, A=#CHAR_RETURN
         lda     #CHAR_DOWN
         FALL_THROUGH_TO COut
 .endproc ; CROut
@@ -993,8 +977,7 @@ vector: jsr     SLOT1                    ; self-modified
         stx     xsave
         sty     ysave
 
-        ldy     #SSC::PWrite
-        jsr     GoCard
+        CALL    GoCard, Y=#SSC::PWrite
 
         lda     asave
         ldx     xsave

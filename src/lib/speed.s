@@ -24,8 +24,7 @@
 ;;; Assert: Aux LC is banked in; interrupts are inhibited
 ;;; NOTE: Must be called after `SlowSpeed`
 .proc ResumeSpeed
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
 
         tax                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIgs
@@ -61,8 +60,7 @@
 ;;; Assert: Aux LC is banked in; interrupts are inhibited
 ;;; NOTE: Must be followed by a call to `ResumeSpeed`
 .proc SlowSpeed
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
 
         ;; Slow down on IIgs
         tax                     ; A = X = kSysCapXYZ bitmap

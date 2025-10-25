@@ -85,24 +85,21 @@ params: .res    3
 ;;; MGTK call from main>aux, MLI-style params
 
 .proc MGTKRelayImpl
-        ldax    #MGTKAuxEntry
-        jmp     ParamsRelayImpl
+        TAIL_CALL ParamsRelayImpl, AX=#MGTKAuxEntry
 .endproc ; MGTKRelayImpl
 
 ;;; ============================================================
 ;;; IconTK call from main>aux, MLI-style params
 
 .proc ITKRelayImpl
-        ldax    #aux::ITKEntry
-        jmp     ParamsRelayImpl
+        TAIL_CALL ParamsRelayImpl, AX=#aux::ITKEntry
 .endproc ; ITKRelayImpl
 
 ;;; ============================================================
 ;;; LineEditTK call from main>aux, MLI-style params
 
 .proc LETKRelayImpl
-        ldax    #aux::letk::LETKEntry
-        jmp     ParamsRelayImpl
+        TAIL_CALL ParamsRelayImpl, AX=#aux::letk::LETKEntry
 .endproc ; LETKRelayImpl
 
 
@@ -110,8 +107,7 @@ params: .res    3
 ;;; ButtonTK call from main>aux, MLI-style params
 
 .proc BTKRelayImpl
-        ldax    #aux::btk::BTKEntry
-        jmp     ParamsRelayImpl
+        TAIL_CALL ParamsRelayImpl, AX=#aux::btk::BTKEntry
 .endproc ; BTKRelayImpl
 
 
@@ -119,16 +115,14 @@ params: .res    3
 ;;; ListBoxTK call from main>aux, MLI-style params
 
 .proc LBTKRelayImpl
-        ldax    #aux::lbtk::LBTKEntry
-        jmp     ParamsRelayImpl
+        TAIL_CALL ParamsRelayImpl, AX=#aux::lbtk::LBTKEntry
 .endproc ; LBTKRelayImpl
 
 ;;; ============================================================
 ;;; OptionPickerTK call from main>aux, MLI-style params
 
 .proc OPTKRelayImpl
-        ldax    #aux::optk::OPTKEntry
-        jmp     ParamsRelayImpl
+        TAIL_CALL ParamsRelayImpl, AX=#aux::optk::OPTKEntry
 .endproc ; OPTKRelayImpl
 
 
@@ -207,7 +201,7 @@ op:     lda     SELF_MODIFIED
         stax    alert_params+AlertParams::text
         sty     alert_params+AlertParams::buttons
         copy8   #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
-        param_call aux::Alert, alert_params
+        CALL    aux::Alert, AX=#alert_params
         jmp     BankInMain
 .endproc ; ShowAlertParams
 
@@ -470,19 +464,19 @@ op:     lda     SELF_MODIFIED
         ;; Now Y = type, A,X = argument
        IF Y = #'d'              ; decimal - decimal integer
         jsr     IntToString
-        param_jump append_string, str_from_int
+        TAIL_CALL append_string, AX=#str_from_int
        END_IF
 
        IF Y = #'n'              ; number - decimal integer with separators
         jsr     IntToStringWithSeparators
-        param_jump append_string, str_from_int
+        TAIL_CALL append_string, AX=#str_from_int
        END_IF
 
        IF Y = #'k'              ; size - in K from blocks
         jsr     PushPointers
         jsr     ComposeSizeString
         jsr     PopPointers
-        param_jump append_string, text_buffer2
+        TAIL_CALL append_string, AX=#text_buffer2
        END_IF
 
        IF Y = #'x'              ; hex - hexadecimal word

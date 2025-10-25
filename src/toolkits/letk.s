@@ -187,8 +187,7 @@ a_record  .addr
 .endproc ; InitImpl
 
 .proc _ResetCaretCounter
-        ldx     #DeskTopSettings::caret_blink_speed+1
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::caret_blink_speed+1
         pha
         dex                     ; `ReadSetting` preserves X
         jsr     ReadSetting

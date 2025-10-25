@@ -755,6 +755,7 @@ cur_offset:
 
 ;;; ============================================================
 
+;;; Output: C=1 if done
 .proc FindTextRun
         ptr := $06
 
@@ -813,8 +814,7 @@ loop:
     IF A IN #CHAR_TAB, #CHAR_RETURN
         inc     drawtext_params::textlen
     END_IF
-        clc
-        rts
+        RETURN  C=0
 .endproc ; FinishTextRun
 
 ;;; ============================================================
@@ -903,15 +903,13 @@ store:  sta     default_buffer,x         ; self-modified
         bne     store
 
         jsr     prep
-        clc                     ; aux>main
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=0    ; aux>main
 
         JSR_TO_MAIN ReadFile
 
         pha                     ; copy read buffer main>aux
         jsr     prep
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
         pla
 
         beq     done
@@ -959,8 +957,7 @@ prep:   lda     #$00
 .proc OnTitleBarClick
         cmp16   event_params::xcoord, mode_mapinfo_viewloc_xcoord
         bcs     ToggleMode
-        clc                     ; Click ignored
-        rts
+        RETURN  C=0             ; Click ignored
 .endproc ; OnTitleBarClick
 
 .proc ToggleMode
@@ -976,8 +973,7 @@ prep:   lda     #$00
         CLEAR_BIT7_FLAG record_offsets_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jsr     InitScrollBar
-        sec                     ; Click consumed
-        rts
+        RETURN  C=1             ; Click consumed
 .endproc ; ToggleMode
 
 ;;; ============================================================
@@ -1110,8 +1106,7 @@ filename:       .res    16
         copy16  #filename, STARTLO
         copy16  #filename+kMaxFilenameLength, ENDLO
         copy16  #aux::titlebuf, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         ;; Run the DA
         JSR_TO_AUX aux::Init
@@ -1169,8 +1164,7 @@ ret:    rts
         copy16  #aux::mli_params, STARTLO
         copy16  #aux::mli_params + aux::sizeof_mli_params - 1, ENDLO
         copy16  #mli_params, DESTINATIONLO
-        clc                     ; aux>main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux>main
 .endproc ; CopyParamsAuxToMain
 
 ;;; Copies param blocks from Main to Aux
@@ -1182,8 +1176,7 @@ ret:    rts
         copy16  #mli_params, STARTLO
         copy16  #mli_params + sizeof_mli_params - 1, ENDLO
         copy16  #aux::mli_params, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         pla
         plp

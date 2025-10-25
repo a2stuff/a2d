@@ -44,8 +44,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     CLR80VID
 
         ;; IIgs: set green-on-black
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
     IF CC
         .pushcpu
         .setcpu "65816"
@@ -64,8 +63,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         jsr     Run
 
         ;; IIgs: restore color
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
     IF CC
         .pushcpu
         .setcpu "65816"
@@ -172,8 +170,7 @@ event_params:   .tag MGTK::Event
         copy16  #aux::event_params, STARTLO
         copy16  #aux::event_params + .sizeof(MGTK::Event) - 1, ENDLO
         copy16  #event_params, DESTINATIONLO
-        clc                     ; aux > main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux > main
 .endproc ; CopyEventAuxToMain
 
 ;;; ============================================================

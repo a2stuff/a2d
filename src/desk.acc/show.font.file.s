@@ -381,8 +381,7 @@ filename:       .res    16
         copy16  #font_buffer, STARTLO
         add16   #font_buffer-1, read_params::trans_count, ENDLO
         copy16  #aux::font_buffer, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         ;; --------------------------------------------------
         ;; Set window title to filename
@@ -405,8 +404,7 @@ filename:       .res    16
         copy16  #filename, STARTLO
         copy16  #filename+kMaxFilenameLength, ENDLO
         copy16  #aux::titlebuf, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         ;; --------------------------------------------------
         ;; Run the DA from Aux, back to Main when done

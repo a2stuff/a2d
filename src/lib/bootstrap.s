@@ -75,8 +75,7 @@ self:
         jsr     SLOT3ENTRY
 
         ;; IIgs: Reset shadowing
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
     IF CC
         .pushcpu
         .p816
@@ -92,15 +91,13 @@ self:
         ;; Display the loading string
 retry:
         jsr     HOME
-        lda     #kSplashVtab
-        jsr     VTABZ
+        CALL    VTABZ, A=#kSplashVtab
         lda     #(80 - kLoadingStringLength)/2
         sta     OURCH
 
         ldy     #0
     DO
-        lda     str_loading,y
-        jsr     COUT
+        CALL    COUT, A=str_loading,y
         iny
     WHILE Y <> #kLoadingStringLength
 
@@ -141,15 +138,13 @@ retry:
 
 prompt_for_system_disk:
         jsr     HOME
-        lda     #kSplashVtab
-        jsr     VTABZ
+        CALL    VTABZ, A=#kSplashVtab
         lda     #(80 - kDiskPromptLength)/2
         sta     OURCH
 
         ldy     #0
     DO
-        lda     str_disk_prompt,y
-        jsr     COUT
+        CALL    COUT, A=str_disk_prompt,y
         iny
     WHILE Y <> #kDiskPromptLength
 

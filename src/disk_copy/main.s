@@ -111,8 +111,7 @@ params:  .res    3
         jsr     HOME            ; Clear 80-col screen
         sta     TXTSET          ; ... and show it
 
-        lda     #$95            ; Ctrl-U - disable 80-col firmware
-        jsr     COUT
+        CALL    COUT, A=#$95    ; Ctrl-U - disable 80-col firmware
         jsr     INIT            ; reset text window again
         jsr     SETVID          ; after INIT so WNDTOP is set properly
         jsr     SETKBD
@@ -136,8 +135,7 @@ params:  .res    3
         beq     disk_ii
 
         ;; Get driver address
-        lda     unit_number
-        jsr     DeviceDriverAddress
+        CALL    DeviceDriverAddress, A=unit_number
         stax    $06
 
         lda     #DRIVER_COMMAND_FORMAT
@@ -198,7 +196,7 @@ EjectDisk := EjectDiskImpl::start
         ;; Pascal?
         jsr     auxlc::IsPascalBootBlock
     IF CC
-        param_call auxlc::GetPascalVolName, on_line_buffer2
+        CALL    auxlc::GetPascalVolName, AX=#on_line_buffer2
         copy8   #$C0, auxlc::source_disk_format ; Pascal
         rts
     END_IF
@@ -258,8 +256,8 @@ fail:   copy8   #$81, auxlc::source_disk_format ; Other
         count := $06         ; no longer needed
 
         sty     count
-loop:   lda     page
-        jsr     MarkUsedInMemoryBitmap
+loop:
+        CALL    MarkUsedInMemoryBitmap, A=page
         inc     page
         inc     page
         inc     count
@@ -284,8 +282,7 @@ loop:   lda     page
         ;; Each volume bitmap block holds $200*8 bits, so keep reading
         ;; blocks until we've accounted for all blocks on the volume.
     DO
-        lda     block_params::data_buffer+1
-        jsr     MarkUsedInMemoryBitmap
+        CALL    MarkUsedInMemoryBitmap, A=block_params::data_buffer+1
         jsr     ReadBlock
       IF CS
         brk                     ; rude!
@@ -331,12 +328,12 @@ start:
         lda     dib_buffer+SPDIB::Device_Type_Code
        IF A = #SPDeviceType::Disk35
         ;; Assume all 3.5" drives are ejectable
-        return8 #$80
+        RETURN  A=#$80
        END_IF
       END_IF
     END_IF
 
-        return8 #0
+        RETURN  A=#0
 
 .endproc ; IsDriveEjectableImpl
 
@@ -414,12 +411,12 @@ check:
         bne     _ReadOrWriteBlock
 
 continue:
-        return8 #$80
+        RETURN  A=#$80
 
 success:
-        return8 #0
+        RETURN  A=#0
 
-error:  return8 #1
+error:  RETURN  A=#1
 
 .proc _ReadOrWriteBlock
         stax    block_params::block_num
@@ -541,8 +538,7 @@ free:   jsr     _Next
         bmi     :+
 
 not_last:
-        clc
-        rts
+        RETURN  C=0
 
 :       lda     #7              ; 7 - (n % 8)
         sta     auxlc::block_num_shift
@@ -550,8 +546,7 @@ not_last:
         ecmp16  auxlc::block_num_div8, auxlc::block_count_div8
         bne     not_last
 
-        sec
-        rts
+        RETURN  C=1
 .endproc ; _Next
 .endproc ; AdvanceToNextBlock
 
@@ -591,8 +586,7 @@ bloop:  asl
         ecmp16  ptr, #volume_bitmap
     WHILE NE
 
-        ldax    count
-        rts
+        RETURN  AX=count
 .endproc ; CountActiveBlocksInVolumeBitmap
 
 ;;; ============================================================
@@ -626,8 +620,7 @@ bloop:  asl
         rol     hi
         ldx     auxlc::block_num_shift
         ora     table,x
-        ldx     hi
-        rts
+        RETURN  X=hi
 
 table:  .byte   7,6,5,4,3,2,1,0
 .endproc ; LookupInVolumeBitmap
@@ -653,8 +646,7 @@ table:  .byte   7,6,5,4,3,2,1,0
 .proc _Next
         dec     auxlc::block_index_shift
     IF POS
-ok:     clc
-        rts
+ok:     RETURN  C=0
     END_IF
 
         lda     #7
@@ -664,8 +656,7 @@ ok:     clc
         cmp     #kMemoryBitmapSize
         bcc     ok
 
-        sec
-        rts
+        RETURN  C=1
 .endproc ; _Next
 .endproc ; AdvanceToNextBlockIndex
 
@@ -699,8 +690,7 @@ calc:   asl     a               ; *= 16
         clc
         adc     table,x
         tax
-        lda     #$00
-        rts
+        RETURN  A=#0
     END_IF
 
     IF A < #$20                 ; 16-31
@@ -728,8 +718,8 @@ bit_shift_table:
         sta     page_num
         lda     #0
         sta     count
-loop:   lda     page_num
-        jsr     _MarkFreeInMemoryBitmap
+loop:
+        CALL    _MarkFreeInMemoryBitmap, A=page_num
         inc     page_num
         inc     page_num
         inc     count
@@ -817,8 +807,7 @@ table:
 .proc ReadBlockWithRetry
 retry:  jsr     ReadBlock
         bcc     done
-        ldx     #0              ; reading
-        jsr     auxlc::ShowBlockError
+        CALL    auxlc::ShowBlockError, X=#0 ; reading
         bmi     done
         bne     retry
 done:   rts
@@ -895,8 +884,7 @@ done:   rts
 .proc WriteBlockWithRetry
 retry:  jsr     WriteBlock
         bcc     done
-        ldx     #$80            ; writing
-        jsr     auxlc::ShowBlockError
+        CALL    auxlc::ShowBlockError, X=#$80 ; writing
         beq     done
         bpl     retry
 done:   rts
@@ -1059,13 +1047,11 @@ kMemoryBitmapSize = * - memory_bitmap
 ;;; Assert: LCBANK1 is banked in
 
 .proc ResetIIgsRGB
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
         and     #DeskTopSettings::kSysCapIsIIgs
         beq     done
 
-        ldx     #DeskTopSettings::rgb_color
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::rgb_color
         bmi     color
 
         ldy     #$80            ; MONOCOLOR - Mono

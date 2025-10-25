@@ -110,8 +110,7 @@ event_params:   .tag MGTK::Event
         copy16  #aux::event_params, STARTLO
         copy16  #aux::event_params + .sizeof(MGTK::Event) - 1, ENDLO
         copy16  #event_params, DESTINATIONLO
-        clc                     ; aux > main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0    ; aux > main
 .endproc ; CopyEventAuxToMain
 
 ;;; ============================================================
@@ -224,8 +223,7 @@ on_key:
 .endproc ; SetSlideshowMode
 
 .proc InitSlideshowCounter
-        ldx     #DeskTopSettings::dblclick_speed
-        jsr     JUMP_TABLE_READ_SETTING
+        CALL    JUMP_TABLE_READ_SETTING, X=#DeskTopSettings::dblclick_speed
         sta     slideshow_counter
         inx                     ; `ReadSetting` preserves X
         jsr     JUMP_TABLE_READ_SETTING
@@ -249,8 +247,7 @@ restore_buffer_overlay_flag:
 
         bit     restore_buffer_overlay_flag
     IF NS
-        lda     #kDynamicRoutineRestoreBuffer
-        jsr     JUMP_TABLE_RESTORE_OVL
+        CALL    JUMP_TABLE_RESTORE_OVL, A=#kDynamicRoutineRestoreBuffer
     END_IF
 
         jsr     JUMP_TABLE_RGB_MODE
@@ -398,8 +395,7 @@ finish:
         jsr     SetBWMode
     END_IF
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
 signature:
         .byte   0
@@ -427,11 +423,9 @@ signature:
 
         jsr     HRToDHR
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
-fail:   sec                     ; failure
-        rts
+fail:   RETURN  C=1             ; failure
 
 .endproc ; ShowLZ4FHFile
 
@@ -440,7 +434,7 @@ fail:   sec                     ; failure
 ;;; Output: C=0 on success, C=1 on failure
 .proc ShowHRFile
         ;; If suffix is ".A2HR" show in mono mode
-        param_call CheckSuffix, str_a2hr_suffix
+        CALL    CheckSuffix, AX=#str_a2hr_suffix
     IF CC
         jsr     SetBWMode
     END_IF
@@ -450,8 +444,7 @@ fail:   sec                     ; failure
 
         jsr     HRToDHR
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
 .endproc ; ShowHRFile
 
@@ -462,7 +455,7 @@ fail:   sec                     ; failure
         ptr := $06
 
         ;; If suffix is ".A2FM" show in mono mode
-        param_call CheckSuffix, str_a2fm_suffix
+        CALL    CheckSuffix, AX=#str_a2fm_suffix
     IF CC
         jsr     SetBWMode
     END_IF
@@ -482,8 +475,7 @@ fail:   sec                     ; failure
         ;; MAIN memory half
         JUMP_TABLE_MLI_CALL READ, read_image_params
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
 .endproc ; ShowDHRFile
 
@@ -530,8 +522,7 @@ fail:   sec                     ; failure
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::notpencopy
         JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::paintbits_params
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 .endproc ; ShowMinipixFile
 
 ;;; ============================================================
@@ -623,8 +614,7 @@ done:   rts
         ;; Aux
         JUMP_TABLE_MLI_CALL READ, read_lores_params
         sta     PAGE2ON
-        lda     #0              ; aux
-        jsr     convert
+        CALL    convert, A=#0   ; aux
         sta     PAGE2OFF
 
         ;; Main
@@ -731,8 +721,7 @@ convert:
         adc     #4
     WHILE A < #kRows
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
 bitmap_table:
         .byte   %0000000,%0000000,%0000000,%0000000
@@ -909,8 +898,7 @@ loop:   copy8   #1, read_buf_params::request_count
         bcc     body
 
         ;; EOF (or other error) - finish up
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
         ;; Process op/count
 body:   lda     read_buf
@@ -931,8 +919,7 @@ body:   lda     read_buf
 
         ldx     #0
     DO
-        lda     read_buf,x
-        jsr     Write
+        CALL    Write, A=read_buf,x
         inx
     WHILE X <> count
 
@@ -971,14 +958,10 @@ not_01: cmp     #%10000000
         ldy     #0
 
     DO
-        lda     read_buf+0
-        jsr     Write
-        lda     read_buf+1
-        jsr     Write
-        lda     read_buf+2
-        jsr     Write
-        lda     read_buf+3
-        jsr     Write
+        CALL    Write, A=read_buf+0
+        CALL    Write, A=read_buf+1
+        CALL    Write, A=read_buf+2
+        CALL    Write, A=read_buf+3
         dec     count
     WHILE NOT_ZERO
 
@@ -1032,15 +1015,14 @@ UnpackRead := UnpackReadImpl::start
 
         sta     PAGE2OFF
 
-        param_call UnpackRead, Write
+        CALL    UnpackRead, AX=#Write
 
         bit     dhr_flags       ; if hires, need to convert
     IF NC
         jsr     HRToDHR
     END_IF
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
         ;; --------------------------------------------------
         ;; Callback for each unique byte to write
@@ -1154,11 +1136,9 @@ done:
         dex
     WHILE NOT_ZERO
 
-no:     sec                     ; no match
-        rts
+no:     RETURN  C=1             ; no match
 
-yes:    clc                     ; match!
-        rts
+yes:    RETURN  C=0             ; match!
 
 .endproc ; CheckSuffix
 
@@ -1171,15 +1151,13 @@ yes:    clc                     ; match!
 
         ;; IIgs?
         bit     ROMIN2
-        sec
-        jsr     IDROUTINE       ; Clears carry if IIgs
+        CALL    IDROUTINE, C=1  ; Clears carry if IIgs
         bit     LCBANK1
         bit     LCBANK1
         bcc     is_iigs
 
         ;; Not IIgs - just fail fast
-        sec                     ; failure
-        rts
+        RETURN  C=1             ; failure
 
         ;; --------------------------------------------------
 
@@ -1196,8 +1174,7 @@ is_iigs:
     END_IF
         copy16  #ExitSHR, exit_hook
 
-        clc                     ; success
-        rts
+        RETURN  C=0             ; success
 
 packed_flag:                    ; bit7
         .byte   0
@@ -1291,7 +1268,7 @@ packed_flag:                    ; bit7
 
         copy24  #SHR_SCREEN, addr
 
-        param_jump UnpackRead, write
+        TAIL_CALL UnpackRead, AX=#write
 
         ;; A = byte
         ;; Y = 0 on entry/exit
@@ -1357,13 +1334,13 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         lda     entry+FileEntry::storage_type_name_length
         and     #NAME_LENGTH_MASK
         sta     entry+FileEntry::storage_type_name_length
-        param_call check_suffix, str_a2fc_suffix
+        CALL    check_suffix, AX=#str_a2fc_suffix
         jcc     yes
-        param_call check_suffix, str_a2fm_suffix
+        CALL    check_suffix, AX=#str_a2fm_suffix
         jcc     yes
-        param_call check_suffix, str_a2lc_suffix
+        CALL    check_suffix, AX=#str_a2lc_suffix
         jcc     yes
-        param_call check_suffix, str_a2hr_suffix
+        CALL    check_suffix, AX=#str_a2hr_suffix
         jcc     yes
 
         ;; File type
@@ -1421,11 +1398,9 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         beq     yes
     END_IF
 
-no:     clc
-        rts
+no:     RETURN  C=0
 
-yes:    sec
-        rts
+yes:    RETURN  C=1
 
         ;; --------------------------------------------------
 
@@ -1451,11 +1426,9 @@ yes:    sec
         dex
     WHILE NOT_ZERO
 
-no:     sec                     ; no match
-        rts
+no:     RETURN  C=1             ; no match
 
-yes:    clc                     ; match!
-        rts
+yes:    RETURN  C=0             ; match!
 
 .endproc ; check_suffix
 
@@ -1596,7 +1569,7 @@ saw_header_flag:                ; bit7
     WHILE X <> INVOKE_PATH
         sty     cur_filename
 
-        param_call EnumerateDirectory, callback
+        CALL    EnumerateDirectory, AX=#callback
 
         ;; `first_filename` and `last_filename` are now populated,
         ;; along with maybe `prev_filename` and `next_filename`.

@@ -51,8 +51,7 @@
 .proc RunDA
         sty     clock_flag
         jsr     init_window
-        lda     dialog_result
-        rts
+        RETURN  A=dialog_result
 .endproc ; RunDA
 
 ;;; ============================================================
@@ -299,14 +298,11 @@ clock_24hours:  .byte   0
 
 init_window:
         ;; Cache settings
-        ldx     #DeskTopSettings::intl_date_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_date_sep
         sta     str_date_separator+1
-        ldx     #DeskTopSettings::intl_time_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_time_sep
         sta     str_time_separator+1
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::clock_24hours
         sta     clock_24hours
 
         jsr     GetDateFromProDOS
@@ -393,14 +389,12 @@ init_window:
         jeq     OnKeyOK
 
       IF A = #'1'
-        lda     #$00
-        jsr     HandleOptionClick
+        CALL    HandleOptionClick, A=#0
         jmp     InputLoop
       END_IF
 
       IF A = #'2'
-        lda     #$80
-        jsr     HandleOptionClick
+        CALL    HandleOptionClick, A=#$80
         jmp     InputLoop
       END_IF
 
@@ -509,14 +503,12 @@ hit:
 
         MGTK_CALL MGTK::InRect, clock_12hour_button::rect
     IF NOT_ZERO
-        lda     #$00
-        jmp     HandleOptionClick
+        TAIL_CALL HandleOptionClick, A=#$00
     END_IF
 
         MGTK_CALL MGTK::InRect, clock_24hour_button::rect
     IF NOT_ZERO
-        lda     #$80
-        jmp     HandleOptionClick
+        TAIL_CALL HandleOptionClick, A=#$80
     END_IF
 
         ;; ----------------------------------------
@@ -685,8 +677,7 @@ finish:
         sta     (ptr),y
         prepare_proc := *+1
         jsr     SELF_MODIFIED   ; update string
-        lda     selected_field
-        jsr     DrawField
+        CALL    DrawField, A=selected_field
 
         ;; If month changed, make sure day is in range and update if not.
         jsr     SetMonthLength
@@ -695,8 +686,7 @@ finish:
         sta     day
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         jsr     PrepareDayString
-        lda     #Field::day
-        jsr     DrawField
+        CALL    DrawField, A=#Field::day
     END_IF
         rts
 
@@ -719,8 +709,7 @@ hit_rect_index:
     END_IF
         sta     hour
 
-        lda     #Field::period
-        jmp     DrawField
+        TAIL_CALL DrawField, A=#Field::period
 .endproc ; TogglePeriod
 
 ;;; ============================================================
@@ -763,8 +752,7 @@ month_length_table:
 ;;; ============================================================
 
 .proc PrepareDayString
-        lda     day
-        jsr     NumberToASCII
+        CALL    NumberToASCII, A=day
         sta     day_string+1    ; first char
         stx     day_string+2    ; second char
         rts
@@ -813,8 +801,7 @@ str_am: PASCAL_STRING "AM"
 str_pm: PASCAL_STRING "PM"
 
 .proc PrepareYearString
-        lda     year
-        jsr     NumberToASCII
+        CALL    NumberToASCII, A=year
         sta     year_string+1
         stx     year_string+2
         rts
@@ -845,8 +832,7 @@ str_pm: PASCAL_STRING "PM"
 .endproc ; PrepareHourString
 
 .proc PrepareMinuteString
-        lda     minute
-        jsr     NumberToASCII
+        CALL    NumberToASCII, A=minute
         sta     minute_string+1
         stx     minute_string+2
         rts
@@ -894,8 +880,7 @@ dialog_result:  .byte   0
         inx
     WHILE X <> #kNumHitRects+1
 
-        ldx     #0
-        rts
+        RETURN  X=#0
 
 done:   pla
         tax
@@ -931,11 +916,11 @@ label_downarrow:
         MGTK_CALL MGTK::PaintBitsHC, time_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, date_sep1_pos
-        param_call DrawString, str_date_separator
+        CALL    DrawString, AX=#str_date_separator
         MGTK_CALL MGTK::MoveTo, date_sep2_pos
-        param_call DrawString, str_date_separator
+        CALL    DrawString, AX=#str_date_separator
         MGTK_CALL MGTK::MoveTo, time_sep_pos
-        param_call DrawString, str_time_separator
+        CALL    DrawString, AX=#str_time_separator
 
         MGTK_CALL MGTK::SetPenMode, penXOR
 
@@ -943,11 +928,11 @@ label_downarrow:
         ldx     clock_flag
     IF ZERO
         MGTK_CALL MGTK::MoveTo, label_uparrow_pos
-        param_call DrawString, label_uparrow
+        CALL    DrawString, AX=#label_uparrow
         MGTK_CALL MGTK::FrameRect, up_arrow_rect
 
         MGTK_CALL MGTK::MoveTo, label_downarrow_pos
-        param_call DrawString, label_downarrow
+        CALL    DrawString, AX=#label_downarrow
         MGTK_CALL MGTK::FrameRect, down_arrow_rect
     END_IF
 
@@ -957,24 +942,17 @@ label_downarrow:
         jsr     PrepareHourString
         jsr     PrepareMinuteString
 
-        lda     #Field::day
-        jsr     DrawField
-        lda     #Field::month
-        jsr     DrawField
-        lda     #Field::year
-        jsr     DrawField
-        lda     #Field::hour
-        jsr     DrawField
-        lda     #Field::minute
-        jsr     DrawField
-        lda     #Field::period
-        jsr     DrawField
+        CALL    DrawField, A=#Field::day
+        CALL    DrawField, A=#Field::month
+        CALL    DrawField, A=#Field::year
+        CALL    DrawField, A=#Field::hour
+        CALL    DrawField, A=#Field::minute
+        CALL    DrawField, A=#Field::period
 
         ;; If there is a system clock, don't draw the highlight.
         ldx     clock_flag
     IF ZERO
-        lda     #Field::day
-        jsr     SelectField
+        CALL    SelectField, A=#Field::day
     END_IF
 
         ;; --------------------------------------------------
@@ -1004,11 +982,9 @@ label_downarrow:
 
 .proc ZToButtonState
     IF ZC
-        lda     #BTK::kButtonStateNormal
-        rts
+        RETURN  A=#BTK::kButtonStateNormal
     END_IF
-        lda     #BTK::kButtonStateChecked
-        rts
+        RETURN  A=#BTK::kButtonStateChecked
 .endproc ; ZToButtonState
 
 ;;; A = field
@@ -1037,42 +1013,42 @@ label_downarrow:
 
 .proc DrawDay
         MGTK_CALL MGTK::MoveTo, day_pos
-        param_jump DrawString, day_string
+        TAIL_CALL DrawString, AX=#day_string
 .endproc ; DrawDay
 
 .proc DrawMonth
         MGTK_CALL MGTK::MoveTo, month_pos
-        param_call DrawString, spaces_string ; variable width, so clear first
+        CALL    DrawString, AX=#spaces_string ; variable width, so clear first
         MGTK_CALL MGTK::MoveTo, month_pos
-        param_jump DrawString, month_string
+        TAIL_CALL DrawString, AX=#month_string
 .endproc ; DrawMonth
 
 .proc DrawYear
         MGTK_CALL MGTK::MoveTo, year_pos
-        param_jump DrawString, year_string
+        TAIL_CALL DrawString, AX=#year_string
 .endproc ; DrawYear
 
 .proc DrawHour
         MGTK_CALL MGTK::MoveTo, hour_pos
-        param_jump DrawString, hour_string
+        TAIL_CALL DrawString, AX=#hour_string
 .endproc ; DrawHour
 
 .proc DrawMinute
         MGTK_CALL MGTK::MoveTo, minute_pos
-        param_jump DrawString, minute_string
+        TAIL_CALL DrawString, AX=#minute_string
 .endproc ; DrawMinute
 
 .proc DrawPeriod
         MGTK_CALL MGTK::MoveTo, period_pos
         bit     clock_24hours
     IF NS
-        param_call DrawString, spaces_string
+        CALL    DrawString, AX=#spaces_string
     ELSE
         lda     hour
       IF A < #12
-        param_jump DrawString, str_am
+        TAIL_CALL DrawString, AX=#str_am
       ELSE
-        param_jump DrawString, str_pm
+        TAIL_CALL DrawString, AX=#str_pm
       END_IF
     END_IF
         rts
@@ -1122,8 +1098,8 @@ label_downarrow:
         pha
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        lda     selected_field  ; invert old
-        jsr     invert
+        CALL    invert, A=selected_field  ; invert old
+
         pla                     ; update to new
         sta     selected_field
         FALL_THROUGH_TO invert
@@ -1226,8 +1202,7 @@ loop:
 
 .proc HandleOptionClick
         sta     clock_24hours
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     WriteSetting
+        CALL    WriteSetting, X=#DeskTopSettings::clock_24hours
 
         jsr     UpdateOptionButtons
 
@@ -1238,16 +1213,13 @@ loop:
 
         lda     selected_field
     IF A = #Field::period
-        lda     #Field::minute
-        jsr     SelectField
+        CALL    SelectField, A=#Field::minute
     END_IF
 
-        lda     #Field::period
-        jsr     DrawField
+        CALL    DrawField, A=#Field::period
 
         jsr     PrepareHourString
-        lda     #Field::hour
-        jsr     DrawField
+        CALL    DrawField, A=#Field::hour
 
         rts                     ; back to `InputLoop`
 .endproc ; HandleOptionClick
@@ -1259,8 +1231,7 @@ loop:
         copy16  #DATELO, STARTLO
         copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
         copy16  #auxdt, DESTINATIONLO
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; GetDateFromProDOS
 
 ;;; ============================================================
@@ -1287,8 +1258,7 @@ loop:
         copy16  #DATELO, STARTLO
         copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
         copy16  #current, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         ;; Is it different?
         ecmp16  current+DateTime::datelo, auxdt::DATELO
@@ -1301,8 +1271,7 @@ update:
         copy16  #auxdt, STARTLO
         copy16  #auxdt+.sizeof(DateTime)-1, ENDLO
         copy16  #DATELO, DESTINATIONLO
-        clc                     ; aux>main
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=0    ; aux>main
 
         ;; Set dirty bit
         lda     dialog_result

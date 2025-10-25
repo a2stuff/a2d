@@ -765,11 +765,10 @@ char:   .byte   0
         ;; Do the check (with ROM banked in)
 
         ;; Is IIgs?
-check:  sec
-        jsr     IDROUTINE       ; Clears carry if IIgs
+check:
+        CALL    IDROUTINE, C=1  ; Clears carry if IIgs
     IF CC
-        sec                     ; Yes, is a IIgs
-        rts
+        RETURN  C=1             ; Yes, is a IIgs
     END_IF
 
         ;; Is IIc+?
@@ -777,16 +776,14 @@ check:  sec
     IF ZERO
         lda     ZIDBYTE2        ; $05 = IIc Plus
       IF A = #$05
-        sec                     ; Yes, is a IIc+
-        rts
+        RETURN  C=1             ; Yes, is a IIc+
       END_IF
     END_IF
 
         ;; Can't distinguish Platinum IIe, even via shift key mod,
         ;; because unshifted state is high, just like no mod.
 
-        clc                     ; No - standard layout
-        rts
+        RETURN  C=0             ; No - standard layout
 .endproc ; CheckExtendedLayout
 
 ;;; ============================================================

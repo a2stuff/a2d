@@ -337,7 +337,7 @@ entry:
         bne     check_key_down
 
 quick_run_desktop:
-        param_call GetFileInfo, str_desktop_2
+        CALL    GetFileInfo, AX=#str_desktop_2
         jcs     done_keys
         jmp     RunDesktop
 
@@ -384,8 +384,7 @@ check_key:
     IF A <> #kSelectorEntryCopyNever
         jsr     GetCopiedToRAMCardFlag
         beq     done_keys       ; no RAMCard, skip
-        ldx     invoke_index
-        jsr     GetEntryCopiedToRAMCardFlag
+        CALL    GetEntryCopiedToRAMCardFlag, X=invoke_index
         bpl     done_keys       ; wasn't copied!
     END_IF
 
@@ -527,8 +526,7 @@ set_startup_menu_items:
 
         lda     startdesktop_params::slot_num
     IF ZERO
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         ora     #DeskTopSettings::kOptionsShowShortcuts
         jsr     WriteSetting
     END_IF
@@ -537,8 +535,7 @@ set_startup_menu_items:
         ;; Cursor tracking
 
         ;; Doubled if option selected
-        ldx     #DeskTopSettings::mouse_tracking
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::mouse_tracking
     IF NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
@@ -553,7 +550,7 @@ set_startup_menu_items:
         ;; --------------------------------------------------
 
         ;; Is DeskTop available?
-        param_call GetFileInfo, str_desktop_2
+        CALL    GetFileInfo, AX=#str_desktop_2
         ror     desktop_available_flag ; bit7 = C (1=not available)
 
         ;; --------------------------------------------------
@@ -595,10 +592,9 @@ quick_boot_slot:
        IF A = #kShortcutRunDeskTop
 
         BTK_CALL BTK::Flash, desktop_button
-retry:  param_call GetFileInfo, str_desktop_2
+retry:  CALL    GetFileInfo, AX=#str_desktop_2
         IF CS
-        lda     #AlertID::insert_system_disk
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     EventLoop       ; `kAlertResultCancel` = 1
         beq     retry           ; `kAlertResultTryAgain` = 0
@@ -639,8 +635,7 @@ ClearUpdates:
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         CONTINUE_IF NOT_ZERO    ; obscured
 
-        sec                     ; is update
-        jsr     DrawWindow
+        CALL    DrawWindow, C=1 ; is update
         OPTK_CALL OPTK::Update, op_params
         MGTK_CALL MGTK::EndUpdate
     WHILE ZERO                  ; always
@@ -778,8 +773,7 @@ cancel: jmp     LoadSelectorList
 
     END_IF
 
-        lda     #AlertID::insert_system_disk
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry           ; `kAlertResultTryAgain` = 0
         rts
@@ -803,8 +797,7 @@ cancel: jmp     LoadSelectorList
         lda     findwindow_params::window_id
         RTS_IF A <> #winfo::kDialogId
 
-        lda     #winfo::kDialogId
-        jsr     GetWindowPort
+        CALL    GetWindowPort, A=#winfo::kDialogId
         copy8   #winfo::kDialogId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -828,10 +821,9 @@ check_desktop_btn:
         BTK_CALL BTK::Track, desktop_button
         bmi     done
 
-retry:  param_call GetFileInfo, str_desktop_2
+retry:  CALL    GetFileInfo, AX=#str_desktop_2
        IF CS
-        lda     #AlertID::insert_system_disk
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_NOT_EQUALS kAlertResultCancel, 0
         bne     done            ; `kAlertResultCancel` = 1
         beq     retry           ; `kAlertResultTryAgain` = 0
@@ -913,8 +905,7 @@ noop:   rts
         jsr     HOME            ; Clear 80-col screen
         sta     TXTSET          ; ... and show it
 
-        lda     #$95            ; Ctrl-U - disable 80-col firmware
-        jsr     COUT
+        CALL    COUT, A=#$95    ; Ctrl-U - disable 80-col firmware
         jsr     INIT            ; reset text window again
         jsr     SETVID          ; after INIT so WNDTOP is set properly
         jsr     SETKBD
@@ -930,9 +921,7 @@ noop:   rts
 ;;; ============================================================
 
 .proc HandleNonmenuKey
-
-        lda     #winfo::kDialogId
-        jsr     GetWindowPort
+        CALL    GetWindowPort, A=#winfo::kDialogId
         lda     event_params::key
     IF A < #$1C                 ; Control character?
         jmp     control_char
@@ -1058,8 +1047,8 @@ start:  MLI_CALL OPEN, open_selector_params
         MLI_CALL CLOSE, close_overlay_params
         rts
 
-error:  lda     #AlertID::insert_system_disk
-        jsr     ShowAlert       ; `kAlertResultCancel` = 1
+error:
+        CALL    ShowAlert, A=#AlertID::insert_system_disk ; `kAlertResultCancel` = 1
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     start           ; `kAlertResultTryAgain` = 0
         rts
@@ -1093,8 +1082,8 @@ error:  lda     #AlertID::insert_system_disk
         copy8   DEVNUM, target
         jsr     GetCopiedToRAMCardFlag
     IF NS
-        param_call CopyDeskTopOriginalPrefix, INVOKER_PREFIX
-        param_call GetFileInfo, INVOKER_PREFIX
+        CALL    CopyDeskTopOriginalPrefix, AX=#INVOKER_PREFIX
+        CALL    GetFileInfo, AX=#INVOKER_PREFIX
       IF CC
         copy8   DEVNUM, target
       END_IF
@@ -1150,8 +1139,7 @@ backup_devlst:
 ;;; ============================================================
 
 .proc GetPortAndDrawWindow
-        lda     #winfo::kDialogId
-        jsr     GetWindowPort
+        CALL    GetWindowPort, A=#winfo::kDialogId
         clc                     ; not an update
         FALL_THROUGH_TO DrawWindow
 .endproc ; GetPortAndDrawWindow
@@ -1166,7 +1154,7 @@ backup_devlst:
         MGTK_CALL MGTK::FrameRect, rect_frame
 
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        param_call DrawTitleString, str_selector_title
+        CALL    DrawTitleString, AX=#str_selector_title
 
         plp
     IF CS
@@ -1286,7 +1274,7 @@ hi:     .byte   0
 
 .proc IsEntryCallback
         tay
-        ldx     entries_flag_table,y
+        ldx     entries_flag_table,y ; set N
         rts
 .endproc ; IsEntryCallback
 
@@ -1394,8 +1382,7 @@ start:
     END_IF
 
         ;; Look at the entry's flags
-        lda     invoke_index
-        jsr     GetSelectorListEntryAddr
+        CALL    GetSelectorListEntryAddr, A=invoke_index
         stax    ptr
         ldy     #kSelectorEntryFlagsOffset
         lda     (ptr),y
@@ -1409,14 +1396,12 @@ start:
         bit     invoked_during_boot_flag
         bmi     use_ramcard_path ; skip if no UI
 
-        ldx     invoke_index
-        jsr     GetEntryCopiedToRAMCardFlag
+        CALL    GetEntryCopiedToRAMCardFlag, X=invoke_index
         bmi     use_ramcard_path ; already copied
 
         ;; Need to copy to RAMCard
         path_addr := $06
-        lda     invoke_index
-        jsr     GetSelectorListPathAddr
+        CALL    GetSelectorListPathAddr, A=invoke_index
         jsr     CopyPathToInvokerPrefix
 
         jsr     LoadOverlayCopyDialog ; Trashes in-memory selector list
@@ -1430,9 +1415,7 @@ start:
         jmp     ClearSelectedIndex ; canceled!
     END_IF
 
-        ldx     invoke_index
-        lda     #$FF
-        jsr     SetEntryCopiedToRAMCardFlag
+        CALL    SetEntryCopiedToRAMCardFlag, X=invoke_index, A=#$FF
         jmp     use_ramcard_path
 
         ;; --------------------------------------------------
@@ -1440,8 +1423,7 @@ start:
 on_boot:
         bit     invoked_during_boot_flag
     IF NC                       ; skip if no UI
-        ldx     invoke_index
-        jsr     GetEntryCopiedToRAMCardFlag
+        CALL    GetEntryCopiedToRAMCardFlag, X=invoke_index
         bpl     use_entry_path  ; wasn't copied!
         FALL_THROUGH_TO use_ramcard_path
     END_IF
@@ -1449,15 +1431,13 @@ on_boot:
         ;; --------------------------------------------------
         ;; Copied to RAMCard - use copied path
 use_ramcard_path:
-        lda     invoke_index
-        jsr     ComposeRAMCardEntryPath
+        CALL    ComposeRAMCardEntryPath, A=invoke_index
         jmp     LaunchPath
 
         ;; --------------------------------------------------
         ;; Not copied to RAMCard - just use entry's path
 use_entry_path:
-        lda     invoke_index
-        jsr     GetSelectorListPathAddr
+        CALL    GetSelectorListPathAddr, A=invoke_index
 
         FALL_THROUGH_TO LaunchPath
 .endproc ; InvokeEntryImpl
@@ -1469,7 +1449,7 @@ InvokeEntry := InvokeEntryImpl::start
         jsr     CopyPathToInvokerPrefix
 
 retry:
-        param_call GetFileInfo, INVOKER_PREFIX
+        CALL    GetFileInfo, AX=#INVOKER_PREFIX
         bcc     check_type
 
         ;; Not present; maybe show a retry prompt
@@ -1510,25 +1490,24 @@ check_type:
     END_IF
 
     IF A = #FT_BASIC
-        param_call CheckInterpreter, str_extras_basic
+        CALL    CheckInterpreter, AX=#str_extras_basic
         bcc     check_path
         jsr     CheckBasicSystem ; try relative to launch path
         beq     check_path
 
-        lda     #AlertID::basic_system_not_found
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#AlertID::basic_system_not_found
         jmp     ClearSelectedIndex
     END_IF
 
     IF A = #FT_INT
-        param_call CheckInterpreter, str_extras_intbasic
+        CALL    CheckInterpreter, AX=#str_extras_intbasic
         bcc     check_path
         jsr     ShowAlert
         jmp     ClearSelectedIndex
     END_IF
 
     IF A IN #FT_AWP, #FT_ASP, #FT_ADB
-        param_call CheckInterpreter, str_extras_awlaunch
+        CALL    CheckInterpreter, AX=#str_extras_awlaunch
         bcc     check_path
         jsr     ShowAlert
         jmp     ClearSelectedIndex
@@ -1548,8 +1527,8 @@ check_type:
     END_IF
 
         ;; Don't know how to invoke
-err:    lda     #AlertID::selector_unable_to_run
-        jsr     ShowAlert
+err:
+        CALL    ShowAlert, A=#AlertID::selector_unable_to_run
         jmp     ClearSelectedIndex
 
         ;; --------------------------------------------------
@@ -1564,8 +1543,7 @@ check_path:
         dey
     WHILE NOT_ZERO
 
-        lda     #AlertID::insert_source_disk
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#AlertID::insert_source_disk
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     ClearSelectedIndex ; `kAlertResultCancel` = 1
         jmp     retry
@@ -1584,9 +1562,9 @@ check_path:
         stx     INVOKER_FILENAME
         pla
         sta     INVOKER_PREFIX
-        param_call UpcaseString, INVOKER_PREFIX
-        param_call UpcaseString, INVOKER_FILENAME
-        param_call UpcaseString, INVOKER_INTERPRETER
+        CALL    UpcaseString, AX=#INVOKER_PREFIX
+        CALL    UpcaseString, AX=#INVOKER_FILENAME
+        CALL    UpcaseString, AX=#INVOKER_INTERPRETER
 
         ;; --------------------------------------------------
         ;; Invoke
@@ -1670,11 +1648,9 @@ check_path:
     WHILE POS
 
         COPY_STRING read_buf + kLinkFilePathLengthOffset, INVOKER_PREFIX
-        clc
-        rts
+        RETURN  C=0
 
-err:    sec
-        rts
+err:    RETURN  C=1
 
 check_header:
         .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
@@ -1726,7 +1702,7 @@ pop_segment:
     WHILE NOT_ZERO
 
 no_bs:  copy8   #0, interp_path ; null out the path
-        return8 #$FF            ; non-zero is failure
+        RETURN  A=#$FF          ; non-zero is failure
 
 found_slash:
         cpx     #1
@@ -1744,7 +1720,7 @@ found_slash:
         copy8   str_basix_system,y, interp_path,x
     WHILE Y <> str_basix_system
         stx     interp_path
-        param_call GetFileInfo, interp_path
+        CALL    GetFileInfo, AX=#interp_path
         bcs     pop_segment
 
         rts                     ; zero is success
@@ -1773,7 +1749,7 @@ CheckBasicSystem        := CheckBasixSystemImpl::basic
     WHILE NE
         stx     INVOKER_INTERPRETER
 
-        param_jump GetFileInfo, INVOKER_INTERPRETER
+        TAIL_CALL GetFileInfo, AX=#INVOKER_INTERPRETER
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 .endproc ; CheckInterpreter
@@ -1830,9 +1806,9 @@ str_extras_awlaunch:
         buf := $800
 
         sta     tmp
-        param_call CopyRAMCardPrefix, buf
-        lda     tmp
-        jsr     GetSelectorListPathAddr
+        CALL    CopyRAMCardPrefix, AX=#buf
+
+        CALL    GetSelectorListPathAddr, A=tmp
 
         path_addr := $06
 
@@ -1862,8 +1838,8 @@ str_extras_awlaunch:
     WHILE Y <> len
 
         stx     buf
-        ldax    #buf
-        rts
+        RETURN  AX=#buf
+
 
 tmp:    .byte   0
 len:    .byte   0
@@ -1916,8 +1892,7 @@ len:    .byte   0
         jsr     ResetIIgsRGB    ; in case it was reset by control panel
     END_IF
 
-        lda     loop_counter
-        rts
+        RETURN  A=loop_counter
 
 loop_counter:
         .byte   0

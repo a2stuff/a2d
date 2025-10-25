@@ -131,7 +131,7 @@ start:
 
         ;;  If not 128k machine, just quit back to ProDOS
         jsr     HOME
-        param_call CoutString, str_128k_required
+        CALL    CoutString, AX=#str_128k_required
         sta     KBDSTRB
     DO
         lda     KBD
@@ -180,8 +180,7 @@ str_128k_required:
         jsr     HOME
 
         ;; IIgs: Reset shadowing
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
     IF CC
         .pushcpu
         .p816
@@ -285,25 +284,21 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
         copy8   #0, syscap
 
         ;; IIgs?
-        sec                     ; Follow detection protocol
-        jsr     IDROUTINE       ; RTS on pre-IIgs
+        CALL    IDROUTINE, C=1  ; Follow detection protocol
     IF CC
-        lda     #DeskTopSettings::kSysCapIsIIgs
-        jsr     set_bit
+        CALL    set_bit, A=#DeskTopSettings::kSysCapIsIIgs
         jmp     done_machid
     END_IF
 
         ;; IIc?
         lda     ZIDBYTE         ; $00 = IIc or later
     IF ZERO
-        lda     #DeskTopSettings::kSysCapIsIIc
-        jsr     set_bit
+        CALL    set_bit, A=#DeskTopSettings::kSysCapIsIIc
 
         ;; IIc Plus?
         lda     ZIDBYTE2        ; ROM version
       IF A = #$05               ; IIc Plus = $05
-        lda     #DeskTopSettings::kSysCapIsIIcPlus
-        jsr     set_bit
+        CALL    set_bit, A=#DeskTopSettings::kSysCapIsIIcPlus
       END_IF
         jmp     done_machid
     END_IF
@@ -311,8 +306,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
         ;; Laser 128?
         lda     IDBYTELASER128
     IF A = #$AC
-        lda     #DeskTopSettings::kSysCapIsLaser128
-        jsr     set_bit
+        CALL    set_bit, A=#DeskTopSettings::kSysCapIsLaser128
         jmp     done_machid
     END_IF
 
@@ -321,8 +315,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
     IF A = #$E0                 ; Enhanced IIe
         lda     IDBYTEMACIIE
       IF A = #$02               ; Mac IIe Option Card
-        lda     #DeskTopSettings::kSysCapIsIIeCard
-        jsr     set_bit
+        CALL    set_bit, A=#DeskTopSettings::kSysCapIsIIeCard
         jmp     done_machid
       END_IF
     END_IF
@@ -332,21 +325,17 @@ done_machid:
         ;; Le Chat Mauve Eve?
         jsr     DetectLeChatMauveEve
     IF NOT_ZERO                 ; non-zero if LCM Eve detected
-        lda     #DeskTopSettings::kSysCapLCMEve
-        jsr     set_bit
+        CALL    set_bit, A=#DeskTopSettings::kSysCapLCMEve
     END_IF
 
         ;; Mega II?
         jsr     DetectMegaII
     IF ZERO                     ; Z=1 if Mega II, Z=0 otherwise
-        lda     #DeskTopSettings::kSysCapMegaII
-        jsr     set_bit
+        CALL    set_bit, A=#DeskTopSettings::kSysCapMegaII
     END_IF
 
         ;; Write to settings
-        ldx     #DeskTopSettings::system_capabilities
-        lda     syscap
-        jmp     WriteSetting
+        TAIL_CALL WriteSetting, X=#DeskTopSettings::system_capabilities, A=syscap
 
 .proc set_bit
         ora     syscap
@@ -545,15 +534,13 @@ str_slash_desktop:
 
 .proc Start
         ;; Clear flag - ramcard not found or unknown state.
-        lda     #0
-        jsr     SetCopiedToRAMCardFlag
+        CALL    SetCopiedToRAMCardFlag, A=#0
 
         ;; Remember the current volume
         copy8   DEVNUM, current_unit_num
 
         ;; Skip RAMCard install if flag is set
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsSkipRAMCard
     IF ZERO
         ;; Skip RAMCard install if button is down
@@ -631,7 +618,7 @@ test_unit_num:
         and     #NAME_LENGTH_MASK
         beq     next_unit
 
-        param_call AdjustOnLineEntryCase, on_line_buffer
+        CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
 
         ;; Copy the name prepended with '/' to `dst_path`
         ldy     on_line_buffer
@@ -645,11 +632,10 @@ test_unit_num:
     WHILE NOT_ZERO
 
         ;; Record that candidate device is found.
-        lda     #$C0
-        jsr     SetCopiedToRAMCardFlag
+        CALL    SetCopiedToRAMCardFlag, A=#$C0
 
         ;; Keep root path (e.g. "/RAM5") for selector entry copies
-        param_call SetRAMCardPrefix, dst_path
+        CALL    SetRAMCardPrefix, AX=#dst_path
 
         ;; Append app dir name, e.g. "/RAM5/DESKTOP"
         ldy     dst_path
@@ -666,8 +652,7 @@ test_unit_num:
         bcs     StartCopy       ; No, start copy.
 
         ;; Already copied - record that it was installed and grab path.
-        lda     #$80
-        jsr     SetCopiedToRAMCardFlag
+        CALL    SetCopiedToRAMCardFlag, A=#$80
         jsr     SetHeaderOrigPrefix
         jsr     CopyOrigPrefixToDesktopOrigPrefix
         copy8   dst_path, copied_flag
@@ -695,8 +680,7 @@ test_unit_num:
         jsr     InitProgress
 
         ;; Record that the copy was performed.
-        lda     #$80
-        jsr     SetCopiedToRAMCardFlag
+        CALL    SetCopiedToRAMCardFlag, A=#$80
 
         jsr     SetHeaderOrigPrefix
 
@@ -916,23 +900,20 @@ done:   dex
 
         ;; Message
         copy8   #kHtabCopyingMsg, OURCH
-        lda     #kVtabCopyingMsg
-        jsr     VTABZ
-        param_call CoutString, str_copying_to_ramcard
+        CALL    VTABZ, A=#kVtabCopyingMsg
+        CALL    CoutString, AX=#str_copying_to_ramcard
 
         ;; Esc to Cancel
         copy8   #kHtabCancelMsg, OURCH
-        lda     #kVtabCancelMsg
-        jsr     VTABZ
-        param_call CoutString, str_esc_to_cancel
+        CALL    VTABZ, A=#kVtabCancelMsg
+        CALL    CoutString, AX=#str_esc_to_cancel
 
         ;; Tip
         bit     supports_mousetext
     IF NS
         copy8   #kHtabCopyingTip, OURCH
-        lda     #kVtabCopyingTip
-        jsr     VTABZ
-        param_call CoutString, str_tip_skip_copying
+        CALL    VTABZ, A=#kVtabCopyingTip
+        CALL    CoutString, AX=#str_tip_skip_copying
     END_IF
         rts
 .endproc ; ShowCopyingDeskTopScreen
@@ -941,8 +922,7 @@ done:   dex
 ;;; Callback from copy failure; restores stack and proceeds.
 
 .proc FailCopy
-        lda     #0              ; treat as no RAMCard
-        jsr     SetCopiedToRAMCardFlag
+        CALL    SetCopiedToRAMCardFlag, A=#0 ; treat as no RAMCard
 
         ldx     saved_stack
         txs
@@ -1053,7 +1033,7 @@ UpdateSelfFile  := UpdateSelfFileImpl::start
 ;;; ============================================================
 
 .proc CopyOrigPrefixToDesktopOrigPrefix
-        param_call SetDesktopOrigPrefix, header_orig_prefix
+        CALL    SetDesktopOrigPrefix, AX=#header_orig_prefix
         rts
 .endproc ; CopyOrigPrefixToDesktopOrigPrefix
 
@@ -1131,8 +1111,8 @@ entry_loop:
         lda     (ptr),y
         ASSERT_EQUALS ::kSelectorEntryCopyOnBoot, 0
         bne     next_entry
-        lda     entry_num
-        jsr     ComputePathAddr
+
+        CALL    ComputePathAddr, A=entry_num
 
         jsr     PrepareEntryPaths
         jsr     CopyUsingEntryPaths
@@ -1323,8 +1303,7 @@ ReadSelectorList        := ReadSelectorListImpl::start
         rol     bits
         .endrepeat
 
-        ldx     bits
-        rts
+        RETURN  X=bits
 
 bits:   .byte   0
 .endproc ; AxTimes16
@@ -1340,8 +1319,7 @@ bits:   .byte   0
         rol     bits
         .endrepeat
 
-        ldx     bits
-        rts
+        RETURN  X=bits
 
 bits:   .byte   $00
 .endproc ; AxTimes64
@@ -1435,11 +1413,10 @@ str_not_completed:
 ;;; Callback; used for `GenericCopy::hook_show_file`
 .proc ShowCopyingEntryScreen
         jsr     HOME
-        lda     #0
-        jsr     VTABZ
+        CALL    VTABZ, A=#0
         copy8   #0, OURCH
-        param_call CoutString, str_copying
-        param_call CoutStringNewline, GenericCopy::pathname_src
+        CALL    CoutString, AX=#str_copying
+        CALL    CoutStringNewline, AX=#GenericCopy::pathname_src
         rts
 .endproc ; ShowCopyingEntryScreen
 
@@ -1447,10 +1424,9 @@ str_not_completed:
 
 ;;; Callback; used for `GenericCopy::hook_insert_source`
 .proc ShowInsertSourceDiskPrompt
-        lda     #0
-        jsr     VTABZ
+        CALL    VTABZ, A=#0
         copy8   #0, OURCH
-        param_call CoutString, str_insert
+        CALL    CoutString, AX=#str_insert
 
         jsr     WaitEnterEscape
     IF A = #$80|CHAR_ESCAPE
@@ -1471,10 +1447,9 @@ str_not_completed:
         txs
         MLI_CALL CLOSE, close_everything_params
 
-        lda     #0
-        jsr     VTABZ
+        CALL    VTABZ, A=#0
         copy8   #0, OURCH
-        param_call CoutString, str_not_enough
+        CALL    CoutString, AX=#str_not_enough
         jsr     WaitEnterEscape
 
         jmp     FinishAndInvoke
@@ -1503,12 +1478,12 @@ str_not_completed:
 
         ;; Show generic error
         pha
-        param_call CoutString, str_error_prefix
+        CALL    CoutString, AX=#str_error_prefix
         pla
         jsr     PRBYTE
-        param_call CoutString, str_error_suffix
-        param_call CoutStringNewline, GenericCopy::pathname_src
-        param_call CoutString, str_not_completed
+        CALL    CoutString, AX=#str_error_suffix
+        CALL    CoutStringNewline, AX=#GenericCopy::pathname_src
+        CALL    CoutString, AX=#str_not_completed
 
         ;; Wait for keyboard
         sta     KBDSTRB
@@ -1569,8 +1544,7 @@ str_desktop:
 start:  MLI_CALL CLOSE, close_everything_params
 
         ;; Don't try selector if flag is set
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsSkipSelector
     IF ZERO
         MLI_CALL OPEN, open_selector_params
@@ -1716,9 +1690,8 @@ found:
         beq     ret
 
         copy8   #kHtabRamNotEmptyMsg, OURCH
-        lda     #kVtabRamNotEmptyMsg
-        jsr     VTABZ
-        param_call CoutString, str_ram_not_empty
+        CALL    VTABZ, A=#kVtabRamNotEmptyMsg
+        CALL    CoutString, AX=#str_ram_not_empty
         jsr     WaitEnterEscape
         cmp     #$80|CHAR_ESCAPE
         beq     quit
@@ -1727,8 +1700,7 @@ found:
 ret:    rts
 
 quit:   jsr     HOME
-        lda     #$95               ; Ctrl-U - disable 80-col firmware
-        jsr     COUT
+        CALL    COUT, A=#$95    ; Ctrl-U - disable 80-col firmware
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
 
@@ -1745,8 +1717,7 @@ str_ram_not_empty:
 
 .proc CoutStringNewline
         jsr     CoutString
-        lda     #$80|CHAR_RETURN
-        jmp     COUT
+        TAIL_CALL COUT, A=#$80|CHAR_RETURN
 .endproc ; CoutStringNewline
 
 .proc CoutString

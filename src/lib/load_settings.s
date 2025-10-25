@@ -34,8 +34,7 @@ LoadSettings:
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
 
         ;; IIgs?
-        sec                     ; Follow detection protocol
-        jsr     IDROUTINE       ; RTS on pre-IIgs
+        CALL    IDROUTINE, C=1  ; Follow detection protocol
 
         ldxy    #kDefaultDblClickSpeed*4
         bcc     update          ; carry clear = IIgs

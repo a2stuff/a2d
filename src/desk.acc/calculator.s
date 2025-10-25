@@ -448,8 +448,7 @@ intl_deci_sep:  .byte   0
 
 .proc Init
         ;; Cache settings
-        ldx     #DeskTopSettings::intl_deci_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_deci_sep
         sta     intl_deci_sep
         sta     decimal_label
         sta     decimal_lookup
@@ -505,10 +504,8 @@ intl_deci_sep:  .byte   0
         tsx
         stx     saved_stack
 
-        lda     #'='
-        jsr     ProcessKey
-        lda     #'C'
-        jsr     ProcessKey
+        CALL    ProcessKey, A=#'='
+        CALL    ProcessKey, A=#'C'
 
         FALL_THROUGH_TO InputLoop
 .endproc ; Init
@@ -585,8 +582,7 @@ exit := OnClick::exit
 ;;; On Key Press
 
 .proc OnKeyPress
-        lda     event_params::key
-        jsr     ToUpperCase
+        CALL    ToUpperCase, A=event_params::key
 
         ldx     event_params::modifiers
     IF NOT_ZERO
@@ -642,8 +638,7 @@ rts1:  rts                     ; used by next proc
     IF A < #kRow1Bot+kBorderBottomRight + 1 ; (+ 1 is bug in original?)
         jsr     FindButtonCol
         bcc     miss
-        lda     row1_lookup,x
-        rts
+        RETURN  A=row1_lookup,x
     END_IF
 
         cmp     #kRow2Top-kBorderLeftTop             ; row 2?
@@ -651,8 +646,7 @@ rts1:  rts                     ; used by next proc
     IF A < #kRow2Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
-        lda     row2_lookup,x
-        rts
+        RETURN  A=row2_lookup,x
     END_IF
 
         cmp     #kRow3Top-kBorderLeftTop             ; row 3?
@@ -660,8 +654,7 @@ rts1:  rts                     ; used by next proc
     IF A < #kRow3Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
-        lda     row3_lookup,x
-        rts
+        RETURN  A=row3_lookup,x
     END_IF
 
         cmp     #kRow4Top-kBorderLeftTop             ; row 4?
@@ -669,9 +662,7 @@ rts1:  rts                     ; used by next proc
     IF A < #kRow4Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
-        sec
-        lda     row4_lookup,x
-        rts
+        RETURN  C=1, A=row4_lookup,x
     END_IF
 
     IF A < #kRow5Top-kBorderLeftTop ; special case for tall + button
@@ -680,9 +671,7 @@ rts1:  rts                     ; used by next proc
         bcc     miss
         cmp     #kCol4Right+kBorderBottomRight-1         ; is -1 bug in original?
         bcs     miss
-        lda     #'+'
-        sec
-        rts
+        RETURN  A=#'+', C=1
     END_IF
 
         cmp     #kRow5Bot+kBorderBottomRight             ; row 5?
@@ -690,21 +679,17 @@ rts1:  rts                     ; used by next proc
 
         jsr     FindButtonCol
     IF CS
-        lda     row5_lookup,x
-        rts
+        RETURN  A=row5_lookup,x
     END_IF
 
         lda     screentowindow_params::windowx ; special case for wide 0 button
     IF A >= #kCol1Left-kBorderLeftTop
       IF A < #kCol2Right+kBorderBottomRight
-        lda     #'0'
-        sec
-        rts
+        RETURN  A=#'0', C=1
       END_IF
     END_IF
 
-miss:   clc
-        rts
+miss:   RETURN  C=0
 .endproc ; FindButtonRow
 
         row1_lookup := *-1
@@ -723,37 +708,28 @@ miss:   clc
         cpx     #kCol1Left-kBorderLeftTop             ; col 1?
         bcc     miss
     IF X < #kCol1Right+kBorderBottomRight
-        ldx     #1
-        sec
-        rts
+        RETURN  X=#1, C=1
     END_IF
 
         cpx     #kCol2Left-kBorderLeftTop             ; col 2?
         bcc     miss
     IF X < #kCol2Right+kBorderBottomRight
-        ldx     #2
-        sec
-        rts
+        RETURN  X=#2, C=1
     END_IF
 
         cpx     #kCol3Left-kBorderLeftTop             ; col 3?
         bcc     miss
     IF X < #kCol3Right+kBorderBottomRight
-        ldx     #3
-        sec
-        rts
+        RETURN  X=#3, C=1
     END_IF
 
         cpx     #kCol4Left-kBorderLeftTop            ; col 4?
         bcc     miss
     IF X < #kCol4Right+kBorderBottomRight - 1 ; bug in original?
-        ldx     #4
-        sec
-        rts
+        RETURN  X=#4, C=1
     END_IF
 
-miss:   clc
-        rts
+miss:   RETURN  C=0
 .endproc ; FindButtonCol
 .endproc ; MapClickToButton
 
@@ -766,9 +742,7 @@ miss:   clc
 
 .proc ProcessKey
     IF A = #'C'                 ; Clear?
-        ldxy    #btn_c::port
-        lda     #'c'
-        jsr     DepressButton
+        CALL    DepressButton, XY=#btn_c::port, A=#'c'
         lda     #0
         ROM_CALL FLOAT
         ldxy    #farg
@@ -784,9 +758,7 @@ miss:   clc
     END_IF
 
     IF A = #'E'                 ; Exponential?
-        ldxy    #btn_e::port
-        lda     #'e'
-        jsr     DepressButton
+        CALL    DepressButton, XY=#btn_e::port, A=#'e'
         ldy     calc_e
         bne     rts1
         ldy     calc_l
@@ -804,22 +776,20 @@ rts1:   rts
 
     IF A = #'='                 ; Equals?
         pha
-        ldxy    #btn_eq::port
-        jmp     DoOpClick
+        TAIL_CALL DoOpClick, XY=#btn_eq::port
     END_IF
 
     IF A = #'*'                 ; Multiply?
         pha
-        ldxy    #btn_mul::port
-        jmp     DoOpClick
+        TAIL_CALL DoOpClick, XY=#btn_mul::port
     END_IF
 
         cmp     intl_deci_sep   ; Decimal?
         beq     dsep
 
     IF A = #'.'                 ; allow either
-dsep:   ldxy    #btn_dec::port
-        jsr     DepressButton
+dsep:
+        CALL    DepressButton, XY=#btn_dec::port
         lda     calc_d
         ora     calc_e
         bne     rts2
@@ -835,8 +805,7 @@ rts2:   rts
 
     IF A = #'+'                 ; Add?
         pha
-        ldxy    #btn_add::port
-        jmp     DoOpClick
+        TAIL_CALL DoOpClick, XY=#btn_add::port
     END_IF
 
     IF A = #'-'                 ; Subtract?
@@ -860,68 +829,57 @@ rts2:   rts
 
     IF A = #'/'                 ; Divide?
         pha
-        ldxy    #btn_div::port
-        jmp     DoOpClick
+        TAIL_CALL DoOpClick, XY=#btn_div::port
     END_IF
 
     IF A = #'0'                 ; Digit 0?
         pha
-        ldxy    #btn_0::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_0::port
     END_IF
 
     IF A = #'1'                 ; Digit 1?
         pha
-        ldxy    #btn_1::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_1::port
     END_IF
 
     IF A = #'2'                 ; Digit 2?
         pha
-        ldxy    #btn_2::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_2::port
     END_IF
 
     IF A = #'3'                 ; Digit 3?
         pha
-        ldxy    #btn_3::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_3::port
     END_IF
 
     IF A = #'4'                 ; Digit 4?
         pha
-        ldxy    #btn_4::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_4::port
     END_IF
 
     IF A = #'5'                 ; Digit 5?
         pha
-        ldxy    #btn_5::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_5::port
     END_IF
 
     IF A = #'6'                 ; Digit 6?
         pha
-        ldxy    #btn_6::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_6::port
     END_IF
 
     IF A = #'7'                 ; Digit 7?
         pha
-        ldxy    #btn_7::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_7::port
     END_IF
 
     IF A = #'8'                 ; Digit 8?
         pha
-        ldxy    #btn_8::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_8::port
     END_IF
 
     IF A = #'9'                 ; Digit 9?
         pha
-        ldxy    #btn_9::port
-        jmp     do_digit_click
+        TAIL_CALL do_digit_click, XY=#btn_9::port
     END_IF
 
     IF A = #CHAR_DELETE         ; Delete?
@@ -1159,8 +1117,7 @@ end:    jsr     DisplayBuffer1
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF A = #MGTK::Error::window_obscured
-        lda     #$80            ; key was pressed
-        rts
+        RETURN  A=#$80          ; key was pressed
     END_IF
         MGTK_CALL MGTK::SetPort, grafport
 
@@ -1202,8 +1159,7 @@ done:   lda     button_state                    ; high bit set if button down
         MGTK_CALL MGTK::PaintRect, 0, restore_addr ; Inverts back to normal
     END_IF
         MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
-        lda     button_state
-        rts
+        RETURN  A=button_state
 .endproc ; DepressButton
 
 ;;; ============================================================
@@ -1240,8 +1196,7 @@ done:   lda     button_state                    ; high bit set if button down
         cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
-        ldxy    #text_buffer1
-        jsr     PreDisplayBuffer
+        CALL    PreDisplayBuffer, XY=#text_buffer1
         MGTK_CALL MGTK::DrawText, drawtext_params1
 end:    rts
 .endproc ; DisplayBuffer1
@@ -1251,8 +1206,7 @@ end:    rts
         cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
-        ldxy    #text_buffer2
-        jsr     PreDisplayBuffer
+        CALL    PreDisplayBuffer, XY=#text_buffer2
         MGTK_CALL MGTK::DrawText, drawtext_params2
 end:    rts
 .endproc ; DisplayBuffer2
@@ -1266,7 +1220,7 @@ end:    rts
         sbc     textwidth_params::result
         sta     text_pos_params3::left
         MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
-        param_call DrawString, spaces_string
+        CALL    DrawString, AX=#spaces_string
         MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
         rts
 .endproc ; PreDisplayBuffer
@@ -1360,7 +1314,7 @@ loop:   ldy     #0
     IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos
-        param_call DrawString, error_string
+        CALL    DrawString, AX=#error_string
     END_IF
 
         jsr     ResetBuffer1AndState

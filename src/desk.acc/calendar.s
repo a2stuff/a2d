@@ -226,21 +226,18 @@ first_dow:
         copy16  #DATELO, STARTLO
         copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
         copy16  #auxdt, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         ;; If it is valid, parse it
         lda     auxdt::DATELO
         ora     auxdt::DATEHI
     IF NOT_ZERO
         copy16  #datetime, $A   ; populate this struct
-        ldax    #auxdt          ; use current date
-        jsr     ParseDatetime
+        CALL    ParseDatetime, AX=#auxdt ; use current date
     END_IF
 
         ;; Load "first day of week" from settings
-        ldx     #DeskTopSettings::intl_first_dow
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_first_dow
         sta     first_dow
 
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -499,12 +496,11 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         ;; Measure month + space + year width, to center
         copy16  #0, width
-        ldax    ptr_str_month
-        jsr     MeasureString
+        CALL    MeasureString, AX=ptr_str_month
         addax   width
-        param_call MeasureString, str_space
+        CALL    MeasureString, AX=#str_space
         addax   width
-        param_call MeasureString, str_year
+        CALL    MeasureString, AX=#str_year
         addax   width
         sub16   #kDAWidth, width, pos_month_year::xcoord
         lsr16   pos_month_year::xcoord
@@ -518,10 +514,9 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         ;; Draw month + space + year
         MGTK_CALL MGTK::MoveTo, pos_month_year
-        ldax    ptr_str_month
-        jsr     DrawString
-        param_call DrawString, str_space
-        param_call DrawString, str_year
+        CALL    DrawString, AX=ptr_str_month
+        CALL    DrawString, AX=#str_space
+        CALL    DrawString, AX=#str_year
 
         ;; --------------------------------------------------
         ;; Grid lines
@@ -600,10 +595,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         ;; Find day-of-week for first day of month
         sub16   datetime + ParsedDateTime::year, #1900, tmp
-        ldy     tmp             ; year (0=1900)
-        ldx     datetime + ParsedDateTime::month ; month (1=Jan)
-        lda     #1              ; day
-        jsr     DayOfWeek       ; 0=sun
+        CALL    DayOfWeek, Y=tmp, X=datetime + ParsedDateTime::month, A=#1 ; Y,M,D; 0=sun
         sta     tmp
 
         ;; Start a few days earlier, to erase previous days
@@ -665,7 +657,7 @@ day_loop:
         ;; Draw it
 draw_date:
         MGTK_CALL MGTK::MoveTo, date_pos
-        param_call DrawString, str_date
+        CALL    DrawString, AX=#str_date
         add16_8 date_pos::xcoord, #kDayDX
 
         ;; Next

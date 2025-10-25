@@ -99,12 +99,6 @@
 ;;; ============================================================
 ;;; 8-bit pseudo-ops
 
-;;; Return a value in A - immediate or absolute
-.macro return8 arg
-        lda     arg
-        rts
-.endmacro
-
 .macro copy8 arg1, arg2, arg3, arg4
     .if (_is_register {arg2}) && (_is_register {arg4})
         ;; indexed load/indexed store
@@ -161,13 +155,6 @@
 
 ;;; ============================================================
 ;;; 16-bit pseudo-ops
-
-;;; Return a value in A,X - immediate or absolute
-.macro return16 arg
-        _op_lo  lda, {arg}
-        _op_hi  ldx, {arg}
-        rts
-.endmacro
 
 ;;; Load A,X
 ;;;    ldax #$1234      ; immediate (optimized if lo=hi)

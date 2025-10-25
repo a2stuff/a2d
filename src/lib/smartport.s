@@ -104,12 +104,9 @@ mirrored_slot   .byte
         iny
     END_IF
 
-        ldax    dispatch
-        clc                     ; Y = SmartPort unit number
-        rts
+        RETURN  AX=dispatch, C=0 ; Y = SmartPort unit number
 
-fail:   sec
-        rts
+fail:   RETURN  C=1
 
         ;; --------------------------------------------------
         ;; Mirrored SmartPort device with a known handler.
@@ -176,8 +173,8 @@ mirrored:
     END_IF
 
         ;; Exit
-        clc
-        rts
+        RETURN  C=0
+
 
 .endproc ; FindSmartportDispatchAddress
 

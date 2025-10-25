@@ -1,9 +1,17 @@
 ;;; ============================================================
+;;;
 ;;; Flow Control
+;;;
 ;;; ============================================================
 
 ;;; Macros that provide higher level flow control without resorting to
-;;; throw-away labels.
+;;; throw-away labels, and generally improve readability.
+
+;;; ============================================================
+;;;
+;;; Conditional Branching
+;;;
+;;; ============================================================
 
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
 ;;; * DO / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
@@ -174,10 +182,13 @@
       __RESULT_COMPARISON__ ">=", BCS, BCC
     .elseif .xmatch({__flow_next_token__}, >)
       .error .sprintf("%s: Greater-than operator ('>') not supported", __flow_statement__)
+      .exitmacro
     .elseif .xmatch({__flow_next_token__}, <=)
       .error .sprintf("%s: Less-than-or-equal operator ('<=') not supported", __flow_statement__)
+      .exitmacro
     .else
       .error .sprintf("%s: No operator match after register %s", __flow_statement__, __flow_register_name__)
+      .exitmacro
     .endif
 
     .undef __flow_comparison_operand__
@@ -187,6 +198,7 @@
 
   .else
     .error .sprintf("%s: No expression match", __flow_statement__)
+    .exitmacro
   .endif
 
   .undef __flow_token__
@@ -209,6 +221,7 @@
         ;; Parse expression
   .ifblank expr
     .error .sprintf("%s: empty expression", __flow_statement__)
+    .exitmacro
   .endif
 
   __flow_break_loop_flag__ .set 0
@@ -223,32 +236,40 @@
   .if __flow_expr_type__ = ::__flow_expr_type_flag_test__
     .if .tcount({expr}) > __flow_current_index__ + 1
       .error .sprintf("%s: Unexpected tokens after flag test '%s'", __flow_statement__, __flow_flag_test_name__)
+      .exitmacro
     .endif
      .ifnblank reg
        .error .sprintf("%s: Unexpected arguments after flag test '%s'", __flow_statement__, __flow_flag_test_name__)
+       .exitmacro
      .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_comparison__
     .if .match({__flow_comparison_operand__}, 0)
       .error .sprintf("%s: Numeric literal in '%s' comparison; did you mean '#%s'?", __flow_statement__, __flow_comparison_operator_name__, .string(__flow_comparison_operand__))
+      .exitmacro
     .endif
     .ifnblank reg
       .if .not(.xmatch({reg}, X) .or .xmatch({reg}, Y))
         .error .sprintf("%s: Unexpected non-index register after comparison '%s'", __flow_statement__, __flow_comparison_operator_name__)
+        .exitmacro
       .endif
     .endif
     .ifnblank arg2
       .error .sprintf("%s: Unexpected arguments after comparison '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      .exitmacro
     .endif
   .elseif __flow_expr_type__ = ::__flow_expr_type_in_list__
     ;; no validation
   .elseif __flow_expr_type__ = ::__flow_expr_type_between__
     .if .not(.xmatch(.mid(0, 1, {__flow_comparison_operand__}), #))
       .error .sprintf("%s: Expected immediate 1st argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      .exitmacro
     .endif
     .ifblank reg
       .error .sprintf("%s: Expected 2nd argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      .exitmacro
     .elseif .not(.xmatch(.mid(0, 1, {reg}), #))
       .error .sprintf("%s: Expected immediate 2nd argument for '%s'", __flow_statement__, __flow_comparison_operator_name__)
+      .exitmacro
     .endif
   .else
      .fatal "unreached"
@@ -513,6 +534,7 @@ stay:
 
 .macro ENDIF
         .error "Do you mean END_IF ?"
+        .exitmacro
 .endmacro
 
 
@@ -739,4 +761,172 @@ _FLOW_DEFINE_COMPARE_MACROS_ "GE"
 
 .macro IF_A_NE_ALL_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         IF A NOT_IN arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.endmacro
+
+;;; ============================================================
+;;;
+;;; Function Calls
+;;;
+;;; ============================================================
+
+;;; * CALL proc, args...
+;;; * TAIL_CALL proc, args...
+;;; * RETURN args...
+;;;
+;;; Args take the form of (pseudo-)register or flag assigments, and
+;;; loads/clears/sets are emitted in the order given. CALL produces
+;;; a JSR, TAIL_CALL produces a JMP, and RETURN produces RTS.
+;;;
+;;; Registers/pseudo-registers are: A, X, Y, AX, AY, XY
+;;; Expressions can be anything supported by the LD* ops/pseudo-ops.
+;;; e.g. CALL Proc, AX=ptr, Y=#kOptions
+;;;
+;;; Flags are: C, D
+;;; Expressions must be constant (e.g. 0, 1, kConst, etc)
+;;; e.g. CALL Proc, C=1
+
+.macro CALL target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
+    _FLOW_STATEMENT "CALL"
+    _CALL_HELPER {arg1},{arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
+        jsr     target
+    _FLOW_END_STATEMENT
+.endmacro
+
+.macro TAIL_CALL target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
+    _FLOW_STATEMENT "TAIL_CALL"
+    _CALL_HELPER {arg1},{arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
+        jmp     target
+    _FLOW_END_STATEMENT
+.endmacro
+
+.macro RETURN arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
+    _FLOW_STATEMENT "RETURN"
+    _CALL_HELPER {arg1},{arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
+        rts
+    _FLOW_END_STATEMENT
+.endmacro
+
+.macro _CALL_HELPER arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
+    .ifblank arg1
+        ;; nothing
+    .elseif .xmatch({arg2},X) .or .xmatch({arg2},Y)
+        ;; Allow calling like: A=table,x
+        _CALL_EXPR {arg1,arg2}
+        _CALL_HELPER {arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
+    .else
+        _CALL_EXPR {arg1}
+        _CALL_HELPER {arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
+    .endif
+.endmacro
+
+::__flow_call_load_type_register__ = 1
+::__flow_call_load_type_flag__ = 2
+
+.macro _CALL_EXPR arg
+
+        ;; --------------------------------------------------
+        ;; Parsing
+
+        ;; '@' is used so this doesn't interfere with cheap local
+        ;; labels in user code.
+
+    .local @__flow_call_load_type__
+
+    .if .xmatch(.left(1,{arg}), A)
+      .define __flow_register_name__ "A"
+      .define __flow_opcode__ LDA
+      @__flow_call_load_type__ .set ::__flow_call_load_type_register__
+    .elseif .xmatch(.left(1,{arg}), X)
+      .define __flow_register_name__ "X"
+      .define __flow_opcode__ LDX
+      @__flow_call_load_type__ .set ::__flow_call_load_type_register__
+    .elseif .xmatch(.left(1,{arg}), Y)
+      .define __flow_register_name__ "Y"
+      .define __flow_opcode__ LDY
+      @__flow_call_load_type__ .set ::__flow_call_load_type_register__
+    .elseif .xmatch(.left(1,{arg}), AX)
+      .define __flow_register_name__ "AX"
+      .define __flow_opcode__ ldax
+      @__flow_call_load_type__ .set ::__flow_call_load_type_register__
+    .elseif .xmatch(.left(1,{arg}), AY)
+      .define __flow_register_name__ "AY"
+      .define __flow_opcode__ lday
+      @__flow_call_load_type__ .set ::__flow_call_load_type_register__
+    .elseif .xmatch(.left(1,{arg}), XY)
+      .define __flow_register_name__ "XY"
+      .define __flow_opcode__ ldxy
+      @__flow_call_load_type__ .set ::__flow_call_load_type_register__
+    .elseif .xmatch(.left(1,{arg}), C)
+      .define __flow_register_name__ "C"
+      @__flow_call_load_type__ .set ::__flow_call_load_type_flag__
+    .elseif .xmatch(.left(1,{arg}), D)
+      .define __flow_register_name__ "D"
+      @__flow_call_load_type__ .set ::__flow_call_load_type_flag__
+    .else
+      .error .sprintf("%s: Expected 'reg=...'", __flow_statement__)
+      .exitmacro
+    .endif
+
+        ;; --------------------------------------------------
+        ;; Validation
+
+    .if .not(.xmatch(.mid(1,1,{arg}), =))
+      .error .sprintf("%s: Expected '%s=...'", __flow_statement__, __flow_register_name__)
+      .exitmacro
+    .endif
+
+    .if @__flow_call_load_type__ = ::__flow_call_load_type_register__
+      .if .match(.mid(2,1,{arg}), 0)
+        .error .sprintf("%s: Numeric literal in '%s=expr' assignment; did you mean '#%s'?", __flow_statement__, __flow_register_name__, .string(.mid(2,1,{arg})))
+        .exitmacro
+      .endif
+      .if .match(.mid(2,1,{arg}), kDummyConstant)
+        .if .strat(.string(.mid(2,1,{arg})), 0) = 'k' .and .strat(.string(.mid(2,1,{arg})), 1) >= 'A' .and .strat(.string(.mid(2,1,{arg})), 1) <= 'Z'
+          .error .sprintf("%s: Constant in '%s=expr' assignment; did you mean '#%s'?", __flow_statement__, __flow_register_name__, .string(.mid(2,1,{arg})))
+          .exitmacro
+        .endif
+      .endif
+    .elseif @__flow_call_load_type__ = ::__flow_call_load_type_flag__
+      .if .tcount({arg}) <> 3
+        .error .sprintf("%s: Unexpected tokens after '%s=...'", __flow_statement__, __flow_register_name__)
+        .exitmacro
+      .endif
+
+      .if .not(.const(.mid(2,9999,{arg})))
+        .error .sprintf("%s: Expected constant expression after '%s='", __flow_statement__, __flow_register_name__)
+        .exitmacro
+      .elseif .mid(2,9999,{arg})
+        .if .xmatch(__flow_register_name__, "C")
+          .define __flow_opcode__ SEC
+        .elseif .xmatch(__flow_register_name__, "D")
+          .define __flow_opcode__ SED
+        .endif
+      .else
+        .if .xmatch(__flow_register_name__, "C")
+           .define __flow_opcode__ CLC
+        .elseif .xmatch(__flow_register_name__, "D")
+           .define __flow_opcode__ CLD
+        .endif
+      .endif
+
+    .else
+      .fatal "unreached"
+    .endif
+
+        ;; --------------------------------------------------
+        ;; Code generation
+
+    .if @__flow_call_load_type__ = ::__flow_call_load_type_register__
+        __flow_opcode__     .mid(2,9999,{arg})
+    .elseif @__flow_call_load_type__ = ::__flow_call_load_type_flag__
+        __flow_opcode__
+    .else
+      .fatal "unreached"
+    .endif
+
+        ;; --------------------------------------------------
+        ;; Cleanup
+
+    .undef __flow_opcode__
+    .undef __flow_register_name__
 .endmacro

@@ -198,7 +198,7 @@ frame_counter:
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        param_call DrawTitleString, title_label_str
+        CALL    DrawTitleString, AX=#title_label_str
 
         BTK_CALL BTK::Draw, ok_button
         BTK_CALL BTK::Draw, norm_button

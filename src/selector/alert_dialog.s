@@ -82,7 +82,7 @@ options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 
 start:  bit     app::invoked_during_boot_flag ; if no UI, just return cancel
     IF NS
-        return8 #kAlertResultCancel
+        RETURN  A=#kAlertResultCancel
     END_IF
 
         ;; --------------------------------------------------

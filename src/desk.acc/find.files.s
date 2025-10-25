@@ -54,8 +54,7 @@
 .proc RunDA
         sty     path_length
         jsr     Init
-        lda     show_index
-        rts
+        RETURN  A=show_index
 .endproc ; RunDA
 
 ;;; ============================================================
@@ -183,7 +182,7 @@ num_entries := listbox_rec::num_items
         copy8   #0, buf_search
 
 
-        param_call MeasureString, find_label_str
+        CALL    MeasureString, AX=#find_label_str
         addax   input_rect::x1
         add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
 
@@ -293,8 +292,7 @@ ignore:
         cmp     #' '
         rts                     ; C=0 (if less) or 1
 
-yes:    clc                     ; C=0
-        rts
+yes:    RETURN  C=0
 .endproc ; IsControlChar
 
 ;;; ============================================================
@@ -327,11 +325,9 @@ yes:    clc                     ; C=0
         bcs     ignore          ; always
 .endif
 
-insert: clc
-        rts
+insert: RETURN  C=0
 
-ignore: sec
-        rts
+ignore: RETURN  C=1
 .endproc ; IsSearchChar
 
 ;;; ============================================================
@@ -353,8 +349,7 @@ ignore: sec
         bne     nope
         rts
 
-nope:   lda     #0
-        rts
+nope:   RETURN  A=#0
 .endproc ; CheckEvents
 
 ;;; ============================================================
@@ -396,8 +391,7 @@ search:
         copy16  #pattern, STARTLO
         copy16  #pattern+kMaxFilenameLength, ENDLO
         copy16  #::main::RecursiveCatalog::pattern, DESTINATIONLO
-        clc                     ; aux>main
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=0    ; aux>main
 
         ;; And invoke it!
         ldy     num_entries     ; A,X are trashed by macro
@@ -530,7 +524,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::FrameRect, input_rect
 
         MGTK_CALL MGTK::MoveTo, find_label_pos
-        param_call DrawString, find_label_str
+        CALL    DrawString, AX=#find_label_str
 
         BTK_CALL BTK::Draw, search_button
         BTK_CALL BTK::Draw, cancel_button
@@ -549,8 +543,7 @@ done:   rts
         add16   STARTLO, #kPathBufferSize-1, ENDLO
         copy16  #entry_buf, DESTINATIONLO
 
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; GetEntry
 
 ;;; ============================================================
@@ -567,7 +560,7 @@ NoOp:   rts
 ;;; Called with A = index
 .proc DrawListEntryProc
         jsr     GetEntry
-        param_jump DrawString, entry_buf
+        TAIL_CALL DrawString, AX=#entry_buf
 .endproc ; DrawListEntryProc
 
 ;;; ============================================================
@@ -585,8 +578,7 @@ NoOp:   rts
 .proc DrawNextResult
         MGTK_CALL MGTK::MoveTo, cur_pos
 
-        lda     cur_line
-        jsr     DrawListEntryProc
+        CALL    DrawListEntryProc, A=cur_line
 
         add16_8 cur_pos+MGTK::Point::ycoord, #kListItemHeight
         inc     cur_line
@@ -612,8 +604,7 @@ NoOp:   rts
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #::main::entries_buffer, offset
 
-        ldax    offset
-        rts
+        RETURN  AX=offset
 
 num:    .byte   0
 offset: .addr   0
@@ -740,8 +731,7 @@ continue:
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #entries_buffer, offset
 
-        ldax    offset
-        rts
+        RETURN  AX=offset
 
 num:    .byte   0
 offset: .addr   0
@@ -865,8 +855,7 @@ num_entries:
         tsx
         stx     saved_stack
 
-        ldax    #nameBuffer
-        jmp     ReadDir
+        TAIL_CALL ReadDir, AX=#nameBuffer
 .endproc ; Relay
 .endproc ; Start
 
@@ -908,8 +897,7 @@ ReadDir1:                       ; recursive entry point
         jmp     nextEntry       ; jump to the end of the loop
 
 loop:
-        ldax    entPtr
-        jsr     JUMP_TABLE_ADJUST_FILEENTRY
+        CALL    JUMP_TABLE_ADJUST_FILEENTRY, AX=entPtr
 
         ldy     #FileEntry::storage_type_name_length ; get type of current entry
         lda     (entPtr),y
@@ -1004,8 +992,7 @@ OpenDone:
 ;;;******************************************************
 ;;;
 .proc VisitFile
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowInvisible
     IF ZERO
         ;; Is the file visible?
@@ -1023,8 +1010,7 @@ OpenDone:
     END_IF
 
         ptr := $0A
-        lda     num_entries
-        jsr     GetEntryAddr
+        CALL    GetEntryAddr, A=num_entries
         stax    ptr
 
         ;; Copy name to buffer
@@ -1450,7 +1436,7 @@ repeat: ldx     devidx
         and     #NAME_LENGTH_MASK
         beq     repeat          ; error - try next one
 
-        param_call JUMP_TABLE_ADJUST_ONLINEENTRY, on_line_buffer
+        CALL    JUMP_TABLE_ADJUST_ONLINEENTRY, AX=#on_line_buffer
 
         ldx     #0
     DO
@@ -1464,12 +1450,10 @@ repeat: ldx     devidx
         stx     searchPath
 
         ;; Success!
-        clc
-        rts
+        RETURN  C=0
 
 fail:
-        sec
-        rts
+        RETURN  C=1
 .endproc ; NextVolume
 
 ;;; ============================================================

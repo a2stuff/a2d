@@ -224,9 +224,7 @@ coords          .tag MGTK::Point
         sub16   ycoord, oprc_top, ycoord
         bmi     fail
 
-        ldax    ycoord
-        ldy     oprc_item_height
-        jsr     _Divide         ; A = row
+        CALL    _Divide, AX=ycoord, Y=oprc_item_height ; A = row
 
         cmp     oprc_num_rows
         bcs     fail
@@ -236,9 +234,7 @@ coords          .tag MGTK::Point
         sub16   xcoord, oprc_left, xcoord
         bmi     fail
 
-        ldax    xcoord
-        ldy     oprc_item_width
-        jsr     _Divide         ; A = col
+        CALL    _Divide, AX=xcoord, Y=oprc_item_width ; A = col
 
         cmp     oprc_num_cols
         bcs     fail
@@ -258,7 +254,7 @@ coords          .tag MGTK::Point
     END_IF
         jmp     _SetSelectionAndNotify
 
-fail:   return8 #$FF
+fail:   RETURN  A=#$FF
 .endproc ; ClickImpl
 
 ;;; ============================================================
@@ -399,8 +395,7 @@ last:   lda     max_entries_minus_one
 .proc _SetSelectionAndNotify
         jsr     _SetSelection
         jsr     OnSelChange
-        lda     oprc_selected_index
-        rts
+        RETURN  A=oprc_selected_index
 .endproc ; _SetSelectionAndNotify
 
 ;;; ============================================================
@@ -422,8 +417,7 @@ new_selection   .byte
 
         pha                     ; A = new selection
         jsr     _SetPort
-        lda     oprc_selected_index
-        jsr     _HighlightIndex
+        CALL    _HighlightIndex, A=oprc_selected_index
         ldy     #OPTK::OptionPickerRecord::selected_index
         pla                     ; A = new selection
         sta     (a_record),y
@@ -511,8 +505,7 @@ END_PARAM_BLOCK
         copy8   #0, muldiv_params::numerator+1
         copy16  #1, muldiv_params::denominator
         MGTK_CALL MGTK::MulDiv, muldiv_params
-        ldax    muldiv_params::result
-        rts
+        RETURN  AX=muldiv_params::result
 .endproc ; _Multiply
 
 ;;; ============================================================
@@ -524,9 +517,7 @@ END_PARAM_BLOCK
         copy8   #0, muldiv_params::denominator+1
         copy16  #1, muldiv_params::number
         MGTK_CALL MGTK::MulDiv, muldiv_params
-        ldax    muldiv_params::result
-        ldy     muldiv_params::remainder
-        rts
+        RETURN  AX=muldiv_params::result, Y=muldiv_params::remainder
 .endproc ; _Divide
 
 ;;; ============================================================

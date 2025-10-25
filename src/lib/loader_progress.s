@@ -26,41 +26,34 @@ PREDEFINE_SCOPE UpdateProgress
         bit     supports_mousetext
         bpl     done
 
-        lda     #kProgressVtab
-        jsr     VTABZ
+        CALL    VTABZ, A=#kProgressVtab
         lda     #kProgressHtab
         sta     OURCH
 
         ;; Enable MouseText
-        lda     #$0F|$80
-        jsr     COUT
-        lda     #$1B|$80
-        jsr     COUT
+        CALL    COUT, A=#$0F|$80
+        CALL    COUT, A=#$1B|$80
 
         ;; Draw progress track (alternating checkerboards)
         ldx     #kProgressWidth
     DO
-        lda     #'V'|$80
-        jsr     COUT
+        CALL    COUT, A=#'V'|$80
         dex
         BREAK_IF ZERO
-        lda     #'W'|$80
-        jsr     COUT
+
+        CALL    COUT, A=#'W'|$80
         dex
     WHILE NOT_ZERO
 
         ;; Disable MouseText
-        lda     #$18|$80
-        jsr     COUT
-        lda     #$0E|$80
-        jsr     COUT
+        CALL    COUT, A=#$18|$80
+        CALL    COUT, A=#$0E|$80
 
 done:   rts
 .endproc ; InitProgress
 
 .proc UpdateProgress
-        lda     #kProgressVtab
-        jsr     VTABZ
+        CALL    VTABZ, A=#kProgressVtab
         lda     #kProgressHtab
         sta     OURCH
 

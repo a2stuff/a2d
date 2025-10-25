@@ -578,9 +578,9 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::PaintBitsHC, map_params
 
         MGTK_CALL MGTK::MoveTo, lat_label_pos
-        param_call      DrawString, lat_label_str
+        CALL    DrawString, AX=#lat_label_str
         MGTK_CALL MGTK::MoveTo, long_label_pos
-        param_call      DrawString, long_label_str
+        CALL    DrawString, AX=#long_label_str
 
         jsr     DrawLatLong
 
@@ -610,18 +610,17 @@ done:   jmp     InputLoop
         sub16   #0, tmp, tmp
     END_IF
 
-        ldax    tmp
-        jsr     IntToString
+        CALL    IntToString, AX=tmp
         MGTK_CALL MGTK::MoveTo, pos_lat
-        param_call DrawString, str_from_int
-        param_call DrawString, str_degree_suffix
+        CALL    DrawString, AX=#str_from_int
+        CALL    DrawString, AX=#str_degree_suffix
         bit     sflag
     IF NC
-        param_call DrawString, str_n
+        CALL    DrawString, AX=#str_n
     ELSE
-        param_call DrawString, str_s
+        CALL    DrawString, AX=#str_s
     END_IF
-        param_call DrawString, str_spaces
+        CALL    DrawString, AX=#str_spaces
 
         ;; Longitude
         copy16  long, tmp
@@ -632,18 +631,17 @@ done:   jmp     InputLoop
         sub16   #0, tmp, tmp
     END_IF
 
-        ldax    tmp
-        jsr     IntToString
+        CALL    IntToString, AX=tmp
         MGTK_CALL MGTK::MoveTo, pos_long
-        param_call DrawString, str_from_int
-        param_call DrawString, str_degree_suffix
+        CALL    DrawString, AX=#str_from_int
+        CALL    DrawString, AX=#str_degree_suffix
         bit     sflag
     IF NC
-        param_call DrawString, str_e
+        CALL    DrawString, AX=#str_e
     ELSE
-        param_call DrawString, str_w
+        CALL    DrawString, AX=#str_w
     END_IF
-        param_call DrawString, str_spaces
+        CALL    DrawString, AX=#str_spaces
 
         jsr     UpdateCoordsFromLatLong
         jmp     ShowPositionIndicator
@@ -692,8 +690,7 @@ indicator_flag:                 ; bit7 = indicator is visible
         .byte   0
 
 .proc ResetBlinkCounter
-        ldx     #DeskTopSettings::caret_blink_speed
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::caret_blink_speed
         sta     blink_counter
         inx                     ; `ReadSetting` preserves X
         jsr     ReadSetting

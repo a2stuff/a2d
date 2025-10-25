@@ -133,71 +133,11 @@ loop:   lda     src,x
 
 
 ;;; ============================================================
-;;; Calls
+;;; Lambda Invocation
 ;;; ============================================================
 
-;;; Calls with one parameter (address in A,X) or two (Y, plus A,X)
-;;; Usage: param_call target, ax_arg
-;;;        param_call target, y_arg, ax_arg
-
-.macro param_call target, param1, param2
-    .ifblank param2
-        lda     #<(param1)
-        ldx     #>(param1)
-    .else
-        ldy     #param1
-        lda     #<(param2)
-        ldx     #>(param2)
-    .endif
-        jsr     target
-.endmacro
-
-;;; The parameter address for `param_call` is implicitly immediate
-;;; addressing mode; this variation allows indirect references to the
-;;; data location.
-.macro param_call_indirect target, param1, param2
-    .ifblank param2
-        lda     param1
-        ldx     param1+1
-    .else
-        ldy     #param1
-        lda     param2
-        ldx     param2+1
-    .endif
-        jsr     target
-.endmacro
-
-;;; Like `param_call` for tail calls.
-.macro param_jump target, param1, param2
-    .ifblank param2
-        lda     #<(param1)
-        ldx     #>(param1)
-    .else
-        ldy     #param1
-        lda     #<(param2)
-        ldx     #>(param2)
-    .endif
-        jmp     target
-.endmacro
-
-;;; Like `param_call_indirect` for tail calls.
-.macro param_jump_indirect target, param1, param2
-    .ifblank param2
-        lda     param1
-        ldx     param1+1
-    .else
-        ldy     #param1
-        lda     param2
-        ldx     param2+1
-    .endif
-        jmp     target
-.endmacro
-
-;;; --------------------------------------------------
-;;; Lambda Invocation
-
-;;; Like `param_call` but the target is passed a "lambda"
-;;; that is defined inline. And RTS (or tail call) is required!
+;;; Call a proc and pass a "lambda" (anonymous locally defined
+;;; function) in A,X. An RTS (or tail call) is required!
 
 ;;; Example:
 ;;;   INVOKE_WITH_LAMBDA ForEachThing

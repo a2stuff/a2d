@@ -13,15 +13,13 @@
 ;;; ============================================================
 
 .proc SetRGBMode
-        ldx     #DeskTopSettings::rgb_color
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::rgb_color
         bpl     SetMonoMode
         FALL_THROUGH_TO SetColorMode
 .endproc ; SetRGBMode
 
 .proc SetColorMode
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
 
         tax                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIgs
@@ -66,8 +64,7 @@ megaii: lda     NEWVIDEO
 .endproc ; SetColorMode
 
 .proc SetMonoMode
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
 
         tax                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIgs
@@ -114,13 +111,11 @@ done:   rts
 
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 .proc ResetIIgsRGB
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
         and     #DeskTopSettings::kSysCapIsIIgs
         beq     SetMonoMode::done ; nope
 
-        ldx     #DeskTopSettings::rgb_color
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::rgb_color
         bmi     SetColorMode::iigs
         bpl     SetMonoMode::iigs ; always
 .endproc ; ResetIIgsRGB

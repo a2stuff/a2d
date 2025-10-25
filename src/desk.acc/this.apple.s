@@ -555,16 +555,14 @@ ep_size := * - ep_start
         copy16  #aux::event_params, STARTLO
         copy16  #aux::event_params+ep_size-1, ENDLO
         copy16  #event_params, DESTINATIONLO
-        clc                     ; aux>main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux>main
 .endproc ; CopyEventDataToMain
 
 .proc CopyEventDataToAux
         copy16  #event_params, STARTLO
         copy16  #event_params+ep_size-1, ENDLO
         copy16  #aux::event_params, DESTINATIONLO
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; CopyEventDataToAux
 
 ;;; ============================================================
@@ -999,8 +997,7 @@ match:  tya
         ;; all masquerade as Enhanced IIe.
     IF A = #model::iie_enhanced
 
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
       IF CC
         ;; Is IIgs; Y holds ROM revision
         tya
@@ -1209,8 +1206,7 @@ v_2x:   and     #$0F
 ;;; ============================================================
 
 .proc HandleEgg
-        lda     egg
-        jsr     SetModelPtrs
+        CALL    SetModelPtrs, A=egg
 
         ldx     egg
         inx
@@ -1251,24 +1247,24 @@ egg:    .byte   0
         JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, SELF_MODIFIED, bits_addr
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::model_pos
-        param_call_indirect DrawString, model_str_ptr
+        CALL    DrawString, AX=model_str_ptr
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pdver_pos
-        param_call DrawString, str_prodos_version
+        CALL    DrawString, AX=#str_prodos_version
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::line1
         JUMP_TABLE_MGTK_CALL MGTK::LineTo, aux::line2
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::mem_pos
-        param_call DrawString, str_memory_prefix
-        param_call DrawString, str_from_int
+        CALL    DrawString, AX=#str_memory_prefix
+        CALL    DrawString, AX=#str_from_int
         bit     memory_is_mb_flag
     IF NS
-        param_call DrawString, str_memory_mb_suffix
+        CALL    DrawString, AX=#str_memory_mb_suffix
     ELSE
-        param_call DrawString, str_memory_kb_suffix
+        CALL    DrawString, AX=#str_memory_kb_suffix
     END_IF
-        param_call DrawString, str_cpu_prefix
+        CALL    DrawString, AX=#str_cpu_prefix
         jsr     CPUId
         jsr     DrawString
 
@@ -1283,7 +1279,7 @@ loop:   lda     slot
         lda     slot
         ora     #'0'
         sta     str_slot_n + kStrSlotNOffset
-        param_call DrawString, str_slot_n
+        CALL    DrawString, AX=#str_slot_n
 
         ;; Possibilities:
         ;; * ProDOS thinks there's a card - may be firmware or no firmware
@@ -1295,19 +1291,18 @@ loop:   lda     slot
         and     mask
     IF NOT_ZERO
         ;; ProDOS thinks there's a card...
-        lda     slot
-        jsr     ProbeSlot       ; check for matching firmware
+        CALL    ProbeSlot, A=slot ; check for matching firmware
         bcs     draw
-        lda     slot            ; check non-firmware cases in case of
-        jsr     ProbeSlotNoFirmware ; false-positive (e.g. emulator)
+
+        ;; check non-firmware cases in case of false-positive (e.g. emulator)
+        CALL    ProbeSlotNoFirmware, A=slot
         bcs     draw
 
         ldax    #str_unknown
         bne     draw            ; always
     END_IF
 
-        lda     slot
-        jsr     ProbeSlotNoFirmware
+        CALL    ProbeSlotNoFirmware, A=slot
         bcs     draw
 
         ldax    #str_empty
@@ -1317,8 +1312,7 @@ draw:   php
         plp
     IF VS
         ;; V=1 means smartport - print out the names
-        lda     slot
-        jsr     SetSlotPtr
+        CALL    SetSlotPtr, A=slot
         jsr     ShowSmartPortDeviceNames
     END_IF
 
@@ -1326,10 +1320,10 @@ draw:   php
         lda     slot
     IF A = #2
         jsr     SetSlotPtr
-        param_call WithInterruptsDisabled, DetectTheCricket
+        CALL    WithInterruptsDisabled, AX=#DetectTheCricket
       IF CS
-        param_call DrawString, str_list_separator
-        param_call DrawString, str_cricket
+        CALL    DrawString, AX=#str_list_separator
+        CALL    DrawString, AX=#str_cricket
       END_IF
     END_IF
 
@@ -1343,15 +1337,14 @@ draw:   php
         bit     LCBANK1
         plp
       IF ZC
-        param_call DrawString, str_list_separator
-        param_call DrawString, str_lcmeve
+        CALL    DrawString, AX=#str_list_separator
+        CALL    DrawString, AX=#str_lcmeve
       ELSE
-        lda     slot
-        jsr     SetSlotPtr
-        param_call WithInterruptsDisabled, DetectUthernet2
+        CALL    SetSlotPtr, A=slot
+        CALL    WithInterruptsDisabled, AX=#DetectUthernet2
        IF CS
-        param_call DrawString, str_list_separator
-        param_call DrawString, str_uthernet2
+        CALL    DrawString, AX=#str_list_separator
+        CALL    DrawString, AX=#str_uthernet2
        END_IF
       END_IF
     END_IF
@@ -1416,15 +1409,14 @@ mask:   .byte   0
 
 ;;; ProDOS and SmartPort Devices
 
-        ldax    #sigtable_prodos_device
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_prodos_device
     IF CS
 
 ;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
 ;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.21.html
         COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
       IF EQ
-        return16 #str_diskii
+        RETURN  AX=#str_diskii
       END_IF
 
         ;; Smartport?
@@ -1437,36 +1429,32 @@ ret:    rts
       END_IF
 
         ;; Block devices - a few signatures
-        ldax    #sigtable_nvram
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_nvram
       IF CS
-        return16 #str_nvram
+        RETURN  AX=#str_nvram
       END_IF
 
-        ldax    #sigtable_booti
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_booti
       IF CS
-        return16 #str_booti
+        RETURN  AX=#str_booti
       END_IF
 
-        ldax    #sigtable_xdrive
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_xdrive
       IF CS
-        return16 #str_xdrive
+        RETURN  AX=#str_xdrive
       END_IF
 
         sec
-        return16 #str_block
+        RETURN  AX=#str_block
 
     END_IF
 
 ;;; ---------------------------------------------
 ;;; VidHD
 
-        ldax    #sigtable_vidhd
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_vidhd
     IF CS
-        return16 #str_vidhd
+        RETURN  AX=#str_vidhd
     END_IF
 
 ;;; ---------------------------------------------
@@ -1480,16 +1468,14 @@ ret:    rts
 ;;;              c = device class
 ;;;              i = unique identifier
 
-        ldax    #sigtable_pascal_device
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_pascal_device
         jcc     notpas
 
         ;; Workstation card has same ID bytes as Super Serial Card,
         ;; so test a few more after the Pascal 1.1 firmware signature
-        ldax    #sigtable_workstation
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_workstation
     IF CS
-        return16 #str_workstation
+        RETURN  AX=#str_workstation
     END_IF
 
         GET_FWB $0C             ; $Cn0C == ....
@@ -1497,7 +1483,7 @@ ret:    rts
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
         cmp     #byte
     IF EQ
-        return16 #arg           ; C=1 implicitly if Z=1
+        RETURN  AX=#arg         ; C=1 implicitly if Z=1
     END_IF
 .endmacro
 
@@ -1523,7 +1509,7 @@ ret:    rts
         ;; Pascal Firmware, but unknown type. Return
         ;; "unknown" otherwise it will be detected as serial below.
         sec
-        return16 #str_unknown
+        RETURN  AX=#str_unknown
 
 notpas:
 
@@ -1531,48 +1517,42 @@ notpas:
 ;;; Based on ProDOS detection
 
 ;;; ThunderClock
-        ldax    #sigtable_thunderclock
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_thunderclock
     IF CS
-        return16 #str_thunderclock
+        RETURN  AX=#str_thunderclock
     END_IF
 
 ;;; ---------------------------------------------
 ;;; Based on ProDOS BASIC Programming Examples
 
 ;;; Silentype
-        ldax    #sigtable_silentype
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_silentype
     IF CS
-        return16 #str_silentype
+        RETURN  AX=#str_silentype
     END_IF
 
 ;;; Clock
-        ldax    #sigtable_clock
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_clock
     IF CS
-        return16 #str_clock
+        RETURN  AX=#str_clock
     END_IF
 
 ;;; Communications Card
-        ldax    #sigtable_comm
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_comm
     IF CS
-        return16 #str_comm
+        RETURN  AX=#str_comm
     END_IF
 
 ;;; Serial Card
-        ldax    #sigtable_serial
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_serial
     IF CS
-        return16 #str_serial
+        RETURN  AX=#str_serial
     END_IF
 
 ;;; Parallel Card
-        ldax    #sigtable_parallel
-        jsr     SigCheck
+        CALL    SigCheck, AX=#sigtable_parallel
     IF CS
-        return16 #str_parallel
+        RETURN  AX=#str_parallel
     END_IF
 
         rts
@@ -1601,12 +1581,10 @@ notpas:
     WHILE NOT_ZERO
 
         ;; match
-        sec
-        rts
+        RETURN  C=1
 
 no_match:
-        clc
-        rts
+        RETURN  C=0
 
 get_next:
         table_ptr := *+1
@@ -1649,27 +1627,27 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
         ;; Point ptr at $Cn00
         jsr     SetSlotPtr
 
-        param_call WithInterruptsDisabled, DetectMockingboard
+        CALL    WithInterruptsDisabled, AX=#DetectMockingboard
     IF CS
-        return16 #str_mockingboard
+        RETURN  AX=#str_mockingboard
     END_IF
 
-        param_call WithInterruptsDisabled, DetectZ80
+        CALL    WithInterruptsDisabled, AX=#DetectZ80
     IF CS
-        return16 #str_z80
+        RETURN  AX=#str_z80
     END_IF
 
-        param_call WithInterruptsDisabled, DetectUthernet2
+        CALL    WithInterruptsDisabled, AX=#DetectUthernet2
     IF CS
-        return16 #str_uthernet2
+        RETURN  AX=#str_uthernet2
     END_IF
 
-        param_call WithInterruptsDisabled, DetectPassportMIDI
+        CALL    WithInterruptsDisabled, AX=#DetectPassportMIDI
     IF CS
-        return16 #str_passport
+        RETURN  AX=#str_passport
     END_IF
-        clc
-        rts
+
+        RETURN  C=0
 .endproc ; ProbeSlotNoFirmware
 
 ;;; ============================================================
@@ -1793,11 +1771,9 @@ oldtest:
 
         ;; Probe successful
 success:
-        sec
-        rts
+        RETURN  C=1
 
-fail:   clc
-        rts
+fail:   RETURN  C=0
 .endproc ; DetectUthernet2
 
 ;;; Detect Passport MIDI Card
@@ -1827,64 +1803,46 @@ fail:   clc
         kLSBPattern2 = %00110110
 
         ;; Reset and hold timers
-        lda     #(kOpFlags | 1) ; give write access to CR#1
-        ldx     #kOffsetWriteCR2
-        jsr     write
-        lda     #(kOpFlags | 1) ; timers hold (reset)
-        ldx     #kOffsetWriteCR13
-        jsr     write
+        CALL    write, A=#(kOpFlags | 1), X=#kOffsetWriteCR2 ; give write access to CR#1
+        CALL    write, A=#(kOpFlags | 1), X=#kOffsetWriteCR13 ; timers hold (reset)
 
         ;; ----------------------------------------
         ;; Write to both Timer 1 and Timer 2
 
         ;; Write to MSB Buffer
-        lda     #kMSBPattern1
-        ldx     #kOffsetWriteMSBBuffer
-        jsr     write
+        CALL    write, A=#kMSBPattern1, X=#kOffsetWriteMSBBuffer
         ;; Write to Timer 1 LSB
-        lda     #kLSBPattern1
-        ldx     #kOffsetWriteTimer1LSB
-        jsr     write
+        CALL    write, A=#kLSBPattern1, X=#kOffsetWriteTimer1LSB
         ;; Write to MSB Buffer
-        lda     #kMSBPattern2
-        ldx     #kOffsetWriteMSBBuffer
-        jsr     write
+        CALL    write, A=#kMSBPattern2, X=#kOffsetWriteMSBBuffer
         ;; Write to Timer 2 LSB
-        lda     #kLSBPattern2
-        ldx     #kOffsetWriteTimer2LSB
-        jsr     write
+        CALL    write, A=#kLSBPattern2, X=#kOffsetWriteTimer2LSB
 
         ;; ----------------------------------------
         ;; Read back and verify
 
         ;; Read Timer 1 MSB
-        ldx     #kOffsetReadTimer1MSB
-        jsr     read
+        CALL    read, X=#kOffsetReadTimer1MSB
         cmp     #kMSBPattern1
         bne     fail
         ;; Read LSB Buffer
-        ldx     #kOffsetReadLSBBuffer
-        jsr     read
+        CALL    read, X=#kOffsetReadLSBBuffer
         cmp     #kLSBPattern1
         bne     fail
         ;; Read Timer 2 MSB
-        ldx     #kOffsetReadTimer2MSB
-        jsr     read
+        CALL    read, X=#kOffsetReadTimer2MSB
         cmp     #kMSBPattern2
         bne     fail
         ;; Read LSB Buffer
-        ldx     #kOffsetReadLSBBuffer
-        jsr     read
+        CALL    read, X=#kOffsetReadLSBBuffer
         cmp     #kLSBPattern2
         bne     fail
 
         ;; Probe successful
 success:
-        sec
-        rts
+        RETURN  C=1
 
-fail:   clc
-        rts
+fail:   RETURN  C=0
 
         ;; ----------------------------------------
         ;; LDX offset / JSR read / A = value
@@ -1937,8 +1895,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         SET_BIT7_FLAG memory_is_mb_flag
     END_IF
 
-        ldax    memory
-        jmp     IntToStringWithSeparators
+        TAIL_CALL IntToStringWithSeparators, AX=memory
 .endproc ; IdentifyMemory
 
 ;;; ============================================================
@@ -2040,8 +1997,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 
 .proc CheckIIgsMemory
         bit     ROMIN2          ; Check ROM - is this a IIgs?
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
         bit     LCBANK1
         bit     LCBANK1
     IF CC
@@ -2078,8 +2034,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 
     DO
         ;; Point at $Cn00
-        lda     slot
-        jsr     SetSlotPtr
+        CALL    SetSlotPtr, A=slot
 
         ;; Look for SmartPort signature bytes
         ldx     #3
@@ -2197,7 +2152,7 @@ str_from_int:
         copy8   #kZCLock, ZC_REG_LOCK
 
         plp
-        return16 #str_65C02zip
+        RETURN  AX=#str_65C02zip
         rts
 
        END_IF
@@ -2219,20 +2174,19 @@ str_from_int:
         beq     p65C02
         .popcpu
 
-        return16 #str_R65C02
-p65C02: return16 #str_65C02
-p6502:  return16 #str_6502
+        RETURN  AX=#str_R65C02
+p65C02: RETURN  AX=#str_65C02
+p6502:  RETURN  AX=#str_6502
 
         ;; Distinguish 65802 and 65816 by machine ID
 p658xx: bit     ROMIN2
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
         bit     LCBANK1
         bit     LCBANK1
     IF CC
-        return16 #str_65816     ; Only IIgs supports 65816
+        RETURN  AX=#str_65816   ; Only IIgs supports 65816
     END_IF
-        return16 #str_65802     ; Other boards support 65802
+        RETURN  AX=#str_65802   ; Other boards support 65802
 .endproc ; CPUId
 
 ;;; ============================================================
@@ -2307,11 +2261,9 @@ device_loop:
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
        DO
-        lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
-        jsr     IsAlpha
+        CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
         IF EQ
-        lda     dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
-        jsr     IsAlpha
+        CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
          IF EQ
         lda     dib_buffer+SPDIB::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
@@ -2346,12 +2298,12 @@ device_loop:
         ;; Need a comma?
         bit     empty_flag
     IF NC
-        param_call DrawString, str_list_separator
+        CALL    DrawString, AX=#str_list_separator
     END_IF
         CLEAR_BIT7_FLAG empty_flag ; saw a unit!
 
         ;; Draw the device name
-        param_call DrawString, str_current
+        CALL    DrawString, AX=#str_current
 
         ;; Next!
 next:   lda     status_params::unit_num
@@ -2366,8 +2318,7 @@ finish:
         ;; If no units, populate with "(none)"
         bit     empty_flag
     IF NS
-        ldax    #str_none
-        jsr     DrawString
+        CALL    DrawString, AX=#str_none
     END_IF
 
         rts
@@ -2413,7 +2364,7 @@ num_devices:
         txa
         ora     #'0'
         sta     str_duplicate_suffix + kDuplicateCountOffset
-        param_call DrawString, str_duplicate_suffix
+        CALL    DrawString, AX=#str_duplicate_suffix
         copy8   #0, duplicate_count
     END_IF
         rts
@@ -2431,11 +2382,11 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 .proc IsAlpha
         jsr     ToUpperCase
     IF A BETWEEN #'A', #'Z'
-        lda     #0
+        lda     #0              ; set Z=1
         rts
     END_IF
 
-        lda     #$FF
+        lda     #$FF            ; set Z=0
         rts
 .endproc ; IsAlpha
 
@@ -2458,8 +2409,7 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 
         copy16  #aux::buf_string, DESTINATIONLO
         add16_8 STARTLO, textlen, ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
     END_IF

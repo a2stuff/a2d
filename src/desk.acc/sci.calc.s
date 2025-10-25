@@ -547,8 +547,7 @@ intl_deci_sep:  .byte   0
 
 init:
         ;; Cache settings
-        ldx     #DeskTopSettings::intl_deci_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_deci_sep
         sta     intl_deci_sep
         sta     btn_dec::key
         sta     btn_dec::label+1
@@ -606,11 +605,8 @@ init:
         tsx
         stx     saved_stack
 
-        lda     #Function::equals
-        jsr     ProcessFunction
-        lda     #Function::clear
-        jsr     ProcessFunction
-
+        CALL    ProcessFunction, A=#Function::equals
+        CALL    ProcessFunction, A=#Function::clear
 
 ;;; ============================================================
 ;;; Input Loop
@@ -679,8 +675,7 @@ ret:    rts
 ;;; On Key Press
 
 .proc OnKeyPress
-        lda     event_params::key
-        jsr     ToUpperCase
+        CALL    ToUpperCase, A=event_params::key
 
         ldx     event_params::modifiers
     IF NOT_ZERO
@@ -706,8 +701,7 @@ ret:    rts
         jmp     ExitDA
        END_IF
       END_IF
-        lda     #Function::clear
-        jmp     ProcessFunction
+        TAIL_CALL ProcessFunction, A=#Function::clear
     END_IF
 
     IF A = #CHAR_DELETE
@@ -747,13 +741,11 @@ ret:    rts
     END_IF
 
     IF A = #CHAR_CLEAR
-        lda     #Function::clear
-        jmp     ProcessFunction
+        TAIL_CALL ProcessFunction, A=#Function::clear
     END_IF
 
     IF A = #CHAR_RETURN
-        lda     #Function::equals
-        jmp     ProcessFunction
+        TAIL_CALL ProcessFunction, A=#Function::equals
     END_IF
 
         jsr     MapKeyToFunction
@@ -788,15 +780,13 @@ loop:   ldy     #0
         lda     (ptr),y
         pha
         ;; ...but first flash the button
-        ldax    rect
-        jsr     DepressButton
+        CALL    DepressButton, AX=rect
         beq     ignore
         pla
 ret:    rts
 
 ignore: pla
-        lda     #0
-        rts
+        RETURN  A=#0
 
 next:   add16_8 ptr, #.sizeof(btn_c)
         jmp     loop
@@ -827,8 +817,7 @@ loop:   ldy     #0
         pha
         ;; ...but first flash the button
         add16_8 ptr, #btn_c::port - btn_c
-        ldax    ptr
-        jsr     DepressButton
+        CALL    DepressButton, AX=ptr
         pla
 
 ret:    rts
@@ -885,8 +874,7 @@ ret2:   rts
        END_IF
       END_IF
 
-        lda     #Function::op_subtract
-        jmp     DoOp
+        TAIL_CALL DoOp, A=#Function::op_subtract
     END_IF
 
     IF A = #Function::decimal
@@ -1436,8 +1424,7 @@ invert_rect:
         cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
-        ldxy    #text_buffer1
-        jsr     PreDisplayBuffer
+        CALL    PreDisplayBuffer, XY=#text_buffer1
         MGTK_CALL MGTK::DrawText, drawtext_params1
 end:    rts
 .endproc ; DisplayBuffer1
@@ -1447,8 +1434,7 @@ end:    rts
         cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
-        ldxy    #text_buffer2
-        jsr     PreDisplayBuffer
+        CALL    PreDisplayBuffer, XY=#text_buffer2
         MGTK_CALL MGTK::DrawText, drawtext_params2
 end:    rts
 .endproc ; DisplayBuffer2
@@ -1462,7 +1448,7 @@ end:    rts
         sbc     textwidth_params::result
         sta     text_pos_params3::left
         MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
-        param_call DrawString, spaces_string
+        CALL    DrawString, AX=#spaces_string
         MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
         rts
 .endproc ; PreDisplayBuffer
@@ -1500,7 +1486,7 @@ loop:   ldy     #0
 
         MGTK_CALL MGTK::PaintBitsHC, 0, bitmap_addr ; draw shadowed rect
         MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
-        param_call_indirect DrawString, label
+        CALL    DrawString, AX=label
 
         add16_8 ptr, #.sizeof(btn_c)
         jmp     loop
@@ -1528,7 +1514,7 @@ label:  .addr   0
     IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos
-        param_call DrawString, error_string
+        CALL    DrawString, AX=#error_string
     END_IF
 
         jsr     ResetBuffer1AndState

@@ -49,8 +49,7 @@
 
 .proc RunDA
         jsr     Init
-        lda     dialog_result
-        rts
+        RETURN  A=dialog_result
 .endproc ; RunDA
 
 ;;; High bit set when anything changes.
@@ -201,8 +200,7 @@ view_by_table:
 ;;; ============================================================
 
 .proc Init
-        ldx     #DeskTopSettings::default_view
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::default_view
         and     #DeskTopSettings::kViewByIndexMask
         sta     current_view_index
 
@@ -331,8 +329,7 @@ common: bit     dragwindow_params::moved
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
       IF NOT_ZERO
 
-        lda     index
-        jmp     ToggleButton
+        TAIL_CALL ToggleButton, A=index
       END_IF
         dec     index
     WHILE POS
@@ -355,7 +352,7 @@ common: bit     dragwindow_params::moved
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::MoveTo, view_style_label_pos
-        param_call DrawString, view_style_label_str
+        CALL    DrawString, AX=#view_style_label_str
 
         copy8   #kNumButtons-1, index
     DO
@@ -428,9 +425,7 @@ common: bit     dragwindow_params::moved
 .endscope
 
         ldx     current_view_index
-        lda     view_by_table,x
-        ldx     #DeskTopSettings::default_view
-        jsr     WriteSetting
+        CALL    WriteSetting, A=view_by_table,x, X=#DeskTopSettings::default_view
         jsr     MarkDirty
 
         jmp     InputLoop

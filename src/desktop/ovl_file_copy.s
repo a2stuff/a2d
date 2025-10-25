@@ -16,7 +16,7 @@
         SET_BIT7_FLAG file_dialog::only_show_dirs_flag
         copy8   #file_dialog::kSelectionOptionalUnlessRoot, file_dialog::selection_requirement_flags
 
-        param_call file_dialog::OpenWindow, label_copy_selection
+        CALL    file_dialog::OpenWindow, AX=#label_copy_selection
         jsr     file_dialog::InitPathWithDefaultDevice
         jsr     file_dialog::UpdateListFromPath
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
@@ -35,13 +35,13 @@ jt_callbacks:
 ;;; ============================================================
 
 .proc HandleOK
-        param_call file_dialog::GetPath, path_buf0
+        CALL    file_dialog::GetPath, AX=#path_buf0
 
         jsr     file_dialog::CloseWindow
         copy16  #path_buf0, $6
         ldx     saved_stack
         txs
-        return8 #$00
+        RETURN  A=#$00
 .endproc ; HandleOK
 
 ;;; ============================================================
@@ -50,7 +50,7 @@ jt_callbacks:
         jsr     file_dialog::CloseWindow
         ldx     saved_stack
         txs
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; HandleCancel
 
 ;;; ============================================================

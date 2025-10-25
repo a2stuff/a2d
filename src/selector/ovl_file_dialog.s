@@ -20,7 +20,7 @@ ep_init:
 
         copy8   #kSelectionRequiredNoDirs, selection_requirement_flags
         jsr     Init
-        param_call OpenWindow, app::str_run_a_program
+        CALL    OpenWindow, AX=#app::str_run_a_program
         jsr     InitPathWithDefaultDevice
         jsr     UpdateListFromPath
         jmp     EventLoop
@@ -47,13 +47,13 @@ saved_stack:
 ;;; ============================================================
 
 .proc HandleOK
-        param_call GetPath, buf_path
+        CALL    GetPath, AX=#buf_path
 
         ldx     saved_stack
         txs
         ldy     #<buf_path
         ldx     #>buf_path
-        return8 #$00
+        RETURN  A=#$00
 .endproc ; HandleOK
 
 ;;; ============================================================
@@ -62,7 +62,7 @@ saved_stack:
         jsr     CloseWindow
         ldx     saved_stack
         txs
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; HandleCancel
 
 ;;; ============================================================

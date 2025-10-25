@@ -15,8 +15,7 @@
         beq     done
 
         ;; Skip on IIgs
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
         bcc     done
 
         ;; Detection routine

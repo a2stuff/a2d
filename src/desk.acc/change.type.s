@@ -154,8 +154,7 @@ auxtype:        .word   SELF_MODIFIED
         copy8   #0, str_type
     ELSE
         copy8   #2, str_type
-        lda     data::type
-        jsr     GetDigits
+        CALL    GetDigits, A=data::type
         sta     str_type+1
         stx     str_type+2
     END_IF
@@ -165,12 +164,10 @@ auxtype:        .word   SELF_MODIFIED
         copy8   #0, str_auxtype
     ELSE
         copy8   #4, str_auxtype
-        lda     data::auxtype+1
-        jsr     GetDigits
+        CALL    GetDigits, A=data::auxtype+1
         sta     str_auxtype+1
         stx     str_auxtype+2
-        lda     data::auxtype
-        jsr     GetDigits
+        CALL    GetDigits, A=data::auxtype
         sta     str_auxtype+3
         stx     str_auxtype+4
     END_IF
@@ -365,8 +362,7 @@ cursor_ibeam_flag: .byte   0
         cmp     #' '
         rts                     ; C=0 (if less) or 1
 
-yes:    clc                     ; C=0
-        rts
+yes:    RETURN  C=0
 .endproc ; IsControlChar
 
 ;;; Input: A=character
@@ -384,11 +380,9 @@ yes:    clc                     ; C=0
         cmp     #'F'+1
         bcc     yes
 
-no:     sec
-        rts
+no:     RETURN  C=1
 
-yes:    clc
-        rts
+yes:    RETURN  C=0
 .endproc ; IsHexChar
 .endproc ; HandleKeyDown
 
@@ -465,9 +459,7 @@ yes:    clc
     ELSE
         SET_BIT7_FLAG data::type_valid
         jsr     PadType
-        lda     str_type+1
-        ldx     str_type+2
-        jsr     DigitsToByte
+        CALL    DigitsToByte, A=str_type+1, X=str_type+2
         sta     data::type
     END_IF
 
@@ -477,13 +469,9 @@ yes:    clc
     ELSE
         SET_BIT7_FLAG data::auxtype_valid
         jsr     PadAuxtype
-        lda     str_auxtype+1
-        ldx     str_auxtype+2
-        jsr     DigitsToByte
+        CALL    DigitsToByte, A=str_auxtype+1, X=str_auxtype+2
         sta     data::auxtype+1
-        lda     str_auxtype+3
-        ldx     str_auxtype+4
-        jsr     DigitsToByte
+        CALL    DigitsToByte, A=str_auxtype+3, X=str_auxtype+4
         sta     data::auxtype
     END_IF
 
@@ -532,10 +520,10 @@ yes:    clc
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, type_label_pos
-        param_call DrawStringRight, type_label_str
+        CALL    DrawStringRight, AX=#type_label_str
 
         MGTK_CALL MGTK::MoveTo, auxtype_label_pos
-        param_call DrawStringRight, auxtype_label_str
+        CALL    DrawStringRight, AX=#auxtype_label_str
 
         MGTK_CALL MGTK::FrameRect, type_rect
         MGTK_CALL MGTK::FrameRect, auxtype_rect
@@ -633,12 +621,12 @@ saved_stack:
 
         jsr     JUMP_TABLE_GET_SEL_WIN
     IF ZERO
-        param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertNoFilesSelected
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT_PARAMS, AX=#aux::AlertNoFilesSelected
     END_IF
 
         jsr     JUMP_TABLE_GET_SEL_COUNT
     IF ZERO
-        param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertNoFilesSelected
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT_PARAMS, AX=#aux::AlertNoFilesSelected
     END_IF
 
         jsr     GetTypes
@@ -646,8 +634,7 @@ saved_stack:
         copy16  #data, STARTLO
         copy16  #data+.sizeof(data)-1, ENDLO
         copy16  #aux::data, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
 
         JSR_TO_AUX aux::RunDA
         RTS_IF NC               ; cancel
@@ -655,8 +642,7 @@ saved_stack:
         copy16  #aux::data, STARTLO
         copy16  #aux::data+.sizeof(data)-1, ENDLO
         copy16  #data, DESTINATIONLO
-        clc                     ; aux>main
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=0    ; aux>main
 
         jsr     ApplyTypes
 
@@ -780,8 +766,7 @@ IterationCallback:
         pha
 
         ;; Get icon ptr
-        lda     index
-        jsr     JUMP_TABLE_GET_SEL_ICON
+        CALL    JUMP_TABLE_GET_SEL_ICON, A=index
         addax   #IconEntry::name, ptr
 
         ;; Compose path
@@ -800,8 +785,7 @@ IterationCallback:
         stx     path
 
         ;; Execute callback
-        lda     index
-        jsr     do_callback
+        CALL    do_callback, A=index
 
         ;; Next
         pla
@@ -838,7 +822,7 @@ index:  .byte   0
 .proc ShowDirError
         bit     flag
     IF NC
-        param_call JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertDirectoriesNotOK
+        CALL    JUMP_TABLE_SHOW_ALERT_PARAMS, AX=#aux::AlertDirectoriesNotOK
         SET_BIT7_FLAG flag
     END_IF
         rts

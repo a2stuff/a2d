@@ -486,8 +486,7 @@ END_PARAM_BLOCK
         txa
         pha
 
-        lda     icon_list,x
-        jsr     GetIconWin      ; A = window_id
+        CALL    GetIconWin, A=icon_list,x ; A = window_id
       IF A = params::window_id
         ldy     #IconEntry::state
         ora     #kIconEntryStateHighlighted
@@ -511,8 +510,7 @@ END_PARAM_BLOCK
         txa
         pha
 
-        lda     icon_list,x
-        jsr     GetIconState
+        CALL    GetIconState, A=icon_list,x
         and     #AS_BYTE(~kIconEntryStateHighlighted)
         sta     (icon_ptr),y
 
@@ -539,12 +537,12 @@ END_PARAM_BLOCK
         ;; Is it in `icon_list`?
         jsr     IsInIconList
     IF NOT_ZERO
-        return8 #1              ; Not found
+        RETURN  A=#1            ; Not found
     END_IF
 .endif ; DEBUG
 
-        jsr     FreeIconCommon ; A = icon id
-        return8 #0
+        jsr     FreeIconCommon  ; A = icon id
+        RETURN  A=#0
 .endproc ; FreeIconImpl
 
 ;;; ============================================================
@@ -628,10 +626,7 @@ icon    .byte
 END_PARAM_BLOCK
 
         ;; Pointer to IconEntry
-        lda     params::icon
-        ldx     #$80            ; do clip
-        sec                     ; do redraw highlighted
-        jmp     EraseIconCommon ; A = icon id, X = clip flag, C = redraw flag
+        TAIL_CALL EraseIconCommon, A=params::icon, X=#$80, C=1 ; X = do clip, C = do redraw
 .endproc ; EraseIconImpl
 
 ;;; ============================================================
@@ -651,14 +646,12 @@ END_PARAM_BLOCK
         txa
         pha
 
-        lda     icon_list,x
-        jsr     GetIconWin      ; A = window_id
+        CALL    GetIconWin, A=icon_list,x ; A = window_id
       IF A = params::window_id
         pla
         pha
         tax
-        lda     icon_list,x
-        jsr     FreeIconCommon  ; A = icon id
+        CALL    FreeIconCommon, A=icon_list,x  ; A = icon id
       END_IF
 
         pla
@@ -689,8 +682,7 @@ END_PARAM_BLOCK
         pha
 
         ;; Check the icon
-        lda     icon_list,x
-        jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
+        CALL    GetIconWin, A=icon_list,x ; A = window_id, sets `icon_ptr` too
 
         ;; Matching window?
        IF A = params::window_id
@@ -751,8 +743,7 @@ END_PARAM_BLOCK
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
     IF A <> #MGTK::EventKind::drag
-        lda     #IconTK::kDragResultNotADrag
-        jmp     exit_with_a
+        TAIL_CALL exit_with_a, A=#IconTK::kDragResultNotADrag
     END_IF
 
         kDragDelta = 5
@@ -809,8 +800,7 @@ is_drag:
         beq     :+                      ; equal okay
         jcs     exit_canceled           ; too many
 :
-        lda     last_highlighted_icon
-        jsr     GetIconWin
+        CALL    GetIconWin, A=last_highlighted_icon
         sta     source_window_id
 
         ;; --------------------------------------------------
@@ -977,8 +967,7 @@ same_window:
         jsr     _CheckRealContentArea
         jcs     exit_canceled   ; don't move
 
-        lda     last_highlighted_icon
-        jsr     IsIconFixed     ; Z=0 if fixed
+        CALL    IsIconFixed, A=last_highlighted_icon ; Z=0 if fixed
         jne     exit_canceled   ; don't move
 
         ;; --------------------------------------------------
@@ -1000,8 +989,7 @@ move_ok:
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         ::drag_highlighted_lambda_clip_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
-        clc                     ; don't redraw highlighted
-        jmp     EraseIconCommon ; A = icon id, X = clip flag, C = redraw flag
+        TAIL_CALL EraseIconCommon, C=0 ; A = icon id, X = clip flag, C = don't redraw
         END_OF_LAMBDA
 
         ;; --------------------------------------------------
@@ -1069,8 +1057,7 @@ last_highlighted_icon:
         ldx     #0
         stx     index
     DO
-        lda     icon_list,x
-        jsr     GetIconState
+        CALL    GetIconState, A=icon_list,x
         and     #kIconEntryStateHighlighted
       IF NOT_ZERO
         ldx     index
@@ -1111,7 +1098,7 @@ last_highlighted_icon:
         jsr     _CheckRealContentArea
         bcc     find_icon
 
-fail:   return8 #0              ; no icon
+fail:   RETURN  A=#0            ; no icon
 
         ;; --------------------------------------------------
         ;; On desktop - A=0, note that as window_id
@@ -1122,8 +1109,7 @@ desktop:
         ;; Is there an icon there?
 find_icon:
         ITK_CALL IconTK::FindIcon, findwindow_params
-        lda     findwindow_params::which_area ; Icon ID
-        rts
+        RETURN  A=findwindow_params::which_area ; Icon ID
 .endproc ; _FindIconValidateWindow
 
 ;;; Dig deeper into FindWindow results to ensure it's really content.
@@ -1151,11 +1137,9 @@ find_icon:
         cmp16   findwindow_params::mousey, headery
         bcc     fail
 
-        clc
-        rts
+        RETURN  C=0
 
-fail:   sec
-        rts
+fail:   RETURN  C=1
 
 headery:
         .word   0
@@ -1228,8 +1212,7 @@ done:   rts
 .proc GetIconFlags
         jsr     SetIconPtr
         ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        rts
+        RETURN  A=(icon_ptr),y
 .endproc ; GetIconFlags
 
 ;;; Input: A = icon number
@@ -1237,8 +1220,7 @@ done:   rts
 .proc GetIconState
         jsr     SetIconPtr
         ldy     #IconEntry::state
-        lda     (icon_ptr),y
-        rts
+        RETURN  A=(icon_ptr),y
 .endproc ; GetIconState
 
 ;;; ============================================================
@@ -1274,8 +1256,7 @@ rect    .tag    MGTK::Rect
 END_PARAM_BLOCK
 
 start:
-        lda     params::icon
-        jsr     SetIconPtr
+        CALL    SetIconPtr, A=params::icon
         jsr     CalcIconRects
 
         ;; Compare the rect against both the bitmap and label rects
@@ -1315,10 +1296,10 @@ start:
     WHILE POS
 
 inside:
-        return8 #1
+        RETURN  A=#1
 
 outside:
-        return8 #0
+        RETURN  A=#0
 .endproc ; IconInRectImplImpl
 IconInRectImpl := IconInRectImplImpl::start
 
@@ -1332,8 +1313,7 @@ rect    .tag    MGTK::Rect ; out
 END_PARAM_BLOCK
 
         ;; Calc icon bounds
-        lda     params::icon
-        jsr     SetIconPtr
+        CALL    SetIconPtr, A=params::icon
         jsr     CalcIconBoundingRect
 
         ASSERT_EQUALS params::rect - params, 1
@@ -1405,8 +1385,7 @@ END_PARAM_BLOCK
 .endproc ; GetBitmapRectImpl
 
 .proc GetXYZRectImplHelper
-        lda     command_data    ; a.k.a. `params::icon`
-        jsr     SetIconPtr
+        CALL    SetIconPtr, A=command_data ; a.k.a. `params::icon`
         jmp     CalcIconRects
 .endproc ; GetXYZRectImplHelper
 
@@ -1434,8 +1413,7 @@ clip_window_id:
 ;;; * Does not erase background
 
 .proc DrawIconRawImpl
-        lda     #0              ; `clip_icons_flag`
-        jmp     DrawIconCommon
+        TAIL_CALL DrawIconCommon, A=#0 ; `clip_icons_flag`
 .endproc ; DrawIconRawImpl
 
 ;;; ============================================================
@@ -1465,8 +1443,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::CheckEvents
 
         ;; Pointer to IconEntry
-        lda     params::icon
-        jsr     SetIconPtr
+        CALL    SetIconPtr, A=params::icon
 
         jsr     CalcIconRects
 
@@ -1599,7 +1576,7 @@ ret:    rts
 
         MGTK_CALL MGTK::SetTextBG, settextbg_white
 
-        return8 #0
+        RETURN  A=#0
 
 .proc _Shade
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -1937,8 +1914,7 @@ END_PARAM_BLOCK
         txa
         pha
 
-        lda     icon_list,x
-        jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
+        CALL    GetIconWin, A=icon_list,x ; A = window_id, sets `icon_ptr` too
       IF A = params::window_id
         ldy     #IconEntry::iconx
         add16in (icon_ptr),y, params::delta_x, (icon_ptr),y
@@ -1971,8 +1947,7 @@ END_PARAM_BLOCK
         txa
         pha
 
-        lda     icon_list,x
-        jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
+        CALL    GetIconWin, A=icon_list,x ; A = window_id, sets `icon_ptr` too
       IF A = params::window_id
         jsr     CalcIconRects
 
@@ -2023,8 +1998,7 @@ icon    .byte           ; in
 entry   .addr           ; out
 END_PARAM_BLOCK
 
-        lda     params::icon
-        jsr     SetIconPtr
+        CALL    SetIconPtr, A=params::icon
 
         ldy     #params::entry - params
         sta     (params_addr),y
@@ -2251,7 +2225,7 @@ reserved:       .byte   0
         MGTK_CALL MGTK::SetPortBits, portbits
         rts
 
-empty:  return8 #$FF
+empty:  RETURN  A=#$FF
 .endproc ; DuplicateClipStructsAndSetPortBits
 
 ;;; ============================================================
@@ -2320,8 +2294,7 @@ reentry:
         jsr     is_degenerate
     IF NEG
         CLEAR_BIT7_FLAG more_drawing_needed_flag
-        sec
-        rts
+        RETURN  C=1
     END_IF
 
         ;; --------------------------------------------------
@@ -2384,8 +2357,7 @@ next_pt:
         sta     more_drawing_needed_flag ; update bit7
 
         MGTK_CALL MGTK::SetPortBits, portbits
-        clc                     ; C=0 means clipping rect is valid
-        rts
+        RETURN  C=0             ; C=0 means clipping rect is valid
 
         ;; ==================================================
         ;; Find window at Nth point, and compute bounds

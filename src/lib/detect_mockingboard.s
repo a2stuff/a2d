@@ -30,9 +30,7 @@ loop:   lda     (ptr),Y         ; 6522 Low-Order Counter
         dex
         bne     loop
 
-        sec
-        rts
+        RETURN  C=1
 
-fail:   clc
-        rts
+fail:   RETURN  C=0
 .endproc ; DetectMockingboard

@@ -311,7 +311,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, prompt_label_pos
-        param_call DrawString, prompt_label_str
+        CALL    DrawString, AX=#prompt_label_str
 
         BTK_CALL BTK::Draw, ok_button
         BTK_CALL BTK::Draw, cancel_button
@@ -348,7 +348,7 @@ str_template:
         adc     #0
         sta     str_template + kDriveOffset
 
-        param_jump DrawString, str_template
+        TAIL_CALL DrawString, AX=#str_template
 .endproc ; DrawListEntryProc
 
 .proc OnSelChange
@@ -633,12 +633,12 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::FrameRect, progress_frame
 
         MGTK_CALL MGTK::MoveTo, disk_vol_label_pos
-        param_call DrawString, disk_vol_label_str
+        CALL    DrawString, AX=#disk_vol_label_str
 
         lda     control_block+ControlBlock::volume_number
         ldx     #0
         jsr     To3DigitString
-        param_call DrawString, str_from_int
+        CALL    DrawString, AX=#str_from_int
 
         BTK_CALL BTK::Draw, import_button
         BTK_CALL BTK::Draw, close_button
@@ -678,7 +678,7 @@ done:   rts
     IF NS
         copy16  #kLockedX, pt::xcoord
         MGTK_CALL MGTK::MoveTo, pt
-        param_call DrawString, str_locked
+        CALL    DrawString, AX=#str_locked
     END_IF
 
         ;; Type
@@ -689,7 +689,7 @@ done:   rts
         and     #$7F
         jsr     clz
         copy8   type_table,x, str_type+1
-        param_call DrawString, str_type
+        CALL    DrawString, AX=#str_type
 
         ;; Size
         copy16  #kSizeX, pt::xcoord
@@ -700,14 +700,13 @@ done:   rts
         dey
         lda     (ptr),y
         jsr     To3DigitString
-        param_call DrawString, str_from_int
+        CALL    DrawString, AX=#str_from_int
 
         ;; Name
         copy16  #kNameX, pt::xcoord
         MGTK_CALL MGTK::MoveTo, pt
         add16_8 ptr, #CatalogEntry::Name
-        ldax    ptr
-        jmp     DrawString
+        TAIL_CALL DrawString, AX=ptr
 .endproc ; DrawListEntryProc
 
 str_locked:     PASCAL_STRING "*"
@@ -829,8 +828,7 @@ start:
         ;; Get active window's path
         jsr     GetWinPath
     IF NOT_ZERO
-        lda     #kErrNoWindowsOpen
-        jmp     JUMP_TABLE_SHOW_ALERT
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#kErrNoWindowsOpen
     END_IF
 
         CLEAR_BIT7_FLAG dirty_flag
@@ -865,8 +863,7 @@ start:
         ;; Force window refresh
         window_id := $06
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, window_id
-        lda     window_id
-        jmp     JUMP_TABLE_ACTIVATE_WINDOW
+        TAIL_CALL JUMP_TABLE_ACTIVATE_WINDOW, A=window_id
 
 .proc EnumerateDrives
         ;; TODO: Iterate slot/drive vs. DEVLST? Order?
@@ -910,9 +907,7 @@ index:  .byte   0
         copy16  #aux::EntryBuffer, aux_entry_ptr
 
         ;; Read VTOC
-        lda     #dos33::VTOCTrack
-        ldx     #dos33::VTOCSector
-        jsr     do_read
+        CALL    do_read, A=#dos33::VTOCTrack, X=#dos33::VTOCSector
         jcs     exit_error
         lda     RWTS_SECTOR_BUF + dos33::VTOC::NumTracks
         cmp     #35
@@ -975,8 +970,7 @@ file_loop:
         copy16  #entry_buf, STARTLO
         copy16  #entry_buf+.sizeof(aux::CatalogEntry)-1, ENDLO
         copy16  aux_entry_ptr, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=1    ; main>aux
         add16_8 aux_entry_ptr, #.sizeof(aux::CatalogEntry)
         inc     control_block+ControlBlock::num_entries
 
@@ -1031,8 +1025,7 @@ control_block:
         copy16  #control_block, STARTLO
         copy16  #control_block+.sizeof(ControlBlock)-1, ENDLO
         copy16  #aux::control_block, DESTINATIONLO
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; SendControlBlock
 
 .proc FetchControlBlock
@@ -1040,8 +1033,7 @@ control_block:
         copy16  #aux::control_block, STARTLO
         copy16  #aux::control_block+.sizeof(ControlBlock)-1, ENDLO
         copy16  #control_block, DESTINATIONLO
-        clc                     ; aux>main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux>main
 .endproc ; FetchControlBlock
 
 ;;; ============================================================
@@ -1077,8 +1069,7 @@ start:
         add16   muldiv_params::result, #aux::EntryBuffer, STARTLO
         add16   STARTLO, #.sizeof(aux::CatalogEntry)-1, ENDLO
         copy16  #entry_buf, DESTINATIONLO
-        clc                     ; aux>main
-        jsr     AUXMOVE
+        CALL    AUXMOVE, C=0    ; aux>main
 
         copy16  #0, control_block+ControlBlock::progress_num
         copy16  entry_buf+aux::CatalogEntry::Length, control_block+ControlBlock::progress_denom
@@ -1129,8 +1120,7 @@ start:
         clc
         adc     str_name
     IF A >= #kMaxPathLength     ; not +1 because we'll add '/'
-        lda     #ERR_INVALID_PATHNAME
-        rts
+        RETURN  A=#ERR_INVALID_PATHNAME
     END_IF
 
         COPY_STRING prefix_path, path_buf
@@ -1152,19 +1142,13 @@ start:
 
         ;; Load file's first Track/Sector List sector
         copy16  #TS_BUF, $06
-        lda     entry_buf+aux::CatalogEntry::Track
-        ldx     entry_buf+aux::CatalogEntry::Sector
-        ldy     control_block+ControlBlock::unit_num
-        jsr     RWTSRead
+        CALL    RWTSRead, A=entry_buf+aux::CatalogEntry::Track, X=entry_buf+aux::CatalogEntry::Sector, Y=control_block+ControlBlock::unit_num
         RTS_IF CS
         jsr     IncProgress
 
         ;; Load first file sector
         copy16  #RWTS_SECTOR_BUF, $06
-        lda     TS_BUF+dos33::TSList::FirstDataT
-        ldx     TS_BUF+dos33::TSList::FirstDataS
-        ldy     control_block+ControlBlock::unit_num
-        jsr     RWTSRead
+        CALL    RWTSRead, A=TS_BUF+dos33::TSList::FirstDataT, X=TS_BUF+dos33::TSList::FirstDataS, Y=control_block+ControlBlock::unit_num
         RTS_IF CS
         jsr     IncProgress
         copy8   #dos33::TSList::FirstDataT+2, tslist_offset
@@ -1246,8 +1230,7 @@ read_sector:
         lda     TS_BUF+0,y      ; Track
         beq     finish
         ldx     TS_BUF+1,y      ; Sector
-        ldy     control_block+ControlBlock::unit_num
-        jsr     RWTSRead
+        CALL    RWTSRead, Y=control_block+ControlBlock::unit_num
         RTS_IF CS
         jsr     IncProgress
         inc     tslist_offset
@@ -1266,9 +1249,7 @@ next_tslist_sector:
         copy16  #TS_BUF, $06
         lda     TS_BUF+dos33::TSList::NextTrack
         beq     finish
-        ldx     TS_BUF+dos33::TSList::NextSector
-        ldy     control_block+ControlBlock::unit_num
-        jsr     RWTSRead
+        CALL    RWTSRead, X=TS_BUF+dos33::TSList::NextSector, Y=control_block+ControlBlock::unit_num
         RTS_IF CS
         jsr     IncProgress
         copy8   #dos33::TSList::FirstDataT, tslist_offset
@@ -1289,7 +1270,7 @@ finish:
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         SET_BIT7_FLAG dirty_flag
-        return8 #0              ; success
+        RETURN  A=#0            ; success
 
 ;;; C=1 if false
 .proc IsUpperAlpha
@@ -1299,8 +1280,7 @@ finish:
         bcs     no
         rts
 
-no:     sec
-        rts
+no:     RETURN  C=1
 .endproc ; IsUpperAlpha
 
 ;;; C=1 if false
@@ -1311,8 +1291,7 @@ no:     sec
         bcs     no
         rts
 
-no:     sec
-        rts
+no:     RETURN  C=1
 .endproc ; IsDigit
 
 ;;; Count leading zeros
@@ -1380,9 +1359,9 @@ prefix_path:    .res    ::kPathBufferSize, 0
         copy8   (ptr),y, prefix_path,y
         dey
     WHILE POS
-        return8 #0
+        RETURN  A=#0
 
-fail:   return8 #1
+fail:   RETURN  A=#1
 
 .endproc ; GetWinPath
 
@@ -1449,8 +1428,7 @@ DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
         dey
     WHILE NOT_ZERO
 
-        clc
-        rts
+        RETURN  C=0
 .endproc ; Read
 
 .proc Write

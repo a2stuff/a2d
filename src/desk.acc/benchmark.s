@@ -182,7 +182,7 @@ pattern_plaid:
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        param_call DrawTitleString, title_label_str
+        CALL    DrawTitleString, AX=#title_label_str
 
         MGTK_CALL MGTK::FrameRect, meter_frame
 
@@ -199,7 +199,7 @@ pattern_plaid:
         ldx     #0
         jsr     IntToString
         MGTK_CALL MGTK::Move, pt_labeldelta
-        param_call DrawStringCentered, str_from_int
+        CALL    DrawStringCentered, AX=#str_from_int
 
         pla
         clc

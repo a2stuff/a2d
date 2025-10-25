@@ -9,11 +9,9 @@
         stax    parsed_ptr
 
         ;; Cache settings
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::clock_24hours
         sta     clock_24hours
-        ldx     #DeskTopSettings::intl_time_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_time_sep
         sta     intl_time_sep
 
         ldy     #ParsedDateTime::hour
@@ -64,8 +62,7 @@ ones:   pla                     ; ones
         sta     str_time,y
 
         ;; Minutes
-        lda     min
-        jsr     _Split
+        CALL    _Split, A=min
         pha
         txa                     ; tens
         ora     #'0'

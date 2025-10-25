@@ -69,7 +69,7 @@
 
         ;; Keep going until we find the Nth candidate
     DO
-        param_call EnumerateDirectory, callback
+        CALL    EnumerateDirectory, AX=#callback
         lda     file_num
     WHILE NOT_ZERO
 
@@ -126,12 +126,10 @@
         dey
     WHILE NOT_ZERO
 
-        sec
-        rts
+        RETURN  C=1
 
 continue:
-        clc
-        rts
+        RETURN  C=0
 
 
 ;;; Output: C=0 if DA
@@ -152,11 +150,9 @@ continue:
         cmp     #>kDAFileAuxType
         bne     nope
 
-        clc
-        rts
+        RETURN  C=0
 
-nope:   sec
-        rts
+nope:   RETURN  C=1
 .endproc ; _IsDAFile
 
 ;;; Output: C=0 if is this DA
@@ -180,11 +176,9 @@ nope:   sec
         dey
     WHILE NOT_ZERO
 
-        clc
-        rts
+        RETURN  C=0
 
-nope:   sec
-        rts
+nope:   RETURN  C=1
 .endproc ; _IsSelfFile
 
 .endproc ; callback

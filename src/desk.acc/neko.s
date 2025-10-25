@@ -360,16 +360,14 @@ ep_size := * - ep_start
         copy16  #aux::event_params, STARTLO
         copy16  #aux::event_params+ep_size-1, ENDLO
         copy16  #event_params, DESTINATIONLO
-        clc                     ; aux>main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux>main
 .endproc ; CopyEventDataToMain
 
 .proc CopyEventDataToAux
         copy16  #event_params, STARTLO
         copy16  #event_params+ep_size-1, ENDLO
         copy16  #aux::event_params, DESTINATIONLO
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; CopyEventDataToAux
 
 ;;; ============================================================
@@ -380,8 +378,7 @@ ep_size := * - ep_start
         copy16  #aux::winfo::maprect, STARTLO
         copy16  #aux::winfo::maprect+.sizeof(MGTK::Rect)-1, ENDLO
         copy16  #win_rect, DESTINATIONLO
-        clc                     ; aux>main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux>main
 .endproc ; GetWindowRect
 
 ;;; ============================================================
@@ -667,30 +664,22 @@ new_state:
     IF EQ
         lda     dir
       IF NOT_ZERO
-        ldx     #NekoState::chase
-        lda     #NekoFrame::surprise
-        jmp     set_state_and_frame
+        TAIL_CALL set_state_and_frame, X=#NekoState::chase, A=#NekoFrame::surprise
       END_IF
 
       IF Y < #$10               ; Y = random
-        ldx     #NekoState::itch
-        lda     #NekoFrame::itch1
-        jmp     set_state_and_frame
+        TAIL_CALL set_state_and_frame, X=#NekoState::itch, A=#NekoFrame::itch1
       END_IF
 
       IF Y < #$20               ; Y = random
-        ldx     #NekoState::yawn
-        lda     #NekoFrame::yawning
-        jmp     set_state_and_frame
+        TAIL_CALL set_state_and_frame, X=#NekoState::yawn, A=#NekoFrame::yawning
       END_IF
 
       IF Y < #$30               ; Y = random
-        lda     #NekoFrame::lick
-        jmp     set_frame
+        TAIL_CALL set_frame, A=#NekoFrame::lick
       END_IF
 
-        lda     #NekoFrame::sitting
-        jmp     set_frame
+        TAIL_CALL set_frame, A=#NekoFrame::sitting
     END_IF
 
         ;; ------------------------------
@@ -699,9 +688,7 @@ new_state:
     IF EQ
         lda     dir
       IF ZERO
-        ldx     #NekoState::rest
-        lda     #NekoFrame::sitting
-        jmp     set_state_and_frame
+        TAIL_CALL set_state_and_frame, X=#NekoState::rest, A=#NekoFrame::sitting
       END_IF
 
         SET_BIT7_FLAG moved_flag
@@ -726,9 +713,7 @@ new_state:
     IF EQ
         lda     dir
       IF A <> scratch_dir
-        ldx     #NekoState::chase
-        lda     #NekoFrame::surprise
-        jmp     set_state_and_frame
+        TAIL_CALL set_state_and_frame, X=#NekoState::chase, A=#NekoFrame::surprise
       END_IF
 
         tax                     ; X = dir
@@ -863,16 +848,14 @@ set_frame:
         copy16  #aux::frame_params::viewloc, STARTLO
         copy16  #aux::frame_params::viewloc+.sizeof(MGTK::Point)-1, ENDLO
         copy16  #pos, DESTINATIONLO
-        clc                     ; aux>main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux>main
 .endproc ; CopyPosToMain
 
 .proc CopyPosToAux
         copy16  #pos, STARTLO
         copy16  #pos+.sizeof(MGTK::Point)-1, ENDLO
         copy16  #aux::frame_params::viewloc, DESTINATIONLO
-        sec                     ; main>aux
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=1  ; main>aux
 .endproc ; CopyPosToAux
 
 ;;; ============================================================
@@ -987,8 +970,7 @@ END_PARAM_BLOCK
         copy8   #0, muldiv_params::numerator+1
         copy16  #1, muldiv_params::denominator
         JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
-        ldax    muldiv_params::result
-        rts
+        RETURN  AX=muldiv_params::result
 .endproc ; Multiply_16_8_16
 
 ;;; ============================================================
@@ -1000,9 +982,7 @@ END_PARAM_BLOCK
         copy8   #0, muldiv_params::denominator+1
         copy16  #1, muldiv_params::number
         JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
-        ldax    muldiv_params::result
-        ldy     muldiv_params::remainder
-        rts
+        RETURN  AX=muldiv_params::result, Y=muldiv_params::remainder
 .endproc ; Divide_16_8_16
 
 ;;; ============================================================

@@ -69,8 +69,7 @@ DoAdd:  ldx     #kRunListPrimary
         tya
         pha
         COPY_STRING text_input_buf, main::stashed_name
-        lda     #kDynamicRoutineRestoreFD
-        jsr     main::RestoreDynamicRoutine
+        CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
         jsr     main::ClearUpdates ; Add File Dialog close
         pla
         tay
@@ -128,7 +127,7 @@ DoAdd:  ldx     #kRunListPrimary
     END_IF
 
 ShowFullAlert:
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_selector_list_full
+        CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_warning_selector_list_full
         dec     clean_flag      ; reset to "clean"
         jmp     Exit::ret
 
@@ -186,8 +185,7 @@ dialog_loop:
 .proc DoDelete
         jsr     main::SetCursorWatch
 
-        lda     shortcut_picker_record::selected_index
-        jsr     RemoveEntry
+        CALL    RemoveEntry, A=shortcut_picker_record::selected_index
     IF ZS                       ; Z set on success
         inc     clean_flag      ; mark as "dirty"
     END_IF
@@ -201,17 +199,15 @@ dialog_loop:
 .proc DoEdit
         jsr     CloseWindow
 
-        lda     shortcut_picker_record::selected_index
-        jsr     GetFileEntryAddr
+        CALL    GetFileEntryAddr, A=shortcut_picker_record::selected_index
         stax    $06
-        param_call main::CopyPtr1ToBuf, text_input_buf
+        CALL    main::CopyPtr1ToBuf, AX=#text_input_buf
 
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
         sta     flags
 
-        lda     shortcut_picker_record::selected_index
-        jsr     GetFilePathAddr
+        CALL    GetFilePathAddr, A=shortcut_picker_record::selected_index
         jsr     main::CopyToBuf0
 
         ldx     #kRunListPrimary
@@ -243,8 +239,7 @@ dialog_loop:
         tya
         pha
         COPY_STRING text_input_buf, main::stashed_name
-        lda     #kDynamicRoutineRestoreFD
-        jsr     main::RestoreDynamicRoutine
+        CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
         jsr     main::ClearUpdates ; Edit File Dialog close
         pla
         tay
@@ -276,8 +271,7 @@ dialog_loop:
         jmp     ShowFullAlert
       END_IF
 
-        lda     shortcut_picker_record::selected_index
-        jsr     RemoveEntry
+        CALL    RemoveEntry, A=shortcut_picker_record::selected_index
       IF ZC
         jmp     CloseWindow
       END_IF
@@ -298,8 +292,7 @@ dialog_loop:
         jmp     ShowFullAlert
       END_IF
 
-        lda     shortcut_picker_record::selected_index
-        jsr     RemoveEntry
+        CALL    RemoveEntry, A=shortcut_picker_record::selected_index
       IF ZC
         jmp     CloseWindow
       END_IF
@@ -318,8 +311,7 @@ reuse_same_index:
 :
     END_IF
 
-        ldy     copy_when
-        jsr     AssignEntryData
+        CALL    AssignEntryData, Y=copy_when
         jsr     WriteFile
     IF ZC
         jmp     CloseWindow
@@ -343,8 +335,7 @@ copy_when_conversion_table:
 .proc DoRun
         jsr     CloseWindow
         jsr     main::ClearUpdates       ; Run dialog OK
-        lda     shortcut_picker_record::selected_index
-        rts
+        RETURN  A=shortcut_picker_record::selected_index
 .endproc ; DoRun
 
 ;;; ============================================================
@@ -354,15 +345,13 @@ copy_when_conversion_table:
 .proc DoCancel
         lda     selector_action
     IF A = #SelectorAction::edit
-        lda     #kDynamicRoutineRestoreFD
-        jsr     main::RestoreDynamicRoutine
+        CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
     END_IF
 
         jsr     CloseWindow
         jsr     main::ClearUpdates
 
-        lda     #$FF
-        jmp     Exit
+        TAIL_CALL Exit, A=#$FF
 .endproc ; DoCancel
 
 ;;; ============================================================
@@ -389,8 +378,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
 .proc OpenWindow
         MGTK_CALL MGTK::OpenWindow, winfo_entry_picker
-        lda     #winfo_entry_picker::kWindowId
-        jsr     main::SafeSetPortFromWindowId
+        CALL    main::SafeSetPortFromWindowId, A=#winfo_entry_picker::kWindowId
         jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, entry_picker_frame_rect
@@ -406,14 +394,14 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
         lda     selector_action
     IF A = #SelectorAction::edit
-        param_jump DrawTitleCentered, label_edit
+        TAIL_CALL DrawTitleCentered, AX=#label_edit
     END_IF
 
     IF A = #SelectorAction::delete
-        param_jump DrawTitleCentered, label_del
+        TAIL_CALL DrawTitleCentered, AX=#label_del
     END_IF
 
-        param_jump DrawTitleCentered, label_run
+        TAIL_CALL DrawTitleCentered, AX=#label_run
 .endproc ; OpenWindow
 
 ;;; ============================================================
@@ -459,16 +447,16 @@ handle_button:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
     IF ZERO
-        return8 #$FF
+        RETURN  A=#$FF
     END_IF
 
     IF A <> #MGTK::Area::content
-        return8 #$FF
+        RETURN  A=#$FF
     END_IF
 
         lda     findwindow_params::window_id
     IF A <> winfo_entry_picker
-        return8 #$FF
+        RETURN  A=#$FF
     END_IF
 
         lda     #winfo_entry_picker::kWindowId
@@ -514,7 +502,7 @@ handle_button:
 .proc HandleKey
         lda     event_params::modifiers
     IF A = #MGTK::event_modifier_solid_apple
-        return8 #$FF
+        RETURN  A=#$FF
     END_IF
 
         lda     event_params::key
@@ -535,7 +523,7 @@ handle_button:
       END_IF
     END_IF
 
-        return8 #$FF
+        RETURN  A=#$FF
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -543,16 +531,16 @@ handle_button:
 .proc HandleKeyReturn
         BTK_CALL BTK::Flash, entry_picker_ok_button
     IF NS
-        return8 #$FF            ; ignore
+        RETURN  A=#$FF          ; ignore
     END_IF
-        return8 #0
+        RETURN  A=#0
 .endproc ; HandleKeyReturn
 
 ;;; ============================================================
 
 .proc HandleKeyEscape
         BTK_CALL BTK::Flash, entry_picker_cancel_button
-        return8 #1
+        RETURN  A=#1
 .endproc ; HandleKeyEscape
 
 ;;; ============================================================
@@ -624,8 +612,7 @@ entries_flag_table:
         ptr_file = $06          ; pointer into file buffer
 
         ;; Assign name in `main::stashed_name` to file
-        lda     index
-        jsr     GetFileEntryAddr
+        CALL    GetFileEntryAddr, A=index
         stax    ptr_file
         ldy     main::stashed_name
     DO
@@ -639,8 +626,7 @@ entries_flag_table:
         sta     (ptr_file),y
 
         ;; Assign path in `path_buf0` to file
-        lda     index
-        jsr     GetFilePathAddr
+        CALL    GetFilePathAddr, A=index
         stax    ptr_file
         ldy     path_buf0
     DO
@@ -668,8 +654,7 @@ index:  .byte   0
         pha
 
         ;; Compute entry address
-        lda     index
-        jsr     GetFileEntryAddr
+        CALL    GetFileEntryAddr, A=index
         stax    ptr
 
         ;; Assign name
@@ -685,8 +670,7 @@ index:  .byte   0
         sta     (ptr),y
 
         ;; Assign path
-        lda     index
-        jsr     GetFilePathAddr
+        CALL    GetFilePathAddr, A=index
         stax    ptr
         ldy     path_buf0
     DO
@@ -758,8 +742,7 @@ loop:   lda     index
         jmp     WriteFile
     END_IF
 
-        lda     index
-        jsr     MoveEntryDown
+        CALL    MoveEntryDown, A=index
 
         inc     index
         jmp     loop
@@ -789,8 +772,7 @@ index:  .byte   0
         sta     (ptr1),y
 
         ;; Copy path (in file buffer) down by one
-        lda     index
-        jsr     GetFilePathAddr
+        CALL    GetFilePathAddr, A=index
         stax    ptr1
         add16   ptr1, #kSelectorListPathLength, ptr2
 
@@ -822,11 +804,9 @@ loop:   dec     index
         bmi     finish
 
         ;; Name
-        lda     index
-        jsr     GetFileEntryAddr
+        CALL    GetFileEntryAddr, A=index
         stax    ptr_file
-        lda     index
-        jsr     GetResourceEntryAddr
+        CALL    GetResourceEntryAddr, A=index
         stax    ptr_res
         jsr     _CopyString
 
@@ -836,11 +816,9 @@ loop:   dec     index
         sta     (ptr_res),y
 
         ;; Path
-        lda     index
-        jsr     GetFilePathAddr
+        CALL    GetFilePathAddr, A=index
         stax    ptr_file
-        lda     index
-        jsr     GetResourcePathAddr
+        CALL    GetResourcePathAddr, A=index
         stax    ptr_res
         jsr     _CopyString
 
@@ -975,7 +953,7 @@ filename:
         DEFINE_CLOSE_PARAMS close_params
 
 .proc WriteFileToOriginalPrefix
-        param_call main::CopyDeskTopOriginalPrefix, filename_buffer
+        CALL    main::CopyDeskTopOriginalPrefix, AX=#filename_buffer
         inc     filename_buffer ; Append '/' separator
         ldx     filename_buffer
         lda     #'/'
@@ -1000,16 +978,14 @@ retry:  MLI_CALL CREATE, create_origpfx_params
         lda     second_try_flag
     IF ZERO
         inc     second_try_flag
-        lda     #kErrSaveChanges
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#kErrSaveChanges
         cmp     #kAlertResultOK
         beq     retry
         bne     cancel          ; always
     END_IF
 
         ;; Second time - prompt to insert.
-        lda     #kErrInsertSystemDisk
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#kErrInsertSystemDisk
         cmp     #kAlertResultOK
         beq     retry
 
@@ -1040,11 +1016,10 @@ retry:  MLI_CALL OPEN, open_curpfx_params
         bcc     read
         cmp     #ERR_FILE_NOT_FOUND
         beq     not_found
-        lda     #kErrInsertSystemDisk
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#kErrInsertSystemDisk
         cmp     #kAlertResultOK
         beq     retry
-        return8 #$FF            ; failure
+        RETURN  A=#$FF          ; failure
 
 read:   lda     open_curpfx_params::ref_num
         sta     read_params::ref_num
@@ -1072,7 +1047,7 @@ not_found:
         inc     ptr+1
         dex
     WHILE NOT_ZERO
-        return8 #0
+        RETURN  A=#0
 .endproc ; ReadFile
 
 ;;; ============================================================
@@ -1083,11 +1058,10 @@ not_found:
         MLI_CALL CREATE, create_curpfx_params
         MLI_CALL OPEN, open_curpfx_params
         bcc     write
-        lda     #kErrInsertSystemDisk
-        jsr     ShowAlert
+        CALL    ShowAlert, A=#kErrInsertSystemDisk
         cmp     #kAlertResultOK
         beq     @retry
-        return8 #$FF
+        RETURN  A=#$FF
 
 write:  lda     open_curpfx_params::ref_num
         sta     write_params::ref_num
@@ -1106,7 +1080,7 @@ close:  MLI_CALL CLOSE, close_params
 
 .proc IsEntryCallback
         tay
-        ldx     entries_flag_table,y
+        ldx     entries_flag_table,y ; set N appropriately
         rts
 .endproc ; IsEntryCallback
 
@@ -1124,8 +1098,8 @@ close:  MLI_CALL CLOSE, close_params
 
         ptr1 := $06
         stax    ptr1
-        param_call main::CopyPtr1ToBuf, text_buffer2
-        param_jump main::DrawString, text_buffer2
+        CALL    main::CopyPtr1ToBuf, AX=#text_buffer2
+        TAIL_CALL main::DrawString, AX=#text_buffer2
 .endproc ; DrawEntryCallback
 
 .proc SelChangeCallback

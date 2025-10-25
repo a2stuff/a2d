@@ -10,8 +10,7 @@
         ENTRY_POINTS_FOR_BIT7_FLAG sep, nosep, separator_flag
         stax    value
 
-        ldx     #DeskTopSettings::intl_thou_sep
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::intl_thou_sep
         sta     thou_sep_char
 
         CLEAR_BIT7_FLAG nonzero_flag

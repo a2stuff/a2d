@@ -51,8 +51,7 @@
 
 .proc RunDA
         jsr     Init
-        lda     dialog_result
-        rts
+        RETURN  A=dialog_result
 .endproc ; RunDA
 
 ;;; High bit set when anything changes.
@@ -319,8 +318,7 @@ common:
 
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
       IF NOT_ZERO
-        lda     index
-        jmp     ToggleButton
+        TAIL_CALL ToggleButton, A=index
       END_IF
 
         dec     index
@@ -353,8 +351,7 @@ common:
         copy16  button_button_table,x, params_addr
 
         ldx     index
-        lda     button_mask_table,x
-        jsr     GetBit
+        CALL    GetBit, A=button_mask_table,x
         ldx     index
         eor     button_eor_table,x
 
@@ -379,16 +376,13 @@ ASSERT_EQUALS BTK::kButtonStateNormal, $00
 ASSERT_EQUALS BTK::kButtonStateChecked, $80
 .proc GetBit
         sta     mask
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         mask := *+1
         and     #SELF_MODIFIED_BYTE
         beq     set
-        lda     #0
-        rts
+        RETURN  A=#0
 
-set:    lda     #$80
-        rts
+set:    RETURN  A=#$80
 .endproc ; GetBit
 
 ;;; ============================================================
@@ -402,16 +396,13 @@ set:    lda     #$80
         stax    rec_addr
         stax    params_addr
 
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         ldx     index
         eor     button_mask_table,x
-        ldx     #DeskTopSettings::options
-        jsr     WriteSetting
+        CALL    WriteSetting, X=#DeskTopSettings::options
 
         ldx     index
-        lda     button_mask_table,x
-        jsr     GetBit
+        CALL    GetBit, A=button_mask_table,x
         ldx     index
         eor     button_eor_table,x
 

@@ -74,8 +74,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     DHIRESOFF
 
         ;; IIgs: save text & border colors & set white-on-black text
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
     IF CC
         .pushcpu
         .setcpu "65816"
@@ -93,8 +92,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         jsr     Run
 
         ;; IIgs: restore original border color
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
     IF CC
         .pushcpu
         .setcpu "65816"
@@ -211,8 +209,7 @@ event_params:   .tag MGTK::Event
         copy16  #aux::event_params, STARTLO
         copy16  #aux::event_params + .sizeof(MGTK::Event) - 1, ENDLO
         copy16  #event_params, DESTINATIONLO
-        clc                     ; aux > main
-        jmp     AUXMOVE
+        TAIL_CALL AUXMOVE, C=0  ; aux > main
 .endproc ; CopyEventAuxToMain
 
 ;;; ============================================================
@@ -424,8 +421,7 @@ bcnt:   dex
         sta     color
 
         ;; If IIgs, set border to plot color
-        sec
-        jsr     IDROUTINE
+        CALL    IDROUTINE, C=1
     IF CC
         .pushcpu
         .setcpu "65816"

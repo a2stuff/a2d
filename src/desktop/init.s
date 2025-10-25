@@ -130,8 +130,7 @@ start:
         sta     startdesktop_params::subid
 
         ;; Model?
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
 
         tax                     ; A = X = kSysCapXYZ bitmap
         ora     #DeskTopSettings::kSysCapIsIIgs | DeskTopSettings::kSysCapIsLaser128
@@ -186,7 +185,7 @@ end:
         copy8   DEVNUM, target
         jsr     main::GetCopiedToRAMCardFlag
     IF NS
-        param_call main::CopyDeskTopOriginalPrefix, INVOKER_PREFIX
+        CALL    main::CopyDeskTopOriginalPrefix, AX=#INVOKER_PREFIX
         MLI_CALL GET_FILE_INFO, main::src_file_info_params
       IF CC
         copy8   DEVNUM, target
@@ -248,8 +247,7 @@ done:
 
         lda     startdesktop_params::slot_num
     IF ZERO
-        ldx     #DeskTopSettings::options
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
         ora     #DeskTopSettings::kOptionsShowShortcuts
         jsr     WriteSetting
     END_IF
@@ -260,16 +258,14 @@ done:
         ;; Cursor tracking
 
         ;; Doubled if option selected
-        ldx     #DeskTopSettings::mouse_tracking
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::mouse_tracking
     IF NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
 
         ;; Also doubled if a IIc
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
         and     #DeskTopSettings::kSysCapIsIIc
     IF NOT_ZERO
         inc     scalemouse_params::x_exponent
@@ -368,8 +364,7 @@ loop:   lda     index
         ;; Copy entry name into place
         jsr     main::ATimes16
         addax   #selector_list_data_buf + kSelectorListEntriesOffset, ptr1
-        lda     index
-        jsr     main::ATimes16
+        CALL    main::ATimes16, A=index
         addax   #run_list_entries, ptr2
         jsr     _CopyPtr1ToPtr2
 
@@ -378,11 +373,9 @@ loop:   lda     index
         copy8   (ptr1),y, (ptr2),y
 
         ;; Copy entry path into place
-        lda     index
-        jsr     main::ATimes64
+        CALL    main::ATimes64, A=index
         addax   #selector_list_data_buf + kSelectorListPathsOffset, ptr1
-        lda     index
-        jsr     main::ATimes64
+        CALL    main::ATimes64, A=index
         addax   #main::run_list_paths, ptr2
         jsr     _CopyPtr1ToPtr2
 
@@ -502,7 +495,7 @@ open_dir:
         copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
 
 process_block:
-        param_call_indirect AdjustFileEntryCase, dir_ptr
+        CALL    AdjustFileEntryCase, AX=dir_ptr
 
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y
@@ -533,9 +526,7 @@ process_block:
         ;; Allow anything else
 
         ;; Compute slot in DA name table
-        ldy     desk_acc_num
-        ldax    #kDAMenuItemSize
-        jsr     Multiply_16_8_16
+        CALL    Multiply_16_8_16, Y=desk_acc_num, AX=#kDAMenuItemSize
         addax   #desk_acc_names, da_ptr
 
         ;; Copy name
@@ -662,8 +653,7 @@ end:
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
         jsr     main::IsDiskII
         beq     done_create     ; skip
-        ldx     device_index
-        jsr     _RemoveDevice
+        CALL    _RemoveDevice, X=device_index
         jmp     next
       END_IF
 
@@ -918,16 +908,14 @@ dib_buffer := ::IO_BUFFER
         ;; Maybe add device to the removable device table
 append:
         ;; Do SmartPort STATUS call to filter out 5.25 devices
-        lda     unit_num
-        jsr     main::FindSmartportDispatchAddress
+        CALL    main::FindSmartportDispatchAddress, A=unit_num
         bcs     next            ; can't determine address - skip it!
         stax    dispatch
         sty     status_params::unit_num
 
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
         ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
         and     #DeskTopSettings::kSysCapIsIIcPlus
     IF NOT_ZERO
         lda     dispatch+1
@@ -938,8 +926,7 @@ append:
 
         ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
         ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
-        ldx     #DeskTopSettings::system_capabilities
-        jsr     ReadSetting
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
         and     #DeskTopSettings::kSysCapIsLaser128
     IF NOT_ZERO
         lda     dispatch+1      ; $Cs
@@ -1040,7 +1027,7 @@ loop:   ldy     #0
 
         dex
         stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length
-        param_call main::FindIconByName, 0, INVOKER_PREFIX+1 ; 0=desktop
+        CALL    main::FindIconByName, Y=#0, AX=#INVOKER_PREFIX+1 ; 0=desktop
         beq     next
         copy8   #'/', INVOKER_PREFIX+1 ; restore leading '/'
 

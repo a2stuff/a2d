@@ -1,4 +1,3 @@
-
 ;;; ============================================================
 ;;; MouseGraphics ToolKit
 ;;; ============================================================
@@ -1415,9 +1414,7 @@ set_width:                                      ; Set width for destination.
         txa
         ror     a
         tax
-        lda     div7_table,x
-        ldy     mod7_table,x
-        rts
+        RETURN  A=div7_table,x, Y=mod7_table,x
 
         ;; x >= 512
 :       txa
@@ -1428,8 +1425,7 @@ set_width:                                      ; Set width for destination.
         clc
         adc     #$24
         plp
-        ldy     mod7_table+4,x
-        rts
+        RETURN  Y=mod7_table+4,x
 .endproc ; DivMod7
 
         ;; Set up destination (for either on-screen or off-screen bitmap.)
@@ -1899,8 +1895,7 @@ in_top: ldy     #0
         tay
 
 :       sty     $9A
-        sec
-        rts
+        RETURN  C=1
 .endproc ; ClipRect
 
 ;;; ============================================================
@@ -2251,8 +2246,7 @@ set_low_point:
 :       stx     vertex_limit
         bit     poly_oper
         bpl     :+
-        sec
-        rts
+        RETURN  C=1
 
 :       jmp     ClipRect
 .endproc ; LoadPoly
@@ -3175,17 +3169,18 @@ glyph_row_hi:
         rts
 .endproc ; TextWidthImpl
 
-        ;; Call with data at ($A1), length in $A3, result in (X,A)
+        ;; Call with data at ($A1), length in $A3, result in (A,X)
 .proc MeasureText
         data   := $A1
         length := $A3
 
-        accum  := $82
+        accum  := $82           ; hi
+        pos    := $83
 
-        ldx     #0
+        ldx     #0              ; X=lo
         ldy     #0
         sty     accum
-loop:   sty     accum+1
+loop:   sty     pos
         lda     (data),y
         tay
         txa
@@ -3194,13 +3189,12 @@ loop:   sty     accum+1
         bcc     :+
         inc     accum
 :       tax
-        ldy     accum+1
+        ldy     pos
         iny
         cpy     length
         bne     loop
-        txa
-        ldx     accum
-        rts
+        txa                     ; now A=lo
+        RETURN  X=accum         ; A,X
 .endproc ; MeasureText
 
 ;;; ============================================================
@@ -5437,8 +5431,7 @@ rts_with_carry_set:
 
         clc
         adc     #MGTK::short_event_size
-        clc
-        rts
+        RETURN  C=0
 .endproc ; NextEvent
 
 
@@ -5717,7 +5710,7 @@ modifiers  .byte
         END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetEvent, event
-        return8 event
+        RETURN  A=event
 .endproc ; GetAndReturnEvent
 
 
@@ -5930,7 +5923,7 @@ loop:   jsr     GetMenu
         lda     curmenu::menu_id          ; search by menu id
         cmp     find_menu_id
         bne     next
-found:  return8 curmenu::menu_id          ; reload to clear Z flag
+found:  RETURN  A=curmenu::menu_id ; reload to clear Z flag
 
 :       ldax    cursor_pos::xcoord ; search by x coordinate bounds
         cpx     curmenu::x_min+1
@@ -5953,7 +5946,7 @@ next:   ldx     menu_index
         inx
         cpx     menu_count
         bne     loop
-        return8 #0
+        RETURN  A=#0
 .endproc ; FindMenuById
 
 find_menu := FindMenuById::find_menu
@@ -6642,8 +6635,7 @@ last_cursor_pos:
         lda     rect+MGTK::Rect::y2
         sta     savebehind_bottom
 
-        ldx     rect+MGTK::Rect::y1
-        rts
+        RETURN  X=rect+MGTK::Rect::y1
 .endproc ; SetUpRectSavebehind
 
 .proc SavebehindGetVidaddr
@@ -7243,8 +7235,7 @@ get_from_ax:
         bne     :-
 
 return_window:
-        ldax    window
-        rts
+        RETURN  AX=window
 .endproc ; GetWindow
         set_found_window := NextWindow::set_found_window
 
@@ -7315,9 +7306,7 @@ end:    rts
         FALL_THROUGH_TO return_winrect
 .endproc ; GetWinRect
 return_winrect:
-        ldax    #winrect
-        rts
-
+        RETURN  AX=#winrect
 
         ;; Return the window's rect including framing: title bar and scroll
         ;; bars.
@@ -7774,9 +7763,11 @@ ret:    rts
 
 
 .proc CenterTitleText
+        text_width = $82
+
         ldax    current_winfo::title
         jsr     DoMeasureText
-        stax    $82
+        stax    text_width
 
         lda     winrect::x1
         clc
@@ -7789,11 +7780,11 @@ ret:    rts
 
         tya
         sec
-        sbc     $82
+        sbc     text_width
         sta     current_penloc_x
 
         txa
-        sbc     $83
+        sbc     text_width+1
         cmp     #$80
         ror     a
         sta     current_penloc_x+1
@@ -7803,8 +7794,7 @@ ret:    rts
         subax8  #2
         stax    current_penloc_y
 
-        ldax    $82
-        rts
+        RETURN  AX=text_width
 .endproc ; CenterTitleText
 
 ;;; ============================================================
@@ -8178,8 +8168,8 @@ win_port  .addr
         dex
         dex
         bpl     :-
-        sec
-        rts
+
+        RETURN  C=1
 .endproc ; PrepareWinport
 
 ;;; ============================================================
@@ -9784,12 +9774,10 @@ stashed_addr:  .addr     0
         sta     kbd_mouse_status ; reset mouse button status
         COPY_BYTES 3, cursor_pos, kbd_mouse_x
 
-        clc
-        rts
+        RETURN  C=0
 
 ignore:
-        sec
-        rts
+        RETURN  C=1
 
 .endproc ; CheckActivateMouseKeys
 
@@ -9799,8 +9787,7 @@ ignore:
         lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
 
-        clc
-        rts
+        RETURN  C=0
 .endproc ; EndMouseKeys
 
 .proc PlayTone1
@@ -10128,8 +10115,7 @@ force_tracking_change:
 
         bit     drag_resize_flag
         bpl     :+
-ret_ok: sec
-        rts
+ret_ok: RETURN  C=1
 
 :       jsr     GetWinFrameRect
         lda     winrect::x2+1
@@ -10141,8 +10127,7 @@ ret_ok: sec
         lda     #65
 :       cmp     winrect::x2
         bcc     min_ok
-        clc
-        rts
+        RETURN  C=0
 
 min_ok: inc     force_tracking_change
 
@@ -10156,8 +10141,8 @@ min_ok: inc     force_tracking_change
         sta     drag_initialpos
         bcc     :+
         inc     drag_initialpos+1
-:       clc
-        rts
+:
+        RETURN  C=0
 .endproc ; KbdMouseCheckXmin
 
 
@@ -10175,8 +10160,8 @@ min_ok: inc     force_tracking_change
         sbc     #>(kScreenWidth-1)
         beq     is_max
 
-:       sec
-        rts
+:
+        RETURN  C=1
 
 is_max: jsr     GetWinFrameRect
         sec
@@ -10199,8 +10184,7 @@ is_max: jsr     GetWinFrameRect
         bcs     in_range
 
 clc_rts:
-        clc
-        rts
+        RETURN  C=0
 
 ge_100: sec
         lda     drag_initialpos
@@ -10216,8 +10200,7 @@ in_range:
         dec     drag_initialpos+1
 :
         inc     force_tracking_change
-        clc
-        rts
+        RETURN  C=0
 .endproc ; KbdMouseCheckXmax
 
 
@@ -10332,8 +10315,7 @@ clamp_y_table_high: .byte   >(kScreenHeight-1), >(kScreenHeight/2-1), >(kScreenH
         jsr     CheckMouseInA
         sta     no_mouse_flag
         beq     found
-        ldx     #0
-        rts
+        RETURN  X=#0
 
         ;; Scan for mouse starting at slot 7
 scan:   ldx     #7
@@ -10384,9 +10366,9 @@ found:
         asl     a
         asl     a
         sta     mouse_operand
-        return8 #$00
+        RETURN  A=#$00
 
-nope:   return8 #$80
+nope:   RETURN  A=#$80
 .endproc ; CheckMouseInA
 .endproc ; FindMouse
 
