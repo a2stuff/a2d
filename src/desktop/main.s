@@ -446,7 +446,11 @@ offset_table:
         sta     findwindow_params::window_id
         ITK_CALL IconTK::FindIcon, event_params::coords
         lda     findicon_params::which_icon
-        jne     _IconClick
+      IF NOT ZERO
+        ldx     #0
+        stx     focused_window_id
+        jmp     _IconClick
+      END_IF
 
         TAIL_CALL DragSelect, A=#0
     END_IF
@@ -902,6 +906,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 
         ;; Make the window active.
         sta     active_window_id
+        sta     focused_window_id
         MGTK_CALL MGTK::SelectWindow, active_window_id
 
         ;; Repaint the contents
@@ -3734,10 +3739,12 @@ END_PARAM_BLOCK
         ENTRY_POINTS_FOR_A left, kDirLeft, right, kDirRight, up, kDirUp, down, kDirDown
         sta     dir
 
+        jsr     LoadFocusedWindowEntryTable
+
 ;;; --------------------------------------------------
 ;;; If a list view, use index-based logic
 
-        jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF NS
         lda     dir
         cmp     #kDirUp
@@ -3749,14 +3756,8 @@ END_PARAM_BLOCK
 ;;; --------------------------------------------------
 ;;; Identify a starting icon
 
-        jsr     LoadActiveWindowEntryTable
-
         lda     selected_icon_count
         jeq     fallback
-
-        lda     active_window_id
-        cmp     selected_window_id
-        jne     fallback
 
         copy8   selected_icon_list, icon_param ; use first
 
@@ -3856,13 +3857,14 @@ compare_order:  .byte   $80, $00, $80, $00
 ;;; If there was no (usable) selection, pick icon from active window.
 
 fallback:
+        ;; Assert: `cached_window_id` = `active_window_id`
         ldy     cached_window_entry_count
         beq     ret
 
         ;; Default to first (X) / last (Y) icon
         ldx     #0
         dey
-        lda     active_window_id
+        lda     cached_window_id
     IF ZERO
         ;; ...except on desktop, since first is Trash.
         tay                     ; make last (Y) be Trash (0)
@@ -4002,15 +4004,32 @@ typedown_buf:
         .res    16, 0
 
 ;;; ============================================================
+;;; Load the entry table for the window to be used for keyboard
+;;; selection - usually the active window, unless the desktop
+;;; has been clicked. Also clears selection if it isn't in
+;;; that window.
+
+.proc LoadFocusedWindowEntryTable
+        lda     focused_window_id
+    IF A <> selected_window_id
+        pha
+        jsr     ClearSelection
+        pla
+    END_IF
+        jmp     LoadWindowEntryTable
+
+.endproc ; LoadFocusedWindowEntryTable
+
+;;; ============================================================
 ;;; Build list of keyboard-selectable icons.
-;;; This is all icons in active window.
 ;;; Output: Buffer at $1800 (length prefixed)
 ;;;         X = number of icons
 
 .proc GetKeyboardSelectableIcons
         buffer := $1800
 
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadFocusedWindowEntryTable
+
         ldx     #0
     DO
         BREAK_IF X = cached_window_entry_count
@@ -5249,6 +5268,7 @@ exception_flag:
         pla                     ; A = window_id
     IF A <> active_window_id
         sta     active_window_id
+        sta     focused_window_id
         MGTK_CALL MGTK::SelectWindow, active_window_id
     END_IF
 
@@ -5593,6 +5613,7 @@ beyond:
 
         ;; Record the new active window
         MGTK_CALL MGTK::FrontWindow, active_window_id
+        copy8   active_window_id, focused_window_id
 
         jsr     ClearUpdates ; following CloseWindow above
 
@@ -7517,7 +7538,9 @@ END_PARAM_BLOCK
         CALL    GetFileRecordListForWindow, A=cached_window_id
         addax   #1, records_base_ptr ; first byte in list is the list size
 
-        copy8   cached_window_id, active_window_id
+        lda     cached_window_id
+        sta     active_window_id
+        sta     focused_window_id
 
         ;; Loop over files, creating icon for each
         ldx     #0              ; X = index

@@ -961,6 +961,11 @@ remainder:      .word   0               ; (out)
 active_window_id:
         .byte   0
 
+;;; Always tracks `active_window_id` unless an icon on the desktop has
+;;; been clicked.
+focused_window_id:
+        .byte   0
+
 kWindowToDirIconFree = $00      ; window not in use
 kWindowToDirIconNone = $FF      ; no icon
 ;;; Otherwise, dir (vol/folder) icon associated with window.
