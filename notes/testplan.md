@@ -961,11 +961,18 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. Close all windows. Select a volume icon. Press an arrow key. Verify that the next icon in the specified direction is selected, if any. If none, verify that selection remains unchanged.
 * Launch DeskTop. Close all windows. Eject all disks, and verify that only the Trash icon remains. Clear selection by clicking on the desktop. Press an arrow key. Verify that the Trash icon is selected.
 
-* Launch DeskTop. Open a window. Select a volume icon. Press Right Arrow key. Verify that the first icon in the window is selected. Repeat with Down Arrow key.
-* Launch DeskTop. Open a window. Select a volume icon. Press Left Arrow key. Verify that the last icon in the window is selected. Repeat with Up Arrow key.
+* Launch DeskTop. Open a window. Press Right Arrow key. Verify that the first icon in the window is selected. Repeat with Down Arrow key.
+* Launch DeskTop. Open a window. Press Left Arrow key. Verify that the last icon in the window is selected. Repeat with Up Arrow key.
 * Launch DeskTop. Open two windows, both containing icons. Select an icon in one window. Activate the other window without changing selection. Press Right Arrow key. Verify that the first icon in the active window is selected. Repeat with Down Arrow key.
 * Launch DeskTop. Open two windows, both containing icons. Select an icon in one window. Activate the other window without changing selection. Press Left Arrow key. Verify that the last icon in the active window is selected. Repeat with Up Arrow key.
 * Launch DeskTop. Open a window containing multiple icons. Select an icon in the window. Press an arrow key. Verify that the next icon in the specified direction is selected, if any. If none, verify that selection remains unchanged.
+
+* Launch DeskTop. Open a window. Click a volume icon. Press an arrow key. Verify that the next volume icon in visual order is selected
+* Launch DeskTop. Open a window. Click a volume icon. Click on the open window's title bar. Press an arrow key. Verify that an icon within the window is selected. Repeat for the window's header and scroll bars.
+* Launch DeskTop. Open a window. Click a volume icon. Click an empty area within the window. Press an arrow key. Verify that an icon within the window is selected.
+* Launch DeskTop. Open a window. Click a volume icon. Click an icon within the window. Press an arrow key. Verify that the next file icon in visual order within the window is selected.
+* Launch DeskTop. Open a window. Click a volume icon. Click an empty space on the desktop. Press the Down Arrow key. Verify that the first volume icon in visual order on the desktop is selected.
+* Launch DeskTop. Open a window. Click a file icon. Click an empty space on the desktop. Press the Down Arrow key. Verify that the first file icon in visual order within the window is selected.
 
 * Launch DeskTop. Open one window containing icons, the other containing no icons. Select an icon in the first window. Activate the other window without changing selection. Press an arrow key. Verify that selection remains unchanged.
 
