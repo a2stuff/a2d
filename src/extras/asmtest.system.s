@@ -470,6 +470,17 @@ table := *
         RTS_IF NOT A NOT_BETWEEN #'0', #'9'
 
 
+;;; --------------------------------------------------
+;;; Cheap Local Label Compatibility
+;;; --------------------------------------------------
+
+        DO
+@cheap:
+        BREAK_IF CS
+        CONTINUE_IF CS
+        beq     @cheap
+        WHILE A < #123
+
 ;;; ============================================================
 ;;; Flow Control Macros - Functions
 ;;; ============================================================
@@ -561,6 +572,15 @@ kSet = 1
         RETURN  Y=#kConstant, AX=var
         RETURN  C=1, A=table,x, X=table,y
 
+;;; --------------------------------------------------
+;;; Cheap Local Label Compatibility
+;;; --------------------------------------------------
+
+@cheap:
+        CALL    target, A=#1
+        TAIL_CALL target, A=#2
+        RETURN  A=#3
+        beq     @cheap
 
 ;;; ============================================================
 ;;; Errors
