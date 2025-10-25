@@ -1331,7 +1331,7 @@ fill_mode_table_onechar_high:
 .proc SetPenModeImpl
         lda     current_penmode
         ldx     #0
-    IF A >=  #4
+    IF A >= #4
         ldx     #$7F
     END_IF
         stx     fill_eor_mask
