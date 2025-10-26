@@ -1056,7 +1056,7 @@ The following tests all require:
 * Configure a IIgs system with ejectable disks. Launch DeskTop. Select the ejectable volume. Special > Eject Disk. Verify that an alert is not shown.
 
 * Configure a IIgs via the system control panel to have a RAM disk:
-  * Launch DeskTop. Verify that the Ram5 volume is shown with a RAMDisk icon.
+  * Launch DeskTop. Verify that the `RAM5` volume is shown with a RAMDisk icon.
   * Configure DeskTop to copy to RAMCard on startup, and restart. Verify it is copied to `/RAM5`.
 
 * On a IIgs, go to Apple Menu > About This Apple II. Verify the memory count is not "000,000".
@@ -1067,7 +1067,7 @@ The following tests all require:
 
 * On the Crossrunner IIgs emulator, launch DeskTop. Verify it does not hang on startup.
 
-* Use the Options control panel (in DeskTop) to show Shortcuts on startup. Launch Shortcuts. File > Quit. Verify that super-hires mode is not erroneously activated.
+* Use the Options control panel (in DeskTop) to show Shortcuts on startup. Launch Shortcuts. File > Run a Program.... Select `BASIC.SYSTEM` and click OK. that super-hires mode is not erroneously activated.
 
 ### Apple IIc
 
@@ -1289,7 +1289,7 @@ Run these tests on a system without a real-time clock:
 
 * Configure multiple drives connected to a SmartPort controller on a higher numbered slot, a single drive connected to a SmartPort controller in a lower numbered slot. Launch DeskTop. Apple Menu > About This Apple II. Verify that the name on the lower numbered slot doesn't have an extra character at the end.
 
-* Run on Laser 128 with memory expansion. Launch DeskTop. Copy a file to Ram5. Apple Menu > About This Apple II, close it. Verify that the file is still present on Ram5.
+* Run on Laser 128 with memory expansion. Launch DeskTop. Copy a file to `/RAM5`. Apple Menu > About This Apple II, close it. Verify that the file is still present on `/RAM5`.
 
 * Boot a system with only the 140k_disk1 image. Verify that About This Apple II is present in the Apple Menu.
 
