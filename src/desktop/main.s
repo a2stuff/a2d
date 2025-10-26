@@ -281,8 +281,6 @@ modifiers:
         jeq     CmdResize
         cmp     #kShortcutMoveWindow  ; Apple-M (Move)
         jeq     CmdMove
-        cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
-        jeq     CmdScroll
 
       IF A IN #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
         jmp     CmdCycleWindows
@@ -4263,45 +4261,6 @@ found:  inx
         MGTK_CALL MGTK::DrawMenuBar
         rts
 .endproc ; CmdFlipScreen
-
-;;; ============================================================
-;;; Keyboard-based scrolling of window contents
-
-.proc CmdScroll
-repeat: jsr     GetEvent        ; no need to synthesize events
-
-        cmp     #MGTK::EventKind::button_down
-        beq     done
-
-        cmp     #MGTK::EventKind::key_down
-        bne     repeat
-
-        lda     event_params::key
-
-    IF A IN #CHAR_RETURN, #CHAR_ESCAPE
-done:   rts
-    END_IF
-
-    IF A = #CHAR_RIGHT
-        jsr     ScrollRight
-        jmp     repeat
-    END_IF
-
-    IF A = #CHAR_LEFT
-        jsr     ScrollLeft
-        jmp     repeat
-    END_IF
-
-    IF A = #CHAR_DOWN
-        jsr     ScrollDown
-        jmp     repeat
-    END_IF
-
-        cmp     #CHAR_UP
-        bne     repeat
-        jsr     ScrollUp
-        jmp     repeat
-.endproc ; CmdScroll
 
 ;;; ============================================================
 ;;; Centralized logic for scrolling directory windows
@@ -12762,6 +12721,145 @@ ok:     RETURN  A=#0
 .endproc ; AboutDialogProc
 
 ;;; ============================================================
+;;; Given a path and a prospective name, update the filesystem with
+;;; the desired case bits, considering type and the option
+;;; `DeskTopSettings::kOptionsSetCaseBits`.
+;;;
+;;; Volume - If option set, write case bits to volume header;
+;;; otherwise clear case bits in volume header and recase the string
+;;; in memory.
+;;;
+;;; Regular File - If option set, write case bits to directory entry;
+;;; otherwise clear case bits in directory entry and recase the string
+;;; in memory.
+;;;
+;;; AppleWorks File - Write case bits to auxtype. If option set, also
+;;; write case bits to directory entry. Otherwise, clear case bits in
+;;; directory entry. (The string in memory is never recased, which
+;;; makes this not a superset of the regular file case.)
+;;;
+;;; Inputs: `src_path_buf` is file, `stashed_name` is new name
+;;; Outputs: `stashed_name` had "resulting" file case
+
+.proc ApplyCaseBits
+        CALL    CalculateCaseBits, AX=#stashed_name
+        stax    case_bits
+
+        jsr     GetSrcFileInfo
+        bcs     ret
+        copy8   DEVNUM, block_params::unit_num
+
+        lda     src_file_info_params::storage_type
+    IF A <> #ST_VOLUME_DIRECTORY
+        ;; --------------------------------------------------
+        ;; File
+
+        CALL    GetFileEntryBlock, AX=#src_path_buf
+        bcs     ret
+        stax    block_params::block_num
+
+        block_ptr := $08
+        CALL    GetFileEntryBlockOffset, AX=#block_buffer ; Y is already the entry number
+        stax    block_ptr
+
+        MLI_CALL READ_BLOCK, block_params
+        bcs     ret
+
+        ;; Is AppleWorks?
+        ldy     #FileEntry::file_type
+        lda     (block_ptr),y
+      IF A NOT_IN #FT_ADB, #FT_AWP, #FT_ASP
+
+        ;; --------------------------------------------------
+        ;; Non-AppleWorks file
+
+        jsr     get_case_bits_per_option_and_adjust_string
+      ELSE
+
+        ;; --------------------------------------------------
+        ;; AppleWorks file
+
+        ;; Per Per File Type Notes: File Type $19 (25) All Auxiliary Types (etc)
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ftn.19.xxxx.html
+        ;;
+        ;; Like as GS/OS case bits, except:
+        ;; * Shifted left by one bit; low bit is clear
+        ;; * Word is stored byte-swapped
+        lda     case_bits
+        asl     a
+        tax
+        lda     case_bits+1
+        rol     a
+
+        ldy     #FileEntry::aux_type
+        sta     (block_ptr),y
+        txa
+        iny
+        sta     (block_ptr),y
+
+        jsr     get_option
+       IF ZERO
+        ;; Option not set, so zero case bits; memory string preserved
+        ldax    #0
+       ELSE
+        ;; Option set, so write case bits as is.
+        ldax    case_bits
+       END_IF
+      END_IF
+
+        ldy     #FileEntry::case_bits
+        sta     (block_ptr),y
+        iny
+        txa
+        sta     (block_ptr),y
+        FALL_THROUGH_TO write_block
+
+write_block:
+        MLI_CALL WRITE_BLOCK, block_params
+ret:    rts
+
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Volume
+
+        copy16  #kVolumeDirKeyBlock, block_params::block_num
+        MLI_CALL READ_BLOCK, block_params
+        bcs     ret
+
+        jsr     get_case_bits_per_option_and_adjust_string
+        stax    block_buffer + VolumeDirectoryHeader::case_bits
+        jmp     write_block
+
+        ;; --------------------------------------------------
+        ;; Helpers
+
+        ;; Returns Z=0 if option set, Z=1 otherwise
+get_option:
+        CALL    ReadSetting, X=#DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsSetCaseBits
+        rts
+
+        ;; Returns A,X=case bits if option set, A,X=0 otherwise
+get_case_bits_per_option_and_adjust_string:
+        jsr     get_option
+    IF ZERO
+        ;; Option not set, so zero case bits, adjust memory string
+        CALL    UpcaseString, AX=#stashed_name
+        CALL    AdjustFileNameCase, AX=#stashed_name
+        ldax    #0
+    ELSE
+        ;; Option set, so write case bits as is, leave string alone
+        ldax    case_bits
+    END_IF
+        rts
+
+        ;; --------------------------------------------------
+        block_buffer := $800
+        DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
+.endproc ; ApplyCaseBits
+
+;;; ============================================================
 ;;; Dynamically load parts of Desktop
 
 ;;; Call `LoadDynamicRoutine` or `RestoreDynamicRoutine`
@@ -12906,145 +13004,6 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         ldx     #SELF_MODIFIED_BYTE
         rts
 .endproc ; AShiftX
-
-;;; ============================================================
-;;; Given a path and a prospective name, update the filesystem with
-;;; the desired case bits, considering type and the option
-;;; `DeskTopSettings::kOptionsSetCaseBits`.
-;;;
-;;; Volume - If option set, write case bits to volume header;
-;;; otherwise clear case bits in volume header and recase the string
-;;; in memory.
-;;;
-;;; Regular File - If option set, write case bits to directory entry;
-;;; otherwise clear case bits in directory entry and recase the string
-;;; in memory.
-;;;
-;;; AppleWorks File - Write case bits to auxtype. If option set, also
-;;; write case bits to directory entry. Otherwise, clear case bits in
-;;; directory entry. (The string in memory is never recased, which
-;;; makes this not a superset of the regular file case.)
-;;;
-;;; Inputs: `src_path_buf` is file, `stashed_name` is new name
-;;; Outputs: `stashed_name` had "resulting" file case
-
-.proc ApplyCaseBits
-        CALL    CalculateCaseBits, AX=#stashed_name
-        stax    case_bits
-
-        jsr     GetSrcFileInfo
-        bcs     ret
-        copy8   DEVNUM, block_params::unit_num
-
-        lda     src_file_info_params::storage_type
-    IF A <> #ST_VOLUME_DIRECTORY
-        ;; --------------------------------------------------
-        ;; File
-
-        CALL    GetFileEntryBlock, AX=#src_path_buf
-        bcs     ret
-        stax    block_params::block_num
-
-        block_ptr := $08
-        CALL    GetFileEntryBlockOffset, AX=#block_buffer ; Y is already the entry number
-        stax    block_ptr
-
-        MLI_CALL READ_BLOCK, block_params
-        bcs     ret
-
-        ;; Is AppleWorks?
-        ldy     #FileEntry::file_type
-        lda     (block_ptr),y
-      IF A NOT_IN #FT_ADB, #FT_AWP, #FT_ASP
-
-        ;; --------------------------------------------------
-        ;; Non-AppleWorks file
-
-        jsr     get_case_bits_per_option_and_adjust_string
-      ELSE
-
-        ;; --------------------------------------------------
-        ;; AppleWorks file
-
-        ;; Per Per File Type Notes: File Type $19 (25) All Auxiliary Types (etc)
-        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ftn.19.xxxx.html
-        ;;
-        ;; Like as GS/OS case bits, except:
-        ;; * Shifted left by one bit; low bit is clear
-        ;; * Word is stored byte-swapped
-        lda     case_bits
-        asl     a
-        tax
-        lda     case_bits+1
-        rol     a
-
-        ldy     #FileEntry::aux_type
-        sta     (block_ptr),y
-        txa
-        iny
-        sta     (block_ptr),y
-
-        jsr     get_option
-       IF ZERO
-        ;; Option not set, so zero case bits; memory string preserved
-        ldax    #0
-       ELSE
-        ;; Option set, so write case bits as is.
-        ldax    case_bits
-       END_IF
-      END_IF
-
-        ldy     #FileEntry::case_bits
-        sta     (block_ptr),y
-        iny
-        txa
-        sta     (block_ptr),y
-        FALL_THROUGH_TO write_block
-
-write_block:
-        MLI_CALL WRITE_BLOCK, block_params
-ret:    rts
-
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; Volume
-
-        copy16  #kVolumeDirKeyBlock, block_params::block_num
-        MLI_CALL READ_BLOCK, block_params
-        bcs     ret
-
-        jsr     get_case_bits_per_option_and_adjust_string
-        stax    block_buffer + VolumeDirectoryHeader::case_bits
-        jmp     write_block
-
-        ;; --------------------------------------------------
-        ;; Helpers
-
-        ;; Returns Z=0 if option set, Z=1 otherwise
-get_option:
-        CALL    ReadSetting, X=#DeskTopSettings::options
-        and     #DeskTopSettings::kOptionsSetCaseBits
-        rts
-
-        ;; Returns A,X=case bits if option set, A,X=0 otherwise
-get_case_bits_per_option_and_adjust_string:
-        jsr     get_option
-    IF ZERO
-        ;; Option not set, so zero case bits, adjust memory string
-        CALL    UpcaseString, AX=#stashed_name
-        CALL    AdjustFileNameCase, AX=#stashed_name
-        ldax    #0
-    ELSE
-        ;; Option set, so write case bits as is, leave string alone
-        ldax    case_bits
-    END_IF
-        rts
-
-        ;; --------------------------------------------------
-        block_buffer := $800
-        DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
-.endproc ; ApplyCaseBits
 
 ;;; ============================================================
 

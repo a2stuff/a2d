@@ -17,6 +17,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show correct icon state after failed operation that closes window.
 * Allow keyboard navigation after clicking on volume icon, even with window open.
 * Improve performance changing views with large numbers of icons selected.
+* Remove support for keyboard scrolling via Apple+S.
 
 ### Selector
 
