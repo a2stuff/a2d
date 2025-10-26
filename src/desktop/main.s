@@ -281,8 +281,6 @@ modifiers:
         jeq     CmdResize
         cmp     #kShortcutMoveWindow  ; Apple-M (Move)
         jeq     CmdMove
-        cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
-        jeq     CmdScroll
 
       IF A IN #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
         jmp     CmdCycleWindows
@@ -4260,45 +4258,6 @@ found:  inx
         MGTK_CALL MGTK::DrawMenuBar
         rts
 .endproc ; CmdFlipScreen
-
-;;; ============================================================
-;;; Keyboard-based scrolling of window contents
-
-.proc CmdScroll
-repeat: jsr     GetEvent        ; no need to synthesize events
-
-        cmp     #MGTK::EventKind::button_down
-        beq     done
-
-        cmp     #MGTK::EventKind::key_down
-        bne     repeat
-
-        lda     event_params::key
-
-    IF A IN #CHAR_RETURN, #CHAR_ESCAPE
-done:   rts
-    END_IF
-
-    IF A = #CHAR_RIGHT
-        jsr     ScrollRight
-        jmp     repeat
-    END_IF
-
-    IF A = #CHAR_LEFT
-        jsr     ScrollLeft
-        jmp     repeat
-    END_IF
-
-    IF A = #CHAR_DOWN
-        jsr     ScrollDown
-        jmp     repeat
-    END_IF
-
-        cmp     #CHAR_UP
-        bne     repeat
-        jsr     ScrollUp
-        jmp     repeat
-.endproc ; CmdScroll
 
 ;;; ============================================================
 ;;; Centralized logic for scrolling directory windows
