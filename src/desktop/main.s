@@ -3279,17 +3279,38 @@ entry3:
 ;;; --------------------------------------------------
 ;;; Restores selection after a view change, reversing what
 ;;; `_PreserveSelection` did.
+;;; Uses $800 as a temporary buffer
 
 .proc _RestoreSelection
         lda     selection_preserved_count
     IF NOT_ZERO
 
+        ;; Build mapping of record number to icon
+        mapping := $800
+        ldx     cached_window_entry_count
+        dex
+      DO
+        txa                     ; X = index
+        pha
+
+        lda     cached_window_entry_list-1,x
+        pha                     ; A = icon id
+        jsr     GetIconRecordNum
+        tay                     ; Y = record num
+        pla                     ; A = icon id
+        sta     mapping,y
+
+        pla
+        tax                     ; X = index
+        dex
+      WHILE POS
+
         ;; For each record num in the list, find and
         ;; highlight the corresponding icon.
       DO
         ldx     selected_icon_count
-        CALL    FindIconForRecordNum, A=selected_icon_list,x
-        jsr     AddToSelectionList
+        ldy     selected_icon_list,x
+        CALL    AddToSelectionList, A=mapping,y
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
         dec     selection_preserved_count
@@ -3307,31 +3328,6 @@ selection_preserved_count:
 RefreshViewPreserveSelection := RefreshViewImpl::entry2
 RefreshView := RefreshViewImpl::entry3
 
-;;; ============================================================
-;;; Find the icon for the cached window's given record index.
-;;; Input: A = record index in cached window
-;;; Output: A = icon id
-;;; Assert: there is a match, window has entries
-;;; Trashes $06
-
-.proc FindIconForRecordNum
-        sta     record_num
-
-        copy8   cached_window_entry_count, index
-
-    DO
-        index := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        CALL    GetIconRecordNum, A=cached_window_entry_list-1,x
-        record_num := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        BREAK_IF EQ
-        dec     index
-    WHILE POS
-
-        ldx     index
-        RETURN  A=cached_window_entry_list-1,x
-.endproc ; FindIconForRecordNum
 
 ;;; ============================================================
 ;;; Retrieve the window id for a given icon.

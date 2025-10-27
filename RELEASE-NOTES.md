@@ -20,6 +20,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Horizontally center file icons.
 * Show disk name when prompting for source/destination disks.
 * Allow keyboard navigation after clicking on volume icon, even with window open.
+* Improve performance changing views with large numbers of icons selected.
 
 ### Selector
 
