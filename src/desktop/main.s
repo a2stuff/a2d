@@ -2958,21 +2958,14 @@ concatenate:
 ;;; Assert: Icon in active window.
 
 .proc ScrollIconIntoView
-        pha
-        jsr     LoadActiveWindowEntryTable
-        pla
         sta     icon_param
-
-        ;; Map coordinates to window
-        pha                     ; A = icon
-        jsr     IconScreenToWindow
+        jsr     LoadActiveWindowEntryTable
 
         ;; Grab the icon bounds
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-
-        ;; Restore coordinates
-        pla                     ; A = icon
-        jsr     IconWindowToScreen
+        jsr     PrepActiveWindowScreenMapping
+        CALL    MapCoordsScreenToWindow, AX=#tmp_rect::topleft
+        CALL    MapCoordsScreenToWindow, AX=#tmp_rect::bottomright
 
         viewport := window_grafport+MGTK::GrafPort::maprect
 
@@ -2992,11 +2985,11 @@ concatenate:
         copy8   #0, dirty
         ldx     #2              ; loop over dimensions
     DO
-        ;; Is left of icon beyond window? If so, adjust by delta (negative)
+        ;; Is left/top of icon beyond window? If so, adjust by delta (negative)
         sub16   tmp_rect::topleft,x, viewport+MGTK::Rect::topleft,x, delta
         bmi     adjust
 
-        ;; Is right of icon beyond window? If so, adjust by delta (positive)
+        ;; Is right/bottom of icon beyond window? If so, adjust by delta (positive)
         sub16   tmp_rect::bottomright,x, viewport+MGTK::Rect::bottomright,x, delta
         bmi     done
 
@@ -4411,15 +4404,13 @@ _Preamble:
         jsr     ComputeIconsBBox
         CALL    PrepWindowScreenMapping, A=cached_window_id
 
+        CALL    MapCoordsScreenToWindow, AX=#iconbb_rect+MGTK::Rect::topleft
+        CALL    MapCoordsScreenToWindow, AX=#iconbb_rect+MGTK::Rect::bottomright
+
         ldx     #2              ; loop over dimensions
     DO
         ;; stash bbox dimensions before union below
         sub16   iconbb_rect+MGTK::Rect::bottomright,x, iconbb_rect+MGTK::Rect::topleft,x, bbox_size,x
-
-        ;; offset bbox
-        add16   map_delta_x,x, iconbb_rect+MGTK::Rect::topleft,x, iconbb_rect+MGTK::Rect::topleft,x
-        add16   map_delta_x,x, iconbb_rect+MGTK::Rect::bottomright,x, iconbb_rect+MGTK::Rect::bottomright,x
-
         dex                     ; next dimension
         dex
     WHILE POS
@@ -5331,6 +5322,7 @@ END_PARAM_BLOCK
         lda     window_id
     IF NOT_ZERO
         ;; Map initial event coordinates
+        jsr     PrepActiveWindowScreenMapping
         jsr     _CoordsScreenToWindow
     END_IF
 
@@ -5388,48 +5380,46 @@ event_loop:
 
         jsr     FrameTmpRect
 
+        jsr     CachedIconsScreenToWindow
+
         ;; Process all icons in window
         ldx     #0              ; X = index
       DO
-        RTS_IF X = cached_window_entry_count
+       IF X = cached_window_entry_count
+        jmp     CachedIconsWindowToScreen
+       END_IF
+
         txa
         pha                     ; A = index
 
         ;; Check if icon should be selected
         copy8   cached_window_entry_list,x, icon_param
-        lda     window_id
-       IF NOT_ZERO
-        CALL    IconScreenToWindow, A=icon_param
-       END_IF
         ITK_CALL IconTK::IconInRect, icon_param
-        beq     done_icon
+       IF NOT ZERO
 
         ;; Already selected?
         CALL    IsIconSelected, A=icon_param
-       IF NE
+        IF NE
         ;; Highlight and add to selection
         ;; NOTE: Does not use `AddIconToSelection` because we perform
         ;; a more optimized drawing below.
         ITK_CALL IconTK::HighlightIcon, icon_param
         CALL    AddToSelectionList, A=icon_param
         copy8   window_id, selected_window_id
-       ELSE
+        ELSE
         ;; Unhighlight and remove from selection
         ITK_CALL IconTK::UnhighlightIcon, icon_param
         CALL    RemoveFromSelectionList, A=icon_param
-       END_IF
+        END_IF
 
         lda     window_id
-       IF ZERO
+        IF ZERO
         ITK_CALL IconTK::DrawIcon, icon_param
-       ELSE
+        ELSE
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag select)
-       END_IF
-
-done_icon:
-        lda     window_id
-       IF NOT_ZERO
-        CALL    IconWindowToScreen, A=icon_param
+        END_IF
+       ELSE
+        MGTK_CALL MGTK::CheckEvents
        END_IF
 
         pla                     ; A = index
@@ -5496,15 +5486,7 @@ beyond:
         jmp     event_loop
 
 .proc _CoordsScreenToWindow
-        jsr     PushPointers
-        jsr     PrepActiveWindowScreenMapping
-
-        ;; Point at an imaginary `IconEntry`, to map
-        ;; `event_params::coords` from screen to window.
-        CALL    IconPtrScreenToWindow, AX=#(event_params::coords - IconEntry::iconx)
-
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
+        TAIL_CALL MapCoordsScreenToWindow, AX=#event_params::coords
 .endproc ; _CoordsScreenToWindow
 .endproc ; DragSelect
 
@@ -6297,7 +6279,8 @@ done:
         RTS_IF NOT_ZERO         ; obscured
 
         jsr     PushPointers
-        jsr     PrepActiveWindowScreenMapping
+        jsr     LoadActiveWindowEntryTable
+        jsr     CachedIconsScreenToWindow
 
         COPY_STRUCT MGTK::Rect, window_grafport+MGTK::GrafPort::maprect, tmp_rect
 
@@ -6305,10 +6288,8 @@ done:
        DO
         txa
         pha                     ; A = index
+
         copy8   selected_icon_list,x, icon_param
-        pha                     ; A = icon id
-        jsr     GetIconEntry
-        jsr     IconPtrScreenToWindow
 
         ITK_CALL IconTK::IconInRect, icon_param
         IF_NOT_ZERO
@@ -6317,14 +6298,12 @@ done:
         MGTK_CALL MGTK::CheckEvents
         END_IF
 
-        pla                     ; A = icon id
-        jsr     GetIconEntry
-        jsr     IconPtrWindowToScreen
         pla                     ; A = index
         tax
         inx
        WHILE X <> selected_icon_count
 
+        jsr     CachedIconsWindowToScreen
         jsr     PopPointers     ; do not tail-call optimize!
         rts
       END_IF
@@ -8555,74 +8534,6 @@ ret:    rts
 .endproc ; DrawStringRight
 
 ;;; ============================================================
-;;; Convert icon's coordinates from window to screen
-;;; (icon index in A, active window)
-;;; NOTE: Avoid calling in a loop; factor out `PrepActiveWindowScreenMapping`
-
-.proc IconWindowToScreen
-        jsr     PushPointers
-        pha
-        jsr     PrepActiveWindowScreenMapping
-        pla
-        jsr     GetIconEntry
-        jsr     IconPtrWindowToScreen
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-.endproc ; IconWindowToScreen
-
-;;; Convert icon's coordinates from window to screen
-;;; Inputs: A,X = `IconEntry`, `PrepActiveWindowScreenMapping` called
-;;; Trashes $06
-.proc IconPtrWindowToScreen
-        entry_ptr := $6
-        stax    entry_ptr
-
-        ;; iconx
-        ldy     #IconEntry::iconx
-        sub16in (entry_ptr),y, map_delta_x, (entry_ptr),y
-
-        ;; icony
-        iny
-        sub16in (entry_ptr),y, map_delta_y, (entry_ptr),y
-
-        rts
-.endproc ; IconPtrWindowToScreen
-
-;;; ============================================================
-;;; Convert icon's coordinates from screen to window
-;;; (icon index in A, active window)
-;;; NOTE: Avoid calling in a loop; factor out `PrepActiveWindowScreenMapping`
-
-.proc IconScreenToWindow
-        jsr     PushPointers
-        pha
-        jsr     PrepActiveWindowScreenMapping
-        pla
-        jsr     GetIconEntry
-        jsr     IconPtrScreenToWindow
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-.endproc ; IconScreenToWindow
-
-;;; Convert icon's coordinates from screen to window
-;;; Inputs: A,X = `IconEntry`, `PrepActiveWindowScreenMapping` called
-;;; Trashes $06
-.proc IconPtrScreenToWindow
-        entry_ptr := $6
-        stax    entry_ptr
-
-        ;; iconx
-        ldy     #IconEntry::iconx
-        add16in (entry_ptr),y, map_delta_x, (entry_ptr),y
-
-        ;; icony
-        iny
-        add16in (entry_ptr),y, map_delta_y, (entry_ptr),y
-
-        rts
-.endproc ; IconPtrScreenToWindow
-
-;;; ============================================================
 
 map_delta_x:    .word   0
 map_delta_y:    .word   0
@@ -8672,6 +8583,22 @@ map_delta_y:    .word   0
         rts
 
 .endproc ; PrepWindowScreenMapping
+
+;;; Input: A,X = point coords
+.proc MapCoordsScreenToWindow
+        ptr := $06
+
+        jsr     PushPointers
+        stax    ptr
+
+        ldy     #MGTK::Point::xcoord
+        add16in map_delta_x, (ptr),y, (ptr),y
+        iny                     ; Y = #MGTK::Point::ycoord
+        add16in map_delta_y, (ptr),y, (ptr),y
+
+        jsr     PopPointers     ; do not tail-call optimize!
+        rts
+.endproc ; MapCoordsScreenToWindow
 
 ;;; ============================================================
 ;;; Input: A = unmasked unit number
