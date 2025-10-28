@@ -14205,24 +14205,19 @@ plural: RETURN  C=0
 ;;; ============================================================
 ;;; Determine if an icon is in the current selection.
 ;;; Inputs: A=icon number
-;;; Outputs: Z=1 if found, X=index in `selected_icon_list`
-;;; X modified, A,Y preserved
+;;; Outputs: Z=1 if found
 
 .proc IsIconSelected
-        ;; TODO: Update to use highlight bit in IconEntry::state
+        sta     icon_param
+        icon_entry := $06
+        jsr     GetIconEntry
+        stax    icon_entry
 
-        ldx     selected_icon_count
-    IF NOT_ZERO
-        dex
-      DO
-        cmp     selected_icon_list,x
-        beq     done            ; found it!
-        dex
-      WHILE POS
-    END_IF
-        ldx     #$FF            ; clear Z = failure
-
-done:   rts
+        ldy     #IconEntry::state ; mark as dimmed
+        lda     (icon_entry),y
+        and     #kIconEntryStateHighlighted
+        cmp     #kIconEntryStateHighlighted
+        rts
 .endproc ; IsIconSelected
 
 ;;; ============================================================
