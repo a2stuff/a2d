@@ -14,6 +14,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### DeskTop
 
+* Show correct icon state after failed operation that closes window.
 
 ### Selector
 

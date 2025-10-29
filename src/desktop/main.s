@@ -5221,7 +5221,6 @@ alert:  jmp     ShowAlert
         RETURN  A=#0
     END_IF
 
-        inc     num_open_windows ; was decremented on failure
         jsr     CloseSpecifiedWindow ; A = window id
         RETURN  A=#$FF
 
@@ -5278,7 +5277,7 @@ exception_flag:
 
         ;; Load new FileRecords
         pla                     ; A = `active_window_id`
-        jsr     CreateFileRecordsForWindow
+        jsr     CreateFileRecordsForRefreshedWindow
 
         ;; Draw header
         jsr     UpdateWindowUsedFreeDisplayValues
@@ -5979,7 +5978,7 @@ no_win:
         ;; --------------------------------------------------
         ;; Read FileRecords
 
-        CALL    CreateFileRecordsForWindow, A=cached_window_id
+        CALL    CreateFileRecordsForNewWindow, A=cached_window_id
 
         ;; --------------------------------------------------
         ;; Update used/free table
@@ -6590,7 +6589,10 @@ index_in_dir:           .byte   0
 
 record_count:           .byte   0
 
-.proc _Start
+new_window_flag:        .byte   0
+
+        ENTRY_POINTS_FOR_BIT7_FLAG new_window, refresh_window, new_window_flag
+
         sta     window_id
         jsr     PushPointers
         jsr     SetCursorWatch ; before loading directory
@@ -6772,8 +6774,6 @@ file_entry_to_file_record_mapping_table:
         .byte   FileEntry::aux_type+1
         ASSERT_TABLE_SIZE file_entry_to_file_record_mapping_table, .sizeof(FileRecord)-1
 
-.endproc ; _Start
-
 ;;; --------------------------------------------------
 
 .proc _DoOpen
@@ -6810,21 +6810,23 @@ suppress_error_on_open_flag:
 .proc _HandleFailure
         php                     ; C = check vol flag
 
+        bit     new_window_flag
+    IF NS
         ;; If opening an icon, need to reset icon state.
         bit     icon_param      ; Were we opening a path? (N=1)
-    IF NC
+      IF NC
         jsr     MarkIconNotDimmed
-    END_IF
+      END_IF
 
         ;; A window was allocated but unused, so restore the count.
         dec     num_open_windows
 
         ;; A table entry was possibly allocated - free it.
         ldy     cached_window_id
-    IF NOT_ZERO
-        lda     #kWindowToDirIconFree
-        sta     window_to_dir_icon_table-1,y
-        sta     cached_window_id
+      IF NOT_ZERO
+        copy8   #0, cached_window_id
+        copy8   #kWindowToDirIconFree, window_to_dir_icon_table-1,y
+      END_IF
     END_IF
 
         plp                     ; C = check vol flag
@@ -6844,7 +6846,8 @@ suppress_error_on_open_flag:
 
 ;;; --------------------------------------------------
 .endproc ; CreateFileRecordsForWindowImpl
-CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
+CreateFileRecordsForNewWindow := CreateFileRecordsForWindowImpl::new_window
+CreateFileRecordsForRefreshedWindow := CreateFileRecordsForWindowImpl::refresh_window
 
 ;;; ============================================================
 ;;; Inputs: `src_path_buf` set to full path (not modified)
