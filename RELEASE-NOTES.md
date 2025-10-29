@@ -18,6 +18,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Allow keyboard navigation after clicking on volume icon, even with window open.
 * Improve performance changing views with large numbers of icons selected.
 * Remove support for keyboard scrolling via Apple+S.
+* Show disk name when prompting for source/destination disks.
 
 ### Selector
 
