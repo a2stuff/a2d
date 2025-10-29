@@ -18,6 +18,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix display of window header when partially offscreen.
 * Fix spatial navigation when all icons are selected.
 * Horizontally center file icons.
+* Show disk name when prompting for source/destination disks.
 
 ### Selector
 

@@ -119,6 +119,7 @@
 .define res_string_alert_name_too_long "imeto e twyrde dylgo."
 .define res_string_alert_insert_source_disk "molq, postawete izhodniq disk."
 .define res_string_alert_insert_destination "molq, postawi wtoriqt disk."
+.define res_string_alert_insert_disk "postawete disk: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM ne e nameren."
 .define res_string_alert_unreadable_format "tozi disk ne move da byde pro~eten. iska{ li da go formatiram?"
 .define res_string_trash_icon_name "ko{~e"

@@ -119,6 +119,7 @@
 .define res_string_alert_name_too_long "De naam is te lang."
 .define res_string_alert_insert_source_disk "Plaats de originele schijf."
 .define res_string_alert_insert_destination "Plaats de doeldiskette."
+.define res_string_alert_insert_disk "Plaats de schijf: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM niet gevonden."
 .define res_string_alert_unreadable_format "De schijf is onleesbaar. Formatteren?"
 .define res_string_trash_icon_name "Prullenmand"

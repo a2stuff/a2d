@@ -119,6 +119,7 @@
 .define res_string_alert_name_too_long "Det navn er for langt."
 .define res_string_alert_insert_source_disk "Inds{t venligst kildedisketten."
 .define res_string_alert_insert_destination "Inds{t venligst destinationsdisketten."
+.define res_string_alert_insert_disk "Inds{t disken: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM ikke fundet."
 .define res_string_alert_unreadable_format "Denne disk kunne ikke l{ses. Vil du formatere det?"
 .define res_string_trash_icon_name "Papirkurv"

@@ -119,6 +119,7 @@
 .define res_string_alert_name_too_long "Det namnet {r f|r l}ngt."
 .define res_string_alert_insert_source_disk "V{nligen s{tt i k{lldisken."
 .define res_string_alert_insert_destination "V{nligen s{tt i destinationsskivan."
+.define res_string_alert_insert_disk "S{tt i disken: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM hittades inte."
 .define res_string_alert_unreadable_format "Den h{r disken kunde inte l{sas. Vill du formatera det?"
 .define res_string_trash_icon_name "Radera"

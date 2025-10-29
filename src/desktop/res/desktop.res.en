@@ -119,6 +119,7 @@
 .define res_string_alert_name_too_long "That name is too long."
 .define res_string_alert_insert_source_disk "Please insert the source disk."
 .define res_string_alert_insert_destination "Please insert the destination disk."
+.define res_string_alert_insert_disk "Insert the disk: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM not found."
 .define res_string_alert_unreadable_format "This disk could not be read. Do you want to format it?"
 .define res_string_trash_icon_name "Trash"

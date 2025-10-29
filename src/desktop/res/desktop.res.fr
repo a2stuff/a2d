@@ -119,6 +119,7 @@
 .define res_string_alert_name_too_long "Le nom est trop long."
 .define res_string_alert_insert_source_disk "Veuillez ins{rer le disque source."
 .define res_string_alert_insert_destination "Veuilez ins{rer le disque destination."
+.define res_string_alert_insert_disk "Ins{rer le disque : %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM non trouv{."
 .define res_string_alert_unreadable_format "Ce disque n'a pas pu etre lu. Voulez-vous le formater ?"
 .define res_string_trash_icon_name "Corbeille"

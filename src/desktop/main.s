@@ -11633,8 +11633,9 @@ retry:  CALL    GetFileInfo, AX=src_ptr
 
 ;;; ============================================================
 ;;; Show Alert Dialog
-;;; A=error. If ERR_VOL_NOT_FOUND or ERR_FILE_NOT_FOUND, will
-;;; show "please insert source disk" (or destination, if flag set)
+;;; A=error. If `ERR_VOL_NOT_FOUND` or `ERR_FILE_NOT_FOUND`, will show
+;;; "please insert the disk: ..." using `path_buf3` (or `path_buf4` if
+;;; destination) to supply the disk name.
 
 .proc ShowErrorAlertImpl
         ENTRY_POINTS_FOR_BIT7_FLAG dst, src, dst_flag
@@ -11647,12 +11648,16 @@ retry:  CALL    GetFileInfo, AX=src_ptr
     END_IF
 
         ;; if err is "not found" prompt specifically for src/dst disk
-        ldax    #aux::str_alert_insert_source_disk
+        ldax    #path_buf3
         bit     dst_flag
     IF NS
-        ldax    #aux::str_alert_insert_destination
+        ldax    #path_buf4
     END_IF
-        CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel ; A,X = string
+        jsr     GetVolumeName   ; populates `filename_buf`
+        push16  #filename_buf
+        FORMAT_MESSAGE 1, aux::str_alert_insert_disk_format
+
+        CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#text_input_buf
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
         jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
@@ -11668,6 +11673,38 @@ dst_flag:       .byte   0       ; bit7
 .endproc ; ShowErrorAlertImpl
 ShowErrorAlert := ShowErrorAlertImpl::src
 ShowErrorAlertDst := ShowErrorAlertImpl::dst
+
+;;; ============================================================
+
+;;; Input: A,X = path
+;;; Output: `filename_buf` populated with volume name
+
+.proc GetVolumeName
+        ptr := $06
+        stax    ptr
+
+        ldx     #0
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        iny                     ; skip past '/'
+
+    DO
+        iny
+        lda     (ptr),y
+        BREAK_IF A = #'/'
+
+        inx
+        sta     filename_buf,x
+
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+    WHILE NE
+
+        stx     filename_buf
+        rts
+
+.endproc ; GetVolumeName
 
 ;;; ============================================================
 ;;; "Get Info" dialog state and logic
