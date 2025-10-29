@@ -466,19 +466,19 @@ str_alert_unreadable_format:
 err_unknown:                    ; kErrUnknown
         PASCAL_STRING res_string_errmsg_00
 
-err_27:  PASCAL_STRING res_string_errmsg_27
-err_28:  PASCAL_STRING res_string_errmsg_28
-err_2B:  PASCAL_STRING res_string_errmsg_2B
-err_40:  PASCAL_STRING res_string_errmsg_40
-err_44:  PASCAL_STRING res_string_errmsg_44
-err_45:  PASCAL_STRING res_string_errmsg_45
-err_46:  PASCAL_STRING res_string_errmsg_46
-err_47:  PASCAL_STRING res_string_errmsg_47
-err_48:  PASCAL_STRING res_string_errmsg_48
-err_49:  PASCAL_STRING res_string_errmsg_49
-err_4E:  PASCAL_STRING res_string_errmsg_4E
-err_52:  PASCAL_STRING res_string_errmsg_52
-err_57:  PASCAL_STRING res_string_errmsg_57
+err_27:  PASCAL_STRING res_string_errmsg_27 ; I/O Error
+err_28:  PASCAL_STRING res_string_errmsg_28 ; Device Not Connected
+err_2B:  PASCAL_STRING res_string_errmsg_2B ; Writed Protected
+err_40:  PASCAL_STRING res_string_errmsg_40 ; Invalid Pathname
+err_44:  PASCAL_STRING res_string_errmsg_44 ; Path Not Found
+err_45:  PASCAL_STRING res_string_errmsg_45 ; Volume Not Found
+err_46:  PASCAL_STRING res_string_errmsg_46 ; File Not Found
+err_47:  PASCAL_STRING res_string_errmsg_47 ; Duplicate Filename
+err_48:  PASCAL_STRING res_string_errmsg_48 ; Overrun Error (Disk Full)
+err_49:  PASCAL_STRING res_string_errmsg_49 ; Volume Directory Full
+err_4E:  PASCAL_STRING res_string_errmsg_4E ; Access Error
+err_52:  PASCAL_STRING res_string_errmsg_52 ; Not ProDOS Volume
+err_57:  PASCAL_STRING res_string_errmsg_57 ; Duplicate Volume
 
 ;;; Below are internal (not ProDOS MLI) error codes.
 err_insert_system_disk:         ; kErrInsertSystemDisk
