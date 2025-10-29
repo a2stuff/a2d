@@ -2635,6 +2635,8 @@ str_disk_copy:
 
 start:
 retry:
+        jsr     SetCursorWatch
+
         ;; Do this now since we'll use up the space later.
         jsr     SaveWindows
 
