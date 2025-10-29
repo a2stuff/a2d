@@ -10360,15 +10360,8 @@ ok_dir: jsr     RemoveSrcPathSegment
         pha                     ; A = `pathname_dst` saved length
 
         ;; Strip to vol name - either end of string or next slash
-        ldy     #1
-    DO
-        iny
-        cpy     pathname_dst
-        bcs     :+
-        lda     pathname_dst,y
-    WHILE A <> #'/'
-        sty     pathname_dst
-:
+        CALL    MakeVolumePath, AX=#pathname_dst
+
         ;; Get total blocks/used blocks on destination volume
 retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
 .if ::kCopyInteractive
