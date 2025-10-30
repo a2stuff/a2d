@@ -4169,6 +4169,7 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
         iny
         lda     (params_addr),y
         sta     cursor_hotspot_y
+
         jsr     RestoreCursorBackground
         jsr     DrawCursor
         plp
@@ -4517,6 +4518,23 @@ cursor_throttle:
         ;; --------------------------------------------------
 
 mouse_moved:
+        jsr     WaitVBL
+
+        ;; We only have 4550 cycles (70 lines x 65 cycles) during VBI
+        ;; but we take ~6000 cycles to erase and draw the cursor. So
+        ;; if the cursor is near the top of the screen, burn some
+        ;; cycles so we're behind the beam
+
+        lda     mouse_y
+    IF A < #48                  ; empirically determined
+        ldy     #6              ; burn 7717 cycles
+l2:     ldx     #0
+l1:     dex
+        bne     l1
+        dey
+        bne     l2
+    END_IF
+
         jsr     RestoreCursorBackground
         ldx     #2
         stx     cursor_flag
@@ -4735,11 +4753,28 @@ savesize        .word
         bit     subid
     IF VC
         ;; Per Technical Note: Apple IIc #1: Mouse Differences on IIe and IIc
-        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.1.html
-        stx     mouse_scale_y
-        inx                              ; default scaling for IIc/IIc+
-        stx     mouse_scale_x
-        ;; TODO: Save a byte by doing `INC mouse_scale_y; INC mouse_scale_x` instead
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.1.htm
+        inc     mouse_scale_x
+        inc     mouse_scale_y
+
+        copy16  #vbl_iic_proc, vbl_proc_addr
+    ELSE
+        ;; IIe or IIgs?
+        bit     RDLCRAM
+        php
+        bit     ROMIN2          ; Bank ROM in unconditionally
+
+        CALL    IDROUTINE, C=1
+      IF_CC
+        ;; IIgs!
+        copy16  #vbl_iigs_proc, vbl_proc_addr
+      END_IF
+
+        plp
+      IF NS
+        bit     LCBANK1         ; Bank RAM back in if needed
+        bit     LCBANK1
+      END_IF
     END_IF
 
         ldx     slot_num
@@ -10761,6 +10796,70 @@ ret:    rts
 
 cursor_shielded_flag:
         .byte   0
+
+;;; ============================================================
+
+.proc WaitVBL
+        php
+        sei
+
+        proc_addr := *+1
+        jsr     iie_proc
+
+        plp
+        rts
+
+;;; --------------------------------------------------
+;;; IIe
+
+iie_proc:
+:       bit RDVBLBAR            ; wait for end of VBL (if in it)
+        bpl     :-
+:       bit RDVBLBAR            ; wait for start of next VBL
+        bmi     :-
+        rts
+
+;;; --------------------------------------------------
+;;;IIgs
+
+iigs_proc:
+:       bit RDVBLBAR            ; wait for end of VBL (if in it)
+        bmi     :-
+:       bit RDVBLBAR            ; wait for start of next VBL
+        bpl     :-
+        rts
+
+;;; --------------------------------------------------
+;;; IIc
+
+iic_proc:
+        lda     IOUDISON        ; = RDIOUDIS
+        pha                     ; save IOUDIS state
+        sta     IOUDISOFF
+
+        lda     RDVBLMSK
+        pha                     ; save VBL interrupt state
+        sta     ENVBL
+
+        ;; TODO: Is this enough?
+:       bit     RDVBLBAR
+        bpl     :-
+
+        pla                     ; restore VBL interrupt state
+    IF NC
+        sta     DISVBL
+    END_IF
+
+        pla                     ; restore IOUDIS state
+    IF NC
+        sta     IOUDISON
+    END_IF
+        rts
+
+.endproc
+vbl_proc_addr := WaitVBL::proc_addr
+vbl_iigs_proc := WaitVBL::iigs_proc
+vbl_iic_proc := WaitVBL::iic_proc
 
 ;;; ============================================================
 

@@ -8,6 +8,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### General
 
+* Reduce cursor flickering when mouse is moved.
 
 ### Launcher
 
