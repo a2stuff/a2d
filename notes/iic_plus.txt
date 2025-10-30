@@ -6,7 +6,7 @@ On some systems (IIgs, Mac IIe Card, Laser 128), the accelerator is temporarily 
 
 See Apple IIc Technical Reference Manual 2nd Ed. for more details.
 
-@qkumba notes that since this is IIc Plus specific, VBL is available and the code could wait for the blanking interval before making CGGA calls, to avoid the glitching.
+@peterferrie notes that since this is IIc Plus specific, VBL is available and the code could wait for the blanking interval before making CGGA calls, to avoid the glitching.
 
 For posterity, here's code that does disable and conditionally re-enable the accelerator.
 

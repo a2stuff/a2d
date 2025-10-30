@@ -908,6 +908,9 @@ hires_table_hi:
         poly_yl_buffer  := $0780
         poly_yh_buffer  := $07BC
 
+        ;; Only used between `PreDrawCursor` and `FinishDrawCursor`
+        cursor_drawmask := $0700 ; 12*3 bytes
+        cursor_drawbits := $0780 ; 12*3 bytes
 
         .assert <pattern_buffer = 0, error, "pattern_buffer must be page-aligned"
 
@@ -1420,12 +1423,15 @@ set_width:                                      ; Set width for destination.
 :       txa
         ror     a
         tax
-        php
+        ldy     mod7_table+4,x
         lda     div7_table+4,x
-        clc
-        adc     #$24
-        plp
-        RETURN  Y=mod7_table+4,x
+        bcc     :+
+        adc     #$23
+        sec
+        rts
+:
+        adc     #$24            ; keep C=0 for x < 560
+        rts
 .endproc ; DivMod7
 
         ;; Set up destination (for either on-screen or off-screen bitmap.)
@@ -4026,19 +4032,14 @@ mouse_hook:
 cursor_hotspot_x:  .byte   $00
 cursor_hotspot_y:  .byte   $00
 
-cursor_mod7:
-        .res    1
-
-cursor_bits:
-        .res    3
-cursor_mask:
-        .res    3
-
 cursor_savebits:
         .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
 
-cursor_data:
-        .res    4                               ; Saved values of cursor_char..cursor_y2.
+        kCursorDrawDataSize = 3
+cursor_restore_data:
+        .res    kCursorDrawDataSize             ; Saved values of `cursor_col`..`cursor_y2`.
+cursor_draw_data:
+        .res    kCursorDrawDataSize             ; Saved values of `cursor_col`..`cursor_y2`.
 
 pointer_cursor:
         PIXELS  ".............."
@@ -4133,7 +4134,7 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
 .proc SetPointerCursor
         ldx     #$FF
         stx     cursor_count
-        inx
+        inx                     ; X = 0
         stx     cursor_flag
         lda     #<pointer_cursor
         sta     params_addr
@@ -4178,6 +4179,7 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
         iny
         lda     (params_addr),y
         sta     cursor_hotspot_y
+
         jsr     RestoreCursorBackground
         jsr     DrawCursor
 
@@ -4186,34 +4188,56 @@ finish:
 .endproc ; SetCursorImpl
 srts:   rts
 
+;;; ============================================================
 
-        cursor_bytes      := $82
-        cursor_softswitch := $83
-        cursor_y1         := $84
-        cursor_y2         := $85
+;;; Cursor updating is split into three part - a "pre-draw" phase, a
+;;; "restore" phase, and a "finish draw" phase. This is because there
+;;; is a limited time budget within the vertical blanking interval to
+;;; avoid tearing/flicker. By doing all of the computations in advance
+;;; the actual restore/draw can be kept under the budget.
+
+        cursor_bytes      := $82 ; `kCursorDrawDataSize` bytes here hold state for draw/restore
+        cursor_col        := $82 ; column (0...39)
+        cursor_y1         := $83 ; top row of cursor - 1
+        cursor_y2         := $84 ; bottom row of cursor
 
         vid_ptr           := $88
 
-.proc UpdateCursor
-        lda     cursor_count           ; hidden? if so, skip
-        bne     srts
-        bit     cursor_flag
-        bmi     srts
-        FALL_THROUGH_TO DrawCursor
-.endproc ; UpdateCursor
+;;; Do all of the calculations and shifting for the cursor bytes,
+;;; without actually drawing.
+.proc PreDrawCursor
+        ;; ZP locations
+        drawbits_index  := $92
+        savebits_index  := $93
+        cursor_bits     := $94  ; 3 bytes
+        cursor_mask     := $97  ; 3 bytes
+        cursor_mod7     := $9A
+        tmp_y           := $9B
 
-.proc DrawCursor
-        lda     #0
-        sta     cursor_count
-        sta     cursor_flag
-
+        ;; Compute rows to draw
         lda     cursor_pos::ycoord
         clc
         sbc     cursor_hotspot_y
         sta     cursor_y1
         clc
         adc     #MGTK::cursor_height
+    IF A >= #192
+        lda     #191
+    END_IF
         sta     cursor_y2
+
+        ;; Compute bytes to draw, and pre-shift table
+        sec
+        sbc     cursor_y1       ; number of lines
+        asl                     ; *= 2
+        sbc     #0              ; -1
+        sta     drawbits_index  ; index into `active_cursor`/`active_cursor_mask`
+
+        ;; Ensure we don't try to draw above screen row 0
+        lda     cursor_y1
+    IF A >= #192
+        copy8   #AS_BYTE(-1), cursor_y1
+    END_IF
 
         lda     cursor_pos::xcoord
         sec
@@ -4221,18 +4245,19 @@ srts:   rts
         tax
         lda     cursor_pos::xcoord+1
         sbc     #0
-        bpl     :+
-
+    IF NEG
         txa                            ; X-coord is negative: X-reg = X-coord + 256
         ror     a                      ; Will shift in zero:  X-reg = X-coord/2 + 128
         tax                            ; Negative mod7 table starts at 252 (since 252%7 = 0), and goes backwards
         ldy     mod7_table+252-128,x   ; Index (X-coord / 2 = X-reg - 128) relative to mod7_table+252
         lda     #$FF                   ; Char index = -1
-        bmi     set_divmod
+        bmi     set_divmod             ; always
+    END_IF
+        ;; "else"
+        jsr     DivMod7
 
-:       jsr     DivMod7
 set_divmod:
-        sta     cursor_bytes            ; char index in line
+        sta     cursor_col             ; char index in line
 
         tya
         rol     a
@@ -4241,198 +4266,286 @@ set_divmod:
         sbc     #7
 :       tay
 
-        lda     #<LOWSCR/2
-        rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
-        eor     #1
-        sta     cursor_softswitch      ; $C0xx softswitch index
-
         sty     cursor_mod7
         copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
         copylohi shift_table_aux_low,y, shift_table_aux_high,y, cursor_shift_aux_addr
 
-        ldx     #3
-:       lda     cursor_bytes,x
-        sta     cursor_data,x
-        dex
-        bpl     :-
+        ;; Set up loop invariants (for here, actual draw, and restore
+        ;; code) Note that even though we don't write to the graphics
+        ;; screen here, the pre-computed cursor mask/bits are stashed
+        ;; in a buffer on text page 1, so we need to match main/aux
+        ;; pages for when `FinishDrawCursor` reading/writing, so we
+        ;; still twiddle `LOWSCR`/`HISCR` here.
+        lda     #<LOWSCR/2
+        rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
+        sta     switch_sta2
+        sta     finish_switch_sta2
+        eor     #1
+        sta     switch_sta1
+        sta     finish_switch_sta1
 
-        ldx     #$17
-        stx     left_bytes
-        ldx     #$23
+        ldx     #OPC_NOP
+        and     #1
+    IF NOT_ZERO
+        ldx     #OPC_DEY
+    END_IF
+        stx     switch_dey
+        stx     finish_switch_dey
+
+        ;; Stash calculations for later use in `FinishDrawCursor` and `RestoreCursorBackground`
+        COPY_BYTES kCursorDrawDataSize, cursor_bytes, cursor_draw_data
+
+        ;; --------------------------------------------------
+        ;; Iterate from bottom of cursor to the top
+
+        ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
-dloop:  cpy     #192
-        bcc     :+
-        jmp     drnext
-
-:       lda     hires_table_lo,y
-        sta     vid_ptr
-        lda     hires_table_hi,y
-        ora     #$20
-        sta     vid_ptr+1
+    DO
         sty     cursor_y2
-        stx     left_mod14
+        stx     savebits_index
 
-        ldy     left_bytes
-        ldx     #$01
-:
-active_cursor           := * + 1
-        lda     $FFFF,y
+        ;; Look up the cursor bits/mask for this row, stash in `cursor_bits`/`cursor_mask`
+        ldy     drawbits_index
+        ldx     #MGTK::cursor_width - 1
+      DO
+        active_cursor := * + 1
+        lda     SELF_MODIFIED,y
         sta     cursor_bits,x
-active_cursor_mask      := * + 1
-        lda     $FFFF,y
+        active_cursor_mask := * + 1
+        lda     SELF_MODIFIED,y
         sta     cursor_mask,x
         dey
         dex
-        bpl     :-
-        lda     #0
+      WHILE POS
+        sty     drawbits_index
+        lda     #0              ; third byte starts off empty
         sta     cursor_bits+2
         sta     cursor_mask+2
 
-        ldy     cursor_mod7
-        beq     no_shift
+        ;; If needed, expand `cursor_bits`/`cursor_mask` to 3 bytes
+        ldx     cursor_mod7
+      IF NOT ZERO
+        ASSERT_EQUALS cursor_bits + 3, cursor_mask
+        ;; Enter this loop with A=`cursor_mask+2` from above (i.e. 0)
+        ldx     #(3 + 3) - 1    ; do both bits and mask in the loop
+       DO
+        ldy     cursor_bits-1,x
 
-        ldy     #5
-:       ldx     cursor_bits-1,y
+        cursor_shift_main_addr := * + 1
+        ora     SELF_MODIFIED,y
+        sta     cursor_bits,x
 
-cursor_shift_main_addr           := * + 1
-        ora     $FF80,x
-        sta     cursor_bits,y
-
-cursor_shift_aux_addr           := * + 1
-        lda     $FF00,x
-        dey
-        bne     :-
+        cursor_shift_aux_addr := * + 1
+        lda     SELF_MODIFIED,y
+        dex
+       WHILE NOT ZERO
         sta     cursor_bits
+      END_IF
 
-no_shift:
-        ldx     left_mod14
-        ldy     cursor_bytes
-        lda     cursor_softswitch
-        jsr     SetSwitch
-        bcs     :+
+        ;; Now record `cursor_mask` and `cursor_bits` into
+        ;; `cursor_drawmask` and `cursor_drawbits` for
+        ;; `FinishDrawCursor` to use later.
 
-        lda     (vid_ptr),y
-        sta     cursor_savebits,x
+        ldx     savebits_index
+        ldy     cursor_col
 
-        lda     cursor_mask
-        ora     (vid_ptr),y
-        eor     cursor_bits
-        sta     (vid_ptr),y
-        dex
-:
-        jsr     SwitchPage
-        bcs     :+
+        ;; First byte
+        switch_sta1 := *+1
+        sta     $C0FF
+        lda     #0
+        jsr     do_byte
 
-        lda     (vid_ptr),y
-        sta     cursor_savebits,x
-        lda     cursor_mask+1
+        ;; Third byte (on same page)
+        iny
+        lda     #2
+        jsr     do_byte
 
-        ora     (vid_ptr),y
-        eor     cursor_bits+1
-        sta     (vid_ptr),y
-        dex
-:
-        jsr     SwitchPage
-        bcs     :+
-
-        lda     (vid_ptr),y
-        sta     cursor_savebits,x
-
-        lda     cursor_mask+2
-        ora     (vid_ptr),y
-        eor     cursor_bits+2
-        sta     (vid_ptr),y
-        dex
-:
-        ldy     cursor_y2
-drnext:
-        dec     left_bytes
-        dec     left_bytes
+        ;; Second byte
+        switch_dey := *
         dey
-        cpy     cursor_y1
-        beq     lowscr_rts
-        jmp     dloop
+        switch_sta2 := *+1
+        sta     $C0FF
+        lda     #1
+        jsr     do_byte
+
+        ldy     cursor_y2
+        dey
+    WHILE Y <> cursor_y1
+        sta     LOWSCR
+        rts
+
+do_byte:
+        cpy     #40
+      IF CC
+        sty     tmp_y
+        tay
+
+        ;; The shifted mask/bits are stashed in a buffer on text page 1
+        ;; (main or aux, depending on page switching)
+
+        .assert cursor_drawmask >= $400 && cursor_drawmask <= $800, error, "on text page"
+        lda     cursor_mask,y
+        sta     cursor_drawmask,x
+
+        .assert cursor_drawbits >= $400 && cursor_drawbits <= $800, error, "on text page"
+        lda     cursor_bits,y
+        sta     cursor_drawbits,x
+
+        ldy     tmp_y
+        dex
+      END_IF
+        rts
+.endproc ; PreDrawCursor
+
+active_cursor        := PreDrawCursor::active_cursor
+active_cursor_mask   := PreDrawCursor::active_cursor_mask
+
+;;; Entry point for simple drawing, without worrying about vertical
+;;; blanking.
+.proc DrawCursor
+        jsr     PreDrawCursor
+        FALL_THROUGH_TO FinishDrawCursor
 .endproc ; DrawCursor
-drts:   rts
 
-active_cursor        := DrawCursor::active_cursor
-active_cursor_mask   := DrawCursor::active_cursor_mask
+;;; Assumes `PreDrawCursor` has been called. This does the actual
+;;; drawing using the stashed `cursor_draw_data`, `cursor_drawmask`
+;;; and `cursor_drawbits`. Prepares `cursor_savebits` and
+;;; `cursor_restore_data` for next call to `RestoreCursorBackground`.
+.proc FinishDrawCursor
+        lda     #0
+        sta     cursor_count
+        sta     cursor_flag
 
+        ;; Unstash calculations from `DrawCursor`
+        ldx     #kCursorDrawDataSize-1
+    DO
+        lda     cursor_draw_data,x
+        sta     cursor_bytes,x  ; for us to use
+        sta     cursor_restore_data,x ; for next `RestoreCursorBackground` call
+        dex
+    WHILE POS
 
-.proc RestoreCursorBackground
-        lda     cursor_count    ; already hidden?
-        bne     drts
-        bit     cursor_flag
-        bmi     drts
+        ;; SMC `RestoreCursorBackground` to match us
+        copy8   switch_sta2, restore_switch_sta2
+        copy8   switch_sta1, restore_switch_sta1
+        copy8   switch_dey, restore_switch_dey
 
-        COPY_BYTES 4, cursor_data, cursor_bytes
+        ;; --------------------------------------------------
+        ;; Iterate from bottom of cursor to the top
 
-        ldx     #$23
+        ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
     DO
-      IF Y < #192
-
         lda     hires_table_lo,y
         sta     vid_ptr
         lda     hires_table_hi,y
         ora     #$20
         sta     vid_ptr+1
+
         sty     cursor_y2
+        ldy     cursor_col
 
-        ldy     cursor_bytes
-        lda     cursor_softswitch
+        ;; First byte
+        switch_sta1 := *+1
+        sta     $C0FF
+        jsr     do_byte
 
-        jsr     SetSwitch
-       IF CC
-        lda     cursor_savebits,x
-        sta     (vid_ptr),y
-        dex
-       END_IF
+        ;; Third byte (on same page)
+        iny
+        jsr     do_byte
 
-        jsr     SwitchPage
-       IF CC
-        lda     cursor_savebits,x
-        sta     (vid_ptr),y
-        dex
-       END_IF
-
-        jsr     SwitchPage
-       IF CC
-        lda     cursor_savebits,x
-        sta     (vid_ptr),y
-        dex
-       END_IF
+        ;; Second byte
+        switch_dey := *
+        dey
+        switch_sta2 := *+1
+        sta     $C0FF
+        jsr     do_byte
 
         ldy     cursor_y2
-      END_IF
-
         dey
     WHILE Y <> cursor_y1
-.endproc ; RestoreCursorBackground
-lowscr_rts:
         sta     LOWSCR
         rts
 
-
-.proc SwitchPage
-        lda     set_switch_sta_addr
-        eor     #1
-        cmp     #<LOWSCR
-        beq     SetSwitch
-        iny
-        FALL_THROUGH_TO SetSwitch
-.endproc ; SwitchPage
-
-.proc SetSwitch
-        sta     switch_sta_addr
-switch_sta_addr := *+1
-        sta     $C0FF
-        cpy     #$28
+do_byte:
+        cpy     #40
+    IF CC
+        lda     (vid_ptr),y
+        sta     cursor_savebits,x
+        ora     cursor_drawmask,x
+        eor     cursor_drawbits,x
+        sta     (vid_ptr),y
+        dex
+    END_IF
         rts
-.endproc ; SetSwitch
+.endproc ; FinishDrawCursor
+finish_switch_sta1 := FinishDrawCursor::switch_sta1
+finish_switch_sta2 := FinishDrawCursor::switch_sta2
+finish_switch_dey := FinishDrawCursor::switch_dey
 
-set_switch_sta_addr := SetSwitch::switch_sta_addr
+;;; Erase the previously drawn cursor, using `cursor_restore_data`
+;;; calculated in `PreDrawCursor` and the `cursor_savebits` captured
+;;; in `FinishDrawCursor`.
+.proc RestoreCursorBackground
+        lda     cursor_count    ; already hidden?
+        bne     ret
+        bit     cursor_flag
+        bmi     ret
 
+        ;; Unstash calculations from `FinishDrawCursor`
+        COPY_BYTES kCursorDrawDataSize, cursor_restore_data, cursor_bytes
+
+        ;; --------------------------------------------------
+        ;; Iterate from bottom of cursor to the top
+
+        ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
+        ldy     cursor_y2
+    DO
+        lda     hires_table_lo,y
+        sta     vid_ptr
+        lda     hires_table_hi,y
+        ora     #$20
+        sta     vid_ptr+1
+
+        sty     cursor_y2
+
+        ldy     cursor_col
+
+        ;; First byte
+        switch_sta1 := *+1
+        sta     $C0FF
+        jsr     do_byte
+
+        ;; Third byte (on same page)
+        iny
+        jsr     do_byte
+
+        ;; Second byte
+        switch_dey := *
+        dey
+        switch_sta2 := *+1
+        sta     $C0FF
+        jsr     do_byte
+
+        ldy     cursor_y2
+        dey
+    WHILE Y <> cursor_y1
+        sta     LOWSCR
+ret:    rts
+
+do_byte:
+        cpy     #40
+      IF CC
+        lda     cursor_savebits,x
+        sta     (vid_ptr),y
+        dex
+      END_IF
+        rts
+
+.endproc ; RestoreCursorBackground
+restore_switch_sta1 := RestoreCursorBackground::switch_sta1
+restore_switch_sta2 := RestoreCursorBackground::switch_sta2
+restore_switch_dey := RestoreCursorBackground::switch_dey
 
 ;;; ============================================================
 ;;; ShowCursor
@@ -4528,14 +4641,28 @@ cursor_throttle:
         ;; --------------------------------------------------
 
 mouse_moved:
-        jsr     RestoreCursorBackground
+        ;; Updated position
         ldx     #2
-        stx     cursor_flag
 :       lda     mouse_x,x
         sta     cursor_pos,x
         dex
         bpl     :-
-        jsr     UpdateCursor
+
+        lda     cursor_count
+        bne     no_move
+
+        ;; Pre-calculate the cursor coordinates, shifted bits and mask bytes
+        jsr     PreDrawCursor
+
+        jsr     WaitVBL
+
+        ;; NTSC VBI budget is 4550 cycles (70 rows x 65 cycles/row)
+        ;; The below is ~3778 cycles, which is sufficient to avoid
+        ;; tearing. It can be reduced to at least ~2903 by inlining,
+        ;; at the expense of size.
+
+        jsr     RestoreCursorBackground
+        jsr     FinishDrawCursor
 
 no_move:
 .endproc ; MoveCursor
@@ -4743,15 +4870,44 @@ savesize        .word
         inx
         stx     mouse_scale_x
 
+        ldax    #vbl_iie_proc   ; default
         bit     subid
     IF VC
         ;; Per Technical Note: Apple IIc #1: Mouse Differences on IIe and IIc
-        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.1.html
-        stx     mouse_scale_y
-        inx                              ; default scaling for IIc/IIc+
-        stx     mouse_scale_x
-        ;; TODO: Save a byte by doing `INC mouse_scale_y; INC mouse_scale_x` instead
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.1.htm
+        inc     mouse_scale_x
+        inc     mouse_scale_y
+
+        ldax    #vbl_iic_proc
+    ELSE
+        ;; IIe or IIgs?
+        bit     RDLCRAM
+        php
+        bit     ROMIN2          ; Bank ROM
+
+        CALL    IDROUTINE, C=1
+      IF CC
+        ;; IIgs
+        ldax    #vbl_iigs_proc
+      END_IF
+
+        ldy     IDBYTEMACIIE
+      IF Y = #$02
+        ;; Macintosh IIe Option Card
+        ;; RDVBLBAR exists and per @mgcaret allows 60Hz timing but is
+        ;; not sync'd to the actual video refresh, so ignore it. It is
+        ;; also buggy on v2.2.2d1 per @peterferrie and never fires so
+        ;; we would hang.
+        ldax    #vbl_none_proc
+      END_IF
+
+        plp
+      IF NS
+        bit     LCBANK1         ; Bank RAM back in if needed
+        bit     LCBANK1
+      END_IF
     END_IF
+        stax    vbl_proc_addr
 
         ldx     slot_num
         jsr     FindMouse
@@ -10729,6 +10885,9 @@ finish:
         dex
     WHILE POS
 
+        ;; TODO: Compute more accurate overlap considering
+        ;; byte boundaries for cursor and passed rect.
+
         ;; Account for cursor size and render slop
         sub16_8 left, #MGTK::cursor_width * 7 + kSlop
         add16_8 right, #kSlop
@@ -10765,13 +10924,95 @@ ret:    rts
 .endproc ; ShieldCursorImpl
 
 .proc UnshieldCursorImpl
-        rol     cursor_shielded_flag
+        asl     cursor_shielded_flag
         bcc     ShieldCursorImpl::ret
         jmp     ShowCursorImpl
 .endproc ; UnshieldCursorImpl
 
 cursor_shielded_flag:
         .byte   0
+
+;;; ============================================================
+
+.proc WaitVBL
+        php
+        sei
+
+        proc_addr := *+1
+        jsr     iie_proc
+
+        plp
+        rts
+
+;;; --------------------------------------------------
+;;; IIe
+
+iie_proc:
+:       bit RDVBLBAR            ; wait for end of VBL (if in it)
+        bpl     :-
+:       bit RDVBLBAR            ; wait for start of next VBL
+        bmi     :-
+
+ret:    rts
+
+;;; --------------------------------------------------
+;;;IIgs
+
+iigs_proc:
+:       bit RDVBLBAR            ; wait for end of VBL (if in it)
+        bmi     :-
+:       bit RDVBLBAR            ; wait for start of next VBL
+        bpl     :-
+        rts
+
+;;; --------------------------------------------------
+;;; IIc
+
+iic_proc:
+        ;; See Apple IIc Tech Note #9: Detecting VBL
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.9.html
+
+        ;; "Note that IOUDis must have been turned off by writing to
+        ;; $C07F then ENVBL accessed at $C05B in order to poll for
+        ;; $C019 on the IIc."
+
+        lda     IOUDISON        ; = RDIOUDIS
+        pha                     ; save IOUDIS state
+        sta     IOUDISOFF
+
+        lda     RDVBLMSK
+        pha                     ; save VBL interrupt state
+        sta     ENVBL
+
+        ;; "After reading $C019 once the high bit has been set to flag
+        ;; VBL, the high bit remains set. A program polling VBL at
+        ;; $C019 would have to access either PTrig at $C070 or
+        ;; RdIOUDis at $C07E to reset the high-bit for $C019."
+
+        ;; TODO: Determine if this is necessary; it's possible that the
+        ;; `IOUDISON` access above makes this redundant.
+        bit     IOUDISON        ; = RDIOUDIS
+
+:       bit     RDVBLBAR        ; poll
+        bpl     :-
+
+        pla                     ; restore VBL interrupt state
+    IF NC
+        sta     DISVBL
+    END_IF
+
+        pla                     ; restore IOUDIS state
+    IF NC
+        sta     IOUDISON
+    END_IF
+        rts
+
+.endproc
+vbl_proc_addr := WaitVBL::proc_addr
+vbl_iie_proc := WaitVBL::iie_proc
+vbl_iigs_proc := WaitVBL::iigs_proc
+vbl_iic_proc := WaitVBL::iic_proc
+vbl_none_proc := WaitVBL::ret
 
 ;;; ============================================================
 
