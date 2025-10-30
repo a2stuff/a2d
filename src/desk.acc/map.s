@@ -257,8 +257,6 @@ position_marker_bitmap:
 ;;; ============================================================
 ;;; Line Edit
 
-cursor_ibeam_flag: .byte   0    ; bit7
-
 kBufSize = 16                       ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
 
@@ -540,22 +538,12 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, input_rect
-        bne     inside
-
-outside:
-        bit     cursor_ibeam_flag
-        bpl     done
-        CLEAR_BIT7_FLAG cursor_ibeam_flag
+    IF ZERO
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        jmp     done
-
-inside:
-        bit     cursor_ibeam_flag
-        bmi     done
-        SET_BIT7_FLAG cursor_ibeam_flag
+    ELSE
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-
-done:   jmp     InputLoop
+    END_IF
+        jmp     InputLoop
 .endproc ; HandleMouseMove
 
 ;;; ============================================================

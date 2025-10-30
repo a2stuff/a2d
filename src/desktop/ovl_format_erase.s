@@ -143,7 +143,7 @@ loop2:
         bmi     loop2           ; not done
         bne     cancel          ; cancel
 
-        jsr     main::SetCursorPointerWithFlag
+        jsr     main::SetCursorPointer
 
         ;; Check for conflicting name
         CALL    CheckConflictingVolumeName, XY=#text_input_buf, A=unit_num
