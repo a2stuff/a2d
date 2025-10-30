@@ -1015,6 +1015,8 @@ found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
 ;;; ============================================================
 
 .proc _ReadDir
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+
         jsr     _IsRootPath
         jeq     _ReadDrives
 
@@ -1105,6 +1107,7 @@ done_entry:
 
 close:  MLI_CALL CLOSE, close_params
         jsr     _SortFileNames
+        jsr     _SetCursorPointer
         RETURN  C=0
 
 next:   lda     entry_in_block
@@ -1134,8 +1137,6 @@ entries_per_block:
         DEFINE_ON_LINE_PARAMS on_line_drives_params, 0, dir_read_buf
 
 .proc _ReadDrives
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-
         MLI_CALL ON_LINE, on_line_drives_params
 
         ptr := $06
