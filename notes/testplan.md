@@ -1154,6 +1154,7 @@ Image File:
 * In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press D (or any key that doesn't have a special purpose). Verify that the slideshow stops. Press S. Verify that a slideshow starts again.
 * In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press Left Arrow. Verify that the previous image is shown, and that the slideshow stops. Press S. Verify that a slideshow starts again.
 * Click on the File menu, then close it. Double-click an image file. Press Escape to close the preview. Verify that the File menu is not highlighted.
+* Preview an image file. Verify that the mouse cursor is hidden. Without moving the mouse, press the Escape key. Verify that after the desktop repaints the mouse cursor becomes visible without needing to move the mouse first.
 
 * Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens other than open/close animation and screen refresh.

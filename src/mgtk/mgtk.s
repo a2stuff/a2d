@@ -4159,6 +4159,15 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
     END_IF
 
         ldax    params_addr
+
+        ;; No-op if same
+        cmp     active_cursor
+        bne     :+
+        cpx     active_cursor+1
+        bne     :+
+        bit     cursor_flag
+        bpl     finish
+:
         stax    active_cursor
         addax8  #MGTK::Cursor::mask
         stax    active_cursor_mask
@@ -4171,6 +4180,8 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
         sta     cursor_hotspot_y
         jsr     RestoreCursorBackground
         jsr     DrawCursor
+
+finish:
         plp
 .endproc ; SetCursorImpl
 srts:   rts

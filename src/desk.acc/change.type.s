@@ -219,38 +219,18 @@ auxtype:        .word   SELF_MODIFIED
 
         MGTK_CALL MGTK::InRect, type_rect
     IF NOT_ZERO
-        jsr     SetCursorIBeam
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         jmp     InputLoop
     END_IF
 
         MGTK_CALL MGTK::InRect, auxtype_rect
     IF NOT_ZERO
-        jsr     SetCursorIBeam
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         jmp     InputLoop
     END_IF
 
-        jsr     SetCursorPointer
-        jmp     InputLoop
-
-cursor_ibeam_flag: .byte   0
-
-.proc SetCursorIBeam
-        bit     cursor_ibeam_flag
-        RTS_IF NS
-
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        SET_BIT7_FLAG cursor_ibeam_flag
-        rts
-.endproc ; SetCursorIBeam
-
-.proc SetCursorPointer
-        bit     cursor_ibeam_flag
-        RTS_IF NC
-
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        CLEAR_BIT7_FLAG cursor_ibeam_flag
-        rts
-.endproc ; SetCursorPointer
+        jmp     InputLoop
 .endproc ; HandleMouseMoved
 
 ;;; ============================================================

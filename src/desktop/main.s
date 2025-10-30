@@ -12233,7 +12233,6 @@ DoRename        := DoRenameImpl::start
 
         COPY_STRUCT MGTK::Point, tmp_rect::topleft, winfo_rename_dialog::viewloc
 
-        CLEAR_BIT7_FLAG cursor_ibeam_flag
         jsr     SetCursorPointer
 
         MGTK_CALL MGTK::OpenWindow, winfo_rename_dialog
@@ -12305,12 +12304,12 @@ loop:   jsr     _InputLoop
         lda     findwindow_params::window_id
       IF A = #winfo_rename_dialog::kWindowId
 
-        jsr     SetCursorIBeamWithFlag
+        jsr     SetCursorIBeam
         jmp     _InputLoop
       END_IF
     END_IF
 
-        jsr     SetCursorPointerWithFlag
+        jsr     SetCursorPointer
         jmp     _InputLoop
 .endproc ; _InputLoop
 
@@ -13129,10 +13128,10 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         MGTK_CALL MGTK::InRect, name_input_rect
         ASSERT_EQUALS MGTK::inrect_outside, 0
         beq     out
-        jsr     SetCursorIBeamWithFlag ; toggling in prompt dialog
+        jsr     SetCursorIBeam
         jmp     PromptInputLoop
 
-out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
+out:    jsr     SetCursorPointer
         jmp     PromptInputLoop
 
 ;;; Click handler for prompt dialog
@@ -13318,30 +13317,6 @@ allow:  RETURN  C=0
 
 ignore: RETURN  C=1
 .endproc ; IsFilenameChar
-
-;;; ============================================================
-
-        PROC_USED_IN_OVERLAY
-.proc SetCursorPointerWithFlag
-        bit     cursor_ibeam_flag
-    IF NS
-        jsr     SetCursorPointer ; toggle routine
-        CLEAR_BIT7_FLAG cursor_ibeam_flag
-    END_IF
-        rts
-.endproc ; SetCursorPointerWithFlag
-
-.proc SetCursorIBeamWithFlag
-        bit     cursor_ibeam_flag
-    IF NC
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        SET_BIT7_FLAG cursor_ibeam_flag
-    END_IF
-        rts
-.endproc ; SetCursorIBeamWithFlag
-
-cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
-        .byte   0
 
 ;;; ============================================================
 
@@ -13843,6 +13818,11 @@ params:  .res    3
         rts
 .endproc ; SetCursorPointer
 
+.proc SetCursorIBeam
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
+        rts
+.endproc ; SetCursorIBeam
+
 ;;; ============================================================
 
 ;;; Inputs: A = new `prompt_button_flags` value
@@ -13859,7 +13839,6 @@ params:  .res    3
         lda     #0
         sta     has_input_field_flag
         sta     has_device_picker_flag
-        sta     cursor_ibeam_flag
         jsr     SetCursorPointer
 
         copy16  #NoOp, PromptDialogClickHandlerHook

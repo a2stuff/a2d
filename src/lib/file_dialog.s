@@ -118,7 +118,6 @@ selection_requirement_flags:
         sta     type_down_buf
         sta     only_show_dirs_flag
 .ifdef FD_EXTENDED
-        sta     cursor_ibeam_flag
         sta     extra_controls_flag
 .endif
 
@@ -178,10 +177,11 @@ key_handler_hook:
         jsr     _MoveToWindowCoords
         MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
         ASSERT_EQUALS MGTK::inrect_outside, 0
-        beq     out
-        jsr     _SetCursorIBeam
-        jmp     EventLoop
-out:    jsr     _UnsetCursorIBeam
+       IF NOT ZERO
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
+       ELSE
+        jsr     _SetCursorPointer
+       END_IF
         ;; Fall through to JMP
       END_IF
 .endif
@@ -331,31 +331,6 @@ ret:    rts
         LBTK_CALL LBTK::Init, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
 .endproc ; UpdateListFromPathAndSelectFile
-.endif
-
-;;; ============================================================
-
-.ifdef FD_EXTENDED
-.proc _SetCursorIBeam
-        bit     cursor_ibeam_flag
-    IF NC
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        SET_BIT7_FLAG cursor_ibeam_flag
-    END_IF
-        rts
-.endproc ; _SetCursorIBeam
-
-.proc _UnsetCursorIBeam
-        bit     cursor_ibeam_flag
-    IF NS
-        jsr     _SetCursorPointer
-        CLEAR_BIT7_FLAG cursor_ibeam_flag
-    END_IF
-        rts
-.endproc ; _UnsetCursorIBeam
-
-cursor_ibeam_flag:              ; high bit set when cursor is I-beam
-        .byte   0
 .endif
 
 ;;; ============================================================
@@ -887,7 +862,7 @@ found:  RETURN  A=index
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
 .ifdef FD_EXTENDED
-        jsr     _UnsetCursorIBeam
+        jsr     _SetCursorPointer
 .endif
         rts
 .endproc ; CloseWindow
@@ -1195,11 +1170,7 @@ next:   add16_8 ptr, #16        ; advance to next
 
 finish:
         jsr     _SortFileNames
-
         jsr     _SetCursorPointer
-.ifdef FD_EXTENDED
-        CLEAR_BIT7_FLAG cursor_ibeam_flag
-.endif
 
         RETURN  C=0
 .endproc ; _ReadDrives
