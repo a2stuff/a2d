@@ -7379,7 +7379,7 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
 
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF NS
-        jsr     SortRecords
+        jsr     _SortFileRecords
     END_IF
 
         ;; --------------------------------------------------
@@ -7389,7 +7389,209 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
         jmp     StoreCachedWindowIconList
 
 ;;; ------------------------------------------------------------
-;;; File Icon Entry Construction
+;;; Populates and sorts `cached_window_icon_list` while that
+;;; list is temporarily a list of `FileRecords`.
+;;; Inputs: A=`DeskTopSettings::kViewBy*` for `cached_window_id`
+
+.proc _SortFileRecords
+
+list_start_ptr  := $801
+num_records     := $803
+scratch_space   := $804         ; can be used by comparison funcs
+
+        sta     _CompareFileRecords_sort_by
+
+        lda     cached_window_icon_count
+        RTS_IF A < #2           ; can't sort < 2 records
+
+        sta     num_records
+
+        CALL    GetFileRecordListForWindow, A=cached_window_id
+        stax    list_start_ptr
+        inc16   list_start_ptr
+
+        copy16  #_CalcPtr, Quicksort_GetPtrProc
+        copy16  #_CompareProc, Quicksort_CompareProc
+        copy16  #_SwapProc, Quicksort_SwapProc
+
+        TAIL_CALL Quicksort, A=num_records
+
+.proc _CompareProc
+        bit     LCBANK2
+        bit     LCBANK2
+        jsr     _CompareFileRecords
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
+        rts
+.endproc ; _CompareProc
+
+.proc _SwapProc
+        swap8   cached_window_icon_list,x, cached_window_icon_list,y
+        rts
+.endproc ; _SwapProc
+
+;;; --------------------------------------------------
+;;; Input: A = index in list being sorted
+;;; Output: A,X = pointer to FileRecord
+;;; Assert: LCBANK1 banked in so `cached_window_icon_list` is visible
+
+.proc _CalcPtr
+        ;; Map from sorting list index to FileRecord index
+        tax
+        ldy     cached_window_icon_list,x
+        dey                     ; 1-based to 0-based
+        tya
+
+        ;; Calculate the pointer
+        ASSERT_EQUALS .sizeof(FileRecord), 32
+        jsr     ATimes32
+
+        clc
+        adc     list_start_ptr
+        pha
+        txa
+        adc     list_start_ptr+1
+        tax
+        pla
+
+        rts
+.endproc ; _CalcPtr
+
+;;; --------------------------------------------------
+
+;;; Inputs: $06 and $08 point at FileRecords
+;;; Assert: LCBANK2 banked in so FileRecords are visible
+
+.proc _CompareFileRecords
+        ptr1 := $06
+        ptr2 := $08
+
+        ;; Set by caller
+        sort_by := *+1
+        lda     #SELF_MODIFIED_BYTE
+    IF A = #DeskTopSettings::kViewByName
+        ASSERT_EQUALS FileRecord::name, 0
+        jmp     CompareStrings
+    END_IF
+
+    IF A = #DeskTopSettings::kViewByDate
+PARAM_BLOCK scratch, $804       ; `scratch_space`
+date_a  .tag    DateTime
+date_b  .tag    DateTime
+parsed_a .tag ParsedDateTime
+parsed_b .tag ParsedDateTime
+END_PARAM_BLOCK
+
+        ;; Copy the dates somewhere easier to work with
+        ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
+        ldx     #.sizeof(DateTime)-1
+      DO
+        copy8   (ptr2),y, scratch::date_a,x ; order descending
+        copy8   (ptr1),y, scratch::date_b,x
+        dey
+        dex
+      WHILE POS
+
+        ;; Crack the ProDOS values into more useful structs, and
+        ;; handle various year encodings.
+        ptr := $0A
+
+        copy16  #scratch::parsed_a, ptr
+        CALL    ParseDatetime, AX=#scratch::date_a
+
+        copy16  #scratch::parsed_b, ptr
+        CALL    ParseDatetime, AX=#scratch::date_b
+
+        ;; Compare member-wise
+        ecmp16  scratch::parsed_a + ParsedDateTime::year, scratch::parsed_b + ParsedDateTime::year
+        bne     done
+
+        lda     scratch::parsed_a + ParsedDateTime::month
+        cmp     scratch::parsed_b + ParsedDateTime::month
+        bne     done
+
+        lda     scratch::parsed_a + ParsedDateTime::day
+        cmp     scratch::parsed_b + ParsedDateTime::day
+        bne     done
+
+        lda     scratch::parsed_a + ParsedDateTime::hour
+        cmp     scratch::parsed_b + ParsedDateTime::hour
+        bne     done
+
+        lda     scratch::parsed_a + ParsedDateTime::minute
+        cmp     scratch::parsed_b + ParsedDateTime::minute
+
+done:   rts
+    END_IF
+
+    IF A = #DeskTopSettings::kViewBySize
+        ;; Copy sizes somewhere convenient
+        size1 := $804
+        size2 := $806
+        ldy     #FileRecord::blocks
+        copy8   (ptr1),y, size1
+        copy8   (ptr2),y, size2
+        iny
+        copy8   (ptr1),y, size1+1
+        copy8   (ptr2),y, size2+1
+
+        ;; Treat directories as 0
+        ldy     #FileRecord::file_type
+        lda     (ptr1),y
+      IF A = #FT_DIRECTORY
+        copy16  #0, size1
+      END_IF
+        lda     (ptr2),y
+      IF A = #FT_DIRECTORY
+        copy16  #0, size2
+      END_IF
+
+        ;; Compare!
+        ecmp16  size2, size1    ; order descending, with Z and C
+        rts
+    END_IF
+
+        ;; Assert: DeskTopSettings::kViewByType
+        ldy     #FileRecord::file_type
+        CALL    _ComposeFileTypeStringForSorting, A=(ptr1),y
+        COPY_STRING str_file_type, scratch
+        ldy     #FileRecord::file_type
+        CALL    _ComposeFileTypeStringForSorting, A=(ptr2),y
+
+        bit     LCBANK1
+        bit     LCBANK1
+        jsr     PushPointers
+        copy16  #scratch, $06
+        copy16  #str_file_type, $08
+        jsr     CompareStrings
+        php                     ; preserve Z,C
+        pla
+        jsr     PopPointers
+        bit     LCBANK2
+        bit     LCBANK2
+        pha
+        plp                     ; restore Z,C
+
+        rts
+
+.endproc ; _CompareFileRecords
+_CompareFileRecords_sort_by := _CompareFileRecords::sort_by
+
+.proc _ComposeFileTypeStringForSorting
+        jsr     ComposeFileTypeString
+        lda     str_file_type+1
+    IF A = #'$'
+        copy8   #$FF, str_file_type+1
+    END_IF
+        rts
+.endproc ; _ComposeFileTypeStringForSorting
+
+.endproc ; _SortFileRecords
+
+;;; ------------------------------------------------------------
+;;; File Icon Construction
 ;;; Inputs: `cached_window_id` must be set
 
 .proc _CreateIconsForWindow
@@ -7420,13 +7622,11 @@ END_PARAM_BLOCK
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF NS
         ldy     #init_list_view - init_views + init_view_size-1
-    ELSE
+    ELSE_IF ZERO
         ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
-      IF ZERO
         ldy     #init_icon_view - init_views + init_view_size-1
-      ELSE
+    ELSE
         ldy     #init_smicon_view - init_views + init_view_size-1
-      END_IF
     END_IF
 
         ;; Populate the initial values from the template
@@ -7730,210 +7930,6 @@ records_base_ptr:
 
         rts
 .endproc ; GetFileRecordCountForWindow
-
-;;; ============================================================
-;;; Populates and sorts `cached_window_icon_list` while that
-;;; list is temporarily a list of `FileRecords`, either during
-;;; window creation or refresh.
-;;; Inputs: A=`DeskTopSettings::kViewBy*` for `cached_window_id`
-
-.proc SortRecords
-
-list_start_ptr  := $801
-num_records     := $803
-scratch_space   := $804         ; can be used by comparison funcs
-
-        sta     _CompareFileRecords_sort_by
-
-        lda     cached_window_icon_count
-        RTS_IF A < #2           ; can't sort < 2 records
-
-        sta     num_records
-
-        CALL    GetFileRecordListForWindow, A=cached_window_id
-        stax    list_start_ptr
-        inc16   list_start_ptr
-
-        copy16  #_CalcPtr, Quicksort_GetPtrProc
-        copy16  #_CompareProc, Quicksort_CompareProc
-        copy16  #_SwapProc, Quicksort_SwapProc
-
-        TAIL_CALL Quicksort, A=num_records
-
-.proc _CompareProc
-        bit     LCBANK2
-        bit     LCBANK2
-        jsr     _CompareFileRecords
-        php
-        bit     LCBANK1
-        bit     LCBANK1
-        plp
-        rts
-.endproc ; _CompareProc
-
-.proc _SwapProc
-        swap8   cached_window_icon_list,x, cached_window_icon_list,y
-        rts
-.endproc ; _SwapProc
-
-;;; --------------------------------------------------
-;;; Input: A = index in list being sorted
-;;; Output: A,X = pointer to FileRecord
-;;; Assert: LCBANK1 banked in so `cached_window_icon_list` is visible
-
-.proc _CalcPtr
-        ;; Map from sorting list index to FileRecord index
-        tax
-        ldy     cached_window_icon_list,x
-        dey                     ; 1-based to 0-based
-        tya
-
-        ;; Calculate the pointer
-        ASSERT_EQUALS .sizeof(FileRecord), 32
-        jsr     ATimes32
-
-        clc
-        adc     list_start_ptr
-        pha
-        txa
-        adc     list_start_ptr+1
-        tax
-        pla
-
-        rts
-.endproc ; _CalcPtr
-
-;;; --------------------------------------------------
-
-;;; Inputs: $06 and $08 point at FileRecords
-;;; Assert: LCBANK2 banked in so FileRecords are visible
-
-.proc _CompareFileRecords
-        ptr1 := $06
-        ptr2 := $08
-
-        ;; Set by caller
-        sort_by := *+1
-        lda     #SELF_MODIFIED_BYTE
-    IF A = #DeskTopSettings::kViewByName
-        ASSERT_EQUALS FileRecord::name, 0
-        jmp     CompareStrings
-    END_IF
-
-    IF A = #DeskTopSettings::kViewByDate
-PARAM_BLOCK scratch, $804       ; `scratch_space`
-date_a  .tag    DateTime
-date_b  .tag    DateTime
-parsed_a .tag ParsedDateTime
-parsed_b .tag ParsedDateTime
-END_PARAM_BLOCK
-
-        ;; Copy the dates somewhere easier to work with
-        ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
-        ldx     #.sizeof(DateTime)-1
-      DO
-        copy8   (ptr2),y, scratch::date_a,x ; order descending
-        copy8   (ptr1),y, scratch::date_b,x
-        dey
-        dex
-      WHILE POS
-
-        ;; Crack the ProDOS values into more useful structs, and
-        ;; handle various year encodings.
-        ptr := $0A
-
-        copy16  #scratch::parsed_a, ptr
-        CALL    ParseDatetime, AX=#scratch::date_a
-
-        copy16  #scratch::parsed_b, ptr
-        CALL    ParseDatetime, AX=#scratch::date_b
-
-        ;; Compare member-wise
-        ecmp16  scratch::parsed_a + ParsedDateTime::year, scratch::parsed_b + ParsedDateTime::year
-        bne     done
-
-        lda     scratch::parsed_a + ParsedDateTime::month
-        cmp     scratch::parsed_b + ParsedDateTime::month
-        bne     done
-
-        lda     scratch::parsed_a + ParsedDateTime::day
-        cmp     scratch::parsed_b + ParsedDateTime::day
-        bne     done
-
-        lda     scratch::parsed_a + ParsedDateTime::hour
-        cmp     scratch::parsed_b + ParsedDateTime::hour
-        bne     done
-
-        lda     scratch::parsed_a + ParsedDateTime::minute
-        cmp     scratch::parsed_b + ParsedDateTime::minute
-
-done:   rts
-    END_IF
-
-    IF A = #DeskTopSettings::kViewBySize
-        ;; Copy sizes somewhere convenient
-        size1 := $804
-        size2 := $806
-        ldy     #FileRecord::blocks
-        copy8   (ptr1),y, size1
-        copy8   (ptr2),y, size2
-        iny
-        copy8   (ptr1),y, size1+1
-        copy8   (ptr2),y, size2+1
-
-        ;; Treat directories as 0
-        ldy     #FileRecord::file_type
-        lda     (ptr1),y
-      IF A = #FT_DIRECTORY
-        copy16  #0, size1
-      END_IF
-        lda     (ptr2),y
-      IF A = #FT_DIRECTORY
-        copy16  #0, size2
-      END_IF
-
-        ;; Compare!
-        ecmp16  size2, size1    ; order descending, with Z and C
-        rts
-    END_IF
-
-        ;; Assert: DeskTopSettings::kViewByType
-        ldy     #FileRecord::file_type
-        CALL    _ComposeFileTypeStringForSorting, A=(ptr1),y
-        COPY_STRING str_file_type, scratch
-        ldy     #FileRecord::file_type
-        CALL    _ComposeFileTypeStringForSorting, A=(ptr2),y
-
-        bit     LCBANK1
-        bit     LCBANK1
-        jsr     PushPointers
-        copy16  #scratch, $06
-        copy16  #str_file_type, $08
-        jsr     CompareStrings
-        php                     ; preserve Z,C
-        pla
-        jsr     PopPointers
-        bit     LCBANK2
-        bit     LCBANK2
-        pha
-        plp                     ; restore Z,C
-
-        rts
-
-.endproc ; _CompareFileRecords
-_CompareFileRecords_sort_by := _CompareFileRecords::sort_by
-
-.proc _ComposeFileTypeStringForSorting
-        jsr     ComposeFileTypeString
-        lda     str_file_type+1
-    IF A = #'$'
-        copy8   #$FF, str_file_type+1
-    END_IF
-        rts
-.endproc ; _ComposeFileTypeStringForSorting
-
-.endproc ; SortRecords
-
 
 ;;; ============================================================
 ;;; A = entry number
