@@ -31,6 +31,7 @@ sub nextTabStopPast ($) {
 
 my $tabstop = 0;
 my $flow_indent = 4;
+my @blocktype = ('');
 
 # TODO: untabify input
 # TODO: sigils to disable/enable formatting around blocks
@@ -68,13 +69,21 @@ while (<STDIN>) {
       $comment = respace_comment($2);
     }
 
-    if (m/^(\w+)\s*:=\s*(.*)$/) {
+    if (m/^PARAM_BLOCK/) {
+      push(@blocktype, 'param_block');
+      $tabstop = 0;
+    } elsif (m/^END_PARAM_BLOCK/) {
+      pop(@blocktype);
+      $tabstop = 0;
+    } elsif ($blocktype[-1] eq 'param_block') {
+      $tabstop = 0;
+    } elsif (m/^(\w+)\s*:=\s*(.*)$/) {
 
       # equate
       my ($identifier, $expression) = ($1 // '', $2 // '', $3 // '');
 
-      # TODO: Only indent w/in proc?
-      $_ = ' ' x $TAB_WIDTH;
+      $_ = '';
+      $_ = ' ' x $TAB_WIDTH if $blocktype[-1] eq '.proc';
       $_ .= $identifier . ' ';
       $_ .= ':= ' . $expression . ' ';
 
@@ -104,6 +113,12 @@ while (<STDIN>) {
       if ($opcode =~ /^\.end/ && $comment) {
         $_ .= ' ' . $comment;
         $comment = '';
+      }
+
+      if ($opcode eq '.proc' || $opcode eq '.scope') {
+        push(@blocktype, $opcode)
+      } elsif ($opcode eq '.endproc' || $opcode eq '.endscope') {
+        pop(@blocktype);
       }
 
     } elsif (m/^(\.(?:if\w*|elseif|else|endif)\b)\s*(.*)$/) {
@@ -159,18 +174,19 @@ while (<STDIN>) {
       if ($opcode =~ m/^\.(byte|word|dword|addr|res|tag)$/) {
         my $col = max(nextTabStopPast(length($_)), $OPERAND_COLUMN);
         $_ .= ' ' x max($col - length($_), 1);
-      } elsif ($opcode =~ m/^([a-z]{3}\w*)$/) {
+      } elsif ($opcode =~ m/^([a-z]{3}\w*|CALL|RETURN)$/) {
         $_ .= ' ' x max($OPERAND_COLUMN - length($_), 1);
       } else {
         $_ .= ' ';
       }
-      $_ .= $arguments . ' ';
+      $_ .= $arguments;
 
     } else {
       die "Unexpected line: $_\n";
     }
 
     if ($comment ) {
+      $_ .= ' ';
       $_ .= ' ' while length($_) < $COMMENT_COLUMN;
       $_ .= $comment;
     }

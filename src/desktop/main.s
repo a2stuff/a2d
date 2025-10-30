@@ -151,7 +151,7 @@ skip_get:
       IF ZERO
         ;; Desktop
         ITK_CALL IconTK::DrawAll, event_params::window_id
-      ELSE_IF A < #kMaxDeskTopWindows+1; 1...max are ours
+      ELSE_IF A < #kMaxDeskTopWindows+1 ; 1...max are ours
         ;; Directory Window
         jsr     UpdateWindow
       END_IF
@@ -178,7 +178,7 @@ ClearUpdatesSkipGet := ClearUpdates::skip_get
         copy8   #0, loop_counter
 
         jsr     ShowClock
-        jsr     ResetIIgsRGB   ; in case it was reset by control panel
+        jsr     ResetIIgsRGB    ; in case it was reset by control panel
     END_IF
         RETURN  A=loop_counter
 .endproc ; SystemTask
@@ -279,7 +279,7 @@ modifiers:
     IF NOT_ZERO
         cmp     #kShortcutGrowWindow ; Apple-G (Resize)
         jeq     CmdResize
-        cmp     #kShortcutMoveWindow  ; Apple-M (Move)
+        cmp     #kShortcutMoveWindow ; Apple-M (Move)
         jeq     CmdMove
 
       IF A IN #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
@@ -505,7 +505,7 @@ window_click:
     IF A <> #MGTK::Area::content
         pha                     ; A = MGTK::Area::*
         ;; Activate if needed
-        CALL    ActivateWindow, A=findwindow_params::window_id  ; no-op if already active
+        CALL    ActivateWindow, A=findwindow_params::window_id ; no-op if already active
         pla                     ; A = MGTK::Area::*
 
         cmp     #MGTK::Area::dragbar
@@ -568,8 +568,8 @@ window_click:
         beq     _TrackThumb
 
         ;; Other parts
-        lda     v_proc_lo,y   ; A = proc lo
-        ldx     v_proc_hi,y   ; X = proc hi
+        lda     v_proc_lo,y      ; A = proc lo
+        ldx     v_proc_hi,y      ; X = proc hi
         bne     _DoScrollbarPart ; always; Y = part
     END_IF
         ;; Horizontal scrollbar
@@ -591,7 +591,7 @@ window_click:
         stax    proc
         sty     part
         copy8   findcontrol_params::which_ctl, ctl
-      DO
+    DO
         ;; Dispatch to handler
         proc := *+1
         jsr     SELF_MODIFIED
@@ -610,7 +610,7 @@ window_click:
         lda     findcontrol_params::which_part
         part := *+1
         cmp     #SELF_MODIFIED_BYTE
-      WHILE EQ
+    WHILE EQ
         FALL_THROUGH_TO ScrollNoOp
 .endproc ; _DoScrollbarPart
 
@@ -752,7 +752,7 @@ check_drag:
         lda     BUTN0
         and     BUTN1
       IF NS
-        jsr     SetPathBuf4FromDragDropResult
+        jsr     SetOperationDstPathFromDragDropResult
         RTS_IF CS               ; failure, e.g. path too long
         jmp     MakeLinkInTarget
       END_IF
@@ -787,7 +787,7 @@ check_drag:
         RTS_IF A = #$80         ; ignore
 
         ;; Path for target
-        jsr     SetPathBuf4FromDragDropResult
+        jsr     SetOperationDstPathFromDragDropResult
         RTS_IF CS               ; failure, e.g. path too long
 
         ;; Double modifier?
@@ -860,9 +860,9 @@ prev_selected_icon:
     IF NC
         ;; Yes, on an icon; update used/free for same-vol windows
         pha
-        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path, A=0 on success
       IF ZERO
-        CALL    UpdateUsedFreeViaPath, AX=#path_buf3
+        CALL    UpdateUsedFreeViaPath, AX=#operation_src_path
       END_IF
         pla
 
@@ -1762,10 +1762,10 @@ devlst_backup:
         ;; If there's a selection, put it in `path_buf0`
         lda     selected_icon_count
       IF NOT_ZERO
-        CALL    GetIconPath, A=selected_icon_list ; `path_buf3` set to path; A=0 on success
+        CALL    GetIconPath, A=selected_icon_list ; `operation_src_path` set to path; A=0 on success
         jne     ShowAlert       ; too long
 
-        CALL    CopyToBuf0, AX=#path_buf3
+        CALL    CopyToBuf0, AX=#operation_src_path
       END_IF
     END_IF
 
@@ -1854,8 +1854,8 @@ done:   rts
         RTS_IF A = #kOperationCanceled
 
     IF A = #kOperationFailed
-        CALL    CopyRAMCardPrefix, AX=#path_buf4
-        jmp     RefreshWindowForPathBuf4
+        CALL    CopyRAMCardPrefix, AX=#operation_dst_path
+        jmp     RefreshWindowForOperationDstPath
     END_IF
 
         ;; Success!
@@ -2108,9 +2108,9 @@ CmdDeskAcc      := CmdDeskAccImpl::start
     IF NOT_ZERO
         lda     selected_icon_list ; first selected icon
       IF A <> trash_icon_num    ; ignore trash
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
         jne     ShowAlert       ; too long
-        CALL    CopyToSrcPath, AX=#path_buf3
+        CALL    CopyToSrcPath, AX=#operation_src_path
       END_IF
     END_IF
         CALL    IconToAnimate, AX=#tmp_path_buf
@@ -2286,52 +2286,52 @@ main_length:    .word   0
         ;; --------------------------------------------------
         ;; Try the copy
 
-        CALL    CopyPtr1ToBuf, AX=#path_buf4
+        CALL    CopyPtr1ToBuf, AX=#operation_dst_path
         jsr     DoCopySelection
 
         RTS_IF A = #kOperationCanceled
 
-        FALL_THROUGH_TO RefreshWindowForPathBuf4
+        FALL_THROUGH_TO RefreshWindowForOperationDstPath
 
 .endproc ; CmdCopySelection
 
 ;;; ============================================================
 
-.proc RefreshWindowForPathBuf4
+.proc RefreshWindowForOperationDstPath
         ;; See if there's a window we should activate later.
-        CALL    FindWindowForPath, AX=#path_buf4
+        CALL    FindWindowForPath, AX=#operation_dst_path
         pha                     ; save for later
 
         ;; Update cached used/free for all same-volume windows
-        CALL    UpdateUsedFreeViaPath, AX=#path_buf4
+        CALL    UpdateUsedFreeViaPath, AX=#operation_dst_path
 
         ;; Select/refresh window if there was one
         pla
         jne     ActivateAndRefreshWindowOrClose
 
         rts
-.endproc ; RefreshWindowForPathBuf4
+.endproc ; RefreshWindowForOperationDstPath
 
 ;;; ============================================================
-;;; Copy string at ($6) to `path_buf3`, string at ($8) to `path_buf4`,
-;;; split filename off `path_buf4` and store in `filename_buf`
+;;; Copy string at ($6) to `operation_src_path`, string at ($8) to `operation_dst_path`,
+;;; split filename off `operation_dst_path` and store in `filename_buf`
 
 .proc CopyPathsFromPtrsToBufsAndSplitName
 
-        ;; Copy string at $6 to `path_buf3`
-        CALL    CopyPtr1ToBuf, AX=#path_buf3
+        ;; Copy string at $6 to `operation_src_path`
+        CALL    CopyPtr1ToBuf, AX=#operation_src_path
 
-        ;; Copy string at $8 to `path_buf4`
-        CALL    CopyPtr2ToBuf, AX=#path_buf4
-        FALL_THROUGH_TO SplitPathBuf4
+        ;; Copy string at $8 to `operation_dst_path`
+        CALL    CopyPtr2ToBuf, AX=#operation_dst_path
+        FALL_THROUGH_TO SplitOperationDstPath
 .endproc ; CopyPathsFromPtrsToBufsAndSplitName
 
-;;; Split filename off `path_buf4` and store in `filename_buf`
+;;; Split filename off `operation_dst_path` and store in `filename_buf`
 ;;; If a volume name, splits off leading "/" (e.g. "/VOL" to "/" and "VOL")
-.proc SplitPathBuf4
-        CALL    FindLastPathSegment, AX=#path_buf4
+.proc SplitOperationDstPath
+        CALL    FindLastPathSegment, AX=#operation_dst_path
 
-    IF Y <> path_buf4
+    IF Y <> operation_dst_path
         tya                     ; Y = position of last '/'
         pha
 
@@ -2340,17 +2340,17 @@ main_length:    .word   0
         iny                     ; +1 for length byte
         iny                     ; +1 to skip past '/'
       DO
-        copy8   path_buf4,y, filename_buf,x
-        BREAK_IF Y = path_buf4
+        copy8   operation_dst_path,y, filename_buf,x
+        BREAK_IF Y = operation_dst_path
         iny
         inx
       WHILE NOT_ZERO
         stx     filename_buf
 
-        ;; And remove from `path_buf4`
+        ;; And remove from `operation_dst_path`
         pla
         tay                     ; Y = position of last '/'
-        sty     path_buf4
+        sty     operation_dst_path
         rts
     END_IF
 
@@ -2358,12 +2358,12 @@ main_length:    .word   0
         dey
         sty     filename_buf
     DO
-        copy8   path_buf4+1,y, filename_buf,y
+        copy8   operation_dst_path+1,y, filename_buf,y
         dey
     WHILE NOT_ZERO
-        copy8   #1, path_buf4
+        copy8   #1, operation_dst_path
         rts
-.endproc ; SplitPathBuf4
+.endproc ; SplitOperationDstPath
 
 ;;; ============================================================
 ;;; Split filename off `INVOKER_PREFIX` into `INVOKER_FILENAME`
@@ -2466,10 +2466,10 @@ common:
         ;; Were any directories opened?
         dir_flag := *+1
         lda     #SELF_MODIFIED_BYTE ; bit7
-    IF NS
+      IF NS
         ;; Maybe close the previously active window, depending on source/modifiers
         jsr     MaybeCloseWindowAfterOpen
-    END_IF
+      END_IF
         rts
 
 next:   txa
@@ -2515,9 +2515,9 @@ maybe_open_file:
         pla                     ; A = index; no longer needed
 
         txa                     ; A = icon id
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
         jne     ShowAlert       ; too long
-        CALL    CopyToSrcPath, AX=#path_buf3
+        CALL    CopyToSrcPath, AX=#operation_src_path
 
         jmp     LaunchFileWithPath
 .endproc ; CmdOpen
@@ -2617,8 +2617,8 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 
 .proc CmdCloseAll
 repeat:
-        lda     active_window_id  ; current window
-        RTS_IF ZERO             ; nope, done!
+        lda     active_window_id ; current window
+        RTS_IF ZERO              ; nope, done!
 
         jsr     CloseActiveWindow ; close it...
         jmp     repeat            ; and try again
@@ -3593,7 +3593,7 @@ spin:   jsr     GetSelectionWindow
 
         ;; Update name case bits on disk, if possible.
         CALL    CopyToSrcPath, AX=#dst_path_buf
-        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
+        jsr     ApplyCaseBits   ; applies `stashed_name` to `src_path_buf`
 
         ;; Update cached used/free for all same-volume windows, and refresh
         CALL    UpdateActivateAndRefreshWindow, A=selected_window_id
@@ -4939,15 +4939,15 @@ suffix: .byte   kAliasSuffix
 target_selection:
         jsr     GetSelectionWindow
         jsr     GetWindowPath
-        jsr     CopyToBuf4
+        jsr     CopyToOperationDstPath
 
-;;; Entry point where caller sets `path_buf4`
+;;; Entry point where caller sets `operation_dst_path`
 arbitrary_target:
 
         ;; --------------------------------------------------
         ;; Prep struct for writing
 
-        CALL    GetIconPath, A=selected_icon_list ; `path_buf3` set to path; A=0 on success
+        CALL    GetIconPath, A=selected_icon_list ; `operation_src_path` set to path; A=0 on success
         jne     ShowAlert       ; too long
 
         ldx     #kHeaderSize-1
@@ -4956,7 +4956,7 @@ arbitrary_target:
         dex
     WHILE POS
 
-        COPY_STRING path_buf3, link_struct::path
+        COPY_STRING operation_src_path, link_struct::path
         lda     link_struct::path
         clc
         adc     #link_struct::path-link_struct+1
@@ -4987,7 +4987,7 @@ arbitrary_target:
     WHILE POS
 
         ;; Repeat to find a free name
-retry:  CALL    CopyToDstPath, AX=#path_buf4
+retry:  CALL    CopyToDstPath, AX=#operation_dst_path
         CALL    AppendFilenameToDstPath, AX=#stashed_name
         jsr     GetDstFileInfo
     IF CS
@@ -5042,9 +5042,9 @@ err:    jmp     ShowAlert
 .proc CmdShowLink
         ;; Assert: single LNK file icon selected
         jsr     GetSingleSelectedIcon
-        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path, A=0 on success
         bne     alert           ; too long
-        CALL    CopyToSrcPath, AX=#path_buf3
+        CALL    CopyToSrcPath, AX=#operation_src_path
         jsr     ReadLinkFile
         RTS_IF CS
 
@@ -5218,7 +5218,7 @@ exception_flag:
 
         ;; Clear background
         CALL    UnsafeSetPortFromWindowId, A=active_window_id ; CHECKED
-        pha                               ; A = obscured?
+        pha                     ; A = obscured?
     IF ZERO                     ; skip if obscured
         MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
     END_IF
@@ -5394,7 +5394,7 @@ event_loop:
 
         lda     delta+1,x
       IF NEG
-        lda     delta,x        ; negate
+        lda     delta,x         ; negate
         eor     #$FF
         sta     delta,x
         inc     delta,x
@@ -5548,7 +5548,7 @@ beyond:
         MGTK_CALL MGTK::FrontWindow, active_window_id
         copy8   active_window_id, focused_window_id
 
-        jsr     ClearUpdates ; following CloseWindow above
+        jsr     ClearUpdates    ; following CloseWindow above
 
         ;; --------------------------------------------------
         ;; Clean up the parent icon (if any)
@@ -5701,14 +5701,14 @@ for_icon:
     END_IF
 
         ;; Compute the path, if it fits
-        CALL    GetIconPath, A=icon_param ; `path_buf3` set to path, A=0 on success
+        CALL    GetIconPath, A=icon_param ; `operation_src_path` set to path, A=0 on success
     IF NOT_ZERO
         jsr     ShowAlert       ; A has error if `GetIconPath` fails
         ldx     saved_stack
         txs
         rts
     END_IF
-        CALL    CopyToSrcPath, AX=#path_buf3 ; set `src_path_buf`
+        CALL    CopyToSrcPath, AX=#operation_src_path ; set `src_path_buf`
         jmp     no_win
 
         ;; --------------------------------------------------
@@ -6084,22 +6084,22 @@ err:    RETURN  C=1
 ;;;
 ;;; Inputs: A,X has path
 ;;; Output: A=icon id and Z=0 if found, Z=1 if no match
-;;; Trashes $06 and `path_buf4`
+;;; Trashes $06 and `operation_dst_path`
 
 .proc FindIconForPath
-        jsr     CopyToBuf4
-        CALL    FindLastPathSegment, AX=#path_buf4
-    IF Y = path_buf4            ; was there a filename?
+        jsr     CopyToOperationDstPath
+        CALL    FindLastPathSegment, AX=#operation_dst_path
+    IF Y = operation_dst_path      ; was there a filename?
         ;; Volume - make it a filename
-        ldx     path_buf4       ; Strip '/'
+        ldx     operation_dst_path ; Strip '/'
         dex
-        stx     path_buf4+1
-        ldax    #path_buf4+1    ; A,X=volname
-        ldy     #0              ; 0=desktop
+        stx     operation_dst_path+1
+        ldax    #operation_dst_path+1 ; A,X=volname
+        ldy     #0                    ; 0=desktop
     ELSE
         ;; File - need to see if there's a window
-        jsr     SplitPathBuf4
-        CALL    FindWindowForPath, AX=#path_buf4
+        jsr     SplitOperationDstPath
+        CALL    FindWindowForPath, AX=#operation_dst_path
         RTS_IF ZERO             ; no matching window
 
         tay                     ; Y=window id
@@ -7633,10 +7633,10 @@ records_base_ptr:
     IF A = #FT_DIRECTORY
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
       IF ZERO
         jsr     PushPointers
-        CALL    FindWindowForPath, AX=#path_buf3
+        CALL    FindWindowForPath, AX=#operation_src_path
         jsr     PopPointers
         tax                     ; A = window id, 0 if none
        IF NOT_ZERO
@@ -7835,12 +7835,12 @@ END_PARAM_BLOCK
         ;; Copy the dates somewhere easier to work with
         ldy     #FileRecord::modification_date + .sizeof(DateTime)-1
         ldx     #.sizeof(DateTime)-1
-    DO
+      DO
         copy8   (ptr2),y, scratch::date_a,x ; order descending
         copy8   (ptr1),y, scratch::date_b,x
         dey
         dex
-    WHILE POS
+      WHILE POS
 
         ;; Crack the ProDOS values into more useful structs, and
         ;; handle various year encodings.
@@ -7897,7 +7897,7 @@ done:   rts
       END_IF
 
         ;; Compare!
-        ecmp16  size2, size1 ; order descending, with Z and C
+        ecmp16  size2, size1    ; order descending, with Z and C
         rts
     END_IF
 
@@ -7948,7 +7948,7 @@ _CompareFileRecords_sort_by := _CompareFileRecords::sort_by
         ptr := $06
 
         ASSERT_EQUALS .sizeof(FileRecord), 32
-        jsr     ATimes32      ; A,X = A * 32
+        jsr     ATimes32        ; A,X = A * 32
         addax   file_record_ptr, ptr
 
         ;; Copy into more convenient location (LCBANK1)
@@ -8062,12 +8062,12 @@ set_pos:
         CLEAR_BIT7_FLAG frac_flag
         cmp16   value, #20
     IF LT
-        lsr16   value        ; Convert blocks to K, rounding up
-        ror     frac_flag    ; If < 10k and odd, show ".5" suffix"
+        lsr16   value           ; Convert blocks to K, rounding up
+        ror     frac_flag       ; If < 10k and odd, show ".5" suffix"
     ELSE
-        lsr16   value       ; Convert blocks to K, rounding up
+        lsr16   value           ; Convert blocks to K, rounding up
       IF CS                     ; NOTE: divide then maybe inc, rather than
-        inc16   value       ; always inc then divide, to handle $FFFF
+        inc16   value           ; always inc then divide, to handle $FFFF
       END_IF
     END_IF
 
@@ -8337,7 +8337,7 @@ str_root_path:  PASCAL_STRING "/"
 
 ;;; ============================================================
 ;;; Inputs: A = icon id (volume or file)
-;;; Outputs: Z=1/A=0/`path_buf3` populated with full path on success
+;;; Outputs: Z=1/A=0/`operation_src_path` populated with full path on success
 ;;;          Z=0/A=`ERR_INVALID_PATHNAME` if too long
 
 .proc GetIconPath
@@ -9218,9 +9218,9 @@ AnimateWindowOpen       := AnimateWindowImpl::open
 ;;; ============================================================
 ;;; For drop onto window/icon, compute target prefix.
 ;;; Input: `drag_drop_params::target` set
-;;; Output: C=0, `path_buf4` populated with target path
+;;; Output: C=0, `operation_dst_path` populated with target path
 ;;;         C=1 on error (e.g. path too long); alert is shown
-.proc SetPathBuf4FromDragDropResult
+.proc SetOperationDstPathFromDragDropResult
         ;; Is drop on a window or an icon?
         ;; hi bit clear = target is an icon
         ;; hi bit set = target is a window; get window number
@@ -9230,20 +9230,20 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         ;; Drop is on a window
         and     #%01111111      ; get window id
         jsr     GetWindowPath
-        jsr     CopyToBuf4
+        jsr     CopyToOperationDstPath
         RETURN  C=0             ; success
 
         ;; Drop is on an icon.
 target_is_icon:
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
     IF NE
         jsr     ShowAlert
         RETURN  C=1             ; failure
     END_IF
 
-        CALL    CopyToBuf4, AX=#path_buf3
+        CALL    CopyToOperationDstPath, AX=#operation_src_path
         RETURN  C=0             ; success
-.endproc ; SetPathBuf4FromDragDropResult
+.endproc ; SetOperationDstPathFromDragDropResult
 
 ;;; ============================================================
 
@@ -9257,7 +9257,7 @@ target_is_icon:
         kOperationFlagsCheckVolFree = %10000000
 
 ;;; File > Duplicate - for a single file copy
-;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
+;;; Caller sets `operation_src_path` (source) and `operation_dst_path` (destination)
 .proc DoCopyFile
         copy8   #kOperationFlagsCheckBadCopy, operation_flags
         copy8   #0, move_flags
@@ -9266,7 +9266,7 @@ target_is_icon:
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
-        jsr     SetDstIsAppleShareFlag  ; uses `path_buf4`, may fail
+        jsr     SetDstIsAppleShareFlag  ; uses `operation_dst_path`, may fail
         jsr     EnumerationProcessSelectedFile
         jsr     PrepTraversalCallbacksForCopy
         FALL_THROUGH_TO DoCopyCommon
@@ -9282,7 +9282,7 @@ FinishOperation:
         RETURN  A=#kOperationSucceeded
 
 ;;; Shortcuts > Run a Shortcut... w/ "Copy to RAMCard"/"at first use"
-;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
+;;; Caller sets `operation_src_path` (source) and `operation_dst_path` (destination)
 .proc DoCopyToRAM
         copy8   #0, move_flags
         copy8   #kOperationFlagsCheckVolFree, operation_flags
@@ -9302,7 +9302,7 @@ FinishOperation:
 
 ;;; File > Copy To...
 ;;; Drag / Drop (to anything but Trash)
-;;; Caller sets `path_buf4` (destination)
+;;; Caller sets `operation_dst_path` (destination)
 .proc DoCopyOrMoveSelection
         lda     selected_window_id
     IF NOT_ZERO                 ; dragging volume always copies
@@ -9322,7 +9322,7 @@ ep_always_copy:
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
-        jsr     SetDstIsAppleShareFlag  ; uses `path_buf4`, may fail
+        jsr     SetDstIsAppleShareFlag  ; uses `operation_dst_path`, may fail
         jmp     OperationOnSelection
 .endproc ; DoCopyOrMoveSelection
 DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
@@ -9356,7 +9356,7 @@ iterate_selection:
         pha                     ; A = index
         lda     selected_icon_list,x
       IF A <> trash_icon_num
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
         jne     ShowErrorAlert  ; too long
 
         ;; During selection iteration, allow Escape to cancel the operation.
@@ -9587,7 +9587,7 @@ OpUpdateCopyProgress := CopyUpdateProgress
 
         ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
 
-        PARAM_BLOCK, dir_data_buffer
+PARAM_BLOCK, dir_data_buffer
 ;;; Read buffers
 buf_block_pointers      .res    kBlockPointersSize
 buf_padding_bytes       .res    kMaxPaddingBytes
@@ -9611,7 +9611,8 @@ dir_data_buffer_end     .byte
 
 src_vol_devnum          .byte
 dst_vol_blocks_free     .word
-        END_PARAM_BLOCK
+END_PARAM_BLOCK
+
         .assert dir_data_buffer_end - dir_data_buffer <= 256, error, "too big"
 
         DEFINE_OPEN_PARAMS open_src_dir_params, pathname_src, dir_io_buffer
@@ -9675,7 +9676,7 @@ loop:
 .endproc ; ProcessDirectory
 
 ;;; Set on error during copying of a single file
-entry_err_flag:  .byte   0      ; bit7
+entry_err_flag: .byte   0       ; bit7
 
 ;;; ============================================================
 
@@ -9948,7 +9949,7 @@ eof:    RETURN  A=#$FF
 ;;; Exception: If user selects Cancel, `CloseFilesCancelDialogWithFailedResult` is invoked.
 ;;; Assert: Type is not `ST_VOLUME_DIRECTORY` or `ST_LINKED_DIRECTORY`
 .proc ValidateStorageType
-     IF A >= #ST_TREE_FILE+1    ; only seedling/sapling/tree supported
+    IF A >= #ST_TREE_FILE+1     ; only seedling/sapling/tree supported
         ;; Unsupported type - show error, and either abort or return failure
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#aux::str_alert_unsupported_type
         jsr     SetCursorWatch  ; preserves A
@@ -9963,13 +9964,13 @@ eof:    RETURN  A=#$FF
 
 ;;; ============================================================
 
-;;; Input: Destination path in `path_buf4`
+;;; Input: Destination path in `operation_dst_path`
 ;;; Output: `dst_is_appleshare_flag` is set
 .proc SetDstIsAppleShareFlag
         CLEAR_BIT7_FLAG dst_is_appleshare_flag
 
         ;; Issue a `GET_FILE_INFO` on destination to set `DEVNUM`
-retry:  CALL    GetFileInfo, AX=#path_buf4
+retry:  CALL    GetFileInfo, AX=#operation_dst_path
     IF CS
         jsr     ShowErrorAlertDst
         jmp     retry
@@ -10221,7 +10222,7 @@ CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
         ;; Directory
 
         jsr     _CopyCreateFile
-        bcc     ok_dir ; leave dst path segment in place for recursion
+        bcc     ok_dir          ; leave dst path segment in place for recursion
         SET_BIT7_FLAG entry_err_flag
 
     END_IF
@@ -11247,7 +11248,7 @@ retry:  jsr     GetSrcFileInfo
 .endproc ; DecrementFileCount
 
 ;;; ============================================================
-;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`
+;;; Copy `operation_src_path` to `src_path_buf`, `operation_dst_path` to `dst_path_buf`
 ;;; and note last '/' in src.
 
 .proc CopyPathsFromBufsToSrcAndDst
@@ -11255,19 +11256,19 @@ retry:  jsr     GetSrcFileInfo
         sty     src_path_slash_index
         dey
 
-        ;; Copy `path_buf3` to `src_path_buf`
+        ;; Copy `operation_src_path` to `src_path_buf`
         ;; ... but record index of last '/'
     DO
         iny
-        lda     path_buf3,y
+        lda     operation_src_path,y
       IF A = #'/'
         sty     src_path_slash_index
       END_IF
         sta     src_path_buf,y
-    WHILE Y <> path_buf3
+    WHILE Y <> operation_src_path
 
-        ;; Copy `path_buf4` to `dst_path_buf`
-        TAIL_CALL CopyToDstPath, AX=#path_buf4
+        ;; Copy `operation_dst_path` to `dst_path_buf`
+        TAIL_CALL CopyToDstPath, AX=#operation_dst_path
 .endproc ; CopyPathsFromBufsToSrcAndDst
 
 src_path_slash_index:
@@ -11406,7 +11407,7 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 
 .proc CheckMoveOrCopy
         src_ptr := $08
-        dst_buf := path_buf4
+        dst_buf := operation_dst_path
 
         stax    src_ptr
 
@@ -11441,7 +11442,7 @@ check:  cpy     #SELF_MODIFIED_BYTE
       IF GE
         cpy     dst_buf         ; dst also done?
         bcs     match
-        lda     path_buf4+1,y   ; is next char in dst a slash?
+        lda     operation_dst_path+1,y ; is next char in dst a slash?
         bne     check_slash     ; always
       END_IF
 
@@ -11520,7 +11521,7 @@ retry:  CALL    GetFileInfo, AX=src_ptr
 ;;; ============================================================
 ;;; Show Alert Dialog
 ;;; A=error. If `ERR_VOL_NOT_FOUND` or `ERR_FILE_NOT_FOUND`, will show
-;;; "please insert the disk: ..." using `path_buf3` (or `path_buf4` if
+;;; "please insert the disk: ..." using `operation_src_path` (or `operation_dst_path` if
 ;;; destination) to supply the disk name.
 
 .proc ShowErrorAlertImpl
@@ -11534,10 +11535,10 @@ retry:  CALL    GetFileInfo, AX=src_ptr
     END_IF
 
         ;; if err is "not found" prompt specifically for src/dst disk
-        ldax    #path_buf3
+        ldax    #operation_src_path
         bit     dst_flag
     IF NS
-        ldax    #path_buf4
+        ldax    #operation_dst_path
     END_IF
         jsr     GetVolumeName   ; populates `filename_buf`
         push16  #filename_buf
@@ -11630,12 +11631,12 @@ loop:
         ;; --------------------------------------------------
         ;; Get the file / volume info from ProDOS
 
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
     IF NE
         jsr     ShowAlert
         jmp     next
     END_IF
-        CALL    CopyToSrcPath, AX=#path_buf3
+        CALL    CopyToSrcPath, AX=#operation_src_path
 
         ;; Try to get file/volume info
 common: jsr     GetSrcFileInfo
@@ -11691,7 +11692,7 @@ common: jsr     GetSrcFileInfo
 next:   inc     icon_index
         jmp     loop
 
-done:   copy8   #0, path_buf4
+done:   copy8   #0, operation_dst_path
         RETURN  A=result_flag
 
 result_flag:                    ; bit7
@@ -12017,12 +12018,12 @@ start:
         stax    rename_dialog_params::a_path
 
         ;; Original path
-        CALL    GetIconPath, A=selected_icon_list ; `path_buf3` set to path; A=0 on success
+        CALL    GetIconPath, A=selected_icon_list ; `operation_src_path` set to path; A=0 on success
     IF NE
         jsr     ShowAlert
         RETURN  A=result_flags
     END_IF
-        CALL    CopyToSrcPath, AX=#path_buf3
+        CALL    CopyToSrcPath, AX=#operation_src_path
 
         ;; Copy original name for display/default
         CALL    GetIconName, A=selected_icon_list
@@ -12420,12 +12421,12 @@ ignore:
 ;;; ============================================================
 ;;; Concatenate paths.
 ;;; Inputs: Base path in $08, second path in $06
-;;; Output: `path_buf3`
+;;; Output: `operation_src_path`
 
 .proc JoinPaths
         str1 := $8
         str2 := $6
-        buf  := path_buf3
+        buf  := operation_src_path
 
         ldx     #0
 
@@ -14019,11 +14020,11 @@ plural: RETURN  C=0
 
 ;;; Input: A,X = string to copy
 ;;; Trashes: $06
-.proc CopyToBuf4
+.proc CopyToOperationDstPath
         ptr1 := $06
         stax    ptr1
-        TAIL_CALL CopyPtr1ToBuf, AX=#path_buf4
-.endproc ; CopyToBuf4
+        TAIL_CALL CopyPtr1ToBuf, AX=#operation_dst_path
+.endproc ; CopyToOperationDstPath
 
 ;;; ============================================================
 
@@ -14684,9 +14685,9 @@ case_bits:      .word   0
 clipboard:
         .res    16, 0
 
-path_buf4:
+operation_dst_path:
         .res    ::kPathBufferSize, 0
-path_buf3:
+operation_src_path:
         .res    ::kPathBufferSize, 0
 filename_buf:
         .res    16, 0
