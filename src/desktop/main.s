@@ -134,6 +134,8 @@ counter:
 ;;; (e.g. a window close followed by a nested loop or slow
 ;;; file operation).
 
+        PROC_USED_IN_OVERLAY
+
 .proc ClearUpdates
     DO
         jsr     PeekEvent
@@ -848,9 +850,9 @@ prev_selected_icon:
         bit     operations::move_flags
     IF NS
         ;; Update source vol's contents
-        jsr     MaybeStashDropTargetName ; in case target is in window...
+        jsr     _MaybeStashDropTargetName ; in case target is in window...
         jsr     UpdateActivateAndRefreshSelectedWindow
-        jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
+        jsr     _MaybeUpdateDropTargetFromName ; ...restore after update.
     END_IF
 
         ;; --------------------------------------------------
@@ -882,6 +884,53 @@ prev_selected_icon:
         jmp     UpdateActivateAndRefreshWindow
 .endproc ; _PerformPostDropUpdates
 
+;;; --------------------------------------------------
+;;; Save/Restore drop target icon ID in case the window was rebuilt.
+
+;;; Inputs: `drag_drop_params::target`
+;;; Assert: If target is a file icon, icon is in active window.
+;;; Trashes $06
+.proc _MaybeStashDropTargetName
+        ;; Flag as not stashed
+        copy8   #0, stashed_name
+
+        ;; Is the target an icon?
+        lda     drag_drop_params::target
+    IF NC                       ; high bit clear = icon
+        ;; Is the target in a window?
+        jsr     GetIconWindow
+      IF NOT_ZERO
+        ;; Stash name
+        ptr1 := $06
+        CALL    GetIconName, A=drag_drop_params::target
+        stax    ptr1
+        CALL    CopyPtr1ToBuf, AX=#stashed_name
+      END_IF
+    END_IF
+        rts
+.endproc ; _MaybeStashDropTargetName
+
+;;; --------------------------------------------------
+;;; Outputs: `drag_drop_params::target` updated if needed
+;;; Assert: `_MaybeStashDropTargetName` was previously called
+;;; Trashes $06
+
+.proc _MaybeUpdateDropTargetFromName
+        ;; Did we previously stash an icon's name?
+        lda     stashed_name
+    IF NOT_ZERO
+        ;; Try to find the icon by name.
+        ldy     active_window_id
+        CALL    FindIconByName, AX=#stashed_name
+      IF NOT_ZERO
+        ;; Update drop target with new icon id.
+        sta     drag_drop_params::target
+      END_IF
+    END_IF
+        rts
+.endproc ; _MaybeUpdateDropTargetFromName
+
+;;; --------------------------------------------------
 
 .proc _ActivateClickedWindow
         window_id := *+1
@@ -2824,51 +2873,6 @@ CmdNewFolder    := CmdNewFolderImpl::start
     WHILE NOT_ZERO              ; always
 
 .endproc ; FindIconByNameInCachedWindow
-
-;;; ============================================================
-;;; Save/Restore drop target icon ID in case the window was rebuilt.
-
-;;; Inputs: `drag_drop_params::target`
-;;; Assert: If target is a file icon, icon is in active window.
-;;; Trashes $06
-.proc MaybeStashDropTargetName
-        ;; Flag as not stashed
-        copy8   #0, stashed_name
-
-        ;; Is the target an icon?
-        lda     drag_drop_params::target
-    IF NC                       ; high bit clear = icon
-        ;; Is the target in a window?
-        jsr     GetIconWindow
-      IF NOT_ZERO
-        ;; Stash name
-        ptr1 := $06
-        CALL    GetIconName, A=drag_drop_params::target
-        stax    ptr1
-        CALL    CopyPtr1ToBuf, AX=#stashed_name
-      END_IF
-    END_IF
-        rts
-.endproc ; MaybeStashDropTargetName
-
-;;; Outputs: `drag_drop_params::target` updated if needed
-;;; Assert: `MaybeStashDropTargetName` was previously called
-;;; Trashes $06
-
-.proc MaybeUpdateDropTargetFromName
-        ;; Did we previously stash an icon's name?
-        lda     stashed_name
-    IF NOT_ZERO
-        ;; Try to find the icon by name.
-        ldy     active_window_id
-        CALL    FindIconByName, AX=#stashed_name
-      IF NOT_ZERO
-        ;; Update drop target with new icon id.
-        sta     drag_drop_params::target
-      END_IF
-    END_IF
-        rts
-.endproc ; MaybeUpdateDropTargetFromName
 
 ;;; ============================================================
 ;;; Take the name in `stashed_name` and "increment it":
