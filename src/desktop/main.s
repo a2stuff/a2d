@@ -197,7 +197,7 @@ tick_counter:
 ;;; Inputs: A = `window_id` from `update` event
 .proc UpdateWindow
         sta     getwinport_params::window_id
-        jsr     LoadWindowEntryTable
+        jsr     CacheWindowIconList
 
         ;; `AdjustUpdatePortForEntries` relies on `window_grafport`
         ;; for dimensions
@@ -910,7 +910,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 
         ;; Repaint the contents
         jsr     UpdateWindowUsedFreeDisplayValues
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
         FALL_THROUGH_TO DrawCachedWindowHeaderAndEntries
 .endproc ; ActivateWindow
 
@@ -2774,13 +2774,13 @@ CmdNewFolder    := CmdNewFolderImpl::start
         pha                     ; A = previous `cached_window_id`
 
         tya
-        jsr     LoadWindowEntryTable
+        jsr     CacheWindowIconList
 
         jsr     FindIconByNameInCachedWindow
         sta     icon
 
         pla                     ; A = previous `cached_window_id`
-        jsr     LoadWindowEntryTable
+        jsr     CacheWindowIconList
         jsr     PopPointers
 
         icon := *+1
@@ -2801,13 +2801,13 @@ CmdNewFolder    := CmdNewFolderImpl::start
     DO
         index := *+1
         ldx     #SELF_MODIFIED_BYTE
-      IF X = cached_window_entry_count
+      IF X = cached_window_icon_count
         ;; Not found
         RETURN  A=#0
       END_IF
 
         ;; Compare with name from dialog
-        lda     cached_window_entry_list,x
+        lda     cached_window_icon_list,x
       IF A <> trash_icon_num
 
         jsr     GetIconName
@@ -2816,7 +2816,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
        IF EQ
         ;; Match!
         ldx     index
-        RETURN  A=cached_window_entry_list,x
+        RETURN  A=cached_window_icon_list,x
        END_IF
       END_IF
 
@@ -2957,7 +2957,7 @@ concatenate:
 
 .proc ScrollIconIntoView
         sta     icon_param
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
 
         ;; Grab the icon bounds
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
@@ -3220,7 +3220,7 @@ entry2:
         jsr     _PreserveSelection
 
         ;; Destroy existing icons
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
         jsr     RemoveAndFreeCachedWindowIcons
 
 ;;; Entry point when refreshing window contents
@@ -3237,8 +3237,8 @@ entry3:
         jsr     ResetActiveWindowViewport ; Must precede icon creation
 
         ;; Create the icons
-        jsr     LoadActiveWindowEntryTable
-        jsr     InitWindowEntriesAndIcons
+        jsr     CacheActiveWindowIconList
+        jsr     InitWindowIcons
         jsr     AdjustViewportForNewIcons
 
         jsr     _RestoreSelection
@@ -3285,13 +3285,13 @@ entry3:
 
         ;; Build mapping of record number to icon
         mapping := $800
-        ldx     cached_window_entry_count
+        ldx     cached_window_icon_count
         dex
       DO
         txa                     ; X = index
         pha
 
-        lda     cached_window_entry_list-1,x
+        lda     cached_window_icon_list-1,x
         pha                     ; A = icon id
         jsr     GetIconRecordNum
         tay                     ; Y = record num
@@ -3349,18 +3349,18 @@ RefreshView := RefreshViewImpl::entry3
 .proc RemoveAndFreeCachedWindowIcons
         lda     icon_count
         sec
-        sbc     cached_window_entry_count
+        sbc     cached_window_icon_count
         sta     icon_count
 
         ITK_CALL IconTK::FreeAll, cached_window_id
 
         ;; Remove any associations with windows
-        ldx     cached_window_entry_count
+        ldx     cached_window_icon_count
     IF NOT_ZERO
       DO
         txa                     ; X = index+1
         pha                     ; A = index+1
-        CALL    FindWindowIndexForDirIcon, A=cached_window_entry_list-1,x ; X = window id-1 if found
+        CALL    FindWindowIndexForDirIcon, A=cached_window_icon_list-1,x ; X = window id-1 if found
        IF EQ
         copy8   #kWindowToDirIconNone, window_to_dir_icon_table,x
        END_IF
@@ -3726,7 +3726,7 @@ END_PARAM_BLOCK
         ENTRY_POINTS_FOR_A left, kDirLeft, right, kDirRight, up, kDirUp, down, kDirDown
         sta     dir
 
-        jsr     LoadFocusedWindowEntryTable
+        jsr     CacheFocusedWindowIconList
 
 ;;; --------------------------------------------------
 ;;; If a list view, use index-based logic
@@ -3745,7 +3745,7 @@ END_PARAM_BLOCK
 
         lda     selected_icon_count
         jeq     fallback
-        cmp     cached_window_entry_count
+        cmp     cached_window_icon_count
         jeq     fallback
 
         copy8   selected_icon_list, icon_param ; use first
@@ -3789,9 +3789,9 @@ END_PARAM_BLOCK
 
     DO
         ldx     index
-        BREAK_IF X = cached_window_entry_count
+        BREAK_IF X = cached_window_icon_count
 
-        lda     cached_window_entry_list,x
+        lda     cached_window_icon_list,x
         sta     cur_icon
         sta     icon_param
         jsr     IsIconSelected
@@ -3846,7 +3846,7 @@ compare_order:  .byte   $80, $00, $80, $00
 
 fallback:
         ;; Assert: `cached_window_id` = `active_window_id`
-        ldy     cached_window_entry_count
+        ldy     cached_window_icon_count
         beq     ret
 
         ;; Default to first (X) / last (Y) icon
@@ -3857,14 +3857,14 @@ fallback:
         ;; ...except on desktop, since first is Trash.
         tay                     ; make last (Y) be Trash (0)
         inx                     ; and first (X) be 1st volume icon
-      IF X = cached_window_entry_count ; unless there isn't one
+      IF X = cached_window_icon_count ; unless there isn't one
         dex
       END_IF
     END_IF
         ror     dir             ; C = 1 if right/down
-        lda     cached_window_entry_list,x
+        lda     cached_window_icon_list,x
     IF CC
-        lda     cached_window_entry_list,y
+        lda     cached_window_icon_list,y
     END_IF
 
 select:
@@ -3997,16 +3997,16 @@ typedown_buf:
 ;;; has been clicked. Also clears selection if it isn't in
 ;;; that window.
 
-.proc LoadFocusedWindowEntryTable
+.proc CacheFocusedWindowIconList
         lda     focused_window_id
     IF A <> selected_window_id
         pha
         jsr     ClearSelection
         pla
     END_IF
-        jmp     LoadWindowEntryTable
+        jmp     CacheWindowIconList
 
-.endproc ; LoadFocusedWindowEntryTable
+.endproc ; CacheFocusedWindowIconList
 
 ;;; ============================================================
 ;;; Build list of keyboard-selectable icons.
@@ -4016,12 +4016,12 @@ typedown_buf:
 .proc GetKeyboardSelectableIcons
         buffer := $1800
 
-        jsr     LoadFocusedWindowEntryTable
+        jsr     CacheFocusedWindowIconList
 
         ldx     #0
     DO
-        BREAK_IF X = cached_window_entry_count
-        copy8   cached_window_entry_list,x, buffer+1,x
+        BREAK_IF X = cached_window_icon_count
+        copy8   cached_window_icon_list,x, buffer+1,x
         inx
     WHILE NOT_ZERO              ; always
 
@@ -4155,18 +4155,18 @@ ret:    rts
 .proc CmdSelectAll
         jsr     ClearSelection
 
-        jsr     LoadFocusedWindowEntryTable
-        lda     cached_window_entry_count
+        jsr     CacheFocusedWindowIconList
+        lda     cached_window_icon_count
         beq     finish          ; nothing to select!
 
-        ldx     cached_window_entry_count
+        ldx     cached_window_icon_count
         dex
     DO
-        copy8   cached_window_entry_list,x, selected_icon_list,x
+        copy8   cached_window_icon_list,x, selected_icon_list,x
         dex
     WHILE POS
 
-        copy8   cached_window_entry_count, selected_icon_count
+        copy8   cached_window_icon_count, selected_icon_count
         copy8   cached_window_id, selected_window_id
 
         ;; --------------------------------------------------
@@ -4317,7 +4317,7 @@ dimensions := width
 ;;; * `old` - initial top/left of viewport (to detect changes)
 
 _Preamble:
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
 
         jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
     IF NC
@@ -4344,7 +4344,7 @@ _Preamble:
         dex
     WHILE POS
 
-        lda     cached_window_entry_count
+        lda     cached_window_icon_count
     IF ZERO
         ;; If no icons in window, the viewport is fine.
         COPY_STRUCT MGTK::Rect, viewport, ubox
@@ -4800,7 +4800,7 @@ close_loop:
 
         jsr     ClearSelection
 
-        jsr     LoadDesktopEntryTable
+        jsr     CacheDesktopIconList
         ldy     devlst_index
         copy8   device_to_icon_map,y, icon_param
     IF NOT_ZERO
@@ -4809,7 +4809,7 @@ close_loop:
         CALL    FreeDesktopIconPosition, A=icon_param
         ITK_CALL IconTK::EraseIcon, icon_param
         ITK_CALL IconTK::FreeIcon, icon_param
-        jsr     StoreWindowEntryTable
+        jsr     StoreCachedWindowIconList
     END_IF
 
         ;; --------------------------------------------------
@@ -4820,10 +4820,10 @@ close_loop:
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
         jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
     IF ZERO
-        ldx     cached_window_entry_count
-        copy8   cached_window_entry_list-1,x, icon_param
+        ldx     cached_window_icon_count
+        copy8   cached_window_icon_list-1,x, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
-        jmp     StoreWindowEntryTable
+        jmp     StoreCachedWindowIconList
     END_IF
 
         ;; --------------------------------------------------
@@ -5229,7 +5229,7 @@ exception_flag:
         jsr     RemoveWindowFileRecords
 
         ;; Remove old icons
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
         jsr     RemoveAndFreeCachedWindowIcons
         jsr     ClearActiveWindowEntryCount
 
@@ -5247,7 +5247,7 @@ exception_flag:
         jsr     UpdateWindowUsedFreeDisplayValues
         pla                     ; A = obscured?
     IF ZERO                     ; skip if obscured
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
         jsr     DrawWindowHeader
     END_IF
 
@@ -5270,7 +5270,7 @@ last_pos        .tag    MGTK::Point
 END_PARAM_BLOCK
 
         sta     window_id
-        jsr     LoadWindowEntryTable
+        jsr     CacheWindowIconList
 
         lda     window_id
     IF NOT_ZERO
@@ -5338,7 +5338,7 @@ event_loop:
         ;; Process all icons in window
         ldx     #0              ; X = index
       DO
-       IF X = cached_window_entry_count
+       IF X = cached_window_icon_count
         jmp     CachedIconsWindowToScreen
        END_IF
 
@@ -5346,7 +5346,7 @@ event_loop:
         pha                     ; A = index
 
         ;; Check if icon should be selected
-        copy8   cached_window_entry_list,x, icon_param
+        copy8   cached_window_icon_list,x, icon_param
         ITK_CALL IconTK::IconInRect, icon_param
        IF NOT ZERO
 
@@ -5456,7 +5456,7 @@ beyond:
 .proc DoWindowDrag
         copy8   active_window_id, dragwindow_params::window_id
 
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
         jsr     CachedIconsScreenToWindow
 
         MGTK_CALL MGTK::DragWindow, dragwindow_params
@@ -5504,14 +5504,14 @@ beyond:
 
 ;;; Inputs: A = window_id
 .proc CloseSpecifiedWindow
-        jsr     LoadWindowEntryTable
+        jsr     CacheWindowIconList
 
         jsr     ClearSelection
 
         jsr     RemoveAndFreeCachedWindowIcons
 
         dec     num_open_windows
-        jsr     ClearAndStoreCachedWindowEntryTable
+        jsr     ClearAndStoreCachedWindowIconList
 
         MGTK_CALL MGTK::CloseWindow, cached_window_id
 
@@ -5759,7 +5759,7 @@ no_win:
         inx                     ; 0-based to 1-based
 
         txa
-        jsr     LoadWindowEntryTable ; sets `cached_window_id`
+        jsr     CacheWindowIconList ; sets `cached_window_id`
 
         inc     num_open_windows
 
@@ -5961,7 +5961,7 @@ no_win:
       WHILE POS
     END_IF
 
-        jsr     InitWindowEntriesAndIcons
+        jsr     InitWindowIcons
 
         bit     copy_new_window_bounds_flag
     IF NC
@@ -6146,11 +6146,11 @@ err:    RETURN  C=1
 
         ;; Draw each list view row
         ldx     #0              ; X = index
-rloop:  cpx     cached_window_entry_count
+rloop:  cpx     cached_window_icon_count
         beq     done
         txa                     ; A = index
         pha
-        lda     cached_window_entry_list,x
+        lda     cached_window_icon_list,x
 
         ;; Look up file record number
         jsr     GetIconRecordNum
@@ -6227,7 +6227,7 @@ done:
         RTS_IF NOT_ZERO         ; obscured
 
         jsr     PushPointers
-        jsr     LoadActiveWindowEntryTable
+        jsr     CacheActiveWindowIconList
         jsr     CachedIconsScreenToWindow
 
         COPY_STRUCT MGTK::Rect, window_grafport+MGTK::GrafPort::maprect, tmp_rect
@@ -6936,7 +6936,7 @@ copy_new_window_bounds_flag:
         ;; --------------------------------------------------
         ;; Width
 
-        lda     cached_window_entry_count
+        lda     cached_window_icon_count
         beq     use_minw        ; `iconbb_rect` is bogus if there are no icons
 
         ;; Check if width is < min or > max
@@ -6965,7 +6965,7 @@ assign_width:
         ;; --------------------------------------------------
         ;; Height
 
-        lda     cached_window_entry_count
+        lda     cached_window_icon_count
         beq     use_minh        ; `iconbb_rect` is bogus if there are no icons
 
         ;; Check if height is < min or > max
@@ -7004,7 +7004,7 @@ assign_height:
 ;;; Inputs: `cached_window_id` is accurate
 .proc AdjustViewportForNewIcons
         ;; No-op if window is empty
-        lda     cached_window_entry_count
+        lda     cached_window_icon_count
     IF NOT_ZERO
         ;; Screen space
         jsr     ComputeIconsBBox
@@ -7323,7 +7323,7 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
 ;;; Outputs: `iconbb_rect` updated (unless cached window is empty)
 .proc ComputeIconsBBox
 
-        lda     cached_window_entry_count
+        lda     cached_window_icon_count
         RTS_IF ZERO
 
         copy8   cached_window_id, get_iconbb::window_id
@@ -7343,18 +7343,14 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
 .endproc ; ComputeIconsBBox
 
 ;;; ============================================================
-;;; Prepares a window's set of entries - before icon creation
-;;; (or in views without icons) these are `FileRecord` indexes.
-;;; In list views these are subsequently sorted. When icons are
-;;; created, this order is used but the list is re-populated
-;;; with icon numbers.
+;;; Prepares a window's icons from its `FileRecord`s.
 ;;;
 ;;; Inputs: `cached_window_id` is set
-;;; Outputs: Populates `cached_window_entry_count` with count and
-;;;          `cached_window_entry_list` with indexes 1...N
+;;; Outputs: Populates `cached_window_icon_count` with count and
+;;;          `cached_window_icon_list` with indexes 1...N
 ;;; Assert: LCBANK1 is active
 
-.proc InitWindowEntriesAndIcons
+.proc InitWindowIcons
         ;; --------------------------------------------------
         ;; Create generic entries for window
 
@@ -7364,14 +7360,14 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
         CALL    GetFileRecordCountForWindow, A=cached_window_id
 
         ;; Store the count
-        sta     cached_window_entry_count
+        sta     cached_window_icon_count
 
         ;; Init the entries, monotonically increasing
         tax
     IF NOT_ZERO
       DO
         txa
-        sta     cached_window_entry_list-1,x ; entries are 1-based
+        sta     cached_window_icon_list-1,x ; entries are 1-based
         dex
       WHILE NOT_ZERO
     END_IF
@@ -7390,7 +7386,7 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
         ;; Create icons
 
         jsr     _CreateIconsForWindow
-        jmp     StoreWindowEntryTable
+        jmp     StoreCachedWindowIconList
 
 ;;; ------------------------------------------------------------
 ;;; File Icon Entry Construction
@@ -7447,17 +7443,17 @@ END_PARAM_BLOCK
         lda     #0
         sta     icons_this_row
 
-        ;; Copy `cached_window_entry_list` to temp location
+        ;; Copy `cached_window_icon_list` to temp location
         record_order_list := $800
-        ldx     cached_window_entry_count
+        ldx     cached_window_icon_count
         stx     num_files
         dex
     DO
-        copy8   cached_window_entry_list,x, record_order_list,x
+        copy8   cached_window_icon_list,x, record_order_list,x
         dex
     WHILE POS
 
-        copy8   #0, cached_window_entry_count
+        copy8   #0, cached_window_icon_count
 
         ;; Get base pointer to records
         CALL    GetFileRecordListForWindow, A=cached_window_id
@@ -7531,9 +7527,9 @@ records_base_ptr:
         ITK_CALL IconTK::AllocIcon, get_icon_entry_params
         copy16  get_icon_entry_params::addr, icon_entry
         copy8   get_icon_entry_params::id, icon_num
-        ldx     cached_window_entry_count
-        inc     cached_window_entry_count
-        sta     cached_window_entry_list,x
+        ldx     cached_window_icon_count
+        inc     cached_window_icon_count
+        sta     cached_window_icon_list,x
 
         ;; Assign record number
         pla                     ; A = record_num
@@ -7709,7 +7705,7 @@ records_base_ptr:
 
 .endproc ; _CreateIconsForWindow
 
-.endproc ; InitWindowEntriesAndIcons
+.endproc ; InitWindowIcons
 
 ;;; ============================================================
 ;;; Fetch the entry count for a window; valid after `CreateFileRecordsForWindow`,
@@ -7736,10 +7732,10 @@ records_base_ptr:
 .endproc ; GetFileRecordCountForWindow
 
 ;;; ============================================================
-;;; Populates and sorts `cached_window_entry_list`.
-;;; Assumes `InitCachedWindowEntries` has been invoked
-;;; (`cached_window_entry_count` is valid, etc)
-;;; Inputs: A=DeskTopSettings::kViewBy* for `cached_window_id`
+;;; Populates and sorts `cached_window_icon_list` while that
+;;; list is temporarily a list of `FileRecords`, either during
+;;; window creation or refresh.
+;;; Inputs: A=`DeskTopSettings::kViewBy*` for `cached_window_id`
 
 .proc SortRecords
 
@@ -7749,7 +7745,7 @@ scratch_space   := $804         ; can be used by comparison funcs
 
         sta     _CompareFileRecords_sort_by
 
-        lda     cached_window_entry_count
+        lda     cached_window_icon_count
         RTS_IF A < #2           ; can't sort < 2 records
 
         sta     num_records
@@ -7776,19 +7772,19 @@ scratch_space   := $804         ; can be used by comparison funcs
 .endproc ; _CompareProc
 
 .proc _SwapProc
-        swap8   cached_window_entry_list,x, cached_window_entry_list,y
+        swap8   cached_window_icon_list,x, cached_window_icon_list,y
         rts
 .endproc ; _SwapProc
 
 ;;; --------------------------------------------------
 ;;; Input: A = index in list being sorted
 ;;; Output: A,X = pointer to FileRecord
-;;; Assert: LCBANK1 banked in so `cached_window_entry_list` is visible
+;;; Assert: LCBANK1 banked in so `cached_window_icon_list` is visible
 
 .proc _CalcPtr
         ;; Map from sorting list index to FileRecord index
         tax
-        ldy     cached_window_entry_list,x
+        ldy     cached_window_icon_list,x
         dey                     ; 1-based to 0-based
         tya
 
@@ -8836,9 +8832,9 @@ error:
         lda     get_icon_entry_params::id
         ldy     devlst_index
         sta     device_to_icon_map,y
-        inc     cached_window_entry_count
-        ldx     cached_window_entry_count
-        sta     cached_window_entry_list-1,x
+        inc     cached_window_icon_count
+        ldx     cached_window_icon_count
+        sta     cached_window_icon_list-1,x
 
         ;; Copy name
         copy16  get_icon_entry_params::addr, icon_ptr
@@ -8962,21 +8958,21 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
 ;;; ============================================================
 
 .proc RemoveIconFromWindow
-        ldx     cached_window_entry_count
+        ldx     cached_window_icon_count
         dex
     DO
-        cmp     cached_window_entry_list,x
+        cmp     cached_window_icon_list,x
         beq     remove
         dex
     WHILE POS
         rts
 
 remove:
-        copy8   cached_window_entry_list+1,x, cached_window_entry_list,x
+        copy8   cached_window_icon_list+1,x, cached_window_icon_list,x
         inx
-        cpx     cached_window_entry_count
+        cpx     cached_window_icon_count
         bne     remove
-        dec     cached_window_entry_count
+        dec     cached_window_icon_count
         rts
 .endproc ; RemoveIconFromWindow
 
@@ -14270,46 +14266,46 @@ ret:    rts
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 ;;; Input: A = window_id (0=desktop)
-.proc LoadWindowEntryTable
+.proc CacheWindowIconList
         sta     cached_window_id
 
         ;; Load count & entries
         tax
-        copy8   window_entry_count_table,x, cached_window_entry_count
+        copy8   window_entry_count_table,x, cached_window_icon_count
     IF NOT_ZERO
         lda     window_entry_offset_table,x
         tax                     ; X = offset in table
         ldy     #0              ; Y = index in win
       DO
-        copy8   window_entry_table,x, cached_window_entry_list,y
+        copy8   window_entry_table,x, cached_window_icon_list,y
         inx
         iny
-        cpy     cached_window_entry_count
+        cpy     cached_window_icon_count
       WHILE NE
     END_IF
 
         rts
-.endproc ; LoadWindowEntryTable
+.endproc ; CacheWindowIconList
 
 .proc ClearActiveWindowEntryCount
-        jsr     LoadActiveWindowEntryTable
-        FALL_THROUGH_TO ClearAndStoreCachedWindowEntryTable
+        jsr     CacheActiveWindowIconList
+        FALL_THROUGH_TO ClearAndStoreCachedWindowIconList
 .endproc ; ClearActiveWindowEntryCount
 
-.proc ClearAndStoreCachedWindowEntryTable
-        copy8   #0, cached_window_entry_count
-        FALL_THROUGH_TO StoreWindowEntryTable
-.endproc ; ClearAndStoreCachedWindowEntryTable
+.proc ClearAndStoreCachedWindowIconList
+        copy8   #0, cached_window_icon_count
+        FALL_THROUGH_TO StoreCachedWindowIconList
+.endproc ; ClearAndStoreCachedWindowIconList
 
 ;;; Assert: `cached_window_id` and `icon_count` is up-to-date
-.proc StoreWindowEntryTable
+.proc StoreCachedWindowIconList
         lda     cached_window_id
         cmp     #kMaxDeskTopWindows ; last window?
         beq     done_shift       ; yes, no need to shift
 
         ;; Compute delta to shift up (or down)
         tax                     ; X = window_id
-        lda     cached_window_entry_count
+        lda     cached_window_icon_count
         sec
         sbc     window_entry_count_table,x ; A = amount to shift up (may be <0)
         beq     done_shift
@@ -14368,21 +14364,21 @@ done_shift:
 
         ;; Store count & entries
         ldx     cached_window_id
-        copy8   cached_window_entry_count, window_entry_count_table,x
+        copy8   cached_window_icon_count, window_entry_count_table,x
     IF NOT_ZERO
         lda     window_entry_offset_table,x
         tax                     ; X = offset in table
         ldy     #0              ; Y = index in win
       DO
-        copy8   cached_window_entry_list,y, window_entry_table,x
+        copy8   cached_window_icon_list,y, window_entry_table,x
         inx
         iny
-        cpy     cached_window_entry_count
+        cpy     cached_window_icon_count
       WHILE NE
     END_IF
 
         rts
-.endproc ; StoreWindowEntryTable
+.endproc ; StoreCachedWindowIconList
 
 window_entry_count_table:       .res    ::kMaxDeskTopWindows+1, 0
 window_entry_offset_table:      .res    ::kMaxDeskTopWindows+1, 0
@@ -14392,13 +14388,13 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 ;;; 41ebde49 for another attempt, but that introduces other issues.
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
-.proc LoadActiveWindowEntryTable
-        TAIL_CALL LoadWindowEntryTable, A=active_window_id
-.endproc ; LoadActiveWindowEntryTable
+.proc CacheActiveWindowIconList
+        TAIL_CALL CacheWindowIconList, A=active_window_id
+.endproc ; CacheActiveWindowIconList
 
-.proc LoadDesktopEntryTable
-        TAIL_CALL LoadWindowEntryTable, A=#0
-.endproc ; LoadDesktopEntryTable
+.proc CacheDesktopIconList
+        TAIL_CALL CacheWindowIconList, A=#0
+.endproc ; CacheDesktopIconList
 
 ;;; ============================================================
 

@@ -581,9 +581,9 @@ icon_count:
         ;; (see `window_entry_count_table`, `window_entry_list_table`)
 cached_window_id: .byte   0
         ;; number of entries in copied window
-cached_window_entry_count:.byte   0
+cached_window_icon_count:.byte   0
         ;; list of entries (icons or file entry numbers) in copied window
-cached_window_entry_list:   .res    kMaxIconCount, 0
+cached_window_icon_list:   .res    kMaxIconCount, 0
 
 ;;; Index of window with selection (0=desktop)
 selected_window_id:

@@ -297,12 +297,12 @@ done:
 
         copy8   #0, cached_window_id
         lda     #1
-        sta     cached_window_entry_count
+        sta     cached_window_icon_count
         sta     icon_count
         ITK_CALL IconTK::AllocIcon, get_icon_entry_params
         lda     get_icon_entry_params::id
         sta     main::trash_icon_num
-        sta     cached_window_entry_list
+        sta     cached_window_icon_list
         sta     icon_param
         ldax    get_icon_entry_params::addr
         stax    ptr
@@ -662,8 +662,8 @@ end:
       END_IF
 
 done_create:
-        ldx     cached_window_entry_count
-        copy8   cached_window_entry_list-1,x, icon_param
+        ldx     cached_window_icon_count
+        copy8   cached_window_icon_list-1,x, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
 
 next:
@@ -672,7 +672,7 @@ next:
     WHILE POS
 
         copy8   #0, cached_window_id
-        jsr     main::StoreWindowEntryTable
+        jsr     main::StoreCachedWindowIconList
 
         jmp     end_of_scope
 
@@ -1066,7 +1066,7 @@ next:   jsr     PopPointers
         add16_8 data_ptr, #.sizeof(DeskTopFileItem)
         jmp     loop
 
-exit:   jmp     main::LoadDesktopEntryTable
+exit:   jmp     main::CacheDesktopIconList
 
 .proc _MaybeOpenWindow
         ;; Save stack for restore on error. If the call
