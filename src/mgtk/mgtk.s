@@ -4264,24 +4264,18 @@ set_divmod:
         eor     #1
 
         sta     switch_sta1
-        sta     switch_sta3
         sta     restore_switch_sta1
-        sta     restore_switch_sta3
         eor     #1
         sta     switch_sta2
         sta     restore_switch_sta2
 
-        ldx     #OPC_INY
-        ldy     #OPC_NOP
+        ldx     #OPC_NOP
         and     #1
     IF ZERO
-        ldx     #OPC_NOP
-        ldy     #OPC_INY
+        ldx     #OPC_DEY
     END_IF
         stx     switch_iny1
-        sty     switch_iny2
         stx     restore_switch_iny1
-        sty     restore_switch_iny2
 
         ;; Stash calculations for later use in `RestoreCursorBackground`
         COPY_BYTES kCursorDrawDataSize, cursor_bytes, cursor_data
@@ -4354,10 +4348,19 @@ dloop:
         sta     (vid_ptr),y
         dex
     END_IF
-
+        iny
+        cpy     #40
+    IF_CC
+        lda     (vid_ptr),y
+        sta     cursor_savebits,x
+        ora     cursor_mask+2
+        eor     cursor_bits+2
+        sta     (vid_ptr),y
+        dex
+    END_IF
         ;; Second byte
         switch_iny1 := *
-        iny
+        dey
         switch_sta2 := *+1
         sta     $C0FF
         cpy     #40
@@ -4366,21 +4369,6 @@ dloop:
         sta     cursor_savebits,x
         ora     cursor_mask+1
         eor     cursor_bits+1
-        sta     (vid_ptr),y
-        dex
-    END_IF
-
-        ;; Third byte
-        switch_iny2 := *
-        iny
-        switch_sta3 := *+1
-        sta     $C0FF
-        cpy     #40
-    IF_CC
-        lda     (vid_ptr),y
-        sta     cursor_savebits,x
-        ora     cursor_mask+2
-        eor     cursor_bits+2
         sta     (vid_ptr),y
         dex
     END_IF
@@ -4432,23 +4420,18 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         sta     (vid_ptr),y
         dex
       END_IF
-
-        ;; Second byte
-        switch_iny1 := *
+        ;; Third byte on same page
         iny
-        switch_sta2 := *+1
-        sta     $C0FF
         cpy     #40
       IF CC
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
       END_IF
-
-        ;; Third byte
-        switch_iny2 := *
-        iny
-        switch_sta3 := *+1
+        ;; Second byte
+        switch_iny1 := *
+        dey
+        switch_sta2 := *+1
         sta     $C0FF
         cpy     #40
       IF CC
@@ -4466,9 +4449,7 @@ ret:    rts
 .endproc ; RestoreCursorBackground
 restore_switch_sta1 := RestoreCursorBackground::switch_sta1
 restore_switch_sta2 := RestoreCursorBackground::switch_sta2
-restore_switch_sta3 := RestoreCursorBackground::switch_sta3
 restore_switch_iny1 := RestoreCursorBackground::switch_iny1
-restore_switch_iny2 := RestoreCursorBackground::switch_iny2
 
 ;;; ============================================================
 ;;; ShowCursor
