@@ -4245,7 +4245,7 @@ set_divmod:
         eor     #1
         sta     cursor_softswitch      ; $C0xx softswitch index
 
-
+        ;; Set up loop invariants
         sta     switch_sta1
         sta     switch_sta3
         eor     #1
@@ -4369,7 +4369,7 @@ drnext:
         dec     left_bytes
         dey
         cpy     cursor_y1
-        beq     lowscr_rts
+        beq     drts
         jmp     dloop
 .endproc ; DrawCursor
 drts:   rts
@@ -4380,11 +4380,28 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
 
 .proc RestoreCursorBackground
         lda     cursor_count    ; already hidden?
-        bne     drts
+        bne     ret
         bit     cursor_flag
-        bmi     drts
+        bmi     ret
 
         COPY_BYTES 4, cursor_data, cursor_bytes
+
+        ;; Set up loop invariants
+        lda     cursor_softswitch
+        sta     switch_sta1
+        sta     switch_sta3
+        eor     #1
+        sta     switch_sta2
+        and     #1
+    IF ZERO
+        lda     #OPC_NOP
+        ldx     #OPC_INY
+    ELSE
+        lda     #OPC_INY
+        ldx     #OPC_NOP
+    END_IF
+        sta     switch_iny1
+        stx     switch_iny2
 
         ldx     #$23
         ldy     cursor_y2
@@ -4399,23 +4416,32 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         sty     cursor_y2
 
         ldy     cursor_bytes
-        lda     cursor_softswitch
 
-        jsr     SetSwitch
+        switch_sta1 := *+1
+        sta     $C0FF
+        cpy     #40
        IF CC
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
        END_IF
 
-        jsr     SwitchPage
+        switch_iny1 := *
+        iny
+        switch_sta2 := *+1
+        sta     $C0FF
+        cpy     #40
        IF CC
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
        END_IF
 
-        jsr     SwitchPage
+        switch_iny2 := *
+        iny
+        switch_sta3 := *+1
+        sta     $C0FF
+        cpy     #40
        IF CC
         lda     cursor_savebits,x
         sta     (vid_ptr),y
@@ -4427,31 +4453,9 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
 
         dey
     WHILE Y <> cursor_y1
-.endproc ; RestoreCursorBackground
-lowscr_rts:
         sta     LOWSCR
-        rts
-
-
-.proc SwitchPage
-        lda     set_switch_sta_addr
-        eor     #1
-        cmp     #<LOWSCR
-        beq     SetSwitch
-        iny
-        FALL_THROUGH_TO SetSwitch
-.endproc ; SwitchPage
-
-.proc SetSwitch
-        sta     switch_sta_addr
-switch_sta_addr := *+1
-        sta     $C0FF
-        cpy     #$28
-        rts
-.endproc ; SetSwitch
-
-set_switch_sta_addr := SetSwitch::switch_sta_addr
-
+ret:    rts
+.endproc ; RestoreCursorBackground
 
 ;;; ============================================================
 ;;; ShowCursor
@@ -4552,8 +4556,9 @@ mouse_moved:
         ;; Budget is 4550 (VBI)
 
         ;; The below is currently ~7635 cycles (2137 + 5446)
-        ;; First opt: 2149 + 5265
-        ;; Second opt: 2006 + 4457
+        ;; First opt: 2149 + 5265 = ~7414
+        ;; Second opt: 2006 + 4457 = ~6463
+        ;; Third opt: 1201 + 4454 = ~5655
 
         jsr     RestoreCursorBackground
         ldx     #2
