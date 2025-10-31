@@ -4261,17 +4261,16 @@ set_divmod:
         ;; Set up loop invariants (both for here and restore code)
         lda     #<LOWSCR/2
         rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
-        eor     #1
 
-        sta     switch_sta1
-        sta     restore_switch_sta1
-        eor     #1
         sta     switch_sta2
         sta     restore_switch_sta2
+        eor     #1
+        sta     switch_sta1
+        sta     restore_switch_sta1
 
         ldx     #OPC_NOP
         and     #1
-    IF ZERO
+    IF NOT_ZERO
         ldx     #OPC_DEY
     END_IF
         stx     switch_dey
