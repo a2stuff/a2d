@@ -4274,8 +4274,8 @@ set_divmod:
     IF ZERO
         ldx     #OPC_DEY
     END_IF
-        stx     switch_iny1
-        stx     restore_switch_iny1
+        stx     switch_dey
+        stx     restore_switch_dey
 
         ;; Stash calculations for later use in `RestoreCursorBackground`
         COPY_BYTES kCursorDrawDataSize, cursor_bytes, cursor_data
@@ -4348,6 +4348,8 @@ dloop:
         sta     (vid_ptr),y
         dex
     END_IF
+
+        ;; Third byte (on same page)
         iny
         cpy     #40
     IF CC
@@ -4358,8 +4360,9 @@ dloop:
         sta     (vid_ptr),y
         dex
     END_IF
+
         ;; Second byte
-        switch_iny1 := *
+        switch_dey := *
         dey
         switch_sta2 := *+1
         sta     $C0FF
@@ -4420,7 +4423,8 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         sta     (vid_ptr),y
         dex
       END_IF
-        ;; Third byte on same page
+
+        ;; Third byte (on same page)
         iny
         cpy     #40
       IF CC
@@ -4428,8 +4432,9 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         sta     (vid_ptr),y
         dex
       END_IF
+
         ;; Second byte
-        switch_iny1 := *
+        switch_dey := *
         dey
         switch_sta2 := *+1
         sta     $C0FF
@@ -4449,7 +4454,7 @@ ret:    rts
 .endproc ; RestoreCursorBackground
 restore_switch_sta1 := RestoreCursorBackground::switch_sta1
 restore_switch_sta2 := RestoreCursorBackground::switch_sta2
-restore_switch_iny1 := RestoreCursorBackground::switch_iny1
+restore_switch_dey := RestoreCursorBackground::switch_dey
 
 ;;; ============================================================
 ;;; ShowCursor
