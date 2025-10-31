@@ -4258,11 +4258,14 @@ set_divmod:
         eor     #1
         sta     cursor_softswitch      ; $C0xx softswitch index
 
-        ;; Set up loop invariants
+        ;; Set up loop invariants (both for here and restore code)
         sta     switch_sta1
         sta     switch_sta3
+        sta     restore_switch_sta1
+        sta     restore_switch_sta3
         eor     #1
         sta     switch_sta2
+        sta     restore_switch_sta2
         and     #1
     IF ZERO
         lda     #OPC_NOP
@@ -4273,6 +4276,8 @@ set_divmod:
     END_IF
         sta     switch_iny1
         stx     switch_iny2
+        sta     restore_switch_iny1
+        stx     restore_switch_iny2
 
         sty     cursor_mod7
         copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
@@ -4394,23 +4399,6 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         ;; Unstash calculations from `DrawCursor`
         COPY_BYTES 4, cursor_data, cursor_bytes
 
-        ;; Set up loop invariants
-        lda     cursor_softswitch
-        sta     switch_sta1
-        sta     switch_sta3
-        eor     #1
-        sta     switch_sta2
-        and     #1
-    IF ZERO
-        lda     #OPC_NOP
-        ldx     #OPC_INY
-    ELSE
-        lda     #OPC_INY
-        ldx     #OPC_NOP
-    END_IF
-        sta     switch_iny1
-        stx     switch_iny2
-
         ;; Iterate from bottom of cursor to the top
         ldx     #(MGTK::cursor_height * 3) - 1 ; max # of bytes
         ldy     cursor_y2
@@ -4463,6 +4451,11 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         sta     LOWSCR
 ret:    rts
 .endproc ; RestoreCursorBackground
+restore_switch_sta1 := RestoreCursorBackground::switch_sta1
+restore_switch_sta2 := RestoreCursorBackground::switch_sta2
+restore_switch_sta3 := RestoreCursorBackground::switch_sta3
+restore_switch_iny1 := RestoreCursorBackground::switch_iny1
+restore_switch_iny2 := RestoreCursorBackground::switch_iny2
 
 ;;; ============================================================
 ;;; ShowCursor
