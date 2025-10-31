@@ -4032,11 +4032,6 @@ cursor_hotspot_y:  .byte   $00
 cursor_mod7:
         .res    1
 
-cursor_bits:
-        .res    3
-cursor_mask:
-        .res    3
-
 cursor_savebits:
         .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
 
@@ -4221,8 +4216,10 @@ srts:   rts
         sta     cursor_y2
 
         ;; ZP locations
-        drawbits_index := left_bytes
-        savebits_index := left_mod14
+        drawbits_index  := $92
+        savebits_index  := $93
+        cursor_bits     := $94  ; 3 bytes
+        cursor_mask     := $97  ; 3 bytes
 
         ;; Compute bytes to draw
         sec
@@ -4566,6 +4563,7 @@ mouse_moved:
         ;; Second opt: 2006 + 4457 = ~6463
         ;; Third opt: 1201 + 4454 = ~5655
         ;; Fourth opt: 1019 + 4334 = ~5353
+        ;; Fifth opt: 4338 -> 4180
 
         jsr     RestoreCursorBackground
         ldx     #2
