@@ -4350,7 +4350,7 @@ dloop:
     END_IF
         iny
         cpy     #40
-    IF_CC
+    IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
         ora     cursor_mask+2
@@ -4787,7 +4787,7 @@ savesize        .word
         bit     ROMIN2          ; Bank ROM in unconditionally
 
         CALL    IDROUTINE, C=1
-      IF_CC
+      IF CC
         ;; IIgs!
         copy16  #vbl_iigs_proc, vbl_proc_addr
       END_IF
