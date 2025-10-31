@@ -4041,7 +4041,8 @@ cursor_savebits:
         .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
 
 cursor_data:
-        .res    4                               ; Saved values of cursor_char..cursor_y2.
+        kCursorDrawDataSize = 3
+        .res    kCursorDrawDataSize             ; Saved values of cursor_char..cursor_y2.
 
 pointer_cursor:
         PIXELS  ".............."
@@ -4188,11 +4189,10 @@ finish:
 .endproc ; SetCursorImpl
 srts:   rts
 
-        cursor_bytes      := $82 ; 4 bytes here hold state for draw/restore
+        cursor_bytes      := $82 ; `kCursorDrawDataSize` bytes here hold state for draw/restore
         cursor_col        := $82 ; column (0...39)
-        cursor_softswitch := $83 ; low byte of LOWSCR/HISCR for 1st cursor col
-        cursor_y1         := $84 ; top row of cursor - 1
-        cursor_y2         := $85 ; bottom row of cursor
+        cursor_y1         := $83 ; top row of cursor - 1
+        cursor_y2         := $84 ; bottom row of cursor
 
         vid_ptr           := $88
 
@@ -4225,7 +4225,7 @@ srts:   rts
         sbc     cursor_y1       ; number of lines
         asl                     ; *= 2
         sbc     #0              ; -1
-        sta     left_bytes
+        sta     left_bytes      ; index into `cursor_bits`/`cursor_mask`
 
         lda     cursor_pos::xcoord
         sec
@@ -4253,12 +4253,15 @@ set_divmod:
         sbc     #7
 :       tay
 
+        sty     cursor_mod7
+        copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
+        copylohi shift_table_aux_low,y, shift_table_aux_high,y, cursor_shift_aux_addr
+
+        ;; Set up loop invariants (both for here and restore code)
         lda     #<LOWSCR/2
         rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
         eor     #1
-        sta     cursor_softswitch      ; $C0xx softswitch index
 
-        ;; Set up loop invariants (both for here and restore code)
         sta     switch_sta1
         sta     switch_sta3
         sta     restore_switch_sta1
@@ -4266,28 +4269,24 @@ set_divmod:
         eor     #1
         sta     switch_sta2
         sta     restore_switch_sta2
+
+        ldx     #OPC_INY
+        ldy     #OPC_NOP
         and     #1
     IF ZERO
-        lda     #OPC_NOP
-        ldx     #OPC_INY
-    ELSE
-        lda     #OPC_INY
         ldx     #OPC_NOP
+        ldy     #OPC_INY
     END_IF
-        sta     switch_iny1
-        stx     switch_iny2
-        sta     restore_switch_iny1
-        stx     restore_switch_iny2
-
-        sty     cursor_mod7
-        copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
-        copylohi shift_table_aux_low,y, shift_table_aux_high,y, cursor_shift_aux_addr
+        stx     switch_iny1
+        sty     switch_iny2
+        stx     restore_switch_iny1
+        sty     restore_switch_iny2
 
         ;; Stash calculations for later use in `RestoreCursorBackground`
-        COPY_BYTES 4, cursor_bytes, cursor_data
+        COPY_BYTES kCursorDrawDataSize, cursor_bytes, cursor_data
 
         ;; Iterate from bottom of cursor to the top
-        ldx     #(MGTK::cursor_height * 3) - 1 ; max # of bytes
+        ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
 dloop:
         lda     hires_table_lo,y
@@ -4297,9 +4296,9 @@ dloop:
         sta     vid_ptr+1
 
         sty     cursor_y2
-        stx     left_mod14
+        stx     left_mod14      ; save X = index into `cursor_savebits`
 
-        ldy     left_bytes
+        ldy     left_bytes      ; index into `cursor_bits`/`cursor_mask`
         ldx     #1
     DO
 active_cursor           := * + 1
@@ -4334,7 +4333,7 @@ active_cursor_mask      := * + 1
         sta     cursor_bits
     END_IF
 
-        ldx     left_mod14
+        ldx     left_mod14      ; restore X = index into `cursor_savebits`
         ldy     cursor_col
 
         switch_sta1 := *+1
@@ -4397,10 +4396,10 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         bmi     ret
 
         ;; Unstash calculations from `DrawCursor`
-        COPY_BYTES 4, cursor_data, cursor_bytes
+        COPY_BYTES kCursorDrawDataSize, cursor_data, cursor_bytes
 
         ;; Iterate from bottom of cursor to the top
-        ldx     #(MGTK::cursor_height * 3) - 1 ; max # of bytes
+        ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
     DO
         lda     hires_table_lo,y
