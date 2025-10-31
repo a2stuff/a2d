@@ -4299,8 +4299,9 @@ dloop:
         sty     cursor_y2
         stx     savebits_index
 
+        ;; Look up the cursor bits/mask for this row, stash in `cursor_bits`/`cursor_mask`
         ldy     drawbits_index
-        ldx     #1
+        ldx     #MGTK::cursor_width - 1
     DO
         active_cursor := * + 1
         lda     $FFFF,y
@@ -4311,12 +4312,12 @@ dloop:
         dey
         dex
     WHILE POS
-
         sty     drawbits_index
-        lda     #0
+        lda     #0              ; third byte starts off empty
         sta     cursor_bits+2
         sta     cursor_mask+2
 
+        ;; If needed, expand `cursor_bits`/`cursor_mask` to 3 bytes
         ldy     cursor_mod7
     IF NOT ZERO
         ASSERT_EQUALS cursor_bits + 3, cursor_mask
