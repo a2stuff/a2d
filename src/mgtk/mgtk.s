@@ -4302,10 +4302,10 @@ dloop:
         ldy     drawbits_index
         ldx     #1
     DO
-active_cursor           := * + 1
+        active_cursor := * + 1
         lda     $FFFF,y
         sta     cursor_bits,x
-active_cursor_mask      := * + 1
+        active_cursor_mask := * + 1
         lda     $FFFF,y
         sta     cursor_mask,x
         dey
