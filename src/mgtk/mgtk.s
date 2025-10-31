@@ -4308,41 +4308,35 @@ no_shift:
         ldy     cursor_bytes
         lda     cursor_softswitch
         jsr     SetSwitch
-        bcs     :+
-
+    IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
-
-        lda     cursor_mask
-        ora     (vid_ptr),y
+        ora     cursor_mask
         eor     cursor_bits
         sta     (vid_ptr),y
         dex
-:
-        jsr     SwitchPage
-        bcs     :+
+    END_IF
 
+        jsr     SwitchPage
+    IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
-        lda     cursor_mask+1
-
-        ora     (vid_ptr),y
+        ora     cursor_mask+1
         eor     cursor_bits+1
         sta     (vid_ptr),y
         dex
-:
-        jsr     SwitchPage
-        bcs     :+
+    END_IF
 
+        jsr     SwitchPage
+    IF_CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
-
-        lda     cursor_mask+2
-        ora     (vid_ptr),y
+        ora     cursor_mask+2
         eor     cursor_bits+2
         sta     (vid_ptr),y
         dex
-:
+    END_IF
+
         ldy     cursor_y2
 drnext:
         dec     left_bytes
@@ -4529,20 +4523,8 @@ cursor_throttle:
 mouse_moved:
         jsr     WaitVBL
 
-        ;; We only have 4550 cycles (70 lines x 65 cycles) during VBI
-        ;; but we take ~6000 cycles to erase and draw the cursor. So
-        ;; if the cursor is near the top of the screen, burn some
-        ;; cycles so we're behind the beam
-
-        lda     mouse_y
-    IF A < #48                  ; empirically determined
-        ldy     #6              ; burn 7717 cycles
-l2:     ldx     #0
-l1:     dex
-        bne     l1
-        dey
-        bne     l2
-    END_IF
+        ;; The below is currently ~7635 cycles (2137 + 5446)
+        ;; First opt: 2149 + 5265
 
         jsr     RestoreCursorBackground
         ldx     #2
