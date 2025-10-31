@@ -4029,9 +4029,6 @@ mouse_hook:
 cursor_hotspot_x:  .byte   $00
 cursor_hotspot_y:  .byte   $00
 
-cursor_mod7:
-        .res    1
-
 cursor_savebits:
         .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
 
@@ -4205,6 +4202,7 @@ srts:   rts
         savebits_index  := $93
         cursor_bits     := $94  ; 3 bytes
         cursor_mask     := $97  ; 3 bytes
+        cursor_mod7     := $9A
 
         lda     #0
         sta     cursor_count
@@ -4322,21 +4320,21 @@ dloop:
         sta     cursor_mask+2
 
         ;; If needed, expand `cursor_bits`/`cursor_mask` to 3 bytes
-        ldy     cursor_mod7
+        ldx     cursor_mod7
     IF NOT ZERO
         ASSERT_EQUALS cursor_bits + 3, cursor_mask
         ;; Enter this loop with A=`cursor_mask+2` from above (i.e. 0)
-        ldy     #(3 + 3) - 1    ; do both bits and mask in the loop
+        ldx     #(3 + 3) - 1    ; do both bits and mask in the loop
       DO
-        ldx     cursor_bits-1,y
+        ldy     cursor_bits-1,x
 
         cursor_shift_main_addr := * + 1
-        ora     $FF80,x
-        sta     cursor_bits,y
+        ora     $FF80,y
+        sta     cursor_bits,x
 
         cursor_shift_aux_addr := * + 1
-        lda     $FF00,x
-        dey
+        lda     $FF00,y
+        dex
       WHILE NOT ZERO
         sta     cursor_bits
     END_IF
@@ -4576,6 +4574,7 @@ mouse_moved:
         ;; Third opt: 1201 + 4454 = ~5655
         ;; Fourth opt: 1019 + 4334 = ~5353  <-- don't trust first number
         ;; Fifth opt: 1248 + 4182 = ~5430
+        ;; Sixth opt: .. + 4085
 
         jsr     RestoreCursorBackground
         ldx     #2
