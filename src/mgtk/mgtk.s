@@ -4319,7 +4319,8 @@ active_cursor_mask      := * + 1
 
         ldy     cursor_mod7
     IF NOT ZERO
-        ldy     #5
+        ASSERT_EQUALS cursor_bits + 3, cursor_mask
+        ldy     #(3 + 3) - 1    ; do both bits and mask in the loop
       DO
         ldx     cursor_bits-1,y
 
