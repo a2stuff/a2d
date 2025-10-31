@@ -4220,12 +4220,16 @@ srts:   rts
     END_IF
         sta     cursor_y2
 
+        ;; ZP locations
+        drawbits_index := left_bytes
+        savebits_index := left_mod14
+
         ;; Compute bytes to draw
         sec
         sbc     cursor_y1       ; number of lines
         asl                     ; *= 2
         sbc     #0              ; -1
-        sta     left_bytes      ; index into `cursor_bits`/`cursor_mask`
+        sta     drawbits_index  ; index into `active_cursor`/`active_cursor_mask`
 
         lda     cursor_pos::xcoord
         sec
@@ -4296,9 +4300,9 @@ dloop:
         sta     vid_ptr+1
 
         sty     cursor_y2
-        stx     left_mod14      ; save X = index into `cursor_savebits`
+        stx     savebits_index
 
-        ldy     left_bytes      ; index into `cursor_bits`/`cursor_mask`
+        ldy     drawbits_index
         ldx     #1
     DO
 active_cursor           := * + 1
@@ -4311,7 +4315,7 @@ active_cursor_mask      := * + 1
         dex
     WHILE POS
 
-        sty     left_bytes
+        sty     drawbits_index
         lda     #0
         sta     cursor_bits+2
         sta     cursor_mask+2
@@ -4333,9 +4337,10 @@ active_cursor_mask      := * + 1
         sta     cursor_bits
     END_IF
 
-        ldx     left_mod14      ; restore X = index into `cursor_savebits`
+        ldx     savebits_index
         ldy     cursor_col
 
+        ;; First byte
         switch_sta1 := *+1
         sta     $C0FF
         cpy     #40
@@ -4348,6 +4353,7 @@ active_cursor_mask      := * + 1
         dex
     END_IF
 
+        ;; Second byte
         switch_iny1 := *
         iny
         switch_sta2 := *+1
@@ -4362,6 +4368,7 @@ active_cursor_mask      := * + 1
         dex
     END_IF
 
+        ;; Third byte
         switch_iny2 := *
         iny
         switch_sta3 := *+1
