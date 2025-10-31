@@ -4416,6 +4416,7 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
 
         ldy     cursor_col
 
+        ;; First byte
         switch_sta1 := *+1
         sta     $C0FF
         cpy     #40
@@ -4425,6 +4426,7 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         dex
       END_IF
 
+        ;; Second byte
         switch_iny1 := *
         iny
         switch_sta2 := *+1
@@ -4436,6 +4438,7 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         dex
       END_IF
 
+        ;; Third byte
         switch_iny2 := *
         iny
         switch_sta3 := *+1
@@ -4562,8 +4565,8 @@ mouse_moved:
         ;; First opt: 2149 + 5265 = ~7414
         ;; Second opt: 2006 + 4457 = ~6463
         ;; Third opt: 1201 + 4454 = ~5655
-        ;; Fourth opt: 1019 + 4334 = ~5353
-        ;; Fifth opt: 4338 -> 4180
+        ;; Fourth opt: 1019 + 4334 = ~5353  <-- don't trust first number
+        ;; Fifth opt: 1248 + 4182 = ~5430
 
         jsr     RestoreCursorBackground
         ldx     #2
