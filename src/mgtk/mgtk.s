@@ -4227,6 +4227,12 @@ srts:   rts
         sbc     #0              ; -1
         sta     drawbits_index  ; index into `active_cursor`/`active_cursor_mask`
 
+        ;; Ensure we don't try to draw above screen row 0
+        lda     cursor_y1
+    IF A >= #192
+        copy8   #AS_BYTE(-1), cursor_y1
+    END_IF
+
         lda     cursor_pos::xcoord
         sec
         sbc     cursor_hotspot_x
@@ -4376,7 +4382,6 @@ dloop:
     END_IF
 
         ldy     cursor_y2
-drnext:
         dey
         cpy     cursor_y1
         beq     drts
@@ -4551,15 +4556,10 @@ cursor_throttle:
 mouse_moved:
         jsr     WaitVBL
 
-        ;; Budget is 4550 (VBI)
-
-        ;; The below is currently ~7635 cycles (2137 + 5446)
-        ;; First opt: 2149 + 5265 = ~7414
-        ;; Second opt: 2006 + 4457 = ~6463
-        ;; Third opt: 1201 + 4454 = ~5655
-        ;; Fourth opt: 1019 + 4334 = ~5353  <-- don't trust first number
-        ;; Fifth opt: 1248 + 4182 = ~5430
-        ;; Sixth opt: .. + 4085
+        ;; NTSC VBI budget is 4550 cycles (70 rows x 65 cycles/row)
+        ;; The below is currently about 5258 cycles, so there is some
+        ;; tearing visible when the cursor moves if it is near the
+        ;; top of the screen.
 
         jsr     RestoreCursorBackground
         ldx     #2
