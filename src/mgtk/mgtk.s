@@ -4288,7 +4288,9 @@ set_divmod:
         ;; Stash calculations for later use in `RestoreCursorBackground`
         COPY_BYTES kCursorDrawDataSize, cursor_bytes, cursor_data
 
+        ;; --------------------------------------------------
         ;; Iterate from bottom of cursor to the top
+
         ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
 dloop:
@@ -4407,7 +4409,9 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         ;; Unstash calculations from `DrawCursor`
         COPY_BYTES kCursorDrawDataSize, cursor_data, cursor_bytes
 
+        ;; --------------------------------------------------
         ;; Iterate from bottom of cursor to the top
+
         ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
     DO
