@@ -4245,6 +4245,22 @@ set_divmod:
         eor     #1
         sta     cursor_softswitch      ; $C0xx softswitch index
 
+
+        sta     switch_sta1
+        sta     switch_sta3
+        eor     #1
+        sta     switch_sta2
+        and     #1
+    IF ZERO
+        lda     #OPC_NOP
+        ldx     #OPC_INY
+    ELSE
+        lda     #OPC_INY
+        ldx     #OPC_NOP
+    END_IF
+        sta     switch_iny1
+        stx     switch_iny2
+
         sty     cursor_mod7
         copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
         copylohi shift_table_aux_low,y, shift_table_aux_high,y, cursor_shift_aux_addr
@@ -4306,8 +4322,10 @@ cursor_shift_aux_addr           := * + 1
 no_shift:
         ldx     left_mod14
         ldy     cursor_bytes
-        lda     cursor_softswitch
-        jsr     SetSwitch
+
+        switch_sta1 := *+1
+        sta     $C0FF
+        cpy     #40
     IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
@@ -4317,7 +4335,11 @@ no_shift:
         dex
     END_IF
 
-        jsr     SwitchPage
+        switch_iny1 := *
+        iny
+        switch_sta2 := *+1
+        sta     $C0FF
+        cpy     #40
     IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
@@ -4327,7 +4349,11 @@ no_shift:
         dex
     END_IF
 
-        jsr     SwitchPage
+        switch_iny2 := *
+        iny
+        switch_sta3 := *+1
+        sta     $C0FF
+        cpy     #40
     IF_CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
@@ -4523,8 +4549,11 @@ cursor_throttle:
 mouse_moved:
         jsr     WaitVBL
 
+        ;; Budget is 4550 (VBI)
+
         ;; The below is currently ~7635 cycles (2137 + 5446)
         ;; First opt: 2149 + 5265
+        ;; Second opt: 2006 + 4457
 
         jsr     RestoreCursorBackground
         ldx     #2
