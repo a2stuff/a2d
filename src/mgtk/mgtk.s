@@ -4200,10 +4200,17 @@ srts:   rts
 .endproc ; UpdateCursor
 
 .proc DrawCursor
+        ;; ZP locations
+        drawbits_index  := $92
+        savebits_index  := $93
+        cursor_bits     := $94  ; 3 bytes
+        cursor_mask     := $97  ; 3 bytes
+
         lda     #0
         sta     cursor_count
         sta     cursor_flag
 
+        ;; Compute rows to draw
         lda     cursor_pos::ycoord
         clc
         sbc     cursor_hotspot_y
@@ -4215,13 +4222,7 @@ srts:   rts
     END_IF
         sta     cursor_y2
 
-        ;; ZP locations
-        drawbits_index  := $92
-        savebits_index  := $93
-        cursor_bits     := $94  ; 3 bytes
-        cursor_mask     := $97  ; 3 bytes
-
-        ;; Compute bytes to draw
+        ;; Compute bytes to draw, and pre-shift table
         sec
         sbc     cursor_y1       ; number of lines
         asl                     ; *= 2
@@ -4234,16 +4235,17 @@ srts:   rts
         tax
         lda     cursor_pos::xcoord+1
         sbc     #0
-        bpl     :+
-
+    IF NEG
         txa                            ; X-coord is negative: X-reg = X-coord + 256
         ror     a                      ; Will shift in zero:  X-reg = X-coord/2 + 128
         tax                            ; Negative mod7 table starts at 252 (since 252%7 = 0), and goes backwards
         ldy     mod7_table+252-128,x   ; Index (X-coord / 2 = X-reg - 128) relative to mod7_table+252
         lda     #$FF                   ; Char index = -1
-        bmi     set_divmod
+        bmi     set_divmod             ; always
+    END_IF
+        ;; "else"
+        jsr     DivMod7
 
-:       jsr     DivMod7
 set_divmod:
         sta     cursor_col             ; char index in line
 
@@ -4321,6 +4323,7 @@ dloop:
         ldy     cursor_mod7
     IF NOT ZERO
         ASSERT_EQUALS cursor_bits + 3, cursor_mask
+        ;; Enter this loop with A=`cursor_mask+2` from above (i.e. 0)
         ldy     #(3 + 3) - 1    ; do both bits and mask in the loop
       DO
         ldx     cursor_bits-1,y
