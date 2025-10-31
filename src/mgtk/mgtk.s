@@ -4188,11 +4188,11 @@ finish:
 .endproc ; SetCursorImpl
 srts:   rts
 
-
-        cursor_bytes      := $82
-        cursor_softswitch := $83
-        cursor_y1         := $84
-        cursor_y2         := $85
+        cursor_bytes      := $82 ; 4 bytes here hold state for draw/restore
+        cursor_col        := $82 ; column (0...39)
+        cursor_softswitch := $83 ; low byte of LOWSCR/HISCR for 1st cursor col
+        cursor_y1         := $84 ; top row of cursor - 1
+        cursor_y2         := $85 ; bottom row of cursor
 
         vid_ptr           := $88
 
@@ -4244,7 +4244,7 @@ srts:   rts
 
 :       jsr     DivMod7
 set_divmod:
-        sta     cursor_bytes            ; char index in line
+        sta     cursor_col             ; char index in line
 
         tya
         rol     a
@@ -4278,25 +4278,25 @@ set_divmod:
         copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
         copylohi shift_table_aux_low,y, shift_table_aux_high,y, cursor_shift_aux_addr
 
-        ldx     #3
-:       lda     cursor_bytes,x
-        sta     cursor_data,x
-        dex
-        bpl     :-
+        ;; Stash calculations for later use in `RestoreCursorBackground`
+        COPY_BYTES 4, cursor_bytes, cursor_data
 
-        ldx     #$23
+        ;; Iterate from bottom of cursor to the top
+        ldx     #(MGTK::cursor_height * 3) - 1 ; max # of bytes
         ldy     cursor_y2
-dloop:  lda     hires_table_lo,y
+dloop:
+        lda     hires_table_lo,y
         sta     vid_ptr
         lda     hires_table_hi,y
         ora     #$20
         sta     vid_ptr+1
+
         sty     cursor_y2
         stx     left_mod14
 
         ldy     left_bytes
-        ldx     #$01
-:
+        ldx     #1
+    DO
 active_cursor           := * + 1
         lda     $FFFF,y
         sta     cursor_bits,x
@@ -4305,31 +4305,32 @@ active_cursor_mask      := * + 1
         sta     cursor_mask,x
         dey
         dex
-        bpl     :-
+    WHILE POS
+
         sty     left_bytes
         lda     #0
         sta     cursor_bits+2
         sta     cursor_mask+2
 
         ldy     cursor_mod7
-        beq     no_shift
-
+    IF NOT ZERO
         ldy     #5
-:       ldx     cursor_bits-1,y
+      DO
+        ldx     cursor_bits-1,y
 
-cursor_shift_main_addr           := * + 1
+        cursor_shift_main_addr := * + 1
         ora     $FF80,x
         sta     cursor_bits,y
 
-cursor_shift_aux_addr           := * + 1
+        cursor_shift_aux_addr := * + 1
         lda     $FF00,x
         dey
-        bne     :-
+      WHILE NOT ZERO
         sta     cursor_bits
+    END_IF
 
-no_shift:
         ldx     left_mod14
-        ldy     cursor_bytes
+        ldy     cursor_col
 
         switch_sta1 := *+1
         sta     $C0FF
@@ -4390,6 +4391,7 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         bit     cursor_flag
         bmi     ret
 
+        ;; Unstash calculations from `DrawCursor`
         COPY_BYTES 4, cursor_data, cursor_bytes
 
         ;; Set up loop invariants
@@ -4409,7 +4411,8 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         sta     switch_iny1
         stx     switch_iny2
 
-        ldx     #$23
+        ;; Iterate from bottom of cursor to the top
+        ldx     #(MGTK::cursor_height * 3) - 1 ; max # of bytes
         ldy     cursor_y2
     DO
         lda     hires_table_lo,y
@@ -4417,45 +4420,46 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         lda     hires_table_hi,y
         ora     #$20
         sta     vid_ptr+1
+
         sty     cursor_y2
 
-        ldy     cursor_bytes
+        ldy     cursor_col
 
         switch_sta1 := *+1
         sta     $C0FF
         cpy     #40
-       IF CC
+      IF CC
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
-       END_IF
+      END_IF
 
         switch_iny1 := *
         iny
         switch_sta2 := *+1
         sta     $C0FF
         cpy     #40
-       IF CC
+      IF CC
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
-       END_IF
+      END_IF
 
         switch_iny2 := *
         iny
         switch_sta3 := *+1
         sta     $C0FF
         cpy     #40
-       IF CC
+      IF CC
         lda     cursor_savebits,x
         sta     (vid_ptr),y
         dex
-       END_IF
+      END_IF
 
         ldy     cursor_y2
-
         dey
     WHILE Y <> cursor_y1
+
         sta     LOWSCR
 ret:    rts
 .endproc ; RestoreCursorBackground
