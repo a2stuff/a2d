@@ -1420,12 +1420,15 @@ set_width:                                      ; Set width for destination.
 :       txa
         ror     a
         tax
-        php
+        ldy     mod7_table+4,x
         lda     div7_table+4,x
-        clc
-        adc     #$24
-        plp
-        RETURN  Y=mod7_table+4,x
+        bcc     :+
+        adc     #$23
+        sec
+        rts
+:
+        adc     #$24            ; keep C=0 for x < 560
+        rts
 .endproc ; DivMod7
 
         ;; Set up destination (for either on-screen or off-screen bitmap.)
@@ -4212,7 +4215,17 @@ srts:   rts
         sta     cursor_y1
         clc
         adc     #MGTK::cursor_height
+    IF A >= #192
+        lda     #191
+    END_IF
         sta     cursor_y2
+
+        ;; Compute bytes to draw
+        sec
+        sbc     cursor_y1       ; number of lines
+        asl                     ; *= 2
+        sbc     #0              ; -1
+        sta     left_bytes
 
         lda     cursor_pos::xcoord
         sec
@@ -4271,15 +4284,9 @@ set_divmod:
         dex
         bpl     :-
 
-        ldx     #$17
-        stx     left_bytes
         ldx     #$23
         ldy     cursor_y2
-dloop:  cpy     #192
-        bcc     :+
-        jmp     drnext
-
-:       lda     hires_table_lo,y
+dloop:  lda     hires_table_lo,y
         sta     vid_ptr
         lda     hires_table_hi,y
         ora     #$20
@@ -4299,6 +4306,7 @@ active_cursor_mask      := * + 1
         dey
         dex
         bpl     :-
+        sty     left_bytes
         lda     #0
         sta     cursor_bits+2
         sta     cursor_mask+2
@@ -4365,8 +4373,6 @@ no_shift:
 
         ldy     cursor_y2
 drnext:
-        dec     left_bytes
-        dec     left_bytes
         dey
         cpy     cursor_y1
         beq     drts
@@ -4406,8 +4412,6 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
         ldx     #$23
         ldy     cursor_y2
     DO
-      IF Y < #192
-
         lda     hires_table_lo,y
         sta     vid_ptr
         lda     hires_table_hi,y
@@ -4449,7 +4453,6 @@ active_cursor_mask   := DrawCursor::active_cursor_mask
        END_IF
 
         ldy     cursor_y2
-      END_IF
 
         dey
     WHILE Y <> cursor_y1
@@ -4559,6 +4562,7 @@ mouse_moved:
         ;; First opt: 2149 + 5265 = ~7414
         ;; Second opt: 2006 + 4457 = ~6463
         ;; Third opt: 1201 + 4454 = ~5655
+        ;; Fourth opt: 1019 + 4334 = ~5353
 
         jsr     RestoreCursorBackground
         ldx     #2
