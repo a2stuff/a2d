@@ -4213,6 +4213,7 @@ srts:   rts
         cursor_bits     := $94  ; 3 bytes
         cursor_mask     := $97  ; 3 bytes
         cursor_mod7     := $9A
+        tmp_y           := $9B
 
         lda     #0
         sta     cursor_count
@@ -4347,35 +4348,40 @@ set_divmod:
         ldy     cursor_col
 
         ;; First byte
-        cpy     #40
-      IF CC
-        copy8   cursor_mask, cursor_drawmask,x
-        copy8   cursor_bits, cursor_drawbits,x
-        dex
-      END_IF
+        lda     #0
+        jsr     do_byte
 
         ;; Third byte (on same page)
         iny
-        cpy     #40
-      IF CC
-        copy8   cursor_mask+2, cursor_drawmask,x
-        copy8   cursor_bits+2, cursor_drawbits,x
-        dex
-      END_IF
+        lda     #2
+        jsr     do_byte
 
         ;; Second byte
         switch_dey := *
         dey
-        cpy     #40
-      IF CC
-        copy8   cursor_mask+1, cursor_drawmask,x
-        copy8   cursor_bits+1, cursor_drawbits,x
-        dex
-      END_IF
+        lda     #1
+        jsr     do_byte
 
         ldy     cursor_y2
         dey
     WHILE Y <> cursor_y1
+        rts
+
+do_byte:
+        cpy     #40
+      IF CC
+        sty     tmp_y
+        tay
+
+        lda     cursor_mask,y
+        sta     cursor_drawmask,x
+
+        lda     cursor_bits,y
+        sta     cursor_drawbits,x
+
+        ldy     tmp_y
+        dex
+      END_IF
         rts
 .endproc ; PreDrawCursor
 
