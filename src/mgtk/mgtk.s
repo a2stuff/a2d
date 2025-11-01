@@ -4032,9 +4032,17 @@ cursor_hotspot_y:  .byte   $00
 cursor_savebits:
         .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
 
-cursor_data:
+cursor_drawmask:
+        .res    3*MGTK::cursor_height           ; Pre-shifted 3 screen bytes per row.
+
+cursor_drawbits:
+        .res    3*MGTK::cursor_height           ; Pre-shifted 3 screen bytes per row.
+
         kCursorDrawDataSize = 3
-        .res    kCursorDrawDataSize             ; Saved values of cursor_char..cursor_y2.
+cursor_restore_data:
+        .res    kCursorDrawDataSize             ; Saved values of `cursor_col`..`cursor_y2`.
+cursor_draw_data:
+        .res    kCursorDrawDataSize             ; Saved values of `cursor_col`..`cursor_y2`.
 
 pointer_cursor:
         PIXELS  ".............."
@@ -4181,6 +4189,14 @@ finish:
 .endproc ; SetCursorImpl
 srts:   rts
 
+;;; ============================================================
+
+;;; Cursor updating is split into three part - a "pre-draw" phase, a
+;;; "restore" phase, and a "finish draw" phase. This is because there
+;;; is a limited time budget within the vertical blanking interval to
+;;; avoid tearing/flicker. By doing all of the computations in advance
+;;; the actual restore/draw can be kept under the budget.
+
         cursor_bytes      := $82 ; `kCursorDrawDataSize` bytes here hold state for draw/restore
         cursor_col        := $82 ; column (0...39)
         cursor_y1         := $83 ; top row of cursor - 1
@@ -4188,15 +4204,9 @@ srts:   rts
 
         vid_ptr           := $88
 
-.proc UpdateCursor
-        lda     cursor_count           ; hidden? if so, skip
-        bne     srts
-        bit     cursor_flag
-        bmi     srts
-        FALL_THROUGH_TO DrawCursor
-.endproc ; UpdateCursor
-
-.proc DrawCursor
+;;; Do all of the calculations and shifting for the cursor bytes,
+;;; without actually drawing.
+.proc PreDrawCursor
         ;; ZP locations
         drawbits_index  := $92
         savebits_index  := $93
@@ -4264,15 +4274,13 @@ set_divmod:
         copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
         copylohi shift_table_aux_low,y, shift_table_aux_high,y, cursor_shift_aux_addr
 
-        ;; Set up loop invariants (both for here and restore code)
+        ;; Set up loop invariants (for here, actual draw, and restore code)
         lda     #<LOWSCR/2
         rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
 
-        sta     switch_sta2
-        sta     restore_switch_sta2
+        sta     finish_switch_sta2
         eor     #1
-        sta     switch_sta1
-        sta     restore_switch_sta1
+        sta     finish_switch_sta1
 
         ldx     #OPC_NOP
         and     #1
@@ -4280,10 +4288,10 @@ set_divmod:
         ldx     #OPC_DEY
     END_IF
         stx     switch_dey
-        stx     restore_switch_dey
+        stx     finish_switch_dey
 
-        ;; Stash calculations for later use in `RestoreCursorBackground`
-        COPY_BYTES kCursorDrawDataSize, cursor_bytes, cursor_data
+        ;; Stash calculations for later use in `FinishDrawCursor` and `RestoreCursorBackground`
+        COPY_BYTES kCursorDrawDataSize, cursor_bytes, cursor_draw_data
 
         ;; --------------------------------------------------
         ;; Iterate from bottom of cursor to the top
@@ -4291,12 +4299,6 @@ set_divmod:
         ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
 dloop:
-        lda     hires_table_lo,y
-        sta     vid_ptr
-        lda     hires_table_hi,y
-        ora     #$20
-        sta     vid_ptr+1
-
         sty     cursor_y2
         stx     savebits_index
 
@@ -4342,14 +4344,99 @@ dloop:
         ldy     cursor_col
 
         ;; First byte
+        cpy     #40
+    IF CC
+        copy8   cursor_mask, cursor_drawmask,x
+        copy8   cursor_bits, cursor_drawbits,x
+        dex
+    END_IF
+
+        ;; Third byte (on same page)
+        iny
+        cpy     #40
+    IF CC
+        copy8   cursor_mask+2, cursor_drawmask,x
+        copy8   cursor_bits+2, cursor_drawbits,x
+        dex
+    END_IF
+
+        ;; Second byte
+        switch_dey := *
+        dey
+        cpy     #40
+    IF CC
+        copy8   cursor_mask+1, cursor_drawmask,x
+        copy8   cursor_bits+1, cursor_drawbits,x
+        dex
+    END_IF
+
+        ldy     cursor_y2
+        dey
+        cpy     cursor_y1
+        jne     dloop
+        rts
+.endproc ; PreDrawCursor
+
+active_cursor        := PreDrawCursor::active_cursor
+active_cursor_mask   := PreDrawCursor::active_cursor_mask
+
+;;; Entry point for simple drawing, without worrying about vertical
+;;; blanking.
+.proc DrawCursor
+        jsr     PreDrawCursor
+        FALL_THROUGH_TO FinishDrawCursor
+.endproc ; DrawCursor
+
+;;; Assumes `PreDrawCursor` has been called. This does the actual
+;;; drawing using the stashed `cursor_draw_data`, `cursor_drawmask`
+;;; and `cursor_drawbits`. Prepares `cursor_savebits` and
+;;; `cursor_restore_data` for next call to `RestoreCursorBackground`.
+.proc FinishDrawCursor
+        ;; ZP locations
+        drawbits_index  := $92
+        savebits_index  := $93
+        cursor_bits     := $94  ; 3 bytes
+        cursor_mask     := $97  ; 3 bytes
+        cursor_mod7     := $9A
+
+        ;; Unstash calculations from `DrawCursor`
+        ldx     #kCursorDrawDataSize-1
+    DO
+        lda     cursor_draw_data,x
+        sta     cursor_bytes,x  ; for us to use
+        sta     cursor_restore_data,x ; for next `RestoreCursorBackground` call
+        dex
+    WHILE POS
+
+        ;; SMC the `RestoreCursorBackground` to match us
+        copy8   switch_sta2, restore_switch_sta2
+        copy8   switch_sta1, restore_switch_sta1
+        copy8   switch_dey, restore_switch_dey
+
+        ;; --------------------------------------------------
+        ;; Iterate from bottom of cursor to the top
+
+        ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
+        ldy     cursor_y2
+dloop:
+        lda     hires_table_lo,y
+        sta     vid_ptr
+        lda     hires_table_hi,y
+        ora     #$20
+        sta     vid_ptr+1
+
+        sty     cursor_y2
+        ldy     cursor_col
+
+        ;; First byte
         switch_sta1 := *+1
         sta     $C0FF
         cpy     #40
     IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
-        ora     cursor_mask
-        eor     cursor_bits
+        ora     cursor_drawmask,x
+        eor     cursor_drawbits,x
         sta     (vid_ptr),y
         dex
     END_IF
@@ -4360,8 +4447,8 @@ dloop:
     IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
-        ora     cursor_mask+2
-        eor     cursor_bits+2
+        ora     cursor_drawmask,x
+        eor     cursor_drawbits,x
         sta     (vid_ptr),y
         dex
     END_IF
@@ -4375,8 +4462,8 @@ dloop:
     IF CC
         lda     (vid_ptr),y
         sta     cursor_savebits,x
-        ora     cursor_mask+1
-        eor     cursor_bits+1
+        ora     cursor_drawmask,x
+        eor     cursor_drawbits,x
         sta     (vid_ptr),y
         dex
     END_IF
@@ -4384,23 +4471,24 @@ dloop:
         ldy     cursor_y2
         dey
         cpy     cursor_y1
-        beq     drts
-        jmp     dloop
-.endproc ; DrawCursor
-drts:   rts
+        jne     dloop
+        rts
+.endproc ; FinishDrawCursor
+finish_switch_sta1 := FinishDrawCursor::switch_sta1
+finish_switch_sta2 := FinishDrawCursor::switch_sta2
+finish_switch_dey := FinishDrawCursor::switch_dey
 
-active_cursor        := DrawCursor::active_cursor
-active_cursor_mask   := DrawCursor::active_cursor_mask
-
-
+;;; Erase the previously drawn cursor, using `cursor_data` calculated
+;;; in `PreDrawCursor` and the `cursor_savebits` captured in
+;;; `FinishDrawCursor`.
 .proc RestoreCursorBackground
         lda     cursor_count    ; already hidden?
         bne     ret
         bit     cursor_flag
         bmi     ret
 
-        ;; Unstash calculations from `DrawCursor`
-        COPY_BYTES kCursorDrawDataSize, cursor_data, cursor_bytes
+        ;; Unstash calculations from `FinishDrawCursor`
+        COPY_BYTES kCursorDrawDataSize, cursor_restore_data, cursor_bytes
 
         ;; --------------------------------------------------
         ;; Iterate from bottom of cursor to the top
@@ -4554,21 +4642,28 @@ cursor_throttle:
         ;; --------------------------------------------------
 
 mouse_moved:
-        jsr     WaitVBL
+        lda     cursor_count           ; hidden? if so, skip
+        bne     no_move
+        bit     cursor_flag
+        bmi     no_move
 
-        ;; NTSC VBI budget is 4550 cycles (70 rows x 65 cycles/row)
-        ;; The below is currently about 5258 cycles, so there is some
-        ;; tearing visible when the cursor moves if it is near the
-        ;; top of the screen.
-
-        jsr     RestoreCursorBackground
         ldx     #2
         stx     cursor_flag
 :       lda     mouse_x,x
         sta     cursor_pos,x
         dex
         bpl     :-
-        jsr     UpdateCursor
+
+
+        jsr     PreDrawCursor
+
+        jsr     WaitVBL
+
+        ;; NTSC VBI budget is 4550 cycles (70 rows x 65 cycles/row)
+        ;; The below is 2903 cycles, to avoid tearing.
+
+        jsr     RestoreCursorBackground
+        jsr     FinishDrawCursor
 
 no_move:
 .endproc ; MoveCursor
