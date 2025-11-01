@@ -4277,7 +4277,6 @@ set_divmod:
         ;; Set up loop invariants (for here, actual draw, and restore code)
         lda     #<LOWSCR/2
         rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
-
         sta     finish_switch_sta2
         eor     #1
         sta     finish_switch_sta1
@@ -4298,23 +4297,23 @@ set_divmod:
 
         ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
-dloop:
+    DO
         sty     cursor_y2
         stx     savebits_index
 
         ;; Look up the cursor bits/mask for this row, stash in `cursor_bits`/`cursor_mask`
         ldy     drawbits_index
         ldx     #MGTK::cursor_width - 1
-    DO
+      DO
         active_cursor := * + 1
-        lda     $FFFF,y
+        lda     SELF_MODIFIED,y
         sta     cursor_bits,x
         active_cursor_mask := * + 1
-        lda     $FFFF,y
+        lda     SELF_MODIFIED,y
         sta     cursor_mask,x
         dey
         dex
-    WHILE POS
+      WHILE POS
         sty     drawbits_index
         lda     #0              ; third byte starts off empty
         sta     cursor_bits+2
@@ -4322,58 +4321,61 @@ dloop:
 
         ;; If needed, expand `cursor_bits`/`cursor_mask` to 3 bytes
         ldx     cursor_mod7
-    IF NOT ZERO
+      IF NOT ZERO
         ASSERT_EQUALS cursor_bits + 3, cursor_mask
         ;; Enter this loop with A=`cursor_mask+2` from above (i.e. 0)
         ldx     #(3 + 3) - 1    ; do both bits and mask in the loop
-      DO
+       DO
         ldy     cursor_bits-1,x
 
         cursor_shift_main_addr := * + 1
-        ora     $FF80,y
+        ora     SELF_MODIFIED,y
         sta     cursor_bits,x
 
         cursor_shift_aux_addr := * + 1
-        lda     $FF00,y
+        lda     SELF_MODIFIED,y
         dex
-      WHILE NOT ZERO
+       WHILE NOT ZERO
         sta     cursor_bits
-    END_IF
+      END_IF
+
+        ;; Now stash `cursor_mask` and `cursor_bits` into
+        ;; `cursor_drawmask` and `cursor_drawbits` for
+        ;; `FinishDrawCursor` to use later.
 
         ldx     savebits_index
         ldy     cursor_col
 
         ;; First byte
         cpy     #40
-    IF CC
+      IF CC
         copy8   cursor_mask, cursor_drawmask,x
         copy8   cursor_bits, cursor_drawbits,x
         dex
-    END_IF
+      END_IF
 
         ;; Third byte (on same page)
         iny
         cpy     #40
-    IF CC
+      IF CC
         copy8   cursor_mask+2, cursor_drawmask,x
         copy8   cursor_bits+2, cursor_drawbits,x
         dex
-    END_IF
+      END_IF
 
         ;; Second byte
         switch_dey := *
         dey
         cpy     #40
-    IF CC
+      IF CC
         copy8   cursor_mask+1, cursor_drawmask,x
         copy8   cursor_bits+1, cursor_drawbits,x
         dex
-    END_IF
+      END_IF
 
         ldy     cursor_y2
         dey
-        cpy     cursor_y1
-        jne     dloop
+    WHILE Y <> cursor_y1
         rts
 .endproc ; PreDrawCursor
 
@@ -4411,7 +4413,7 @@ active_cursor_mask   := PreDrawCursor::active_cursor_mask
 
         ldx     #(MGTK::cursor_height * 3) - 1 ; index into `cursor_savebits`
         ldy     cursor_y2
-dloop:
+    DO
         lda     hires_table_lo,y
         sta     vid_ptr
         lda     hires_table_hi,y
@@ -4439,8 +4441,7 @@ dloop:
 
         ldy     cursor_y2
         dey
-        cpy     cursor_y1
-        jne     dloop
+    WHILE Y <> cursor_y1
         rts
 
 do_byte:
