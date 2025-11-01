@@ -1730,10 +1730,39 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 .proc CalcIconPoly
         jsr     CalcIconBoundingRect
 
+        .assert bitmap_rect < $100, error, "assumes zero page"
+        .assert label_rect < $100, error, "assumes zero page"
+
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryFlagsSmall
     IF NOT_ZERO
+        ;; Small icon
+        ldy     #.sizeof(MGTK::Point)*8-1
+      DO
+        ldx     smicon_poly_map,y
+        copy8   $00,x, poly::vertices,y
+        dey
+      WHILE POS
+        rts
+   END_IF
+
+        ;; Regular icon
+        ldy     #.sizeof(MGTK::Point)*8-1
+   DO
+        ldx     icon_poly_map,y
+        copy8   $00,x, poly::vertices,y
+        dey
+   WHILE POS
+        rts
+
+.macro MAP_POINT xsrc, ysrc
+        .byte   xsrc+0
+        .byte   xsrc+1
+        .byte   ysrc+0
+        .byte   ysrc+1
+.endmacro
+
         ;; ----------------------------------------
         ;; Small icon
 
@@ -1744,30 +1773,16 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ;;        +-----------------------+
         ;;      v7                         v6
 
-        ;; Start off making all (except v6) the same
-        ldx     #.sizeof(MGTK::Point)-1
-    DO
-        lda     bitmap_rect+MGTK::Rect::topleft,x
-        sta     poly::v0,x
-        sta     poly::v1,x
-        sta     poly::v2,x
-        sta     poly::v3,x
-        sta     poly::v4,x
-        sta     poly::v5,x
-        sta     poly::v7,x
-        dex
-    WHILE POS
-
-        ;; Then tweak remaining vertices on right/bottom
-        ldax    label_rect+MGTK::Rect::x2
-        stax    poly::v5::xcoord
-        stax    poly::v6::xcoord
-
-        ldax    bitmap_rect+MGTK::Rect::y2
-        stax    poly::v6::ycoord
-        stax    poly::v7::ycoord
-
-    ELSE
+smicon_poly_map:
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, bitmap_rect+MGTK::Rect::y1 ; v0
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, bitmap_rect+MGTK::Rect::y1 ; v1
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, bitmap_rect+MGTK::Rect::y1 ; v2
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, bitmap_rect+MGTK::Rect::y1 ; v3
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, bitmap_rect+MGTK::Rect::y1 ; v4
+        MAP_POINT label_rect+MGTK::Rect::x2,  bitmap_rect+MGTK::Rect::y1 ; v5
+        MAP_POINT label_rect+MGTK::Rect::x2,  bitmap_rect+MGTK::Rect::y2 ; v6
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, bitmap_rect+MGTK::Rect::y2 ; v7
+        ASSERT_RECORD_TABLE_SIZE smicon_poly_map, 8, .sizeof(MGTK::Point)
 
         ;; ----------------------------------------
         ;; Normal icon
@@ -1782,40 +1797,17 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ;;         |                      |
         ;;      v5 +----------------------+ v4
 
-        ;; Even vertexes are (mostly) direct copies from rects
+icon_poly_map:
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, bitmap_rect+MGTK::Rect::y1 ; v0
+        MAP_POINT bitmap_rect+MGTK::Rect::x2, bitmap_rect+MGTK::Rect::y1 ; v1
+        MAP_POINT bitmap_rect+MGTK::Rect::x2, label_rect+MGTK::Rect::y1 ; v2
+        MAP_POINT label_rect+MGTK::Rect::x2,  label_rect+MGTK::Rect::y1 ; v3
+        MAP_POINT label_rect+MGTK::Rect::x2,  label_rect+MGTK::Rect::y2 ; v4
+        MAP_POINT label_rect+MGTK::Rect::x1,  label_rect+MGTK::Rect::y2 ; v5
+        MAP_POINT label_rect+MGTK::Rect::x1,  label_rect+MGTK::Rect::y1 ; v6
+        MAP_POINT bitmap_rect+MGTK::Rect::x1, label_rect+MGTK::Rect::y1 ; v7
+        ASSERT_RECORD_TABLE_SIZE icon_poly_map, 8, .sizeof(MGTK::Point)
 
-        ;; v0/v2 (and extend bitmap rect down to top of text)
-        COPY_STRUCT MGTK::Point, bitmap_rect+MGTK::Rect::topleft, poly::v0
-        copy16  bitmap_rect+MGTK::Rect::x2, poly::v2::xcoord
-        copy16  label_rect+MGTK::Rect::y1, poly::v2::ycoord
-
-        ;; v6/v4
-        COPY_STRUCT MGTK::Point, label_rect+MGTK::Rect::topleft, poly::v6
-        COPY_STRUCT MGTK::Point, label_rect+MGTK::Rect::bottomright, poly::v4
-
-        ;; Odd vertexes are combinations
-
-        ;; v1
-        copy16  poly::v2::xcoord, poly::v1::xcoord
-        copy16  poly::v0::ycoord, poly::v1::ycoord
-
-        ;; v7
-        copy16  poly::v0::xcoord, poly::v7::xcoord
-        copy16  poly::v2::ycoord, poly::v7::ycoord
-
-        ;; v3
-        copy16  poly::v4::xcoord, poly::v3::xcoord
-        copy16  poly::v6::ycoord, poly::v3::ycoord
-
-        ;; v5
-        copy16  poly::v6::xcoord, poly::v5::xcoord
-        copy16  poly::v4::ycoord, poly::v5::ycoord
-
-        ;; ----------------------------------------
-
-    END_IF
-
-        rts
 .endproc ; CalcIconPoly
 
 ;;; Copy name from IconEntry (`icon_ptr`) to text_buffer,
