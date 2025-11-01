@@ -4134,7 +4134,7 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
 .proc SetPointerCursor
         ldx     #$FF
         stx     cursor_count
-        inx
+        inx                     ; X = 0
         stx     cursor_flag
         lda     #<pointer_cursor
         sta     params_addr
@@ -4644,6 +4644,7 @@ mouse_moved:
         bmi     no_move
 
         ldx     #2
+        ;; TODO: Is updating `cursor_flag` here correct?
         stx     cursor_flag
 :       lda     mouse_x,x
         sta     cursor_pos,x
