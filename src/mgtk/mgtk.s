@@ -4651,6 +4651,9 @@ mouse_moved:
         dex
         bpl     :-
 
+        ;; BUG: After `ObscureCursor` called, moving the cursor
+        ;; no longer re-shows it.
+        ;; Regressed in 17df0489cf60dd84a8dd3e88f858b32faa5a6474
 
         jsr     PreDrawCursor
 
