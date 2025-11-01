@@ -909,8 +909,8 @@ hires_table_hi:
         poly_yh_buffer  := $07BC
 
         ;; Only used between `PreDrawCursor` and `FinishDrawCursor`
-        cursor_drawmask := $0700 ; 12*3 bytes - duplicated in main + aux
-        cursor_drawbits := $0780 ; 12*3 bytes - duplicated in main + aux
+        cursor_drawmask := $0700 ; 12*3 bytes
+        cursor_drawbits := $0780 ; 12*3 bytes
 
         .assert <pattern_buffer = 0, error, "pattern_buffer must be page-aligned"
 
@@ -4035,7 +4035,6 @@ cursor_hotspot_y:  .byte   $00
 cursor_savebits:
         .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
 
-
         kCursorDrawDataSize = 3
 cursor_restore_data:
         .res    kCursorDrawDataSize             ; Saved values of `cursor_col`..`cursor_y2`.
@@ -4213,10 +4212,6 @@ srts:   rts
         cursor_mod7     := $9A
         tmp_y           := $9B
 
-        lda     #0
-        sta     cursor_count
-        sta     cursor_flag
-
         ;; Compute rows to draw
         lda     cursor_pos::ycoord
         clc
@@ -4273,11 +4268,18 @@ set_divmod:
         copylohi shift_table_main_low,y, shift_table_main_high,y, cursor_shift_main_addr
         copylohi shift_table_aux_low,y, shift_table_aux_high,y, cursor_shift_aux_addr
 
-        ;; Set up loop invariants (for here, actual draw, and restore code)
+        ;; Set up loop invariants (for here, actual draw, and restore
+        ;; code) Note that even though we don't write to the graphics
+        ;; screen here, the pre-computed cursor mask/bits are stashed
+        ;; in a buffer on text page 1, so we need to match main/aux
+        ;; pages for when `FinishDrawCursor` reading/writing, so we
+        ;; still twiddle `LOWSCR`/`HISCR` here.
         lda     #<LOWSCR/2
         rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
+        sta     switch_sta2
         sta     finish_switch_sta2
         eor     #1
+        sta     switch_sta1
         sta     finish_switch_sta1
 
         ldx     #OPC_NOP
@@ -4346,6 +4348,8 @@ set_divmod:
         ldy     cursor_col
 
         ;; First byte
+        switch_sta1 := *+1
+        sta     $C0FF
         lda     #0
         jsr     do_byte
 
@@ -4357,6 +4361,8 @@ set_divmod:
         ;; Second byte
         switch_dey := *
         dey
+        switch_sta2 := *+1
+        sta     $C0FF
         lda     #1
         jsr     do_byte
 
@@ -4371,21 +4377,16 @@ do_byte:
         sty     tmp_y
         tay
 
-        ;; The shifted mask/bits are stashed in a buffer on text page 1;
-        ;; a copy is written to both main and aux pages since the code that
-        ;; reads the bytes will alternate.
+        ;; The shifted mask/bits are stashed in a buffer on text page 1
+        ;; (main or aux, depending on page switching)
 
         .assert cursor_drawmask >= $400 && cursor_drawmask <= $800, error, "on text page"
         lda     cursor_mask,y
-        sta     cursor_drawmask,x ; main text page 1
-        sta     HISCR
-        sta     cursor_drawmask,x ; aux text page 1
+        sta     cursor_drawmask,x
 
         .assert cursor_drawbits >= $400 && cursor_drawbits <= $800, error, "on text page"
         lda     cursor_bits,y
-        sta     cursor_drawbits,x ; aux text page 1
-        sta     LOWSCR
-        sta     cursor_drawbits,x ; main text page 1
+        sta     cursor_drawbits,x
 
         ldy     tmp_y
         dex
@@ -4408,6 +4409,10 @@ active_cursor_mask   := PreDrawCursor::active_cursor_mask
 ;;; and `cursor_drawbits`. Prepares `cursor_savebits` and
 ;;; `cursor_restore_data` for next call to `RestoreCursorBackground`.
 .proc FinishDrawCursor
+        lda     #0
+        sta     cursor_count
+        sta     cursor_flag
+
         ;; Unstash calculations from `DrawCursor`
         ldx     #kCursorDrawDataSize-1
     DO
