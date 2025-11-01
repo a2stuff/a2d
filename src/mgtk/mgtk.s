@@ -908,6 +908,9 @@ hires_table_hi:
         poly_yl_buffer  := $0780
         poly_yh_buffer  := $07BC
 
+        ;; Only used between `PreDrawCursor` and `FinishDrawCursor`
+        cursor_drawmask := $0700 ; 12*3 bytes - duplicated in main + aux
+        cursor_drawbits := $0780 ; 12*3 bytes - duplicated in main + aux
 
         .assert <pattern_buffer = 0, error, "pattern_buffer must be page-aligned"
 
@@ -4032,11 +4035,6 @@ cursor_hotspot_y:  .byte   $00
 cursor_savebits:
         .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
 
-cursor_drawmask:
-        .res    3*MGTK::cursor_height           ; Pre-shifted 3 screen bytes per row.
-
-cursor_drawbits:
-        .res    3*MGTK::cursor_height           ; Pre-shifted 3 screen bytes per row.
 
         kCursorDrawDataSize = 3
 cursor_restore_data:
@@ -4340,7 +4338,7 @@ set_divmod:
         sta     cursor_bits
       END_IF
 
-        ;; Now stash `cursor_mask` and `cursor_bits` into
+        ;; Now record `cursor_mask` and `cursor_bits` into
         ;; `cursor_drawmask` and `cursor_drawbits` for
         ;; `FinishDrawCursor` to use later.
 
@@ -4373,11 +4371,21 @@ do_byte:
         sty     tmp_y
         tay
 
-        lda     cursor_mask,y
-        sta     cursor_drawmask,x
+        ;; The shifted mask/bits are stashed in a buffer on text page 1;
+        ;; a copy is written to both main and aux pages since the code that
+        ;; reads the bytes will alternate.
 
+        .assert cursor_drawmask >= $400 && cursor_drawmask <= $800, error, "on text page"
+        lda     cursor_mask,y
+        sta     cursor_drawmask,x ; main text page 1
+        sta     HISCR
+        sta     cursor_drawmask,x ; aux text page 1
+
+        .assert cursor_drawbits >= $400 && cursor_drawbits <= $800, error, "on text page"
         lda     cursor_bits,y
-        sta     cursor_drawbits,x
+        sta     cursor_drawbits,x ; aux text page 1
+        sta     LOWSCR
+        sta     cursor_drawbits,x ; main text page 1
 
         ldy     tmp_y
         dex
