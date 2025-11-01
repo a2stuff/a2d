@@ -4392,13 +4392,6 @@ active_cursor_mask   := PreDrawCursor::active_cursor_mask
 ;;; and `cursor_drawbits`. Prepares `cursor_savebits` and
 ;;; `cursor_restore_data` for next call to `RestoreCursorBackground`.
 .proc FinishDrawCursor
-        ;; ZP locations
-        drawbits_index  := $92
-        savebits_index  := $93
-        cursor_bits     := $94  ; 3 bytes
-        cursor_mask     := $97  ; 3 bytes
-        cursor_mod7     := $9A
-
         ;; Unstash calculations from `DrawCursor`
         ldx     #kCursorDrawDataSize-1
     DO
@@ -4408,7 +4401,7 @@ active_cursor_mask   := PreDrawCursor::active_cursor_mask
         dex
     WHILE POS
 
-        ;; SMC the `RestoreCursorBackground` to match us
+        ;; SMC `RestoreCursorBackground` to match us
         copy8   switch_sta2, restore_switch_sta2
         copy8   switch_sta1, restore_switch_sta1
         copy8   switch_dey, restore_switch_dey
@@ -4431,33 +4424,26 @@ dloop:
         ;; First byte
         switch_sta1 := *+1
         sta     $C0FF
-        cpy     #40
-    IF CC
-        lda     (vid_ptr),y
-        sta     cursor_savebits,x
-        ora     cursor_drawmask,x
-        eor     cursor_drawbits,x
-        sta     (vid_ptr),y
-        dex
-    END_IF
+        jsr     do_byte
 
         ;; Third byte (on same page)
         iny
-        cpy     #40
-    IF CC
-        lda     (vid_ptr),y
-        sta     cursor_savebits,x
-        ora     cursor_drawmask,x
-        eor     cursor_drawbits,x
-        sta     (vid_ptr),y
-        dex
-    END_IF
+        jsr     do_byte
 
         ;; Second byte
         switch_dey := *
         dey
         switch_sta2 := *+1
         sta     $C0FF
+        jsr     do_byte
+
+        ldy     cursor_y2
+        dey
+        cpy     cursor_y1
+        jne     dloop
+        rts
+
+do_byte:
         cpy     #40
     IF CC
         lda     (vid_ptr),y
@@ -4467,11 +4453,6 @@ dloop:
         sta     (vid_ptr),y
         dex
     END_IF
-
-        ldy     cursor_y2
-        dey
-        cpy     cursor_y1
-        jne     dloop
         rts
 .endproc ; FinishDrawCursor
 finish_switch_sta1 := FinishDrawCursor::switch_sta1
@@ -4509,33 +4490,18 @@ finish_switch_dey := FinishDrawCursor::switch_dey
         ;; First byte
         switch_sta1 := *+1
         sta     $C0FF
-        cpy     #40
-      IF CC
-        lda     cursor_savebits,x
-        sta     (vid_ptr),y
-        dex
-      END_IF
+        jsr     do_byte
 
         ;; Third byte (on same page)
         iny
-        cpy     #40
-      IF CC
-        lda     cursor_savebits,x
-        sta     (vid_ptr),y
-        dex
-      END_IF
+        jsr     do_byte
 
         ;; Second byte
         switch_dey := *
         dey
         switch_sta2 := *+1
         sta     $C0FF
-        cpy     #40
-      IF CC
-        lda     cursor_savebits,x
-        sta     (vid_ptr),y
-        dex
-      END_IF
+        jsr     do_byte
 
         ldy     cursor_y2
         dey
@@ -4543,6 +4509,16 @@ finish_switch_dey := FinishDrawCursor::switch_dey
 
         sta     LOWSCR
 ret:    rts
+
+do_byte:
+        cpy     #40
+      IF CC
+        lda     cursor_savebits,x
+        sta     (vid_ptr),y
+        dex
+      END_IF
+        rts
+
 .endproc ; RestoreCursorBackground
 restore_switch_sta1 := RestoreCursorBackground::switch_sta1
 restore_switch_sta2 := RestoreCursorBackground::switch_sta2
@@ -4660,7 +4636,9 @@ mouse_moved:
         jsr     WaitVBL
 
         ;; NTSC VBI budget is 4550 cycles (70 rows x 65 cycles/row)
-        ;; The below is 2903 cycles, to avoid tearing.
+        ;; The below is 3778 cycles, which is sufficient to avoid
+        ;; tearing. It can be reduced to at least 2903 by inlining,
+        ;; at the expense of size.
 
         jsr     RestoreCursorBackground
         jsr     FinishDrawCursor
