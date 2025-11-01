@@ -73,7 +73,6 @@ kScreenHeight   = 192
         x_offset        := $F7
         y_offset        := $F9
 
-        glyph_widths    := $FB  ; address
         glyph_type      := $FD  ; 0=regular, $80=double width
         glyph_last      := $FE  ; last glyph index
         glyph_height_p  := $FF  ; glyph height
@@ -3118,7 +3117,10 @@ prepare_font:
 
         ldax    current_textfont
         addax8  #3
-        stax    glyph_widths    ; set $FB/$FC to start of widths
+        stax    measure_text_glyph_widths
+        stax    drawtextimpl_glyph_widths_a
+        stax    drawtextimpl_glyph_widths_b
+        stax    drawtextimpl_glyph_widths_c
 
         sec
         adc     glyph_last
@@ -3183,25 +3185,28 @@ glyph_row_hi:
         accum  := $82           ; hi
         pos    := $83
 
-        ldx     #0              ; X=lo
-        ldy     #0
-        sty     accum
-loop:   sty     pos
-        lda     (data),y
-        tay
-        txa
+        ldax    data
+        stax    text_data
+
+        lda     #0
+        sta     accum
         clc
-        adc     (glyph_widths),y
+
+        tay
+loop:
+text_data = *+1
+        ldx     $FFFF,y
+glyph_widths = *+1
+        adc     $FFFF,x
         bcc     :+
         inc     accum
-:       tax
-        ldy     pos
-        iny
+        clc
+:       iny
         cpy     length
         bne     loop
-        txa                     ; now A=lo
         RETURN  X=accum         ; A,X
 .endproc ; MeasureText
+measure_text_glyph_widths = MeasureText::glyph_widths
 
 ;;; ============================================================
 
@@ -3253,6 +3258,9 @@ loop:   sty     pos
         text_len  := $A3        ; param
         text_width := $A4       ; computed
 
+        ldax    text_addr
+        stax    text_addr_a
+        stax    text_addr_b
 
         jsr     maybe_unstash_low_zp
         jsr     MeasureText
@@ -3273,18 +3281,21 @@ loop:   sty     pos
 
         ldy     #0
         ldx     vid_page
+        stx     $82
+
+        clc
+        tya
 left_clip_loop:
         sty     text_index
-        lda     (text_addr),y
-        tay
-        lda     (glyph_widths),y
-        clc
-        adc     clipped_left             ; exit loop when first partially or
+text_addr_a = *+1
+        ldx     $FFFF,y
+glyph_widths_a = *+1
+        adc     $FFFF,x                  ; exit loop when first partially or
         bcc     :+                       ; fully visible glyph is found
-        inx
+        clc
+        inc     $82
         beq     no_left_clip
 :       sta     clipped_left
-        ldy     text_index
         iny
         bne     left_clip_loop
 
@@ -3467,8 +3478,9 @@ text_dest_next:
         sta     shift_main_ptr
 
         ldy     text_index
+text_addr_b = *+1
 next_glyph:
-        lda     (text_addr),y
+        lda     $FFFF,y
         tay
 
         bit     doublewidth_flag
@@ -3477,7 +3489,8 @@ next_glyph:
         adc     glyph_last
 :
         tax
-        lda     (glyph_widths),y
+glyph_widths_b = *+1
+        lda     $FFFF,x
         beq     zero_width_glyph
 
         ldy     left_mod14
@@ -3551,19 +3564,12 @@ do_blit:
         lda     remaining_width
         bne     advance_x              ; always
 
-:       txa
-        tay
-        lda     (glyph_widths),y
+:
+glyph_widths_c = *+1
+        lda     $FFFF,x
         cmp     #8
-        bcs     :+
+        bcs     cont_double_width
         inc     text_index             ; completed a single-width glyph
-        bcc     advance_x
-
-:       sbc     #7
-        sta     remaining_width
-        ror     doublewidth_flag       ; will set to negative
-        lda     #7                     ; did the first 7 pixels of a
-                                       ; double-width glyph
 advance_x:
         clc
         adc     left_mod14
@@ -3580,6 +3586,14 @@ L5BFF:  ldy     text_index
 
 jmp_last_blit:
         jmp     last_blit
+
+cont_double_width:
+        sbc     #7
+        sta     remaining_width
+        ror     doublewidth_flag       ; will set to negative
+        lda     #7                     ; did the first 7 pixels of a
+                                       ; double-width glyph
+        jmp     advance_x
 
 advance_byte:
         sbc     #7
@@ -3728,6 +3742,9 @@ masked_blit_line_table_high:
         .endrepeat
 
 .endproc ; DrawTextImpl
+drawtextimpl_glyph_widths_a = DrawTextImpl::glyph_widths_a
+drawtextimpl_glyph_widths_b = DrawTextImpl::glyph_widths_b
+drawtextimpl_glyph_widths_c = DrawTextImpl::glyph_widths_c
 
 ;;; ============================================================
 
