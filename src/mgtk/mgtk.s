@@ -4638,30 +4638,24 @@ cursor_throttle:
         ;; --------------------------------------------------
 
 mouse_moved:
-        lda     cursor_count           ; hidden? if so, skip
-        bne     no_move
-        bit     cursor_flag
-        bmi     no_move
-
+        ;; Updated position
         ldx     #2
-        ;; TODO: Is updating `cursor_flag` here correct?
-        stx     cursor_flag
 :       lda     mouse_x,x
         sta     cursor_pos,x
         dex
         bpl     :-
 
-        ;; BUG: After `ObscureCursor` called, moving the cursor
-        ;; no longer re-shows it.
-        ;; Regressed in 17df0489cf60dd84a8dd3e88f858b32faa5a6474
+        lda     cursor_count
+        bne     no_move
 
+        ;; Pre-calculate the cursor coordinates, shifted bits and mask bytes
         jsr     PreDrawCursor
 
         jsr     WaitVBL
 
         ;; NTSC VBI budget is 4550 cycles (70 rows x 65 cycles/row)
-        ;; The below is 3778 cycles, which is sufficient to avoid
-        ;; tearing. It can be reduced to at least 2903 by inlining,
+        ;; The below is ~3778 cycles, which is sufficient to avoid
+        ;; tearing. It can be reduced to at least ~2903 by inlining,
         ;; at the expense of size.
 
         jsr     RestoreCursorBackground
