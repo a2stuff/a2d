@@ -1726,3 +1726,12 @@ Repeat these tests for all language builds:
 * Launch DeskTop. Click the Apple Menu. Verify that no screen corruption occurs.
 * Launch DeskTop. Click the Shortcuts menu. Verify that no screen corruption occurs.
 * Launch DeskTop. Select a file. File > Copy To.... Verify that directories appear within volumes.
+
+# Performance
+
+For the following tests, run on non-IIgs system with any acceleration disabled.
+
+* Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Click the down arrow in the vertical scroll bar. Verify that the window repaints in under 1s, and that the mouse cursor remains responsive.
+* Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Press Apple-A to Select All. Verify that the visible icons all become selected in under 1s, and that the mouse cursor remains responsive. Click a blank area within the window to clear selection. Verify that the visible icons all become selected in under 1s, and that the mouse cursor remains responsive.
+* Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Type `F`. Verify that icon `F1` becomes selected in under 2s. Without moving the mouse, type `9`. Verify that icon `F9` becomes selected in under 1s. Without moving the mouse, type `9`. Verify that icon `F99` becomes selected and scrolled into view in under 2s.
+* Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Press the Left Arrow key. Verify that icon `F1` becomes selected. Use the arrow keys to move selection. Verify that changing selection takes under 0.5s when scrolling is not required.
