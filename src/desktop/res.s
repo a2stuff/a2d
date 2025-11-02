@@ -871,6 +871,9 @@ file_record_ptr:
 
 ;;; ============================================================
 
+kMaxResizeWindowWidth = 545
+kMaxResizeWindowHeight = 175
+
 .macro WINFO_DEFN id, label, buflabel
 .params label
 window_id:      .byte   id
@@ -886,8 +889,8 @@ status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   170
 mincontheight:  .word   50
-maxcontwidth:   .word   545
-maxcontheight:  .word   175
+maxcontwidth:   .word   kMaxResizeWindowWidth
+maxcontheight:  .word   kMaxResizeWindowHeight
 port:
         DEFINE_POINT viewloc, 20, 27
 mapbits:        .addr   MGTK::screen_mapbits
@@ -920,7 +923,7 @@ buflabel:       .res    16, 0
         DEFINE_POINT header_text_delta, 0, 0
 
         DEFINE_POINT header_line_left, 0, 0
-        DEFINE_POINT header_line_right, 0, 0
+        DEFINE_POINT header_line_right, kMaxResizeWindowWidth, 0
 
 str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator

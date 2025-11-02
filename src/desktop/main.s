@@ -7255,41 +7255,24 @@ END_PARAM_BLOCK
         ;; Separator Lines
 
         viewport := window_grafport+MGTK::GrafPort::maprect
+        jsr     SetPenModeNotCopy
 
         ;; x coords
         copy16  viewport+MGTK::Rect::x1, header_line_left::xcoord
-        copy16  viewport+MGTK::Rect::x2, header_line_right::xcoord
 
-        ;; y coords
-        lda     viewport+MGTK::Rect::y1
-        clc
-        adc     #kWindowHeaderHeight - 3
-        sta     header_line_left::ycoord
-        sta     header_line_right::ycoord
-        lda     viewport+MGTK::Rect::y1+1
-        adc     #0
-        sta     header_line_left::ycoord+1
-        sta     header_line_right::ycoord+1
+        ;; y coord
+        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line_left::ycoord
 
         ;; Draw top line
         MGTK_CALL MGTK::MoveTo, header_line_left
-        jsr     SetPenModeNotCopy
-        MGTK_CALL MGTK::LineTo, header_line_right
+        MGTK_CALL MGTK::Line, header_line_right
 
         ;; Offset down by 2px
-        lda     header_line_left::ycoord
-        clc
-        adc     #2
-        sta     header_line_left::ycoord
-        sta     header_line_right::ycoord
-        lda     header_line_left::ycoord+1
-        adc     #0
-        sta     header_line_left::ycoord+1
-        sta     header_line_right::ycoord+1
+        add16_8 header_line_left::ycoord, #2
 
         ;; Draw bottom line
         MGTK_CALL MGTK::MoveTo, header_line_left
-        MGTK_CALL MGTK::LineTo, header_line_right
+        MGTK_CALL MGTK::Line, header_line_right
 
         ;; --------------------------------------------------
         ;; Labels (Items/K in disk/K available)
