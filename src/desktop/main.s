@@ -199,8 +199,8 @@ tick_counter:
         sta     getwinport_params::window_id
         jsr     LoadWindowEntryTable
 
-        ;; `DrawWindowHeader` and `AdjustUpdatePortForEntries` rely on
-        ;; `window_grafport` for dimensions
+        ;; `AdjustUpdatePortForEntries` relies on `window_grafport`
+        ;; for dimensions
         MGTK_CALL MGTK::GetWinPort, getwinport_params
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
@@ -7241,7 +7241,9 @@ next:   add16_8 ptr, #.sizeof(ICTRecord)
 .proc DrawWindowHeader
 
 ;;; Local variables on ZP
-PARAM_BLOCK, $50
+PARAM_BLOCK, $40
+maprect                 .tag MGTK::Rect
+
 num_items               .word
 blocks_in_disk          .word
 blocks_available        .word
@@ -7252,16 +7254,34 @@ width_k_available       .word
 END_PARAM_BLOCK
 
         ;; --------------------------------------------------
+        ;; Window header doesn't scroll with window's maprect so we
+        ;; need to "undo" the offset. Stash the maprect somewhere
+        ;; handy.
+
+        ;; TODO: See if we can dedupe with `PrepWindowScreenMapping`
+
+        winfo_ptr := $06
+        CALL    GetWindowPtr, A=cached_window_id
+        stax    winfo_ptr
+
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect) - 1
+        ldx     #.sizeof(MGTK::Rect) - 1
+    DO
+        copy8   (winfo_ptr),y, maprect,x
+        dey
+        dex
+    WHILE POS
+
+        ;; --------------------------------------------------
         ;; Separator Lines
 
-        viewport := window_grafport+MGTK::GrafPort::maprect
         jsr     SetPenModeNotCopy
 
         ;; x coords
-        copy16  viewport+MGTK::Rect::x1, header_line_left::xcoord
+        copy16  maprect+MGTK::Rect::x1, header_line_left::xcoord
 
         ;; y coord
-        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line_left::ycoord
+        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line_left::ycoord
 
         ;; Draw top line
         MGTK_CALL MGTK::MoveTo, header_line_left
@@ -7283,15 +7303,12 @@ END_PARAM_BLOCK
         stax    num_items
 
         ldx     cached_window_id
-        dex                     ; index 0 is window 1
         txa
         asl     a
         tay
-        lda     window_draw_blocks_used_table,y
-        ldx     window_draw_blocks_used_table+1,y
+        ldax    window_draw_blocks_used_table-2,y ; 1-based to 0-based
         stax    blocks_in_disk
-        lda     window_draw_blocks_free_table,y
-        ldx     window_draw_blocks_free_table+1,y
+        ldax    window_draw_blocks_free_table-2,y
         stax    blocks_available
 
         ;; Measure strings
@@ -7308,10 +7325,10 @@ END_PARAM_BLOCK
         stax    width_k_available
 
         ;; Determine gap for centering
-        gap := header_text_delta::xcoord
-        sub16   viewport+MGTK::Rect::x2, viewport+MGTK::Rect::x1, gap ; window width
-        sub16_8 gap, #kWindowHeaderInsetX * 2, gap ; minus left/right insets
-        sub16   gap, width_num_items, gap          ; minus width of all text
+        gap := $06
+        sub16   maprect+MGTK::Rect::x2, maprect+MGTK::Rect::x1, gap
+        sub16_8 gap, #kWindowHeaderInsetX * 2 ; minus left/right insets
+        sub16   gap, width_num_items, gap ; minus width of all text
         sub16   gap, width_k_in_disk, gap
         sub16   gap, width_k_available, gap
         asr16   gap                         ; divided evenly
@@ -7319,9 +7336,10 @@ END_PARAM_BLOCK
     IF POS
         copy16  #kWindowHeaderSpacingX, gap ; yes, use the minimum
     END_IF
+        copy16  gap, header_text_delta::xcoord
 
-        add16_8 viewport+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
-        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
+        add16_8 maprect+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
+        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
 
         ;; Draw "XXX items"
         MGTK_CALL MGTK::MoveTo, header_text_pos
