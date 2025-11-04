@@ -464,28 +464,28 @@ op:     lda     SELF_MODIFIED
         ;; Now Y = type, A,X = argument
        IF Y = #'d'              ; decimal - decimal integer
         jsr     IntToString
-        TAIL_CALL append_string, AX=#str_from_int
+        TAIL_CALL _AppendString, AX=#str_from_int
        END_IF
 
        IF Y = #'n'              ; number - decimal integer with separators
         jsr     IntToStringWithSeparators
-        TAIL_CALL append_string, AX=#str_from_int
+        TAIL_CALL _AppendString, AX=#str_from_int
        END_IF
 
        IF Y = #'k'              ; size - in K from blocks
         jsr     PushPointers
         jsr     ComposeSizeString
         jsr     PopPointers
-        TAIL_CALL append_string, AX=#text_buffer2
+        TAIL_CALL _AppendString, AX=#text_buffer2
        END_IF
 
        IF Y = #'x'              ; hex - hexadecimal word
-        jsr     append_hex
+        jsr     _AppendHex
         jmp     resume
        END_IF
 
        IF Y = #'s'              ; string pointer
-        jmp     append_string
+        jmp     _AppendString
        END_IF
 
         ;; If 'c', char in A is written, X is ignored
@@ -495,7 +495,7 @@ op:     lda     SELF_MODIFIED
        END_IF
       END_IF
 
-        jsr     write_byte
+        jsr     _WriteByte
 
 resume:
         len := *+1
@@ -528,14 +528,14 @@ read_byte:
         rts
 
 ;;; Preserves X
-.proc write_byte
+.proc _WriteByte
         inc     out_buf
         ldy     out_buf
         sta     out_buf,y
         rts
-.endproc ; write_byte
+.endproc ; _WriteByte
 
-.proc append_string
+.proc _AppendString
         stax    arg_ptr
         ldy     #0
         lda     (arg_ptr),y
@@ -547,15 +547,15 @@ read_byte:
         tya
         pha
         lda     (arg_ptr),y
-        jsr     write_byte      ; preserves X
+        jsr     _WriteByte      ; preserves X
         pla
         tay                     ; Y = index
         dex
     WHILE NOT_ZERO
         beq     resume          ; always
-.endproc ; append_string
+.endproc ; _AppendString
 
-.proc append_hex
+.proc _AppendHex
         pha
         txa
         jsr     do_byte
@@ -578,8 +578,8 @@ do_nibble:
         cmp     #10             ; >= 10?
         adc     #'0'            ; +$30 (i.e. '0') if < 10, +$40 (i.e. 'A') -10 if >= 10
         cld
-        jmp     write_byte
-.endproc ; append_hex
+        jmp     _WriteByte
+.endproc ; _AppendHex
 
 .endproc ; FormatMessage
 
