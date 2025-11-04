@@ -801,7 +801,7 @@ _FLOW_DEFINE_COMPARE_MACROS_ "GE"
 ;;; loads/clears/sets are emitted in the order given. CALL produces
 ;;; a JSR, TAIL_CALL produces a JMP, and RETURN produces RTS.
 ;;;
-;;; Registers/pseudo-registers are: A, X, Y, AX, AY, XY
+;;; Registers/pseudo-registers are: A, X, Y, AX, AY, XY, YA
 ;;; Expressions can be anything supported by the LD* ops/pseudo-ops.
 ;;; e.g. CALL Proc, AX=ptr, Y=#kOptions
 ;;;
@@ -898,6 +898,12 @@ _FLOW_DEFINE_COMPARE_MACROS_ "GE"
       .undef __flow_opcode__
       .define __flow_register_name__ "AY"
       .define __flow_opcode__ lday
+      @__flow_call_load_type__ .set ::__flow_call_load_type_register__
+    .elseif .xmatch(.left(1,{arg}), YA)
+      .undef __flow_register_name__
+      .undef __flow_opcode__
+      .define __flow_register_name__ "YA"
+      .define __flow_opcode__ ldya
       @__flow_call_load_type__ .set ::__flow_call_load_type_register__
     .elseif .xmatch(.left(1,{arg}), XY)
       .undef __flow_register_name__

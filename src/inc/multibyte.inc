@@ -156,54 +156,52 @@
 ;;; ============================================================
 ;;; 16-bit pseudo-ops
 
+;;; Load two registers (e.g. A, X), optimizing same immediate (e.g. w/ TAX)
+.macro _ld_reg_reg ld1, ld2, t12, arg, reg
+    .ifnblank reg
+        ld1    arg, reg
+        ld2    arg+1, reg
+    .elseif !_is_immediate {arg}
+        ld1   arg
+        ld2   arg+1
+    .else
+        ld1   #.lobyte(_immediate_value {arg})
+      .if .const(_immediate_value {arg})
+       .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
+        t12                     ; lo=hi
+       .else
+        ld2   #.hibyte(_immediate_value {arg})
+       .endif
+      .else
+        ld2   #.hibyte(_immediate_value {arg})
+      .endif
+    .endif
+.endmacro
+
 ;;; Load A,X
 ;;;    ldax #$1234      ; immediate (optimized if lo=hi)
 ;;;    ldax $1234       ; absolute
 ;;;    ldax $1234,y     ; absolute,y
 .macro ldax arg, reg
-    .ifnblank reg
-        lda    arg, reg
-        ldx    arg+1, reg
-    .elseif !_is_immediate {arg}
-        lda   arg
-        ldx   arg+1
-    .else
-        lda   #.lobyte(_immediate_value {arg})
-      .if .const(_immediate_value {arg})
-       .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
-        tax                     ; lo=hi
-       .else
-        ldx   #.hibyte(_immediate_value {arg})
-       .endif
-      .else
-        ldx   #.hibyte(_immediate_value {arg})
-      .endif
-    .endif
+        _ld_reg_reg lda, ldx, tax, arg, reg
 .endmacro
 
 ;;; Load A,Y
 ;;;    lday #$1234      ; immediate (optimized if lo=hi)
 ;;;    lday $1234       ; absolute
-.macro lday arg
-    .if !_is_immediate {arg}
-        lda     arg
-        ldx     arg+1
-    .else
-        lda     #.lobyte(_immediate_value {arg})
-      .if .const(_immediate_value {arg})
-       .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
-        tay                     ; lo=hi
-       .else
-        ldy     #.hibyte(_immediate_value {arg})
-       .endif
-      .else
-        ldy     #.hibyte(_immediate_value {arg})
-      .endif
-    .endif
+.macro lday arg, reg
+        _ld_reg_reg lda, ldy, tay, arg, reg
+.endmacro
+
+;;; Load Y, A
+;;;    ldya #$1234      ; immediate (optimized if lo=hi)
+;;;    ldya $1234       ; absolute
+.macro ldya arg, reg
+        _ld_reg_reg ldy, lda, tya, arg, reg
 .endmacro
 
 ;;; Load X,Y
-;;;    ldxy #$1234      ; immediate
+;;;    ldxy #$1234      ; immediate (no optimization)
 ;;;    ldxy $1234       ; absolute
 .macro ldxy arg
         _op_lo ldx, {arg}

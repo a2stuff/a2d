@@ -9,9 +9,7 @@
 
 ;;; FAC = int
 .macro  FAC_LOAD_INT arg
-        _op_lo ldy, {arg}
-        _op_hi lda, {arg}
-        jsr     GIVAYF
+        CALL    GIVAYF, YA=arg
 .endmacro
 
 ;;; int = FAC
@@ -25,42 +23,35 @@
 
 ;;; FAC = float
 .macro  FAC_LOAD float
-        lday    #float
-        jsr     MOVFM
+        CALL    MOVFM, AY=#float
 .endmacro
 
 ;;; float = FAC
 .macro  FAC_STORE float
-        ldxy    #float
-        jsr     MOVMF
+        CALL    MOVMF, XY=#float
 .endmacro
 
 ;;; FAC = float / FAC
 .macro  FAC_DIV float
-        lday    #float
-        jsr     FDIV
+        CALL    FDIV, AY=#float
 .endmacro
 
 ;;; FAC = float * FAC
 .macro  FAC_MUL float
-        lday    #float
-        jsr     FMULT
+        CALL    FMULT, AY=#float
 .endmacro
 
 ;;; FAC = float - FAC
 .macro  FAC_SUB float
-        lday    #float
-        jsr     FSUB
+        CALL    FSUB, AY=#float
 .endmacro
 
 ;;; FAC = float + FAC
 .macro  FAC_ADD float
-        lday    #float
-        jsr     FADD
+        CALL    FADD, AY=#float
 .endmacro
 
 ;;; A = float <=> FAC
 .macro  FAC_COMP float
-        lday    #float
-        jsr     FCOMP
+        CALL    FCOMP, AY=#float
 .endmacro
