@@ -152,13 +152,13 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
   * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the window contents do not refresh.
   * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed, and that (apart from the source window for Copy) the window contents do refresh.
 
-* Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
+* Open `/TESTS/HUNDRED.FILES`, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
 
 * Launch DeskTop. Open a volume window with enough icons that a scrollbar appears. Click on an active part of the scrollbar. Verify that the scrollbar responds immediately, not after the double-click detection delay expires.
 * Launch DeskTop. Open a volume window where the vertical and horizontal scrollbars are inactive. Click on each inactive scrollbar. Verify nothing happens.
 
-* Use `BASIC.SYSTEM` to create a file with type $08 e.g. `CREATE TEST08,T$08`. Launch DeskTop. Open the appropriate window. Verify that an icon appears for the file.
-* Use `BASIC.SYSTEM` to create a file with type $01 e.g. `CREATE TEST01,T$01`. Launch DeskTop. Open the appropriate window. Verify that an icon appears for the file.
+* Open `TESTS/FILE.TYPES`. Verify that an icon appears for the `TEST08` file.
+* Open `TESTS/FILE.TYPES`. Verify that an icon appears for the `TEST01` file.
 
 
 ## Selection
