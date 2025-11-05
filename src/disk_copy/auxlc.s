@@ -65,14 +65,6 @@ key_mods  := * + 3
 .endparams
         .res    4, 0
 
-
-
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
 ;;; ============================================================
 ;;; Menu definition
 
@@ -326,7 +318,7 @@ rect:   .tag    MGTK::Rect
 .endparams
 
 device_name_buf:
-        .res 18, 0
+        .res 16, 0
 
 listbox_enabled_flag:  .byte   0 ; bit7
 
@@ -334,7 +326,7 @@ listbox_enabled_flag:  .byte   0 ; bit7
 ;;; %0xxxxxxx = ProDOS
 ;;; %10xxxxxx = DOS 3.3
 ;;; %11xxxxx0 = Pascal
-;;; %11xxxxx1 = Other
+;;; %11xxxxx1 = Other - TODO: %1xxxxxx1 in the code!
 source_disk_format:
         .byte   0
 
@@ -558,8 +550,7 @@ prompt_insert_source:
         ;; Check source disk
 
         ldx     source_drive_index
-        copy8   drive_unitnum_table,x, main::on_line_params2::unit_num
-        jsr     main::CallOnLine2
+        CALL    main::CallOnLine2, A=drive_unitnum_table,x
         bcc     source_is_pro
 
 check_source_error:
@@ -604,8 +595,7 @@ check_source_finish:
         ;; Check destination disk
 
         ldx     dest_drive_index
-        copy8   drive_unitnum_table,x, main::on_line_params2::unit_num
-        jsr     main::CallOnLine2
+        CALL    main::CallOnLine2, A=drive_unitnum_table,x
         bcc     dest_is_pro
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     dest_ok
@@ -897,7 +887,20 @@ menu_offset_table:
     IF ZERO
         lda     event_params::key
       IF A <> #CHAR_ESCAPE
-        jmp     dialog_shortcuts
+        CALL    ToUpperCase, A=event_params::key
+
+       IF A = #kShortcutReadDisk
+        BTK_CALL BTK::Flash, read_drive_button
+        RETURN  A=#1
+       END_IF
+
+       IF A = #CHAR_RETURN
+        BTK_CALL BTK::Flash, dialog_ok_button
+        bmi     ignore          ; disabled
+        RETURN  A=#0
+       END_IF
+
+ignore: RETURN  A=#$FF
       END_IF
     END_IF
 
@@ -993,7 +996,7 @@ ret:    rts
         cmp     #winfo_dialog::kWindowId
         beq     HandleDialogClick
 
-    IF A = winfo_drive_select
+    IF A = #kListBoxWindowId
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
 
@@ -1083,25 +1086,6 @@ params: .res    3
 
         rts
 .endproc ; MGTKRelayImpl
-
-;;; ============================================================
-
-.proc dialog_shortcuts
-        CALL    ToUpperCase, A=event_params::key
-
-    IF A = #kShortcutReadDisk
-        BTK_CALL BTK::Flash, read_drive_button
-        RETURN  A=#1
-    END_IF
-
-    IF A = #CHAR_RETURN
-        BTK_CALL BTK::Flash, dialog_ok_button
-        bmi     ignore          ; disabled
-        RETURN  A=#0
-    END_IF
-
-ignore: RETURN  A=#$FF
-.endproc ; dialog_shortcuts
 
 ;;; ============================================================
 
@@ -1379,8 +1363,7 @@ fallback:
 
 ;;; Populates `num_drives`, `drive_unitnum_table` and `drive_name_table`
 .proc EnumerateDevices
-        copy8   #0, main::on_line_params2::unit_num
-        jsr     main::CallOnLine2
+        CALL    main::CallOnLine2, A=#0
     IF CS
         brk                     ; rude!
     END_IF
@@ -1388,9 +1371,12 @@ fallback:
         on_line_ptr := $06
 
         lda     #0
-        sta     device_index
         sta     num_drives
-loop:   lda     device_index    ; <16
+        tax                     ; X = index
+loop:
+        txa
+        pha
+
         asl     a               ; *=16 (each record is 16 bytes)
         asl     a
         asl     a
@@ -1405,7 +1391,10 @@ loop:   lda     device_index    ; <16
         ;; Check first byte of record
         ldy     #0
         lda     (on_line_ptr),y
-        RTS_IF ZERO             ; 0 indicates end of valid records
+    IF ZERO                     ; 0 indicates end of valid records
+        pla                     ; pop index off stack
+        rts
+    END_IF
 
         ;; Tentatively add to table; doesn't count until we inc `num_drives`
         pha                     ; A = unit number / name length
@@ -1446,22 +1435,20 @@ loop:   lda     device_index    ; <16
         ;; Pascal
         CALL    GetDriveNameTableSlot, A=num_drives ; result in A,X
         jsr     GetPascalVolName      ; A,X is buffer to populate
-        jmp     next
+        jmp     keep_it
        END_IF
 
         jsr     IsDOS33BootBlock
        IF CC
         ;; DOS 3.3
         CALL    AssignDriveName, AX=#str_dos33
-        jmp     next
+        jmp     keep_it
        END_IF
       END_IF
 
         ;; Unknown
         CALL    AssignDriveName, AX=#str_unknown
-
-next:   inc     num_drives
-
+        ;; "fall through" to `keep_it`
     ELSE
         ;; Valid ProDOS volume
 
@@ -1474,19 +1461,20 @@ next:   inc     num_drives
         CALL    AdjustOnLineEntryCase, AX=on_line_ptr
         CALL    AssignDriveName, AX=on_line_ptr
 
-        inc     num_drives
+        FALL_THROUGH_TO keep_it
     END_IF
 
+keep_it:
+        inc     num_drives
+
 next_device:
-        inc     device_index
-        lda     device_index
-        cmp     #kMaxNumDrives+1
+        pla
+        tax
+        inx                     ; X = index
+        cpx     #kMaxNumDrives+1
         jne     loop
 
         rts
-
-device_index:
-        .byte   0
 
 .endproc ; EnumerateDevices
 
@@ -1505,33 +1493,34 @@ device_index:
 
         lda     #0
         sta     num_drives
-        sta     index
-loop:   lda     index
+        tax                     ; X = index
+    DO
+        txa
+        pha
 
         ;; Compare block counts
         asl     a
         tax
         ecmp16  block_count_table,x, src_block_count
-        bne     next
-
+      IF EQ
         ;; Same - add it
-        lda     index
+        pla                     ; A = index
+        pha
         ldx     num_drives
         sta     destination_index_table,x
 
         ;; Keep going
         inc     num_drives
-next:   inc     index
-        lda     index
-        cmp     num_src_drives
-        beq     finish
-        jmp     loop
+      END_IF
+
+        pla
+        tax
+        inx
+    WHILE X <> num_src_drives
 
         ;; Clear selection
-finish: copy8   #$FF, current_drive_selection
+        copy8   #$FF, current_drive_selection
         rts
-
-index:  .byte   0
 
 src_block_count:
         .word   0
@@ -1570,15 +1559,18 @@ device_index:
 ;;; Populate block_count_table across all devices
 
 .proc GetAllBlockCounts
-        copy8   #0, index
+        ldx     #0              ; index
     DO
-        jsr     GetBlockCount
-        inc     index
-        lda     index
-    WHILE A <> num_drives
-        rts
+        txa
+        pha
 
-index:  .byte   0
+        jsr     GetBlockCount
+
+        pla
+        tax
+        inx
+    WHILE X <> num_drives
+        rts
 .endproc ; GetAllBlockCounts
 
 ;;; ============================================================
@@ -2200,8 +2192,7 @@ ShowAlertDialog := ShowAlertDialogImpl::start
 @retry:
         ;; Poll drive until something is present
         ;; (either a ProDOS disk or a non-ProDOS disk)
-        copy8   unit_num, main::on_line_params::unit_num
-        jsr     main::CallOnLine
+        CALL    main::CallOnLine, A=unit_num
         bcc     done
 
         cmp     #ERR_NOT_PRODOS_VOLUME

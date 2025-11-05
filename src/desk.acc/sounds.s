@@ -302,14 +302,14 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
         lda     findwindow_params::window_id
-    IF A = winfo::window_id
+    IF A = #kDAWindowId
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         beq     HandleDialogClick
         jmp     InputLoop
     END_IF
 
-    IF A = winfo_listbox::window_id
+    IF A = #kListBoxWindowId
         lda     findwindow_params::which_area
       IF A = #MGTK::Area::content
         COPY_STRUCT event_params::coords, lb_params::coords

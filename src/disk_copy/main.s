@@ -943,12 +943,18 @@ done:   rts
 
 ;;; ============================================================
 
+;;; Input: A = `unit_num`
+;;; Output: C = 0 on success, C = 1 on error
 .proc CallOnLine2
+        sta     on_line_params2::unit_num
         MLI_CALL ON_LINE, on_line_params2
         rts
 .endproc ; CallOnLine2
 
+;;; Input: A = `unit_num`
+;;; Output: C = 0 on success, C = 1 on error
 .proc CallOnLine
+        sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         rts
 .endproc ; CallOnLine
