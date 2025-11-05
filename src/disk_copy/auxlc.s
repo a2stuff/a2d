@@ -322,11 +322,10 @@ device_name_buf:
 
 listbox_enabled_flag:  .byte   0 ; bit7
 
-
-;;; %0xxxxxxx = ProDOS
-;;; %10xxxxxx = DOS 3.3
-;;; %11xxxxx0 = Pascal
-;;; %11xxxxx1 = Other - TODO: %1xxxxxx1 in the code!
+kSourceDiskFormatProDOS = %00000000 ; bit7 clear
+kSourceDiskFormatDOS33  = %10000000 ; bit6 clear
+kSourceDiskFormatPascal = %11000000 ; bits 0-3 clear
+kSourceDiskFormatOther  = %10000001 ; TODO: Should be %11000001 ???
 source_disk_format:
         .byte   0
 
@@ -440,7 +439,7 @@ InitDialog:
         copy8   #$FF, current_drive_selection
         copy8   #BTK::kButtonStateDisabled, dialog_ok_button::state
 
-        copy8   #$81, source_disk_format ; other
+        copy8   #kSourceDiskFormatOther, source_disk_format
 
         copy8   #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
@@ -544,7 +543,7 @@ prompt_insert_source:
         jmp     InitDialog      ; Cancel
     END_IF
 
-        copy8   #$00, source_disk_format ; ProDOS
+        copy8   #kSourceDiskFormatProDOS, source_disk_format
 
         ;; --------------------------------------------------
         ;; Check source disk
@@ -1732,13 +1731,21 @@ remainder:      .word   0              ; (out)
         CALL    PrepSDStrings, A=drive_unitnum_table,x
         MGTK_CALL MGTK::MoveTo, point_source_slot_drive
         CALL    DrawString, AX=#str_slot_drive_pattern
+
         bit     source_disk_format
+        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
         bpl     show_name       ; ProDOS
+
+        ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
+        ;; TODO: Also includes `auxlc::kSourceDiskFormatOther`, but is unclear
         bvc     :+              ; DOS 3.3
+
         lda     source_disk_format
         and     #$0F
+        ASSERT_EQUALS auxlc::kSourceDiskFormatPascal & $0F, $00
         beq     show_name       ; Pascal
-:       rts
+:
+        rts
 
 show_name:
         CALL    DrawString, AX=#str_2_spaces
@@ -1767,10 +1774,14 @@ show_name:
         MGTK_CALL MGTK::MoveTo, point_disk_copy
 
         bit     source_disk_format
+        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
     IF NC                       ; ProDOS
         CALL    DrawString, AX=#str_prodos_disk_copy
         rts
     END_IF
+
+        ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
+        ;; TODO: Erroneously includes `auxlc::kSourceDiskFormatDOS33`
     IF VC                       ; DOS 3.3
         CALL    DrawString, AX=#str_dos33_disk_copy
         rts
@@ -1778,6 +1789,7 @@ show_name:
 
         lda     source_disk_format
         and     #$0F
+        ASSERT_EQUALS auxlc::kSourceDiskFormatPascal & $0F, $00
     IF ZERO                     ; Pascal
         CALL    DrawString, AX=#str_pascal_disk_copy
     END_IF

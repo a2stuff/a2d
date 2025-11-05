@@ -197,19 +197,19 @@ EjectDisk := EjectDiskImpl::start
         jsr     auxlc::IsPascalBootBlock
     IF CC
         CALL    auxlc::GetPascalVolName, AX=#on_line_buffer2
-        copy8   #$C0, auxlc::source_disk_format ; Pascal
+        copy8   #auxlc::kSourceDiskFormatPascal, auxlc::source_disk_format
         rts
     END_IF
 
         ;; DOS 3.3?
         jsr     auxlc::IsDOS33BootBlock
     IF CC
-        copy8   #$80,auxlc::source_disk_format ; DOS 3.3
+        copy8   #auxlc::kSourceDiskFormatDOS33, auxlc::source_disk_format
         rts
     END_IF
 
         ;; Anything else
-fail:   copy8   #$81, auxlc::source_disk_format ; Other
+fail:   copy8   #auxlc::kSourceDiskFormatOther, auxlc::source_disk_format
         rts
 .endproc ; IdentifySourceNonProDOSDiskType
 
@@ -228,7 +228,9 @@ fail:   copy8   #$81, auxlc::source_disk_format ; Other
         lsr16   block_count_div8
         lsr16   block_count_div8
         copy16  block_count_div8, auxlc::block_count_div8
+
         bit     auxlc::source_disk_format
+        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
         bmi     :+              ; not ProDOS
         bit     auxlc::disk_copy_flag
         bmi     :+
