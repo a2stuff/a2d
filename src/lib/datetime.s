@@ -87,7 +87,7 @@ ones:   pla                     ; ones
         lda     #'A'
         SKIP_NEXT_2_BYTE_INSTRUCTION
 :       lda     #'P'
-store:  iny
+        iny
         sta     str_time,y
         lda     #'M'
         iny

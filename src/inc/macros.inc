@@ -322,6 +322,7 @@ loop:   pla
 
 .macro PREDEFINE_SCOPE scope_name
     scope_name::__predefine_scope__ = 0
+    .refto scope_name::__predefine_scope__
 .endmacro
 
 ::__shadow_warning_suppress_count__ .set 0

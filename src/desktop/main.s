@@ -2790,7 +2790,6 @@ CmdNewFolder    := CmdNewFolderImpl::start
 ;;; Trashes $08
 
 .proc FindIconByNameInCachedWindow
-        ptr_name := $06
         ptr_icon_name := $08
 
         ;; Iterate icons
@@ -3446,7 +3445,7 @@ found:  lda     DEVLST,x
         dex
     WHILE POS
 
-ret:    rts
+        rts
 .endproc ; IconToDeviceIndex
 
 ;;; ============================================================
@@ -3842,7 +3841,6 @@ next_icon:
         inc     index
     WHILE NOT_ZERO              ; always
 
-finish_loop:
         lda     best_icon
         bne     select
 
@@ -5551,8 +5549,6 @@ beyond:
 
 ;;; Inputs: A = window_id
 .proc CloseSpecifiedWindow
-        icon_ptr := $06
-
         jsr     LoadWindowEntryTable
 
         jsr     ClearSelection
@@ -5783,7 +5779,6 @@ for_path:
         ;; `src_path_buf` has path
         ;; `icon_param` has icon (or `kWindowToDirIconNone`)
 
-        ptr := $06
 no_win:
         ;; Is there a free window?
         lda     num_open_windows
@@ -6080,8 +6075,6 @@ OpenWindowForPath := OpenWindowImpl::for_path
 ;;; Inputs: `icon_param` points at icon
 
 .proc MarkIconNotDimmed
-        icon_ptr := $6
-
         ;; Find open window for the icon
         lda     icon_param
         beq     ret
@@ -6509,7 +6502,6 @@ start:  stax    ptr1
         rts
       END_IF
 
-check_window:
         tax
         lda     window_to_dir_icon_table-1,x
         ASSERT_EQUALS ::kWindowToDirIconFree, 0
@@ -8761,7 +8753,7 @@ is_sp:  CALL    FindSmartportDispatchAddress, A=block_params::unit_num
         dey
       WHILE NOT_ZERO
     END_IF
-done:   sty     dib_buffer+SPDIB::ID_String_Length
+        sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
 
 .if kBuildSupportsLowercase
@@ -9109,7 +9101,6 @@ remove:
 kMaxAnimationStep = 7
 
 .proc AnimateWindowImpl
-        ptr := $06
         rect_table := $800
 
         ENTRY_POINTS_FOR_BIT7_FLAG close, open, close_flag
@@ -10593,10 +10584,6 @@ retry2: MLI_CALL DESTROY, destroy_dst_params
 
 failure:
         RETURN  C=1
-
-        ;; --------------------------------------------------
-
-cancel:
 
 ;;; ============================================================
 ;;; Case Bits

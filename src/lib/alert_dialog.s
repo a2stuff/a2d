@@ -271,7 +271,7 @@ advance:
     WHILE A <> #' '
 
         ;; Does this much fit?
-test:   sty     textwidth_params::length
+        sty     textwidth_params::length
         MGTK_CALL MGTK::TextWidth, textwidth_params
         cmp16   textwidth_params::width, #kWrapWidth
     IF LT
