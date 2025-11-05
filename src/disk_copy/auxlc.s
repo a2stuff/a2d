@@ -325,7 +325,7 @@ listbox_enabled_flag:  .byte   0 ; bit7
 kSourceDiskFormatProDOS = %00000000 ; bit7 clear
 kSourceDiskFormatDOS33  = %10000000 ; bit6 clear
 kSourceDiskFormatPascal = %11000000 ; bits 0-3 clear
-kSourceDiskFormatOther  = %10000001 ; TODO: Should be %11000001 ???
+kSourceDiskFormatOther  = %11000001
 source_disk_format:
         .byte   0
 
@@ -1737,7 +1737,6 @@ remainder:      .word   0              ; (out)
         bpl     show_name       ; ProDOS
 
         ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
-        ;; TODO: Also includes `auxlc::kSourceDiskFormatOther`, but is unclear
         bvc     :+              ; DOS 3.3
 
         lda     source_disk_format
@@ -1745,6 +1744,7 @@ remainder:      .word   0              ; (out)
         ASSERT_EQUALS auxlc::kSourceDiskFormatPascal & $0F, $00
         beq     show_name       ; Pascal
 :
+        ;; no name for `kSourceDiskFormatDOS33` and `kSourceDiskFormatOther`
         rts
 
 show_name:
@@ -1781,7 +1781,6 @@ show_name:
     END_IF
 
         ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
-        ;; TODO: Erroneously includes `auxlc::kSourceDiskFormatDOS33`
     IF VC                       ; DOS 3.3
         CALL    DrawString, AX=#str_dos33_disk_copy
         rts
@@ -1793,6 +1792,8 @@ show_name:
     IF ZERO                     ; Pascal
         CALL    DrawString, AX=#str_pascal_disk_copy
     END_IF
+
+        ;; Nothing if `kSourceDiskFormatOther`
 
         rts
 .endproc ; DrawCopyFormatType

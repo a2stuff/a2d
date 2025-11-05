@@ -29,6 +29,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Disk Copy
 
+* Don't erroneously show "DOS 3.3 disk copy" when source format is unknown.
 
 ### Desk Accessories
 
