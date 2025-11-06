@@ -9008,13 +9008,14 @@ kMaxAnimationStep = 7
     IF NS
         ;; --------------------------------------------------
         ;; Use desktop rect
-        copy16  #0, win_rect + MGTK::Rect::x1
-        copy16  #kMenuBarHeight, win_rect + MGTK::Rect::y1
-        copy16  #kScreenWidth-1, win_rect + MGTK::Rect::x2
-        copy16  #kScreenHeight-1, win_rect + MGTK::Rect::y2
+
+        COPY_STRUCT MGTK::Rect, desktop_rect, win_rect
     ELSE
         ;; --------------------------------------------------
-        ;; Get window rect - used as last rect
+        ;; Get window rect
+
+        ;; Note: can't use `MGTK::GetWinFrameRect` as the window
+        ;; either doesn't exist yet or has already been closed.
 
         jsr     ApplyWinfoToWindowGrafport
 
@@ -9079,9 +9080,9 @@ kMaxAnimationStep = 7
 
         bit     close_flag
     IF NC
-        jmp     AnimateWindowOpenImpl
+        jmp     _AnimateOpen
     END_IF
-        jmp     AnimateWindowCloseImpl
+        jmp     _AnimateClose
 
 close_flag:
         .byte   0
@@ -9091,13 +9092,9 @@ table:
         .byte   (main::kMaxAnimationStep - 1 - i) * .sizeof(MGTK::Rect)
         .endrepeat
 
-.endproc ; AnimateWindowImpl
-AnimateWindowClose      := AnimateWindowImpl::close
-AnimateWindowOpen       := AnimateWindowImpl::open
+        DEFINE_RECT desktop_rect, 0, kMenuBarHeight, kScreenWidth-1, kScreenHeight-1
 
-;;; ============================================================
-
-.proc AnimateWindowOpenImpl
+.proc _AnimateOpen
         ;; Loop N = 0 to 13
         ;; If N in 0..11, draw N
         ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
@@ -9109,7 +9106,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         ;; If N in 0..11, draw N
         lda     step            ; draw the Nth
       IF A < #kMaxAnimationStep+1
-        jsr     FrameTableRect
+        jsr     _FrameTableRect
       END_IF
 
         ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
@@ -9117,7 +9114,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         sec
         sbc     #2              ; erase the (N-2)th
       IF POS
-        jsr     FrameTableRect
+        jsr     _FrameTableRect
       END_IF
 
         inc     step
@@ -9125,11 +9122,11 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         lda     #SELF_MODIFIED_BYTE
     WHILE A <> #kMaxAnimationStep+3
         rts
-.endproc ; AnimateWindowOpenImpl
+.endproc ; _AnimateOpen
 
 ;;; ============================================================
 
-.proc AnimateWindowCloseImpl
+.proc _AnimateClose
         ;; Loop N = 11 to -2
         ;; If N in 0..11, draw N
         ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
@@ -9141,7 +9138,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         ;; If N in 0..11, draw N
         lda     step
       IF POS
-        jsr     FrameTableRect
+        jsr     _FrameTableRect
       END_IF
 
         ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
@@ -9149,7 +9146,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         clc
         adc     #2
       IF A < #kMaxAnimationStep+1
-        jsr     FrameTableRect
+        jsr     _FrameTableRect
       END_IF
 
         dec     step
@@ -9158,12 +9155,12 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         cmp     #AS_BYTE(-3)
     WHILE NE
         rts
-.endproc ; AnimateWindowCloseImpl
+.endproc ; _AnimateClose
 
 ;;; ============================================================
 
 ;;; Inputs: A = rect in `rect_table` to frame
-.proc FrameTableRect
+.proc _FrameTableRect
         rect_table := $800
 
         ;; Compute offset into rect table
@@ -9183,7 +9180,13 @@ AnimateWindowOpen       := AnimateWindowImpl::open
     WHILE POS
 
         FALL_THROUGH_TO FrameTmpRect
-.endproc ; FrameTableRect
+.endproc ; _FrameTableRect
+
+.endproc ; AnimateWindowImpl
+AnimateWindowClose      := AnimateWindowImpl::close
+AnimateWindowOpen       := AnimateWindowImpl::open
+
+;;; ============================================================
 
 .proc FrameTmpRect
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
