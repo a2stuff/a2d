@@ -5510,15 +5510,6 @@ beyond:
 .proc CloseSpecifiedWindow
         jsr     CacheWindowIconList
 
-        jsr     ClearSelection
-
-        jsr     RemoveAndFreeCachedWindowIcons
-
-        dec     num_open_windows
-        jsr     ClearAndStoreCachedWindowIconList
-
-        MGTK_CALL MGTK::CloseWindow, cached_window_id
-
         ;; --------------------------------------------------
         ;; Do we have a parent icon for this window?
 
@@ -5531,17 +5522,25 @@ beyond:
         sta     icon
 
         ;; --------------------------------------------------
-        ;; Animate closing
+        ;; Prep for animation
 
         CALL    GetWindowPath, A=cached_window_id
         jsr     IconToAnimate
         pha                     ; A = animation icon
-        CALL    AnimateWindowClose, X=cached_window_id ; A = icon id, X = window id
+        lda     cached_window_id
+        pha                     ; A = animation window
 
         ;; --------------------------------------------------
-        ;; Tidy up after closing window
+        ;; Close and tidy up
 
+        jsr     ClearSelection
+
+        jsr     RemoveAndFreeCachedWindowIcons
+        jsr     ClearAndStoreCachedWindowIconList
         CALL    RemoveWindowFileRecords, A=cached_window_id
+
+        MGTK_CALL MGTK::CloseWindow, cached_window_id
+        dec     num_open_windows
 
         ldx     cached_window_id
         ASSERT_EQUALS ::kWindowToDirIconFree, 0
@@ -5555,7 +5554,16 @@ beyond:
         jsr     ClearUpdates    ; following CloseWindow above
 
         ;; --------------------------------------------------
-        ;; Clean up the parent icon (if any)
+        ;; Animate closing
+
+        pla                     ; A = animation window
+        tax
+        pla                     ; A = animation icon
+        pha
+        CALL    AnimateWindowClose ; A = icon id, X = window id
+
+        ;; --------------------------------------------------
+        ;; Un-dim the parent icon (if any)
 
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
