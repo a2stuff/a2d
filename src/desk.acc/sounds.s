@@ -423,7 +423,7 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, alert_sound_label_pos
-        CALL    DrawString, AX=#alert_sound_label_str
+        MGTK_CALL MGTK::DrawString, alert_sound_label_str
 
         BTK_CALL BTK::Draw, cancel_button
         BTK_CALL BTK::Draw, ok_button
@@ -1350,18 +1350,14 @@ OnListSelectionNoChange := OnListSelectionChange
         asl
         tax
 
-        lda     name_table,x
-        pha
-        lda     name_table+1,x
-        tax
-        pla
-        jmp     DrawString
+        copy16  name_table,x, @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
 .endproc ; DrawListEntryProc
 
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

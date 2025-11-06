@@ -566,9 +566,9 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::PaintBitsHC, map_params
 
         MGTK_CALL MGTK::MoveTo, lat_label_pos
-        CALL    DrawString, AX=#lat_label_str
+        MGTK_CALL MGTK::DrawString, lat_label_str
         MGTK_CALL MGTK::MoveTo, long_label_pos
-        CALL    DrawString, AX=#long_label_str
+        MGTK_CALL MGTK::DrawString, long_label_str
 
         jsr     DrawLatLong
 
@@ -600,15 +600,15 @@ notpencopy:     .byte   MGTK::notpencopy
 
         CALL    IntToString, AX=tmp
         MGTK_CALL MGTK::MoveTo, pos_lat
-        CALL    DrawString, AX=#str_from_int
-        CALL    DrawString, AX=#str_degree_suffix
+        MGTK_CALL MGTK::DrawString, str_from_int
+        MGTK_CALL MGTK::DrawString, str_degree_suffix
         bit     sflag
     IF NC
-        CALL    DrawString, AX=#str_n
+        MGTK_CALL MGTK::DrawString, str_n
     ELSE
-        CALL    DrawString, AX=#str_s
+        MGTK_CALL MGTK::DrawString, str_s
     END_IF
-        CALL    DrawString, AX=#str_spaces
+        MGTK_CALL MGTK::DrawString, str_spaces
 
         ;; Longitude
         copy16  long, tmp
@@ -621,15 +621,15 @@ notpencopy:     .byte   MGTK::notpencopy
 
         CALL    IntToString, AX=tmp
         MGTK_CALL MGTK::MoveTo, pos_long
-        CALL    DrawString, AX=#str_from_int
-        CALL    DrawString, AX=#str_degree_suffix
+        MGTK_CALL MGTK::DrawString, str_from_int
+        MGTK_CALL MGTK::DrawString, str_degree_suffix
         bit     sflag
     IF NC
-        CALL    DrawString, AX=#str_e
+        MGTK_CALL MGTK::DrawString, str_e
     ELSE
-        CALL    DrawString, AX=#str_w
+        MGTK_CALL MGTK::DrawString, str_w
     END_IF
-        CALL    DrawString, AX=#str_spaces
+        MGTK_CALL MGTK::DrawString, str_spaces
 
         jsr     UpdateCoordsFromLatLong
         jmp     ShowPositionIndicator
@@ -708,7 +708,6 @@ blink_counter:
 
 ;;; ============================================================
 
-        .include "../lib/drawstring.s"
         .include "../lib/inttostring.s"
         .include "../lib/get_next_event.s"
 

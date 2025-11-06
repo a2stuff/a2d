@@ -1220,7 +1220,7 @@ end:    rts
         sbc     textwidth_params::result
         sta     text_pos_params3::left
         MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
-        CALL    DrawString, AX=#spaces_string
+        MGTK_CALL MGTK::DrawString, spaces_string
         MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
         rts
 .endproc ; PreDisplayBuffer
@@ -1314,7 +1314,7 @@ loop:   ldy     #0
     IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos
-        CALL    DrawString, AX=#error_string
+        MGTK_CALL MGTK::DrawString, error_string
     END_IF
 
         jsr     ResetBuffer1AndState
@@ -1347,7 +1347,6 @@ END_PROC_AT
 
 
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
         .include "../lib/rom_call.s"
 
 ;;; ============================================================

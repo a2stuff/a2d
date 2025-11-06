@@ -352,7 +352,7 @@ common: bit     dragwindow_params::moved
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::MoveTo, view_style_label_pos
-        CALL    DrawString, AX=#view_style_label_str
+        MGTK_CALL MGTK::DrawString, view_style_label_str
 
         copy8   #kNumButtons-1, index
     DO
@@ -434,7 +434,6 @@ common: bit     dragwindow_params::moved
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

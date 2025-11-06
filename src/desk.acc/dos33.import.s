@@ -316,7 +316,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, prompt_label_pos
-        CALL    DrawString, AX=#prompt_label_str
+        MGTK_CALL MGTK::DrawString, prompt_label_str
 
         BTK_CALL BTK::Draw, ok_button
         BTK_CALL BTK::Draw, cancel_button
@@ -353,7 +353,8 @@ str_template:
         adc     #0
         sta     str_template + kDriveOffset
 
-        TAIL_CALL DrawString, AX=#str_template
+        MGTK_CALL MGTK::DrawString, str_template
+        rts
 .endproc ; DrawListEntryProc
 
 .proc OnSelChange
@@ -642,12 +643,12 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::FrameRect, progress_frame
 
         MGTK_CALL MGTK::MoveTo, disk_vol_label_pos
-        CALL    DrawString, AX=#disk_vol_label_str
+        MGTK_CALL MGTK::DrawString, disk_vol_label_str
 
         lda     control_block+ControlBlock::volume_number
         ldx     #0
         jsr     To3DigitString
-        CALL    DrawString, AX=#str_from_int
+        MGTK_CALL MGTK::DrawString, str_from_int
 
         BTK_CALL BTK::Draw, import_button
         BTK_CALL BTK::Draw, close_button
@@ -687,7 +688,7 @@ done:   rts
     IF NS
         copy16  #kLockedX, pt::xcoord
         MGTK_CALL MGTK::MoveTo, pt
-        CALL    DrawString, AX=#str_locked
+        MGTK_CALL MGTK::DrawString, str_locked
     END_IF
 
         ;; Type
@@ -698,7 +699,7 @@ done:   rts
         and     #$7F
         jsr     clz
         copy8   type_table,x, str_type+1
-        CALL    DrawString, AX=#str_type
+        MGTK_CALL MGTK::DrawString, str_type
 
         ;; Size
         copy16  #kSizeX, pt::xcoord
@@ -709,13 +710,14 @@ done:   rts
         dey
         lda     (ptr),y
         jsr     To3DigitString
-        CALL    DrawString, AX=#str_from_int
+        MGTK_CALL MGTK::DrawString, str_from_int
 
         ;; Name
         copy16  #kNameX, pt::xcoord
         MGTK_CALL MGTK::MoveTo, pt
-        add16_8 ptr, #CatalogEntry::Name
-        TAIL_CALL DrawString, AX=ptr
+        add16_8 ptr, #CatalogEntry::Name, @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
 .endproc ; DrawListEntryProc
 
 str_locked:     PASCAL_STRING "*"
@@ -809,7 +811,6 @@ str_from_int:   PASCAL_STRING "000000" ; filled in by IntToString
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
         .include "../lib/get_next_event.s"
         .include "../lib/doubleclick.s"
         .include "../lib/inttostring.s"

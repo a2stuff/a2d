@@ -869,51 +869,30 @@ found:  RETURN  A=index
 
 ;;; ============================================================
 
-.proc DrawString
-        ptr := $06
-        params := $06
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        beq     ret
-        sta     params+2
-        inc16   params
-        MGTK_CALL MGTK::DrawText, params
-ret:    rts
-.endproc ; DrawString
-
-;;; ============================================================
-
 .proc _DrawStringCentered
-        ptr := $06
         params := $06
+        str := params
+        width := params+2
 
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        beq     ret
-        sta     params+2
-        inc16   params
-        MGTK_CALL MGTK::TextWidth, params
-        lsr16   params+3               ; width
-        sub16   #0, params+3, params+3 ; deltax
-        copy16  #0, params+5           ; deltay
-        MGTK_CALL MGTK::Move, params+3
-        MGTK_CALL MGTK::DrawText, params
-ret:    rts
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
+        lsr16   width
+        sub16   #0, width, params+MGTK::Point::xcoord
+        copy16  #0, params+MGTK::Point::ycoord
+        MGTK_CALL MGTK::Move, params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
 .endproc ; _DrawStringCentered
 
 ;;; ============================================================
 
 .ifdef FD_EXTENDED
 .proc DrawLineEditLabel
-        phax
-
+        stax    @addr
         MGTK_CALL MGTK::MoveTo, file_dialog_res::line_edit_label_pos
-
-        plax
-        jmp     DrawString
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
 .endproc ; DrawLineEditLabel
 .endif
 
@@ -1480,7 +1459,7 @@ selected_index := file_dialog_res::listbox_rec::selected_index
     WHILE POS
         copy16  #kListViewNameX, file_dialog_res::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
-        CALL    DrawString, AX=#file_dialog_res::filename_buf
+        MGTK_CALL MGTK::DrawString, file_dialog_res::filename_buf
 
         ;; Folder glyph?
         copy16  #kListViewIconX, file_dialog_res::item_pos+MGTK::Point::xcoord
@@ -1497,7 +1476,9 @@ selected_index := file_dialog_res::listbox_rec::selected_index
     ELSE
         ldax    #file_dialog_res::str_file
     END_IF
-        jmp     DrawString
+        stax    @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
 .endproc ; DrawListEntryProc
 
 ;;; ============================================================

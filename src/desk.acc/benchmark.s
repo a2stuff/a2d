@@ -395,22 +395,17 @@ done:   jmp     InputLoop
 ;;; Input: A,X = string address
 
 .proc DrawTitleString
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
+        params := $6
+        str := $6
+        width := $8
 
-        stax    text_addr       ; input is length-prefixed string
-        ldy     #0
-        lda     (text_addr),y
-        sta     text_length
-        inc16   text_addr       ; point past length
-        MGTK_CALL MGTK::TextWidth, text_params
-
-        sub16   #kDAWidth, text_width, title_label_pos::xcoord
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
+        sub16   #kDAWidth, width, title_label_pos::xcoord
         lsr16   title_label_pos::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, title_label_pos
-        MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawTitleString
 
@@ -503,24 +498,18 @@ done:   jmp     InputLoop
 ;;; ============================================================
 
 .proc DrawStringCentered
-        params := $6
-        textptr := $6
-        textlen := $8
-        result := $9
+        params := $06
+        str := params
+        width := params+2
 
-        stax    textptr
-        ldy     #0
-        lda     (textptr),y
-        sta     textlen
-        inc16   textptr
-        MGTK_CALL MGTK::TextWidth, params
-        lsr16   result
-        sub16   #0, result, result
-        lda     #0
-        sta     result+2
-        sta     result+3
-        MGTK_CALL MGTK::Move, result
-        MGTK_CALL MGTK::DrawText, params
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
+        lsr16   width
+        sub16   #0, width, params+MGTK::Point::xcoord
+        copy16  #0, params+MGTK::Point::ycoord
+        MGTK_CALL MGTK::Move, params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawStringCentered
 

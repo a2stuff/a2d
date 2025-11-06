@@ -1186,21 +1186,17 @@ backup_devlst:
 ;;; Input: A,X = string address
 
 .proc DrawTitleString
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
+        params := $6
+        str := params
+        width := params+2
 
-        stax    text_addr       ; input is length-prefixed string
-        ldy     #0
-        copy8   (text_addr),y, text_length
-        inc16   text_addr       ; point past length
-        MGTK_CALL MGTK::TextWidth, text_params
-
-        sub16   #winfo::kWidth, text_width, pos_title_string::xcoord
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
+        sub16   #winfo::kWidth, width, pos_title_string::xcoord
         lsr16   pos_title_string::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, pos_title_string
-        MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawTitleString
 

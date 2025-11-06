@@ -380,6 +380,8 @@ jump_table:
         .addr   MulDivImpl          ; $5A MulDiv
         .addr   ShieldCursorImpl    ; $5B ShieldCursor
         .addr   UnshieldCursorImpl  ; $5C UnshieldCursor
+        .addr   StringWidthImpl     ; $5D StringWidth
+        .addr   DrawStringImpl      ; $5E DrawStrng
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -511,6 +513,8 @@ param_lengths:
         PARAM_DEFN  6, $82, 0                ; $5A MulDiv
         PARAM_DEFN 16, $8A, 0                ; $5B ShieldCursor
         PARAM_DEFN  0, $00, 0                ; $5C UnshieldCursor
+        PARAM_DEFN  2, $A1, 0                ; $5D StringWidth
+        PARAM_DEFN  0, $00, 1                ; $5E DrawString
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -3204,6 +3208,32 @@ loop:   sty     pos
 .endproc ; MeasureText
 
 ;;; ============================================================
+;;; StringWidth
+
+;;; 2 bytes of params, copied to $A1
+
+.proc StringWidthImpl
+        jsr     StringToText
+        jsr     MeasureText
+        ldy     #2              ; Store result (X,A) at params+2
+        sta     (params_addr),y
+        txa
+        iny
+        sta     (params_addr),y
+        rts
+.endproc ; StringWidthImpl
+
+;;; Convert "String" params (Pascal string at $A1) to "Text" params
+;;; (text address at $A1, length at $A3)
+.proc StringToText
+        ldy     #0
+        lda     ($A1),y
+        sta     $A3
+        inc16   $A1
+        rts
+.endproc ; StringToText
+
+;;; ============================================================
 
         ;; Turn the current penloc into left, right, top, and bottom.
         ;;
@@ -3233,6 +3263,12 @@ loop:   sty     pos
 .endproc ; PenlocToBounds
 
 ;;; ============================================================
+
+.proc DrawStringImpl
+        copy16  params_addr, $A1
+        jsr     StringToText
+        FALL_THROUGH_TO DrawTextImpl
+.endproc ; DrawStringImpl
 
 ;;; 3 bytes of params, copied to $A1
 

@@ -341,21 +341,17 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
 ;;; Input: A,X = string address
 
 .proc DrawTitleString
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
+        params := $6
+        str := $6
+        width := $8
 
-        stax    text_addr       ; input is length-prefixed string
-        ldy     #0
-        copy8   (text_addr),y, text_length
-        inc16   text_addr       ; point past length
-        MGTK_CALL MGTK::TextWidth, text_params
-
-        sub16   #kDAWidth, text_width, title_label_pos::xcoord
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
+        sub16   #kDAWidth, width, title_label_pos::xcoord
         lsr16   title_label_pos::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, title_label_pos
-        MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawTitleString
 
@@ -399,7 +395,6 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

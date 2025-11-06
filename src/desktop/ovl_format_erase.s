@@ -71,12 +71,12 @@ Exec:
         bne     skip_select
 
         MGTK_CALL MGTK::MoveTo, vol_picker_select_pos
-        ldax    #aux::str_select_format
         bit     erase_flag
     IF NS
-        ldax    #aux::str_select_erase
+        MGTK_CALL MGTK::DrawString, aux::str_select_erase
+    ELSE
+        MGTK_CALL MGTK::DrawString, aux::str_select_format
     END_IF
-        jsr     main::DrawString
 
         jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::MoveTo, vol_picker_line1_start
@@ -129,8 +129,7 @@ skip_select:
         ;; NOTE: Assertion violation if not found
 
         txa
-        jsr     GetDeviceNameForIndex
-        jsr     main::DrawString
+        jsr     DrawDeviceNameForIndex
 
         CALL    main::DrawDialogLabel, Y=#4, AX=#aux::str_new_volume
 
@@ -355,8 +354,7 @@ no:     RETURN  A=#$80
         index := *+1
         sbc     #SELF_MODIFIED_BYTE
 
-        jsr     GetDeviceNameForIndex
-        jmp     main::DrawString
+        jmp     DrawDeviceNameForIndex
 .endproc ; DrawEntryCallback
 
 .proc SelChangeCallback
@@ -366,12 +364,13 @@ no:     RETURN  A=#$80
 ;;; ============================================================
 
 ;;; Input: A = index in `DEVLST`
-;;; Output: A,X = device name
-.proc GetDeviceNameForIndex
+.proc DrawDeviceNameForIndex
         asl     a
         tay
-        RETURN  AX=device_name_table,y
-.endproc ; GetDeviceNameForIndex
+        copy16  device_name_table,y, @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
+.endproc ; DrawDeviceNameForIndex
 
 ;;; ============================================================
 ;;; Gets the selected unit number from `DEVLST`

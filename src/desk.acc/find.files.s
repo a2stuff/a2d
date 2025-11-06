@@ -132,6 +132,11 @@ grafport_win:   .tag    MGTK::GrafPort
         kFindLeft = 20
         DEFINE_LABEL find, res_string_label_find, kFindLeft, 20
 
+.params measure_find_label_params
+str:    .addr   find_label_str
+width:  .word   0
+.endparams
+
         ;; Left edges are adjusted dynamically based on label width
         DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
 
@@ -179,9 +184,8 @@ num_entries := listbox_rec::num_items
         ;; Prep input string
         copy8   #0, buf_search
 
-
-        CALL    MeasureString, AX=#find_label_str
-        addax   input_rect::x1
+        MGTK_CALL MGTK::StringWidth, measure_find_label_params
+        add16   input_rect::x1, measure_find_label_params::width, input_rect::x1
         add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
 
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -507,7 +511,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::FrameRect, input_rect
 
         MGTK_CALL MGTK::MoveTo, find_label_pos
-        CALL    DrawString, AX=#find_label_str
+        MGTK_CALL MGTK::DrawString, find_label_str
 
         BTK_CALL BTK::Draw, search_button
         BTK_CALL BTK::Draw, cancel_button
@@ -543,7 +547,8 @@ NoOp:   rts
 ;;; Called with A = index
 .proc DrawListEntryProc
         jsr     GetEntry
-        TAIL_CALL DrawString, AX=#entry_buf
+        MGTK_CALL MGTK::DrawString, entry_buf
+        rts
 .endproc ; DrawListEntryProc
 
 ;;; ============================================================
@@ -596,8 +601,6 @@ offset: .addr   0
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
-        .include "../lib/measurestring.s"
         .include "../lib/doubleclick.s"
         .include "../lib/get_next_event.s"
 

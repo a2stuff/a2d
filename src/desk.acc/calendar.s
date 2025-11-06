@@ -514,9 +514,10 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         ;; Draw month + space + year
         MGTK_CALL MGTK::MoveTo, pos_month_year
-        CALL    DrawString, AX=ptr_str_month
-        CALL    DrawString, AX=#str_space
-        CALL    DrawString, AX=#str_year
+        copy16  ptr_str_month, @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        MGTK_CALL MGTK::DrawString, str_space
+        MGTK_CALL MGTK::DrawString, str_year
 
         ;; --------------------------------------------------
         ;; Grid lines
@@ -579,12 +580,8 @@ notpenXOR:      .byte   MGTK::notpenXOR
 
         asl
         tax
-        lda     day_str_table,x
-        pha
-        lda     day_str_table+1,x
-        tax
-        pla
-        jsr     DrawString
+        copy16  day_str_table,x, @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
 
         dec     index
       WHILE POS
@@ -657,7 +654,7 @@ day_loop:
         ;; Draw it
 draw_date:
         MGTK_CALL MGTK::MoveTo, date_pos
-        CALL    DrawString, AX=#str_date
+        MGTK_CALL MGTK::DrawString, str_date
         add16_8 date_pos::xcoord, #kDayDX
 
         ;; Next
@@ -769,9 +766,19 @@ tmp:    .word   0
 
 ;;; ============================================================
 
+.proc MeasureString
+        ptr := $06
+        width := $08
+
+        stax    ptr
+        MGTK_CALL MGTK::StringWidth, ptr
+        ldax    width
+        rts
+.endproc ; MeasureString
+
+;;; ============================================================
+
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
-        .include "../lib/measurestring.s"
 
         str_time := 0           ; unused
         .include "../lib/datetime.s"

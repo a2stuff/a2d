@@ -37,7 +37,7 @@ MGTK::Point item_pos        Position when drawing item. Can be modified for colu
 
 #### Callbacks
 
-The `draw_entry_proc` callback is invoked for each item whenever the list is redrawn, e.g. when `LBTK::Init` is called or a scroll event happens. `A` is populated with the item index; `X,Y` hold the address of an `MGTK::Point` representing the text position of the item. This is already set as the drawing position via `MGTK::MoveTo` so a basic implementation should just call `MGTK::DrawText` with the item string. A more elaborate implementation that e.g. displays multiple columns can use the position as the basis for its own `MGTK::MoveTo` calls. Note that the passed `MGTK::Point` must not be modified.
+The `draw_entry_proc` callback is invoked for each item whenever the list is redrawn, e.g. when `LBTK::Init` is called or a scroll event happens. `A` is populated with the item index; `X,Y` hold the address of an `MGTK::Point` representing the text position of the item. This is already set as the drawing position via `MGTK::MoveTo` so a basic implementation should just call `MGTK::DrawString` with the item string. A more elaborate implementation that e.g. displays multiple columns can use the position as the basis for its own `MGTK::MoveTo` calls. Note that the passed `MGTK::Point` must not be modified.
 
 The `on_sel_change` callback is invoked whenever selection changes as a result of an `LBTK::Click` or `LBTK::Key` action. This is useful to update other UI elements in response to the selection. The new selection can be inspected via the `selected_index` record member. This will be $FF if no item is selected, e.g. if the user clicked on empty space within the list.
 

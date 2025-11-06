@@ -102,10 +102,10 @@ buffer: .res 16, 0
         CALL    file_dialog::DrawLineEditLabel, AX=#enter_the_name_to_appear_label
 
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
-        CALL    main::DrawString, AX=#add_a_new_entry_to_label_str
+        MGTK_CALL MGTK::DrawString, add_a_new_entry_to_label_str
 
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
-        CALL    main::DrawString, AX=#down_load_label_str
+        MGTK_CALL MGTK::DrawString, down_load_label_str
 
         BTK_CALL BTK::RadioDraw, primary_run_list_button
         BTK_CALL BTK::RadioDraw, secondary_run_list_button

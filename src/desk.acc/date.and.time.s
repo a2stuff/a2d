@@ -916,11 +916,11 @@ label_downarrow:
         MGTK_CALL MGTK::PaintBitsHC, time_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, date_sep1_pos
-        CALL    DrawString, AX=#str_date_separator
+        MGTK_CALL MGTK::DrawString, str_date_separator
         MGTK_CALL MGTK::MoveTo, date_sep2_pos
-        CALL    DrawString, AX=#str_date_separator
+        MGTK_CALL MGTK::DrawString, str_date_separator
         MGTK_CALL MGTK::MoveTo, time_sep_pos
-        CALL    DrawString, AX=#str_time_separator
+        MGTK_CALL MGTK::DrawString, str_time_separator
 
         MGTK_CALL MGTK::SetPenMode, penXOR
 
@@ -928,11 +928,11 @@ label_downarrow:
         ldx     clock_flag
     IF ZERO
         MGTK_CALL MGTK::MoveTo, label_uparrow_pos
-        CALL    DrawString, AX=#label_uparrow
+        MGTK_CALL MGTK::DrawString, label_uparrow
         MGTK_CALL MGTK::FrameRect, up_arrow_rect
 
         MGTK_CALL MGTK::MoveTo, label_downarrow_pos
-        CALL    DrawString, AX=#label_downarrow
+        MGTK_CALL MGTK::DrawString, label_downarrow
         MGTK_CALL MGTK::FrameRect, down_arrow_rect
     END_IF
 
@@ -1013,42 +1013,47 @@ label_downarrow:
 
 .proc DrawDay
         MGTK_CALL MGTK::MoveTo, day_pos
-        TAIL_CALL DrawString, AX=#day_string
+        MGTK_CALL MGTK::DrawString, day_string
+        rts
 .endproc ; DrawDay
 
 .proc DrawMonth
         MGTK_CALL MGTK::MoveTo, month_pos
-        CALL    DrawString, AX=#spaces_string ; variable width, so clear first
+        MGTK_CALL MGTK::DrawString, spaces_string ; variable width, so clear first
         MGTK_CALL MGTK::MoveTo, month_pos
-        TAIL_CALL DrawString, AX=#month_string
+        MGTK_CALL MGTK::DrawString, month_string
+        rts
 .endproc ; DrawMonth
 
 .proc DrawYear
         MGTK_CALL MGTK::MoveTo, year_pos
-        TAIL_CALL DrawString, AX=#year_string
+        MGTK_CALL MGTK::DrawString, year_string
+        rts
 .endproc ; DrawYear
 
 .proc DrawHour
         MGTK_CALL MGTK::MoveTo, hour_pos
-        TAIL_CALL DrawString, AX=#hour_string
+        MGTK_CALL MGTK::DrawString, hour_string
+        rts
 .endproc ; DrawHour
 
 .proc DrawMinute
         MGTK_CALL MGTK::MoveTo, minute_pos
-        TAIL_CALL DrawString, AX=#minute_string
+        MGTK_CALL MGTK::DrawString, minute_string
+        rts
 .endproc ; DrawMinute
 
 .proc DrawPeriod
         MGTK_CALL MGTK::MoveTo, period_pos
         bit     clock_24hours
     IF NS
-        CALL    DrawString, AX=#spaces_string
+        MGTK_CALL MGTK::DrawString, spaces_string
     ELSE
         lda     hour
       IF A < #12
-        TAIL_CALL DrawString, AX=#str_am
+        MGTK_CALL MGTK::DrawString, str_am
       ELSE
-        TAIL_CALL DrawString, AX=#str_pm
+        MGTK_CALL MGTK::DrawString, str_pm
       END_IF
     END_IF
         rts
@@ -1288,7 +1293,6 @@ current:
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

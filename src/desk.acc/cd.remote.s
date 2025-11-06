@@ -558,21 +558,21 @@ str_time:
 ;;; Caller is responsible for setting port.
 .proc DrawTrack
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_track
-        CALL    DrawString, AX=#str_track
-        TAIL_CALL DrawString, AX=#str_track_num
+        CALL    DrawStringFromMain, AX=#str_track
+        TAIL_CALL DrawStringFromMain, AX=#str_track_num
 .endproc ; DrawTrack
 
 ;;; Caller is responsible for setting port.
 .proc DrawTime
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_time
-        TAIL_CALL DrawString, AX=#str_time
+        TAIL_CALL DrawStringFromMain, AX=#str_time
 .endproc ; DrawTime
 
 ;;; ============================================================
 ;;; Copies string main>aux before drawing
 ;;; Input: A,X = address of length-prefixed string
 
-.proc DrawString
+.proc DrawStringFromMain
         params  := $06
         textptr := $06
         textlen := $08
@@ -591,7 +591,7 @@ str_time:
 
         JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
 done:   rts
-.endproc ; DrawString
+.endproc ; DrawStringFromMain
 
 ;;; ============================================================
 ;;; Inputs: A,X = rect address

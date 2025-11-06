@@ -35,7 +35,7 @@ This defines the state of a control instance.
 
 The `is_entry_proc` callback is invoked to determine if the entry exists, when drawing or responding to input events. `A` is populated with the index (column-major). The callback must return `N=0` if the entry exists, `N=1` if it does not.
 
-The `draw_entry_proc` callback is invoked for each entry when whenever the control is redrawn, e.g. when `OPTK::Draw` or `OPTK::Update` is called. `A` is populated with the item index. The draw position assuming a simple text label is already set as the drawing position via `MGTK::MoveTo` so a basic implementation should just call `MGTK::DrawText` with the item string.
+The `draw_entry_proc` callback is invoked for each entry when whenever the control is redrawn, e.g. when `OPTK::Draw` or `OPTK::Update` is called. `A` is populated with the item index. The draw position assuming a simple text label is already set as the drawing position via `MGTK::MoveTo` so a basic implementation should just call `MGTK::DrawString` with the item string.
 
 The `on_sel_change` callback is invoked whenever selection changes as a result of an `OPTK::Click` or `OPTK::Key` action. This is useful to update other UI elements in response to the selection. The new selection can be inspected via the `selected_index` record member. This will be $FF if no item is selected, e.g. if the user clicked on empty space within the control.
 

@@ -616,6 +616,13 @@ ShieldCursor          = $5B     ; Hide cursor if intersects rect
 UnshieldCursor        = $5C
 ;;; (no parameters)
 
+StringWidth           = $5D
+;;; .addr       str             Address of Pascal string
+;;; .word       width           (out) result in pixels
+
+DrawString            = $5E
+;;; .addr       str             Address of Pascal string
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 

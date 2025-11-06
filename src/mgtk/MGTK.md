@@ -383,6 +383,23 @@ Parameters:
 .byte       length
 ```
 
+#### StringWidth ($5D)
+Measure the width of a Pascal string in pixels
+
+Parameters:
+```
+.addr       str             Address of Pascal string
+.word       width           (out) result in pixels
+```
+
+#### DrawString ($5E)
+Draw string at the pen location of the current graphport (as left, baseline)
+
+Parameters:
+```
+(input is the address of Pascal string)
+```
+
 ### Utility - configuration and version
 
 #### SetZP1 ($1A)

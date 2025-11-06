@@ -1247,26 +1247,26 @@ egg:    .byte   0
         JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, SELF_MODIFIED, bits_addr
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::model_pos
-        CALL    DrawString, AX=model_str_ptr
+        CALL    DrawStringFromMain, AX=model_str_ptr
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pdver_pos
-        CALL    DrawString, AX=#str_prodos_version
+        CALL    DrawStringFromMain, AX=#str_prodos_version
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::line1
         JUMP_TABLE_MGTK_CALL MGTK::LineTo, aux::line2
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::mem_pos
-        CALL    DrawString, AX=#str_memory_prefix
-        CALL    DrawString, AX=#str_from_int
+        CALL    DrawStringFromMain, AX=#str_memory_prefix
+        CALL    DrawStringFromMain, AX=#str_from_int
         bit     memory_is_mb_flag
     IF NS
-        CALL    DrawString, AX=#str_memory_mb_suffix
+        CALL    DrawStringFromMain, AX=#str_memory_mb_suffix
     ELSE
-        CALL    DrawString, AX=#str_memory_kb_suffix
+        CALL    DrawStringFromMain, AX=#str_memory_kb_suffix
     END_IF
-        CALL    DrawString, AX=#str_cpu_prefix
+        CALL    DrawStringFromMain, AX=#str_cpu_prefix
         jsr     CPUId
-        jsr     DrawString
+        jsr     DrawStringFromMain
 
         copy8   #7, slot
         copy8   #1<<7, mask
@@ -1279,7 +1279,7 @@ loop:   lda     slot
         lda     slot
         ora     #'0'
         sta     str_slot_n + kStrSlotNOffset
-        CALL    DrawString, AX=#str_slot_n
+        CALL    DrawStringFromMain, AX=#str_slot_n
 
         ;; Possibilities:
         ;; * ProDOS thinks there's a card - may be firmware or no firmware
@@ -1308,7 +1308,7 @@ loop:   lda     slot
         ldax    #str_empty
 
 draw:   php
-        jsr     DrawString
+        jsr     DrawStringFromMain
         plp
     IF VS
         ;; V=1 means smartport - print out the names
@@ -1322,8 +1322,8 @@ draw:   php
         jsr     SetSlotPtr
         CALL    WithInterruptsDisabled, AX=#DetectTheCricket
       IF CS
-        CALL    DrawString, AX=#str_list_separator
-        CALL    DrawString, AX=#str_cricket
+        CALL    DrawStringFromMain, AX=#str_list_separator
+        CALL    DrawStringFromMain, AX=#str_cricket
       END_IF
     END_IF
 
@@ -1337,14 +1337,14 @@ draw:   php
         bit     LCBANK1
         plp
       IF ZC
-        CALL    DrawString, AX=#str_list_separator
-        CALL    DrawString, AX=#str_lcmeve
+        CALL    DrawStringFromMain, AX=#str_list_separator
+        CALL    DrawStringFromMain, AX=#str_lcmeve
       ELSE
         CALL    SetSlotPtr, A=slot
         CALL    WithInterruptsDisabled, AX=#DetectUthernet2
        IF CS
-        CALL    DrawString, AX=#str_list_separator
-        CALL    DrawString, AX=#str_uthernet2
+        CALL    DrawStringFromMain, AX=#str_list_separator
+        CALL    DrawStringFromMain, AX=#str_uthernet2
        END_IF
       END_IF
     END_IF
@@ -2298,12 +2298,12 @@ device_loop:
         ;; Need a comma?
         bit     empty_flag
     IF NC
-        CALL    DrawString, AX=#str_list_separator
+        CALL    DrawStringFromMain, AX=#str_list_separator
     END_IF
         CLEAR_BIT7_FLAG empty_flag ; saw a unit!
 
         ;; Draw the device name
-        CALL    DrawString, AX=#str_current
+        CALL    DrawStringFromMain, AX=#str_current
 
         ;; Next!
 next:   lda     status_params::unit_num
@@ -2318,7 +2318,7 @@ finish:
         ;; If no units, populate with "(none)"
         bit     empty_flag
     IF NS
-        CALL    DrawString, AX=#str_none
+        CALL    DrawStringFromMain, AX=#str_none
     END_IF
 
         rts
@@ -2364,7 +2364,7 @@ num_devices:
         txa
         ora     #'0'
         sta     str_duplicate_suffix + kDuplicateCountOffset
-        CALL    DrawString, AX=#str_duplicate_suffix
+        CALL    DrawStringFromMain, AX=#str_duplicate_suffix
         copy8   #0, duplicate_count
     END_IF
         rts
@@ -2394,7 +2394,7 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 ;;; Copies string main>aux before drawing
 ;;; Input: A,X = address of length-prefixed string
 
-.proc DrawString
+.proc DrawStringFromMain
         params  := $06
         textptr := $06
         textlen := $08
@@ -2414,7 +2414,7 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
         JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
     END_IF
         rts
-.endproc ; DrawString
+.endproc ; DrawStringFromMain
 
 ;;; ============================================================
 

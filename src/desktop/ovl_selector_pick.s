@@ -407,22 +407,18 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 ;;; ============================================================
 
 .proc DrawTitleCentered
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
+        params := $06
+        str := params
+        width := params+2
 
-        stax    text_addr       ; input is length-prefixed string
-        ldy     #0
-        lda     (text_addr),y
-        sta     text_length
-        inc16   text_addr       ; point past length byte
-        MGTK_CALL MGTK::TextWidth, text_params
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
 
-        sub16   #winfo_entry_picker::kWidth, text_width, pos_dialog_title::xcoord
+        sub16   #winfo_entry_picker::kWidth, width, pos_dialog_title::xcoord
         lsr16   pos_dialog_title::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawTitleCentered
 
@@ -1099,7 +1095,8 @@ close:  MLI_CALL CLOSE, close_params
         ptr1 := $06
         stax    ptr1
         CALL    main::CopyPtr1ToBuf, AX=#text_buffer2
-        TAIL_CALL main::DrawString, AX=#text_buffer2
+        MGTK_CALL MGTK::DrawString, text_buffer2
+        rts
 .endproc ; DrawEntryCallback
 
 .proc SelChangeCallback

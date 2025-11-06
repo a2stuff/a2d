@@ -146,13 +146,13 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::FrameRect, frame_rect
 
         copy16  ypos_playing, pos::ycoord
-        CALL    DrawCenteredString, AX=#str_playing
+        CALL    DrawStringCentered, AX=#str_playing
         copy16  ypos_credit1, pos::ycoord
-        CALL    DrawCenteredString, AX=#str_credit1
+        CALL    DrawStringCentered, AX=#str_credit1
         copy16  ypos_credit2, pos::ycoord
-        CALL    DrawCenteredString, AX=#str_credit2
+        CALL    DrawStringCentered, AX=#str_credit2
         copy16  ypos_instruct, pos::ycoord
-        CALL    DrawCenteredString, AX=#str_instruct
+        CALL    DrawStringCentered, AX=#str_instruct
 
         MGTK_CALL MGTK::FlushEvents
 
@@ -173,25 +173,21 @@ str_instruct:   PASCAL_STRING res_string_instructions
 ;;; Draw centered string
 ;;; Input: A,X = string address, `pos` used, has ycoord
 ;;; Trashes $6...$A
-.proc DrawCenteredString
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
+.proc DrawStringCentered
+        params := $6
+        str := $6
+        width := $8
 
-        stax    text_addr       ; input is length-prefixed string
-        ldy     #0
-        lda     (text_addr),y
-        sta     text_length
-        inc16   text_addr       ; point past length
-        MGTK_CALL MGTK::TextWidth, text_params
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
 
-        sub16   #kDAWidth, text_width, pos::xcoord
+        sub16   #kDAWidth, width, pos::xcoord
         lsr16   pos::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, pos
-        MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
-.endproc ; DrawCenteredString
+.endproc ; DrawStringCentered
 
 ;;; ============================================================
 

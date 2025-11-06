@@ -101,24 +101,18 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
 ;;; Draw string right-aligned to current coords, updating the
 ;;; current coords to be on the left side of the string.
 .proc DrawStringRight
-        params := $6
-        textptr := $6
-        textlen := $8
-        result := $9
+        params := $06
+        str := params
+        width := params+2
 
-        stax    textptr
-        ldy     #0
-        lda     (textptr),y
-        sta     textlen
-        inc16   textptr
-        MGTK_CALL MGTK::TextWidth, params
-        sub16   #0, result, result
-        lda     #0
-        sta     result+2
-        sta     result+3
-        MGTK_CALL MGTK::Move, result
-        MGTK_CALL MGTK::DrawText, params
-        MGTK_CALL MGTK::Move, result
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
+        sub16   #0, width, params+MGTK::Point::xcoord
+        copy16  #0, params+MGTK::Point::ycoord
+        MGTK_CALL MGTK::Move, params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        MGTK_CALL MGTK::Move, params
         rts
 .endproc ; DrawStringRight
 

@@ -413,7 +413,7 @@ progress_pattern:
         MGTK_CALL MGTK::SetPenSize, app::pensize_normal
 
         MGTK_CALL MGTK::MoveTo, download_label_pos
-        CALL    DrawString, AX=#download_label_str
+        MGTK_CALL MGTK::DrawString, download_label_str
         rts
 .endproc ; OpenWindow
 
@@ -449,14 +449,14 @@ remainder:      .word   0                 ; (out)
         CALL    IntToString, AX=file_count
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         MGTK_CALL MGTK::MoveTo, pos_copying
-        CALL    DrawString, AX=#str_copying
+        MGTK_CALL MGTK::DrawString, str_copying
         MGTK_CALL MGTK::MoveTo, pos_path
         COPY_STRING pathname_src, display_path
         CALL    DrawDialogPath, AX=#display_path
         MGTK_CALL MGTK::MoveTo, pos_remaining
-        CALL    DrawString, AX=#str_files_remaining
-        CALL    DrawString, AX=#str_from_int
-        CALL    DrawString, AX=#str_spaces
+        MGTK_CALL MGTK::DrawString, str_files_remaining
+        MGTK_CALL MGTK::DrawString, str_from_int
+        MGTK_CALL MGTK::DrawString, str_spaces
 
         sub16   total_count, file_count, progress_muldiv_params::numerator
         copy16  total_count, progress_muldiv_params::denominator
@@ -479,9 +479,10 @@ display_path:
 
         CALL    IntToString, AX=file_count
         MGTK_CALL MGTK::MoveTo, pos_copying
-        CALL    DrawString, AX=#str_files_to_copy
-        CALL    DrawString, AX=#str_from_int
-        TAIL_CALL DrawString, AX=#str_spaces
+        MGTK_CALL MGTK::DrawString, str_files_to_copy
+        MGTK_CALL MGTK::DrawString, str_from_int
+        MGTK_CALL MGTK::DrawString, str_spaces
+        rts
 .endproc ; UpdateEnumerationProgress
 
 ;;; ============================================================
@@ -546,7 +547,6 @@ display_path:
 
         ReadSetting := app::ReadSetting
         .include "../lib/inttostring.s"
-        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

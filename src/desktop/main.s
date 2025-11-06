@@ -222,7 +222,7 @@ tick_counter:
         ;; --------------------------------------------------
         ;; No modifiers
 
-        CALL   CheckTypeDown, A=event_params::key
+        CALL    CheckTypeDown, A=event_params::key
         RTS_IF ZERO
 
         jsr     ClearTypeDown
@@ -7273,7 +7273,8 @@ END_PARAM_BLOCK
         ;; Draw "XXXK available"
         MGTK_CALL MGTK::Move, header_text_delta
         jsr     _PrepAvailable
-draw:   TAIL_CALL DrawString, AX=#text_input_buf
+draw:   MGTK_CALL MGTK::DrawString, text_input_buf
+        rts
 
 .proc _PrepItems
         push16  num_items
@@ -7307,14 +7308,10 @@ draw:   TAIL_CALL DrawString, AX=#text_input_buf
 ;;; String must be in LC area (visible to both main and aux code)
 .proc _MeasureString
         ptr := $6
-        len := $8
-        result := $9
+        result := $8
 
         stax    ptr
-        ldy     #0
-        copy8   (ptr),y, len
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, ptr
+        MGTK_CALL MGTK::StringWidth, ptr
         RETURN  AX=result
 .endproc ; _MeasureString
 
@@ -7982,11 +7979,14 @@ ret:    rts
 in_range:
         CALL    set_pos, AX=#kColLock
         jsr     _PrepareColLock
-        CALL    DrawString, AX=#text_buffer2
+        lda     text_buffer2
+    IF NOT ZERO
+        MGTK_CALL MGTK::DrawString, text_buffer2
+    END_IF
 
         CALL    set_pos, AX=#kColType
         jsr     _PrepareColType
-        CALL    DrawString, AX=#text_buffer2
+        MGTK_CALL MGTK::DrawString, text_buffer2
 
         CALL    set_pos, AX=#kColSize
         jsr     _PrepareColSize
@@ -7994,7 +7994,8 @@ in_range:
 
         CALL    set_pos, AX=#kColDate
         jsr     ComposeDateString
-        TAIL_CALL DrawString, AX=#text_buffer2
+        MGTK_CALL MGTK::DrawString, text_buffer2
+        rts
 
 set_pos:
         stax    pos_col::xcoord
@@ -8480,24 +8481,18 @@ finish:
 ;;; String must be in aux or LC memory.
 
 .proc DrawStringRight
-        params  := $6
-        textptr := $6
-        textlen := $8
-        width   := $9
-        dy      := $B
+        params := $06
+        str := params
+        width := params+2
 
-        stax    textptr
-        jsr     AuxLoad
-        beq     ret
-        sta     textlen
-        inc16   textptr
-        MGTK_CALL MGTK::TextWidth, params
-        sub16   #0, width, width
-        copy16  #0, dy
-        MGTK_CALL MGTK::Move, width
-        MGTK_CALL MGTK::DrawText, params
-
-ret:    rts
+        stax    str
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, params
+        sub16   #0, width, params+MGTK::Point::xcoord
+        copy16  #0, params+MGTK::Point::ycoord
+        MGTK_CALL MGTK::Move, params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
 .endproc ; DrawStringRight
 
 ;;; ============================================================
@@ -11325,17 +11320,18 @@ src_path_slash_index:
     ELSE
         FORMAT_MESSAGE 1, aux::str_file_count_plural_format
     END_IF
-        TAIL_CALL DrawString, AX=#text_input_buf
+        MGTK_CALL MGTK::DrawString, text_input_buf
+        rts
 .endproc ; DrawFileCountWithSuffix
 
 ;;; `file_count` must be populated
 .proc DrawProgressDialogFilesRemaining
         MGTK_CALL MGTK::MoveTo, progress_dialog_remaining_pos
-        CALL    DrawString, AX=#aux::str_files_remaining
+        MGTK_CALL MGTK::DrawString, aux::str_files_remaining
 
         CALL    IntToStringWithSeparators, AX=file_count
-        CALL    DrawString, AX=#str_from_int
-        CALL    DrawString, AX=#str_4_spaces
+        MGTK_CALL MGTK::DrawString, str_from_int
+        MGTK_CALL MGTK::DrawString, str_4_spaces
 
         ;; Update progress bar
         sub16   total_count, file_count, progress_muldiv_params::numerator
@@ -13348,7 +13344,7 @@ ignore: RETURN  C=1
 ;;; Y = row number (0, 1, 2, ... )
 
 .proc DrawProgressDialogLabel
-        phax
+        stax    @addr
 
         ;; y = base + aux::kDialogLabelHeight * line
         tya                     ; low byte
@@ -13357,9 +13353,8 @@ ignore: RETURN  C=1
         jsr     Multiply_16_8_16
         addax   #kProgressDialogLabelBaseY, progress_dialog_label_pos::ycoord
         MGTK_CALL MGTK::MoveTo, progress_dialog_label_pos
-
-        plax
-        jmp     DrawString
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        rts
 .endproc ; DrawProgressDialogLabel
 
 ;;; ============================================================
@@ -13867,7 +13862,7 @@ params:  .res    3
 ;;; ============================================================
 
 ;;; Draw dialog label.
-;;; A,X has pointer to DrawText params block
+;;; A,X has pointer to string
 ;;; Y has row number (1, 2, ... ) in low nibble, alignment in top nibble
 
         DDL_LEFT   = $00      ; Left aligned relative to `kDialogLabelDefaultX`
@@ -13878,15 +13873,13 @@ params:  .res    3
 
         PROC_USED_IN_OVERLAY
 .proc DrawDialogLabel
-        textwidth_params := $8
-        textptr := $8
-        textlen := $A
-        result  := $B
+        stringwidth_params := $8
+        stringptr := $8
+        result  := $A
 
         ptr := $6
 
-        stx     ptr+1
-        sta     ptr
+        stax    ptr
         tya
         and     #%00001111
         sta     row
@@ -13900,14 +13893,10 @@ params:  .res    3
         beq     calc_y
     END_IF
 
-        ;; Compute text width
+        ;; Compute string width
         pha                     ; A = flags
-        ldxy    ptr
-        inxy
-        stxy    textptr
-        CALL    AuxLoad, AX=ptr
-        sta     textlen
-        MGTK_CALL MGTK::TextWidth, textwidth_params
+        copy16  ptr, stringptr
+        MGTK_CALL MGTK::StringWidth, stringwidth_params
         pla                     ; A = flags
 
     IF A = #DDL_CENTER
@@ -13932,7 +13921,8 @@ calc_y:
         jsr     Multiply_16_8_16
         addax   #aux::kDialogLabelBaseY, dialog_label_pos::ycoord
         MGTK_CALL MGTK::MoveTo, dialog_label_pos
-        CALL    DrawString, AX=ptr
+        copy16  ptr, @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
 
         ;; Restore default X position
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
@@ -13971,44 +13961,21 @@ ret:    rts
 .endproc ; UpdateOKButton
 
 ;;; ============================================================
-;;; Draw text, pascal string address in A,X
-;;; String must be in aux or LC memory.
-
-        PROC_USED_IN_OVERLAY
-.proc DrawString
-        params := $6
-        textptr := $6
-        textlen := $8
-
-        stax    textptr
-        jsr     AuxLoad
-    IF NOT_ZERO
-        sta     textlen
-        inc16   textptr
-        MGTK_CALL MGTK::DrawText, params
-    END_IF
-        rts
-.endproc ; DrawString
-
-;;; ============================================================
 
         PROC_USED_IN_OVERLAY
 .proc DrawDialogTitle
         text_params     := $6
         text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
+        text_width      := text_params + 2
 
         stax    text_addr       ; input is length-prefixed string
-        jsr     AuxLoad
-        sta     text_length
-        inc16   text_addr        ; point past length byte
-        MGTK_CALL MGTK::TextWidth, text_params
+        stax    @addr
+        MGTK_CALL MGTK::StringWidth, text_params
 
         sub16   #kPromptDialogWidth, text_width, pos_dialog_title::xcoord
         lsr16   pos_dialog_title::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawDialogTitle
 
