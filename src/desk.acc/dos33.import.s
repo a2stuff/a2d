@@ -178,13 +178,12 @@ port:           .addr   grafport_win
         copy8   #BTK::kButtonStateDisabled, ok_button::state
 
         MGTK_CALL MGTK::OpenWindow, winfo_picker
-        MGTK_CALL MGTK::OpenWindow, winfo_picker_listbox
 
         MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
-        MGTK_CALL MGTK::ShowCursor
-
+        MGTK_CALL MGTK::OpenWindow, winfo_picker_listbox
         LBTK_CALL LBTK::Init, lb_params
+        MGTK_CALL MGTK::ShowCursor
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -491,13 +490,12 @@ remainder:      .word   0                 ; (out)
         copy8   #BTK::kButtonStateDisabled, import_button::state
 
         MGTK_CALL MGTK::OpenWindow, winfo_catalog
-        MGTK_CALL MGTK::OpenWindow, winfo_catalog_listbox
 
         MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
-        MGTK_CALL MGTK::ShowCursor
-
+        MGTK_CALL MGTK::OpenWindow, winfo_catalog_listbox
         LBTK_CALL LBTK::Init, lb_params
+        MGTK_CALL MGTK::ShowCursor
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop

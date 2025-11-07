@@ -784,12 +784,6 @@ found:  RETURN  A=index
         MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
 
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-    IF NS
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::line_edit_rect
-    END_IF
-.endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
 .ifndef FD_EXTENDED
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
@@ -802,6 +796,13 @@ found:  RETURN  A=index
     END_IF
 .endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
+
+.ifdef FD_EXTENDED
+        bit     extra_controls_flag
+    IF NS
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::line_edit_rect
+    END_IF
+.endif
 
         ;; Draw title
         copy16  file_dialog_res::winfo::maprect::x2, file_dialog_res::pos_title::xcoord

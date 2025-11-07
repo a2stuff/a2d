@@ -189,9 +189,9 @@ num_entries := listbox_rec::num_items
         add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        MGTK_CALL MGTK::OpenWindow, winfo_results
         MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
+        MGTK_CALL MGTK::OpenWindow, winfo_results
         LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
         MGTK_CALL MGTK::ShowCursor
