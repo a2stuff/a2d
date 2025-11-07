@@ -33,7 +33,7 @@ clip_bounds     .tag    MGTK::Rect  ; Used for clipped drawing
 
 bitmap_rect     .tag    MGTK::Rect  ; populated by `CalcIconRects`
 label_rect      .tag    MGTK::Rect  ; populated by `CalcIconRects`
-bounding_rect   .tag    MGTK::Rect  ; populated by `CalcIconRects`
+bounding_rect   .tag    MGTK::Rect  ; populated by `CalcIconBoundingRect`
 rename_rect     .tag    MGTK::Rect  ; populated by `CalcIconRects`
 
 ;;; For size calculation, not actually used
@@ -1477,6 +1477,9 @@ END_PARAM_BLOCK
         bit     clip_icons_flag
         bpl     _DoPaint        ; no clipping, just paint
 
+        ;; Needed for `SetPortForXyzIcon`
+        jsr     CalcIconBoundingRectFromBitmapAndLabelRects
+
         ;; Set up clipping structs and port
         lda     clip_window_id
     IF ZERO
@@ -1709,6 +1712,8 @@ stash_rename_rect:
 .proc CalcIconBoundingRect
         jsr     CalcIconRects
 
+from_bitmap_and_label_rects:
+
         COPY_BLOCK bitmap_rect, bounding_rect
 
         ;; Union of rectangles (expand `bounding_rect` to encompass `label_rect`)
@@ -1716,6 +1721,7 @@ stash_rename_rect:
 
         rts
 .endproc ; CalcIconBoundingRect
+CalcIconBoundingRectFromBitmapAndLabelRects := CalcIconBoundingRect::from_bitmap_and_label_rects
 
 .params unionrects_label_bounding
         .addr   label_rect
@@ -2138,9 +2144,8 @@ reserved:       .byte   0
 ;;; ============================================================
 
 ;;; Sets `res_ptr`
+;;; Assert: `CalcIconBoundingRect` has been called
 .proc SetPortForVolIcon
-        jsr     CalcIconBoundingRect
-
         ;; Will need to clip to screen bounds
         COPY_STRUCT MGTK::Rect, desktop_bounds, portbits::maprect
 
@@ -2150,9 +2155,8 @@ reserved:       .byte   0
 ;;; ============================================================
 
 ;;; Sets `res_ptr`
+;;; Assert: `CalcIconBoundingRect` has been called
 .proc SetPortForWinIcon
-        jsr     CalcIconBoundingRect
-
         ;; Get window clip rect (in screen space)
         copy8   clip_window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
