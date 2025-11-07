@@ -3244,6 +3244,7 @@ entry3:
         jsr     CacheActiveWindowIconList
         jsr     InitWindowIcons
         jsr     AdjustViewportForNewIcons
+        jsr     CachedIconsWindowToScreen
 
         jsr     _RestoreSelection
 
@@ -5804,6 +5805,7 @@ no_win:
         stax    @addr
         MGTK_CALL MGTK::OpenWindow, 0, @addr
 
+        jsr     CachedIconsWindowToScreen
         jsr     DrawCachedWindowHeaderAndEntries
         jmp     ScrollUpdate
 
@@ -6299,15 +6301,18 @@ done:
         sta     offset_icons_params::window_id
         jsr     PrepWindowScreenMapping
 
+        ldx     #2              ; loop over dimensions
+      DO
         s2w_flag := *+1
         lda     #SELF_MODIFIED_BYTE
-      IF_NS
-        copy16  map_delta_x, offset_icons_params::delta_x
-        copy16  map_delta_y, offset_icons_params::delta_y
-      ELSE
-        sub16   #0, map_delta_x, offset_icons_params::delta_x
-        sub16   #0, map_delta_y, offset_icons_params::delta_y
-      END_IF
+       IF_NS
+        copy16  map_delta,x, offset_icons_params::delta,x
+       ELSE
+        sub16   #0, map_delta,x, offset_icons_params::delta,x
+       END_IF
+        dex
+        dex
+      WHILE POS
 
         ITK_CALL IconTK::OffsetAll, offset_icons_params
     END_IF
@@ -6942,8 +6947,10 @@ copy_new_window_bounds_flag:
         bbox_dx := iconbb_rect+MGTK::Rect::x2
         bbox_dy := iconbb_rect+MGTK::Rect::y2
         sub16   bbox_dx, iconbb_rect+MGTK::Rect::x1, bbox_dx
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
-        sub16in bbox_dy, (winfo_ptr),y, bbox_dy
+        sub16   bbox_dy, iconbb_rect+MGTK::Rect::y1, bbox_dy
+
+        ;; Account for window header
+        add16_8 bbox_dy, #kWindowHeaderHeight
 
         ;; --------------------------------------------------
         ;; Width
@@ -7014,11 +7021,13 @@ assign_height:
 ;;; than being offset arbitrarily.
 
 ;;; Inputs: `cached_window_id` is accurate
+;;;
+;;; Note: Assumes icons are in window coordinates.
 .proc AdjustViewportForNewIcons
         ;; No-op if window is empty
         lda     cached_window_icon_count
     IF NOT_ZERO
-        ;; Screen space
+        ;; Window space
         jsr     ComputeIconsBBox
 
         winfo_ptr := $06
@@ -7029,14 +7038,11 @@ assign_height:
 
         ;; Adjust view bounds of new window so it matches icon bounding box.
         ;; (Only done for width because height is treated as fixed.)
-        jsr     CachedIconsScreenToWindow
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
-        sub16in iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y, tmpw
+
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x1
-        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
+        add16in (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
-        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
-        jsr     CachedIconsWindowToScreen
+        add16in (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
     END_IF
         rts
 .endproc ; AdjustViewportForNewIcons
@@ -7361,6 +7367,8 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
 ;;; Outputs: Populates `cached_window_icon_count` with count and
 ;;;          `cached_window_icon_list` with indexes 1...N
 ;;; Assert: LCBANK1 is active
+;;; Note that icons are left in window coordinates, and must
+;;; eventually be remapped to screen coordinates as IconTK expects.
 
 .proc InitWindowIcons
         ;; --------------------------------------------------
@@ -7702,7 +7710,6 @@ END_PARAM_BLOCK
         inx
     WHILE NOT_ZERO              ; always
 
-        jsr     CachedIconsWindowToScreen
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 
@@ -8501,6 +8508,7 @@ finish:
 
 ;;; ============================================================
 
+map_delta:
 map_delta_x:    .word   0
 map_delta_y:    .word   0
 
@@ -8515,37 +8523,33 @@ map_delta_y:    .word   0
 .endproc ; PrepActiveWindowScreenMapping
 
 .proc PrepWindowScreenMapping
-        winfo_ptr := $8
+PARAM_BLOCK, $40                ; used by some other procs that use $50...
+mapinfo      .tag MGTK::MapInfo
+END_PARAM_BLOCK
+        .assert mapinfo + .sizeof(MGTK::MapInfo) <= $50, error, "collision"
 
+        ;; NOTE: Can't use `MGTK::ScreenToWindow` as that doesn't take
+        ;; into account scroll position (i.e. the GrafPort's `maprect`)
+
+        winfo_ptr := $08
         jsr     GetWindowPtr
         stax    winfo_ptr
 
-        ;; Compute delta x
-        sec
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 0
-        lda     (winfo_ptr),y
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 0
-        sbc     (winfo_ptr),y
-        sta     map_delta_x
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 1
-        lda     (winfo_ptr),y
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 1
-        sbc     (winfo_ptr),y
-        sta     map_delta_x+1
+        ;; Copy window's `MapInfo` somewhere more convenient.
+        ldy     #MGTK::Winfo::port + .sizeof(MGTK::MapInfo) - 1
+        ldx     #.sizeof(MGTK::MapInfo) - 1
+    DO
+        copy8   (winfo_ptr),y, mapinfo,x
+        dey
+        dex
+    WHILE POS
 
-        ;; Compute delta y
-        sec
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 2
-        lda     (winfo_ptr),y
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 2
-        sbc     (winfo_ptr),y
-        sta     map_delta_y
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
-        lda     (winfo_ptr),y
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 3
-        sbc     (winfo_ptr),y
-        sta     map_delta_y+1
-
+        ldx     #2              ; loop over dimensions
+    DO
+        sub16   mapinfo+MGTK::GrafPort::maprect+MGTK::Rect::topleft,x, mapinfo+MGTK::GrafPort::viewloc,x, map_delta,x
+        dex
+        dex
+    WHILE POS
         rts
 
 .endproc ; PrepWindowScreenMapping
