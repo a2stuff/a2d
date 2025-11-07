@@ -4,6 +4,9 @@
 ;;; Used in control panel DAs
 ;;; ============================================================
 
+        .include "../inc/prodos.inc"
+        .include "../lib/alert_dialog.inc"
+
 filename:
         PASCAL_STRING kPathnameDeskTopConfig
 

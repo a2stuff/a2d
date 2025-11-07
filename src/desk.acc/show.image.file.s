@@ -1,3 +1,9 @@
+;;; ============================================================
+;;; SHOW.IMAGE.FILE - Desk Accessory
+;;;
+;;; Preview accessory for graphics (image) files.
+;;; ============================================================
+
         .include "../config.inc"
 
         .include "apple2.inc"

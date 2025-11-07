@@ -4,6 +4,9 @@
 ;;;
 ;;; ============================================================
 
+.ifndef PRODOS_INC
+PRODOS_INC = 1
+
 ;;; Entry point / Global Page
 MLI             := $BF00        ; Entry point
 DATETIME        := $BF06        ; JMP to clock routine
@@ -641,3 +644,5 @@ new_pathname:   .addr   np
         .refto new_pathname
 .endparams
 .endmacro
+
+.endif ; PRODOS_INC

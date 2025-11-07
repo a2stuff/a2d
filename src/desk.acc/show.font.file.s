@@ -1,3 +1,9 @@
+;;; ============================================================
+;;; SHOW.FONT.FILE - Desk Accessory
+;;;
+;;; Preview accessory for MGTK font files.
+;;; ============================================================
+
         .include "../config.inc"
 
         .include "apple2.inc"

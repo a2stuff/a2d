@@ -19,7 +19,6 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
-        .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../toolkits/btk.inc"
         .include "../common.inc"

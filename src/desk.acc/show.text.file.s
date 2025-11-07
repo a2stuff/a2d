@@ -1,3 +1,9 @@
+;;; ============================================================
+;;; SHOW.TEXT.FILE - Desk Accessory
+;;;
+;;; Preview accessory for plain text files.
+;;; ============================================================
+
         .include "../config.inc"
         RESOURCE_FILE "show.text.file.res"
 

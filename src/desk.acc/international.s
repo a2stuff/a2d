@@ -10,10 +10,8 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
-        .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../toolkits/btk.inc"
-        .include "../lib/alert_dialog.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 

@@ -2,6 +2,9 @@
 ;;; Alert library options. See `lib/alert_dialog.s`
 ;;; ============================================================
 
+.ifndef ALERT_DIALOG_INC
+ALERT_DIALOG_INC = 1
+
 ;;; Button options
 ;;; $C0 (%11xxxxxx) = Cancel + OK
 ;;; $81 (%10xxxxx1) = Cancel + Yes + No + All
@@ -39,3 +42,4 @@ kAlertResultAll         = 5
 ;;; the options (OK vs. Try Again / Cancel), and OK after a failure is
 ;;; the same as Cancel (give up), not Try Again.
 
+.endif ; ALERT_DIALOG_INC
