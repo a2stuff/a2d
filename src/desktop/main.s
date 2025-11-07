@@ -7172,14 +7172,46 @@ next:   add16_8 ptr, #.sizeof(ICTRecord)
 .endproc ; FileRecordToSrcFileInfo
 
 ;;; ============================================================
+;;; Cache the given directory window's `MapInfo` (view geometry) on
+;;; the zero page, to avoid pointer gymnastics. It does not require
+;;; that the window has been created in MGTK yet.
+;;;
+;;; Input: A = `window_id`
+;;; Output: $40...$4F holds copy of window's `MapInfo`
+;;; Trashes $06
+
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+
+window_mapinfo_cache := $40
+
+.proc CacheWindowMapInfo
+        winfo_ptr := $06
+
+        jsr     GetWindowPtr
+        stax    winfo_ptr
+
+        ldy     #MGTK::Winfo::port + .sizeof(MGTK::MapInfo) - 1
+        ldx     #.sizeof(MGTK::MapInfo) - 1
+    DO
+        copy8   (winfo_ptr),y, window_mapinfo_cache,x
+        dey
+        dex
+    WHILE POS
+
+        rts
+.endproc ; CacheWindowMapInfo
+
+;;; ============================================================
 ;;; Draw header (items/K in disk/K available/lines) for `cached_window_id`
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawWindowHeader
 
 ;;; Local variables on ZP
+;;; Note that this collides with the `window_mapinfo_cache` but we
+;;; finish using it before the fields that collide are touched.
 PARAM_BLOCK, $40
-maprect                 .tag MGTK::Rect
+gap                     .word
 
 num_items               .word
 blocks_in_disk          .word
@@ -7193,32 +7225,29 @@ END_PARAM_BLOCK
         ;; --------------------------------------------------
         ;; Window header doesn't scroll with window's maprect so we
         ;; need to "undo" the offset. Stash the maprect somewhere
-        ;; handy.
+        ;; handy and calculate coordinates with it.
 
-        ;; TODO: See if we can dedupe with `PrepWindowScreenMapping`
+        CALL    CacheWindowMapInfo, A=cached_window_id
+        maprect := window_mapinfo_cache + MGTK::MapInfo::maprect
 
-        winfo_ptr := $06
-        CALL    GetWindowPtr, A=cached_window_id
-        stax    winfo_ptr
+        ;; separator line x/y coords
+        copy16  maprect+MGTK::Rect::x1, header_line_left::xcoord
+        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line_left::ycoord
 
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect) - 1
-        ldx     #.sizeof(MGTK::Rect) - 1
-    DO
-        copy8   (winfo_ptr),y, maprect,x
-        dey
-        dex
-    WHILE POS
+        ;; label x/y coords
+        add16_8 maprect+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
+        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
+
+        ;; window width
+        ;; Note that `gap` is in `window_mapinfo_cache`'s `MapInfo::viewloc`
+        sub16   maprect+MGTK::Rect::x2, maprect+MGTK::Rect::x1, gap
+
+        ;; Now we're done with `window_mapinfo_cache`
 
         ;; --------------------------------------------------
         ;; Separator Lines
 
         jsr     SetPenModeNotCopy
-
-        ;; x coords
-        copy16  maprect+MGTK::Rect::x1, header_line_left::xcoord
-
-        ;; y coord
-        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line_left::ycoord
 
         ;; Draw top line
         MGTK_CALL MGTK::MoveTo, header_line_left
@@ -7262,8 +7291,6 @@ END_PARAM_BLOCK
         stax    width_k_available
 
         ;; Determine gap for centering
-        gap := $06
-        sub16   maprect+MGTK::Rect::x2, maprect+MGTK::Rect::x1, gap
         sub16_8 gap, #kWindowHeaderInsetX * 2 ; minus left/right insets
         sub16   gap, width_num_items, gap ; minus width of all text
         sub16   gap, width_k_in_disk, gap
@@ -7274,9 +7301,6 @@ END_PARAM_BLOCK
         copy16  #kWindowHeaderSpacingX, gap ; yes, use the minimum
     END_IF
         copy16  gap, header_text_delta::xcoord
-
-        add16_8 maprect+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
-        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
 
         ;; Draw "XXX items"
         MGTK_CALL MGTK::MoveTo, header_text_pos
@@ -8523,30 +8547,16 @@ map_delta_y:    .word   0
 .endproc ; PrepActiveWindowScreenMapping
 
 .proc PrepWindowScreenMapping
-PARAM_BLOCK, $40                ; used by some other procs that use $50...
-mapinfo      .tag MGTK::MapInfo
-END_PARAM_BLOCK
-        .assert mapinfo + .sizeof(MGTK::MapInfo) <= $50, error, "collision"
+        .assert window_mapinfo_cache + .sizeof(MGTK::MapInfo) <= $50, error, "collision"
 
         ;; NOTE: Can't use `MGTK::ScreenToWindow` as that doesn't take
         ;; into account scroll position (i.e. the GrafPort's `maprect`)
 
-        winfo_ptr := $08
-        jsr     GetWindowPtr
-        stax    winfo_ptr
-
-        ;; Copy window's `MapInfo` somewhere more convenient.
-        ldy     #MGTK::Winfo::port + .sizeof(MGTK::MapInfo) - 1
-        ldx     #.sizeof(MGTK::MapInfo) - 1
-    DO
-        copy8   (winfo_ptr),y, mapinfo,x
-        dey
-        dex
-    WHILE POS
+        jsr     CacheWindowMapInfo
 
         ldx     #2              ; loop over dimensions
     DO
-        sub16   mapinfo+MGTK::GrafPort::maprect+MGTK::Rect::topleft,x, mapinfo+MGTK::GrafPort::viewloc,x, map_delta,x
+        sub16   window_mapinfo_cache+MGTK::GrafPort::maprect+MGTK::Rect::topleft,x, window_mapinfo_cache+MGTK::GrafPort::viewloc,x, map_delta,x
         dex
         dex
     WHILE POS
