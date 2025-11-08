@@ -912,8 +912,8 @@ label_downarrow:
         MGTK_CALL MGTK::FrameRect, date_rect
         MGTK_CALL MGTK::FrameRect, time_rect
 
-        MGTK_CALL MGTK::PaintBitsHC, date_bitmap_params
-        MGTK_CALL MGTK::PaintBitsHC, time_bitmap_params
+        MGTK_CALL MGTK::PaintBits, date_bitmap_params
+        MGTK_CALL MGTK::PaintBits, time_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, date_sep1_pos
         MGTK_CALL MGTK::DrawString, str_date_separator

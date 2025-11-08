@@ -563,7 +563,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_CALL MGTK::PaintBitsHC, map_params
+        MGTK_CALL MGTK::PaintBits, map_params
 
         MGTK_CALL MGTK::MoveTo, lat_label_pos
         MGTK_CALL MGTK::DrawString, lat_label_str
@@ -670,7 +670,7 @@ HidePositionIndicator := ShowPositionIndicator
         eor     #$80
         sta     indicator_flag
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintBitsHC, position_marker_params
+        MGTK_CALL MGTK::PaintBits, position_marker_params
         rts
 .endproc ; XDrawPositionIndicator
 

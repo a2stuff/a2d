@@ -24,6 +24,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve performance changing views with large numbers of icons selected.
 * Remove support for keyboard scrolling via Apple+S.
 * On window close, repaint overlapping windows before the animation.
+* Reduce cursor flickering while icons are drawn.
 
 ### Selector
 

@@ -121,7 +121,7 @@ grow_box_bitmap:
         MGTK_CALL MGTK::SetPenMode, notpencopy
         sub16_8 winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
         sub16_8 winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
-        MGTK_CALL MGTK::PaintBitsHC, grow_box_params
+        MGTK_CALL MGTK::PaintBits, grow_box_params
         rts
 .endproc ; DrawGrowBox
 
@@ -435,9 +435,7 @@ loop:   txa
         copy8   (pos_ptr),y, object_params::viewloc,y
         dey
     WHILE POS
-        MGTK_CALL MGTK::ShieldCursor, object_params
-        MGTK_CALL MGTK::PaintBits, object_params
-        MGTK_CALL MGTK::UnshieldCursor
+        jsr     _Paint
 
         ;; Old coords
         ldy     #.sizeof(MGTK::Point)-1
@@ -446,9 +444,7 @@ loop:   txa
         sta     object_params::viewloc,y
         dey
     WHILE POS
-        MGTK_CALL MGTK::ShieldCursor, object_params
-        MGTK_CALL MGTK::PaintBits, object_params
-        MGTK_CALL MGTK::UnshieldCursor
+        jsr     _Paint
 
         ;; --------------------------------------------------
         ;; Next
@@ -462,6 +458,24 @@ loop:   txa
         jpl     loop
 
         rts
+
+.proc _Paint
+        ldax    object_params::viewloc::xcoord
+        stax    shield_rect::x1
+        addax   object_params::maprect::x2, shield_rect::x2
+
+        ldax    object_params::viewloc::ycoord
+        stax    shield_rect::y1
+        addax   object_params::maprect::y2, shield_rect::y2
+
+        MGTK_CALL MGTK::ShieldCursor, shield_rect
+        MGTK_CALL MGTK::PaintBits, object_params
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
+
+        DEFINE_RECT shield_rect, 0,0,0,0
+.endproc ; _Paint
+
 .endproc ; AnimateObjects
 
 ;;; ============================================================

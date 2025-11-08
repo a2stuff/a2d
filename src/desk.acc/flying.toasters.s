@@ -162,7 +162,7 @@ loop:
         asl                     ; *2
         tax
         copy16  toaster_frames,x, paintbits_params::mapbits
-        MGTK_CALL MGTK::PaintBitsHC, paintbits_params
+        MGTK_CALL MGTK::PaintBits, paintbits_params
 
         ;; Store updated values
         ldx     index

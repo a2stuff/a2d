@@ -132,6 +132,8 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 .endparams
 
+        DEFINE_RECT shield_params, 0,0,0,0
+
 frame1:
         PIXELS  "............##......."
         PIXELS  "..........######....."
@@ -368,9 +370,7 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
         add16_8   #kRunPosX, run_pos, frame_params::viewloc::xcoord
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::ShieldCursor, frame_params
-        MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
-        MGTK_CALL MGTK::UnshieldCursor
+        jsr     _Paint
 
         inc     frame_counter
         lda     frame_counter
@@ -384,10 +384,24 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
         copy8   #0, run_pos
 
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::ShieldCursor, frame_params
-        MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
-        MGTK_CALL MGTK::UnshieldCursor
+        jsr     _Paint
     END_IF
+        rts
+
+.proc _Paint
+        ldax    frame_params::viewloc::xcoord
+        stax    shield_params::x1
+        addax   frame_params::maprect::x2, shield_params::x2
+        ldax    frame_params::viewloc::ycoord
+        stax    shield_params::y1
+        addax   frame_params::maprect::y2, shield_params::y2
+
+        MGTK_CALL MGTK::ShieldCursor, shield_params
+        MGTK_CALL MGTK::PaintBits, frame_params
+        MGTK_CALL MGTK::UnshieldCursor
+
+        rts
+.endproc ; _Paint
 
 .endproc ; AnimFrame
 

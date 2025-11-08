@@ -206,7 +206,7 @@ start:
     END_IF
         stax    alert_bitmap_params::mapbits
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintBitsHC, alert_bitmap_params
+        MGTK_CALL MGTK::PaintBits, alert_bitmap_params
 
         ;; --------------------------------------------------
         ;; Draw appropriate buttons

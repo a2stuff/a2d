@@ -582,45 +582,42 @@ FindControlEx   = $53           ; Like FindControl, but works on non-topmost win
 ;;; .byte       which_part      (out) Part::*
 ;;; .byte       window_id
 
-PaintBitsHC     = $54           ; Like PaintBits, but hides the cursor
-;;; (input is address of MapInfo record)
-
-FlashMenuBar    = $55           ; Inverts menu bar (e.g. for silent alerts)
+FlashMenuBar    = $54           ; Inverts menu bar (e.g. for silent alerts)
 ;;; (no parameters)
 
-SaveScreenRect        = $56
+SaveScreenRect        = $55
 ;;; Rect        rect
 
-RestoreScreenRect     = $57
+RestoreScreenRect     = $56
 ;;; Rect        rect
 
-InflateRect           = $58
+InflateRect           = $57
 ;;; .addr       rect            Address of MGTK::Rect
 ;;; .word       xdelta
 ;;; .word       ydelta
 
-UnionRects            = $59
+UnionRects            = $58
 ;;; .addr       rect1           Address of MGTK::Rect
 ;;; .addr       rect2           Address of MGTK::Rect
 
-MulDiv                = $5A
+MulDiv                = $59
 ;;; .word       number
 ;;; .word       numerator
 ;;; .word       denominator
 ;;; .word       result
 ;;; .word       remainder
 
-ShieldCursor          = $5B     ; Hide cursor if intersects rect
-;;; (input is address of MapInfo record)
+ShieldCursor          = $5A     ; Hide cursor if intersects rect
+;;; Rect        rect
 
-UnshieldCursor        = $5C
+UnshieldCursor        = $5B
 ;;; (no parameters)
 
-StringWidth           = $5D
+StringWidth           = $5C
 ;;; .addr       str             Address of Pascal string
 ;;; .word       width           (out) result in pixels
 
-DrawString            = $5E
+DrawString            = $5D
 ;;; .addr       str             Address of Pascal string
 
 ;;; ============================================================

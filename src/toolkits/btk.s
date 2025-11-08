@@ -477,7 +477,7 @@ unchecked_rb_bitmap:
         stax    rb_params::mapbits
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::PaintBitsHC, rb_params
+        MGTK_CALL MGTK::PaintBits, rb_params
         rts
 .endproc ; _DrawRadioBitmap
 
@@ -564,7 +564,7 @@ unchecked_cb_bitmap:
         stax    cb_params::mapbits
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::PaintBitsHC, cb_params
+        MGTK_CALL MGTK::PaintBits, cb_params
         rts
 .endproc ; _DrawCheckboxBitmap
 

@@ -438,6 +438,7 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCaretBmpWidth - 1, kCaretBmpHeight - 1
         REF_MAPINFO_MEMBERS
 .endparams
+        DEFINE_RECT_SZ caret_blink_shield_params, kCaretBmpPosX, kCaretBmpPosY, kCaretBmpWidth, kCaretBmpHeight
 
 caret_blink_caret_bitmap:
         PIXELS  "##"
@@ -987,8 +988,8 @@ notpencopy:     .byte   MGTK::notpencopy
         BTK_CALL BTK::Draw, pattern_button
 
         MGTK_CALL MGTK::FrameRect, fatbits_frame
-        MGTK_CALL MGTK::PaintBitsHC, larr_params
-        MGTK_CALL MGTK::PaintBitsHC, rarr_params
+        MGTK_CALL MGTK::PaintBits, larr_params
+        MGTK_CALL MGTK::PaintBits, rarr_params
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, preview_frame
@@ -1021,7 +1022,7 @@ notpencopy:     .byte   MGTK::notpencopy
         dey
       WHILE POS
 
-        MGTK_CALL MGTK::PaintBitsHC, darrow_params
+        MGTK_CALL MGTK::PaintBits, darrow_params
         add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
         lda     arrow_num
@@ -1046,7 +1047,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
         jsr     UpdateDblclickButtons
 
-        MGTK_CALL MGTK::PaintBitsHC, dblclick_params
+        MGTK_CALL MGTK::PaintBits, dblclick_params
 
         ;; ==============================
         ;; Mouse Tracking Speed
@@ -1058,7 +1059,7 @@ notpencopy:     .byte   MGTK::notpencopy
         BTK_CALL BTK::RadioDraw, tracking_fast_button
         jsr     UpdateTrackingButtons
 
-        MGTK_CALL MGTK::PaintBitsHC, mouse_tracking_params
+        MGTK_CALL MGTK::PaintBits, mouse_tracking_params
 
         ;; ==============================
         ;; Caret Blinking
@@ -1069,7 +1070,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::MoveTo, caret_blink2_label_pos
         MGTK_CALL MGTK::DrawString, caret_blink2_label_str
 
-        MGTK_CALL MGTK::PaintBitsHC, caret_blink_bitmap_params
+        MGTK_CALL MGTK::PaintBits, caret_blink_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, caret_blink_slow_label_pos
         MGTK_CALL MGTK::DrawString, caret_blink_slow_label_str
@@ -1615,7 +1616,7 @@ caret_blink_speed: .word   0
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::ShieldCursor, caret_blink_bitmap_caret_params
+        MGTK_CALL MGTK::ShieldCursor, caret_blink_shield_params
         MGTK_CALL MGTK::PaintBits, caret_blink_bitmap_caret_params
         MGTK_CALL MGTK::UnshieldCursor
 

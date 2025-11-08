@@ -1267,7 +1267,7 @@ loop:   ldy     #0
         ldy     #(btn_c::label - btn_c) ; label
         copy8   (ptr),y, label
 
-        MGTK_CALL MGTK::PaintBitsHC, 0, bitmap_addr ; draw shadowed rect
+        MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw shadowed rect
         MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
         MGTK_CALL MGTK::DrawText, drawtext_params_label  ; button label text
 
@@ -1296,7 +1296,7 @@ loop:   ldy     #0
         subax8  #kOffsetTop, title_bar_bitmap::viewloc::ycoord
 
         MGTK_CALL MGTK::SetPortBits, screen_port ; set clipping rect to whole screen
-        MGTK_CALL MGTK::PaintBitsHC, title_bar_bitmap     ; Draws decoration in title bar
+        MGTK_CALL MGTK::PaintBits, title_bar_bitmap     ; Draws decoration in title bar
         MGTK_CALL MGTK::ShowCursor
         jmp     DisplayBuffer2
 .endproc ; DrawTitleBar

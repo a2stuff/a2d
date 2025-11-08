@@ -194,7 +194,7 @@ grow_box_bitmap:
         MGTK_CALL MGTK::SetPenMode, notpencopy
         sub16_8 winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
         sub16_8 winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
-        MGTK_CALL MGTK::PaintBitsHC, grow_box_params
+        MGTK_CALL MGTK::PaintBits, grow_box_params
         rts
 .endproc ; DrawGrowBox
 
@@ -264,7 +264,7 @@ reserved:       .byte   0
         copy16  #FRAMEBUFFER, LZSA_DST_LO
         jsr     decompress_lzsa2_fast
         jsr     FrameDouble
-        MGTK_CALL MGTK::PaintBitsHC, frame_params
+        MGTK_CALL MGTK::PaintBits, frame_params
 
         ;; Stash rect of this frame so we can optionally erase it next time
         COPY_STRUCT frame_params::viewloc, erase_rect::topleft

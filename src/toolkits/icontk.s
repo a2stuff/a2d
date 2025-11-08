@@ -1445,7 +1445,7 @@ END_PARAM_BLOCK
         ;; Pointer to IconEntry
         CALL    SetIconPtr, A=params::icon
 
-        jsr     CalcIconRects
+        jsr     CalcIconBoundingRect
 
         ;; Stash some flags
         ldy     #IconEntry::state
@@ -1472,10 +1472,16 @@ END_PARAM_BLOCK
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point)
         copy16in (res_ptr),y, mask_paintbits_params::mapbits
 
-        ;; Determine if we want clipping, based on icon type and flags.
+        ;; Avoid cursor flashing
+        MGTK_CALL MGTK::ShieldCursor, bounding_rect
+        jsr     rest
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
 
+rest:
+        ;; Determine if we want clipping, based on icon type and flags.
         bit     clip_icons_flag
-        bpl     _DoPaint        ; no clipping, just paint
+        jpl     _DoPaint        ; no clipping, just paint
 
         ;; Needed for `SetPortForXyzIcon`
         jsr     CalcIconBoundingRectFromBitmapAndLabelRects
@@ -1503,6 +1509,15 @@ END_PARAM_BLOCK
 
 ret:    rts
 
+.params shield_cursor_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, 0, 0
+        REF_MAPINFO_MEMBERS
+.endparams
+
 
 .proc _DoPaint
         label_pos := generic_ptr
@@ -1529,8 +1544,6 @@ ret:    rts
         sta     settextbg_params
         MGTK_CALL MGTK::SetTextBG, settextbg_params
 
-        MGTK_CALL MGTK::HideCursor
-
         ;; --------------------------------------------------
         ;; Icon
 
@@ -1550,7 +1563,7 @@ ret:    rts
     ELSE
         MGTK_CALL MGTK::SetPenMode, penOR
     END_IF
-        MGTK_CALL MGTK::PaintBitsHC, mask_paintbits_params
+        MGTK_CALL MGTK::PaintBits, mask_paintbits_params
 
         ;; Shade again (restores background)
         ASSERT_EQUALS ::kIconEntryStateDimmed, $80
@@ -1567,7 +1580,7 @@ ret:    rts
     ELSE
         MGTK_CALL MGTK::SetPenMode, penBIC
     END_IF
-        MGTK_CALL MGTK::PaintBitsHC, icon_paintbits_params
+        MGTK_CALL MGTK::PaintBits, icon_paintbits_params
 
         ;; --------------------------------------------------
         ;; Label
@@ -1575,7 +1588,6 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, label_pos
 
         MGTK_CALL MGTK::DrawText, drawtext_params
-        MGTK_CALL MGTK::ShowCursor
 
         MGTK_CALL MGTK::SetTextBG, settextbg_white
 
@@ -2036,6 +2048,8 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::SetPattern, white_pattern
     END_IF
 
+        MGTK_CALL MGTK::ShieldCursor, bounding_rect
+
         bit     clip_icons_flag
     IF NC
         MGTK_CALL MGTK::PaintPoly, poly
@@ -2047,13 +2061,16 @@ END_PARAM_BLOCK
         bit     more_drawing_needed_flag
       WHILE NS
     END_IF
+
+        MGTK_CALL MGTK::UnshieldCursor
+
         FALL_THROUGH_TO _RedrawIconsAfterErase
 
 ;;; ============================================================
 ;;; After erasing an icon, redraw any overlapping icons
 
 .proc _RedrawIconsAfterErase
-        COPY_BLOCK bounding_rect, icon_in_rect_params::rect
+        COPY_STRUCT MGTK::Rect, bounding_rect, icon_in_rect_params::rect
 
         ldx     num_icons
     DO

@@ -1484,7 +1484,7 @@ loop:   ldy     #0
         add16_8 ptr, #(btn_c::pos - btn_c), text_addr
         add16_8 ptr, #(btn_c::label - btn_c), label
 
-        MGTK_CALL MGTK::PaintBitsHC, 0, bitmap_addr ; draw shadowed rect
+        MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw shadowed rect
         MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
         MGTK_CALL MGTK::DrawString, 0, label
 

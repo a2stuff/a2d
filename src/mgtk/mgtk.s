@@ -129,7 +129,7 @@ adjust_stack:                   ; Adjust stack to account for params
         ;; * second byte's high bit is "hide cursor" flag
         ;; * rest of second byte is # bytes to copy
 
-        ldy     param_lengths+1,x ; Check param length...
+        ldy     param_lengths+1,x ; Check "hide cursor" flag
         bpl     done_hiding
 
         bit     desktop_initialized_flag
@@ -138,6 +138,9 @@ adjust_stack:                   ; Adjust stack to account for params
         pha                     ; registers and params_addr and then
         tya                     ; hide cursor
         pha
+
+        bit     disable_autohide_flag ; unless globally overridden!
+    IF NC
         lda     params_addr
         pha
         lda     params_addr+1
@@ -147,6 +150,8 @@ adjust_stack:                   ; Adjust stack to account for params
         sta     params_addr+1
         pla
         sta     params_addr
+    END_IF
+
         pla
         and     #$7F            ; clear high bit in length count
         tay
@@ -371,17 +376,16 @@ jump_table:
         .addr   GetWinFrameRectImpl ; $51 GetWinFrameRect
         .addr   RedrawDeskTopImpl   ; $52 RedrawDeskTop
         .addr   FindControlExImpl   ; $53 FindControlEx
-        .addr   PaintBitsImpl       ; $54 PaintBitsHC
-        .addr   FlashMenuBarImpl    ; $55 FlashMenuBar
-        .addr   SaveScreenRectImpl  ; $56 SaveScreenRect
-        .addr   RestoreScreenRectImpl ; $57 RestoreScreenRect
-        .addr   InflateRectImpl     ; $58 InflateRect
-        .addr   UnionRectsImpl      ; $59 UnionRects
-        .addr   MulDivImpl          ; $5A MulDiv
-        .addr   ShieldCursorImpl    ; $5B ShieldCursor
-        .addr   UnshieldCursorImpl  ; $5C UnshieldCursor
-        .addr   StringWidthImpl     ; $5D StringWidth
-        .addr   DrawStringImpl      ; $5E DrawStrng
+        .addr   FlashMenuBarImpl    ; $54 FlashMenuBar
+        .addr   SaveScreenRectImpl  ; $55 SaveScreenRect
+        .addr   RestoreScreenRectImpl ; $56 RestoreScreenRect
+        .addr   InflateRectImpl     ; $57 InflateRect
+        .addr   UnionRectsImpl      ; $58 UnionRects
+        .addr   MulDivImpl          ; $59 MulDiv
+        .addr   ShieldCursorImpl    ; $5A ShieldCursor
+        .addr   UnshieldCursorImpl  ; $5B UnshieldCursor
+        .addr   StringWidthImpl     ; $5C StringWidth
+        .addr   DrawStringImpl      ; $5D DrawString
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -419,7 +423,7 @@ param_lengths:
         PARAM_DEFN  8, $92, 1                ; $11 PaintRect
         PARAM_DEFN  8, $9F, 1                ; $12 FrameRect
         PARAM_DEFN  8, $92, 0                ; $13 InRect
-        PARAM_DEFN 16, $8A, 0                ; $14 PaintBits
+        PARAM_DEFN 16, $8A, 1                ; $14 PaintBits
         PARAM_DEFN  0, $00, 1                ; $15 PaintPoly
         PARAM_DEFN  0, $00, 1                ; $16 FramePoly
         PARAM_DEFN  0, $00, 0                ; $17 InPoly
@@ -504,17 +508,16 @@ param_lengths:
         PARAM_DEFN  5, $82, 0                ; $51 GetWinFrameRect
         PARAM_DEFN  0, $00, 0                ; $52 RedrawDeskTop
         PARAM_DEFN  7, $82, 0                ; $53 FindControlEx
-        PARAM_DEFN 16, $8A, 1                ; $54 PaintBitsHC
-        PARAM_DEFN  0, $00, 0                ; $55 FlashMenuBar
-        PARAM_DEFN  8, $92, 1                ; $56 SaveScreenRect
-        PARAM_DEFN  8, $92, 1                ; $57 RestoreScreenRect
-        PARAM_DEFN  6, $82, 0                ; $58 InflateRect
-        PARAM_DEFN  4, $82, 0                ; $59 UnionRects
-        PARAM_DEFN  6, $82, 0                ; $5A MulDiv
-        PARAM_DEFN 16, $8A, 0                ; $5B ShieldCursor
-        PARAM_DEFN  0, $00, 0                ; $5C UnshieldCursor
-        PARAM_DEFN  2, $A1, 0                ; $5D StringWidth
-        PARAM_DEFN  0, $00, 1                ; $5E DrawString
+        PARAM_DEFN  0, $00, 0                ; $54 FlashMenuBar
+        PARAM_DEFN  8, $92, 1                ; $55 SaveScreenRect
+        PARAM_DEFN  8, $92, 1                ; $56 RestoreScreenRect
+        PARAM_DEFN  6, $82, 0                ; $57 InflateRect
+        PARAM_DEFN  4, $82, 0                ; $58 UnionRects
+        PARAM_DEFN  6, $82, 0                ; $59 MulDiv
+        PARAM_DEFN  8, $92, 0                ; $5A ShieldCursor
+        PARAM_DEFN  0, $00, 0                ; $5B UnshieldCursor
+        PARAM_DEFN  2, $A1, 0                ; $5C StringWidth
+        PARAM_DEFN  0, $00, 1                ; $5D DrawString
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -10881,35 +10884,25 @@ finish:
 ;;; ============================================================
 ;;; ShieldCursor
 
-;;; 16 bytes of params, copied to $8A
+;;; 8 bytes of params, copied to $92
 
 .proc ShieldCursorImpl
-        ;; Input is a `MapInfo`
-        dbi_left   := $8A
-        dbi_top    := $8C
-        dbi_bitmap := $8E     ; aka bits_addr
-        dbi_stride := $90     ; aka src_mapwidth
-        dbi_hoff   := $92     ; aka left
-        dbi_voff   := $94     ; aka top
-        dbi_width  := $96     ; aka right
-        dbi_height := $98     ; aka bottom
+        SET_BIT7_FLAG disable_autohide_flag
+
+        jsr     ClipRect
+        RTS_IF CC
 
         ;; Convert to rect offset by current port
         ldx     #2              ; loop over dimensions
     DO
-        add16   dbi_left,x, x_offset,x, left,x
-        add16   left,x, dbi_width,x, right,x
+        add16   left,x, x_offset,x, left,x
+        add16   right,x, x_offset,x, right,x
         dex
         dex
     WHILE POS
 
-        ;; Now using `left`/`top`/`right`/`bottom`
-
-        ;; Assert: all four coords are on-screen
-
-        ;; TODO: Clip rect to the port? To the screen?
-
         ;; Keep in sync with algorithms in `PreDrawCursor`
+        ;; TODO: Factor out common code.
 
         ;; --------------------------------------------------
         ;; Y tests
@@ -10944,10 +10937,10 @@ finish:
         ;; --------------------------------------------------
         ;; X tests
 
+        cursor_b1 := $8A
+        cursor_b2 := $8B
+
         ;; Determine cursor columns
-        cursor_x1 := $8A
-        cursor_b1 := $8C
-        cursor_b2 := $8D
         lda     cursor_pos::xcoord
         sec
         sbc     cursor_hotspot_x
@@ -10995,12 +10988,19 @@ ret:    rts
 .endproc ; ShieldCursorImpl
 
 .proc UnshieldCursorImpl
+        CLEAR_BIT7_FLAG disable_autohide_flag
         asl     cursor_shielded_flag
         bcc     ShieldCursorImpl::ret
         jmp     ShowCursorImpl
 .endproc ; UnshieldCursorImpl
 
+;;; bit7 set if the cursor was hidden by a `ShieldCursor` call.
 cursor_shielded_flag:
+        .byte   0
+
+;;; bit7 set between `ShieldCursor` and `UnshieldCursor` regardless of
+;;; whether or not the cursor was hidden.
+disable_autohide_flag:
         .byte   0
 
 ;;; ============================================================

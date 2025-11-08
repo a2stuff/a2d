@@ -1244,7 +1244,7 @@ egg:    .byte   0
 
         copy16  model_pix_ptr, bits_addr
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::notpencopy
-        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, SELF_MODIFIED, bits_addr
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBits, SELF_MODIFIED, bits_addr
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::model_pos
         CALL    DrawStringFromMain, AX=model_str_ptr

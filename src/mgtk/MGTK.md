@@ -270,6 +270,8 @@ Parameters:
 .word       ydelta
 ```
 
+This call normally auto-hides the cursor.
+
 #### LineTo ($10)
 Draw line from pen location (absolute) of the current grafport.
 
@@ -277,6 +279,8 @@ Parameters:
 ```
 Point       pos
 ```
+
+This call normally auto-hides the cursor.
 
 #### PaintRect ($11)
 Fill rectangle with pattern of the current grafport.
@@ -286,6 +290,8 @@ Parameters:
 Rect        rect
 ```
 
+This call normally auto-hides the cursor.
+
 #### FrameRect ($12)
 Draw rectangle with pen mode/size of the current grafport.
 
@@ -293,6 +299,8 @@ Parameters:
 ```
 Rect        rect
 ```
+
+This call normally auto-hides the cursor.
 
 #### InRect ($13)
 Is current position in bounds? A=$80 true, 0 false
@@ -310,33 +318,9 @@ Parameters:
 (input is address of MapInfo record)
 ```
 
-Note that the cursor is not hidden automatically for this operation.
-See `PaintBitsHC`.
+This call normally auto-hides the cursor.
 
-If `PaintBits` is used the cursor is not hidden, then the caller must
-assure that the cursor save/restore area and the bitmap do not
-intersect, or when the cursor moves the display will be distorted.
-
-In general, `PaintBitsHC` should be preferred except for truly
-performance-sensitive operations (e.g. animations) where the cursor
-remains visible but is hidden conditionally.
-
-#### PaintBitsHC ($54)
-Like `PaintBits`, but hides/restores the cursor for the operation.
-
-Parameters:
-```
-(input is address of MapInfo record)
-```
-
-If the cursor is already hidden (via a call to `ShowCursor` or
-`ObscureCursor`) then this is the same as `PaintBits`, with no
-performance penalty. If the cursor is not already hidden, then
-this is equivalent in behavior but faster than surrounding
-a `PaintBits` call with `ShowCursor`/`HideCursor` because the
-extra dispatch is avoided.
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
+> It is a modern change that this call auto-hides the cursor.
 
 #### PaintPoly ($15)
 Fill multiple closed polygons with the pattern of the current grafport.
@@ -346,6 +330,8 @@ Parameters:
 (input is address of PolyList record)
 ```
 
+This call normally auto-hides the cursor.
+
 #### FramePoly ($16)
 Draw multiple closed polygons with the pen mode/size of the current grafport.
 
@@ -353,6 +339,8 @@ Parameters:
 ```
 (input is address of PolyList record)
 ```
+
+This call normally auto-hides the cursor.
 
 #### InPoly ($17)
 Is pen location of the current grafport within the polygon? A=$80 true, 0 false
@@ -383,7 +371,9 @@ Parameters:
 .byte       length
 ```
 
-#### StringWidth ($5D)
+This call normally auto-hides the cursor.
+
+#### StringWidth ($5C)
 Measure the width of a Pascal string in pixels
 
 Parameters:
@@ -392,13 +382,15 @@ Parameters:
 .word       width           (out) result in pixels
 ```
 
-#### DrawString ($5E)
+#### DrawString ($5D)
 Draw string at the pen location of the current graphport (as left, baseline)
 
 Parameters:
 ```
 (input is the address of Pascal string)
 ```
+
+This call normally auto-hides the cursor.
 
 ### Utility - configuration and version
 
@@ -694,7 +686,7 @@ Parameters:
 .addr definition            (out) Address of cursor record
 ```
 
-#### ShieldCursor ($5B)
+#### ShieldCursor ($5A)
 Conditionally hide the cursor.
 
 Parameters:
@@ -706,9 +698,11 @@ If the cursor would overlap with the offset/rectangle described by the passed `M
 
 Calls to `ShieldCursor` must not be nested, and must be balanced by a corresponding `UnshieldCursor` call. Nesting `ShieldCursor`/`UnshieldCursor` within `HideCursor`/`ShowCursor` or vice versa is supported, however.
 
+Between the `ShieldCursor` and `UnshieldCursor` calls, drawing calls do not auto-hide the cursor.
+
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### UnshieldCursor ($5C)
+#### UnshieldCursor ($5B)
 Balance a previous call to `UnshieldCursor`.
 
 No parameters.
@@ -866,7 +860,7 @@ No parameters.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### FlashMenuBar ($55)
+#### FlashMenuBar ($54)
 Negates (XOR) the pixels of the menu bar. Useful for silent alerts.
 This should be called an even number of times before another MGTK call
 is made so the menu bar is left in a normal state.
@@ -1110,7 +1104,7 @@ Parameters:
 
 > This call was not listed in the 1985 APDA documentation, so the behavior is inferred from the source.
 
-#### SaveScreenRect ($56)
+#### SaveScreenRect ($55)
 Save the passed screen rectangle to the save area.
 
 Parameters:
@@ -1125,9 +1119,11 @@ or other modal effects without requiring underlying windows to update.
 Note that no error checking is done that the passed rect is valid or
 that the save area passed to `StartDeskTop` is large enough.
 
+This call normally auto-hides the cursor.
+
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### RestoreScreenRect ($57)
+#### RestoreScreenRect ($56)
 Restore the passed screen rectangle from the save area.
 
 Parameters:
@@ -1138,9 +1134,11 @@ Rect        rect
 This must only be used following a `SaveScreenRect` call and must be
 passed the same rectangle dimensions. No error checking is done.
 
+This call normally auto-hides the cursor.
+
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### InflateRect ($58)
+#### InflateRect ($57)
 Expand the referenced rectangle by `xdelta` and `ydelta`, which can be negative.
 
 Parameters:
@@ -1152,7 +1150,7 @@ Parameters:
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### UnionRects ($59)
+#### UnionRects ($58)
 Expand the second rectangle to encompass the first rectangle.
 
 Parameters:
@@ -1163,7 +1161,7 @@ Parameters:
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### MulDiv ($5A)
+#### MulDiv ($59)
 Multiplies two 16-bit values and then divides the 32-bit result by a
 third 16-bit value, yielding a 16-bit result and a 16-bit remainder.
 

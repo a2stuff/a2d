@@ -914,7 +914,7 @@ after_click:
         asl     a
         tax
         copy16  bitmap_table,x, paintbits_params::mapbits
-        MGTK_CALL MGTK::PaintBitsHC, paintbits_params
+        MGTK_CALL MGTK::PaintBits, paintbits_params
         pla
         clc
         adc     draw_inc

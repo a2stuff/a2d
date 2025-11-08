@@ -1775,3 +1775,4 @@ For the following tests, run on non-IIgs system with any acceleration disabled.
 * Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Press the Left Arrow key. Verify that icon `F1` becomes selected. Use the arrow keys to move selection. Verify that changing selection takes under 0.5s when scrolling is not required.
 * Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Drag a select rectangle around all the visible icons in the window. Verify that the icons all become selected in under 1s, and that the mouse cursor remains responsive.
 
+* Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Verify that the mouse cursor doesn't flicker as icons far away from the cursor are drawn.
