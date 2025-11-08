@@ -1776,3 +1776,5 @@ For the following tests, run on non-IIgs system with any acceleration disabled.
 * Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Drag a select rectangle around all the visible icons in the window. Verify that the icons all become selected in under 1s, and that the mouse cursor remains responsive.
 
 * Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Verify that the mouse cursor doesn't flicker as icons far away from the cursor are drawn.
+* Launch DeskTop. Click on the desktop, away from any icons. Verify that the mouse cursor doesn't flicker.
+* Launch DeskTop. Click on in a window, away from any icons. Verify that the mouse cursor doesn't flicker.

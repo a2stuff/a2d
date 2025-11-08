@@ -9211,10 +9211,20 @@ AnimateWindowOpen       := AnimateWindowImpl::open
 ;;; ============================================================
 
 .proc FrameTmpRect
+        ;; Skip if degenerate, to avoid cursor flashes
+        ldx     #2              ; loop over dimensions
+    DO
+        ecmp16  tmp_rect::topleft,x, tmp_rect::bottomright,x
+        beq     ret
+        dex
+        dex
+    WHILE POS
+
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     SetPenModeXOR
         MGTK_CALL MGTK::FrameRect, tmp_rect
-        rts
+
+ret:    rts
 .endproc ; FrameTmpRect
 
 ;;; ============================================================
