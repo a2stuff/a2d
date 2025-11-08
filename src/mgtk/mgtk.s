@@ -10849,73 +10849,108 @@ finish:
 
 .proc ShieldCursorImpl
         ;; Input is a `MapInfo`
-        left   := $8A
-        top    := $8C
-        bitmap := $8E           ; unused
-        stride := $90           ; unused
-        hoff   := $92           ; unused (TODO: should it be?)
-        voff   := $94           ; unused (TODO: should it be?)
-        width  := $96
-        height := $98
+        dbi_left   := $8A
+        dbi_top    := $8C
+        dbi_bitmap := $8E     ; aka bits_addr
+        dbi_stride := $90     ; aka src_mapwidth
+        dbi_hoff   := $92     ; aka left
+        dbi_voff   := $94     ; aka top
+        dbi_width  := $96     ; aka right
+        dbi_height := $98     ; aka bottom
 
-        right   := width
-        bottom  := height
-
-        kSlop = 14    ; Two DHR bytes worth of pixels
-
-        jsr     CheckRect
-
-        ;; Offset passed rect by current port
+        ;; Convert to rect offset by current port
         ldx     #2              ; loop over dimensions
     DO
-        add16   left,x, current_winport::viewloc+MGTK::Point::xcoord,x, left,x
+        add16   dbi_left,x, x_offset,x, left,x
+        add16   left,x, dbi_width,x, right,x
         dex
         dex
     WHILE POS
 
-        ;; Offset passed rect by hotspot
-        add16_8 left, cursor_hotspot_x
-        add16_8 top, cursor_hotspot_y
+        ;; Now using `left`/`top`/`right`/`bottom`
 
-        ;; Compute the far edges
-        ldx     #2              ; loop over dimensions
-    DO
-        add16   left,x, width,x, right,x
-        dex
-        dex
-    WHILE POS
+        ;; Assert: all four coords are on-screen
 
-        ;; TODO: Compute more accurate overlap considering
-        ;; byte boundaries for cursor and passed rect.
+        ;; TODO: Clip rect to the port? To the screen?
 
-        ;; Account for cursor size and render slop
-        sub16_8 left, #MGTK::cursor_width * 7 + kSlop
-        add16_8 right, #kSlop
-        sub16_8 top, #MGTK::cursor_height
+        ;; Keep in sync with algorithms in `PreDrawCursor`
 
-        ldx     #2              ; loop over dimensions
-    DO
-        lda     cursor_pos+1,x
-        cmp     left+1,x
-        bmi     outside
-        bne     :+
-        lda     cursor_pos,x
-        cmp     left,x
+        ;; --------------------------------------------------
+        ;; Y tests
+
+        cursor_y1 := $8A
+        cursor_y2 := $8B
+
+        ;; Determine cursor rows
+        lda     cursor_pos::ycoord
+        sec
+        sbc     cursor_hotspot_y
+        pha                     ; A = y1 unclamped
+     IF CC
+        lda     #0              ; clamp on underflow
+     END_IF
+        sta     cursor_y1
+        pla                     ; A = y1 unclamped
+        clc
+        adc     #MGTK::cursor_height-1
+        sta     cursor_y2
+
+        ;; top row of rect > bottom byte of cursor?
+        lda     cursor_y2
+        cmp     top
         bcc     outside
-:
-        lda     cursor_pos+1,x
-        cmp     right+1,x
-        bmi     :+
-        bne     outside
-        lda     cursor_pos,x
-        cmp     right,x
-        bcc     :+
-        bne     outside
-:
-        dex
-        dex
-    WHILE POS
 
+        ;; bottom row or rect < top row of cursor?
+        lda     bottom
+        cmp     cursor_y1
+        bcc     outside
+
+        ;; --------------------------------------------------
+        ;; X tests
+
+        ;; Determine cursor columns
+        cursor_x1 := $8A
+        cursor_b1 := $8C
+        cursor_b2 := $8D
+        lda     cursor_pos::xcoord
+        sec
+        sbc     cursor_hotspot_x
+        tax
+        lda     cursor_pos::xcoord+1
+        sbc     #0
+    IF NEG
+        lda     #$FF            ; this is what cursor logic uses
+        bmi     store           ; always
+    END_IF
+        ;; "else"
+        jsr     DivMod7
+store:
+        sta     cursor_b1
+        pha
+        clc
+        adc     #2              ; cursor save/restore is 3 bytes wide
+        sta     cursor_b2
+        pla
+    IF NEG
+        inc     cursor_b1       ; min of 0
+    END_IF
+
+        ;; left byte of rect > right byte of cursor?
+        ldx     left
+        lda     left+1
+        jsr     DivMod7
+        cmp     cursor_b2
+        beq     inside
+        bcs     outside
+
+        ;; right byte of rect < left byte of cursor?
+        ldx     right
+        lda     right+1
+        jsr     DivMod7
+        cmp     cursor_b1
+        bcc     outside
+
+inside:
         SET_BIT7_FLAG cursor_shielded_flag
         jmp     HideCursorImpl
 
