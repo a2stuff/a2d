@@ -981,11 +981,21 @@ clicked_window_id := _ActivateClickedWindow::window_id
 .proc ClearAndDrawActiveWindowEntries
         CALL    UnsafeSetPortFromWindowIdAndAdjustForEntries, A=active_window_id ; CHECKED
     IF ZERO
-        MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
+        jsr     EraseWindowBackground
         jsr     DrawWindowEntries
     END_IF
         rts
 .endproc ; ClearAndDrawActiveWindowEntries
+
+;;; ============================================================
+
+;;; Assumes `window_grafport` is selected/initialized
+.proc EraseWindowBackground
+        MGTK_CALL MGTK::ShieldCursor, window_grafport+MGTK::GrafPort::maprect
+        MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
+.endproc ; EraseWindowBackground
 
 ;;; ============================================================
 
@@ -5225,7 +5235,7 @@ exception_flag:
         CALL    UnsafeSetPortFromWindowId, A=active_window_id ; CHECKED
         pha                     ; A = obscured?
     IF ZERO                     ; skip if obscured
-        MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
+        jsr     EraseWindowBackground
     END_IF
 
         ;; Remove old FileRecords
