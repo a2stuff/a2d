@@ -5021,7 +5021,7 @@ reset_desktop:
         ;; Fills the desktop background on startup (menu left black)
         MGTK_CALL MGTK::SetPattern, desktop_pattern
         MGTK_CALL MGTK::PaintRect, desktop_mapinfo+MGTK::MapInfo::maprect
-        jmp     RestoreParamsActivePort
+        jmp     RestoreParamsAndStack
 .endproc ; StartDeskTopImpl
 
         DEFINE_ALLOC_INTERRUPT_PARAMS alloc_interrupt_params, InterruptHandler
@@ -5149,7 +5149,7 @@ invalid_hook:
 
         jsr     before_events_hook_jmp
         php
-        jsr     RestoreParamsActivePort
+        jsr     RestoreParamsAndStack
         plp
     END_IF
 
@@ -5166,7 +5166,7 @@ before_events_hook_jmp:
 
         jsr     after_events_hook_jmp
         php
-        jsr     RestoreParamsActivePort
+        jsr     RestoreParamsAndStack
         plp
 :       rts
 .endproc ; CallAfterEventsHook
@@ -5181,31 +5181,30 @@ stack_ptr_save:
         .res    1
 
 
-.proc HideCursorSaveParams
+.proc HideCursorAndSaveParams
         jsr     HideCursorImpl
         FALL_THROUGH_TO SaveParamsAndStack
-.endproc ; HideCursorSaveParams
+.endproc ; HideCursorAndSaveParams
 
 .proc SaveParamsAndStack
         copy16  params_addr, params_addr_save
-        lda     stack_ptr_stash
-        sta     stack_ptr_save
+        copy8   stack_ptr_stash, stack_ptr_save
         lsr     preserve_zp_flag
         rts
 .endproc ; SaveParamsAndStack
 
 
-.proc ShowCursorAndRestore
+.proc ShowCursorAndRestoreParams
         jsr     ShowCursorImpl
-        FALL_THROUGH_TO RestoreParamsActivePort
-.endproc ; ShowCursorAndRestore
+        FALL_THROUGH_TO RestoreParamsAndStack
+.endproc ; ShowCursorAndRestoreParams
 
-.proc RestoreParamsActivePort
+.proc RestoreParamsAndStack
         asl     preserve_zp_flag
         copy16  params_addr_save, params_addr
         ldax    active_port
         FALL_THROUGH_TO SetAndPreparePort
-.endproc ; RestoreParamsActivePort
+.endproc ; RestoreParamsAndStack
 
 .proc SetAndPreparePort
         stax    $82
@@ -5940,7 +5939,7 @@ draw_menu_impl:
         sta     savebehind_usage+1
 
         jsr     GetMenuCount    ; into menu_count
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
         jsr     SetStandardPort
 
         ldax    menu_bar_rect_addr
@@ -6056,7 +6055,7 @@ filler: ldx     menu_item_index
         cpx     menu_count
         jne     menuloop
 
-        jsr     ShowCursorAndRestore
+        jsr     ShowCursorAndRestoreParams
         sec
         lda     savebehind_size
         sbc     savebehind_usage
@@ -6220,10 +6219,10 @@ found:  rts
         jsr     FindMenuByIdOrFail
 
 do_hilite:
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
         jsr     SetStandardPort
         jsr     HiliteMenu
-        jmp     ShowCursorAndRestore
+        jmp     ShowCursorAndRestoreParams
 .endproc ; HiliteMenuImpl
 
         ;; Highlight/Unhighlight top level menu item
@@ -6471,7 +6470,7 @@ event_loop:
       IF NS
         ;; Menu selection or cancel
         jsr     close_menu
-        jsr     RestoreParamsActivePort
+        jsr     RestoreParamsAndStack
 
         lda     sel_menu_item_index
        IF ZERO
@@ -6551,7 +6550,7 @@ handle_click:
         ;; --------------------------------------------------
         ;; Exit menu loop
 restore:
-        jsr     RestoreParamsActivePort
+        jsr     RestoreParamsAndStack
 
         lda     #0
         ldx     cur_hilited_menu_item
@@ -8028,7 +8027,7 @@ return_no_window:
 return_result:
         phax
 
-        ;; `RestoreParamsActivePort` isn't needed, and is
+        ;; `RestoreParamsAndStack` isn't needed, and is
         ;; very slow, so do the minimum here.
         asl     preserve_zp_flag
         copy16  params_addr_save, params_addr
@@ -8162,7 +8161,7 @@ do_select_win:
         pha
         lda     window+1
         pha
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
         jsr     SetDesktopPort
 
         jsr     TopWindow
@@ -8179,7 +8178,7 @@ do_select_win:
 
         jsr     SetDesktopPort
         jsr     DrawWindow
-        jmp     ShowCursorAndRestore
+        jmp     ShowCursorAndRestoreParams
 .endproc ; SelectWindowImpl
 
 do_select_win   := SelectWindowImpl::do_select_win
@@ -8226,7 +8225,7 @@ update_port:
         bne     win
 
         ;; Desktop
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
         jsr     SetDesktopPort
         MGTK_CALL MGTK::SetPortBits, set_port_params
         copy16  active_port, previous_port
@@ -8243,7 +8242,7 @@ win:    jsr     WindowByIdOrExit
         bne     :+
         inc     matched_target
 
-:       jsr     HideCursorSaveParams
+:       jsr     HideCursorAndSaveParams
         jsr     SetDesktopPort
         lda     matched_target
         bne     :+
@@ -8462,7 +8461,7 @@ loop:   jsr     GetAndReturnEvent
         eor     #$80
         jmp     toggle
 
-:       jsr     RestoreParamsActivePort
+:       jsr     RestoreParamsAndStack
         ldy     #0
         lda     in_close_box
         asl
@@ -8532,7 +8531,7 @@ drag_or_grow:
         bpl     :+
         jsr     KbdWinDragOrGrow
 
-:       jsr     HideCursorSaveParams
+:       jsr     HideCursorAndSaveParams
         jsr     WinframeToSetPort
 
         jsr     SetFillModeXOR
@@ -8562,7 +8561,7 @@ no_change:
         bpl     :-
 
 canceled:
-        jsr     ShowCursorAndRestore
+        jsr     ShowCursorAndRestoreParams
         lda     #0
 return_moved:
         ldy     #params::moved - params
@@ -8580,13 +8579,13 @@ changed:
 
         lda     current_winfo::id
         jsr     EraseWindow
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
 
         bit     movement_cancel
         bvc     :+
         jsr     SetInput
 
-:       jsr     ShowCursorAndRestore
+:       jsr     ShowCursorAndRestoreParams
         lda     #$80
         bne     return_moved
 
@@ -8718,7 +8717,7 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
 .proc CloseWindowImpl
         jsr     WindowByIdOrExit
 
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
 
         jsr     WinframeToSetPort
         php                     ; Save C=1 if valid port
@@ -8743,7 +8742,7 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         jsr     SetDesktopPort
         jsr     DrawWindowPreserveContent
       END_IF
-        jmp     ShowCursorAndRestore
+        jmp     ShowCursorAndRestoreParams
     END_IF
 
         lda     #0
@@ -8804,7 +8803,7 @@ matched_target:
         MGTK_CALL MGTK::SetPattern, desktop_pattern
         MGTK_CALL MGTK::PaintRect, set_port_maprect
 
-        jsr     ShowCursorAndRestore
+        jsr     ShowCursorAndRestoreParams
 
         php
         sei
@@ -9025,10 +9024,10 @@ toggle: eor     params::activate
         RTS_IF A = (window),y   ; no-op if no change
         sta     (window),y
 
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
         lda     params::activate
         jsr     DrawOrEraseScrollbar
-        jmp     ShowCursorAndRestore
+        jmp     ShowCursorAndRestoreParams
 .endproc ; ActivateCtlImpl
 
 
@@ -9513,7 +9512,7 @@ in_bound2:
 drag_done:
         jsr     HideCursorImpl
         jsr     FrameWinRect
-        jsr     ShowCursorAndRestore
+        jsr     ShowCursorAndRestoreParams
 
         ;; Did position change?
         ldx     #0
@@ -9705,10 +9704,10 @@ check_win:
         RTS_IF A = (window),y   ; no-op if no change
         sta     (window),y
 
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
         jsr     SetStandardPort
         jsr     DrawOrEraseScrollbar
-        jmp     ShowCursorAndRestore
+        jmp     ShowCursorAndRestoreParams
 .endproc ; UpdateThumbImpl
 
 ;;; ============================================================
@@ -10640,7 +10639,7 @@ rect       .tag MGTK::Rect
         COPY_STRUCT desktop_mapinfo, set_port_params
 
         ;; Restored by `EraseWindow`
-        jsr     HideCursorSaveParams
+        jsr     HideCursorAndSaveParams
 
         lda     #0              ; window to erase (none)
         jmp     EraseWindow
@@ -10653,7 +10652,7 @@ rect       .tag MGTK::Rect
         jsr     SetStandardPort
         jsr     SetFillModeXOR
         MGTK_CALL MGTK::PaintRect, menu_bar_rect
-        jmp     RestoreParamsActivePort
+        jmp     RestoreParamsAndStack
 .endproc ; FlashMenuBarImpl
 
 ;;; ============================================================
