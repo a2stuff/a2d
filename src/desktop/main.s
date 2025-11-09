@@ -9135,6 +9135,8 @@ table:
         jsr     InitSetDesktopPort
 
     DO
+        MGTK_CALL MGTK::WaitVBL
+
         ;; If N in 0..11, draw N
         lda     step            ; draw the Nth
       IF A < #kMaxAnimationStep+1
@@ -9167,6 +9169,8 @@ table:
         jsr     InitSetDesktopPort
 
     DO
+        MGTK_CALL MGTK::WaitVBL
+
         ;; If N in 0..11, draw N
         lda     step
       IF POS

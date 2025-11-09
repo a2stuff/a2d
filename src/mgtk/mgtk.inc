@@ -620,6 +620,9 @@ StringWidth           = $5C
 DrawString            = $5D
 ;;; .addr       str             Address of Pascal string
 
+WaitVBL               = $5E
+;;; (no parameters)
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 

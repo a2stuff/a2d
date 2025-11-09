@@ -386,6 +386,7 @@ jump_table:
         .addr   UnshieldCursorImpl  ; $5B UnshieldCursor
         .addr   StringWidthImpl     ; $5C StringWidth
         .addr   DrawStringImpl      ; $5D DrawString
+        .addr   WaitVBLImpl         ; $5E WaitVBL
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -518,6 +519,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0                ; $5B UnshieldCursor
         PARAM_DEFN  2, $A1, 0                ; $5C StringWidth
         PARAM_DEFN  0, $00, 1                ; $5D DrawString
+        PARAM_DEFN  0, $00, 0                ; $5E WaitVBL
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -4693,7 +4695,7 @@ mouse_moved:
         ;; Pre-calculate the cursor coordinates, shifted bits and mask bytes
         jsr     PreDrawCursor
 
-        jsr     WaitVBL
+        jsr     WaitVBLImpl
 
         ;; NTSC VBI budget is 4550 cycles (70 rows x 65 cycles/row)
         ;; The below is ~3778 cycles, which is sufficient to avoid
@@ -11005,7 +11007,7 @@ disable_autohide_flag:
 
 ;;; ============================================================
 
-.proc WaitVBL
+.proc WaitVBLImpl
         php
         sei
 
@@ -11079,11 +11081,11 @@ iic_proc:
         rts
 
 .endproc
-vbl_proc_addr := WaitVBL::proc_addr
-vbl_iie_proc := WaitVBL::iie_proc
-vbl_iigs_proc := WaitVBL::iigs_proc
-vbl_iic_proc := WaitVBL::iic_proc
-vbl_none_proc := WaitVBL::ret
+vbl_proc_addr := WaitVBLImpl::proc_addr
+vbl_iie_proc := WaitVBLImpl::iie_proc
+vbl_iigs_proc := WaitVBLImpl::iigs_proc
+vbl_iic_proc := WaitVBLImpl::iic_proc
+vbl_none_proc := WaitVBLImpl::ret
 
 ;;; ============================================================
 

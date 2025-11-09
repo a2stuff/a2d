@@ -18,17 +18,15 @@
     IF ZERO
         MGTK_CALL MGTK::FlashMenuBar
 
-        ;; Hit Slot 6, which causes accelerators e.g. Zip Chip
-        ;; to slow down.
-        ;; NOTE: $C0E0 causes Virtual ][ emulator to make sound;
-        ;; $C0EC (data read location) does not.
-        bit     $C0EC
-        ptr := $06
-        copy16  #20000, ptr
-loop:   dec     ptr
-        bne     loop
-        dec     ptr+1
-        bne     loop
+        ldx     #10
+      DO
+        txa
+        pha
+        MGTK_CALL MGTK::WaitVBL
+        pla
+        tax
+        dex
+      WHILE POS
 
         MGTK_CALL MGTK::FlashMenuBar
     ELSE

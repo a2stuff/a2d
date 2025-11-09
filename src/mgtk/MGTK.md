@@ -1185,6 +1185,21 @@ undefined.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
+#### WaitVBL ($5E)
+Wait for the start of the video blanking interval, if supported on the system.
+
+No parameters.
+
+This can be used to roughly time animations, assuming the system (or
+emulator) correctly reports vertical blank (VBL) at 60Hz (NTSC) or
+50Hz (PAL). On systems that do not correctly support VBL it will
+return immediately.
+
+Note that MGTK calls are generally too slow to use this to avoid
+"tearing" while painting.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 # Creating Applications and DeskTop Desk Accessories
 
 ### Application Use
