@@ -4168,7 +4168,7 @@ ret:    rts
 .proc CmdSelectAll
         jsr     ClearSelection
 
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadFocusedWindowEntryTable
         lda     cached_window_entry_count
         beq     finish          ; nothing to select!
 
@@ -4180,7 +4180,7 @@ ret:    rts
     WHILE POS
 
         copy8   cached_window_entry_count, selected_icon_count
-        copy8   active_window_id, selected_window_id
+        copy8   cached_window_id, selected_window_id
 
         ;; --------------------------------------------------
         ;; Mark all icons as highlighted
@@ -4190,10 +4190,7 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Repaint the icons
 
-        ;; Assert: `selected_window_id` == `active_window_id`
-        ;; Assert: `selected_window_id` == `cached_window_id`
-
-        lda     selected_window_id
+        lda     cached_window_id
     IF ZERO
         jsr     InitSetDesktopPort
     ELSE

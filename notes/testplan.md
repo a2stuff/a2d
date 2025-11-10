@@ -209,6 +209,12 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a window. Select a file icon. Apple Menu > Control Panels. Verify that the previously selected file is no longer selected.
 
 * Launch DeskTop, ensuring no windows are open. Edit > Select All. Verify that the volume icons are selected.
+* Launch DeskTop. Open a window. Click a volume icon. Edit > Select All. Verify that volume icons are selected.
+* Launch DeskTop. Open a window. Click a volume icon. Click on the open window's title bar. Edit > Select All. Verify that icons within the window are selected. Repeat for the window's header and scroll bars.
+* Launch DeskTop. Open a window. Click a volume icon. Click an empty area within the window. Edit > Select All. Verify that icons within the window are selected.
+* Launch DeskTop. Open a window. Click a volume icon. Click an icon within the window. Edit > Select All. Verify that icons within the window are selected.
+* Launch DeskTop. Open a window. Click a volume icon. Click an empty space on the desktop. Edit > Select All. Verify that volume icons are selected.
+* Launch DeskTop. Open a window. Click a file icon. Click an empty space on the desktop. Edit > Select All. Verify that volume icons are selected.
 
 * Launch DeskTop. Open a volume window. Drag a selection rectangle so that it covers only the top row of pixels of an icon. Verify that the icon is selected.
 
