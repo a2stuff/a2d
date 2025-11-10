@@ -3753,6 +3753,8 @@ END_PARAM_BLOCK
 
         lda     selected_icon_count
         jeq     fallback
+        cmp     cached_window_entry_count
+        jeq     fallback
 
         lda     active_window_id
         cmp     selected_window_id

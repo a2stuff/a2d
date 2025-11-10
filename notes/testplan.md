@@ -981,6 +981,8 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 * Launch DeskTop. Clear selection by closing all windows and clicking on the desktop. Press Apple+Down. Verify that nothing happens.
 
+* Launch DeskTop. Close all windows. Edit > Select All. Press the Right Arrow key. Verify that a single volume icon becomes selected.
+* Launch DeskTop. Open a window containing icons. Edit > Select All. Press the Right Arrow key. Verify that a single file icon becomes selected.
 
 ## Hardware Configurations
 

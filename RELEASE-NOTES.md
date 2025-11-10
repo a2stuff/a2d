@@ -16,6 +16,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Show correct icon state after failed operation that closes window.
 * Fix display of window header when partially offscreen.
+* Fix spatial navigation when all icons are selected.
 
 ### Selector
 
