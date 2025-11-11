@@ -625,6 +625,8 @@ rts1:  rts                     ; used by next proc
 .proc MapClickToButton
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        copy8   #MGTK::EventKind::button_down, event_params::kind ; Needed in `DepressButton`
+
         lda     screentowindow_params::windowx+1        ; ensure high bits of coords are 0
         ora     screentowindow_params::windowy+1
         bne     rts1
@@ -1113,21 +1115,38 @@ end:    jsr     DisplayBuffer1
 .proc DepressButton
         stxy    invert_addr
         stxy    inrect_params
-        stxy    restore_addr
 
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF A = #MGTK::Error::window_obscured
-        RETURN  A=#$80          ; key was pressed
+        ;; --------------------------------------------------
+        ;; Keyboard?
+        lda     event_params::kind
+    IF A = #MGTK::EventKind::key_down
+
+        ;; Match delay in BTK::Flash
+        jsr     invert_rect
+        ldx     #5
+      DO
+        txa
+        pha
+        MGTK_CALL MGTK::WaitVBL
+        pla
+        tax
+        dex
+      WHILE NOT ZERO
+        jsr     invert_rect
+        RETURN  A=#1            ; non-zero to continue
     END_IF
-        MGTK_CALL MGTK::SetPort, grafport
 
-        button_state := $FC
+        ;; Called (indirectly) during init with `EventKind::no_event`
+        RTS_IF  A <> #MGTK::EventKind::button_down
 
-        MGTK_CALL MGTK::SetPattern, black_pattern
-        MGTK_CALL MGTK::SetPenMode, penmode_xor
+        ;; --------------------------------------------------
+        ;; Mouse
+
+        button_state := $10
         SET_BIT7_FLAG button_state
 
-invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts port
+invert:
+        jsr     invert_rect
 
 check_button:
         MGTK_CALL MGTK::GetEvent, event_params
@@ -1154,12 +1173,20 @@ inside: lda     button_state    ; inside, and down
         SET_BIT7_FLAG button_state ; inside, was not down so set down
         jmp     invert          ; and show it
 
-done:   lda     button_state                    ; high bit set if button down
+done:   lda     button_state    ; high bit set if button down
     IF NOT_ZERO
-        MGTK_CALL MGTK::PaintRect, 0, restore_addr ; Inverts back to normal
+        jsr     invert_rect
     END_IF
-        MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
         RETURN  A=button_state
+
+invert_rect:
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        RTS_IF  A = #MGTK::Error::window_obscured
+        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPattern, black_pattern
+        MGTK_CALL MGTK::SetPenMode, penmode_xor
+        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, invert_addr
+        rts
 .endproc ; DepressButton
 
 ;;; ============================================================
@@ -1245,7 +1272,7 @@ end:    rts
         MGTK_CALL MGTK::SetTextBG, settextbg_params
 
         ;; Buttons
-        ptr := $FA
+        ptr := $06
 
         copy16  #btn_c, ptr
 loop:   ldy     #0
