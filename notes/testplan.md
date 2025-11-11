@@ -706,6 +706,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Select a folder containing many files. File > Duplicate. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the window contents do not refresh.
 * Select a folder containing many files. File > Duplicate. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed, and that the window contents do refresh, but that no rename prompt appears.
 
+* Find make a copy of a `PRODOS` system file. Rename it to have a ".SYSTEM" suffix. Verify that it updates to have an application icon. Rename it again to remove the suffix. Verify that it updates to have a system file icon. Repeat several times. Verify that the icon has not shifted in position.
 
 ## Name Casing
 

@@ -7460,7 +7460,8 @@ draw:   TAIL_CALL DrawString, AX=#text_input_buf
 PARAM_BLOCK, $50
 icon_type       .addr
 icon_flags      .byte
-icon_height     .word
+icon_width_half .byte
+icon_height     .byte
 
         ;; Updated based on view type
 initial_xcoord  .word
@@ -7643,9 +7644,23 @@ records_base_ptr:
         jsr     GetCachedWindowViewBy
         ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
     IF ZERO
-        ;; Icon view: include y-offset
-        ldy     #IconEntry::icony
-        sub16in (icon_entry),y, icon_height, (icon_entry),y
+        ;; Icon view: include x- and y-offset
+        ldy     #IconEntry::iconx
+        ldx     #0              ; loop over dimensions
+      DO
+        ;; First iteration: `icon_entry[IconEntry::iconx]` += `icon_width_half`
+        ;; Second iteration: `icon_entry[IconEntry::icony]` += `icon_height`
+        lda     (icon_entry),y
+        sec
+        sbc     icon_width_half,x
+        sta     (icon_entry),y
+        iny
+        lda     (icon_entry),y
+        sbc     #0
+        sta     (icon_entry),y
+        iny
+        inx
+      WHILE X < #2
     END_IF
 
         ;; Next col
@@ -7697,7 +7712,7 @@ records_base_ptr:
 
 ;;; ============================================================
 ;;; Inputs: A = `IconType` member, Y = `DeskTopSettings::kViewByXXX` value
-;;; Outputs: Populates `icon_flags`, `icon_type`, `icon_height`
+;;; Outputs: Populates `icon_flags`, `icon_type`, `icon_width_half`, `icon_height`
 
 .proc _FindIconDetailsForIconType
         ptr := $6
@@ -7731,14 +7746,18 @@ records_base_ptr:
         ;; For populating `IconEntry::type`
         sty     icon_type
 
-        ;; Icon height will be needed too
+        ;; Icon width/height will be needed too
         tya
         asl                     ; *= 2
         tay
         ldax    type_icons_table,y
         stax    ptr
+        ldy     #IconResource::maprect + MGTK::Rect::x2
+        lda     (ptr),y
+        lsr                     ; /= 2
+        sta     icon_width_half
         ldy     #IconResource::maprect + MGTK::Rect::y2
-        copy16in (ptr),y, icon_height
+        copy8   (ptr),y, icon_height
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
@@ -12205,38 +12224,34 @@ finish: jsr     _DialogClose
         jsr     GetSelectionViewBy
         ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
     IF ZERO
-        tmpy := $50
 
-        ;; Compute bounds of icon bitmap
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-        copy16  tmp_rect::y2, tmpy
+        tmpc := $50
+        tmpx := tmpc + MGTK::Point::xcoord
+        tmpy := tmpc + MGTK::Point::ycoord
+        delta := $54
+
+        ;; Compute old bounds of icon bitmap
+        jsr     _GetIconBitmapSize
+        COPY_STRUCT tmp_rect::bottomright, tmpc
 
         CALL    DetermineIconType, AX=#new_name_buf ; uses passed name and `src_file_info_params`
         ldy     #IconEntry::type
         sta     (icon_ptr),y
         ;; Assumes flags will not change, regardless of icon.
 
-        ;; Update location so bottom (name) is in the same place
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-        ;; A,X = `tmpy` - `tmp_rect::y2` (delta between old and new bottom)
-        lda     tmpy
-        sec
-        sbc     tmp_rect::y2
-        pha
-        lda     tmpy+1
-        sbc     tmp_rect::y2+1
-        tax
-        pla
+        ;; Compute new bounds of icon bitmap
+        jsr     _GetIconBitmapSize
 
-        ;; `icony` += A,X
-        ldy     #IconEntry::icony
-        clc
-        adc     (icon_ptr),y
-        sta     (icon_ptr),y
-        txa
+        ;; Compute and apply deltas
+        ldx     #0              ; loop over dimensions
+        ldy     #IconEntry::iconx
+      DO
+        sub16   tmpc,x, tmp_rect::bottomright,x, delta
+        add16in (icon_ptr),y, delta, (icon_ptr),y
         iny
-        adc     (icon_ptr),y
-        sta     (icon_ptr),y
+        inx
+        inx
+      WHILE X <> #4
     END_IF
 
 end_filerecord_and_icon_update:
@@ -12422,6 +12437,24 @@ allow:  LETK_CALL LETK::Key, rename_le_params
 ignore:
         RETURN  A=#$FF
 .endproc ; _KeyHandler
+
+;;; Inputs: `icon_param` set
+;;; Outputs: `tmp_rect::x2` is half bitmap width and `tmp_rect::y2` is bitmap height
+.proc _GetIconBitmapSize
+        ITK_CALL IconTK::GetBitmapRect, icon_param ; inits `tmp_rect`
+
+        ldx     #2              ; loop over dimensions
+    DO
+        sub16   tmp_rect::bottomright,x, tmp_rect::topleft,x, tmp_rect::bottomright,x
+        dex
+        dex
+    WHILE POS
+
+        ;; Assert: width is < 256, so operating on lower byte is enough
+        lsr   tmp_rect::x2      ; want half, for centering
+
+        rts
+.endproc ; _GetIconBitmapSize
 
 .endscope ; rename
         DoRename := rename::DoRename
