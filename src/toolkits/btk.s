@@ -204,10 +204,23 @@ ret:
 
         jsr     _SetPort
         jsr     _Invert
+
+        ldx     #5
+    DO
+        txa
+        pha
+        MGTK_CALL MGTK::WaitVBL
+        pla
+        tax
+        dex
+    WHILE NOT ZERO
+
+
         FALL_THROUGH_TO _Invert
 .endproc ; FlashImpl
 
 .proc _Invert
+        MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::InflateRect, shrink_rect
         MGTK_CALL MGTK::PaintRect, rect

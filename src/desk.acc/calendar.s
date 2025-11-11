@@ -311,7 +311,7 @@ first_dow:
 ;;; ============================================================
 
 .proc DecDate
-        jsr     InvertDec
+        BTK_CALL BTK::Flash, left_button
 
         lda     BUTN0
         and     BUTN1
@@ -334,33 +334,11 @@ check:  cmp16   datetime + ParsedDateTime::year, #1901
         copy16  #2155, datetime + ParsedDateTime::year
 
 fin:    jsr     UpdateWindow
-        jsr     InvertDec
         jmp     InputLoop
-
-.proc InvertDec
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF A <> #MGTK::Error::window_obscured
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::InflateRect, shrink
-        MGTK_CALL MGTK::PaintRect, left_button::rect
-        MGTK_CALL MGTK::InflateRect, grow
-    END_IF
-        rts
-.params shrink
-        .addr   left_button::rect
-        .word   AS_WORD(-1), AS_WORD(-1)
-.endparams
-.params grow
-        .addr   left_button::rect
-        .word   1, 1
-.endparams
-.endproc ; InvertDec
-
 .endproc ; DecDate
 
 .proc IncDate
-        jsr     InvertInc
+        BTK_CALL BTK::Flash, right_button
 
         lda     BUTN0
         and     BUTN1
@@ -385,28 +363,7 @@ check:  cmp16   datetime + ParsedDateTime::year, #2155
         copy16  #1901, datetime + ParsedDateTime::year
 
 fin:    jsr     UpdateWindow
-        jsr     InvertInc
         jmp     InputLoop
-
-.proc InvertInc
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-    IF A <> #MGTK::Error::window_obscured
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::InflateRect, shrink
-        MGTK_CALL MGTK::PaintRect, right_button::rect
-        MGTK_CALL MGTK::InflateRect, grow
-    END_IF
-        rts
-.params shrink
-        .addr   right_button::rect
-        .word   AS_WORD(-1), AS_WORD(-1)
-.endparams
-.params grow
-        .addr   right_button::rect
-        .word   1, 1
-.endparams
-.endproc ; InvertInc
 .endproc ; IncDate
 
 ;;; ============================================================

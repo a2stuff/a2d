@@ -9,6 +9,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### General
 
 * Eliminate cursor flickering when mouse is moved.
+* Improve visibility of button flashing using VBL.
 
 ### Launcher
 
