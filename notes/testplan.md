@@ -1367,6 +1367,19 @@ Run these tests on a system without a real-time clock:
 * Select a non-folder. Apple > Change Type. Specify `0F` as the type and click OK. Verify that an error is shown.
 * Select two folders. Apple > Change Type. Modify only the type (e.g. `06`). Verify that only a single error is shown.
 
+## DOS 3.3 Import
+
+For the following test cases, insert a DOS 3.3 disk then run the DA.
+
+* Select nothing. Verify that the OK button is disabled.
+* Select nothing. Press the Return key. Verify that nothing happens.
+* Select a slot/drive. Verify that the OK button is enabled.
+* Select a slot/drive. Click OK. Verify that the catalog screen is shown.
+* Select a slot/drive. Press the Return key. Verify that the OK button flashes and that the catalog dialog is shown.
+* Select a slot/drive. Click Cancel. Verify that the dialog closes.
+* Select a slot/drive. Press the Escape key. Verify that the Cancel button flashes and that the dialog closes.
+* Select a slot/drive. Click OK. Select a file. Press the Return key. Verify that the Import button flashes.
+* Select a slot/drive. Click OK. Select a file. Press the Escape key. Verify that the Cancel button flashes and that the dialog closes.
 
 # Shortcuts (Module)
 

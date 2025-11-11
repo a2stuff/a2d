@@ -232,18 +232,23 @@ port:           .addr   grafport_win
         lda     event_params::key
         jsr     ToUpperCase
 
-        cmp     #kShortcutCloseWindow
-        jeq     Exit
+      IF A = #kShortcutCloseWindow
+        BTK_CALL BTK::Flash, cancel_button
+        jmp     Exit
+      END_IF
 
         jmp     InputLoop
     END_IF
 
         ;; Not modified
     IF A = #CHAR_ESCAPE
+        BTK_CALL BTK::Flash, cancel_button
+        copy8   #$FF, listbox_rec::selected_index
         jmp     Exit
     END_IF
 
     IF A = #CHAR_RETURN
+        BTK_CALL BTK::Flash, ok_button
         jmp     Exit
     END_IF
 
@@ -541,18 +546,22 @@ remainder:      .word   0                 ; (out)
         lda     event_params::key
         jsr     ToUpperCase
 
-        cmp     #kShortcutCloseWindow
-        jeq     ExitOK
+      IF A = #kShortcutCloseWindow
+        BTK_CALL BTK::Flash, close_button
+        jmp     ExitOK
+      END_IF
 
         jmp     InputLoop
     END_IF
 
         ;; Not modified
     IF A = #CHAR_ESCAPE
+        BTK_CALL BTK::Flash, close_button
         jmp     ExitOK
     END_IF
 
     IF A = #CHAR_RETURN
+        BTK_CALL BTK::Flash, import_button
         jmp     Import
     END_IF
 
