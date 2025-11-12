@@ -171,7 +171,7 @@ dialog_loop:
         bmi     dialog_loop
         lda     selector_action
         cmp     #SelectorAction::edit
-        jeq     DoEdit
+        beq     DoEdit
 
         cmp     #SelectorAction::delete
         beq     DoDelete
@@ -433,7 +433,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         jsr     main::GetEvent
 
         cmp     #MGTK::EventKind::button_down
-        jeq     handle_button
+        beq     handle_button
 
         cmp     #MGTK::EventKind::key_down
         bne     EventLoop
@@ -504,10 +504,10 @@ handle_button:
         lda     event_params::key
 
         cmp     #CHAR_RETURN
-        jeq     HandleKeyReturn
+        beq     HandleKeyReturn
 
         cmp     #CHAR_ESCAPE
-        jeq     HandleKeyEscape
+        beq     HandleKeyEscape
 
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
@@ -599,7 +599,7 @@ entries_flag_table:
 
 .proc AssignEntryData
         cmp     #8
-        jcs     AssignSecondaryRunListEntryData
+        bcs     AssignSecondaryRunListEntryData
 
         sta     index
         tya                     ; flags

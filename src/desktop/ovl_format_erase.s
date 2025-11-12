@@ -146,7 +146,7 @@ loop2:
 
         ;; Check for conflicting name
         CALL    CheckConflictingVolumeName, XY=#text_input_buf, A=unit_num
-    IF_CS
+    IF CS
         CALL    ShowAlert, A=#ERR_DUPLICATE_FILENAME
         jmp     loop2
     END_IF
@@ -168,7 +168,7 @@ loop2:
         FORMAT_MESSAGE 1, aux::str_confirm_erase_format
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#text_input_buf
         cmp     #kAlertResultOK
-        jne     cancel
+        bne     cancel
 .endscope
 
         ;; Confirmed!

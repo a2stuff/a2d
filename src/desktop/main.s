@@ -118,7 +118,7 @@ loop:
         jsr     ClearUpdatesSkipGet
     END_IF
 
-        jmp     loop
+        bne     loop            ; always
 
 counter:
         .byte   0
@@ -561,27 +561,19 @@ window_click:
         lda     findcontrol_params::which_ctl
         RTS_IF A = #MGTK::Ctl::dead_zone
 
-    IF A = #MGTK::Ctl::vertical_scroll_bar
-        ;; Vertical scrollbar
-
         ;; Thumb?
         ldy     findcontrol_params::which_part
         cpy     #MGTK::Part::thumb
         beq     _TrackThumb
 
-        ;; Other parts
+    IF A = #MGTK::Ctl::vertical_scroll_bar
+        ;; Vertical scrollbar
         lda     v_proc_lo,y      ; A = proc lo
         ldx     v_proc_hi,y      ; X = proc hi
         bne     _DoScrollbarPart ; always; Y = part
     END_IF
+
         ;; Horizontal scrollbar
-
-        ;; Thumb?
-        ldy     findcontrol_params::which_part
-        cpy     #MGTK::Part::thumb
-        beq     _TrackThumb
-
-        ;; Other parts
         lda     h_proc_lo,y     ; A = proc hi
         ldx     h_proc_hi,y     ; X = proc hi
         FALL_THROUGH_TO _DoScrollbarPart ; Y = part
@@ -1985,21 +1977,18 @@ entry_num:
         CALL    CopyRAMCardPrefix, AX=#src_path_buf
         ldy     entry_path
 
+        ;; Walk back two segments
+        ldx     #2
+    DO
         ;; Walk back one segment
-    DO
+      DO
         lda     entry_path,y
         BREAK_IF A = #'/'
         dey
-    WHILE NOT_ZERO
+      WHILE NOT_ZERO
         dey
-
-        ;; Walk back a second segment
-    DO
-        lda     entry_path,y
-        BREAK_IF A = #'/'
-        dey
-    WHILE NOT_ZERO
-        dey
+        dex
+    WHILE NOT ZERO
 
         ;; Append last two segments to `src_path_buf`
         ldx     src_path_buf
@@ -2477,7 +2466,7 @@ open_then_close_current:
         RTS_IF ZERO
 
         copy8   selected_window_id, window_id_to_close
-        jmp     common
+        bpl     common          ; always
 
         ;; --------------------------------------------------
         ;; Entry point from Apple+Down
@@ -2488,7 +2477,7 @@ from_keyboard:
         RTS_IF ZERO
 
         copy8   #0, window_id_to_close
-        jmp     common
+        beq     common          ; always
 
         ;; --------------------------------------------------
         ;; Entry point from double-click
@@ -4320,7 +4309,6 @@ tick_v  .byte
 
 tmpw    .word
 END_PARAM_BLOCK
-dimensions := width
 
 ;;; --------------------------------------------------
 ;;; Compute the necessary data for scroll operations:
@@ -4428,15 +4416,20 @@ _Preamble:
 
 .proc PageRight
         jsr     _Preamble
-        add16   viewport+MGTK::Rect::x2, width, viewport+MGTK::Rect::x2
+        CALL    _Page_hi, X=#MGTK::Point::xcoord
         jmp     _Clamp_x2
 .endproc ; PageRight
 
 .proc PageDown
         jsr     _Preamble
-        add16_8 viewport+MGTK::Rect::y2, height
+        CALL    _Page_hi, X=#MGTK::Point::ycoord
         jmp     _Clamp_y2
 .endproc ; PageDown
+
+.proc _Page_hi
+        add16 viewport+MGTK::Rect::bottomright,x, viewport_size,x, viewport+MGTK::Rect::bottomright,x
+        rts
+.endproc ; _Page_hi
 
 ;;; --------------------------------------------------
 ;;; When page decrement area is clicked:
@@ -4445,15 +4438,20 @@ _Preamble:
 
 .proc PageLeft
         jsr     _Preamble
-        sub16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x1
+        CALL    _Page_lo, X=#MGTK::Point::xcoord
         jmp     _Clamp_x1
 .endproc ; PageLeft
 
 .proc PageUp
         jsr     _Preamble
-        sub16_8 viewport+MGTK::Rect::y1, height
+        CALL    _Page_lo, X=#MGTK::Point::ycoord
         jmp     _Clamp_y1
 .endproc ; PageUp
+
+.proc _Page_lo
+        sub16   viewport+MGTK::Rect::topleft,x, viewport_size,x, viewport+MGTK::Rect::topleft,x
+        rts
+.endproc ; _Page_lo
 
 ;;; --------------------------------------------------
 ;;; When thumb is moved by user:
@@ -4498,7 +4496,7 @@ _Preamble:
     IF POS
         copy16  ubox+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::bottomright,x
     END_IF
-        sub16   viewport+MGTK::Rect::bottomright,x, dimensions,x, viewport+MGTK::Rect::topleft,x
+        sub16   viewport+MGTK::Rect::bottomright,x, viewport_size,x, viewport+MGTK::Rect::topleft,x
         rts
 .endproc ; _Clamp_hi
 
@@ -4523,7 +4521,7 @@ _Preamble:
     IF NEG
         copy16  ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
     END_IF
-        add16   viewport+MGTK::Rect::topleft,x, dimensions,x, viewport+MGTK::Rect::bottomright,x
+        add16   viewport+MGTK::Rect::topleft,x, viewport_size,x, viewport+MGTK::Rect::bottomright,x
         rts
 .endproc ; _Clamp_lo
 
@@ -4638,8 +4636,7 @@ _Preamble:
 
         ;; deactivate horizontal scrollbar
         CALL    _ActivateCtl, X=#MGTK::Ctl::horizontal_scroll_bar, A=#MGTK::activatectl_deactivate
-
-        jmp     check_vscroll
+        beq     check_vscroll   ; always
 
 activate_hscroll:
         ;; activate horizontal scrollbar
@@ -4667,7 +4664,7 @@ activate_vscroll:
 
 ;;; --------------------------------------------------
 ;;; Inputs: A=activate/deactivate, X=which_ctl
-
+;;; Output: Z=1
 .proc _ActivateCtl
         stx     activatectl_params::which_ctl
         sta     activatectl_params::activate
@@ -5949,10 +5946,7 @@ no_win:
 
         ;; Used cached window's details, which are correct now.
         lda     cached_window_id
-        asl     a
-        tax
-        copy16  vol_blocks_used, window_blocks_used_table-2,x ; 1-based to 0-based
-        copy16  vol_blocks_free, window_blocks_free_table-2,x
+        jsr     AssignWindowBlockCounts
 
         copy16  window_blocks_used_table-2,x, window_draw_blocks_used_table-2,x ; 1-based to 0-based
         copy16  window_blocks_free_table-2,x, window_draw_blocks_free_table-2,x
@@ -6264,7 +6258,7 @@ done:
         copy8   selected_icon_list,x, icon_param
 
         ITK_CALL IconTK::IconInRect, icon_param
-        IF_NOT_ZERO
+        IF NOT ZERO
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
         ELSE
         MGTK_CALL MGTK::CheckEvents
@@ -6315,7 +6309,7 @@ done:
       DO
         s2w_flag := *+1
         lda     #SELF_MODIFIED_BYTE
-       IF_NS
+       IF NS
         copy16  map_delta,x, offset_icons_params::delta,x
        ELSE
         sub16   #0, map_delta,x, offset_icons_params::delta,x
@@ -6388,10 +6382,7 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
       IF NOT_ZERO
        DO
         lda     found_windows_list-1,y
-        asl     a
-        tax
-        copy16  vol_blocks_used, window_blocks_used_table-2,x ; 1-based to 0-based
-        copy16  vol_blocks_free, window_blocks_free_table-2,x
+        jsr     AssignWindowBlockCounts
         dey
        WHILE NOT_ZERO
       END_IF
@@ -6399,6 +6390,17 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
 
         rts
 .endproc ; UpdateUsedFreeViaPath
+
+;;; Update `window_blocks_used_table`/`window_blocks_free_table`
+;;; Input: A = window_id, `vol_blocks_used`/`vol_blocks_free` set
+;;; Output: X = window_id*2, Y unchanged
+.proc AssignWindowBlockCounts
+        asl     a
+        tax
+        copy16  vol_blocks_used, window_blocks_used_table-2,x ; 1-based to 0-based
+        copy16  vol_blocks_free, window_blocks_free_table-2,x
+        rts
+.endproc ; AssignWindowBlockCounts
 
 ;;; ============================================================
 ;;; Find position of last segment of path at (A,X), return in Y.
@@ -6956,8 +6958,13 @@ copy_new_window_bounds_flag:
         ;; convert right/bottom to width/height
         bbox_dx := iconbb_rect+MGTK::Rect::x2
         bbox_dy := iconbb_rect+MGTK::Rect::y2
-        sub16   bbox_dx, iconbb_rect+MGTK::Rect::x1, bbox_dx
-        sub16   bbox_dy, iconbb_rect+MGTK::Rect::y1, bbox_dy
+
+        ldx     #2              ; loop over dimensions
+    DO
+        sub16   bbox_dx,x, iconbb_rect+MGTK::Rect::topleft,x, bbox_dx,x
+        dex
+        dex
+    WHILE POS
 
         ;; Account for window header
         add16_8 bbox_dy, #kWindowHeaderHeight
@@ -7090,7 +7097,7 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         iny                     ; ASSERT: Y = ICTRecord::filetype
         ASSERT_EQUALS ICTRecord::filetype, ICTRecord::mask+1
         cmp     (ptr),y         ; type check
-        jne     next
+        bne     next
 
         ;; Flags
         iny                     ; ASSERT: Y = ICTRecord::flags
@@ -8654,7 +8661,7 @@ vdrive: RETURN  AX=#str_device_type_vdrive, Y=#IconType::fileshare
         ;; Look up driver address
         CALL    DeviceDriverAddress, A=block_params::unit_num ; Z=1 if $Cn
         bvs     is_sp
-        jne     generic         ; not $CnXX, unknown type
+        bne     generic         ; not $CnXX, unknown type
 
         ;; Firmware driver; maybe SmartPort?
 is_sp:  CALL    FindSmartportDispatchAddress, A=block_params::unit_num
@@ -9111,10 +9118,8 @@ kMaxAnimationStep = 7
         ;; Animate it
 
         bit     close_flag
-    IF NC
-        jmp     _AnimateOpen
-    END_IF
-        jmp     _AnimateClose
+        bpl     _AnimateOpen
+        bmi     _AnimateClose   ; always
 
 close_flag:
         .byte   0
@@ -12160,7 +12165,7 @@ finish: jsr     _DialogClose
 
         ;; If not volume, find and update associated FileEntry
         lda     selected_window_id
-        jeq     end_filerecord_and_icon_update
+        beq     end_filerecord_and_icon_update
 
         ;; Dig up the index of the icon within the window.
         icon_ptr := $06
@@ -12331,10 +12336,10 @@ loop:   jsr     _InputLoop
         jsr     GetNextEvent
 
         cmp     #MGTK::EventKind::button_down
-        jeq     _ClickHandler
+        beq     _ClickHandler
 
         cmp     #MGTK::EventKind::key_down
-        jeq     _KeyHandler
+        beq     _KeyHandler
 
         cmp     #kEventKindMouseMoved
         bne     _InputLoop
@@ -13151,7 +13156,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         jsr     GetNextEvent
 
         cmp     #MGTK::EventKind::button_down
-        jeq     _ClickHandler
+        beq     _ClickHandler
 
         cmp     #MGTK::EventKind::key_down
         jeq     _KeyHandler

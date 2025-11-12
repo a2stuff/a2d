@@ -536,7 +536,7 @@ ret:    rts
         bit     extra_controls_flag
       IF NC
         jsr     _CheckTypeDown
-        jeq     exit
+        beq     exit
       END_IF
 .endif
 
@@ -1020,7 +1020,7 @@ err:    jsr     _SetRootPath
         lda     dir_read_buf+SubdirectoryHeader::file_count
         and     #$7F            ; TODO: max of 128 entries, but this is still weird
         sta     num_file_names
-        jeq     close
+        beq     close
 
         ptr := $06
         copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr

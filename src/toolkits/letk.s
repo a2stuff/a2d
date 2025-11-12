@@ -271,6 +271,8 @@ port:           .addr   grafport_win
 
 grafport_win:   .tag    MGTK::GrafPort
 
+;;; If obscured, caller is popped so returns to caller's caller.
+;;; Output: If this returns, Z=1
 .proc _SetPort
         ;; Set the port
         copy8   window_id, getwinport_params::window_id
@@ -304,7 +306,7 @@ a_record  .addr
         ldy     #LETK::LineEditRecord::active_flag
         copy8   #$80, (a_record),y
 
-        jmp     _ShowCaret
+        bne     _ShowCaret      ; always
 .endproc ; ActivateImpl
 
 ;;; ============================================================
@@ -687,7 +689,7 @@ ret:    rts
         add16   pos, text_params+MGTK::TextWidthParams::width, rect+MGTK::Rect::x1
     END_IF
         jsr     _SetPort        ; aborts rest of this proc if obscured
-        jmp     _ClearRect
+        beq     _ClearRect      ; always
 .endproc ; _DeleteCharCommon
 
 ;;; ============================================================

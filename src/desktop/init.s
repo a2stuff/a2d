@@ -516,11 +516,11 @@ process_block:
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
-        jne     next_entry
+        bne     next_entry
         iny
         lda     (dir_ptr),y
         cmp     #>kDAFileAuxType
-        jne     next_entry
+        bne     next_entry
     END_IF
 
         ;; Allow anything else
@@ -578,12 +578,12 @@ next_entry:
         ;; Room for more DAs?
         lda     desk_acc_num
         cmp     #kMaxDeskAccCount
-        jcs     close_dir
+        bcs     close_dir
 
         ;; Any more entries in dir?
         lda     entry_num
         cmp     file_count
-        jeq     close_dir
+        beq     close_dir
 
         ;; Any more entries in block?
         inc     entry_in_block

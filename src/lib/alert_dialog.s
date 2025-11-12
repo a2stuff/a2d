@@ -285,7 +285,7 @@ advance:
         copy8   len, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
         MGTK_CALL MGTK::DrawText, textwidth_params
-        jmp     done
+        beq     done            ; always
     END_IF
 
         ;; Split string over two lines.
@@ -379,7 +379,7 @@ finish_cancel:
         jmp     finish
       END_IF
 
-        jmp     event_loop
+        bne     event_loop      ; always
     END_IF
         pla
 .endif ; AD_YESNOALL
@@ -414,13 +414,13 @@ HandleButtonDown:
         MGTK_CALL MGTK::MoveTo, event_coords
 
         bit     alert_params::buttons ; high bit clear = OK only
-        jpl     check_ok_rect
+        bpl     check_ok_rect
 
         ;; Cancel
         MGTK_CALL MGTK::InRect, cancel_button+BTK::ButtonRecord::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
-        jne     was_no_button
+        bne     was_no_button
         lda     #kAlertResultCancel
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     finish          ; always

@@ -469,7 +469,7 @@ END_PARAM_BLOCK
         sta     (icon_ptr),y
 
         pla                     ; A = icon
-        jmp     MaybeMoveIconToTop
+        bne     MaybeMoveIconToTop ; always
 .endproc ; HighlightIconImpl
 
 ;;; ============================================================
@@ -965,10 +965,10 @@ same_window:
         jne     exit_canceled   ; don't move
 
         jsr     _CheckRealContentArea
-        jcs     exit_canceled   ; don't move
+        bcs     exit_canceled   ; don't move
 
         CALL    IsIconFixed, A=last_highlighted_icon ; Z=0 if fixed
-        jne     exit_canceled   ; don't move
+        bne     exit_canceled   ; don't move
 
         ;; --------------------------------------------------
         ;; Probably a move within the same window...
@@ -1481,7 +1481,7 @@ END_PARAM_BLOCK
 rest:
         ;; Determine if we want clipping, based on icon type and flags.
         bit     clip_icons_flag
-        jpl     _DoPaint        ; no clipping, just paint
+        bpl     _DoPaint        ; no clipping, just paint
 
         ;; Needed for `SetPortForXyzIcon`
         jsr     CalcIconBoundingRectFromBitmapAndLabelRects
