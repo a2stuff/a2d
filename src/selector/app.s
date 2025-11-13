@@ -750,7 +750,13 @@ retry:
 
         ;; Load file dialog overlay
         MLI_CALL OPEN, open_selector_params
-    IF CC
+    IF CS
+        CALL    ShowAlert, A=#AlertID::insert_system_disk
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
+        beq     retry           ; `kAlertResultTryAgain` = 0
+        rts
+    END_IF
+
         lda     open_selector_params::ref_num
         sta     set_mark_overlay1_params::ref_num
         sta     read_overlay1_params::ref_num
@@ -771,12 +777,6 @@ ok:     tya                     ; now A,X = path
 
 cancel: jmp     LoadSelectorList
 
-    END_IF
-
-        CALL    ShowAlert, A=#AlertID::insert_system_disk
-        ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry           ; `kAlertResultTryAgain` = 0
-        rts
 .endproc ; CmdRunAProgram
 
 ;;; ============================================================

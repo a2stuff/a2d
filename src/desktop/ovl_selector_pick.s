@@ -952,19 +952,19 @@ filename:
 
 .proc WriteFileToOriginalPrefix
         CALL    main::CopyDeskTopOriginalPrefix, AX=#filename_buffer
-        inc     filename_buffer ; Append '/' separator
-        ldx     filename_buffer
+
+        ldx     filename_buffer ; Append '/' separator
+        inx
         lda     #'/'
         sta     filename_buffer,x
 
-        ldx     #$00            ; Append filename
-        ldy     filename_buffer
+        ldy     #0              ; Append filename
     DO
         inx
         iny
-        copy8   filename,x, filename_buffer,y
-    WHILE X <> filename
-        sty     filename_buffer
+        copy8   filename,y, filename_buffer,x
+    WHILE Y <> filename
+        stx     filename_buffer
 
         copy8   #0, second_try_flag
 

@@ -13910,6 +13910,17 @@ params:  .res    3
 ;;; ============================================================
 
         PROC_USED_IN_OVERLAY
+
+.proc ClosePromptDialog
+        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
+        jsr     ClearUpdates     ; following CloseWindow
+        jmp     SetCursorPointer ; when closing prompt dialog (might be I-beam)
+.endproc ; ClosePromptDialog
+
+;;; ============================================================
+
+        PROC_USED_IN_OVERLAY
+
 .proc SetPortForPromptDialog
         TAIL_CALL SafeSetPortFromWindowId, A=#winfo_prompt_dialog::kWindowId
 .endproc ; SetPortForPromptDialog
@@ -14130,14 +14141,6 @@ plural: RETURN  C=0
         MGTK_CALL MGTK::SetPort, desktop_grafport
         rts
 .endproc ; InitSetDesktopPort
-
-;;; ============================================================
-
-.proc ClosePromptDialog
-        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        jsr     ClearUpdates     ; following CloseWindow
-        jmp     SetCursorPointer ; when closing dialog
-.endproc ; ClosePromptDialog
 
 ;;; ============================================================
 ;;; Output: A = number of selected icons

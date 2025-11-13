@@ -275,7 +275,7 @@ done:
 
         ;; --------------------------------------------------
 
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        jsr     main::SetCursorWatch ; before the rest of initialization
         MGTK_CALL MGTK::ShowCursor
 
         ;; fall through
@@ -964,10 +964,10 @@ unit_num:
 .proc FinalSetup
         ;; Final MGTK configuration
         MGTK_CALL MGTK::CheckEvents
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        copy8   #0, active_window_id
+        jsr     main::SetCursorPointer ; after the rest of initialization
 
         ;; Restore state from previous session
+        copy8   #0, active_window_id
         jsr     RestoreWindows
 
         ;; Window restoration can safely trash anything before this

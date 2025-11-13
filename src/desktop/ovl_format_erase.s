@@ -227,10 +227,7 @@ l12:    pha
 
 finish:
         pha
-        jsr     main::SetCursorPointer
-        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        jsr     main::ClearUpdates
-
+        jsr     main::ClosePromptDialog
         ldx     unit_num
         pla
         rts
@@ -281,10 +278,7 @@ retry:
 
 finish:
         pha
-        jsr     main::SetCursorPointer
-        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        jsr     main::ClearUpdates
-
+        jsr     main::ClosePromptDialog
         ldx     unit_num
         pla
         rts
