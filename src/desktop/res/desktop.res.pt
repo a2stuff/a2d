@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "A execu][o de um arquivo bin@rio pode travar o computador. Tem certeza de que deseja execut@-lo?"
 .define res_string_alert_bad_replacement "Um item n[o pode ser substitu{do por ele mesmo ou por um item que ele cont`m."
 .define res_string_alert_unsupported_type "Tipo de arquivo n[o suportado."
-.define res_string_alert_no_windows_open "N[o h@ janelas abertas."
 .define res_string_alert_move_copy_into_self "O artigo n[o pode ser transferido ou copiado dentro dele mesmo."
 .define res_string_alert_duplicate_volume_names "Existem 2 volumes com o mesmo nome."
 .define res_string_alert_cannot_open "O arquivo n[o pode ser aberto."

@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "izpylnenieto na dwoi~en fajl move da dowede do sriw na komp`tyra. siguren li si, ~e iska{ da go startiram?"
 .define res_string_alert_bad_replacement "elementyt ne move da byde zamenen sys sebe si ili s drug, kojto sydyrva."
 .define res_string_alert_unsupported_type "nepoddyrvan fajlow tip."
-.define res_string_alert_no_windows_open "nqma otworeni prozorci."
 .define res_string_alert_move_copy_into_self "elementyt ne move da byde premesten ili kopiran w sebe si."
 .define res_string_alert_duplicate_volume_names "ima 2 toma s edno i sy}o ime."
 .define res_string_alert_cannot_open "tozi fajl ne move da byde otworen."

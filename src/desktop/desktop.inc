@@ -175,7 +175,6 @@ kDynamicRoutineRestoreBuffer       = 7
 kErrUnknown             = $00
 kErrInsertSystemDisk    = $FA
 kErrSaveChanges         = $FB
-kErrNoWindowsOpen       = $FC
 kErrDuplicateVolName    = $FD
 kErrBasicSysNotFound    = $FE
 

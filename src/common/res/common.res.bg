@@ -93,3 +93,4 @@
 .define res_string_alert_insert_system_disk "molq, postawi sistemniq disk."
 .define res_string_alert_insert_disk "postawete disk: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM ne e nameren."
+.define res_string_alert_no_windows_open "nqma otworeni prozorci."

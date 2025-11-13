@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "Das Ausf}hren einer Bin{rdatei kann den Computer zum Absturz bringen. Bist du dir sicher?"
 .define res_string_alert_bad_replacement "Ein Gegenstand kann nicht durch sich selbst oder einen darin enthaltenen Gegenstand ersetzt werden."
 .define res_string_alert_unsupported_type "Nicht unterst}tztes Dateiformat."
-.define res_string_alert_no_windows_open "Es sind keine Fenster ge|ffnet."
 .define res_string_alert_move_copy_into_self "Das Objekt kann nicht in sich selbst bewegt oder kopiert werden."
 .define res_string_alert_duplicate_volume_names "Es gibt 2 gleichnamige Volumen."
 .define res_string_alert_cannot_open "Diese Datei kann nicht ge|ffnet werden."

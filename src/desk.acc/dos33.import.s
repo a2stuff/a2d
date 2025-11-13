@@ -12,6 +12,7 @@
         .include "../inc/dos33.inc"
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
+        .include "../lib/alert_dialog.inc"
         .include "../desktop/desktop.inc"
         .include "../toolkits/btk.inc"
         .include "../toolkits/lbtk.inc"
@@ -90,6 +91,17 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 grafport_win:   .tag    MGTK::GrafPort
 
 control_block:  .tag    ControlBlock
+
+;;; ============================================================
+;;; Alerts
+
+.params AlertNoWindowsOpen
+        .addr   str_alert_no_windows_open
+        .byte   AlertButtonOptions::OK
+        .byte   AlertOptions::Beep | AlertOptions::SaveBack
+.endparams
+str_alert_no_windows_open:
+        PASCAL_STRING res_string_alert_no_windows_open
 
 ;;; ============================================================
 
@@ -836,7 +848,7 @@ start:
         ;; Get active window's path
         jsr     GetWinPath
     IF NOT_ZERO
-        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#kErrNoWindowsOpen
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT_PARAMS, AX=#aux::AlertNoWindowsOpen
     END_IF
 
         CLEAR_BIT7_FLAG dirty_flag

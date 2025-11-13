@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "Att k|ra en bin{r fil kan krascha datorn. [r du s{ker p} att du vill k|ra den?"
 .define res_string_alert_bad_replacement "En vara kan inte ers{ttas av sig sj{lv eller en vara som den inneh}ller."
 .define res_string_alert_unsupported_type "Filtyp som inte st|ds."
-.define res_string_alert_no_windows_open "Det finns inga f|nster |ppna."
 .define res_string_alert_move_copy_into_self "Ett objekt kan inte flyttas eller kopieras in i sig sj{lvt."
 .define res_string_alert_duplicate_volume_names "Det finns 2 volymer med samma namn."
 .define res_string_alert_cannot_open "Den h{r filen kan inte |ppnas."

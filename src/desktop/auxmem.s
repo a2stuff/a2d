@@ -483,15 +483,13 @@ err_insert_system_disk:         ; kErrInsertSystemDisk
         PASCAL_STRING res_string_alert_insert_system_disk
 err_save_changes:               ; kErrSaveChanges
         PASCAL_STRING res_string_alert_save_changes
-err_no_windows:                 ; kErrNoWindowsOpen
-        PASCAL_STRING res_string_alert_no_windows_open
 err_duplicate_volumes:          ; kErrDuplicateVolName
         PASCAL_STRING res_string_alert_duplicate_volume_names
 err_no_basic_system:            ; kErrBasicSysNotFound
         PASCAL_STRING res_string_alert_basic_system_not_found
 
         ;; number of alert messages
-        kNumAlerts = 19
+        kNumAlerts = 18
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
@@ -508,7 +506,6 @@ alert_table:
         ;; Internal error codes:
         .byte   kErrInsertSystemDisk
         .byte   kErrSaveChanges
-        .byte   kErrNoWindowsOpen
         .byte   kErrDuplicateVolName
         .byte   kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_table, kNumAlerts
@@ -520,7 +517,6 @@ message_table_low:
         .byte   <err_47,<err_48,<err_49,<err_4E,<err_52,<err_57
         .byte   <err_insert_system_disk
         .byte   <err_save_changes
-        .byte   <err_no_windows
         .byte   <err_duplicate_volumes
         .byte   <err_no_basic_system
         ASSERT_TABLE_SIZE message_table_low, kNumAlerts
@@ -531,7 +527,6 @@ message_table_high:
         .byte   >err_47,>err_48,>err_49,>err_4E,>err_52,>err_57
         .byte   >err_insert_system_disk
         .byte   >err_save_changes
-        .byte   >err_no_windows
         .byte   >err_duplicate_volumes
         .byte   >err_no_basic_system
         ASSERT_TABLE_SIZE message_table_high, kNumAlerts
@@ -554,7 +549,6 @@ alert_options_table:
 
         .byte   AlertButtonOptions::OKCancel       ; kErrInsertSystemDisk
         .byte   AlertButtonOptions::OKCancel       ; kErrSaveChanges
-        .byte   AlertButtonOptions::OK             ; kErrNoWindowsOpen
         .byte   AlertButtonOptions::OK             ; kErrDuplicateVolName
         .byte   AlertButtonOptions::OK             ; kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts

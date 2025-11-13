@@ -93,3 +93,4 @@
 .define res_string_alert_insert_system_disk "S{tt i systemdisken."
 .define res_string_alert_insert_disk "S{tt i disken: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM hittades inte."
+.define res_string_alert_no_windows_open "Det finns inga f|nster |ppna."

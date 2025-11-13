@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "L'ex{cution d'un fichier binaire peut planter l'ordinateur. Voulez-vous vraiment l'ex{cuter ?"
 .define res_string_alert_bad_replacement "Un {l{ment ne peut pas etre remplac{ par lui-meme ou un {l{ment qu'il contient."
 .define res_string_alert_unsupported_type "Type de fichier non pris en charge."
-.define res_string_alert_no_windows_open "Il n'y a pas de fenetres ouvertes."
 .define res_string_alert_move_copy_into_self "Impossible de placer ou copier l'{l{ment sur lui-meme."
 .define res_string_alert_duplicate_volume_names "Il existe 2 volumes avec le meme nom."
 .define res_string_alert_cannot_open "Ce fichier ne peut etre ex{cut{."

@@ -93,3 +93,4 @@
 .define res_string_alert_insert_system_disk "Insira o disco do sistema."
 .define res_string_alert_insert_disk "Insira o disco: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM n[o pode ser encontrado."
+.define res_string_alert_no_windows_open "N[o h@ janelas abertas."

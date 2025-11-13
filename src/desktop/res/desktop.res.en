@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "Running a binary file may crash the computer. Are you sure you want to run it?"
 .define res_string_alert_bad_replacement "An item cannot be replaced by itself or an item it contains."
 .define res_string_alert_unsupported_type "Unsupported file type."
-.define res_string_alert_no_windows_open "There are no windows open."
 .define res_string_alert_move_copy_into_self "An item cannot be moved or copied into itself."
 .define res_string_alert_duplicate_volume_names "There are 2 volumes with the same name."
 .define res_string_alert_cannot_open "This file cannot be opened."

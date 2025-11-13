@@ -93,3 +93,4 @@
 .define res_string_alert_insert_system_disk "Plaats de systeemschijf."
 .define res_string_alert_insert_disk "Plaats de schijf: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM niet gevonden."
+.define res_string_alert_no_windows_open "Er zijn geen vensters geopend."

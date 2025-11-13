@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "Ejecutar un archivo binario puede bloquear la computadora. ]Est\x10s seguro de que quieres ejecutarlo?"
 .define res_string_alert_bad_replacement "Un art\x12culo no puede ser reemplazado por s\x12 mismo o por un art\x12culo que contiene."
 .define res_string_alert_unsupported_type "Tipo de archivo no soportado."
-.define res_string_alert_no_windows_open "No hay ventanas abiertas."
 .define res_string_alert_move_copy_into_self "El art\x12culo no puede trasladarse ni copiarse dentro de s\x12 misma."
 .define res_string_alert_duplicate_volume_names "Hay 2 vol\x14menes con el mismo nombre."
 .define res_string_alert_cannot_open "El archivo no puede abrirse."

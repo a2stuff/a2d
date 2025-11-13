@@ -15,6 +15,7 @@
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
+        .include "../lib/alert_dialog.inc"
         .include "../desktop/desktop.inc"
         .include "../toolkits/icontk.inc"
 
@@ -35,8 +36,8 @@
 ;;;          :           : :           :
 ;;;          | DHR       | | DHR       |
 ;;;  $2000   +-----------+ +-----------+
-;;;          | IO Buffer | |           |
-;;;  $1C00   +-----------+ |           |
+;;;          | IO Buffer | | (mostly   |
+;;;  $1C00   +-----------+ |  unused)  |
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
@@ -44,14 +45,30 @@
 ;;;          |           | |           |
 ;;;   $E00   +-----------+ |           |
 ;;;          |           | |           |
-;;;          |           | | (unused)  |
-;;;          | DA        | |           |
+;;;          |           | | Alert     |
+;;;          | DA        | | Resources |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 
 ;;; ============================================================
 
         DA_HEADER
+        DA_START_AUX_SEGMENT
+
+;;; ============================================================
+;;; Alerts
+
+.params AlertNoWindowsOpen
+        .addr   str_alert_no_windows_open
+        .byte   AlertButtonOptions::OK
+        .byte   AlertOptions::Beep | AlertOptions::SaveBack
+.endparams
+str_alert_no_windows_open:
+        PASCAL_STRING res_string_alert_no_windows_open
+
+;;; ============================================================
+
+        DA_END_AUX_SEGMENT
         DA_START_MAIN_SEGMENT
 
 ;;; ============================================================
@@ -95,7 +112,7 @@ start:  tsx
 
         lda     window_id
     IF ZERO
-        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#kErrNoWindowsOpen
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT_PARAMS, AX=#aux::AlertNoWindowsOpen
     END_IF
 
         CALL    JUMP_TABLE_RESTORE_OVL, A=#kDynamicRoutineRestoreBuffer

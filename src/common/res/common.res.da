@@ -93,3 +93,4 @@
 .define res_string_alert_insert_system_disk "Inds{t venligst systemdisken."
 .define res_string_alert_insert_disk "Inds{t disken: %0s"
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM ikke fundet."
+.define res_string_alert_no_windows_open "Der er ingen vinduer }bne."

@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "Het uitvoeren van een binair bestand kan de computer crashen. Weet u het zeker?"
 .define res_string_alert_bad_replacement "Een item kan niet door zichzelf vervangen worden of door een item dat het bevat."
 .define res_string_alert_unsupported_type "Dit bestandstype wordt niet ondersteund."
-.define res_string_alert_no_windows_open "Er zijn geen vensters geopend."
 .define res_string_alert_move_copy_into_self "Een item kan niet naar zichzlef verplaatst of gekopieerd worden."
 .define res_string_alert_duplicate_volume_names "Er zijn 2 volumes met dezelfde naam."
 .define res_string_alert_cannot_open "Dit bestand kan niet worden geopend."

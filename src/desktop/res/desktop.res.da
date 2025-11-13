@@ -98,7 +98,6 @@
 .define res_string_alert_confirm_running "K|rsel af en bin{r fil kan computeren g} ned. Er du sikker p}, at du vil k|re det?"
 .define res_string_alert_bad_replacement "En vare kan ikke erstattes af sig selv eller en vare den indeholder."
 .define res_string_alert_unsupported_type "Ikke-underst|ttet filtype."
-.define res_string_alert_no_windows_open "Der er ingen vinduer }bne."
 .define res_string_alert_move_copy_into_self "Et element kan ikke flyttes eller kopieres ind i sig selv."
 .define res_string_alert_duplicate_volume_names "Der er 2 bind med samme navn."
 .define res_string_alert_cannot_open "Denne fil kan ikke }bnes."
