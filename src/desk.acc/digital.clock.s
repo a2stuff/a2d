@@ -245,7 +245,7 @@ ploop:  copy8   (ptr),y, num_verts ; A = num vertices
 
         lda     (ptr),y         ; A = num vertices, 0 if done
         beq     advance         ; done
-        jmp     ploop
+        jmp     ploop           ; TODO: `BNE`
 
 advance:
         add16   vector_cursor::xcoord, #kCharAdvance, vector_cursor::xcoord

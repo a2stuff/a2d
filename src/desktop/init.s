@@ -466,10 +466,8 @@ not_found:
 
         lda     get_file_info_params::file_type
         cmp     #FT_DIRECTORY
-        beq     open_dir
-        jmp     end
+        jne     end
 
-open_dir:
         MLI_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     read_params::ref_num

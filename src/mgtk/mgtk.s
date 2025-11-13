@@ -2449,10 +2449,8 @@ next:   php
         sty     $AB
         ldy     $A9
         bit     loop_ctr
-        bmi     :+
-        jmp     loop
-
-:       plp
+        jpl     loop
+        plp
         ldx     vertex_limit
         jmp     PaintPolyImpl::next
 .endproc ; ProcessPoly
@@ -2685,10 +2683,8 @@ skip_rect:
 
         lda     poly_maxima_links,x
 scan_next_link:
-        bmi     :+
-        jmp     scan_loop2
-
-:       inc16   scan_y
+        jpl     scan_loop2
+        inc16   scan_y
         jmp     scan_loop
 .endproc ; FillPolys
 
@@ -3030,8 +3026,7 @@ L57BF:  ldx     current_penwidth
         bne     L57E1
         cmp     x2
         bcc     L57E9
-        bne     L57E1
-        jmp     DrawLine
+        jeq     DrawLine
 
 L57E1:  lda     $A1
         ldx     $A2
@@ -3615,10 +3610,8 @@ advance_x:
 
 L5BFF:  ldy     text_index
         cpy     text_len
-        beq     :+
-        jmp     next_glyph
-
-:       ldy     $A0
+        jne     next_glyph
+        ldy     $A0
 
 jmp_last_blit:
         jmp     last_blit
@@ -3628,10 +3621,8 @@ advance_byte:
         sta     left_mod14
 
         ldy     $A0
-        bne     :+
-        jmp     first_blit
-
-:       bmi     next_byte
+        jeq     first_blit
+        bmi     next_byte
         dec     width_bytes
         beq     jmp_last_blit
 
@@ -5952,7 +5943,7 @@ draw_menu_impl:
         jsr     SetPenloc
 
         ldx     #0
-menuloop:
+    DO
         jsr     GetMenu
         ldax    current_penloc_x
         stax    curmenu::x_penloc
@@ -5964,22 +5955,22 @@ menuloop:
         stx     max_width
         stx     max_width+1
 
-itemloop:
+      DO
         jsr     GetMenuItem
         bit     curmenuitem::options
-        bvs     filler                  ; bit 6 - is filler
+        bvs     filler          ; bit 6 - is filler
 
         ldax    curmenuitem::name
         jsr     DoMeasureText
         stax    temp
 
         lda     curmenuitem::options
-        and     #3                      ; OA+SA
+        and     #3              ; OA+SA
         ora     curmenuitem::shortcut1
-    IF ZERO
+       IF ZERO
         lda     shortcut_x_adj
         bne     has_shortcut
-    END_IF
+       END_IF
 
         lda     non_shortcut_x_adj
 has_shortcut:
@@ -5993,14 +5984,13 @@ has_shortcut:
         sbc     max_width
         lda     temp+1
         sbc     max_width+1
-    IF POS
-        copy16  temp, max_width          ; calculate max width
-    END_IF
+       IF POS
+        copy16  temp, max_width ; calculate max width
+       END_IF
 
 filler: ldx     menu_item_index
         inx
-        cpx     menu_item_count
-        bne     itemloop
+      WHILE X <> menu_item_count
 
         add16_8 max_width, offset_text
 
@@ -6053,8 +6043,7 @@ filler: ldx     menu_item_index
 
         ldx     menu_index
         inx
-        cpx     menu_count
-        jne     menuloop
+    WHILE X <> menu_count
 
         jsr     ShowCursorAndRestoreParams
         sec
@@ -7054,9 +7043,8 @@ no_shortcut:
 next:   ldx     menu_item_index
         inx
         cpx     menu_item_count
-        beq     :+
-        jmp     loop
-:       jmp     ShowCursorImpl
+        jne     loop
+        jmp     ShowCursorImpl
 .endproc ; HideOrDrawMenuBarImpl
 HideMenu := HideOrDrawMenuBarImpl::hide_menu
 DrawMenuBar := HideOrDrawMenuBarImpl::draw_menu_bar

@@ -575,7 +575,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         copy8   #0, row
         COPY_BLOCK date_base, date_pos
 
-day_loop:
+    DO
         ;; Assume it's an empty cell.
         copy8   #3, str_date
         lda     #' '
@@ -593,19 +593,19 @@ day_loop:
         copy8   #' ', str_date+1 ; assume 1 digit
         lda     date
         ldx     #0
-    DO
+      DO
         BREAK_IF A < #10
         sbc     #10
         inx
-    WHILE NOT_ZERO              ; always
+      WHILE NOT_ZERO            ; always
 
         ora     #'0'            ; convert to digit
         sta     str_date+2      ; units place
         txa
-    IF NOT_ZERO
+      IF NOT_ZERO
         ora     #'0'            ; convert to digit
         sta     str_date+1      ; tens place
-    END_IF
+      END_IF
 
         ;; Draw it
 draw_date:
@@ -616,17 +616,16 @@ draw_date:
         ;; Next
         inc     col
         lda     col
-    IF A = #7
+      IF A = #7
         copy8   #0, col
         inc     row
         copy16  date_base::xcoord, date_pos
         add16_8 date_pos::ycoord, #kDayDY
-    END_IF
+      END_IF
 
         inc     date
         lda     date
-        cmp     #39             ; extra, to erase previous days
-        jne     day_loop
+    WHILE A <> #39              ; extra, to erase previous days
 
         ;; --------------------------------------------------
         ;; Left/right arrow buttons

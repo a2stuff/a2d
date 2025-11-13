@@ -499,7 +499,7 @@ draw_pupils:
 
         copy16  outer_oval+OvalRec::top, yy
 
-loop:
+    DO
         copy16  #outer_oval, bo_params::oval
         copy16  yy, bo_params::vert
         jsr     BumpOval
@@ -536,7 +536,7 @@ outer_only:
 next:
         inc16   yy
         cmp16   yy, outer_oval+OvalRec::bottom
-        jcc     loop
+    WHILE LT
 
         rts
 

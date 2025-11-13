@@ -360,16 +360,36 @@
 ;;; Helpers for branching to `target`
 .macro _BOP_HELPER target
   .if !@__flow_expr_invert_flag__
+     .if .def(target) .and .const((*-2)-(target)) .and ((*+2)-(target) > 127)
+        __flow_branchOp2__ *+5
+        jmp     target
+     .else
         __flow_branchOp1__ target
+     .endif
   .else
+     .if .def(target) .and .const((*-2)-(target)) .and ((*+2)-(target) > 127)
+        __flow_branchOp1__ *+5
+        jmp     target
+     .else
         __flow_branchOp2__ target
+     .endif
   .endif
 .endmacro
 .macro _NOT_BOP_HELPER target
   .if !@__flow_expr_invert_flag__
+     .if .def(target) .and .const((*-2)-(target)) .and ((*+2)-(target) > 127)
+        __flow_branchOp1__ *+5
+        jmp     target
+     .else
         __flow_branchOp2__ target
+     .endif
   .else
+     .if .def(target) .and .const((*-2)-(target)) .and ((*+2)-(target) > 127)
+        __flow_branchOp2__ *+5
+        jmp     target
+     .else
         __flow_branchOp1__ target
+     .endif
   .endif
 .endmacro
 

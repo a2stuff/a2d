@@ -928,12 +928,15 @@ index:  .byte   0
 
         lda     RWTS_SECTOR_BUF + dos33::VTOC::FirstCatTrack
         ldx     RWTS_SECTOR_BUF + dos33::VTOC::FirstCatSector
-sector_loop:
+    DO
+        ;; For each sector
         jsr     do_read
         jcs     exit_error
 
         ldy     #dos33::FirstFileOffset
-file_loop:
+
+      DO
+        ;; For each file
         sty     cur_cat_sector_offset ; +$00 `FileEntry::Track`
         lda     RWTS_SECTOR_BUF,y
         jeq     exit_success    ; $00 = entry free, so done
@@ -953,18 +956,18 @@ file_loop:
 
         iny                     ; +$03 `FileEntry::Name`
         ldx     #0
-    DO
+       DO
         lda     RWTS_SECTOR_BUF,y
         and     #$7F            ; strip high bit
         sta     entry_buf+aux::CatalogEntry::Name+1,x
         iny
         inx
-    WHILE X <> #dos33::MaxFilenameLen
+       WHILE X <> #dos33::MaxFilenameLen
 
-    DO
+       DO
         dex
         lda     entry_buf+aux::CatalogEntry::Name+1,x
-    WHILE A = #' '
+       WHILE A = #' '
         inx
         stx     entry_buf+aux::CatalogEntry::Name
 
@@ -987,12 +990,12 @@ next_file:
         clc
         adc     #.sizeof(dos33::FileEntry)
         tay
-        jcc     file_loop
+      WHILE CC
 
 next_sector:
         lda     RWTS_SECTOR_BUF + dos33::NextCatSectorTrack
         ldx     RWTS_SECTOR_BUF + dos33::NextCatSectorSector
-        jne     sector_loop
+    WHILE NOT ZERO
 
 exit_success:
         rts

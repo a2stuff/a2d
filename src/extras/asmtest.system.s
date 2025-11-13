@@ -623,6 +623,31 @@ kSet = 1
         RETURN  A=#3
         beq     @cheap
 
+
+;;; --------------------------------------------------
+;;; Long (backwards) branches
+;;; --------------------------------------------------
+
+    DO
+.repeat 120
+        nop
+.endrepeat
+        ;; Should be `BMI`
+        CONTINUE_IF NS
+
+        ;; Should be `BCS`
+    WHILE CS
+
+    DO
+.repeat 130
+        nop
+.endrepeat
+        ;; Should be `BPL` / `JMP`
+        CONTINUE_IF NS
+
+        ;; Should be `BCC` / `JMP`
+    WHILE CS
+
 ;;; ============================================================
 ;;; Errors
 ;;; ============================================================

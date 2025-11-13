@@ -1271,7 +1271,8 @@ egg:    .byte   0
         copy8   #7, slot
         copy8   #1<<7, mask
 
-loop:   lda     slot
+    DO
+        lda     slot
         asl
         tax
         copy16  slot_pos_table,x, slot_pos
@@ -1289,7 +1290,7 @@ loop:   lda     slot
         ;; Check ProDOS slot bit mask
         lda     SLTBYT
         and     mask
-    IF NOT_ZERO
+      IF NOT_ZERO
         ;; ProDOS thinks there's a card...
         CALL    ProbeSlot, A=slot ; check for matching firmware
         bcs     draw
@@ -1300,7 +1301,7 @@ loop:   lda     slot
 
         ldax    #str_unknown
         bne     draw            ; always
-    END_IF
+      END_IF
 
         CALL    ProbeSlotNoFirmware, A=slot
         bcs     draw
@@ -1310,48 +1311,48 @@ loop:   lda     slot
 draw:   php
         jsr     DrawStringFromMain
         plp
-    IF VS
+      IF VS
         ;; V=1 means smartport - print out the names
         CALL    SetSlotPtr, A=slot
         jsr     ShowSmartPortDeviceNames
-    END_IF
+      END_IF
 
         ;; Special case for Slot 2
         lda     slot
-    IF A = #2
+      IF A = #2
         jsr     SetSlotPtr
         CALL    WithInterruptsDisabled, AX=#DetectTheCricket
-      IF CS
+       IF CS
         CALL    DrawStringFromMain, AX=#str_list_separator
         CALL    DrawStringFromMain, AX=#str_cricket
+       END_IF
       END_IF
-    END_IF
 
         ;; Special case for Slot 3 cards
         lda     slot
-    IF A = #3
+      IF A = #3
         bit     ROMIN2
         jsr     DetectLeChatMauveEve
         php
         bit     LCBANK1
         bit     LCBANK1
         plp
-      IF ZC
+       IF ZC
         CALL    DrawStringFromMain, AX=#str_list_separator
         CALL    DrawStringFromMain, AX=#str_lcmeve
-      ELSE
+       ELSE
         CALL    SetSlotPtr, A=slot
         CALL    WithInterruptsDisabled, AX=#DetectUthernet2
-       IF CS
+        IF CS
         CALL    DrawStringFromMain, AX=#str_list_separator
         CALL    DrawStringFromMain, AX=#str_uthernet2
+        END_IF
        END_IF
       END_IF
-    END_IF
 
         lsr     mask
         dec     slot
-        jne     loop
+    WHILE NOT ZERO
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts

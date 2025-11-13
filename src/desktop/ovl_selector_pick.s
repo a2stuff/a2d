@@ -687,11 +687,9 @@ index:  .byte   0
 
         sta     index
         cmp     #8
-        bcc     run_list
-        jmp     secondary_run_list
+        jcs     secondary_run_list
 
         ;; Primary run list
-run_list:
 .scope
         tax
         inx

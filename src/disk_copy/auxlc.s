@@ -1325,7 +1325,7 @@ fallback:
         lda     #0
         sta     num_drives
         tax                     ; X = index
-loop:
+    DO
         txa
         pha
 
@@ -1343,10 +1343,10 @@ loop:
         ;; Check first byte of record
         ldy     #0
         lda     (on_line_ptr),y
-    IF ZERO                     ; 0 indicates end of valid records
+      IF ZERO                   ; 0 indicates end of valid records
         pla                     ; pop index off stack
         rts
-    END_IF
+      END_IF
 
         ;; Tentatively add to table; doesn't count until we inc `num_drives`
         pha                     ; A = unit number / name length
@@ -1356,59 +1356,59 @@ loop:
         pla                     ; A = unit number / name length
 
         and     #NAME_LENGTH_MASK
-    IF ZERO
+      IF ZERO
         ;; Not ProDOS
 
         ;; name_len=0 signifies an error, with error code in second byte
         iny                     ; Y = 1
         lda     (on_line_ptr),y
-      IF A = #ERR_DEVICE_NOT_CONNECTED
+       IF A = #ERR_DEVICE_NOT_CONNECTED
         ;; Device Not Connected - skip, unless it's a Disk II device
         dey                     ; Y = 0
         CALL    IsDiskII, A=(on_line_ptr),y ; A = unmasked unit number
         bne     next_device
 
         lda     #ERR_DEVICE_NOT_CONNECTED
-      END_IF
+       END_IF
 
-      IF A = #ERR_NOT_PRODOS_VOLUME
+       IF A = #ERR_NOT_PRODOS_VOLUME
         ldx     num_drives
         CALL    main::ReadBootBlock, A=drive_unitnum_table,x
         bcs     next_device     ; failure
 
         jsr     IsPascalBootBlock
-       IF EQ
+        IF EQ
         ;; Pascal
         CALL    GetDriveNameTableSlot, A=num_drives ; result in A,X
-        jsr     GetPascalVolName      ; A,X is buffer to populate
+        jsr     GetPascalVolName ; A,X is buffer to populate
         jmp     keep_it
-       END_IF
+        END_IF
 
         jsr     IsDOS33BootBlock
-       IF CC
+        IF CC
         ;; DOS 3.3
         CALL    AssignDriveName, AX=#str_dos33
         jmp     keep_it
+        END_IF
        END_IF
-      END_IF
 
         ;; Unknown
         CALL    AssignDriveName, AX=#str_unknown
         ;; "fall through" to `keep_it`
-    ELSE
+      ELSE
         ;; Valid ProDOS volume
 
         ldx     num_drives
         lda     drive_unitnum_table,x
-      IF A = DISK_COPY_INITIAL_UNIT_NUM
+       IF A = DISK_COPY_INITIAL_UNIT_NUM
         copy8   num_drives, current_drive_selection
-      END_IF
+       END_IF
 
         CALL    AdjustOnLineEntryCase, AX=on_line_ptr
         CALL    AssignDriveName, AX=on_line_ptr
 
         FALL_THROUGH_TO keep_it
-    END_IF
+      END_IF
 
 keep_it:
         inc     num_drives
@@ -1417,8 +1417,7 @@ next_device:
         pla
         tax
         inx                     ; X = index
-        cpx     #kMaxNumDrives+1
-        jne     loop
+    WHILE X <> #kMaxNumDrives+1
 
         rts
 
