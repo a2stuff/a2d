@@ -39,9 +39,9 @@
 .define res_string_prompt_erase_slot_drive_pattern "siguren li si, ~e iska{ da iztrie{ diska w slot # u-wo #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 49
 .define res_const_prompt_erase_slot_drive_pattern_offset2 56
-.define res_string_errmsg_dest_format_fail "diskyt ne move da byde formatiran!"
-.define res_string_errmsg_dest_protected "diskyt e za}iten ot zapis!"
-.define res_string_errmsg_format_error "gre{ka pri formatiraneto."
+.define res_string_error_dest_format_fail "diskyt ne move da byde formatiran!"
+.define res_string_error_dest_protected "diskyt e za}iten ot zapis!"
+.define res_string_error_format_error "gre{ka pri formatiraneto."
 .define res_string_label_status_copy_success "kopiraneto be{e uspe{no."
 .define res_string_label_status_copy_fail "kopiraneto ne e zawyr{eno."
 .define res_string_prompt_insert_source_or_cancel "postawi izhodniq disk ili natisni ESC za otmqna."

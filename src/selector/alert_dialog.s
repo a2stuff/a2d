@@ -15,19 +15,19 @@
 str_selector_unable_to_run:
         PASCAL_STRING res_string_alert_selector_unable_to_run
 str_io_error:
-        PASCAL_STRING res_string_alert_io_error
+        PASCAL_STRING res_string_err27_io_error
 str_no_device:
-        PASCAL_STRING res_string_alert_no_device
+        PASCAL_STRING res_string_err28_device_not_connected
 str_pathname_does_not_exist:
-        PASCAL_STRING res_string_alert_pathname_does_not_exist
+        PASCAL_STRING res_string_err44_path_not_found
 str_insert_source_disk:
         PASCAL_STRING res_string_alert_insert_source_disk
 str_file_not_found:
-        PASCAL_STRING res_string_alert_file_not_found
+        PASCAL_STRING res_string_err46_file_not_found
 str_copy_incomplete:
-        PASCAL_STRING res_string_errmsg_copy_incomplete
+        PASCAL_STRING res_string_error_copy_incomplete
 str_not_enough_room:
-        PASCAL_STRING res_string_errmsg_not_enough_room
+        PASCAL_STRING res_string_error_not_enough_room
 str_insert_system_disk:
         PASCAL_STRING res_string_alert_insert_system_disk
 str_basic_system_not_found:

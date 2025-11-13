@@ -39,9 +39,9 @@
 .define res_string_prompt_erase_slot_drive_pattern "Are you sure you want to erase the disk in slot # drive #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 49
 .define res_const_prompt_erase_slot_drive_pattern_offset2 57
-.define res_string_errmsg_dest_format_fail "The destination disk cannot be formatted!"
-.define res_string_errmsg_dest_protected "The destination disk is write protected!"
-.define res_string_errmsg_format_error "Error during formatting."
+.define res_string_error_dest_format_fail "The destination disk cannot be formatted!"
+.define res_string_error_dest_protected "The destination disk is write protected!"
+.define res_string_error_format_error "Error during formatting."
 .define res_string_label_status_copy_success "The copy was successful."
 .define res_string_label_status_copy_fail "The copy was not completed."
 .define res_string_prompt_insert_source_or_cancel "Insert the source disk or press Esc to cancel."

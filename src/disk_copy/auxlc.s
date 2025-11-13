@@ -1907,11 +1907,11 @@ str_confirm_erase_suffix:
         PASCAL_STRING res_string_prompt_erase_suffix
 
 str_dest_format_fail:
-        PASCAL_STRING res_string_errmsg_dest_format_fail
+        PASCAL_STRING res_string_error_dest_format_fail
 str_format_error:
-        PASCAL_STRING res_string_errmsg_format_error
+        PASCAL_STRING res_string_error_format_error
 str_dest_protected:
-        PASCAL_STRING res_string_errmsg_dest_protected
+        PASCAL_STRING res_string_error_dest_protected
 
 ;;; This string is seen when copying over a DOS 3.3 disk.
 str_confirm_erase_dos33:
