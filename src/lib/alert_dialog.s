@@ -168,6 +168,7 @@ start:
         dex
     WHILE POS
 
+        MGTK_CALL MGTK::GetCursorAdr, saved_cursor_addr
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
 
         ;; --------------------------------------------------
@@ -487,19 +488,21 @@ was_no_button:
 ;;; ============================================================
 
 finish:
+        pha
+
 .ifdef AD_SAVEBG
         bit     alert_params::options
     IF VS                       ; V = use save area
-        pha
         MGTK_CALL MGTK::RestoreScreenRect, alert_rect
-        pla
     END_IF
 .else
-        pha
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, alert_rect
-        pla
 .endif ; AD_SAVEBG
+
+        MGTK_CALL MGTK::SetCursor, SELF_MODIFIED, saved_cursor_addr
+
+        pla
         rts
 
 ;;; ============================================================

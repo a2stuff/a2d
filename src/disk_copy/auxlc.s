@@ -419,7 +419,6 @@ init:
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetMenu, menu_definition
-        jsr     SetCursorPointer
 
         copy8   #kMenuItemIdQuickCopy, checkitem_params::menu_item
         copy8   #MGTK::checkitem_check, checkitem_params::check
@@ -435,6 +434,8 @@ init:
         MGTK_CALL MGTK::FrameRect, rect_frame
 
 InitDialog:
+        jsr     SetCursorPointer ; after startup or after copy
+
         CLEAR_BIT7_FLAG listbox_enabled_flag
         copy8   #$FF, current_drive_selection
         copy8   #BTK::kButtonStateDisabled, dialog_ok_button::state
@@ -475,12 +476,12 @@ InitDialog:
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
         SET_BIT7_FLAG listbox_enabled_flag
 
-        jsr     SetCursorWatch
+        jsr     SetCursorWatch  ; before enumerating devices
         jsr     EnumerateDevices
         copy8   #0, DISK_COPY_INITIAL_UNIT_NUM
         jsr     GetAllBlockCounts
 
-        jsr     SetCursorPointer
+        jsr     SetCursorPointer ; after enumerating devices
         CLEAR_BIT7_FLAG selection_mode_flag
 
         LBTK_CALL LBTK::Init, lb_params
@@ -527,6 +528,8 @@ InitDialog:
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::PaintRect, win_frame_rect_params::rect
+
+        jsr     SetCursorWatch  ; before copy
 
         ;; --------------------------------------------------
         ;; Prompt to insert source disk
@@ -582,8 +585,6 @@ check_source_finish:
     IF A <> #kAlertResultOK
         jmp     InitDialog      ; Cancel
     END_IF
-
-        jsr     SetCursorWatch
 
         ;; --------------------------------------------------
         ;; Check destination disk
@@ -659,8 +660,6 @@ maybe_format:
         jmp     do_copy
 
 try_format:
-        jsr     SetCursorWatch
-
         ldx     dest_drive_index
         CALL    IsDiskII, A=drive_unitnum_table,x
         beq     format
@@ -694,14 +693,10 @@ format: CALL    DrawStatus, AX=#str_formatting
         ;; Perform the copy
 
 do_copy:
-        jsr     SetCursorWatch
-
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
 
         CALL    MaybePromptDiskSwap, X=#kAlertMsgInsertSource
-
-        jsr     SetCursorWatch
 
         jsr     main::ReadVolumeBitmap
 
@@ -724,16 +719,12 @@ do_copy:
         jsr     DrawEscToStopCopyHint
 
 copy_loop:
-        jsr     SetCursorWatch
-
         jsr     DrawStatusReading
         CALL    main::CopyBlocks, C=0 ; reading
         cmp     #$01
         beq     copy_failure
 
         CALL    MaybePromptDiskSwap, X=#kAlertMsgInsertDestination
-
-        jsr     SetCursorWatch
 
         jsr     DrawStatusWriting
         CALL    main::CopyBlocks, C=1 ; writing
@@ -744,8 +735,6 @@ copy_loop:
         jmp     copy_loop
 
 copy_success:
-        jsr     SetCursorWatch
-
         jsr     main::FreeVolBitmapPages
 
         ldx     source_drive_index

@@ -745,16 +745,16 @@ dispatch:
 
 .proc CmdRunAProgram
         jsr     ClearSelectedIndex
-retry:
-        jsr     SetCursorWatch
 
+        jsr     SetCursorWatch  ; before loading overlay
+retry:
         ;; Load file dialog overlay
         MLI_CALL OPEN, open_selector_params
     IF CS
         CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry           ; `kAlertResultTryAgain` = 0
-        rts
+        jmp     SetCursorPointer  ; after loading overlay (failure)
     END_IF
 
         lda     open_selector_params::ref_num
@@ -763,6 +763,8 @@ retry:
         MLI_CALL SET_MARK, set_mark_overlay1_params
         MLI_CALL READ, read_overlay1_params
         MLI_CALL CLOSE, close_overlay_params
+
+        jsr     SetCursorPointer  ; after loading overlay (success)
 
         ;; Invoke file dialog
         jsr     file_dialog_init
@@ -1358,12 +1360,19 @@ start:
         sta     invoke_index
 
         ;; --------------------------------------------------
-        ;; Highlight entry in UI, if needed
+        ;; Set cursor for duration of operation
+
         bit     invoked_during_boot_flag
     IF NC                       ; skip if there's no UI yet
-        jsr     SetCursorWatch
-        jsr     ClearSelectedIndex
+        jsr     SetCursorWatch  ; before invoking entry
+        jsr     rest
+        jmp     SetCursorPointer ; after invoking entry
     END_IF
+        FALL_THROUGH_TO rest    ; "else"
+rest:
+        ;; --------------------------------------------------
+
+        jsr     ClearSelectedIndex
 
         ;; --------------------------------------------------
         ;; Figure out entry path, given entry options and overrides
@@ -1407,7 +1416,6 @@ start:
         jsr     CheckAndClearUpdates
         pla
     IF NOT_ZERO
-        jsr     SetCursorPointer
         jmp     ClearSelectedIndex ; canceled!
     END_IF
 
@@ -1444,6 +1452,19 @@ InvokeEntry := InvokeEntryImpl::start
 .proc LaunchPath
         jsr     CopyPathToInvokerPrefix
 
+        ;; --------------------------------------------------
+        ;; Set cursor for duration of operation
+
+        bit     invoked_during_boot_flag
+    IF NC                       ; skip if there's no UI yet
+        jsr     SetCursorWatch  ; before launching path
+        jsr     rest
+        jmp     SetCursorPointer ; after launching path
+    END_IF
+        FALL_THROUGH_TO rest    ; "else"
+rest:
+        ;; --------------------------------------------------
+
 retry:
         CALL    GetFileInfo, AX=#INVOKER_PREFIX
         bcc     check_type
@@ -1462,11 +1483,11 @@ retry:
         txa
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     fail            ; `kAlertResultCancel` = 1
-        jsr     SetCursorWatch
         jmp     retry
     END_IF
 
-fail:   jmp     ClearSelectedIndex
+fail:
+        jmp     ClearSelectedIndex
 
         ;; --------------------------------------------------
         ;; Check file type
@@ -1524,7 +1545,10 @@ check_type:
 
         ;; Don't know how to invoke
 err:
+        bit     invoked_during_boot_flag
+    IF NC
         CALL    ShowAlert, A=#AlertID::selector_unable_to_run
+    END_IF
         jmp     ClearSelectedIndex
 
         ;; --------------------------------------------------

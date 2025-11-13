@@ -1358,7 +1358,12 @@ tmp_path_buf:
 .proc LaunchFileWithPathImpl
         ENTRY_POINTS_FOR_BIT7_FLAG sys_disk, normal_disk, sys_prompt_flag
 
-        jsr     SetCursorWatch  ; before invoking
+        ;; --------------------------------------------------
+        jsr     SetCursorWatch  ; before invoking file
+        jsr     rest
+        jmp     SetCursorPointer ; after invoking file
+rest:
+        ;; --------------------------------------------------
 
         ;; Easiest to assume absolute path later.
         jsr     _MakeSrcPathAbsolute ; Trashes `INVOKER_INTERPRETER`
@@ -1416,7 +1421,7 @@ interpreter:
 
         ;; Is the interpreter where we expect it?
         jsr     GetFileInfo
-        jcs     SetCursorPointer ; nope, just ignore
+        RTS_IF  CS              ; nope, just ignore
 
         ;; Construct absolute path
         CALL    _MakeRelPathAbsoluteIntoInvokerInterpreter, AX=ptr1
@@ -1449,9 +1454,8 @@ binary:
         jsr     ModifierDown ; Otherwise, only launch if a button is down
         jmi     launch
         CALL    ShowAlertParams,  Y=#AlertButtonOptions::OKCancel, AX=#aux::str_alert_confirm_running
-        cmp     #kAlertResultOK
-        jeq     launch
-        jmp     SetCursorPointer ; after not launching BIN
+        RTS_IF A <> #kAlertResultOK
+        jmp     launch
 
 ;;; --------------------------------------------------
 
@@ -1581,9 +1585,8 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
         tsx
         stx     saved_stack
 
-        jsr     OpenWindowForPath
-
-        jmp     SetCursorPointer ; after opening folder
+        jsr     OpenWindowForPath ; do not tail-call optimize!
+        rts
 .endproc ; _OpenFolder
 
 
@@ -2105,8 +2108,7 @@ CmdAbout := AboutDialogProc
 str_desk_acc:
         PASCAL_STRING .concat(kFilenameDADir, "/")
 
-start:  jsr     SetCursorWatch  ; before loading DA
-
+start:
         ;; Append DA directory name
         CALL    CopyToSrcPath, AX=#str_desk_acc
 
@@ -2684,7 +2686,7 @@ str_disk_copy:
 
 start:
 retry:
-        jsr     SetCursorWatch
+        jsr     SetCursorWatch  ; before loading module (undone in module or failure)
 
         ;; Do this now since we'll use up the space later.
         jsr     SaveWindows
@@ -2698,7 +2700,7 @@ retry:
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         cmp     #kAlertResultOK
         beq     retry           ; ok, so try again
-        rts                     ; cancel, so fail
+        jmp     SetCursorPointer ; after loading module (failure)
     END_IF
 
         lda     open_params::ref_num
@@ -10002,7 +10004,6 @@ eof:    RETURN  A=#$FF
     IF A >= #ST_TREE_FILE+1     ; only seedling/sapling/tree supported
         ;; Unsupported type - show error, and either abort or return failure
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#aux::str_alert_unsupported_type
-        jsr     SetCursorWatch  ; preserves A
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialogWithFailedResult
         RETURN  C=1
@@ -10369,8 +10370,6 @@ retry:  jsr     GetDstFileInfo
         ldax    #aux::str_large_move_prompt
     END_IF
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel ; A,X = string
-        jsr     SetCursorWatch  ; preserves A
-
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialogWithFailedResult
 
@@ -10482,7 +10481,6 @@ retry:
       IF A = #ST_LINKED_DIRECTORY
         ;; TODO: Prompt and recursively delete
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_no_overwrite_dir
-        jsr     SetCursorWatch
         jmp     CloseFilesCancelDialogWithFailedResult
       END_IF
 
@@ -10490,7 +10488,6 @@ retry:
         bit     operations::all_flag
       IF NC
         CALL    ShowAlertParams, Y=#AlertButtonOptions::YesNoAllCancel, AX=#aux::str_exists_prompt
-        jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultNo
         beq     failure
@@ -11050,8 +11047,6 @@ operation_traversal_callbacks_for_delete:
     END_IF
 
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#text_input_buf
-        jsr     SetCursorWatch  ; preserves A
-
         cmp     #kAlertResultOK
         jne     CloseFilesCancelDialogWithCanceledResult
         rts
@@ -11129,8 +11124,6 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         bmi     unlock
 
         CALL    ShowAlertParams, Y=#AlertButtonOptions::YesNoAllCancel, AX=#aux::str_delete_locked_file
-        jsr     SetCursorWatch  ; preserves A
-
         cmp     #kAlertResultNo
         beq     done
         cmp     #kAlertResultYes
@@ -11581,7 +11574,7 @@ retry:  CALL    GetFileInfo, AX=src_ptr
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
-        jmp     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
+        rts
     END_IF
 
         ;; if err is "not found" prompt specifically for src/dst disk
@@ -11597,7 +11590,6 @@ retry:  CALL    GetFileInfo, AX=src_ptr
         CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#text_input_buf
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
-        jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
 
         ;; Poll drives before trying again
         MLI_CALL ON_LINE, on_line_all_drives_params
@@ -12279,8 +12271,6 @@ DoRename        := DoRenameImpl::start
         sty     rename_line_edit_rec::options
 
         COPY_STRUCT MGTK::Point, tmp_rect::topleft, winfo_rename_dialog::viewloc
-
-        jsr     SetCursorPointer
 
         MGTK_CALL MGTK::OpenWindow, winfo_rename_dialog
 
@@ -13056,6 +13046,7 @@ retry:  MLI_CALL OPEN, open_params
         jsr     ShowAlertOption
         cmp     #kAlertResultOK
         beq     retry
+        jsr     SetCursorPointer ; after loading overlay (failure)
         RETURN  A=#$FF          ; failed
     END_IF
 
@@ -13855,9 +13846,7 @@ params:  .res    3
 ;;; Preserves A
         PROC_USED_IN_OVERLAY
 .proc SetCursorWatch
-        pha
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        pla
         rts
 .endproc ; SetCursorWatch
 
@@ -13867,6 +13856,7 @@ params:  .res    3
         rts
 .endproc ; SetCursorPointer
 
+        PROC_USED_IN_OVERLAY
 .proc SetCursorIBeam
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
@@ -13888,7 +13878,6 @@ params:  .res    3
         lda     #0
         sta     has_input_field_flag
         sta     has_device_picker_flag
-        jsr     SetCursorPointer
 
         copy16  #NoOp, PromptDialogClickHandlerHook
         copy16  #NoOp, PromptDialogKeyHandlerHook

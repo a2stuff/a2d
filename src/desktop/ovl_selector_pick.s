@@ -185,14 +185,10 @@ dialog_loop:
 ;;; ============================================================
 
 .proc DoDelete
-        jsr     main::SetCursorWatch
-
         CALL    RemoveEntry, A=shortcut_picker_record::selected_index
     IF ZS                       ; Z set on success
         inc     clean_flag      ; mark as "dirty"
     END_IF
-
-        jsr     main::SetCursorPointer
         jmp     DoCancel
 .endproc ; DoDelete
 
@@ -319,7 +315,6 @@ reuse_same_index:
         jmp     CloseWindow
     END_IF
 
-        jsr     main::SetCursorPointer
         jmp     Exit
 
 flags:  .byte   0
@@ -951,6 +946,13 @@ filename:
         DEFINE_CLOSE_PARAMS close_params
 
 .proc WriteFileToOriginalPrefix
+        jsr     main::SetCursorWatch ; before writing
+        jsr     rest
+        jmp     main::SetCursorPointer ; after writing
+rest:
+        ;; --------------------------------------------------
+
+
         CALL    main::CopyDeskTopOriginalPrefix, AX=#filename_buffer
 
         ldx     filename_buffer ; Append '/' separator
@@ -1013,6 +1015,12 @@ second_try_flag:                ; 0 or 1, updated with INC
 ;;; Read SELECTOR.LIST file (using current prefix)
 
 .proc ReadFile
+        jsr     main::SetCursorWatch ; before reading
+        jsr     rest
+        jmp     main::SetCursorPointer ; after reading
+rest:
+        ;; --------------------------------------------------
+
 retry:  MLI_CALL OPEN, open_curpfx_params
         bcc     read
         cmp     #ERR_FILE_NOT_FOUND
@@ -1055,6 +1063,12 @@ not_found:
 ;;; Write SELECTOR.LIST file (using current prefix)
 
 .proc WriteFile
+        jsr     main::SetCursorWatch ; before writing
+        jsr     rest
+        jmp     main::SetCursorPointer ; after writing
+rest:
+        ;; --------------------------------------------------
+
 retry_create_and_open:
         MLI_CALL CREATE, create_curpfx_params
         MLI_CALL OPEN, open_curpfx_params
