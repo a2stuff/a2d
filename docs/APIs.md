@@ -69,6 +69,14 @@ Mac/IIgs Developers: You can think of this as analogous to the "List Manager" to
 
 The interface is similar to the ProDOS MLI, with JSR to a known address, with a command byte and pointer to parameter block following the JSR. The library is built into DeskTop, the entry point address can move but is fixed at build-time.
 
+## Option Picker ToolKit (OPTK)
+
+[OPTK Documentation](../toolkits/OPTK.md)
+
+This library was written specifically for DeskTop, but is isolated from the rest of the application logic, depending only on MGTK. It provides operations to draw and interact with a controls that present a 2-D grid of options.
+
+The interface is similar to the ProDOS MLI, with JSR to a known address, with a command byte and pointer to parameter block following the JSR. The library is built into DeskTop, the entry point address can move but is fixed at build-time.
+
 
 ## Libraries
 
