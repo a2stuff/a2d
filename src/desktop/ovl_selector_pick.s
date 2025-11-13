@@ -27,6 +27,8 @@ Exec:
         beq     DoAdd
         jmp     Init
 
+;;; ============================================================
+
 .proc Exit
         pha
         lda     clean_flag
@@ -966,38 +968,41 @@ filename:
 
         copy8   #0, second_try_flag
 
-retry:  MLI_CALL CREATE, create_origpfx_params
+retry_create_and_open:
+        MLI_CALL CREATE, create_origpfx_params
         MLI_CALL OPEN, open_origpfx_params
-        bcc     write
-
+    IF CS
         ;; First time - ask if we should even try.
         lda     second_try_flag
-    IF ZERO
+      IF ZERO
         inc     second_try_flag
         CALL    ShowAlert, A=#kErrSaveChanges
         cmp     #kAlertResultOK
-        beq     retry
+        beq     retry_create_and_open
         bne     cancel          ; always
-    END_IF
+      END_IF
 
         ;; Second time - prompt to insert.
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         cmp     #kAlertResultOK
-        beq     retry
+        beq     retry_create_and_open
 
 cancel: rts
+    END_IF
 
-write:  lda     open_origpfx_params::ref_num
+        lda     open_origpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
 
-@retry: MLI_CALL WRITE, write_params
-        bcc     close
+retry_write:
+        MLI_CALL WRITE, write_params
+    IF CS
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     @retry          ; `kAlertResultTryAgain` = 0
+        beq     retry_write     ; `kAlertResultTryAgain` = 0
+    END_IF
 
-close:  MLI_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         rts
 
 second_try_flag:                ; 0 or 1, updated with INC
@@ -1050,25 +1055,29 @@ not_found:
 ;;; Write SELECTOR.LIST file (using current prefix)
 
 .proc WriteFile
-@retry:
+retry_create_and_open:
         MLI_CALL CREATE, create_curpfx_params
         MLI_CALL OPEN, open_curpfx_params
-        bcc     write
+    IF CS
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         cmp     #kAlertResultOK
-        beq     @retry
+        beq     retry_create_and_open
         RETURN  A=#$FF
+    END_IF
 
-write:  lda     open_curpfx_params::ref_num
+        lda     open_curpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-@retry: MLI_CALL WRITE, write_params
-        bcc     close
+
+retry_write:
+        MLI_CALL WRITE, write_params
+    IF CS
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     @retry          ; `kAlertResultTryAgain` = 0
+        beq     retry_write     ; `kAlertResultTryAgain` = 0
+    END_IF
 
-close:  MLI_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         rts
 .endproc ; WriteFile
 

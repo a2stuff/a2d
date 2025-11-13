@@ -57,8 +57,8 @@ Exec:
         ;; Prompt for device
 .scope
         CLEAR_BIT7_FLAG has_input_field_flag
-        CALL    main::OpenPromptWindow, A=#kPromptButtonsOKCancel
-        jsr     main::SetPortForDialogWindow
+        CALL    main::OpenPromptDialog, A=#kPromptButtonsOKCancel
+        jsr     main::SetPortForPromptDialog
 
         ldax    #aux::label_format_disk
         bit     erase_flag
@@ -142,7 +142,7 @@ loop2:
         bmi     loop2           ; not done
         bne     cancel          ; cancel
 
-        jsr     main::SetCursorPointer
+        jsr     main::SetCursorPointer ; after volume name prompt (might be I-beam)
 
         ;; Check for conflicting name
         CALL    CheckConflictingVolumeName, XY=#text_input_buf, A=unit_num
@@ -198,7 +198,7 @@ retry:
         jsr     SetPortAndClear
         CALL    main::DrawDialogLabel, Y=#1, AX=#aux::str_formatting
         CALL    main::DrawDialogLabel, Y=#7, AX=#aux::str_tip_prodos
-        jsr     main::SetCursorWatch
+        jsr     main::SetCursorWatch ; before format
 
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -208,10 +208,10 @@ retry:
         CALL    FormatUnit, A=unit_num
         bcs     l12
 l9:
-        TAIL_CALL ::FormatEraseOverlay::EraseDisk::EP2, A=unit_num
+        TAIL_CALL ::FormatEraseOverlay::EraseDisk::EP2, A=unit_num ; (re)sets cursor
 
 l12:    pha
-        jsr     main::SetCursorPointer
+        jsr     main::SetCursorPointer ; after format
         pla
     IF A = #ERR_WRITE_PROTECTED
 
@@ -253,14 +253,14 @@ retry:
         jsr     SetPortAndClear
         CALL    main::DrawDialogLabel, Y=#1, AX=#aux::str_erasing
         CALL    main::DrawDialogLabel, Y=#7, AX=#aux::str_tip_prodos
-        jsr     main::SetCursorWatch
+        jsr     main::SetCursorWatch ; before writing header
 
         ldxy    #main::filename_buf
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     WriteHeaderBlocks
         pha
-        jsr     main::SetCursorPointer
+        jsr     main::SetCursorPointer ; after writing header
         pla
     IF ZERO
         lda     #$00
@@ -293,7 +293,7 @@ finish:
 ;;; ============================================================
 
 .proc SetPortAndClear
-        jsr     main::SetPortForDialogWindow
+        jsr     main::SetPortForPromptDialog
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         rts
 .endproc ; SetPortAndClear

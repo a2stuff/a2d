@@ -6696,7 +6696,7 @@ finish: copy16  record_ptr, filerecords_free_start
         bit     LCBANK1
 
         jsr     _DoClose
-        jsr     SetCursorPointer ; after loading directory
+        jsr     SetCursorPointer ; after loading directory (success)
         jsr     PopPointers      ; do not tail-call optimise!
         rts
 
@@ -6789,7 +6789,7 @@ suppress_error_on_open_flag:
     END_IF
 
         ;; And return via saved stack.
-        jsr     SetCursorPointer
+        jsr     SetCursorPointer ; after loading directory (failure)
         ldx     saved_stack
         txs
 .endproc ; _HandleFailure
@@ -11728,9 +11728,9 @@ common: jsr     GetSrcFileInfo
 
         lda     src_file_info_params::storage_type
     IF A IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
-        jsr     SetCursorWatch
+        jsr     SetCursorWatch  ; before directory enumeration
         jsr     _GetDirSize
-        jsr     SetCursorPointer
+        jsr     SetCursorPointer ; after directory enumeration
         jsr     GetSrcFileInfo  ; needed for toggling lock
     END_IF
         ;; --------------------------------------------------
@@ -11766,8 +11766,8 @@ write_protected_flag:
     IF X = selected_icon_count
         lda     #kPromptButtonsOKOnly
     END_IF
-        jsr     OpenPromptWindow
-        jsr     SetPortForDialogWindow
+        jsr     OpenPromptDialog
+        jsr     SetPortForPromptDialog
 
         CALL    DrawDialogTitle, AX=#aux::label_get_info
 
@@ -11871,7 +11871,7 @@ write_protected_flag:
         stx     locked_button::state
         BTK_CALL BTK::CheckboxDraw, locked_button
 
-        ;; Assign hooks; reset in `OpenPromptWindow`
+        ;; Assign hooks; reset in `OpenPromptDialog`
         copy16  #_HandleClick, main::PromptDialogClickHandlerHook
         copy16  #_HandleKey, main::PromptDialogKeyHandlerHook
     END_IF
@@ -11942,7 +11942,7 @@ operation_traversal_callbacks_for_getinfo:
       END_IF
     END_IF
 
-        jsr     SetPortForDialogWindow
+        jsr     SetPortForPromptDialog
         TAIL_CALL DrawDialogLabel, Y=#3 | DDL_VALUE, AX=#text_input_buf
 .endproc ; _UpdateDirSizeDisplay
 
@@ -12321,7 +12321,7 @@ loop:   jsr     _InputLoop
 .proc _DialogClose
         MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
         jsr     ClearUpdates     ; following CloseWindow
-        jsr     SetCursorPointer ; when closing dialog
+        jsr     SetCursorPointer ; when closing rename dialog (might be I-beam)
         RETURN  A=#1
 .endproc ; _DialogClose
 
@@ -12351,12 +12351,12 @@ loop:   jsr     _InputLoop
         lda     findwindow_params::window_id
       IF A = #winfo_rename_dialog::kWindowId
 
-        jsr     SetCursorIBeam
+        jsr     SetCursorIBeam  ; over rename line edit
         jmp     _InputLoop
       END_IF
     END_IF
 
-        jsr     SetCursorPointer
+        jsr     SetCursorPointer ; not over rename line edit
         jmp     _InputLoop
 .endproc ; _InputLoop
 
@@ -13065,7 +13065,7 @@ retry:  MLI_CALL OPEN, open_params
         MLI_CALL SET_MARK, set_mark_params
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
-        jmp     SetCursorPointer ; after loading overlay
+        jmp     SetCursorPointer ; after loading overlay (success)
 
 .endproc ; LoadDynamicRoutineImpl
 LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
@@ -13174,11 +13174,12 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, name_input_rect
         ASSERT_EQUALS MGTK::inrect_outside, 0
-        beq     out
-        jsr     SetCursorIBeam
+    IF NOT ZERO
+        jsr     SetCursorIBeam  ; over prompt line edit
         jmp     PromptInputLoop
+    END_IF
 
-out:    jsr     SetCursorPointer
+        jsr     SetCursorPointer ; not over prompt line edit
         jmp     PromptInputLoop
 
 ;;; Click handler for prompt dialog
@@ -13209,6 +13210,7 @@ out:    jsr     SetCursorPointer
     END_IF
 
         bit     prompt_button_flags
+        ASSERT_EQUALS ::kPromptButtonsOKCancel & $80, $00
     IF NC
         MGTK_CALL MGTK::InRect, cancel_button::rect
       IF NOT_ZERO
@@ -13263,6 +13265,7 @@ out:    jsr     SetCursorPointer
 
       IF A = #CHAR_ESCAPE
         bit     prompt_button_flags
+        ASSERT_EQUALS ::kPromptButtonsOKCancel & $80, $00
         bpl     _HandleKeyCancel
         bmi     _HandleKeyOK    ; always
       END_IF
@@ -13372,7 +13375,7 @@ ignore: RETURN  C=1
         jsr     SetPortForProgressDialog
         CALL    DrawDialogFrame, AX=#aux::progress_dialog_frame_rect
         MGTK_CALL MGTK::FrameRect, progress_dialog_bar_frame
-        jmp     SetCursorWatch  ; undone by `CloseProgressDialog`
+        jmp     SetCursorWatch  ; before progress dialog
 .endproc ; OpenProgressDialog
 
 ;;; ============================================================
@@ -13386,7 +13389,7 @@ ignore: RETURN  C=1
 .proc CloseProgressDialog
         MGTK_CALL MGTK::CloseWindow, winfo_progress_dialog::window_id
         jsr     ClearUpdates     ; following CloseWindow
-        jmp     SetCursorPointer ; when closing dialog
+        jmp     SetCursorPointer ; after progress dialog
 .endproc ; CloseProgressDialog
 
 ;;; ============================================================
@@ -13875,7 +13878,7 @@ params:  .res    3
 
         PROC_USED_IN_OVERLAY
 
-.proc OpenPromptWindow
+.proc OpenPromptDialog
         sta     prompt_button_flags
 
         copy8   #0, text_input_buf
@@ -13891,24 +13894,25 @@ params:  .res    3
         copy16  #NoOp, PromptDialogKeyHandlerHook
 
         MGTK_CALL MGTK::OpenWindow, winfo_prompt_dialog
-        jsr     SetPortForDialogWindow
+        jsr     SetPortForPromptDialog
         CALL    DrawDialogFrame, AX=#aux::prompt_dialog_frame_rect
 
         BTK_CALL BTK::Draw, ok_button
         bit     prompt_button_flags
+        ASSERT_EQUALS ::kPromptButtonsOKCancel & $80, $00
     IF NC
         BTK_CALL BTK::Draw, cancel_button
     END_IF
 
         rts
-.endproc ; OpenPromptWindow
+.endproc ; OpenPromptDialog
 
 ;;; ============================================================
 
         PROC_USED_IN_OVERLAY
-.proc SetPortForDialogWindow
+.proc SetPortForPromptDialog
         TAIL_CALL SafeSetPortFromWindowId, A=#winfo_prompt_dialog::kWindowId
-.endproc ; SetPortForDialogWindow
+.endproc ; SetPortForPromptDialog
 
 ;;; ============================================================
 
