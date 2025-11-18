@@ -564,23 +564,6 @@ function apple2.WriteSSW(symbol, value)
   mem:write_u8(ssw[symbol], value)
 end
 
--- TODO: Build an API around this
-function apple2.DumpReadableStates()
-  function IsHi(ident)
-    if apple2.ReadSSW(ident) > 127 then
-      return "true"
-    else
-      return "false"
-    end
-  end
-
-  print("text?   " .. IsHi("RDTEXT"))
-  print("mixed?  " .. IsHi("RDMIXED"))
-  print("page2?  " .. IsHi("RDPAGE2"))
-  print("hires?  " .. IsHi("RDHIRES"))
-  print("altchr? " .. IsHi("RDALTCHR"))
-  print("80vid?  " .. IsHi("RD80VID"))
-end
 
 --------------------------------------------------
 
