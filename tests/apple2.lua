@@ -509,26 +509,52 @@ local ssw = {
   CLOCKCTL     = 0xC034,        -- IIgs
   SHADOW       = 0xC035,        -- IIgs
 
-  -- Video mode
-  TXTCLR       = 0xC050,        -- (R/W)
-  TXTSET       = 0xC051,        -- (R/W)
-  MIXCLR       = 0xC052,        -- (R/W)
-  MIXSET       = 0xC053,        -- (R/W)
-  PAGE2OFF     = 0xC054,        -- (R/W)
-  PAGE2ON      = 0xC055,        -- (R/W)
-  HIRESON      = 0xC056,        -- (R/W)
-  HIRESOFF     = 0xC057,        -- (R/W)
+  TXTCLR       = 0xC050,        -- (R/W) Graphics
+  TXTSET       = 0xC051,        -- (R/W) Text
+  MIXCLR       = 0xC052,        -- (R/W) Fullscreen
+  MIXSET       = 0xC053,        -- (R/W) Mixed screen
+  PAGE2OFF     = 0xC054,        -- (R/W) Page 1
+  PAGE2ON      = 0xC055,        -- (R/W) Page 2
+  HIRESOFF     = 0xC056,        -- (R/W) High resolution graphics
+  HIRESON      = 0xC057,        -- (R/W) Low resolution graphics
 
-  AN3_OFF      = 0xC05E,
-  AN3_ON       = 0xC05F,
+  DISVBL       = 0xC05A,        -- (W) Disable VBL interrupts      (IIc)
+  ENVBL        = 0xC05B,        -- (W) Enable VBL interrupts       (IIc)
 
-  STATEREG     = 0xC068,         -- Mega II chip (IIgs, etc)
+  AN0_OFF      = 0xC058,        -- (W)
+  AN0_ON       = 0xC059,        -- (W)
+  AN1_OFF      = 0xC05A,        -- (W)
+  AN1_ON       = 0xC05B,        -- (W)
+  AN2_OFF      = 0xC05C,        -- (W)
+  AN2_ON       = 0xC05D,        -- (W)
+  AN3_OFF      = 0xC05E,        -- (W)
+  AN3_ON       = 0xC05F,        -- (W)
+  DHIRESON     = 0xC05E,        -- (W) Double high resolution graphics on
+  DHIRESOFF    = 0xC05F,        -- (W) Double high resolution graphics off
 
+
+  BUTN0        = 0xC061,        -- (R)
+  BUTN1        = 0xC062,        -- (R)
+  BUTN2        = 0xC063,        -- (R)
+  PDL0         = 0xC064,        -- (R)
+  PDL1         = 0xC065,        -- (R)
+  PDL2         = 0xC066,        -- (R)
+  PDL3         = 0xC067,        -- (R)
+
+  STATEREG     = 0xC068,        -- Mega II chip (IIgs, etc)
+
+  PTRIG        = 0xC070,
 
   RAMWORKS_BANK   = 0xC073,
-  LASER128EX_CFG  = 0xC074,      -- high two bits control speed
+  LASER128EX_CFG  = 0xC074,     -- high two bits control speed
 
-  ROMIN2       = 0xC082,         -- (W) Read ROM; no write
+  IOUDISON     = 0xC07E,        -- (W) Disable IOU access          (IIc)
+  RDIOUDIS     = 0xC07E,        -- (R7) Read IOUDIS switch (1=on)  (IIc)
+  IOUDISOFFF   = 0xC07F,        -- (W) Enable IOU access           (IIc)
+
+  RDDHIRES     = 0xC07F,        -- (R7) Read DHIRES switch (1=on)  (IIc)
+
+  ROMIN2       = 0xC082,        -- (W) Read ROM; no write
 }
 
 function apple2.ReadSSW(symbol)
