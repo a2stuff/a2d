@@ -462,27 +462,86 @@ end
 local cpu = manager.machine.devices[":maincpu"]
 local mem = cpu.spaces["program"]
 
+local ssw = {
+  KBD          = 0xC000,        -- (R) keyboard
+  CLR80STORE   = 0xC000,        -- (W) restore normal PAGE2 control
+  SET80STORE   = 0xC001,        -- (W) cause PAGE2 to bank display memory
+
+  RAMRDOFF     = 0xC002,        -- (W) Read from main 48K RAM ($200-$BFFF)
+  RAMRDON      = 0xC003,        -- (W) Read from auxiliary 48K RAM ($200-$BFFF)
+  RAMWRTOFF    = 0xC004,        -- (W) Write to main 48K RAM ($200-$BFFF)
+  RAMWRTON     = 0xC005,        -- (W) Write to auxiliary 48K RAM ($200-$BFFF)
+  SETSLOTCXROM = 0xC006,        -- (W) Bank in slot ROM in $C100-$CFFF      (IIe/IIgs)
+  SETINTCXROM  = 0xC007,        -- (W) Bank in internal ROM in $C100-$CFFF  (IIe/IIgs)
+  ALTZPOFF     = 0xC008,        -- (W) Use main zero page/stack/LC
+  ALTZPON      = 0xC009,        -- (W) Use aux zero page/stack/LC
+  SETINTC3ROM  = 0xC006,        -- (W) ROM in Slot 3                        (IIe/IIgs)
+  SETSLOTC3ROM = 0xC007,        -- (W) ROM in Aux Slot                      (IIe/IIgs)
+  CLR80VID     = 0xC00C,        -- (W) Disable 80-column hardware
+  SET80VID     = 0xC00D,        -- (W) Enable 80-column hardware
+  CLRALTCHAR   = 0xC00E,        -- (W) Primary character set
+  SETALTCHAR   = 0xC00F,        -- (W) Alternate character set (MouseText)
+
+  KBDSTRB      = 0xC010,        -- (R/W) clear keyboard strobe
+  RDLCBNK2     = 0xC011,        -- (R7) bit 7=1 if LCBANK2 enabled
+  RDLCRAM      = 0xC012,        -- (R7) bit 7=1 if LC RAM (0=ROM)
+  RDRAMRD      = 0xC013,        -- (R7) bit 7=1 if reading auxiliary RAM
+  RDRAMWRT     = 0xC014,        -- (R7) bit 7=1 if writing auxiliary RAM
+  RDCXROM      = 0xC015,        -- (R7)                                     (IIe/IIgs)
+  RDALTZP      = 0xC016,        -- (R7) bit 7=1 if auxiliary ZP/stack/LC enabled
+  RDC3ROM      = 0XC017,        -- (R7)                                     (IIe/IIgs)
+  RD80STORE    = 0xC018,        -- (R7) bit 7=1 if 80STORE enabled
+  RDVBL        = 0xC019,        -- (R7) Vertical blanking
+  RDTEXT       = 0xC01A,        -- (R7) bit 7=1 if text
+  RDMIXED      = 0xC01B,        -- (R7) bit 7=1 if mixed
+  RDPAGE2      = 0xC01C,        -- (R7) bit 7=1 if PAGE2 on
+  RDHIRES      = 0xC01D,
+  RDALTCHAR    = 0xC01E,        -- (R7) bit 7=1 if ALTCHAR on
+  RD80VID      = 0xC01F,
+
+  MONOCOLOR    = 0xC021,        -- IIgs - bit 7=1 switches composite to mono
+  TBCOLOR      = 0xC022,        -- IIgs - text foreground/background colors
+  KEYMODREG    = 0xC025,        -- IIgs - keyboard modifiers
+  NEWVIDEO     = 0xC029,        -- IIgs - new video modes
+  MACIIE       = 0xC02B,        -- Macintosh IIe Option Card
+
+  SPKR         = 0xC030,
+  CLOCKCTL     = 0xC034,        -- IIgs
+  SHADOW       = 0xC035,        -- IIgs
+
+  -- Video mode
+  TXTCLR       = 0xC050,        -- (R/W)
+  TXTSET       = 0xC051,        -- (R/W)
+  MIXCLR       = 0xC052,        -- (R/W)
+  MIXSET       = 0xC053,        -- (R/W)
+  PAGE2OFF     = 0xC054,        -- (R/W)
+  PAGE2ON      = 0xC055,        -- (R/W)
+  HIRESON      = 0xC056,        -- (R/W)
+  HIRESOFF     = 0xC057,        -- (R/W)
+
+  AN3_OFF      = 0xC05E,
+  AN3_ON       = 0xC05F,
+
+  STATEREG     = 0xC068,         -- Mega II chip (IIgs, etc)
+
+
+  RAMWORKS_BANK   = 0xC073,
+  LASER128EX_CFG  = 0xC074,      -- high two bits control speed
+
+  ROMIN2       = 0xC082,         -- (W) Read ROM; no write
+}
+
+function apple2.ReadSSW(symbol)
+  return mem:read_u8(ssw[symbol])
+end
+function apple2.WriteSSW(symbol, value)
+  mem:write_u8(ssw[symbol], value)
+end
+
 -- TODO: Build an API around this
 function apple2.DumpReadableStates()
-  local ssw = {
-    RDBNK2    = 0xC011,
-    RDLCRAM   = 0xC012,
-    RDRAMRD   = 0xC013,
-    RDRAMWRT  = 0xC014,
-    RDCXROM   = 0xC015,
-    RDALTZP   = 0xC016,
-    RDC3ROM   = 0XC017,
-    RD80STORE = 0xC018,
-    RDVBL     = 0xC019,
-    RDTEXT    = 0xC01A,
-    RDMIXED   = 0xC01B,
-    RDPAGE2   = 0xC01C,
-    RDHIRES   = 0xC01D,
-    RDALTCHAR = 0xC01E,
-    RD80VID   = 0xC01F,
-  }
   function IsHi(ident)
-    if mem:read_u8(ssw[ident]) > 127 then
+    if apple2.ReadSSW(ident) > 127 then
       return "true"
     else
       return "false"
