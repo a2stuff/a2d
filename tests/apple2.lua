@@ -428,14 +428,27 @@ end
 -- Memory
 --------------------------------------------------
 
+-- This is a hardware view of memory
 local ram = emu.item(machine.devices[":ram"].items["0/m_pointer"])
+
+-- LCBANK1 is presented at $C000
+-- LCBANK2 is presented at $D000
 
 function apple2.ReadRAM(addr)
   -- Apple IIe exposes Aux RAM as a separate device
   if addr > 0x10000 and auxram ~= nil then
     return auxram:read(addr - 0x10000)
   else
-    return ram.read(addr)
+    return ram:read(addr)
+  end
+end
+
+function apple2.WriteRAM(addr, value)
+  -- Apple IIe exposes Aux RAM as a separate device
+  if addr > 0x10000 and auxram ~= nil then
+    auxram:write(addr - 0x10000, value)
+  else
+    ram:write(addr, value)
   end
 end
 
@@ -443,25 +456,46 @@ end
 -- Machine State
 --------------------------------------------------
 
-    --[[ Machine state query?
-      print("page: " .. emu.item(machine.devices[":a2video"].items["0/m_page2"]):read(0))
-      print("mix: "  .. emu.item(machine.devices[":a2video"].items["0/m_mix"]):read(0))
-      print("graphics: " .. emu.item(machine.devices[":a2video"].items["0/m_graphics"]):read(0))
-      print("hires: " .. emu.item(machine.devices[":a2video"].items["0/m_hires"]):read(0))
-      print("dhires: " .. emu.item(machine.devices[":a2video"].items["0/m_dhires"]):read(0))
-      print("80col: " .. emu.item(machine.devices[":a2video"].items["0/m_80col"]):read(0))
-      print("80store: " .. emu.item(machine.devices[":a2video"].items["0/m_80store"]):read(0))
-    ]]--
-    --[[
-      This doesn't work.
-    emu.item(machine.devices[":a2video"].items["0/m_80store"]):write(0,0)
-    emu.item(machine.devices[":a2video"].items["0/m_page2"]):write(0,1)
-    emu.wait(1)
-    video:snapshot()
-    emu.item(machine.devices[":a2video"].items["0/m_page2"]):write(0,0)
-    emu.wait(1)
-    video:snapshot()
-    ]]--
+-- This is a software view of memory; i.e. banking matters!
+
+-- Most useful for reading/writing softswitches
+local cpu = manager.machine.devices[":maincpu"]
+local mem = cpu.spaces["program"]
+
+-- TODO: Build an API around this
+function apple2.DumpReadableStates()
+  local ssw = {
+    RDBNK2    = 0xC011,
+    RDLCRAM   = 0xC012,
+    RDRAMRD   = 0xC013,
+    RDRAMWRT  = 0xC014,
+    RDCXROM   = 0xC015,
+    RDALTZP   = 0xC016,
+    RDC3ROM   = 0XC017,
+    RD80STORE = 0xC018,
+    RDVBL     = 0xC019,
+    RDTEXT    = 0xC01A,
+    RDMIXED   = 0xC01B,
+    RDPAGE2   = 0xC01C,
+    RDHIRES   = 0xC01D,
+    RDALTCHAR = 0xC01E,
+    RD80VID   = 0xC01F,
+  }
+  function IsHi(ident)
+    if mem:read_u8(ssw[ident]) > 127 then
+      return "true"
+    else
+      return "false"
+    end
+  end
+
+  print("text?   " .. IsHi("RDTEXT"))
+  print("mixed?  " .. IsHi("RDMIXED"))
+  print("page2?  " .. IsHi("RDPAGE2"))
+  print("hires?  " .. IsHi("RDHIRES"))
+  print("altchr? " .. IsHi("RDALTCHR"))
+  print("80vid?  " .. IsHi("RD80VID"))
+end
 
 --------------------------------------------------
 

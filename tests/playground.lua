@@ -70,6 +70,8 @@ local c = coroutine.create(function()
         return test.PASS
     end)
 
+    apple2.DumpReadableStates()
+
     os.exit(0)
 end)
 coroutine.resume(c)
