@@ -429,12 +429,12 @@ end
 --------------------------------------------------
 
 -- This is a hardware view of memory
+-- * It does not reflect bank states; aux starts at is 0x10000
+-- * LCBANK1 is presented at $C000 (!!!)
+-- * LCBANK2 is presented at $D000
 local ram = emu.item(machine.devices[":ram"].items["0/m_pointer"])
 
--- LCBANK1 is presented at $C000
--- LCBANK2 is presented at $D000
-
-function apple2.ReadRAM(addr)
+function apple2.ReadRAMDevice(addr)
   -- Apple IIe exposes Aux RAM as a separate device
   if addr > 0x10000 and auxram ~= nil then
     return auxram:read(addr - 0x10000)
@@ -443,7 +443,7 @@ function apple2.ReadRAM(addr)
   end
 end
 
-function apple2.WriteRAM(addr, value)
+function apple2.WriteRAMDevice(addr, value)
   -- Apple IIe exposes Aux RAM as a separate device
   if addr > 0x10000 and auxram ~= nil then
     auxram:write(addr - 0x10000, value)
@@ -461,6 +461,14 @@ end
 -- Most useful for reading/writing softswitches
 local cpu = manager.machine.devices[":maincpu"]
 local mem = cpu.spaces["program"]
+
+function apple2.ReadMemory(addr)
+  return mem:read_u8(addr)
+end
+
+function apple2.WriteMemory(addr, value)
+  return mem:write_u8(addr, value)
+end
 
 local ssw = {
   KBD          = 0xC000,        -- (R) keyboard
@@ -558,12 +566,11 @@ local ssw = {
 }
 
 function apple2.ReadSSW(symbol)
-  return mem:read_u8(ssw[symbol])
+  return apple2.ReadMemory(ssw[symbol])
 end
 function apple2.WriteSSW(symbol, value)
-  mem:write_u8(ssw[symbol], value)
+  apple2.WriteMemory(ssw[symbol], value)
 end
-
 
 --------------------------------------------------
 

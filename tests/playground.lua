@@ -85,6 +85,18 @@ local c = coroutine.create(function()
     print("altchr? " .. IsHi("RDALTCHR"))
     print("80vid?  " .. IsHi("RD80VID"))
 
+    --[[
+    local last = apple2.ReadMemory(0x2000)
+    while true do
+      emu.wait(5/60)
+      local cur = apple2.ReadMemory(0x2000)
+      if cur ~= last then
+        print("Now is " .. cur)
+        last = cur
+      end
+      end
+    ]]--
+
     os.exit(0)
 end)
 coroutine.resume(c)
