@@ -70,6 +70,21 @@ local c = coroutine.create(function()
         return test.PASS
     end)
 
+    function IsHi(ident)
+      if apple2.ReadSSW(ident) > 127 then
+        return "true"
+      else
+        return "false"
+      end
+    end
+
+    print("text?   " .. IsHi("RDTEXT"))
+    print("mixed?  " .. IsHi("RDMIXED"))
+    print("page2?  " .. IsHi("RDPAGE2"))
+    print("hires?  " .. IsHi("RDHIRES"))
+    print("altchr? " .. IsHi("RDALTCHR"))
+    print("80vid?  " .. IsHi("RD80VID"))
+
     os.exit(0)
 end)
 coroutine.resume(c)

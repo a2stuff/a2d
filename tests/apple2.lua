@@ -428,14 +428,27 @@ end
 -- Memory
 --------------------------------------------------
 
+-- This is a hardware view of memory
 local ram = emu.item(machine.devices[":ram"].items["0/m_pointer"])
+
+-- LCBANK1 is presented at $C000
+-- LCBANK2 is presented at $D000
 
 function apple2.ReadRAM(addr)
   -- Apple IIe exposes Aux RAM as a separate device
   if addr > 0x10000 and auxram ~= nil then
     return auxram:read(addr - 0x10000)
   else
-    return ram.read(addr)
+    return ram:read(addr)
+  end
+end
+
+function apple2.WriteRAM(addr, value)
+  -- Apple IIe exposes Aux RAM as a separate device
+  if addr > 0x10000 and auxram ~= nil then
+    auxram:write(addr - 0x10000, value)
+  else
+    ram:write(addr, value)
   end
 end
 
@@ -443,25 +456,114 @@ end
 -- Machine State
 --------------------------------------------------
 
-    --[[ Machine state query?
-      print("page: " .. emu.item(machine.devices[":a2video"].items["0/m_page2"]):read(0))
-      print("mix: "  .. emu.item(machine.devices[":a2video"].items["0/m_mix"]):read(0))
-      print("graphics: " .. emu.item(machine.devices[":a2video"].items["0/m_graphics"]):read(0))
-      print("hires: " .. emu.item(machine.devices[":a2video"].items["0/m_hires"]):read(0))
-      print("dhires: " .. emu.item(machine.devices[":a2video"].items["0/m_dhires"]):read(0))
-      print("80col: " .. emu.item(machine.devices[":a2video"].items["0/m_80col"]):read(0))
-      print("80store: " .. emu.item(machine.devices[":a2video"].items["0/m_80store"]):read(0))
-    ]]--
-    --[[
-      This doesn't work.
-    emu.item(machine.devices[":a2video"].items["0/m_80store"]):write(0,0)
-    emu.item(machine.devices[":a2video"].items["0/m_page2"]):write(0,1)
-    emu.wait(1)
-    video:snapshot()
-    emu.item(machine.devices[":a2video"].items["0/m_page2"]):write(0,0)
-    emu.wait(1)
-    video:snapshot()
-    ]]--
+-- This is a software view of memory; i.e. banking matters!
+
+-- Most useful for reading/writing softswitches
+local cpu = manager.machine.devices[":maincpu"]
+local mem = cpu.spaces["program"]
+
+local ssw = {
+  KBD          = 0xC000,        -- (R) keyboard
+  CLR80STORE   = 0xC000,        -- (W) restore normal PAGE2 control
+  SET80STORE   = 0xC001,        -- (W) cause PAGE2 to bank display memory
+
+  RAMRDOFF     = 0xC002,        -- (W) Read from main 48K RAM ($200-$BFFF)
+  RAMRDON      = 0xC003,        -- (W) Read from auxiliary 48K RAM ($200-$BFFF)
+  RAMWRTOFF    = 0xC004,        -- (W) Write to main 48K RAM ($200-$BFFF)
+  RAMWRTON     = 0xC005,        -- (W) Write to auxiliary 48K RAM ($200-$BFFF)
+  SETSLOTCXROM = 0xC006,        -- (W) Bank in slot ROM in $C100-$CFFF      (IIe/IIgs)
+  SETINTCXROM  = 0xC007,        -- (W) Bank in internal ROM in $C100-$CFFF  (IIe/IIgs)
+  ALTZPOFF     = 0xC008,        -- (W) Use main zero page/stack/LC
+  ALTZPON      = 0xC009,        -- (W) Use aux zero page/stack/LC
+  SETINTC3ROM  = 0xC006,        -- (W) ROM in Slot 3                        (IIe/IIgs)
+  SETSLOTC3ROM = 0xC007,        -- (W) ROM in Aux Slot                      (IIe/IIgs)
+  CLR80VID     = 0xC00C,        -- (W) Disable 80-column hardware
+  SET80VID     = 0xC00D,        -- (W) Enable 80-column hardware
+  CLRALTCHAR   = 0xC00E,        -- (W) Primary character set
+  SETALTCHAR   = 0xC00F,        -- (W) Alternate character set (MouseText)
+
+  KBDSTRB      = 0xC010,        -- (R/W) clear keyboard strobe
+  RDLCBNK2     = 0xC011,        -- (R7) bit 7=1 if LCBANK2 enabled
+  RDLCRAM      = 0xC012,        -- (R7) bit 7=1 if LC RAM (0=ROM)
+  RDRAMRD      = 0xC013,        -- (R7) bit 7=1 if reading auxiliary RAM
+  RDRAMWRT     = 0xC014,        -- (R7) bit 7=1 if writing auxiliary RAM
+  RDCXROM      = 0xC015,        -- (R7)                                     (IIe/IIgs)
+  RDALTZP      = 0xC016,        -- (R7) bit 7=1 if auxiliary ZP/stack/LC enabled
+  RDC3ROM      = 0XC017,        -- (R7)                                     (IIe/IIgs)
+  RD80STORE    = 0xC018,        -- (R7) bit 7=1 if 80STORE enabled
+  RDVBL        = 0xC019,        -- (R7) Vertical blanking
+  RDTEXT       = 0xC01A,        -- (R7) bit 7=1 if text
+  RDMIXED      = 0xC01B,        -- (R7) bit 7=1 if mixed
+  RDPAGE2      = 0xC01C,        -- (R7) bit 7=1 if PAGE2 on
+  RDHIRES      = 0xC01D,
+  RDALTCHAR    = 0xC01E,        -- (R7) bit 7=1 if ALTCHAR on
+  RD80VID      = 0xC01F,
+
+  MONOCOLOR    = 0xC021,        -- IIgs - bit 7=1 switches composite to mono
+  TBCOLOR      = 0xC022,        -- IIgs - text foreground/background colors
+  KEYMODREG    = 0xC025,        -- IIgs - keyboard modifiers
+  NEWVIDEO     = 0xC029,        -- IIgs - new video modes
+  MACIIE       = 0xC02B,        -- Macintosh IIe Option Card
+
+  SPKR         = 0xC030,
+  CLOCKCTL     = 0xC034,        -- IIgs
+  SHADOW       = 0xC035,        -- IIgs
+
+  TXTCLR       = 0xC050,        -- (R/W) Graphics
+  TXTSET       = 0xC051,        -- (R/W) Text
+  MIXCLR       = 0xC052,        -- (R/W) Fullscreen
+  MIXSET       = 0xC053,        -- (R/W) Mixed screen
+  PAGE2OFF     = 0xC054,        -- (R/W) Page 1
+  PAGE2ON      = 0xC055,        -- (R/W) Page 2
+  HIRESOFF     = 0xC056,        -- (R/W) High resolution graphics
+  HIRESON      = 0xC057,        -- (R/W) Low resolution graphics
+
+  DISVBL       = 0xC05A,        -- (W) Disable VBL interrupts      (IIc)
+  ENVBL        = 0xC05B,        -- (W) Enable VBL interrupts       (IIc)
+
+  AN0_OFF      = 0xC058,        -- (W)
+  AN0_ON       = 0xC059,        -- (W)
+  AN1_OFF      = 0xC05A,        -- (W)
+  AN1_ON       = 0xC05B,        -- (W)
+  AN2_OFF      = 0xC05C,        -- (W)
+  AN2_ON       = 0xC05D,        -- (W)
+  AN3_OFF      = 0xC05E,        -- (W)
+  AN3_ON       = 0xC05F,        -- (W)
+  DHIRESON     = 0xC05E,        -- (W) Double high resolution graphics on
+  DHIRESOFF    = 0xC05F,        -- (W) Double high resolution graphics off
+
+
+  BUTN0        = 0xC061,        -- (R)
+  BUTN1        = 0xC062,        -- (R)
+  BUTN2        = 0xC063,        -- (R)
+  PDL0         = 0xC064,        -- (R)
+  PDL1         = 0xC065,        -- (R)
+  PDL2         = 0xC066,        -- (R)
+  PDL3         = 0xC067,        -- (R)
+
+  STATEREG     = 0xC068,        -- Mega II chip (IIgs, etc)
+
+  PTRIG        = 0xC070,
+
+  RAMWORKS_BANK   = 0xC073,
+  LASER128EX_CFG  = 0xC074,     -- high two bits control speed
+
+  IOUDISON     = 0xC07E,        -- (W) Disable IOU access          (IIc)
+  RDIOUDIS     = 0xC07E,        -- (R7) Read IOUDIS switch (1=on)  (IIc)
+  IOUDISOFFF   = 0xC07F,        -- (W) Enable IOU access           (IIc)
+
+  RDDHIRES     = 0xC07F,        -- (R7) Read DHIRES switch (1=on)  (IIc)
+
+  ROMIN2       = 0xC082,        -- (W) Read ROM; no write
+}
+
+function apple2.ReadSSW(symbol)
+  return mem:read_u8(ssw[symbol])
+end
+function apple2.WriteSSW(symbol, value)
+  mem:write_u8(ssw[symbol], value)
+end
+
 
 --------------------------------------------------
 
