@@ -199,8 +199,8 @@ SHADOW          := $C035        ; IIgs - inhibit shadowing
 ;;; Video mode
 PAGE2OFF        := $C054
 PAGE2ON         := $C055
-HIRESON         := $C056
-HIRESOFF        := $C057
+HIRESOFF        := $C056
+HIRESON         := $C057
 
 AN3_OFF         := $C05E
 AN3_ON          := $C05F

@@ -217,7 +217,7 @@ event_params:   .tag MGTK::Event
 
 .proc Run
 
-        lda     HIRESON
+        lda     HIRESOFF
         jsr     setgr
         jsr     HOME
         lda     #$16
@@ -316,7 +316,7 @@ exit:   pla                     ;pop stack
         pla
         jsr     settx
         lda     fullscr
-        lda     HIRESOFF
+        lda     HIRESON
         rts                     ;return to A2D
 ;
 ; Plot via table lookup
