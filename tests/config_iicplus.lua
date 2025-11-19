@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2cp"
-MODELARGS="-ramsize 1152K"
+MODELARGS="-ramsize 1152K -gameio joy"
 DISKARGS="-flop3 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
 
 ======================================== ENDCONFIG ]]--
@@ -38,6 +38,8 @@ local c = coroutine.create(function()
         emu.wait(3) -- IIc emulation is very slow
         test.Snap()
         a2d.CloseWindow()
+        test.ExpectEquals(apple2.ReadRAMDevice(0x2000+40), 0x55, "DHR access")
+        test.ExpectEquals(apple2.ReadRAMDevice(0x12000+40), 0x2A, "DHR access")
         return test.PASS
     end)
 

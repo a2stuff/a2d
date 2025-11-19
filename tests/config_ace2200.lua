@@ -1,8 +1,8 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="las128ex"
-MODELARGS="-ramsize 1152K -sl7 cffa2"
-DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_140k_disk1.po"
+MODEL="ace2200"
+MODELARGS="-sl2 mouse -sl7 cffa2"
+DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
 
 ======================================== ENDCONFIG ]]--
 
@@ -27,13 +27,21 @@ local c = coroutine.create(function()
 
     ============================================================]]--
 
+    -- ACE 2200 does not auto-start with anythng but floppies
+    emu.wait(1)
+    apple2.ControlReset()
+    apple2.Type("PR#7")
+    apple2.ReturnKey()
+
     -- Wait for DeskTop to start
     a2d.WaitForRestart()
+    emu.wait(5) -- slow floppy drives
 
     test.Step(
       "Apple > About This Apple II",
       function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+        emu.wait(5) -- slow floppy drives
         test.Snap()
         a2d.CloseWindow()
         test.ExpectEquals(apple2.ReadRAMDevice(0x2000+40), 0x55, "DHR access")

@@ -1,8 +1,8 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="las128ex"
-MODELARGS="-ramsize 1152K -sl7 cffa2"
-DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_140k_disk1.po"
+MODEL="apple2ee"
+MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
+DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
 
 ======================================== ENDCONFIG ]]--
 
