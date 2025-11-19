@@ -1761,7 +1761,7 @@ The following steps exercise the menu as "drop down" using the keyboard to initi
   * Use keys to double-click on an icon. Verify it opens.
 
 
-# Keyboard Window Control
+# Keyboard Window Control - covered by `tests/keyboard_window_control.md`
 
 These shortcuts only apply in DeskTop.
 
