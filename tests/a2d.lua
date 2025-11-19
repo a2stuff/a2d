@@ -187,7 +187,7 @@ function a2d.OpenSelection()
 end
 
 function a2d.SelectAndOpen(name)
-  apple2.TypeSlow(name, 1/16)
+  apple2.Type(name)
   a2d.OpenSelection()
 end
 
