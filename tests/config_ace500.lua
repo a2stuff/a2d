@@ -1,8 +1,8 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="las128ex"
-MODELARGS="-ramsize 1152K -sl7 cffa2"
-DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_140k_disk1.po"
+MODEL="ace500"
+MODELARGS=""
+DISKARGS="-flop1 out/A2DeskTop-1.6-alpha0-en_140k_disk1.po"
 
 ======================================== ENDCONFIG ]]--
 

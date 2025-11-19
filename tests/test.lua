@@ -22,13 +22,14 @@ function test.Step(title, func)
   end
 
   print("-- " .. title)
-  if not func() then
-    test.Failure("test \"" .. title .. "\" did not return success")
+  local status, err = pcall(func)
+  if not status then
+    test.Failure(err)
   end
 end
 
 function test.Failure(message)
-  print("FAIL: " .. message)
+  print(message)
   os.exit(1)
 end
 
@@ -37,6 +38,16 @@ function test.Snap(opt_title)
     print("--- " .. opt_title)
   end
   manager.machine.video:snapshot()
+end
+
+function test.Expect(expr, message)
+  if not expr then
+    error("Expectation failure: " .. message)
+  end
+end
+
+function test.ExpectEquals(actual, expected, message)
+  test.Expect(actual == expected, message .. " - " .. actual .. " should equal " .. expected)
 end
 
 --------------------------------------------------

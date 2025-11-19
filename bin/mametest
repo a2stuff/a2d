@@ -118,7 +118,8 @@ pushd "$MAMEDIR" > /dev/null
   $OUTPUTARGS \
   $MODEL $MODELARGS $DISKARGS \
   -nothrottle -nosleep \
-  $SCRIPTARGS
+  $SCRIPTARGS \
+  2>&1 | egrep -v "Secure coding is automatically enabled"
 
 popd > /dev/null
 

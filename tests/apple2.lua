@@ -8,8 +8,6 @@
 local apple2 = {}
 
 local machine = manager.machine
-local ioport = machine.ioport
-local kbd = machine.natkeyboard
 
 --------------------------------------------------
 -- System Abstractions
@@ -38,32 +36,26 @@ local keyboard = {
   ["Reset"] = { port = ":keyb_special", field = "RESET" },
 }
 
+function get_device(pattern)
+  for name,dev in pairs(machine.devices) do
+    if name:match(pattern) then return dev end
+  end
+  error("Failed to find device " .. pattern)
+end
+
+
+local scan_for_mouse = false
 if machine.system.name:match("^apple2e") then
   -- Apple IIe
-  local auxdev, mousedev
-  for devname,j in pairs(machine.devices) do
-    if devname:match("^:aux:") then auxdev = devname end
-    if devname:match("^:sl.:mouse$") then mousedev = devname end
-  end
+  -- * mouse card required
+  -- * many possible aux memory devices
+  scan_for_mouse = true
+  auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
 
-  if auxdev == nil then
-    error("Failed to identify aux memory device")
-  end
-  if mousedev == nil then
-    error("Failed to identify mouse device")
-  end
-
-  mouse = {
-    x = { port = mousedev .. ":a2mse_x",      field = "Mouse X" },
-    y = { port = mousedev .. ":a2mse_y",      field = "Mouse Y" },
-    b = { port = mousedev .. ":a2mse_button", field = "Mouse Button" },
-  }
-
-  auxram = emu.item(machine.devices[auxdev].items["0/m_ram"])
 elseif machine.system.name:match("^apple2c") then
   -- Apple IIc / Apple IIc Plus
-  -- * has built-in mouse port
-  -- * Aux memory is just exposed as RAM > 0xFFFF
+  -- * built-in mouse port
+  -- * aux memory is just exposed as RAM > 0xFFFF
   mouse = {
     x = { port = ":mse_x",      field = "Mouse X" },
     y = { port = ":mse_y",      field = "Mouse Y" },
@@ -71,20 +63,21 @@ elseif machine.system.name:match("^apple2c") then
   }
 elseif machine.system.name:match("^las.*128") then
   -- Laser 128
-  -- * has built-in mouse port
-  -- * Aux memory is just exposed as RAM > 0xFFFF
+  -- * built-in mouse port
+  -- * aux memory is just exposed as RAM > 0xFFFF
   mouse = {
     x = { port = ":mse_x",      field = "Mouse X" },
     y = { port = ":mse_y",      field = "Mouse Y" },
     b = { port = ":mse_button", field = "Mouse Button" },
   }
+
   keyboard["Open Apple"].field = "Open Triangle"
   keyboard["Solid Apple"].field = "Solid Triangle"
 
 elseif machine.system.name:match("^apple2gs") then
   -- Apple IIgs
-  -- * has built-in mouse port (ADB)
-  -- * Aux memory is just exposed as RAM > 0xFFFF
+  -- * built-in mouse port (ADB)
+  -- * aux memory is just exposed as RAM > 0xFFFF
   mouse = {
     x = { port = ":macadb:MOUSE1", field = "Mouse X" },
     y = { port = ":macadb:MOUSE2", field = "Mouse Y" },
@@ -109,8 +102,45 @@ elseif machine.system.name:match("^apple2gs") then
     -- Other
     ["Reset"] = { port = ":macadb:KEY5", field = "Reset / Power" },
   }
+elseif machine.system.name:match("^ace500") then
+  -- Franklin ACE 500
+  -- * has built-in mouse port
+  -- * built-in aux memory device
+  auxram = emu.item(get_device("^:aux$").items["0/m_ram"])
+
+  mouse = {
+    x = { port = ":mse_x",      field = "Mouse X" },
+    y = { port = ":mse_y",      field = "Mouse Y" },
+    b = { port = ":mse_button", field = "Mouse Button" },
+  }
+
+  keyboard["Open Apple"].field = "Open F"
+  keyboard["Solid Apple"].field = "Solid F"
+  keyboard["Reset"].field = "RESET"
+
+elseif machine.system.name:match("^ace2200") then
+  -- Franklin ACE 2200
+  -- * mouse card required
+  -- * built-in aux memory device
+  auxram = emu.item(get_device("^:aux$").items["0/m_ram"])
+
+  scan_for_mouse = true
+
+  keyboard["Open Apple"].field = "Open F"
+  keyboard["Solid Apple"].field = "Solid F"
+  keyboard["Reset"].field = "RESET"
 else
   error("Unknown model: " .. machine.system.name)
+end
+
+if scan_for_mouse then
+  local mousedev = get_device("^:sl.:mouse$").tag
+  -- TODO: Allow operation without a mouse
+  mouse = {
+    x = { port = mousedev .. ":a2mse_x",      field = "Mouse X" },
+    y = { port = mousedev .. ":a2mse_y",      field = "Mouse Y" },
+    b = { port = mousedev .. ":a2mse_button", field = "Mouse Button" },
+  }
 end
 
 --------------------------------------------------
@@ -118,7 +148,7 @@ end
 --------------------------------------------------
 
 function get_port(port_name)
-  local port = ioport.ports[port_name]
+  local port = machine.ioport.ports[port_name]
   if port == nil then
     error("No such port: " .. port_name)
   end
@@ -240,12 +270,11 @@ function apple2.SetTextColorMode(mode)
   SetVideoConfig("Text color", mode, TEXTCOLOR_MODE_MASK, TEXTCOLOR_MODE_SHIFT)
 end
 
--- CPU types - 1MHz, 4MHz Zip Chip
--- Bootup speed: Standard, 4MHz
-
 --------------------------------------------------
 -- Keyboard Input
 --------------------------------------------------
+
+local kbd = machine.natkeyboard
 
 -- https://docs.mamedev.org/luascript/ref-input.html#natural-keyboard-manager
 function apple2.Type(sequence)
@@ -254,10 +283,13 @@ function apple2.Type(sequence)
     while kbd.is_posting do
       emu.wait(1/60)
     end
-    -- wait for key to be consumed
-    while apple2.ReadSSW('KBD') > 127 do
-      emu.wait(1/60)
-    end
+    wait_for_kbd_strobe_clear()
+  end
+end
+
+function wait_for_kbd_strobe_clear()
+  while apple2.ReadSSW("KBD") > 127 do
+    emu.wait(1/60)
   end
 end
 
@@ -297,26 +329,32 @@ end
 
 function apple2.ReturnKey()
   press_and_release("Return")
+  wait_for_kbd_strobe_clear()
 end
 
 function apple2.EscapeKey()
   press_and_release("Escape")
+  wait_for_kbd_strobe_clear()
 end
 
 function apple2.LeftArrowKey()
   press_and_release("Left Arrow")
+  wait_for_kbd_strobe_clear()
 end
 
 function apple2.RightArrowKey()
   press_and_release("Right Arrow")
+  wait_for_kbd_strobe_clear()
 end
 
 function apple2.UpArrowKey()
   press_and_release("Up Arrow")
+  wait_for_kbd_strobe_clear()
 end
 
 function apple2.DownArrowKey()
   press_and_release("Down Arrow")
+  wait_for_kbd_strobe_clear()
 end
 
 function apple2.PressOA()
@@ -392,8 +430,8 @@ function apple2.MoveMouse(x, y)
     reading:
 
     # maxes out at 256
-    ioport.ports[mouse.x.port]:read()
-    ioport.ports[mouse.y.port]:read()
+    machine.ioport.ports[mouse.x.port]:read()
+    machine.ioport.ports[mouse.y.port]:read()
 
     # this is low level hardware... need to snoop at higher level
     # maybe screen holes?
@@ -410,7 +448,7 @@ function apple2.MoveMouse(x, y)
       mouse_x = mouse_x + delta_x
       get_field(mouse.x.port, mouse.x.field):set_value(mouse_x)
       emu.wait(10/60)
-      -- print(ioport.ports[mouse.x.port]:read())
+      -- print(machine.ioport.ports[mouse.x.port]:read())
     end
   until delta_x == 0
   emu.wait(0.5)
@@ -421,7 +459,7 @@ function apple2.MoveMouse(x, y)
       mouse_y = mouse_y + delta_y
       get_field(mouse.y.port, mouse.y.field):set_value(mouse_y)
       emu.wait(10/60)
-      -- print(ioport.ports[mouse.y.port]:read())
+      -- print(machine.ioport.ports[mouse.y.port]:read())
     end
   until delta_y == 0
   emu.wait(0.5)

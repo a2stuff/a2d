@@ -28,6 +28,9 @@ function a2d.InitSystem()
     elseif system.name:match("^las.*128") then
       -- Laser 128
       apple2.SetMonitorType(apple2.MONITOR_TYPE_BW)
+    elseif system.name:match("^ace") then
+      -- Franklin ACE 500/2200
+      apple2.SetMonitorType(apple2.MONITOR_TYPE_BW)
     end
 
     -- Rendering preferences
@@ -285,6 +288,14 @@ function a2d.MouseKeysGoToApproximately(x,y)
   a2d.MouseKeysDown(round(y / MOUSE_KEYS_DELTA_Y))
 end
 
+
+--------------------------------------------------
+
+-- TODO:
+-- * Need API to get window count
+-- * Need API to get active window name
+-- * Need API to get selected icon count
+-- Idea: Generate Lua-friendly symbol table on build by processing listing file
 
 --------------------------------------------------
 
