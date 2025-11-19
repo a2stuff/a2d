@@ -76,7 +76,7 @@ end
 
 local MINIMAL_REPAINT = 0.5
 local DESKTOP_REPAINT = 1
-local DESKTOP_RESTART = 5
+local DESKTOP_RESTART = 10
 
 function a2d.WaitForRestart()
   emu.wait(DESKTOP_RESTART)
