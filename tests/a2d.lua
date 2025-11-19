@@ -75,15 +75,17 @@ end
 --------------------------------------------------
 
 local MINIMAL_REPAINT = 0.5
-local DESKTOP_REPAINT = 1
-local DESKTOP_RESTART = 10
+
+function a2d.WaitForCopyToRAMCard()
+  emu.wait(20)
+end
 
 function a2d.WaitForRestart()
-  emu.wait(DESKTOP_RESTART)
+  emu.wait(10)
 end
 
 function a2d.WaitForRepaint()
-  emu.wait(DESKTOP_REPAINT)
+  emu.wait(1)
 end
 
 --------------------------------------------------

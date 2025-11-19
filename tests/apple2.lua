@@ -614,5 +614,29 @@ function apple2.WriteSSW(symbol, value)
 end
 
 --------------------------------------------------
+-- Misc Utilities
+--------------------------------------------------
+
+function apple2.GrabTextScreen()
+  local is80 = apple2.ReadSSW("RD80VID") > 127
+  local screen = ""
+  for row = 0,23 do
+    local base = 0x400 + (row - math.floor(row/8) * 8) * 0x80 + 40 * math.floor(row/8)
+    for col = 0,39 do
+      if is80 then
+        byte = apple2.ReadRAMDevice(0x10000 + base + col)
+        byte = byte & 0x7F
+        screen = screen .. string.format("%c", byte)
+      end
+      byte = apple2.ReadRAMDevice(base + col)
+      byte = byte & 0x7F
+      screen = screen .. string.format("%c", byte)
+    end
+    screen = screen .. "\n"
+  end
+  return screen
+end
+
+--------------------------------------------------
 
 return apple2
