@@ -30,6 +30,7 @@ end
 
 function test.Failure(message)
   print(message)
+  manager.machine.video:snapshot()
   os.exit(1)
 end
 
