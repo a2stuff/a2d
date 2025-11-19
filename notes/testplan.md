@@ -1338,7 +1338,7 @@ Run these tests on a system without a real-time clock:
 * Launch DeskTop. Apple Menu > Puzzle. Scramble then solve the puzzle. After the victory sound plays, click on the puzzle again. Verify that the puzzle scrambles and that it can be solved again.
 * Launch DeskTop. Apple Menu > Puzzle. Scramble the puzzle. Move the window so that only the title bar of the window is visible on screen. Use the arrow keys to move puzzle pieces. Verify that the puzzle pieces don't mispaint on the desktop.
 
-## Run Basic Here
+## Run Basic Here - covered by `tests/run_basic_here.lua`
 
 * Launch DeskTop. Open a volume window. Apple Menu > Run Basic Here. Verify that `/RAM` exists.
 * Launch DeskTop. Open a window for a volume that is not the startup disk. Apple Menu > Run Basic Here. Verify that the PREFIX is set correctly.

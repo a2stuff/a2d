@@ -601,7 +601,7 @@ local ssw = {
   RDIOUDIS     = 0xC07E,        -- (R7) Read IOUDIS switch (1=on)  (IIc)
   IOUDISOFFF   = 0xC07F,        -- (W) Enable IOU access           (IIc)
 
-  RDDHIRES     = 0xC07F,        -- (R7) Read DHIRES switch (1=on)  (IIc)
+  RDDHIRES     = 0xC07F,        -- (R7) Read DHIRES switch (0=on)  (IIc)
 
   ROMIN2       = 0xC082,        -- (W) Read ROM; no write
 }
