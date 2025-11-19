@@ -1297,7 +1297,7 @@ Run these tests on a system without a real-time clock:
 * Launch DeskTop. Apple Menu > Control Panels. Open Map. Type a known city name e.g. "San Francisco". Click Find. Verify that the city is highlighted on the map and the Latitude/Longitude are updated.
 * Launch DeskTop. Apple Menu > Control Panels. Open Map. Wait for the blinking indicator to be visible (this will be easier to observe in emulators with acceleration disabled), and drag the window to a new location. Type a city name (e.g. "San Francisco"). Click Find. Verify that the indicator blinks correctly only in the new location.
 
-## Screen Savers
+## Screen Savers - covered by `tests/screen_savers.lua`
 
 * Launch DeskTop. Apple Menu > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
 * Configure a system with a real-time clock. Launch DeskTop. Apple Menu > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
@@ -1323,7 +1323,7 @@ Run these tests on a system without a real-time clock:
 
 * Configure a system without a RAMWorks. Verify that the DA does not erroneously detect 16MB of RAMWorks memory.
 
-## System Speed
+## System Speed - covered by `tests/system_speed.lua`
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
 * Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.

@@ -617,6 +617,15 @@ end
 -- Misc Utilities
 --------------------------------------------------
 
+-- Single hires only
+function apple2.GetHiresByte(row, col)
+  local aa = (row & 0xC0) >> 6
+  local bbb = (row & 0x38) >> 3
+  local ccc = (row & 0x07)
+  local addr = 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
+  return apple2.ReadRAMDevice(addr)
+end
+
 function apple2.GrabTextScreen()
   local is80 = apple2.ReadSSW("RD80VID") > 127
   local screen = ""

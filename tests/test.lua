@@ -51,6 +51,10 @@ function test.ExpectEquals(actual, expected, message)
   test.Expect(actual == expected, message .. " - " .. actual .. " should equal " .. expected)
 end
 
+function test.ExpectNotEquals(actual, expected, message)
+  test.Expect(actual ~= expected, message .. " - " .. actual .. " should not equal " .. expected)
+end
+
 --------------------------------------------------
 
 return test
