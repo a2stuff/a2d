@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2ee"
-MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux rw3"
 DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
 
 ======================================== ENDCONFIG ]]--
