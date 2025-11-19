@@ -20,6 +20,10 @@ local auxram
 
 -- Defaults (Apple IIe, Apple IIc)
 local keyboard = {
+  ["Return"]      = { port = ":X6", field = "Return" },
+  ["Delete"]      = { port = ":X7", field = "Delete" },
+  ["Escape"]      = { port = ":X0", field = "Esc" },
+
   ["Up Arrow"]    = { port = ":X6", field = "↑" },
   ["Left Arrow"]  = { port = ":X7", field = "←" },
   ["Right Arrow"] = { port = ":X7", field = "→" },
@@ -88,6 +92,10 @@ elseif machine.system.name:match("^apple2gs") then
   }
 
   keyboard = {
+    ["Return"]      = { port = ":macadb:KEY2", field = "Return" },
+    ["Delete"]      = { port = ":macadb:KEY7", field = "Delete" },
+    ["Escape"]      = { port = ":macadb:KEY3", field = "Esc" },
+
     ["Up Arrow"]    = { port = ":macadb:KEY3", field = "Up Arrow"    },
     ["Left Arrow"]  = { port = ":macadb:KEY3", field = "Left Arrow"  },
     ["Right Arrow"] = { port = ":macadb:KEY3", field = "Right Arrow" },
@@ -239,22 +247,17 @@ end
 -- Keyboard Input
 --------------------------------------------------
 
--- Supports embedded codes e.g. {ENTER}
 -- https://docs.mamedev.org/luascript/ref-input.html#natural-keyboard-manager
 function apple2.Type(sequence)
-  kbd:post_coded(sequence)
-  while kbd.is_posting do
-    emu.wait(0.1)
-  end
-end
-
-function apple2.TypeSlow(sequence, pacing)
   for i=1,sequence:len() do
     kbd:post(sequence:sub(i,i))
     while kbd.is_posting do
-      emu.wait(0.1)
+      emu.wait(1/60)
     end
-    emu.wait(pacing)
+    -- wait for key to be consumed
+    while apple2.ReadSSW('KBD') > 127 do
+      emu.wait(1/60)
+    end
   end
 end
 
@@ -293,11 +296,11 @@ function apple2.ControlKey(key)
 end
 
 function apple2.ReturnKey()
-  apple2.Type("{ENTER}")
+  press_and_release("Return")
 end
 
 function apple2.EscapeKey()
-  apple2.Type("{ESC}")
+  press_and_release("Escape")
 end
 
 function apple2.LeftArrowKey()
