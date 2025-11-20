@@ -22,8 +22,6 @@ local c = coroutine.create(function()
     -- Wait for DeskTop to start
     a2d.WaitForRestart()
 
-    apple2.MoveMouse(10,10)
-
     local INITIAL_HEADER_X = 280
     local INITIAL_HEADER_Y = 55
 
