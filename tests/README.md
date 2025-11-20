@@ -40,8 +40,23 @@ RESOLUTION="560x384"
 ================================================== ]]-- ENDCONFIG
 ```
 
-Files:
+# Files
 
-* `test.lua` - basic test infrastructure
-* `apple2.lua` - utilities for driving Apple II systems in MAME
-* `a2d.lua` - utilities for driving Apple II DeskTop specifically
+Most files in this directory correspond to `../notes/testplan.md`.
+
+## `lib/` - Libraries
+
+This directory is part of the package path, so scripts can just `a2d = require("a2d")`, etc.
+
+* `lib/test.lua` - basic test infrastructure
+* `lib/apple2.lua` - utilities for driving Apple II systems in MAME
+* `lib/a2d.lua` - utilities for driving Apple II DeskTop specifically
+
+## `screenshots/`
+
+Not tests - these just dump screenshots of the app, for documentation or e.g. validating fonts.
+
+## `config/`
+
+Not tests, just example machine configurations. These verify that the abstractions in `lib/apple2.lua` work.
+

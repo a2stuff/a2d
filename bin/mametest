@@ -46,6 +46,7 @@ fi
 
 # --------------------------------------------------
 
+BASEDIR="$(pwd)"
 SCRIPTDIR="$(dirname "$SCRIPT")"
 TMPDIR=/tmp/mametest
 mkdir -p $TMPDIR/disks
@@ -106,7 +107,7 @@ else
   SCRIPTARGS="-seconds_to_run $TIMEOUT -autoboot_script $SCRIPT"
 fi
 
-export LUA_PATH="$SCRIPTDIR/?.lua"
+export LUA_PATH="$BASEDIR/tests/lib/?.lua;$SCRIPTDIR/?.lua"
 export TEST_NAME
 
 pushd "$MAMEDIR" > /dev/null
