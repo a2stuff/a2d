@@ -255,12 +255,16 @@ end
 function a2d.InMouseKeysMode(func)
   a2d.EnterMouseKeysMode()
   func({
+      ButtonDown = a2d.MouseKeysButtonDown,
+      ButtonUp = a2d.MouseKeysButtonUp,
       Click = a2d.MouseKeysClick,
       DoubleClick = a2d.MouseKeysDoubleClick,
+
       Up = a2d.MouseKeysUp,
       Down = a2d.MouseKeysDown,
       Left = a2d.MouseKeysLeft,
       Right = a2d.MouseKeysRight,
+
       Home = a2d.MouseKeysHome,
       GoToApproximately = a2d.MouseKeysGoToApproximately,
   })
@@ -274,10 +278,10 @@ function a2d.MouseKeysDoubleClick()
 end
 
 function a2d.MouseKeysClick()
-    apple2.PressSA()
-    emu.wait(1/60)
-    apple2.ReleaseSA()
-    emu.wait(1/60)
+  a2d.MouseKeysButtonDown()
+  emu.wait(1/60)
+  a2d.MouseKeysButtonUp()
+  emu.wait(1/60)
 end
 
 function a2d.MouseKeysUp(n)
@@ -304,6 +308,14 @@ function a2d.MouseKeysRight(n)
   end
 end
 
+function a2d.MouseKeysButtonDown()
+  apple2.PressSA()
+end
+
+function a2d.MouseKeysButtonUp()
+  apple2.ReleaseSA()
+end
+
 local MOUSE_KEYS_DELTA_X = 8
 local MOUSE_KEYS_DELTA_Y = 4
 function round(n)
@@ -321,7 +333,9 @@ function a2d.MouseKeysGoToApproximately(x,y)
   a2d.MouseKeysDown(round(y / MOUSE_KEYS_DELTA_Y))
 end
 
--- ==================================================
+--------------------------------------------------
+-- Modifier Key Combox
+--------------------------------------------------
 
 function a2d.OADown()
   apple2.PressOA()

@@ -11,6 +11,16 @@ local test = {
 
 local test_name = emu.subst_env("$TEST_NAME")
 
+local snapnum = -1
+
+function snap(message)
+  manager.machine.video:snapshot()
+  snapnum = snapnum + 1
+  if message ~= nil then
+    print(string.format("[snap: %04d] %s", snapnum, message))
+  end
+end
+
 --------------------------------------------------
 
 -- TODO: Add assertion stuff here
@@ -36,16 +46,12 @@ function test.Variants(t, func)
 end
 
 function test.Failure(message)
-  print(message)
-  manager.machine.video:snapshot()
+  snap(message)
   os.exit(1)
 end
 
 function test.Snap(opt_title)
-  if opt_title ~= nil then
-    print("--- " .. opt_title)
-  end
-  manager.machine.video:snapshot()
+  snap(opt_title)
 end
 
 function test.Expect(expr, message)
