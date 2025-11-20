@@ -1211,7 +1211,7 @@ Repeat for every desk accessory that runs in a window.
 
 * Open the Sounds DA. Select one of the "Obnoxious" sounds. Exit the DA. Run `BASIC.SYSTEM` from the EXTRAS/ folder. Verify that the system does not crash to the monitor.
 
-## International
+## International - covered by `tests/international.lua`
 
 * Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
 * Open the Control Panels folder. View > by Name. Open International. Close without changing anything. Verify that only a minimal repaint happens.
