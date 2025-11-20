@@ -22,9 +22,6 @@ local c = coroutine.create(function()
     -- Wait for DeskTop to start
     a2d.WaitForRestart()
 
-    -- BUG: Why is this necessary? (A2D issue!)
-    apple2.MoveMouse(100,100)
-
     test.Step(
       "Move window with keyboard - cancelled",
       function()
