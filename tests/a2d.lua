@@ -85,7 +85,7 @@ function a2d.WaitForRestart()
 end
 
 function a2d.WaitForRepaint()
-  emu.wait(2)
+  emu.wait(5)
 end
 
 --------------------------------------------------
