@@ -27,6 +27,12 @@ Tests can define custom MAME configuration. The contents of a config block are e
   * NOTE: This is parsed as space-delimited pairs and the second argument is copied to a temp directory so that the original disk images are not modified
 * `RESOLUTION` - defaults to "560x384"; for IIgs should be set to "704x462"
 
+These variables can be used:
+
+* `HARDIMG` has the path to the 800K package disk
+* `FLOP1IMG` has the path to the 140K package disk #1 (desktop)
+* `FLOP2IMG` has the path to the 140K package disk #2 (accessories)
+
 Example:
 
 ```lua

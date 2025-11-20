@@ -2,7 +2,7 @@
 
 MODEL="apple2gsr0"
 MODELARGS="-sl7 cffa2 -ramsize 8M"
-DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
+DISKARGS="-hard1 $HARDIMG"
 RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]--
