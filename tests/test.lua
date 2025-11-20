@@ -28,6 +28,13 @@ function test.Step(title, func)
   end
 end
 
+-- test.Variants({"v1", "v2"}, function(idx) ... end}
+function test.Variants(t, func)
+  for idx, name in pairs(t) do
+    test.Step(name, function() return func(idx) end)
+  end
+end
+
 function test.Failure(message)
   print(message)
   manager.machine.video:snapshot()
@@ -53,6 +60,14 @@ end
 
 function test.ExpectNotEquals(actual, expected, message)
   test.Expect(actual ~= expected, message .. " - " .. actual .. " should not equal " .. expected)
+end
+
+function test.ExpectLessThan(a, b, message)
+  test.Expect(a < b, message .. " - " .. a .. " should be < " .. b)
+end
+
+function test.ExpectLessThanOrEqual(a, b, message)
+  test.Expect(a <= b, message .. " - " .. a .. " should be <= " .. b)
 end
 
 --------------------------------------------------

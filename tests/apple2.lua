@@ -287,6 +287,11 @@ function apple2.Type(sequence)
   end
 end
 
+function apple2.TypeLine(sequence)
+  apple2.Type(sequence)
+  apple2.ReturnKey()
+end
+
 function wait_for_kbd_strobe_clear()
   while apple2.ReadSSW("KBD") > 127 do
     emu.wait(1/60)
@@ -359,37 +364,45 @@ end
 
 function apple2.PressOA()
   press("Open Apple")
+  emu.wait(1/60)
 end
 
 function apple2.ReleaseOA()
   release("Open Apple")
+  emu.wait(1/60)
 end
 
 function apple2.PressSA()
   press("Solid Apple")
+  emu.wait(1/60)
 end
 
 function apple2.ReleaseSA()
   release("Solid Apple")
+  emu.wait(1/60)
 end
 
 function apple2.PressControl()
   press("Control")
+  emu.wait(1/60)
 end
 
 function apple2.ReleaseControl()
   release("Control")
+  emu.wait(1/60)
 end
 
 function apple2.OAKey(key)
   apple2.PressOA()
   apple2.Type(key)
+  emu.wait(1/60)
   apple2.ReleaseOA()
 end
 
 function apple2.SAKey(key)
   apple2.PressSA()
   apple2.Type(key)
+  emu.wait(1/60)
   apple2.ReleaseSA()
 end
 
@@ -397,6 +410,7 @@ function apple2.OASAKey(key)
   apple2.PressOA()
   apple2.PressSA()
   apple2.Type(key)
+  emu.wait(1/60)
   apple2.ReleaseSA()
   apple2.ReleaseOA()
 end
