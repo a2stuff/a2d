@@ -638,13 +638,14 @@ end
 -- Misc Utilities
 --------------------------------------------------
 
--- Single hires only
-function apple2.GetHiresByte(row, col)
+function apple2.GetDoubleHiresByte(row, col)
+  local bank = col % 2
+  col = col >> 1
   local aa = (row & 0xC0) >> 6
   local bbb = (row & 0x38) >> 3
   local ccc = (row & 0x07)
   local addr = 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
-  return apple2.ReadRAMDevice(addr)
+  return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank))
 end
 
 function apple2.GrabTextScreen()
