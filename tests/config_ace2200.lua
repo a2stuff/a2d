@@ -30,8 +30,7 @@ local c = coroutine.create(function()
     -- ACE 2200 does not auto-start with anythng but floppies
     emu.wait(1)
     apple2.ControlReset()
-    apple2.Type("PR#7")
-    apple2.ReturnKey()
+    apple2.TypeLine("PR#7")
 
     -- Wait for DeskTop to start
     a2d.WaitForRestart()

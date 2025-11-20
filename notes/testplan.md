@@ -1273,7 +1273,7 @@ Run these tests on a system without a real-time clock:
 * Configure a system with a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.
 * Configure a system without a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the build's release month and year correctly.
 
-## Sort Directory
+## Sort Directory - covered by `tests/sort_directory.lua`
 
 * Open `/TESTS/SORT.DIRECTORY/ORDER`. File > Quit. Re-launch DeskTop. Apple Menu > Sort Directory. Verify that the files in the window are sorted.
 

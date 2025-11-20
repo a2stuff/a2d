@@ -108,6 +108,7 @@ for k,v in pairs({
     ABOUT_THIS_APPLE_II    = 2,
     CONTROL_PANELS         = 3,
     RUN_BASIC_HERE         = 11,
+    SORT_DIRECTORY         = 12,
 
     FILE_NEW_FOLDER = 1,
     FILE_OPEN       = 2,
@@ -191,9 +192,18 @@ function a2d.OpenSelection()
   a2d.WaitForRepaint()
 end
 
-function a2d.SelectAndOpen(name)
+function a2d.OpenSelectionAndCloseCurrent()
+  a2d.OASADown()
+  a2d.WaitForRepaint()
+end
+
+function a2d.SelectAndOpen(name, opt_close_current)
   apple2.Type(name)
-  a2d.OpenSelection()
+  if opt_close_current then
+    a2d.OpenSelectionAndCloseCurrent()
+  else
+    a2d.OpenSelection()
+  end
 end
 
 function a2d.CloseWindow()
@@ -209,7 +219,7 @@ end
 function a2d.OpenPath(path)
   a2d.CloseAllWindows()
   for name in path:gmatch("([^/]+)") do
-    a2d.SelectAndOpen(name)
+    a2d.SelectAndOpen(name, true)
   end
 end
 
@@ -240,6 +250,27 @@ end
 
 function a2d.ExitMouseKeysMode()
     apple2.EscapeKey()
+end
+
+function a2d.InMouseKeysMode(func)
+  a2d.EnterMouseKeysMode()
+  func({
+      Click = a2d.MouseKeysClick,
+      DoubleClick = a2d.MouseKeysDoubleClick,
+      Up = a2d.MouseKeysUp,
+      Down = a2d.MouseKeysDown,
+      Left = a2d.MouseKeysLeft,
+      Right = a2d.MouseKeysRight,
+      Home = a2d.MouseKeysHome,
+      GoToApproximately = a2d.MouseKeysGoToApproximately,
+  })
+  a2d.ExitMouseKeysMode()
+end
+
+function a2d.MouseKeysDoubleClick()
+  a2d.MouseKeysClick()
+  emu.wait(10/60)
+  a2d.MouseKeysClick()
 end
 
 function a2d.MouseKeysClick()
@@ -290,6 +321,21 @@ function a2d.MouseKeysGoToApproximately(x,y)
   a2d.MouseKeysDown(round(y / MOUSE_KEYS_DELTA_Y))
 end
 
+-- ==================================================
+
+function a2d.OADown()
+  apple2.PressOA()
+  apple2.DownArrowKey()
+  apple2.ReleaseOA()
+end
+
+function a2d.OASADown()
+  apple2.PressOA()
+  apple2.PressSA()
+  apple2.DownArrowKey()
+  apple2.ReleaseSA()
+  apple2.ReleaseOA()
+end
 
 --------------------------------------------------
 
