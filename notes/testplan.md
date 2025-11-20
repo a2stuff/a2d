@@ -1216,7 +1216,7 @@ Repeat for every desk accessory that runs in a window.
 * Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
 * Open the Control Panels folder. View > by Name. Open International. Close without changing anything. Verify that only a minimal repaint happens.
 
-## Calculator and Sci.Calc
+## Calculator and Sci.Calc - covered by `tests/calculator.lua`
 
 * Run Apple Menu > Calculator. Move the Calculator window. Verify that the mouse cursor is drawn correctly.
 

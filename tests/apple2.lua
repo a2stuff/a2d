@@ -21,6 +21,7 @@ local keyboard = {
   ["Return"]      = { port = ":X6", field = "Return" },
   ["Delete"]      = { port = ":X7", field = "Delete" },
   ["Escape"]      = { port = ":X0", field = "Esc" },
+  ["Tab"]         = { port = ":X1", field = "Tab" },
 
   ["Up Arrow"]    = { port = ":X6", field = "↑" },
   ["Left Arrow"]  = { port = ":X7", field = "←" },
@@ -88,6 +89,7 @@ elseif machine.system.name:match("^apple2gs") then
     ["Return"]      = { port = ":macadb:KEY2", field = "Return" },
     ["Delete"]      = { port = ":macadb:KEY7", field = "Delete" },
     ["Escape"]      = { port = ":macadb:KEY3", field = "Esc" },
+    ["Tab"]         = { port = ":macadb:KEY3", field = "Tab" },
 
     ["Up Arrow"]    = { port = ":macadb:KEY3", field = "Up Arrow"    },
     ["Left Arrow"]  = { port = ":macadb:KEY3", field = "Left Arrow"  },
@@ -330,6 +332,11 @@ function apple2.ControlKey(key)
   apple2.PressControl()
   apple2.Type(key)
   apple2.ReleaseControl()
+end
+
+function apple2.TabKey()
+  press_and_release("Tab")
+  wait_for_kbd_strobe_clear()
 end
 
 function apple2.ReturnKey()
