@@ -2,7 +2,7 @@
 
 MODEL="apple2cp"
 MODELARGS="-ramsize 1152K -gameio joy"
-DISKARGS="-flop3 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
+DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 

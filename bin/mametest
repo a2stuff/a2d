@@ -63,9 +63,14 @@ fi
 # --------------------------------------------------
 # Configuration
 
+VERSION="1.6-alpha0"
+HARDIMG="out/A2DeskTop-$VERSION-en_800k.2mg"
+FLOP1IMG="out/A2DeskTop-1.6-alpha0-en_140k_disk1.po"
+FLOP2IMG="out/A2DeskTop-1.6-alpha0-en_140k_disk2.po"
+
 MODEL="apple2ee"
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi -aux rw3"
-DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
+DISKARGS="-hard1 $HARDIMG"
 RESOLUTION="560x384"
 
 CONFIG="$(cat "$SCRIPT" | sed -n '/BEGINCONFIG/,/ENDCONFIG/p' | egrep -v 'BEGINCONFIG|ENDCONFIG' || true)"

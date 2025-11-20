@@ -2,7 +2,7 @@
 
 MODEL="ace2200"
 MODELARGS="-sl2 mouse -sl7 cffa2"
-DISKARGS="-hard1 out/A2DeskTop-1.6-alpha0-en_800k.2mg"
+DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
