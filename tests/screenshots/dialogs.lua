@@ -268,8 +268,8 @@ local c = coroutine.create(function()
 
         --[[
           BUG: hit "error during formatting" consistently when using "Disk Copy" here!
-          -- Even in "Quick Copy" the result is success by drive name is "Unknown" on return
-          -- does not repro normally; timing issue? https://github.com/mamedev/mame/issues/14474 ?
+          -- Confirmed it is https://github.com/mamedev/mame/issues/14474 ?
+          -- Could work around by using System Speed to slow ZIP Chip
 
         -- formatting
         emu.wait(10)
