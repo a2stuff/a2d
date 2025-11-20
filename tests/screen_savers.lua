@@ -107,16 +107,19 @@ local c = coroutine.create(function()
         return test.PASS
     end)
 
+    function RemoveClockDriver()
+      a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+      a2d.WaitForRestart()
+      apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
+      apple2.TypeLine("PR#7")
+      a2d.WaitForRestart()
+    end
+
 
     test.Step(
       "Analog Clock shows alert if there is no system clock",
       function()
-        a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-        a2d.WaitForRestart()
-
-        apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
-        apple2.TypeLine("PR#7")
-        a2d.WaitForRestart()
+        RemoveClockDriver()
 
         a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/ANALOG.CLOCK")
         test.Snap()
@@ -128,12 +131,7 @@ local c = coroutine.create(function()
     test.Step(
       "Digital Clock shows alert if there is no system clock",
       function()
-        a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-        a2d.WaitForRestart()
-
-        apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
-        apple2.TypeLine("PR#7")
-        a2d.WaitForRestart()
+        RemoveClockDriver()
 
         a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/DIGITAL.CLOCK")
         test.Snap()

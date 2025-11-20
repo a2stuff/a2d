@@ -1268,7 +1268,7 @@ Run these tests on a system without a real-time clock:
 * Apple Menu > Control Panels. View > by Name. Run Date and Time. Change the date to the same date as one of the files in the folder. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with "Today".
 * Start with a fresh disk image. Run DeskTop. Apple Menu > Control Panels. View > by Name. Open Date and Time. Verify that the date shown in the dialog matches the file dates. Click OK without changing anything. Verify that the entire desktop repaints, and that dates in the window are shown with "Today". Open Date and Time. Click OK without changing anything. Verify that the entire desktop does not repaint.
 
-## Calendar
+## Calendar - covered by `tests/calendar.lua`
 
 * Configure a system with a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.
 * Configure a system without a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the build's release month and year correctly.
