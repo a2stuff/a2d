@@ -30,9 +30,7 @@ local c = coroutine.create(function()
         a2d.OAShortcut("O")
         emu.wait(1)
 
-        a2d.EnterMouseKeysMode()
-        a2d.MouseKeysClick()
-        a2d.ExitMouseKeysMode()
+        a2d.InMouseKeysMode(function(m) m.Click() end)
         a2d.WaitForRepaint()
 
         for i = 1,39 do
@@ -51,9 +49,7 @@ local c = coroutine.create(function()
         a2d.OADown()
         emu.wait(1)
 
-        a2d.EnterMouseKeysMode()
-        a2d.MouseKeysClick()
-        a2d.ExitMouseKeysMode()
+        a2d.InMouseKeysMode(function(m) m.Click() end)
         a2d.WaitForRepaint()
 
         for i = 1,39 do
@@ -86,9 +82,7 @@ local c = coroutine.create(function()
         a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MATRIX")
         emu.wait(1)
 
-        a2d.EnterMouseKeysMode()
-        a2d.MouseKeysClick()
-        a2d.ExitMouseKeysMode()
+        a2d.InMouseKeysMode(function(m) m.Click() end)
         a2d.WaitForRepaint()
 
         a2d.CloseAllWindows()
@@ -122,7 +116,7 @@ local c = coroutine.create(function()
         RemoveClockDriver()
 
         a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/ANALOG.CLOCK")
-        test.Snap()
+        test.Snap("verify alert shown")
         a2d.DialogOK()
         a2d.CloseAllWindows()
         return test.PASS
@@ -134,7 +128,7 @@ local c = coroutine.create(function()
         RemoveClockDriver()
 
         a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/DIGITAL.CLOCK")
-        test.Snap()
+        test.Snap("verify alert shown")
         a2d.DialogOK()
         a2d.CloseAllWindows()
         return test.PASS

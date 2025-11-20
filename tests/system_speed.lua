@@ -62,7 +62,6 @@ local c = coroutine.create(function()
         emu.wait(5) -- floppy drives are slow
         apple2.Type("N")
         apple2.Type("F")
-        test.Snap()
         test.Expect(apple2.ReadSSW("RDDHIRES") < 128, "Should still be in DHR mode")
         a2d.CloseAllWindows()
         return test.PASS
@@ -73,18 +72,18 @@ local c = coroutine.create(function()
       function()
         a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
         emu.wait(5) -- floppy drives are slow
-        a2d.EnterMouseKeysMode()
-        a2d.MouseKeysGoToApproximately(115,124)
-        for i=1,15 do
-          a2d.MouseKeysUp(2)
-          emu.wait(0.15)
-          test.Snap("visually confirm no garbage")
-          a2d.MouseKeysDown(2)
-          emu.wait(0.15)
-          test.Snap("visually confirm no garbage")
-        end
-        a2d.CloseAllWindows()
-        a2d.ExitMouseKeysMode()
+        a2d.InMouseKeysMode(function(m)
+            m.GoToApproximately(115,124)
+            for i=1,15 do
+              m.Up(2)
+              emu.wait(0.15)
+              test.Snap("visually confirm no garbage")
+              m.Down(2)
+              emu.wait(0.15)
+              test.Snap("visually confirm no garbage")
+            end
+            a2d.CloseAllWindows()
+        end)
         return test.PASS
     end)
 
