@@ -38,7 +38,7 @@ local c = coroutine.create(function()
         name = line:match("^ ([A-Z0-9.]+)%s+%S%S%S%s+%d+%s+%d+-%a+-%d+%s+$")
         if name then
           -- elide duplicates (in case we're called during scroll)
-          if not #names or name ~= names[#names] then
+          if names:empty() or name ~= names[#names] then
             table.insert(names, name)
           end
         end
