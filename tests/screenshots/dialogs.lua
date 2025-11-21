@@ -1,9 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2ee"
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi -aux rw3"
 DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk -flop2 res/prodos_floppy2.dsk"
-RESOLUTION="560x384"
 
 ======================================== ENDCONFIG ]]--
 
