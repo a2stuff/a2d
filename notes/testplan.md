@@ -1000,6 +1000,8 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 ## Hardware Configurations
 
+### Slot 2 - covered by `tests/slot2.lua`
+
 * Configure a system with a drive controller (Disk II or SmartPort) in slot 2. Launch DeskTop. Verify that Slot 2 appears in the Startup menu.
 
 ### Real-Time Clock - covered by `tests/real_time_clock.lua`

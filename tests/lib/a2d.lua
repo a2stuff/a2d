@@ -152,8 +152,7 @@ for k,v in pairs({
 
 }) do a2d[k] = v end
 
--- Invoke nth item on mth menu (1-based)
-function a2d.InvokeMenuItem(mth, nth)
+function a2d.OpenMenu(mth)
   -- activate menu
   apple2.EscapeKey()
   emu.wait(MINIMAL_REPAINT)
@@ -163,6 +162,12 @@ function a2d.InvokeMenuItem(mth, nth)
     apple2.RightArrowKey()
     emu.wait(MINIMAL_REPAINT)
   end
+  a2d.WaitForRepaint()
+end
+
+-- Invoke nth item on mth menu (1-based)
+function a2d.InvokeMenuItem(mth, nth)
+  a2d.OpenMenu(mth)
   -- down to nth item
   for i=1,nth do
     apple2.DownArrowKey()

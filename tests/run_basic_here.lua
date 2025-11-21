@@ -1,9 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2ee"
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
-RESOLUTION="560x384"
 
 ======================================== ENDCONFIG ]]--
 
