@@ -36,9 +36,7 @@ local c = coroutine.create(function()
         name .. " - Not copied to RAMCard, rename load volume",
         name .. " - Copied to RAMCard, rename load volume",
         name .. " - Copied to RAMCard, rename load folder",
-
-        -- Not ready yet:
-        --name .. " - Not copied to RAMCard, rename load folder",
+        name .. " - Not copied to RAMCard, rename load folder",
       },
       function(idx)
 
@@ -64,9 +62,20 @@ local c = coroutine.create(function()
           a2d.RenamePath("/RAM1/DESKTOP", "NEWNAME")
           dtpath = "/RAM1/NEWNAME"
         elseif idx == 4 then
-          -- TODO: Revise me!
-          a2d.RenamePath("/EMPTY/A2.DESKTOP", "NEWNAME")
-          dtpath = "/EMPTY/NEWNAME"
+          -- Copy to /RAM1
+          a2d.SelectPath("/A2.DESKTOP")
+          a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO - 4)
+          apple2.ControlKey("D") -- Drives
+          emu.wait(10) -- empty floppies
+          apple2.Type("RAM1")
+          a2d.DialogOK() -- confirm copy
+          emu.wait(80) -- copy is slow
+          -- Switch to copy
+          a2d.OpenPath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
+          a2d.WaitForRestart()
+
+          a2d.RenamePath("/RAM1/A2.DESKTOP", "NEWNAME")
+          dtpath = "/RAM1/NEWNAME"
         else
           error("NYI")
         end
@@ -89,7 +98,7 @@ local c = coroutine.create(function()
         elseif idx == 3 then
           a2d.EraseVolume("RAM1")
         elseif idx == 4 then
-          -- TODO: Anything?
+          a2d.EraseVolume("RAM1")
         else
           error("NYI")
         end
@@ -99,51 +108,6 @@ local c = coroutine.create(function()
         return test.PASS
       end)
     end
-
-
-
-    --[[
-        elseif idx == 4 then
-          -- Copy to /RAM1 temporarily
-          a2d.SelectPath("/A2.DESKTOP")
-          a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO - 4)
-          apple2.ControlKey("D") -- Drives
-          emu.wait(10) -- empty floppies
-          apple2.Type("RAM1")
-          a2d.DialogOK() -- confirm copy
-          emu.wait(80) -- copy is slow
-
-          -- Switch to temporary copy
-          a2d.OpenPath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
-          a2d.WaitForRestart()
-
-          -- Delete original
-          a2d.OpenPath("/A2.DESKTOP")
-          a2d.OAShortcut("A") -- Select All
-          a2d.OADelete()
-          emu.wait(20) -- wait for enumeration
-          a2d.DialogOK() -- confirm delete
-          emu.wait(80) -- delete is slow
-
-          -- Copy to folder on original disk
-          a2d.SelectPath("/RAM1/A2.DESKTOP")
-          a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
-          apple2.ControlKey("D") -- Drives
-          emu.wait(10) -- empty floppies
-          apple2.Type("A2.DESKTOP")
-          a2d.DialogOK() -- confirm delete
-          emu.wait(80) -- copy is slow
-
-          -- Make disk bootable
-          a2d.SelectPath("/RAM1/A2.DESKTOP/PRODOS")
-          a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
-          apple2.ControlKey("D") -- Drives
-          emu.wait(10) -- empty floppies
-          apple2.Type("A2.DESKTOP")
-          a2d.DialogOK() -- confirm delete
-
-          -- Now how do we actually restart each time?
-    ]]--
 
     RenameTest(
       "overlays",
