@@ -107,6 +107,7 @@ for k,v in pairs({
     ABOUT_APPLE_II_DESKTOP = 1,
     ABOUT_THIS_APPLE_II    = 2,
     CONTROL_PANELS         = 3,
+    CALCULATOR             = 6,
     RUN_BASIC_HERE         = 11,
     SORT_DIRECTORY         = 12,
 

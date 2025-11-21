@@ -11,6 +11,7 @@
 #    --audible           Don't run silent (i.e. do present audio)
 #    --nosnaps           Don't show snapshots once tests are complete
 #    --console           Don't run script, show console instead
+#    --slow              Don't run emulation unthrottled
 
 # --------------------------------------------------
 
@@ -27,6 +28,7 @@ VISIBLE=""
 AUDIBLE=""
 SNAPS=true
 CONSOLE=""
+SLOW=""
 
 for arg in "$@"; do
   case $1 in
@@ -35,6 +37,7 @@ for arg in "$@"; do
     --audible)   shift; AUDIBLE=true ;;
     --nosnaps)   shift; SNAPS="" ;;
     --console)   shift; CONSOLE=true ;;
+    --slow)      shift; SLOW=true ;;
     *)           SCRIPT="$(realpath "$1")"; shift; break ;;
   esac
 done
@@ -112,6 +115,12 @@ else
   SCRIPTARGS="-seconds_to_run $TIMEOUT -autoboot_script $SCRIPT"
 fi
 
+if [ "$SLOW" ]; then
+  THROTTLE=""
+else
+  THROTTLE="-nothrottle"
+fi
+
 export LUA_PATH="$BASEDIR/tests/lib/?.lua;$SCRIPTDIR/?.lua"
 export TEST_NAME
 
@@ -123,7 +132,7 @@ pushd "$MAMEDIR" > /dev/null
   -snapshot_directory "$SNAPDIR" -snapsize $RESOLUTION \
   $OUTPUTARGS \
   $MODEL $MODELARGS $DISKARGS \
-  -nothrottle -nosleep \
+  $THROTTLE -nosleep \
   $SCRIPTARGS \
   2>&1 | egrep -v "Secure coding is automatically enabled"
 
