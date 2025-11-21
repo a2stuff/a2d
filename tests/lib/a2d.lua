@@ -274,9 +274,9 @@ end
 
 function a2d.DeleteSelection()
   a2d.OADelete()
-  emu.wait(20) -- wait for enumeration
+  emu.wait(5) -- wait for enumeration
   a2d.DialogOK() -- confirm delete
-  emu.wait(40) -- delete is slow
+  emu.wait(5) -- wait for delete
 end
 
 function a2d.DeletePath(path)
@@ -291,7 +291,7 @@ function a2d.EraseVolume(name)
   a2d.DialogOK()
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
-  emu.wait(20)
+  emu.wait(5)
 end
 
 --------------------------------------------------
