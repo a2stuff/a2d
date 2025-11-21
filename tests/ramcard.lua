@@ -193,10 +193,10 @@ local c = coroutine.create(function()
         apple2.ControlKey("D")
         a2d.WaitForRepaint()
         a2d.CloseWindow()
-        a2d.CloseAllWindows()
-        a2d.OAShortcut("Q")
-        apple2.ControlOAReset() -- BUG: Doesn't this cause a recopy to RAMCard?
+
+        a2d.OpenPath(dtpath.."/DESKTOP.SYSTEM")
         a2d.WaitForCopyToRAMCard()
+
         test.Snap("verify desktop pattern changed")
     end)
 
@@ -204,10 +204,7 @@ local c = coroutine.create(function()
       "configuration",
       function(dtpath)
         -- Windows are saved on exit/restored on restart
-        a2d.OpenPath(dtpath)
-        a2d.SelectAndOpen("EXTRAS")
-        a2d.OAShortcut("Q")
-        apple2.ControlOAReset()
+        a2d.OpenPath(dtpath.."/DESKTOP.SYSTEM")
         a2d.WaitForCopyToRAMCard()
         test.Snap("verify windows restored")
     end)
@@ -234,8 +231,10 @@ local c = coroutine.create(function()
         a2d.WaitForRepaint()
         a2d.DialogOK()
         a2d.WaitForRepaint()
-        apple2.ControlOAReset()
+
+        a2d.OpenPath(dtpath.."/DESKTOP.SYSTEM")
         a2d.WaitForCopyToRAMCard()
+
         a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
         a2d.WaitForRepaint()
         test.Snap("verify shortcut persisted")
