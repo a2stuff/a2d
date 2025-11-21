@@ -25,11 +25,12 @@ local c = coroutine.create(function()
 
     test.Variants(
       {
-        "Rename load volume",
-        "Rename load volume, copied to RAMCard",
+        "Not copied to RAMCard, rename load volume",
+        "Copied to RAMCard, rename load volume",
+        "Copied to RAMCard, rename load folder",
       },
       function(idx)
-        if idx == 2 then
+        if idx == 2 or idx == 3 then
           a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
           a2d.OAShortcut("1") -- Enable "Copy to RAMCard"
           a2d.CloseWindow()
@@ -38,24 +39,25 @@ local c = coroutine.create(function()
           a2d.WaitForCopyToRAMCard()
         end
 
-        local folder
+        local dtpath
         if idx == 1 then
-          apple2.Type("A2.DESKTOP")
-          folder = ""
+          a2d.SelectPath("/A2.DESKTOP")
+          a2d.RenameSelection("NEWNAME")
+          dtpath = "/NEWNAME"
+        elseif idx == 2 then
+          a2d.SelectPath("/RAM1")
+          a2d.RenameSelection("NEWNAME")
+          dtpath = "/NEWNAME/DESKTOP"
+        elseif idx == 3 then
+          a2d.SelectPath("/RAM1/DESKTOP")
+          a2d.RenameSelection("NEWNAME")
+          dtpath = "/RAM1/NEWNAME"
         else
-          apple2.Type("RAM1")
-          folder = "/DESKTOP"
+          error("NYI")
         end
 
-        apple2.ReturnKey()
-        apple2.ControlKey("X") -- clear
-        apple2.Type("NEWNAME")
-        apple2.ReturnKey()
-
-
-
         -- File > Copy To... (overlay)
-        a2d.OpenPath("/NEWNAME"..folder)
+        a2d.OpenPath(dtpath)
         apple2.Type("READ.ME")
         a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
         test.Snap("verify copy dialog displayed")
@@ -81,7 +83,7 @@ local c = coroutine.create(function()
         a2d.CloseWindow()
 
         -- Control Panel, change desktop pattern, close, quit, restart (settings)
-        a2d.OpenPath("/NEWNAME"..folder.."/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+        a2d.OpenPath(dtpath.."/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
         apple2.LeftArrowKey()
         apple2.ControlKey("D")
         a2d.WaitForRepaint()
@@ -93,13 +95,23 @@ local c = coroutine.create(function()
         test.Snap("verify desktop pattern changed")
 
         -- Windows are saved on exit/restored on restart (configuration)
-        apple2.Type("NEWNAME")
-        apple2.ReturnKey()
-        apple2.ControlKey("X") -- clear
-        apple2.Type("NEWNAME2")
-        apple2.ReturnKey()
+        if idx == 1 then
+          a2d.SelectPath("/NEWNAME")
+          a2d.RenameSelection("NEWNAME2")
+          dtpath = "/NEWNAME2"
+        elseif idx == 2 then
+          a2d.SelectPath("/NEWNAME")
+          a2d.RenameSelection("NEWNAME2")
+          dtpath = "/NEWNAME2/DESKTOP"
+        elseif idx == 3 then
+          a2d.SelectPath("/RAM1/NEWNAME")
+          a2d.RenameSelection("NEWNAME2")
+          dtpath = "/RAM1/NEWNAME2"
+        else
+          error("NYI")
+        end
 
-        a2d.OpenPath("/NEWNAME2"..folder)
+        a2d.OpenPath(dtpath)
         a2d.SelectAndOpen("SAMPLE.MEDIA")
         a2d.OAShortcut("Q")
         apple2.ControlOAReset()
@@ -108,20 +120,30 @@ local c = coroutine.create(function()
         a2d.CloseAllWindows()
 
         -- Invoking another application (e.g. `BASIC.SYSTEM`), then quitting back to DeskTop (quit handler)
-        apple2.Type("NEWNAME2")
-        apple2.ReturnKey()
-        apple2.ControlKey("X") -- clear
-        apple2.Type("NEWNAME3")
-        apple2.ReturnKey()
+        if idx == 1 then
+          a2d.SelectPath("/NEWNAME2")
+          a2d.RenameSelection("NEWNAME3")
+          dtpath = "/NEWNAME3"
+        elseif idx == 2 then
+          a2d.SelectPath("/NEWNAME2")
+          a2d.RenameSelection("NEWNAME3")
+          dtpath = "/NEWNAME3/DESKTOP"
+        elseif idx == 3 then
+          a2d.SelectPath("/RAM1/NEWNAME2")
+          a2d.RenameSelection("NEWNAME3")
+          dtpath = "/RAM1/NEWNAME3"
+        else
+          error("NYI")
+        end
 
-        a2d.OpenPath("/NEWNAME3"..folder.."/EXTRAS/BASIC.SYSTEM")
+        a2d.OpenPath(dtpath.."/EXTRAS/BASIC.SYSTEM")
         a2d.WaitForRestart()
         apple2.TypeLine("BYE")
         a2d.WaitForRestart()
         test.Snap("verify desktop restarted")
 
         -- Modifying shortcuts (selector)
-        a2d.OpenPath("/NEWNAME3"..folder.."/EXTRAS")
+        a2d.OpenPath(dtpath.."/EXTRAS")
         apple2.Type("BASIC.SYSTEM")
         a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
         a2d.WaitForRepaint()
@@ -136,17 +158,23 @@ local c = coroutine.create(function()
         a2d.WaitForRepaint()
 
         -- clean up after test
-        a2d.OpenPath("/NEWNAME3"..folder.."/EXTRA/BASIC.SYSTEM")
+        a2d.OpenPath(dtpath.."/EXTRA/BASIC.SYSTEM")
         a2d.WaitForRestart()
         if idx == 1 then
           apple2.TypeLine("RENAME /NEWNAME3,/A2.DESKTOP")
-        else
+          dtpath = "/A2.DESKTOP"
+        elseif idx == 2 then
           apple2.TypeLine("RENAME /NEWNAME3,/RAM1")
+          dtpath = "/A2.DESKTOP"
+        elseif idx == 3 then
+          dtpath = "/A2.DESKTOP"
+        else
+          error("NYI")
         end
-        apple2.TypeLine("DELETE /A2.DESKTOP/LOCAL/DESKTOP.CONFIG")
-        apple2.TypeLine("DELETE /A2.DESKTOP/LOCAL/DESKTOP.FILE")
-        apple2.TypeLine("DELETE /A2.DESKTOP/LOCAL/QUIT.TMP")
-        apple2.TypeLine("DELETE /A2.DESKTOP/LOCAL/SELECTOR.LIST")
+        apple2.TypeLine("DELETE "..dtpath.."/LOCAL/DESKTOP.CONFIG")
+        apple2.TypeLine("DELETE "..dtpath.."/LOCAL/DESKTOP.FILE")
+        apple2.TypeLine("DELETE "..dtpath.."/LOCAL/QUIT.TMP")
+        apple2.TypeLine("DELETE "..dtpath.."/LOCAL/SELECTOR.LIST")
         apple2.ControlOAReset()
         a2d.WaitForRestart()
     end)

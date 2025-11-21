@@ -111,7 +111,7 @@ fi
 if [ "$CONSOLE" ]; then
   SCRIPTARGS="-console"
 else
-  TIMEOUT=999
+  TIMEOUT=9999
   SCRIPTARGS="-seconds_to_run $TIMEOUT -autoboot_script $SCRIPT"
 fi
 

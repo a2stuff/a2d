@@ -224,9 +224,17 @@ end
 
 function a2d.OpenPath(path)
   a2d.CloseAllWindows()
-  for name in path:gmatch("([^/]+)") do
-    a2d.SelectAndOpen(name, true)
+  for segment in path:gmatch("([^/]+)") do
+    a2d.SelectAndOpen(segment, true)
   end
+end
+
+function a2d.SelectPath(path)
+  local base, name = a2d.SplitPath(path)
+  if base ~= "" then
+    a2d.OpenPath(base)
+  end
+  apple2.Type(name)
 end
 
 function a2d.ClearSelection()
@@ -234,6 +242,13 @@ function a2d.ClearSelection()
   apple2.EscapeKey()
   apple2.ReleaseOA()
   a2d.WaitForRepaint()
+end
+
+function a2d.RenameSelection(newname)
+  apple2.ReturnKey()
+  apple2.ControlKey("X") -- clear
+  apple2.Type(newname)
+  apple2.ReturnKey()
 end
 
 function a2d.DialogOK()
@@ -244,6 +259,10 @@ end
 function a2d.DialogCancel()
   apple2.EscapeKey()
   a2d.WaitForRepaint()
+end
+
+function a2d.SplitPath(path)
+  return path:match("^(.*)/([^/]+)$")
 end
 
 --------------------------------------------------
