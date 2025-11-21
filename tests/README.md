@@ -19,6 +19,19 @@ Options:
 * `--audible` - play the emulator audio (default is silent)
 * `--nosnaps` - don't generate snapshots
 
+## Configuration
+
+The default system configuration is:
+
+* Apple IIe Enhanced (`apple2ee`)
+* Aux: 8MB RAMWorks card
+* Slot 1: 8MB RAMFactor card
+* Slot 2: Mouse card
+* Slot 4: Mockingboard
+* Slot 6: Disk II Controller w/ 2 (empty) drives
+* Slot 7: CFFA2, w/ 800K package image
+* No-Slot Clock under system ROM
+
 Tests can define custom MAME configuration. The contents of a config block are executed by `mametest` to override environment variable that are used when MAME launches.
 
 * `MODEL` - the system type, e.g. "apple2ee", "apple2gsr1" etc
