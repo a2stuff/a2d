@@ -52,16 +52,11 @@ fi
 BASEDIR="$(pwd)"
 SCRIPTDIR="$(dirname "$SCRIPT")"
 TMPDIR=/tmp/mametest
-mkdir -p $TMPDIR/disks
+mkdir -p "$TMPDIR"/disks
 
-# --------------------------------------------------
-# Prepare snapshots dir
-
-SNAPDIR=$TMPDIR/snaps
-mkdir -p $SNAPDIR
-if [ -e "$SNAPDIR/$MODEL" ]; then
-  rm -r $SNAPDIR/$MODEL
-fi
+NVRAMDIR="$TMPDIR"/nvram
+mkdir -p "$NVRAMDIR"
+rm -rf "$NVRAMDIR"/*
 
 # --------------------------------------------------
 # Configuration
@@ -91,6 +86,13 @@ while read -r arg disk; do
   NEWDISKARGS="$NEWDISKARGS $arg $target"
 done < <(echo $DISKARGS | xargs -n 2)
 DISKARGS="$NEWDISKARGS"
+
+# --------------------------------------------------
+# Prepare snapshots dir
+
+SNAPDIR="$TMPDIR"/snaps
+mkdir -p "$SNAPDIR/$MODEL"
+rm -rf "$SNAPDIR/$MODEL/"*
 
 # --------------------------------------------------
 # Run MAME
@@ -127,11 +129,12 @@ export TEST_NAME
 pushd "$MAMEDIR" > /dev/null
 "$MAMEEXE" \
   -skip_gameinfo -nosamples \
-  -window -nomax -resolution $RESOLUTION -nounevenstretch \
+  -window -nomax -resolution "$RESOLUTION" -nounevenstretch \
   -mouse \
-  -snapshot_directory "$SNAPDIR" -snapsize $RESOLUTION \
+  -nvram_directory "$NVRAMDIR" \
+  -snapshot_directory "$SNAPDIR" -snapsize "$RESOLUTION" \
   $OUTPUTARGS \
-  $MODEL $MODELARGS $DISKARGS \
+  "$MODEL" $MODELARGS $DISKARGS \
   $THROTTLE -nosleep \
   $SCRIPTARGS \
   2>&1 | egrep -v "Secure coding is automatically enabled"
@@ -142,7 +145,7 @@ popd > /dev/null
 # Show snapshots
 
 if [ "$SNAPS" ]; then
-  if ls $SNAPDIR/$MODEL/* >/dev/null 2>/dev/null; then
-    open $SNAPDIR/$MODEL/*
+  if ls "$SNAPDIR/$MODEL"/* >/dev/null 2>/dev/null; then
+    open "$SNAPDIR/$MODEL/"*
   fi
 fi

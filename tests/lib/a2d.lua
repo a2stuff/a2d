@@ -203,8 +203,13 @@ function a2d.OpenSelectionAndCloseCurrent()
   a2d.WaitForRepaint()
 end
 
-function a2d.SelectAndOpen(name, opt_close_current)
+function a2d.Select(name)
+  a2d.ClearSelection()
   apple2.Type(name)
+end
+
+function a2d.SelectAndOpen(name, opt_close_current)
+  a2d.Select(name)
   if opt_close_current then
     a2d.OpenSelectionAndCloseCurrent()
   else
@@ -230,11 +235,11 @@ function a2d.OpenPath(path)
 end
 
 function a2d.SelectPath(path)
-  local base, name = a2d.SplitPath(path)
+  local base, name = path:match("^(.*)/([^/]+)$")
   if base ~= "" then
     a2d.OpenPath(base)
   end
-  apple2.Type(name)
+  a2d.Select(name)
 end
 
 function a2d.ClearSelection()
@@ -242,13 +247,6 @@ function a2d.ClearSelection()
   apple2.EscapeKey()
   apple2.ReleaseOA()
   a2d.WaitForRepaint()
-end
-
-function a2d.RenameSelection(newname)
-  apple2.ReturnKey()
-  apple2.ControlKey("X") -- clear
-  apple2.Type(newname)
-  apple2.ReturnKey()
 end
 
 function a2d.DialogOK()
@@ -261,8 +259,39 @@ function a2d.DialogCancel()
   a2d.WaitForRepaint()
 end
 
-function a2d.SplitPath(path)
-  return path:match("^(.*)/([^/]+)$")
+function a2d.RenameSelection(newname)
+  apple2.ReturnKey()
+  apple2.ControlKey("X") -- clear
+  apple2.Type(newname)
+  apple2.ReturnKey()
+  a2d.WaitForRepaint()
+end
+
+function a2d.RenamePath(path, newname)
+  a2d.SelectPath(path)
+  a2d.RenameSelection(newname)
+end
+
+function a2d.DeleteSelection()
+  a2d.OADelete()
+  emu.wait(20) -- wait for enumeration
+  a2d.DialogOK() -- confirm delete
+  emu.wait(40) -- delete is slow
+end
+
+function a2d.DeletePath(path)
+  a2d.SelectPath(path)
+  a2d.DeleteSelection()
+end
+
+function a2d.EraseVolume(name)
+  a2d.SelectPath("/"..name)
+  a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
+  apple2.Type(name) -- new name
+  a2d.DialogOK()
+  a2d.WaitForRepaint()
+  a2d.DialogOK() -- confirm overwrite
+  emu.wait(20)
 end
 
 --------------------------------------------------
@@ -359,7 +388,7 @@ function a2d.MouseKeysGoToApproximately(x,y)
 end
 
 --------------------------------------------------
--- Modifier Key Combox
+-- Modifier Key Combos
 --------------------------------------------------
 
 function a2d.OADown()
@@ -373,6 +402,12 @@ function a2d.OASADown()
   apple2.PressSA()
   apple2.DownArrowKey()
   apple2.ReleaseSA()
+  apple2.ReleaseOA()
+end
+
+function a2d.OADelete()
+  apple2.PressOA()
+  apple2.DeleteKey()
   apple2.ReleaseOA()
 end
 

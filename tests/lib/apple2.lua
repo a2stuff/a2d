@@ -344,6 +344,11 @@ function apple2.ReturnKey()
   wait_for_kbd_strobe_clear()
 end
 
+function apple2.DeleteKey()
+  press_and_release("Delete")
+  wait_for_kbd_strobe_clear()
+end
+
 function apple2.EscapeKey()
   press_and_release("Escape")
   wait_for_kbd_strobe_clear()
