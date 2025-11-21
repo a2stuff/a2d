@@ -1002,7 +1002,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 * Configure a system with a drive controller (Disk II or SmartPort) in slot 2. Launch DeskTop. Verify that Slot 2 appears in the Startup menu.
 
-### Real-Time Clock
+### Real-Time Clock - covered by `tests/real_time_clock.lua`
 
 * Run on system with real-time clock; verify that time shows in top-right of menu.
 * Run on system with real-time clock. Click on a volume icon. Verify that the clock still renders correctly.
