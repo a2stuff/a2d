@@ -260,6 +260,7 @@ port:           .addr   grafport_win
 
     IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
+        jmi     InputLoop
         jmp     Exit
     END_IF
 
@@ -280,7 +281,10 @@ port:           .addr   grafport_win
         LBTK_CALL LBTK::Click, lb_params
       IF NC
         jsr     DetectDoubleClick
-        jpl     Exit
+       IF NC
+        BTK_CALL BTK::Flash, ok_button
+        jmp     Exit
+       END_IF
       END_IF
         jmp     InputLoop
     END_IF
@@ -573,6 +577,7 @@ remainder:      .word   0                 ; (out)
 
     IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, import_button
+        jmi     InputLoop
         jmp     Import
     END_IF
 
@@ -593,7 +598,10 @@ remainder:      .word   0                 ; (out)
         LBTK_CALL LBTK::Click, lb_params
       IF NC
         jsr     DetectDoubleClick
-        jpl     Import
+       IF NC
+        BTK_CALL BTK::Flash, import_button
+        jmp     Import
+       END_IF
       END_IF
         jmp     InputLoop
     END_IF

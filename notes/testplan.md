@@ -1653,6 +1653,7 @@ This covers:
 * Disk Copy
 * Sounds DA
 * Find Files DA
+* DOS 3.3 Import DA
 
 Repeat for each list box:
 * Verify the following keyboard shortcuts:
@@ -1684,6 +1685,18 @@ For the Sounds DA:
 Repeat for each list box where the contents are dynamic:
 * Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key selects the last item.
 * Populate the list so that the scrollbar is active, and scrolled to the top. Repopulate the list so that the scrollbar is still active. Verify that the scrollbar doesn't repaint/flicker. (This is easiest in the Shortcuts > Add a Shortcut File Picker.)
+
+If the list box supports double-click:
+* Double-click an item. Verify that the corresponding action button flashes.
+
+# Option Picker Controls
+
+This covers:
+* Shortcuts (module)
+* Shortcuts picker (in DeskTop)
+* Format/Erase dialog (in DeskTop)
+
+* Double-click an item. Verify that the appropriate action button flashes.
 
 # Menus
 
