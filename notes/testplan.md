@@ -1384,7 +1384,7 @@ Run these tests on a system without a real-time clock:
 * Select a non-folder. Apple > Change Type. Specify `0F` as the type and click OK. Verify that an error is shown.
 * Select two folders. Apple > Change Type. Modify only the type (e.g. `06`). Verify that only a single error is shown.
 
-## DOS 3.3 Import
+## DOS 3.3 Import - covered by `tests/dos33_import.lua`
 
 For the following test cases, insert a DOS 3.3 disk then run the DA.
 
