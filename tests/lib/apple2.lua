@@ -428,6 +428,34 @@ function apple2.OASAKey(key)
 end
 
 --------------------------------------------------
+-- Joystick/Paddles
+--------------------------------------------------
+
+-- NOTE: On `apple2e` (etc) need `-gameio joy` or equivalent to enable
+
+function apple2.SetJoy1(x,y)
+  local xport = machine.ioport.ports[":gameio:joy:joystick_1_x"]
+  local yport = machine.ioport.ports[":gameio:joy:joystick_1_y"]
+  if not xport or not yport then
+    error("No joystick ports present")
+  end
+  xport.fields["P1 Joystick X"]:set_value(x)
+  yport.fields["P1 Joystick Y"]:set_value(y)
+  emu.wait(1/10)
+end
+
+function apple2.SetJoy2(x,y)
+  local xport = machine.ioport.ports[":gameio:joy:joystick_2_x"]
+  local yport = machine.ioport.ports[":gameio:joy:joystick_2_y"]
+  if not xport or not yport then
+    error("No joystick ports present")
+  end
+  xport.fields["P2 Joystick X"]:set_value(x)
+  yport.fields["P2 Joystick Y"]:set_value(y)
+  emu.wait(1/10)
+end
+
+--------------------------------------------------
 -- Mouse
 --------------------------------------------------
 
