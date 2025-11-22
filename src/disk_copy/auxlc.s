@@ -975,6 +975,9 @@ CmdDiskCopy := SetCopyModeImpl::disk_copy
         plp
       IF NC
         jsr     DetectDoubleClick
+       IF NC
+        BTK_CALL BTK::Flash, dialog_ok_button
+       END_IF
       END_IF
     END_IF
         rts
