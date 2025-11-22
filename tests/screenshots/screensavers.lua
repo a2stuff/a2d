@@ -9,7 +9,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/ANALOG.CLOCK")
     emu.wait(0.5)
-    test.Snap()
+    test.Snap("Analog Clock")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -20,7 +20,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/DIGITAL.CLOCK")
     emu.wait(0.5)
-    test.Snap()
+    test.Snap("Digital Clock")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -31,7 +31,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/FLYING.TOASTERS")
     emu.wait(2)
-    test.Snap()
+    test.Snap("Flying Toasters")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -42,7 +42,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/HELIX")
     emu.wait(0.5)
-    test.Snap()
+    test.Snap("Helix")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -53,7 +53,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/INVERT")
     emu.wait(0.5)
-    test.Snap()
+    test.Snap("Invert")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -64,7 +64,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MATRIX")
     emu.wait(1)
-    test.Snap()
+    test.Snap("Matrix")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -75,7 +75,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MELT")
     emu.wait(1)
-    test.Snap()
+    test.Snap("Melt")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -86,7 +86,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MESSAGE")
     emu.wait(0.5)
-    test.Snap()
+    test.Snap("Message")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS
@@ -97,7 +97,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/RODS.PATTERN")
     emu.wait(1)
-    test.Snap()
+    test.Snap("Rod's Pattern")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     return test.PASS

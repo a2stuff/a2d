@@ -13,7 +13,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/HELLO.WORLD")
     emu.wait(2)
-    test.Snap()
+    test.Snap("Applesoft BASIC")
     apple2.ControlOAReset()
     a2d.WaitForRestart()
     return test.PASS
@@ -26,7 +26,7 @@ test.Step(
     emu.wait(5)
     apple2.ReturnKey()
     emu.wait(15)
-    test.Snap()
+    test.Snap("Integer BASIC")
     apple2.ControlOAReset()
     a2d.WaitForRestart()
     return test.PASS
@@ -37,7 +37,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/EMERGENCY")
     emu.wait(5)
-    test.Snap()
+    test.Snap("S.A.M. Text-To-Speech")
     apple2.ControlOAReset()
     a2d.WaitForRestart()
     return test.PASS
@@ -48,7 +48,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/AUTUMN.PT3")
     emu.wait(5)
-    test.Snap()
+    test.Snap("Noise Tracker PT3")
     apple2.ControlOAReset()
     a2d.WaitForRestart()
     return test.PASS

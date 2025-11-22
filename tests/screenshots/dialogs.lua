@@ -18,7 +18,7 @@ test.Step(
   "Apple > About Apple II DeskTop",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
-    test.Snap()
+    test.Snap("Apple > About Apple II DeskTop")
     a2d.CloseWindow()
     return test.PASS
 end)
@@ -27,7 +27,7 @@ test.Step(
   "Apple > About This Apple II",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    test.Snap()
+    test.Snap("Apple > About This Apple II")
     a2d.CloseWindow()
     return test.PASS
 end)
@@ -42,7 +42,7 @@ test.Step(
     apple2.Type("A2.DESKTOP")
     a2d.OAShortcut("I")
     emu.wait(5) -- enumerating takes a bit
-    test.Snap()
+    test.Snap("File > Get Info (volume)")
     a2d.DialogCancel()
     return test.PASS
 end)
@@ -53,7 +53,7 @@ test.Step(
     a2d.SelectAndOpen("A2.DESKTOP")
     apple2.Type("READ.ME")
     a2d.OAShortcut("I")
-    test.Snap()
+    test.Snap("File > Get Info (file)")
     a2d.DialogCancel()
     a2d.CloseAllWindows()
     return test.PASS
@@ -65,7 +65,7 @@ test.Step(
     a2d.SelectAndOpen("A2.DESKTOP")
     apple2.Type("READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
-    test.Snap()
+    test.Snap("File > Copy To...")
     a2d.DialogCancel()
     a2d.CloseAllWindows()
     return test.PASS
@@ -82,29 +82,29 @@ test.Step(
 
     -- show dialog
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK - 2)
-    test.Snap("Prompt for drive")
+    test.Snap("Special > Format Disk... - Prompt for drive")
 
     -- select RAMFactor
     apple2.DownArrowKey() -- S7D1
     apple2.DownArrowKey() -- S7D2
     apple2.DownArrowKey() -- S1D1
-    test.Snap("Drive selected")
+    test.Snap("Special > Format Disk... - Drive selected")
 
     -- accept selection
     a2d.DialogOK()
-    test.Snap("Prompt for name")
+    test.Snap("Special > Format Disk... - Prompt for name")
 
     -- type new name
     apple2.Type("NEWNAME")
-    test.Snap("Name entered")
+    test.Snap("Special > Format Disk... - Name entered")
 
     -- accept typed name
     a2d.DialogOK()
-    test.Snap("Confirm erase")
+    test.Snap("Special > Format Disk... - Confirm erase")
 
     -- confirm format
     apple2.ReturnKey() -- not a2d.DialogOK() because usual wait is too ong
-    test.Snap("Format in progress")
+    test.Snap("Special > Format Disk... - Format in progress")
 
     return test.PASS
 end)
@@ -116,29 +116,29 @@ test.Step(
 
     -- show dialog
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK - 2)
-    test.Snap("Prompt for drive")
+    test.Snap("Special > Erase Disk... - Prompt for drive")
 
     -- select RAMFactor
     apple2.DownArrowKey() -- S7D1
     apple2.DownArrowKey() -- S7D2
     apple2.DownArrowKey() -- S1D1
-    test.Snap("Drive selected")
+    test.Snap("Special > Erase Disk... - Drive selected")
 
     -- accept selection
     a2d.DialogOK()
-    test.Snap("Prompt for name")
+    test.Snap("Special > Erase Disk... - Prompt for name")
 
     -- type new name
     apple2.Type("NEWNAME")
-    test.Snap("Name entered")
+    test.Snap("Special > Erase Disk... - Name entered")
 
     -- accept typed name
     a2d.DialogOK()
-    test.Snap("Confirm erase")
+    test.Snap("Special > Erase Disk... - Confirm erase")
 
     -- confirm erase
     apple2.ReturnKey() -- not a2d.DialogOK() because usual wait is too ong
-    test.Snap("Erase in progress")
+    test.Snap("Special > Erase Disk... - Erase in progress")
 
     return test.PASS
 end)
@@ -153,7 +153,7 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/EXTRAS")
     apple2.Type("BASIC.SYSTEM")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    test.Snap()
+    test.Snap("Shortcuts > Add a Shortcut...")
     a2d.OAShortcut('4') -- copy to RAMCard / on first use
     a2d.DialogOK()
     return test.PASS
@@ -163,10 +163,10 @@ test.Step(
   "Shortcuts > Edit a Shortcut...",
   function()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
-    test.Snap("Select shortcut")
+    test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut")
     apple2.DownArrowKey()
     a2d.DialogOK()
-    test.Snap("Editing")
+    test.Snap("Shortcuts > Edit a Shortcut... - Editing")
     a2d.DialogCancel()
     a2d.CloseAllWindows()
     return test.PASS
@@ -176,7 +176,7 @@ test.Step(
   "Shortcuts > Delete a Shortcut...",
   function()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
-    test.Snap()
+    test.Snap("Shortcuts > Delete a Shortcut...")
     a2d.DialogCancel()
     return test.PASS
 end)
@@ -185,7 +185,7 @@ test.Step(
   "Shortcuts > Run a Shortcut...",
   function()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
-    test.Snap()
+    test.Snap("Shortcuts > Run a Shortcut...")
     a2d.DialogCancel()
     return test.PASS
 end)
@@ -202,7 +202,7 @@ end)
   function()
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
   a2d.WaitForRestart()
-  test.Snap()
+  test.Snap("Special > Check All Drives...")
   return test.PASS
   end)
 ]]--
@@ -216,7 +216,7 @@ test.Step(
 
     -- "Disk Copy"
     a2d.InvokeMenuItem(3, 2)
-    test.Snap("\"Disk Copy\" option")
+    test.Snap("Disk Copy - \"Disk Copy\" option")
 
     -- "Quick Copy" / select source
     a2d.InvokeMenuItem(3, 1)
@@ -224,25 +224,25 @@ test.Step(
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     apple2.DownArrowKey()
-    test.Snap()
-    a2d.DialogOK("\"Quick Copy\" option")
+    test.Snap("Special > Copy Disk...")
+    a2d.DialogOK("Disk Copy - \"Quick Copy\" option")
 
     -- select destination
     apple2.DownArrowKey()
     apple2.DownArrowKey()
-    test.Snap("Select destination")
+    test.Snap("Disk Copy - Select destination")
     a2d.DialogOK()
 
     -- insert source
-    test.Snap("Prompt for source")
+    test.Snap("Disk Copy - Prompt for source")
     a2d.DialogOK()
 
     -- insert destination
-    test.Snap("Prompt for destination")
+    test.Snap("Disk Copy - Prompt for destination")
     a2d.DialogOK()
 
     -- confirm erase
-    test.Snap("Confirm erase")
+    test.Snap("Disk Copy - Confirm erase")
     a2d.DialogOK()
 
     --[[
@@ -252,21 +252,21 @@ test.Step(
 
       -- formatting
       emu.wait(10)
-      test.Snap()
+      test.Snap("Special > Copy Disk...")
       emu.wait(10)
     --]]
 
     -- reading progress
     emu.wait(0.25)
-    test.Snap("Reading progress")
+    test.Snap("Disk Copy - Reading progress")
 
     -- writing progress
     emu.wait(2)
-    test.Snap("Writing progress")
+    test.Snap("Disk Copy - Writing progress")
 
     -- success
     emu.wait(3)
-    test.Snap("Success")
+    test.Snap("Disk Copy - Success")
 
     -- back to desktop
     a2d.DialogOK()
@@ -289,23 +289,23 @@ test.Step(
 
     -- Launcher: Copying to RAMCard...
     emu.wait(10) -- copying is slow
-    test.Snap("Copying app to RAMCard...")
+    test.Snap("Selector - Copying app to RAMCard...")
 
     -- Shortcuts dialog
     emu.wait(10) -- let copying finish
-    test.Snap("Shortcuts dialog")
+    test.Snap("Selector - Shortcuts dialog")
 
     -- File > Run a Program...
     a2d.OAShortcut('R')
     a2d.WaitForRepaint()
-    test.Snap("Run a Program...")
+    test.Snap("Selector - Run a Program...")
     a2d.DialogCancel()
 
     -- Copy to RAMCard...
     apple2.DownArrowKey()
     apple2.ReturnKey()
     emu.wait(2)
-    test.Snap("Copying shortcut to RAMCard...")
+    test.Snap("Selector - Copying shortcut to RAMCard...")
 
     return test.PASS
 end)
