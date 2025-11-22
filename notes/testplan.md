@@ -1067,7 +1067,7 @@ The following tests all require:
 
 * Configure a system with a Z80 card and without a No-Slot Clock. Boot a package disk including the CLOCK.SYSTEM driver. Verify that it doesn't hang.
 
-### ZIP CHIP
+### ZIP CHIP - covered by `tests/zip_chip.lua`
 
 * Run DeskTop on a IIe with a ZIP CHIP installed.. Apple Menu > About This Apple II. Verify that a ZIP CHIP is reported.
 
