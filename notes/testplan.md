@@ -1057,7 +1057,7 @@ The following tests all require:
 
 * With a Floppy Emu in SmartPort mode, ensure that the 32MB image shows up as an option.
 
-### RGB Display
+### RGB Display - covered by `tests/rgb_display.lua`
 
 * On an RGB system (IIgs, etc), go to Control Panel, check RGB Color. Verify that the display shows in color. Preview an image, and verify that the image shows in color and the DeskTop remains in color after exiting.
 * On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Preview an image, and verify that the image shows in color and the DeskTop returns to monochrome after exiting.
