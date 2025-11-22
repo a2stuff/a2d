@@ -65,11 +65,12 @@ Most files in this directory correspond to `../notes/testplan.md`.
 
 ## `lib/` - Libraries
 
-This directory is part of the package path, so scripts can just `a2d = require("a2d")`, etc.
+This directory is part of the package path, so scripts can just `a2d = require("a2d")`, etc. But shouldn't need to.
 
-* `lib/test.lua` - basic test infrastructure
-* `lib/apple2.lua` - utilities for driving Apple II systems in MAME
-* `lib/a2d.lua` - utilities for driving Apple II DeskTop specifically
+* `lib/autoboot.lua` - the file that MAME is actually launched with. It has boilerplate to simplify test scripts.
+* `lib/test.lua` - basic test infrastructure; exposed as a `test` global.
+* `lib/apple2.lua` - utilities for driving Apple II systems in MAME; exposed as an `apple2` global.
+* `lib/a2d.lua` - utilities for driving Apple II DeskTop specifically; exposed as an `a2d` global.
 
 ## `screenshots/`
 
