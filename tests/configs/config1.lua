@@ -11,6 +11,5 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     test.Snap()
-    a2d.CloseWindow()
     return test.PASS
 end)

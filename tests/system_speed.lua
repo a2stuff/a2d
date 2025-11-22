@@ -1,6 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-ramsize 1152K -gameio joy"
+MODEL="apple2c4"
+MODELARGS="-gameio joy"
 DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
 ======================================== ENDCONFIG ]]--

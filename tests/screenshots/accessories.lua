@@ -13,7 +13,7 @@ function OpenFileTest(name, path)
     name,
     function()
       a2d.OpenPath(path)
-      test.Snap()
+      test.Snap(name)
       a2d.CloseWindow()
       return test.PASS
   end)
@@ -30,7 +30,7 @@ test.Step(
     apple2.Type("C*")
     a2d.DialogOK()
     emu.wait(10)
-    test.Snap()
+    test.Snap("Find Files")
     a2d.CloseWindow()
     return test.PASS
 end)
@@ -42,7 +42,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/RUN.BASIC.HERE")
     a2d.WaitForRestart()
-    test.Snap()
+    test.Snap("Run Basic Here")
     apple2.TypeLine("BYE")
     a2d.WaitForRestart()
     return test.PASS
