@@ -6,43 +6,16 @@ DISKARGS="-flop1 $FLOP1IMG"
 
 ======================================== ENDCONFIG ]]--
 
-package.path = emu.subst_env("$LUA_PATH") .. ";" .. package.path
+emu.wait(50) -- IIc emulation is very slow
 
--- Run in an async context
-local c = coroutine.create(function()
-    emu.wait(1/60) -- allow logging to get ready
-
-    -- "Globals"
-    local machine = manager.machine
-
-    -- Dependencies
-    local test = require("test")
-    local apple2 = require("apple2")
-    local a2d = require("a2d")
-    a2d.InitSystem() -- async; outside require
-
-    --[[============================================================
-
-      Test Script
-
-    ============================================================]]--
-
-    -- Wait for DeskTop to start
-    a2d.WaitForRestart()
-    emu.wait(50) -- IIc emulation is very slow
-
-    test.Step(
-      "Apple > About This Apple II",
-      function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-        emu.wait(5) -- IIc emulation is very slow
-        test.Snap()
-        a2d.CloseWindow()
-        test.ExpectEquals(apple2.ReadRAMDevice(0x2000+40), 0x55, "DHR access")
-        test.ExpectEquals(apple2.ReadRAMDevice(0x12000+40), 0x2A, "DHR access")
-        return test.PASS
-    end)
-
-    os.exit(0)
+test.Step(
+  "Apple > About This Apple II",
+  function()
+    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+    emu.wait(5) -- IIc emulation is very slow
+    test.Snap()
+    a2d.CloseWindow()
+    test.ExpectEquals(apple2.ReadRAMDevice(0x2000+40), 0x55, "DHR access")
+    test.ExpectEquals(apple2.ReadRAMDevice(0x12000+40), 0x2A, "DHR access")
+    return test.PASS
 end)
-coroutine.resume(c)
