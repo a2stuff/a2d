@@ -1375,7 +1375,7 @@ Run these tests on a system without a real-time clock:
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Print Screen DA. Invoke the Print Catalog DA. Verify that the catalog is printed on separate lines, not all overprinted on the same line onto one.
 * Using MAME (e.g. via Ample), configure a system with an SSC in Slot 1 and a Serial Printer. Invoke the Print Screen DA. Verify that the File menu is not corrupted.
 
-## Change Type
+## Change Type - covered by `tests/change_type.lua`
 
 * Select a folder. Apple > Change Type. Modify only the type (e.g. `06`). Verify that an error is shown.
 * Select a folder. Apple > Change Type. Modify only the aux type (e.g. `8000`). Verify that no error is shown.
