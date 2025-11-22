@@ -1346,7 +1346,7 @@ Run these tests on a system without a real-time clock:
 * Launch DeskTop. Open a window for a volume that is not the startup disk. Apple Menu > Run Basic Here. Verify that the PREFIX is set correctly.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure `BASIC.SYSTEM` is present on the startup disk. Open a window. Apple Menu > Run Basic Here. Verify that `BASIC.SYSTEM` starts.
 
-## Joystick
+## Joystick - coverage in `tests/joystick.lua`
 
 * Configure a system with only a single joystick (or paddles 0 and 1). Run the DA. Verify that only a single indicator is shown.
 * Configure a system with two joysticks (or paddles 2 and 3). Run the DA. Verify that after the second joystick is moved, a second indicator is shown.
