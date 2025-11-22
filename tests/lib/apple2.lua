@@ -304,7 +304,7 @@ function press(k)
   get_field(keyboard[k].port, keyboard[k].field):set_value(1)
 end
 function release(k)
-  get_field(keyboard[k].port, keyboard[k].field):clear_value(1)
+  get_field(keyboard[k].port, keyboard[k].field):clear_value()
 end
 function press_and_release(k)
   press(k)

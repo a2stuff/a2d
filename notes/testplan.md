@@ -1285,7 +1285,7 @@ Run these tests on a system without a real-time clock:
 
 * Open `/TESTS/SORT.DIRECTORY/TWO.SYS.FILES`. Apple Menu > Sort Directory. Verify that the files are sorted as `A.SYSTEM` then `B.SYSTEM`.
 
-## Key Caps
+## Key Caps - covered by `tests/key_caps*.lua`
 
 * Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
 * Repeat on an Apple IIe, Apple IIc, and Laser 128:
