@@ -108,6 +108,7 @@ for k,v in pairs({
     ABOUT_THIS_APPLE_II    = 2,
     CONTROL_PANELS         = 3,
     CALCULATOR             = 6,
+    CHANGE_TYPE            = 8,
     RUN_BASIC_HERE         = 11,
     SORT_DIRECTORY         = 12,
 
@@ -215,6 +216,11 @@ function a2d.SelectAndOpen(name, opt_close_current)
   else
     a2d.OpenSelection()
   end
+end
+
+function a2d.SelectAll()
+  a2d.OAShortcut("A")
+  emu.wait(2)
 end
 
 function a2d.CloseWindow()
