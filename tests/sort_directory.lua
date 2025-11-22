@@ -5,15 +5,11 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
-
 --[[============================================================
 
   "Sort Directory" tests
 
   ============================================================]]--
-
--- Wait for DeskTop to start
-a2d.WaitForRestart()
 
 -- Parse on-screen output of CAT; returns filenames in array
 function ParseCat()
