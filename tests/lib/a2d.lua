@@ -185,6 +185,11 @@ function a2d.OAShortcut(key)
   a2d.WaitForRepaint()
 end
 
+function a2d.SAShortcut(key)
+  apple2.SAKey(key)
+  a2d.WaitForRepaint()
+end
+
 function a2d.OASAShortcut(key)
   apple2.OASAKey(key)
   a2d.WaitForRepaint()
@@ -298,6 +303,13 @@ function a2d.EraseVolume(name)
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
   emu.wait(5)
+end
+
+function a2d.CycleWindows()
+  apple2.PressOA()
+  apple2.TabKey()
+  apple2.ReleaseOA()
+  a2d.WaitForRepaint()
 end
 
 --------------------------------------------------

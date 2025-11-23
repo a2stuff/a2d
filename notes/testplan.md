@@ -391,6 +391,10 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Configure a system with `/HD1`, `/HD1/FOLDER1`, and `/HD2`. Launch DeskTop. Open `/HD1`. Open `/HD1/FOLDER1`. Close `/HD1`. Open `/HD2`. Re-open `/HD1`. Re-open `/HD/FOLDER1`. Verify that the previously opened window is activated.
 
 * Launch DeskTop. Open a window and select multiple folder icons. File > Open. Verify that the folders open, and that the icons remain selected and become dimmed.
+* Launch DeskTop. Select two volume icons. Double-click one of the volume icons. Verify that two windows open.
+* Launch DeskTop. Open a window. Select two folder icons. Double-click one of the folder icons. Verify that two windows open.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Solid-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
 
 
 ## Close Window
@@ -398,11 +402,6 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
 * Open two windows. Open the File menu, then press Solid-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
 * Open two windows. Open the File menu, then press Open-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
-
-* Launch DeskTop. Select two volume icons. Double-click one of the volume icons. Verify that two windows open.
-* Launch DeskTop. Open a window. Select two folder icons. Double-click one of the folder icons. Verify that two windows open.
-* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Solid-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
-* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
 
 * Launch DeskTop. Open a window. Click the close box. Verify that the close animation runs. Open a window. File > Close. Verify that the close animation runs.
 
