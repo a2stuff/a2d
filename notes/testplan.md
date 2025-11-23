@@ -397,7 +397,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
 
 
-## Close Window
+## Close Window - covered by `tests/close_window.lua`
 
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
 * Open two windows. Open the File menu, then press Solid-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
@@ -446,15 +446,15 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 
 
-## Close All
+## Close All - partially covered by `tests/close_all.lua`
 
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
   * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
 * Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 * Open two windows. Hold Solid-Apple and select File > Close. Verify that all windows close.
 * Open two windows. Hold Open-Apple and select File > Close. Verify that all windows close.
-* Open two windows. Open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
-
+* Open two windows. Hold Open-Apple and open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
+* Open two windows. Hold Solid-Apple and open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 
 ## View Menu
 
