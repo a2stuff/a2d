@@ -21,7 +21,7 @@ clean:
 	rm -f $(TARGETS)
 
 $(OUTDIR)/disk_copy.o: disk_copy.s $(HEADERS) loader.s auxlc.s main.s $(foreach TK,$(TOOLKITS),../toolkits/$(TK).s)
-	../../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../common/asm.cfg
-	../../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
+	ld65 $(LDFLAGS) -o '$@' $<

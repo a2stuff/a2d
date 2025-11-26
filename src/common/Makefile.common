@@ -20,15 +20,15 @@ MONO_FONTS = $(foreach LANG,$(LANGS),$(OUTDIR)/Monaco.$(LANG).font)
 
 # Object files
 $(OUTDIR)/%.o: %.s $(HEADERS)
-	../../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Desk Accessory Files .da
 $(OUTDIR)/%.da: $(OUTDIR)/%.o ../common/asm.cfg
-	../../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
+	ld65 $(LDFLAGS) -o '$@' $<
 
 # System Files .SYS
 $(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../common/asm.cfg
-	../../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
+	ld65 $(LDFLAGS) -o '$@' $<
 
 # Fonts
 .SECONDEXPANSION:

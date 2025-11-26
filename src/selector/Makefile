@@ -21,7 +21,7 @@ clean:
 	rm -f $(TARGETS)
 
 $(OUTDIR)/selector.o: selector.s $(HEADERS) loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s $(foreach TK,$(TOOLKITS),../toolkits/$(TK).s)
-	../../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../common/asm.cfg
-	../../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
+	ld65 $(LDFLAGS) -o '$@' $<
