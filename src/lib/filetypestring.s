@@ -70,7 +70,7 @@ hex_to_ascii:
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
-        kNumFileTypes = 26
+        kNumFileTypes = 27
 type_table:
         .byte   FT_TYPELESS   ; unknown
         .byte   FT_BAD        ; bad block
@@ -83,6 +83,7 @@ type_table:
         .byte   FT_AWP        ; appleworks wp
         .byte   FT_ASP        ; appleworks sp
         .byte   FT_ANIMATION  ; animation
+        .byte   FT_ENTERTAINMENT ; entertainment
         .byte   FT_S16        ; IIgs application
         .byte   FT_PNT        ; IIgs Packed Super Hi-Res picture
         .byte   FT_PIC        ; IIgs Super Hi-Res picture
@@ -113,6 +114,7 @@ type_names_table:
         .byte   "AWP" ; appleworks wp *
         .byte   "ASP" ; appleworks sp *
         .byte   "ANM" ; animation
+        .byte   "ENT" ; entertainment
         .byte   "S16" ; IIgs application
         .byte   "PNT" ; IIgs Packed Super Hi-Res picture
         .byte   "PIC" ; IIgs Super Hi-Res picture

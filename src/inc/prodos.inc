@@ -120,6 +120,7 @@ FT_ADB          = $19           ; AppleWorks Database *
 FT_AWP          = $1A           ; AppleWorks Word Processing *
 FT_ASP          = $1B           ; AppleWorks Spreadsheet *
 FT_ANIMATION    = $5B           ; Animation/Video file
+FT_ENTERTAINMENT= $5D           ; Entertainment
 FT_SRC          = $B0           ; IIgs system type; re-used?
 FT_S16          = $B3           ; IIgs Application Program
 FT_PNT          = $C0           ; IIgs Packed Super Hi-Res picture

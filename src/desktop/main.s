@@ -1516,6 +1516,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         INVOKE_TABLE_ENTRY      interpreter, str_unshrink      ; archive
         INVOKE_TABLE_ENTRY      interpreter, str_binscii       ; encoded
         INVOKE_TABLE_ENTRY      _InvokeLink, 0                 ; link
+        INVOKE_TABLE_ENTRY      interpreter, str_chip8         ; chip8
         INVOKE_TABLE_ENTRY      InvokeDeskAccByPath, 0         ; desk_accessory
         INVOKE_TABLE_ENTRY      basic, 0                       ; basic
         INVOKE_TABLE_ENTRY      interpreter, str_intbasic      ; intbasic
@@ -1778,6 +1779,9 @@ str_unshrink:
 
 str_binscii:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/BinSCII")
+
+str_chip8:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/CHIP8.system")
 
 str_preview_fot:
         PASCAL_STRING .concat(kFilenameModulesDir, "/show.image.file")
@@ -14684,6 +14688,7 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_btc_suffix, 0, IconType::audio ; Binary Time Constant Audio
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_zc_suffix, 0, IconType::audio ; Zero-Crossing Audio
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_pt3_suffix, 0, IconType::tracker ; Vortex Tracker PT3
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_ch8_suffix, 0, IconType::chip8 ; CHIP-8
 
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
@@ -14773,6 +14778,9 @@ str_bsq_suffix:                 ; BinSCII - ShrinkIt
 
 str_pt3_suffix:                 ; Vortex Tracker PT3
         PASCAL_STRING ".PT3"
+
+str_ch8_suffix:                 ; CHIP-8
+        PASCAL_STRING ".CH8"
 
 ;;; ============================================================
 ;;; DeskTop icon placement
@@ -14928,6 +14936,7 @@ icontype_iconentryflags_table := * - IconType::VOL_COUNT
         .byte   0               ; archive
         .byte   0               ; encoded
         .byte   0               ; link
+        .byte   0               ; chip8
         .byte   0               ; desk_accessory
         .byte   0               ; basic
         .byte   0               ; intbasic
@@ -14960,6 +14969,7 @@ icontype_to_smicon_table := * - IconType::VOL_COUNT
         .byte   IconType::small_generic ; archive
         .byte   IconType::small_generic ; encoded
         .byte   IconType::small_generic ; link
+        .byte   IconType::small_generic ; chip8
         .byte   IconType::small_generic ; desk_accessory
         .byte   IconType::small_generic ; basic
         .byte   IconType::small_generic ; intbasic

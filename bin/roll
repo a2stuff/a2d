@@ -10,16 +10,35 @@ set -e
 cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
+DRY_RUN=""
+VERBOSE=""
+for arg in "$@"; do
+  case $1 in
+    --verbose) shift; VERBOSE=true ;;
+    --dry-run) shift; DRY_RUN=true ;;
+  esac
+done
+
+if [ $# -gt 0 ]; then
+  echo "Unexpected argument(s): $@" 1>&2
+  exit 1
+fi
+
 roll () {
   spath="$1"
   sfile="$2"
   tpath="$3"
   tfile="$4"
+  if [ -n "$VERBOSE" ]; then
+    echo "considering ${tfile} from ${spath}..."
+  fi
   if ! diff -q "$spath/$sfile" "$tpath/$tfile" > /dev/null; then
-    cp "${spath}/${sfile}" "${tpath}/${tfile}"
     last=$(git log --oneline | egrep roll | egrep -o "${tfile} to \w+" | head -1 | cut -d' ' -f3)
     curr=$(cd "$spath" && git rev-parse --short HEAD)
     echo "roll ${tfile} to ${curr}"
+    if [ -z "$DRY_RUN" ]; then
+      cp "${spath}/${sfile}" "${tpath}/${tfile}"
+    fi
     (
       cd "${spath}"
       git log --oneline --no-decorate ${last}..${curr}
@@ -28,7 +47,8 @@ roll () {
 }
 
 roll "../intbasic" "out/intbasic.system.SYS" "res/package" "INTBASIC.SYSTEM"
-roll "../prodos-drivers/" "out/clock.system.SYS" "res/package" "CLOCK.SYSTEM"
+roll "../prodos-drivers" "out/clock.system.SYS" "res/package" "CLOCK.SYSTEM"
 roll "../pt3plr" "pt3plr.apple2" "res/package" "PT3PLR.SYSTEM"
 roll "../prodos-sam" "out/tts.system.SYS" "res/package" "TTS.SYSTEM"
 roll "../prodos-sam" "res/SAM.BIN" "res/package" "SAM.BIN"
+roll "../chip8" "out/chip8.system.SYS" "res/package" "CHIP8.SYSTEM"

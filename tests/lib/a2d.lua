@@ -653,7 +653,8 @@ function a2d.WaitForDesktopShowing(options, level)
   if level == nil then level = 0 end
 
   function IsDesktopShowing()
-    -- TODO: Is there RDDHIRES on anything but IIc?
+    -- TODO: Is there RDDHIRES (two 'D's) on anything but IIc?
+    -- Use RDHIRES (one 'D'), the best we can do on the IIe.
     if apple2.ReadSSW("RDHIRES") < 128 then
       return false
     end
@@ -951,14 +952,10 @@ function a2d.OADelete()
 end
 
 --------------------------------------------------
-
--- TODO:
--- * Need API to get window count
--- * Need API to get active window name
--- * Need API to get selected icon count
--- Idea: Generate Lua-friendly symbol table on build by processing listing file
-
+-- Dates
 --------------------------------------------------
+
+-- TODO: API to disable clock driver (clear MACHID bit and JMP)
 
 local DATELO, DATEHI, TIMELO, TIMEHI = 0xBF90, 0xBF91, 0xBF92, 0xBF93
 
@@ -997,6 +994,17 @@ function a2d.GetProDOSTime()
 end
 
 --------------------------------------------------
+-- Icons
+--------------------------------------------------
+
+-- TODO: Build some sort of proper API
+
+
+local DESKTOP_SYMBOLS = {}
+for pair in emu.subst_env("$DESKTOP_SYMBOLS"):gmatch("([^ ]+)") do
+  local k,v = pair:match("^(.+)=(.+)$")
+  DESKTOP_SYMBOLS[k] = tonumber(v, 16)
+end
 
 local function ram_u8(addr)
   return apple2.ReadRAMDevice(addr)
@@ -1017,7 +1025,7 @@ end
 
 local function ReadIcon(id)
   local icon = {}
-  local icon_entries = 0x01F0D1
+  local icon_entries = DESKTOP_SYMBOLS["icon_entries"] | 0x010000
 
   local IconEntry = {
     state = 0,
@@ -1048,9 +1056,8 @@ local function ReadIcon(id)
 end
 
 function a2d.GetSelectedIcons()
-  -- TODO: Rework this so it's based on an actual API
-  local selected_icon_count_addr = 0x01DAEC
-  local selected_icon_list_addr = 0x01DAED
+  local selected_icon_count_addr = DESKTOP_SYMBOLS['selected_icon_count'] | 0x010000
+  local selected_icon_list_addr = DESKTOP_SYMBOLS['selected_icon_list'] | 0x010000
 
   local selected_icon_count = apple2.ReadRAMDevice(selected_icon_count_addr)
 

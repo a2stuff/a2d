@@ -127,6 +127,16 @@ export UNFORMATTED_IMG="$TMPDIR/disks/unformatted.2mg"
 cp "res/unformatted.2mg" "$UNFORMATTED_IMG"
 
 # --------------------------------------------------
+# Symbols
+
+DESKTOP_SYMBOLS=""
+for sym in selected_icon_count selected_icon_list icon_entries; do
+  addr="$(egrep $sym: out/desktop.list | cut -d' ' -f1)"
+  DESKTOP_SYMBOLS="${DESKTOP_SYMBOLS} ${sym}=${addr}"
+done
+export DESKTOP_SYMBOLS
+
+# --------------------------------------------------
 # Prepare snapshots dir
 
 SNAPDIR="$TMPDIR"/snaps

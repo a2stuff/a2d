@@ -34,6 +34,7 @@
         archive
         encoded
         link
+        chip8
         desk_accessory
         basic
         intbasic
