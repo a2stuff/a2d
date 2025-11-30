@@ -276,6 +276,8 @@ modifiers:
         jeq     CmdOpenFromKeyboard
         cmp     #CHAR_UP        ; Apple-Up (Open Parent)
         jeq     CmdOpenParent
+        cmp     #CHAR_ESCAPE    ; Apple-Esc (Clear Selection)
+        jeq     ClearSelection
 
         ldx     active_window_id
     IF NOT_ZERO

@@ -28,6 +28,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Reduce cursor flickering while icons are drawn.
 * Eliminate cursor flickering when clicking on the desktop or windows.
 * Time window open/close animations using VBL.
+* Add Apple+Escape as shortcut to clear selection.
 
 ### Selector
 
