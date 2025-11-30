@@ -12,6 +12,9 @@
 #    --nosnaps           Don't show snapshots once tests are complete
 #    --console           Don't run script, show console instead
 #    --slow              Don't run emulation unthrottled
+#
+# MAMEDIR must be set to the path containing roms/ etc
+# MAMEEXE must be set to the path to the mame64 binary
 
 # --------------------------------------------------
 
@@ -19,6 +22,7 @@ set -e
 #set -x
 
 cd "$(dirname "$0")/.."
+source "bin/util.sh"
 
 # --------------------------------------------------
 # Parse command line
@@ -47,6 +51,17 @@ if [ $# -gt 0 ]; then
   exit 1
 fi
 
+# Validate environment
+
+if [ ! -x "$MAMEEXE" ]; then
+  echo "MAMEEXE is not an executable" 1>&2
+  exit 1
+fi
+if [ ! -d "$MAMEDIR" ]; then
+  echo "MAMEDIR is not a directory" 1>&2
+  exit 1
+fi
+
 # --------------------------------------------------
 
 BASEDIR="$(pwd)"
@@ -61,10 +76,12 @@ rm -rf "$NVRAMDIR"/*
 # --------------------------------------------------
 # Configuration
 
-VERSION="1.6-alpha0"
-HARDIMG="out/A2DeskTop-$VERSION-en_800k.2mg"
-FLOP1IMG="out/A2DeskTop-1.6-alpha0-en_140k_disk1.po"
-FLOP2IMG="out/A2DeskTop-1.6-alpha0-en_140k_disk2.po"
+HARDIMG="out/A2DeskTop-${version}_800k.2mg"
+FLOP1IMG="out/A2DeskTop-${version}_140k_disk1.po"
+FLOP2IMG="out/A2DeskTop-${version}_140k_disk2.po"
+
+echo $HARDIMG
+exit
 
 MODEL="apple2ee"
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi -aux rw3"
@@ -96,9 +113,6 @@ rm -rf "$SNAPDIR/$MODEL/"*
 
 # --------------------------------------------------
 # Run MAME
-
-MAMEDIR=~/Library/Application\ Support/Ample/
-MAMEEXE=~/Desktop/Ample.app/Contents/MacOS/mame64
 
 OUTPUTARGS=""
 if [ -z "$VISIBLE" ]; then

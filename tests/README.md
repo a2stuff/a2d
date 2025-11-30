@@ -1,13 +1,16 @@
 > NOTE: This is all extremely experimental.
 > * Requires macOS
-> * Requires Ample sitting on your desktop (!)
 > * Probably some other stuff
 
-Run with:
+Run in a terminal with:
 
 ```sh
 make                              # build latest
 make package                      # create required disk images
+
+export MAMEDIR=<path to your MAME directory>
+export MAMEEXE=<path to your MAME executable>
+
 bin/mametest tests/SCRIPTNAME.lua
 ```
 
