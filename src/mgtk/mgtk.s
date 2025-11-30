@@ -6451,7 +6451,7 @@ event_loop:
 
         ;; Process the key
         lda     GetAndReturnEvent::event::modifiers
-        sta     set_input_modifiers
+        sta     menu_key_modifiers
         lda     GetAndReturnEvent::event::key
         jsr     HandleMenuKey
 
@@ -6721,7 +6721,7 @@ finish: rts
 
 .proc KbdMenuByShortcut
         sta     find_shortcut
-        lda     set_input_modifiers
+        lda     menu_key_modifiers
         and     #3
         sta     find_options
 
@@ -8567,14 +8567,6 @@ changed:
 
         lda     current_winfo::id
         jsr     EraseWindow
-        jsr     HideCursorAndSaveParams ; restored by call below
-
-        bit     movement_cancel
-    IF VS
-        jsr     SetInput
-    END_IF
-
-        jsr     ShowCursorAndRestoreParams
         lda     #$80
         bne     return_moved
 
@@ -8660,7 +8652,7 @@ next:   inx
 
 
         ;; Return with Z=1 if the drag position was not changed, or Z=0
-        ;; if the drag position was changed or force_tracking_change is set.
+        ;; if the drag position was changed or `force_tracking_change` is set.
 .proc CheckIfChanged
         ldx     #2
         ldy     #0
@@ -9874,9 +9866,6 @@ scale_y:
 ;;; normally in `CheckEventsImpl`
 ;;; Assert: `kbd_mouse_state` is not `kKeyboardMouseStateInactive`
 .proc GetKey
-        jsr     ComputeModifiers
-        sta     set_input_modifiers
-no_modifiers:
         clc
         lda     KBD
     IF NS
@@ -9930,7 +9919,7 @@ stashed_addr:  .addr     0
         lda     #0
         sta     input::modifiers
 
-        jsr     GetKey::no_modifiers
+        jsr     GetKey
         jcs     MousekeysInput
 
         jmp     PositionKbdMouse
@@ -10030,6 +10019,9 @@ beeploop:
 .endproc ; KbdMouseSyncCursor
 
 
+kMinKbdDragPosLeft = 35
+kMinKbdDragPosRight = 8
+
 
 .proc KbdWinDragOrGrow
         php
@@ -10110,7 +10102,7 @@ dragloop:
         lda     winrect::x1,x
         cpx     #2
         beq     is_y
-        adc     #$23 - 5
+        adc     #kMinKbdDragPosLeft - 5
 
 is_y:   adc     #5
         sta     kbd_mouse_x,x
@@ -10171,6 +10163,36 @@ pos:    jmp     PositionKbdMouse
         bne     pos             ; always
 .endproc ; KbdMouseAddToY
 
+.proc KbdMouseAddToX
+        clc
+        adc     kbd_mouse_x
+        sta     kbd_mouse_x
+        txa
+        adc     kbd_mouse_x+1
+        sta     kbd_mouse_x+1
+
+    IF NEG
+        lda     #0
+        sta     kbd_mouse_x
+        sta     kbd_mouse_x+1
+        rts
+    END_IF
+
+        ;; Positive offset - if beyond screen, clamp to max
+        sec
+        lda     kbd_mouse_x
+        sbc     #<(kScreenWidth-1)
+        lda     kbd_mouse_x+1
+        sbc     #>(kScreenWidth-1)
+
+    IF_POS
+        lda     #>(kScreenWidth-1)
+        sta     kbd_mouse_x+1
+        lda     #<(kScreenWidth-1)
+        sta     kbd_mouse_x
+    END_IF
+        rts
+.endproc ; KbdMouseAddToX
 
 .proc KbdMouseDoWindow
         jsr     GetKey
@@ -10185,13 +10207,6 @@ pos:    jmp     PositionKbdMouse
         jmp     UnstashCursor
     END_IF
 
-        tax
-        lda     set_input_modifiers
-        beq     :+
-        ora     #$80
-        sta     set_input_modifiers
-:
-        txa
         ldx     #$C0
         stx     mouse_status
         FALL_THROUGH_TO MousekeysInput
@@ -10206,92 +10221,41 @@ kMouseKeysDeltaY = 4
     END_IF
 
     IF A = #CHAR_UP
-        lda     #256-48
-        bit     set_input_modifiers
-        bmi     :+              ; leave N flag set
-        lda     #256-kMouseKeysDeltaY ; sets N flag
-:       jmp     KbdMouseAddToY  ; N flag must be set here
+        lda     #256-kMouseKeysDeltaY
+        jmp     KbdMouseAddToY
     END_IF
 
     IF A = #CHAR_DOWN
         lda     #kMouseKeysDeltaY
-        bit     set_input_modifiers
-        bpl     :+              ; leave N flag clear
-        lda     #48             ; clears N flag
-:       jmp     KbdMouseAddToY  ; N flag must be clear here
+        jmp     KbdMouseAddToY
     END_IF
 
     IF A = #CHAR_RIGHT
-        jsr     KbdMouseCheckXmax
-        bcc     out_of_bounds
+        jsr     KbdMouseDragCheckXmax ; If dragging window, maybe slip it
+        bcc     :+              ; mouse didn't move, but window did
 
-        clc
-        lda     #kMouseKeysDeltaX
-        bit     set_input_modifiers
-        bpl     :+
-        lda     #64
-
-:       adc     kbd_mouse_x
-        sta     kbd_mouse_x
-        bcc     :+
-        inc     kbd_mouse_x+1
+        ldax    #kMouseKeysDeltaX
+        jsr     KbdMouseAddToX
 :
-        sec
-        lda     kbd_mouse_x
-        sbc     #<(kScreenWidth-1)
-        lda     kbd_mouse_x+1
-        sbc     #>(kScreenWidth-1)
-        bmi     out_of_bounds
-
-        lda     #>(kScreenWidth-1)
-        sta     kbd_mouse_x+1
-        lda     #<(kScreenWidth-1)
-        sta     kbd_mouse_x
-out_of_bounds:
         jmp     PositionKbdMouse
     END_IF
 
     IF A = #CHAR_LEFT
-        jsr     KbdMouseCheckXmin
-        bcc     out_of_boundsl
+        jsr     KbdMouseDragCheckXmin ; If dragging window, maybe slip it
+        bcc     :+              ; mouse didn't move, but window did
 
-        lda     kbd_mouse_x
-        bit     set_input_modifiers
-        bpl     :+
-        sbc     #64 - 8
-
-:       sbc     #kMouseKeysDeltaX
-        sta     kbd_mouse_x
-        lda     kbd_mouse_x+1
-        sbc     #0
-        sta     kbd_mouse_x+1
-        bpl     out_of_boundsl
-
-        lda     #0
-        sta     kbd_mouse_x
-        sta     kbd_mouse_x+1
-out_of_boundsl:
+        ldax    #AS_WORD(-kMouseKeysDeltaX)
+        jsr     KbdMouseAddToX
+:
         jmp     PositionKbdMouse
     END_IF
 
-        sta     set_input_key   ; TODO: Is this needed any more?
         rts
 .endproc ; MousekeysInput
 
-
-.proc SetInput
-        MGTK_CALL MGTK::PostEvent, set_input_params
-        rts
-.endproc ; SetInput
-
-.params set_input_params          ; 1 byte shorter than normal, since KEY
-state:  .byte   MGTK::EventKind::key_down
-key:    .byte   0
-modifiers:
+;;; Referenced if a shortcut key is used while the menu is showing.
+menu_key_modifiers:
         .byte   0
-.endparams
-        set_input_key := set_input_params::key
-        set_input_modifiers := set_input_params::modifiers
 
         ;; Set to true to force the return value of CheckIfChanged to true
         ;; during a tracking kOperation.
@@ -10299,105 +10263,88 @@ force_tracking_change:
         .byte   0
 
 
-.proc KbdMouseCheckXmin
+;;; When dragging a window (so `kbd_mouse_state` is set to
+;;; `kKeyboardMouseStateForced` and `drag_resize_flag` unset, this
+;;; enables the window to be moved (horizontally) further offscreen
+;;; using the keyboard than would be possible if movement stopped when
+;;; the cursor hit the edge of the screen. Rather than just stopping,
+;;; `drag_initialpos::xcoord` is adjusted and `force_tracking_change`
+;;; is set.
+
+.proc KbdMouseDragCheckXmin
         lda     kbd_mouse_state
         cmp     #kKeyboardMouseStateMouseKeys
         beq     ret_ok
+        ;; so `kKeyboardMouseStateForced`, i.e. moving or growing a window
+        bit     drag_resize_flag ; N=0 = move, N=1 = grow
+        bmi     ret_ok
+        ;; so dragging
 
+        ;; If we're not at the screen edge, then we're good for now.
         lda     kbd_mouse_x
         bne     ret_ok
         lda     kbd_mouse_x+1
-        bne     ret_ok
+        beq     is_min
 
-        bit     drag_resize_flag
-        bpl     :+
-ret_ok: RETURN  C=1
+ret_ok:
+        RETURN  C=1             ; do normal validation
 
-:       jsr     GetWinFrameRect
+is_min:
+        ;; Is the right window edge at least `kMinKbdDragPosRight` from the left screen edge?
+        jsr     GetWinFrameRect
         lda     winrect::x2+1
-        bne     min_ok
-        lda     #9
-        bit     set_input_params::modifiers
-        bpl     :+
+        bne     slip
+        lda     #kMinKbdDragPosRight+1
+        cmp     winrect::x2
+        bcc     slip
+        RETURN  C=0             ; no further validation needed
 
-        lda     #65
-:       cmp     winrect::x2
-        bcc     min_ok
-        RETURN  C=0
+slip:
+        ;; Slip the drag tracking position by +8px
+        add16_8 drag_initialpos::xcoord, #kMouseKeysDeltaX
+        inc     force_tracking_change
+        RETURN  C=0             ; no further validation needed
+.endproc ; KbdMouseDragCheckXmin
 
-min_ok: inc     force_tracking_change
-
-        clc
-        lda     #8
-        bit     set_input_params::modifiers
-        bpl     :+
-        lda     #64
-
-:       adc     drag_initialpos
-        sta     drag_initialpos
-        bcc     :+
-        inc     drag_initialpos+1
-:
-        RETURN  C=0
-.endproc ; KbdMouseCheckXmin
-
-
-.proc KbdMouseCheckXmax
+.proc KbdMouseDragCheckXmax
         lda     kbd_mouse_state
         cmp     #kKeyboardMouseStateMouseKeys
-        beq     :+
+        beq     ret_ok
+        ;; so `kKeyboardMouseStateForced`, i.e. moving or growing a window
+        bit     drag_resize_flag ; N=0 = move, N=1 = grow
+        bmi     ret_ok
+        ;; so dragging
 
-        bit     drag_resize_flag
-        bmi     :+
-
+        ;; If we're not at the screen edge, then we're good for now.
         lda     kbd_mouse_x
         sbc     #<(kScreenWidth-1)
         lda     kbd_mouse_x+1
         sbc     #>(kScreenWidth-1)
         beq     is_max
 
-:
-        RETURN  C=1
+ret_ok:
+        RETURN  C=1             ; do normal validation
 
-is_max: jsr     GetWinFrameRect
+is_max:
+        ;; Is the left window edge at least `kMinKbdDragPosLeft` from the right screen edge?
+        jsr     GetWinFrameRect
         sec
         lda     #<(kScreenWidth-1)
         sbc     winrect::x1
         tax
         lda     #>(kScreenWidth-1)
         sbc     winrect::x1+1
-        beq     :+
+        bne     slip
+        cpx     #kMinKbdDragPosLeft + kMouseKeysDeltaX + 1
+        bcs     slip
+        RETURN  C=0             ; no further validation needed
 
-        ldx     #256-1
-:       bit     set_input_modifiers
-        bpl     :+
-
-        cpx     #100
-        bcc     clc_rts
-        bcs     ge_100
-
-:       cpx     #44
-        bcs     in_range
-
-clc_rts:
-        RETURN  C=0
-
-ge_100: sec
-        lda     drag_initialpos
-        sbc     #64
-        jmp     :+
-
-in_range:
-        sec
-        lda     drag_initialpos
-        sbc     #8
-:       sta     drag_initialpos
-        bcs     :+
-        dec     drag_initialpos+1
-:
+slip:
+        ;; Slip the drag tracking position by -8px
+        sub16_8 drag_initialpos::xcoord, #kMouseKeysDeltaX
         inc     force_tracking_change
-        RETURN  C=0
-.endproc ; KbdMouseCheckXmax
+        RETURN  C=0             ; no further validation needed
+.endproc ; KbdMouseDragCheckXmax
 
 
 grew_flag:
