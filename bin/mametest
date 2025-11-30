@@ -141,25 +141,48 @@ export LUA_PATH="$BASEDIR/tests/lib/?.lua;$SCRIPTDIR/?.lua"
 export TEST_NAME
 
 pushd "$MAMEDIR" > /dev/null
-"$MAMEEXE" \
-  -skip_gameinfo -nosamples \
-  -window -nomax -resolution "$RESOLUTION" -nounevenstretch \
-  -mouse \
-  -nvram_directory "$NVRAMDIR" \
-  -snapshot_directory "$SNAPDIR" -snapsize "$RESOLUTION" \
-  $OUTPUTARGS \
-  "$MODEL" $MODELARGS $DISKARGS \
-  $THROTTLE -nosleep \
-  $SCRIPTARGS \
-  2>&1 | egrep -v "Secure coding is automatically enabled"
-
+exec 5>&1 # duplicate stdout filehandle
+output=$(
+  "$MAMEEXE" \
+    -skip_gameinfo -nosamples \
+    -window -nomax -resolution "$RESOLUTION" -nounevenstretch \
+    -mouse \
+    -nvram_directory "$NVRAMDIR" \
+    -snapshot_directory "$SNAPDIR" -snapsize "$RESOLUTION" \
+    $OUTPUTARGS \
+    "$MODEL" $MODELARGS $DISKARGS \
+    $THROTTLE -nosleep \
+    $SCRIPTARGS \
+    2>&1 | \
+    egrep --line-buffered -v "Secure coding is automatically enabled" | \
+    tee /dev/fd/5
+      )
 popd > /dev/null
 
 # --------------------------------------------------
 # Show snapshots
 
+# Parse output to determine snapshot names
+snapname=()
+while IFS= read -r line ; do
+  pattern='\[snap: ([0-9]+)\] (.*)'
+  if [[ $line =~ $pattern ]]; then
+    snapname["10#${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+  fi
+done <<< "$output"
+
 if [ "$SNAPS" ]; then
-  if ls "$SNAPDIR/$MODEL"/* >/dev/null 2>/dev/null; then
-    open "$SNAPDIR/$MODEL/"*
+  if ls "$SNAPDIR/$MODEL/"????.png >/dev/null 2>/dev/null; then
+    # Rename files to include snapshot names
+    for file in "$SNAPDIR/$MODEL"/????.png; do
+      dir="$(dirname "$file")"
+      num="$(basename "$file" .png)"
+      name="${snapname[10#$num]}"
+      if [ -n "$name" ]; then
+        mv "${dir}/${num}.png" "${dir}/${num} - ${name}.png"
+      fi
+    done
+
+    open "$SNAPDIR/$MODEL/"*.png
   fi
 fi
