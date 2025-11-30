@@ -96,6 +96,15 @@ END_PARAM_BLOCK
 ASSERT_EQUALS dragwindow_params::dragx, event_params::xcoord
 ASSERT_EQUALS dragwindow_params::dragy, event_params::ycoord
 
+PARAM_BLOCK growwindow_params, *
+window_id       .byte
+dragx           .word
+dragy           .word
+moved           .byte
+END_PARAM_BLOCK
+ASSERT_EQUALS growwindow_params::dragx, event_params::xcoord
+ASSERT_EQUALS growwindow_params::dragy, event_params::ycoord
+
 ;;; --------------------------------------------------
 
 ;;; The following are offset so x/y overlap event_params x/y

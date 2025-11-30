@@ -5492,8 +5492,8 @@ beyond:
 ;;; ============================================================
 
 .proc DoWindowResize
-        copy8   active_window_id, event_params
-        MGTK_CALL MGTK::GrowWindow, event_params
+        copy8   active_window_id, growwindow_params::window_id
+        MGTK_CALL MGTK::GrowWindow, growwindow_params
         jmp     ScrollUpdate
 .endproc ; DoWindowResize
 

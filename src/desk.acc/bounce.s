@@ -286,8 +286,8 @@ finish: jmp     InputLoop
         bcc     HandleDrag::finish
 
         ;; Initiate the grow... re-using the drag logic
-        copy8   #kDAWindowId, dragwindow_params::window_id
-        MGTK_CALL MGTK::GrowWindow, dragwindow_params
+        copy8   #kDAWindowId, growwindow_params::window_id
+        MGTK_CALL MGTK::GrowWindow, growwindow_params
         jmp     HandleDrag::common
 .endproc ; HandleGrow
 
