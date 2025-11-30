@@ -61,9 +61,6 @@ add_file () {
         fi
     fi
 
-    if [ "$folder" != "" ]; then
-        suppress cadius CREATEFOLDER "$INSTALL_IMG" "$dst_dir" --quiet
-    fi
     cadius DELETEFILE "$INSTALL_IMG" "$dst_dir/$dst_file" > /dev/null || true
     suppress cadius ADDFILE "$INSTALL_IMG" "$dst_dir" "$tmp_file" --quiet
     rm -rf "$tmp_file"
@@ -72,8 +69,6 @@ add_file () {
 
 # ============================================================
 # Install
-
-suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet
 
 manifest="$(no_loc_da_names=$INSTALL_NOLOCDA no_sample_media=$INSTALL_NOSAMPLES bin/manifest $@)"
 init_progress

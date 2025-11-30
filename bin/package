@@ -80,9 +80,6 @@ add_file () {
             fi
         fi
 
-        if [ "$folder" != "" ]; then
-            suppress cadius CREATEFOLDER "$img_file" "$folder" --quiet
-        fi
         suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet
         rm "$tmp_file"
     }
