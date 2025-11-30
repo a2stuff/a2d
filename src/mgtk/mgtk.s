@@ -10197,6 +10197,9 @@ pos:    jmp     PositionKbdMouse
         FALL_THROUGH_TO MousekeysInput
 .endproc ; KbdMouseDoWindow
 
+kMouseKeysDeltaX = 8
+kMouseKeysDeltaY = 4
+
 .proc MousekeysInput
     IF A = #CHAR_ESCAPE
         jmp     EndMouseKeys
@@ -10206,12 +10209,12 @@ pos:    jmp     PositionKbdMouse
         lda     #256-48
         bit     set_input_modifiers
         bmi     :+              ; leave N flag set
-        lda     #256-8          ; sets N flag
+        lda     #256-kMouseKeysDeltaY ; sets N flag
 :       jmp     KbdMouseAddToY  ; N flag must be set here
     END_IF
 
     IF A = #CHAR_DOWN
-        lda     #8
+        lda     #kMouseKeysDeltaY
         bit     set_input_modifiers
         bpl     :+              ; leave N flag clear
         lda     #48             ; clears N flag
@@ -10223,7 +10226,7 @@ pos:    jmp     PositionKbdMouse
         bcc     out_of_bounds
 
         clc
-        lda     #8
+        lda     #kMouseKeysDeltaX
         bit     set_input_modifiers
         bpl     :+
         lda     #64
@@ -10257,7 +10260,7 @@ out_of_bounds:
         bpl     :+
         sbc     #64 - 8
 
-:       sbc     #8
+:       sbc     #kMouseKeysDeltaX
         sta     kbd_mouse_x
         lda     kbd_mouse_x+1
         sbc     #0

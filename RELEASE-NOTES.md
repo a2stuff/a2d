@@ -10,6 +10,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Eliminate cursor flickering when mouse is moved.
 * Improve visibility of button flashing using VBL.
+* Adjust movement scaling in MouseKeys mode.
 
 ### Launcher
 
@@ -36,6 +37,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Disk Copy
 
 * Don't erroneously show "DOS 3.3 disk copy" when source format is unknown.
+* Flash OK button when a disk is selected via double-click.
 
 ### Desk Accessories
 
