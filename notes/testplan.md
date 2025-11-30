@@ -1750,7 +1750,7 @@ The following steps exercise the menu as "drop down" using the keyboard to initi
 
 * Launch DeskTop. Close all windows. Press the Escape key. Use the Left and Right Arrow keys to highlight the View menu. Verify that all menu items are disabled. Press the Up and Down arrow keys. Verify that the cursor position does not change.
 
-# Mouse Keys
+# Mouse Keys - covered by `tests/mouse_keys.lua`
 
 * Enter MouseKeys mode (Open-Apple+Solid-Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid-Apple (or Option) key as the mouse button, "pull down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
 * Enter MouseKeys mode (Open-Apple+Solid-Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid-Apple (or Option) key as the mouse button, "drop down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
@@ -1762,7 +1762,7 @@ The following steps exercise the menu as "drop down" using the keyboard to initi
   * Use keys to double-click on an icon. Verify it opens.
 
 
-# Keyboard Window Control - covered by `tests/keyboard_window_control.md`
+# Keyboard Window Control - covered by `tests/keyboard_window_control.lua`
 
 These shortcuts only apply in DeskTop.
 

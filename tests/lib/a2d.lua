@@ -339,8 +339,11 @@ function a2d.InMouseKeysMode(func)
 
       Home = a2d.MouseKeysHome,
       GoToApproximately = a2d.MouseKeysGoToApproximately,
+      MoveByApproximately = a2d.MouseKeysMoveByApproximately,
   })
   a2d.ExitMouseKeysMode()
+  -- TODO: Without this, ClearSelection triggers menu. Why is delay needed?
+  emu.wait(10/60)
 end
 
 function a2d.MouseKeysDoubleClick()
@@ -401,8 +404,20 @@ end
 
 function a2d.MouseKeysGoToApproximately(x,y)
   a2d.MouseKeysHome() -- known location
-  a2d.MouseKeysRight(round(x / MOUSE_KEYS_DELTA_X))
-  a2d.MouseKeysDown(round(y / MOUSE_KEYS_DELTA_Y))
+  a2d.MouseKeysMoveByApproximately(x, y)
+end
+
+function a2d.MouseKeysMoveByApproximately(x,y)
+  if x > 0 then
+    a2d.MouseKeysRight(round(x / MOUSE_KEYS_DELTA_X))
+  elseif x < 0 then
+    a2d.MouseKeysLeft(round(-x / MOUSE_KEYS_DELTA_X))
+  end
+  if y > 0 then
+    a2d.MouseKeysDown(round(y / MOUSE_KEYS_DELTA_Y))
+  elseif y < 0 then
+    a2d.MouseKeysUp(round(-y / MOUSE_KEYS_DELTA_Y))
+  end
 end
 
 --------------------------------------------------
