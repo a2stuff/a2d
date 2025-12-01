@@ -37,11 +37,12 @@ The default system configuration is:
 
 Tests can define custom MAME configuration. The contents of a config block are executed by `mametest` to override environment variable that are used when MAME launches.
 
-* `MODEL` - the system type, e.g. "apple2ee", "apple2gsr1" etc
-* `MODELARGS` - slot and other configuration, e.g. "-sl2 mouse"
-* `DISKARGS` - disk configuration, e.g. "-hard1 a2d.hdv"
+* `MODEL` - the system type, e.g. `"apple2ee"`, `"apple2gsr1"` etc
+* `MODELARGS` - slot and other configuration, e.g. `"-sl2 mouse"`
+  * A slot can be emptied with empty single-quoted string, e.g. `-sl6 ''`
+* `DISKARGS` - disk configuration, e.g. `"-hard1 a2d.hdv"`
   * NOTE: This is parsed as space-delimited pairs and the second argument is copied to a temp directory so that the original disk images are not modified
-* `RESOLUTION` - defaults to "560x384"; for IIgs should be set to "704x462"
+* `RESOLUTION` - defaults to `"560x384"`; for IIgs should be set to `"704x462"`
 
 These variables can be used:
 

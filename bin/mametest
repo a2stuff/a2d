@@ -143,16 +143,17 @@ export TEST_NAME
 pushd "$MAMEDIR" > /dev/null
 exec 5>&1 # duplicate stdout filehandle
 output=$(
-  "$MAMEEXE" \
+  # eval here to allow configs to specify empty variables e.g. -sl6 ''
+  eval "'$MAMEEXE' \
     -skip_gameinfo -nosamples \
-    -window -nomax -resolution "$RESOLUTION" -nounevenstretch \
+    -window -nomax -resolution '$RESOLUTION' -nounevenstretch \
     -mouse \
-    -nvram_directory "$NVRAMDIR" \
-    -snapshot_directory "$SNAPDIR" -snapsize "$RESOLUTION" \
+    -nvram_directory '$NVRAMDIR' \
+    -snapshot_directory '$SNAPDIR' -snapsize '$RESOLUTION' \
     $OUTPUTARGS \
-    "$MODEL" $MODELARGS $DISKARGS \
+    '$MODEL' $MODELARGS $DISKARGS \
     $THROTTLE -nosleep \
-    $SCRIPTARGS \
+    $SCRIPTARGS" \
     2>&1 | \
     egrep --line-buffered -v "Secure coding is automatically enabled" | \
     tee /dev/fd/5
