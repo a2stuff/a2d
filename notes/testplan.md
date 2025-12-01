@@ -1351,17 +1351,16 @@ Run these tests on a system without a real-time clock:
 * Configure a system with two joysticks (or paddles 2 and 3). Run the DA. Verify that after the second joystick is moved, a second indicator is shown.
 * Configure a system with a single joystick. Run the DA. Move the joystick to the right and bottom extremes. Verify that the indicator does not wrap to the left or top edges.
 
-## Find Files
+## Find Files - covered by `tests/find_files.lua`
 
 * Launch DeskTop. Close all windows. Apple Menu > Find Files. Type `PRODOS` and click Search. Verify that all volumes are searched recursively.
 * Launch DeskTop. Open a volume window. Apple Menu > Find Files. Type `PRODOS` and click Search. Verify that only that volume's contents are searched recursively.
-* Launch DeskTop. Open a volume window. Open a folder window. Apple Menu > Find Files. Type "PRODOS" and click Search. Verify that only that folder's contents are searched recursively.
+* Launch DeskTop. Open a volume window. Open a folder window. Apple Menu > Find Files. Type `PRODOS` and click Search. Verify that only that folder's contents are searched recursively.
 * Launch DeskTop. Open a window. Apple Menu > Find Files. Type `*` and click Search. Select a file in the list. Press Open-Apple+O. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
 * Launch DeskTop. Open a window. Apple Menu > Find Files. Type `*` and click Search. Select a file in the list. Press Solid-Apple+O. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
 * Launch DeskTop. Open a window. Apple Menu > Find Files. Type `*` and click Search. Double-click a file in the list. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
 * Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. Apple Menu > Find Files. Type `*` and click Search. Double-click a file in the list that's inside the folder. Verify that the Find Files window closes, and that the file icon is selected.
 
-* Create a set of nested directories, 21 levels deep or more (e.g. `/VOL/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D`). Launch DeskTop and open the volume. Apple Menu > Find Files. Type `*` and click Search. Verify that the DA doesn't crash. (Not all files will be found, though.)
 * Rename `/TESTS` to `/ABCDEF123456789`. Open the volume. Apple Menu > Find Files. Type *. Verify that the DA doesn't crash.
 * Open `/TESTS/FIND.FILES`. Apple Menu > Find Files. Type `*` and click Search. Verify that the DA doesn't crash. (But the deeply nested `NOT.FOUND` file will not be found.)
 

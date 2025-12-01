@@ -109,6 +109,7 @@ for k,v in pairs({
     CONTROL_PANELS         = 3,
     CALCULATOR             = 6,
     CHANGE_TYPE            = 8,
+    FIND_FILES             = 9,
     RUN_BASIC_HERE         = 11,
     SORT_DIRECTORY         = 12,
 
