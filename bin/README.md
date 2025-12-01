@@ -18,8 +18,8 @@
   * Generates a set of disk images for distribution.
 * [roll](roll)
   * Updates external dependencies.
-* [make_builddate_inc](make_builddate_inc)
-  * Generates include file containing the last commit date.
+* [make_buildinfo_inc](make_buildinfo_inc)
+  * Generates include file containing the last commit date, etc.
 * [setlang](setlang)
   * Updates the config to build the specified language.
 * [setopt](setopt)

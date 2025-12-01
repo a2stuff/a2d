@@ -11,7 +11,7 @@ BINDIR = ../../bin
 
 # Evaluated relative to each Makefile - include, library, and resource files
 COMMON_HEADERS = \
-	../config.inc $(OUTDIR)/builddate.inc ../common.inc \
+	../config.inc $(OUTDIR)/buildinfo.inc ../common.inc \
 	$(wildcard ../inc/*.inc *.inc) \
 	$(wildcard ../lib/*.s ../lib/*.inc) \
 	$(wildcard res/*.res.?? ../common/res/*.res.??)
@@ -44,8 +44,8 @@ $(OUTDIR)/%.font: ../../res/fonts/$$(basename $$*).unicode.txt
 .NOTINTERMEDIATE: $(SYS_FONTS) $(MONO_FONTS)
 
 # Build Date
-$(OUTDIR)/builddate.inc: FORCE
-	@$(BINDIR)/make_builddate_inc
+$(OUTDIR)/buildinfo.inc: FORCE
+	@$(BINDIR)/make_buildinfo_inc
 
 FORCE:
 

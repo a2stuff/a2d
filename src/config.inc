@@ -17,7 +17,7 @@ kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 6
 .define kDeskTopVersionSuffix "-alpha0"
 
-.include "../out/builddate.inc"
+.include "../out/buildinfo.inc"
 
 ;;; Localization - applies language suffix to filename
 

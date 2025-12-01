@@ -6,14 +6,15 @@ set -e
 cd "$(dirname "$0")/.."
 
 lang="$(egrep 'define kBuildLang' src/config.inc | cut -d'"' -f2)"
+resfile="src/common/res/common.res.${lang}"
 
 yyyy="$(git log -1 --format="%ad" --date=format:%Y)"
 yy="$(git log -1 --format="%ad" --date=format:%y)"
 mm="$(git log -1 --format="%ad" --date=format:%m)"
 dd="$(git log -1 --format="%ad" --date=format:%d)"
 
-month=$(egrep "\bres_string_month_name_${mm}\b" "src/common/res/common.res.${lang}" | cut -d'"' -f2)
-order=$(egrep "\bres_const_date_order\b" "src/common/res/common.res.${lang}" | cut -d' ' -f3)
+month="$(egrep "\bres_string_month_name_${mm}\b" "$resfile" | cut -d'"' -f2)"
+order="$(egrep "\bres_const_date_order\b" "$resfile" | cut -d' ' -f3)"
 
 if [ "$order" = "0" ]; then
     date="$month $dd, $yyyy"
@@ -24,7 +25,7 @@ fi
 OUTDIR="out"
 
 # Generate tmp file
-cat > $OUTDIR/builddate.inc.tmp  <<EOF
+cat > $OUTDIR/buildinfo.inc.tmp  <<EOF
 .define kBuildDate "$date"
 kBuildYYYY = $yyyy
 kBuildYY   = $yy
@@ -33,9 +34,9 @@ kBuildDD   = $dd
 EOF
 
 # Only generate real file if it doesn't exist or changed
-if [ -r $OUTDIR/builddate.inc ]; then
-  cmp --silent $OUTDIR/builddate.inc.tmp $OUTDIR/builddate.inc || \
-    mv -f $OUTDIR/builddate.inc.tmp $OUTDIR/builddate.inc
+if [ -r $OUTDIR/buildinfo.inc ]; then
+  cmp --silent $OUTDIR/buildinfo.inc.tmp $OUTDIR/buildinfo.inc || \
+    mv -f $OUTDIR/buildinfo.inc.tmp $OUTDIR/buildinfo.inc
 else
-  mv -f $OUTDIR/builddate.inc.tmp $OUTDIR/builddate.inc
+  mv -f $OUTDIR/buildinfo.inc.tmp $OUTDIR/buildinfo.inc
 fi
