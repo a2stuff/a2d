@@ -1690,7 +1690,7 @@ Repeat for each list box where the contents are dynamic:
 If the list box supports double-click:
 * Double-click an item. Verify that the corresponding action button flashes.
 
-# Option Picker Controls
+# Option Picker Controls - covered by `tests/option_pickers.lua`
 
 This covers:
 * Shortcuts (module)
