@@ -26,7 +26,6 @@ test.Step(
     a2d.DialogOK()
     test.Snap("verify alert shown")
     a2d.DialogOK()
-    return test.PASS
 end)
 
 test.Step(
@@ -42,7 +41,6 @@ test.Step(
     apple2.Type("8000")
     a2d.DialogOK()
     test.Snap("verify no alert shown")
-    return test.PASS
 end)
 
 test.Step(
@@ -59,7 +57,6 @@ test.Step(
     test.Snap("verify alert shown")
     a2d.DialogOK()
     test.Snap("verify only non-folders are modified")
-    return test.PASS
 end)
 
 test.Step(
@@ -77,7 +74,6 @@ test.Step(
     apple2.Type("8000")
     a2d.DialogOK()
     test.Snap("verify no alert shown")
-    return test.PASS
 end)
 
 test.Step(
@@ -91,7 +87,6 @@ test.Step(
     a2d.DialogOK()
     test.Snap("verify alert shown")
     a2d.DialogOK()
-    return test.PASS
 end)
 
 test.Step(
@@ -105,7 +100,6 @@ test.Step(
     a2d.DialogOK()
     test.Snap("verify alert shown")
     a2d.DialogOK()
-    return test.PASS
 end)
 
 test.Step(
@@ -121,5 +115,4 @@ test.Step(
     test.Snap("verify alert shown")
     a2d.DialogOK()
     test.Snap("only a single alert was shown")
-    return test.PASS
 end)

@@ -4,10 +4,7 @@
 
   ============================================================]]--
 
-local test = {
-  PASS = 1,
-  FAIL = 0,
-}
+local test = {}
 
 local test_name = emu.subst_env("$TEST_NAME")
 

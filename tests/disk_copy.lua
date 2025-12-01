@@ -28,6 +28,4 @@ test.Step(
         m.DoubleClick()
         test.Snap("verify OK button flashes")
     end)
-
-    return test.PASS
 end)

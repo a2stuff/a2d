@@ -18,7 +18,6 @@ test.Step(
     end
     apple2.EscapeKey()
     test.Snap("should not have moved")
-    return test.PASS
 end)
 
 test.Step(
@@ -35,7 +34,6 @@ test.Step(
     apple2.ReturnKey()
     a2d.WaitForRepaint()
     test.Snap("should have moved right and down")
-    return test.PASS
 end)
 
 test.Step(
@@ -51,7 +49,6 @@ test.Step(
     end
     apple2.EscapeKey()
     test.Snap("should not have resized")
-    return test.PASS
 end)
 
 test.Step(
@@ -68,5 +65,4 @@ test.Step(
     apple2.ReturnKey()
     a2d.WaitForRepaint()
     test.Snap("should have resized")
-    return test.PASS
 end)

@@ -26,7 +26,6 @@ test.Step(
     emu.wait(10) -- floppy catalog
     test.Snap("verify catalog screen is shown")
     a2d.CloseWindow()
-    return test.PASS
 end)
 
 test.Step(
@@ -41,7 +40,6 @@ test.Step(
     emu.wait(10) -- floppy catalog
     test.Snap("verify catalog screen is shown")
     a2d.CloseWindow()
-    return test.PASS
 end)
 
 
@@ -53,7 +51,6 @@ test.Step(
     test.Snap("verify Cancel button flashes")
     a2d.WaitForRepaint()
     test.Snap("verify dialog closes")
-    return test.PASS
 end)
 
 test.Step(
@@ -66,7 +63,6 @@ test.Step(
     end)
     a2d.WaitForRepaint()
     test.Snap("verify dialog closes")
-    return test.PASS
 end)
 
 test.Step(
@@ -83,7 +79,6 @@ test.Step(
     test.Snap("verify Import button flashes")
     emu.wait(10) -- floppy read
     a2d.CloseWindow()
-    return test.PASS
 end)
 
 test.Step(
@@ -97,6 +92,5 @@ test.Step(
     test.Snap("verify Cancel button flashes")
     a2d.WaitForRepaint()
     test.Snap("verify dialog closes")
-    return test.PASS
 end)
 

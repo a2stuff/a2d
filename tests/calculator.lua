@@ -108,8 +108,6 @@ test.Variants(
     apple2.EscapeKey()
 
     a2d.CloseWindow()
-
-    return test.PASS
 end)
 
 test.Variants(
@@ -166,7 +164,5 @@ test.Variants(
 
     -- Restore decimal separator
     SetNumberFormat(".", ",")
-
-    return test.PASS
 end)
 

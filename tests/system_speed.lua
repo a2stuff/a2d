@@ -24,7 +24,6 @@ test.Step(
     a2d.DialogOK()
     a2d.CloseAllWindows()
     -- TODO: Expect still running
-    return test.PASS
 end)
 
 test.Step(
@@ -36,7 +35,6 @@ test.Step(
     a2d.DialogOK()
     a2d.CloseAllWindows()
     -- TODO: Expect still running
-    return test.PASS
 end)
 
 test.Step(
@@ -48,7 +46,6 @@ test.Step(
     apple2.Type("F")
     test.Expect(apple2.ReadSSW("RDDHIRES") < 128, "Should still be in DHR mode")
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -68,5 +65,4 @@ test.Step(
         end
         a2d.CloseAllWindows()
     end)
-    return test.PASS
 end)

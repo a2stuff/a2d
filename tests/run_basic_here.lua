@@ -27,7 +27,6 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForRestart()
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -42,7 +41,6 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForRestart()
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -59,6 +57,5 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
     a2d.WaitForRestart()
     test.Expect(apple2.GrabTextScreen():match("PRODOS BASIC"), "BASIC should start")
-    return test.PASS
 end)
 

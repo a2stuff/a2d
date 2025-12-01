@@ -14,7 +14,6 @@ test.Step(
         a2d.WaitForRepaint()
     end)
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -29,7 +28,6 @@ test.Step(
         a2d.WaitForRepaint()
         a2d.DialogCancel()
     end)
-    return test.PASS
 end)
 
 test.Step(
@@ -52,5 +50,4 @@ test.Step(
         test.Snap("verify OK button flashes")
         a2d.WaitForRepaint()
     end)
-    return test.PASS
 end)

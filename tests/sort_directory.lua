@@ -77,7 +77,6 @@ test.Variants(
     apple2.TypeLine("BYE")
     a2d.WaitForRestart()
 
-    return test.PASS
 end)
 
 test.Step(
@@ -103,7 +102,6 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForRestart()
 
-    return test.PASS
 end)
 
 test.Step(
@@ -126,5 +124,4 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForRestart()
 
-    return test.PASS
 end)

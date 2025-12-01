@@ -37,7 +37,6 @@ test.Step(
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     test.Snap("Back to desktop")
-    return test.PASS
 end)
 
 test.Step(
@@ -50,7 +49,6 @@ test.Step(
     -- Move the mouse
     apple2.MoveMouse(0, 0)
     test.Snap("Mouse to 0,0")
-    return test.PASS
 end)
 
 function IsHi(ident)

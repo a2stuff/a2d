@@ -12,7 +12,6 @@ test.Step(
     a2d.WaitForRepaint()
     test.Snap("verify current month and year")
     a2d.CloseWindow()
-    return test.PASS
 end)
 
 test.Step(
@@ -29,5 +28,4 @@ test.Step(
     a2d.WaitForRepaint()
     test.Snap("verify month and year match build")
     a2d.CloseWindow()
-    return test.PASS
 end)

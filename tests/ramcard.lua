@@ -88,7 +88,6 @@ function RenameTest(name, proc)
       a2d.DeletePath("/A2.DESKTOP/LOCAL")
       a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
       a2d.WaitForRestart()
-      return test.PASS
   end)
 end
 

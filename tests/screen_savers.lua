@@ -29,7 +29,6 @@ test.Variants(
       test.ExpectEquals(apple2.GetDoubleHiresByte(0, col), 0x7F, "Menu should not be highlighted")
     end
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -46,7 +45,6 @@ test.Step(
     test.ExpectNotEquals(apple2.GetDoubleHiresByte(4, 78), 0x7F, "Clock should be visible already")
 
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Variants(
@@ -66,7 +64,6 @@ test.Variants(
 
     a2d.WaitForRepaint()
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 -- Remove clock driver
@@ -83,7 +80,6 @@ test.Step(
     test.Snap("verify alert shown")
     a2d.DialogOK()
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -93,5 +89,4 @@ test.Step(
     test.Snap("verify alert shown")
     a2d.DialogOK()
     a2d.CloseAllWindows()
-    return test.PASS
 end)

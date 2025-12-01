@@ -17,5 +17,4 @@ test.Step(
     test.Snap("Green")
     apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
     test.Snap("Video-7")
-    return test.PASS
 end)

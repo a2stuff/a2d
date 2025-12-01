@@ -18,5 +18,4 @@ test.Step(
   function()
     a2d.OpenMenu(a2d.STARTUP_MENU)
     test.Snap("verify Slot 2 is listed")
-    return test.PASS
 end)
