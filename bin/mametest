@@ -81,6 +81,10 @@ HARDIMG="out/A2DeskTop-${version}_800k.2mg"
 FLOP1IMG="out/A2DeskTop-${version}_140k_disk1.po"
 FLOP2IMG="out/A2DeskTop-${version}_140k_disk2.po"
 
+if [ ! -f "$HARDIMG" ]; then
+  make && make package
+fi
+
 MODEL="apple2ee"
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi -aux rw3"
 DISKARGS="-hard1 $HARDIMG"
