@@ -98,14 +98,14 @@ test.Step(
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.SelectAndOpen("DATE.AND.TIME")
     test.Snap("verify dialog date matches packaged file dates")
-    -- TODO: The date is only updated when the version is bumped,
-    -- so this doesn't work quite as expected.
     a2d.DialogOK()
     test.Snap("verify full repaint and dates now Today")
     a2d.OAShortcut("1") -- invoke darkness
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.DialogOK()
     test.Snap("verify no full repaint")
+    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
+    a2d.WaitForRestart()
 end)
 
 test.Step(
@@ -160,6 +160,7 @@ test.Step(
       apple2.UpArrowKey()
       test.Snap("verify 12 hour cycle")
     end
+    a2d.DialogOK()
 end)
 
 test.Step(
@@ -181,6 +182,7 @@ test.Step(
       apple2.UpArrowKey()
       test.Snap("verify 24 hour cycle")
     end
+    a2d.DialogOK()
 end)
 
 
@@ -268,7 +270,7 @@ test.Step(
         m.Click()
         test.Snap("verify period focused")
     end)
-    a2d.DialogCancel()
+    a2d.DialogOK()
 end)
 
 test.Step(
@@ -283,7 +285,7 @@ test.Step(
         m.Click()
         test.Snap("verify period not focused")
     end)
-    a2d.DialogCancel()
+    a2d.DialogOK()
 end)
 
 test.Step(
@@ -314,7 +316,7 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify year decrements")
     end)
-    a2d.DialogCancel()
+    a2d.DialogOK()
 end)
 
 test.Step(
