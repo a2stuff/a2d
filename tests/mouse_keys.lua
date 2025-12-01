@@ -3,12 +3,12 @@ test.Step(
   function()
     a2d.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(40,10) -- File
+        m.MoveToApproximately(40,10) -- File
         m.ButtonDown()
         m.MoveByApproximately(0,20) -- File > Open
         m.ButtonUp()
         a2d.WaitForRepaint()
-        m.GoToApproximately(560/2, 192/2)
+        m.MoveToApproximately(560/2, 192/2)
         test.Snap("verify cursor at center of screen")
     end)
     a2d.CloseAllWindows()
@@ -20,12 +20,12 @@ test.Step(
   function()
     a2d.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(40,10) -- File
+        m.MoveToApproximately(40,10) -- File
         m.Click()
         m.MoveByApproximately(0,20) -- File > Open
         m.Click()
         a2d.WaitForRepaint()
-        m.GoToApproximately(560/2, 192/2)
+        m.MoveToApproximately(560/2, 192/2)
         test.Snap("verify cursor at center of screen")
     end)
     a2d.CloseAllWindows()
@@ -36,16 +36,16 @@ test.Step(
   "Mouse Keys - screen bounds",
   function()
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(560/2, 192/2)
+        m.MoveToApproximately(560/2, 192/2)
         m.MoveByApproximately(0,-192)
         test.Snap("verify cursor at top center")
-        m.GoToApproximately(560/2, 192/2)
+        m.MoveToApproximately(560/2, 192/2)
         m.MoveByApproximately(0,192)
         test.Snap("verify cursor at bottom center")
-        m.GoToApproximately(560/2, 192/2)
+        m.MoveToApproximately(560/2, 192/2)
         m.MoveByApproximately(-560,0)
         test.Snap("verify cursor at left center")
-        m.GoToApproximately(560/2, 192/2)
+        m.MoveToApproximately(560/2, 192/2)
         m.MoveByApproximately(560,0)
         test.Snap("verify cursor at right center")
     end)
@@ -58,11 +58,11 @@ test.Step(
   "Mouse Keys - stay in mousekeys mode",
   function()
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(vol_icon_x, vol_icon_y)
+        m.MoveToApproximately(vol_icon_x, vol_icon_y)
         m.Click()
         test.Snap("verify icon selected")
         apple2.ReturnKey()
-        m.GoToApproximately(560/2, 192/2)
+        m.MoveToApproximately(560/2, 192/2)
         test.Snap("verify cursor at screen center")
         m.Click()
     end)
@@ -74,7 +74,7 @@ test.Step(
   function()
     a2d.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(40,10) -- File
+        m.MoveToApproximately(40,10) -- File
         m.Click()
         m.MoveByApproximately(0,192)
         test.Snap("verify menu still open")
@@ -88,7 +88,7 @@ test.Step(
   "Mouse Keys - double-click",
   function()
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(vol_icon_x, vol_icon_y)
+        m.MoveToApproximately(vol_icon_x, vol_icon_y)
         m.DoubleClick()
         a2d.WaitForRepaint()
         test.Snap("verify window opened")

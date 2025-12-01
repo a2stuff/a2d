@@ -11,7 +11,7 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP")
     a2d.SelectAndOpen("EXTRAS")
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(40, 26)
+        m.MoveToApproximately(40, 26)
         apple2.PressOA()
         m.Click()
         apple2.ReleaseOA()

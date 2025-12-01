@@ -8,7 +8,7 @@ test.Step(
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(180,60) -- over shortcut
+        m.MoveToApproximately(180,60) -- over shortcut
         m.DoubleClick()
         test.Snap("verify OK button flashes")
         a2d.WaitForRepaint()
@@ -22,7 +22,7 @@ test.Step(
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK-2)
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(150,80) -- over volume
+        m.MoveToApproximately(150,80) -- over volume
         m.DoubleClick()
         test.Snap("verify OK button flashes")
         a2d.WaitForRepaint()
@@ -45,7 +45,7 @@ test.Step(
     a2d.WaitForRestart()
 
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(150,60) -- over shortcut
+        m.MoveToApproximately(150,60) -- over shortcut
         m.DoubleClick()
         test.Snap("verify OK button flashes")
         a2d.WaitForRepaint()

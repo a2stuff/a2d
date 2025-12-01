@@ -17,14 +17,14 @@ test.Step(
     a2d.WaitForRestart()
 
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(180,90)
+        m.MoveToApproximately(180,90)
         m.DoubleClick()
         test.Snap("verify OK button flashes")
     end)
     a2d.WaitForRepaint()
 
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(180,60)
+        m.MoveToApproximately(180,60)
         m.DoubleClick()
         test.Snap("verify OK button flashes")
     end)

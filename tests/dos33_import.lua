@@ -34,7 +34,7 @@ test.Step(
     a2d.SelectAndOpen("DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(260,140)
+        m.MoveToApproximately(260,140)
         m.Click()
     end)
     emu.wait(10) -- floppy catalog
@@ -58,7 +58,7 @@ test.Step(
   function()
     a2d.SelectAndOpen("DOS33.IMPORT")
     a2d.InMouseKeysMode(function(m)
-        m.GoToApproximately(320,140)
+        m.MoveToApproximately(320,140)
         m.Click()
     end)
     a2d.WaitForRepaint()

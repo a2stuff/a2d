@@ -42,7 +42,7 @@ test.Variants(
     else
       -- click
       a2d.InMouseKeysMode(function(m)
-          m.GoToApproximately(150,60)
+          m.MoveToApproximately(150,60)
           m.DoubleClick()
       end)
       a2d.WaitForRepaint()

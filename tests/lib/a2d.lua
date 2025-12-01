@@ -338,7 +338,7 @@ function a2d.InMouseKeysMode(func)
       Right = a2d.MouseKeysRight,
 
       Home = a2d.MouseKeysHome,
-      GoToApproximately = a2d.MouseKeysGoToApproximately,
+      MoveToApproximately = a2d.MouseKeysMoveToApproximately,
       MoveByApproximately = a2d.MouseKeysMoveByApproximately,
   })
   a2d.ExitMouseKeysMode()
@@ -402,7 +402,7 @@ function a2d.MouseKeysHome()
   a2d.MouseKeysUp(round(192 / MOUSE_KEYS_DELTA_Y))
 end
 
-function a2d.MouseKeysGoToApproximately(x,y)
+function a2d.MouseKeysMoveToApproximately(x,y)
   a2d.MouseKeysHome() -- known location
   a2d.MouseKeysMoveByApproximately(x, y)
 end
