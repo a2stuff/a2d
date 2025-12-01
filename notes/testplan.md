@@ -160,6 +160,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Open `TESTS/FILE.TYPES`. Verify that an icon appears for the `TEST08` file.
 * Open `TESTS/FILE.TYPES`. Verify that an icon appears for the `TEST01` file.
 
+* Configure a system with a SmartPort hard drive, RAMFactor card, and Disk II controller card with drives but no floppies. (MAME works) Launch DeskTop. Verify that the RAMCard volume icon doesn't flicker when the desktop is initially painted. (This will be easier to observe in emulators with acceleration disabled.)
 
 ## Selection
 

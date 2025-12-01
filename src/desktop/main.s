@@ -67,7 +67,6 @@ JT_GET_TICKS:           jmp     GetTickCount            ; *
 ;;; Main event loop for the application
 
 .proc MainLoop
-
         ;; Poll drives every Nth time `SystemTask` does its thing.
         ;; At 1MHz on a //e this is about once every 3 seconds.
         kDrivePollFrequency = 35

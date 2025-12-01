@@ -643,28 +643,27 @@ end:
         pha                     ; A = unmasked unit number
 
         jsr     main::CreateVolumeIcon ; A = unmasked unit number, Y = device index
-      IF A = #ERR_DEVICE_NOT_CONNECTED
+
+      IF ZERO
+        ;; Success! Draw it.
+        ldx     cached_window_icon_count
+        copy8   cached_window_icon_list-1,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param
+      ELSE_IF A = #ERR_DEVICE_NOT_CONNECTED
         ;; If device is not connected, remove it from DEVLST
         ;; unless it's a Disk II.
         pla                     ; A = unmasked unit number
         pha                     ; A = unmasked unit number
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
         jsr     main::IsDiskII
-        beq     done_create     ; skip
+       IF ZC
         CALL    _RemoveDevice, X=device_index
-        jmp     next
-      END_IF
-
-      IF A = #ERR_DUPLICATE_VOLUME
+       END_IF
+      ELSE_IF A = #ERR_DUPLICATE_VOLUME
+        ;; If duplicate, show a special error.
         copy8   #kErrDuplicateVolName, main::pending_alert
       END_IF
 
-done_create:
-        ldx     cached_window_icon_count
-        copy8   cached_window_icon_list-1,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-
-next:
         pla
         dec     device_index
     WHILE POS

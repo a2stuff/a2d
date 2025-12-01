@@ -30,6 +30,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Eliminate cursor flickering when clicking on the desktop or windows.
 * Time window open/close animations using VBL.
 * Add Apple+Escape as shortcut to clear selection.
+* Prevent volume icon flicker on startup with empty Disk II drives.
 
 ### Selector
 
