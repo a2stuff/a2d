@@ -16,7 +16,13 @@ cd "$(dirname "$0")/.."
 
 vmajor=$(grep 'kDeskTopVersionMajor =' src/config.inc | sed -e 's/.* = //')
 vminor=$(grep 'kDeskTopVersionMinor =' src/config.inc | sed -e 's/.* = //')
-vsuffix=$(grep 'define kDeskTopVersionSuffix' src/config.inc | cut -d'"' -f2)
+
+gittag="$(git describe --abbrev=0 --tags)"
+case "$gittag" in
+  v*.*-*) vsuffix="-${gittag/#*-/}" ;;
+  *) echo "Last tag is '$gittag'; manually tag as vM.M-alpha0" 1>&2 ; exit 1 ;;
+esac
+
 lang=$(grep 'define kBuildLang' src/config.inc | cut -d'"' -f2)
 vtype=$(echo "$vsuffix" | sed -E -e 's/^-//' -e 's/[0-9]+$//')
 vrel=$(echo "$vsuffix" | sed -E -e 's/[^0-9]*//')
@@ -26,14 +32,12 @@ vrel=$(echo "$vsuffix" | sed -E -e 's/[^0-9]*//')
 
 vrel=`expr $vrel + 1`
 
-version=$(echo ${vmajor}.${vminor}-${vtype}${vrel})
+version="$(echo ${vmajor}.${vminor}-${vtype}${vrel})"
 
 # --------------------------------------------------
 echo "Bumping to ${version}..."
 
 bin/setlang "en"
-
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-${vtype}${vrel}\"/" src/config.inc
 
 git commit -a -m "Bump version to ${version}" > /dev/null
 git tag "v${version}" > /dev/null

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# Generate `out/date.inc` based off last commit
+# Generate `out/buildinfo.inc` based off last commit and tag
 
 set -e
 cd "$(dirname "$0")/.."
+source "bin/util.sh"
 
-lang="$(egrep 'define kBuildLang' src/config.inc | cut -d'"' -f2)"
 resfile="src/common/res/common.res.${lang}"
 
 yyyy="$(git log -1 --format="%ad" --date=format:%Y)"
@@ -15,11 +15,14 @@ dd="$(git log -1 --format="%ad" --date=format:%d)"
 
 month="$(egrep "\bres_string_month_name_${mm}\b" "$resfile" | cut -d'"' -f2)"
 order="$(egrep "\bres_const_date_order\b" "$resfile" | cut -d' ' -f3)"
-
 if [ "$order" = "0" ]; then
     date="$month $dd, $yyyy"
 else
     date="$dd $month $yyyy"
+fi
+
+if [ "$supports_lowercase" != "1" ]; then
+  vsuffix="$(echo "$vsuffix" | tr 'a-z' 'A-Z')"
 fi
 
 OUTDIR="out"
@@ -31,6 +34,7 @@ kBuildYYYY = $yyyy
 kBuildYY   = $yy
 kBuildMM   = $mm
 kBuildDD   = $dd
+.define kDeskTopVersionSuffix "$vsuffix"
 EOF
 
 # Only generate real file if it doesn't exist or changed

@@ -15,7 +15,6 @@
 .define kDeskTopProductName "Apple II DeskTop"
 kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 6
-.define kDeskTopVersionSuffix "-alpha0"
 
 .include "../out/buildinfo.inc"
 

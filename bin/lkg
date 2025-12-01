@@ -5,13 +5,6 @@ cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 # ============================================================
-# Tweak config
-
-git checkout src/config.inc
-hash=$(git rev-parse --short HEAD)
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-build-${hash}\"/" src/config.inc
-
-# ============================================================
 # Do a build and package
 
 make

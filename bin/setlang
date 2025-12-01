@@ -17,7 +17,6 @@ perl -pni \
 if [ "$supports_lowercase" != "1" ]; then
   perl -pni \
        -e 's/(?<=define kDeskTopProductName )"(.*)"/"\U$1\E"/;' \
-       -e 's/(?<=define kDeskTopVersionSuffix )"(.*)"/"\U$1\E"/;' \
        src/config.inc
 fi
 

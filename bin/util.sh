@@ -73,9 +73,19 @@ fini_progress () {
 # ============================================================
 # Extract metadata for the build
 
+lang=$(grep 'define kBuildLang' src/config.inc | cut -d'"' -f2)
+decoded_a=$(echo 'a' | bin/transcode.pl decode $lang)
+supports_lowercase=$(if [ "$decoded_a" == "a" ]; then echo 1; else echo 0; fi);
+
 vmajor=$(grep 'kDeskTopVersionMajor =' src/config.inc | sed -e 's/.* = //')
 vminor=$(grep 'kDeskTopVersionMinor =' src/config.inc | sed -e 's/.* = //')
-vsuffix=$(grep 'define kDeskTopVersionSuffix' src/config.inc | cut -d'"' -f2)
-lang=$(grep 'define kBuildLang' src/config.inc | cut -d'"' -f2)
+
+# vsuffix is like "-alpha123" (current tag), "-build-abc1234" (hash), "" (release)
+gittag="$(git describe --tags --exact-match 2> /dev/null || true)"
+case "$gittag" in
+  v*.*-*) vsuffix="-${gittag/#*-/}" ;;
+  v*.*) vsuffix="";;
+  *) vsuffix="-build-$(git rev-parse --short HEAD)" ;;
+esac
+
 version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
-supports_lowercase=$(grep 'define kBuildSupportsLowercase' src/config.inc | cut -d' ' -f3)
