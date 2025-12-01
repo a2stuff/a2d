@@ -6,9 +6,7 @@
   ============================================================]]--
 
 -- Add shortcut for "Darkness"
-a2d.OpenPath("/A2.DESKTOP/EXTRAS")
-apple2.Type("DARKNESS")
-a2d.WaitForRepaint()
+a2d.SelectPath("/A2.DESKTOP/EXTRAS/DARKNESS")
 a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
 a2d.DialogOK()
 

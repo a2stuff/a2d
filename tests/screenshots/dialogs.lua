@@ -39,7 +39,7 @@ end)
 test.Step(
   "File > Get Info (volume)",
   function()
-    apple2.Type("A2.DESKTOP")
+    a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I")
     emu.wait(5) -- enumerating takes a bit
     test.Snap("File > Get Info (volume)")
@@ -50,8 +50,7 @@ end)
 test.Step(
   "File > Get Info (file)",
   function()
-    a2d.SelectAndOpen("A2.DESKTOP")
-    apple2.Type("READ.ME")
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.OAShortcut("I")
     test.Snap("File > Get Info (file)")
     a2d.DialogCancel()
@@ -62,8 +61,7 @@ end)
 test.Step(
   "File > Copy To...",
   function()
-    a2d.SelectAndOpen("A2.DESKTOP")
-    apple2.Type("READ.ME")
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
     test.Snap("File > Copy To...")
     a2d.DialogCancel()
@@ -150,8 +148,7 @@ end)
 test.Step(
   "Shortcuts > Add a Shortcut...",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS")
-    apple2.Type("BASIC.SYSTEM")
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("Shortcuts > Add a Shortcut...")
     a2d.OAShortcut('4') -- copy to RAMCard / on first use

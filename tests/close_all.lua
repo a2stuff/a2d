@@ -8,8 +8,7 @@
 test.Step(
   "Close all using modifier-click",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.SelectAndOpen("EXTRAS")
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(40, 26)
         apple2.PressOA()
@@ -26,8 +25,7 @@ test.Variants(
     "Close all using shortcut - caps lock off",
   },
   function(idx)
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.SelectAndOpen("EXTRAS")
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
     if idx == 1 then
       a2d.OASAShortcut("W")
     else
@@ -46,8 +44,7 @@ test.Variants(
     "Close all using menu and modifier - Open Apple",
   },
   function(idx)
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.SelectAndOpen("EXTRAS")
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
     if idx == 1 then
       apple2.PressSA()
     else
@@ -73,8 +70,7 @@ end)
     "Close All shortcut with File menu open (caps lock off)",
   },
   function(idx)
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.SelectAndOpen("EXTRAS")
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS") -- leave parent open
     a2d.OpenMenu(a2d.FILE_MENU)
     if idx == 1 then
       a2d.OASAShortcut("W")

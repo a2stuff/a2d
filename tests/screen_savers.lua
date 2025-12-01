@@ -10,8 +10,7 @@ test.Variants(
     "Melt - Apple-Down does not leave File menu highlighted",
   },
   function(idx)
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS")
-    apple2.Type("MELT")
+    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MELT")
 
     if idx == 1 then
       a2d.OAShortcut("O")
@@ -34,8 +33,7 @@ end)
 test.Step(
   "Clock redraws immediately",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS")
-    apple2.Type("MELT")
+    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MELT")
     a2d.OAShortcut("O")
     emu.wait(1)
 

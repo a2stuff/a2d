@@ -238,10 +238,10 @@ function a2d.CloseAllWindows()
   a2d.WaitForRepaint()
 end
 
-function a2d.OpenPath(path)
+function a2d.OpenPath(path, opt_leave_parent)
   a2d.CloseAllWindows()
   for segment in path:gmatch("([^/]+)") do
-    a2d.SelectAndOpen(segment, true)
+    a2d.SelectAndOpen(segment, not opt_leave_parent)
   end
 end
 

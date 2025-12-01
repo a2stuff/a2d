@@ -171,8 +171,7 @@ RenameTest(
   "selector file",
   function(dtpath)
     -- Modifying shortcuts (selector)
-    a2d.OpenPath(dtpath.."/EXTRAS")
-    apple2.Type("BASIC.SYSTEM")
+    a2d.SelectPath(dtpath.."/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.WaitForRepaint()
     a2d.DialogOK()
