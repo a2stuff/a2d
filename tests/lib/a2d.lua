@@ -455,4 +455,19 @@ end
 
 --------------------------------------------------
 
+function a2d.SetProDOSDate(y,m,d)
+  local hi = (y % 100) << 1 | (m >> 4)
+  local lo = (m << 5) | d
+  apple2.WriteRAMDevice(0xBF90, lo)
+  apple2.WriteRAMDevice(0xBF91, hi)
+end
+
+function a2d.SetProDOSTime(h, m)
+  apple2.WriteRAMDevice(0xBF92, h)
+  apple2.WriteRAMDevice(0xBF93, m)
+end
+
+--------------------------------------------------
+
+
 return a2d

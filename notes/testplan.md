@@ -1244,7 +1244,7 @@ With Sci.Calc:
 * Enter '4' '5' 'COS' 'ACOS'. Verify that the result is approximately 45.
 * Enter '8' '9' 'TAN' 'ATAN'. Verify that the result is approximately 89.
 
-## Date & Time
+## Date & Time - covered in `tests/date_and_time.lua`
 
 * Open `/TESTS/FILE.TYPES`. View > by Name. Apple Menu > Control Panels > Date and Time. Change the time format from 12- to 24-hour or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the windows are shown with the new format.
 

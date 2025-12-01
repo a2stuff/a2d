@@ -7,6 +7,7 @@
 local test = {}
 
 local test_name = emu.subst_env("$TEST_NAME")
+test.count = 0
 
 local snapnum = -1
 
@@ -20,13 +21,12 @@ end
 
 --------------------------------------------------
 
--- TODO: Add assertion stuff here
-
 -- test.Step("do a thing", function() ... end)
 function test.Step(title, func)
   if test_name ~= "" and test_name ~= title then
     return
   end
+  test.count = test.count+1
 
   print("-- " .. title)
   local status, err = pcall(func)
@@ -43,7 +43,7 @@ function test.Variants(t, func)
 end
 
 function test.Failure(message)
-  snap(message)
+  print(message)
   os.exit(1)
 end
 

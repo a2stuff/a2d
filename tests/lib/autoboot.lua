@@ -28,6 +28,11 @@ local c = coroutine.create(function()
       return
     end
 
+    if test.count == 0 then
+      print("no tests run!")
+      os.exit(1)
+    end
+
     -- Success by default
     os.exit(0)
 end)
