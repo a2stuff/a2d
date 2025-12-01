@@ -783,6 +783,8 @@ kMaxSPDeviceNameLength = SPDIB::Device_Type_Code - SPDIB::Device_Name
 ;;; The Microdigital TK-3000 //e has the string "TK3000//e" at $FF0A
 ;;;
 ;;; The Pravetz 8A and 8C look like an original IIe, with the string "ПРАВЕЦ" at $FB0A
+;;;
+;;; The Nuova Elettronica DELTA has: $FA67 = $A0 and $FA68 = $C0
 
 .enum model
         ii                      ; Apple ][
