@@ -1722,7 +1722,7 @@ str_a2hr_suffix:
 
         .include "../lib/uppercase.s"
         .include "../inc/hires_table.inc"
-        .include "inc/hr_to_dhr.inc"
+        .include "hr_to_dhr.inc"
 
 .proc LZ4FH
         .include "../lib/lz4fh6502.s"

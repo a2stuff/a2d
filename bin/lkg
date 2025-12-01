@@ -8,7 +8,6 @@ source "bin/util.sh"
 # Tweak config
 
 git checkout src/config.inc
-bin/setdate en
 hash=$(git rev-parse --short HEAD)
 perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-build-${hash}\"/" src/config.inc
 

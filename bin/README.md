@@ -18,8 +18,8 @@
   * Generates a set of disk images for distribution.
 * [roll](roll)
   * Updates external dependencies.
-* [setdate](setdate)
-  * Updates the config with the current date.
+* [make_builddate_inc](make_builddate_inc)
+  * Generates include file containing the last commit date.
 * [setlang](setlang)
   * Updates the config to build the specified language.
 * [setopt](setopt)
@@ -59,6 +59,8 @@
   * Shows the size of the Main and Aux segments of all desk accessories.
 * [endproc.pl](endproc.pl)
   * Applies the coding style guidelines for `.endproc` comments.
+* [mametest](mametest)
+  * Runs Lua test scripts from `tests/` in MAME.
 * [md5](md5)
   * Generates MD5 checksums for all built files. Useful for ensuring a change does not alter the binaries in any way.
 * [stats.pl](stats.pl)

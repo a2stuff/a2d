@@ -18,6 +18,8 @@ clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
 	rm -f $(OUTDIR)/*.fonts
+	rm -f $(OUTDIR)/*.inc
+	rm -f $(OUTDIR)/*.tmp
 	rm -f $(TARGETS)
 
 $(OUTDIR)/selector.o: selector.s $(HEADERS) loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s $(foreach TK,$(TOOLKITS),../toolkits/$(TK).s)

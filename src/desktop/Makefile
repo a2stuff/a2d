@@ -18,6 +18,8 @@ clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
 	rm -f $(OUTDIR)/*.font
+	rm -f $(OUTDIR)/*.inc
+	rm -f $(OUTDIR)/*.tmp
 	rm -f $(TARGETS)
 
 $(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s auxmem.s lc.s res.s main.s init.s ovl*.s ../disk_copy/disk_copy.inc ../mgtk/mgtk.s $(foreach TK,$(TOOLKITS),../toolkits/$(TK).s)
