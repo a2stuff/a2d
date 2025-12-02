@@ -457,7 +457,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Open two windows. Hold Open-Apple and open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 * Open two windows. Hold Solid-Apple and open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 
-## View Menu
+## View Menu - covered by `tests/view_menu.lua`
 
 * Open folder with files. View > by Date. Verify that DeskTop does not hang.
 
