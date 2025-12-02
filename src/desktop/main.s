@@ -3298,7 +3298,7 @@ entry3:
         txa                     ; X = index
         pha
 
-        lda     cached_window_icon_list-1,x
+        lda     cached_window_icon_list,x
         pha                     ; A = icon id
         jsr     GetIconRecordNum
         tay                     ; Y = record num
