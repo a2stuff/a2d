@@ -1189,7 +1189,7 @@ Repeat for every desk accessory that runs in a movable window:
 Repeat for every desk accessory that runs in a window.
 * Launch DeskTop. Open the DA. Hold Apple (either Open-Apple or Solid-Apple) and press W. Verify that the desk accessory exits. Repeat with caps-lock off.
 
-## Control Panel
+## Control Panel - covered by `tests/control_panel*.lua`
 
 * Launch DeskTop. Open the Control Panel DA. Use the pattern editor to create a custom pattern, then click the desktop preview to apply it. Close the DA. Open the Control Panel DA. Click the right arrow above the desktop preview. Verify that the default checkerboard pattern is shown.
 
