@@ -1202,7 +1202,7 @@ Repeat for every desk accessory that runs in a window.
 
 * Configure a system with a RAMCard, and ensure DeskTop is configured to copy to RAMCard on startup. Launch DeskTop. Apple Menu > Control Panels. Open Control Panel. Modify a setting e.g. the desktop pattern. Close the window. Reboot the system. Verify that the setting is retained.
 
-## Options - need a way to eject via emulator from Lua
+## Options - covered by `tests/options.lua`
 
 * Open the Options DA. Eject the startup disk. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Options DA. Eject the startup disk. Modify a setting and close the DA. Verify that you are prompted to save.
