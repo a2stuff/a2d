@@ -4873,6 +4873,15 @@ close_loop:
         jmp     FormatUnitNum
     END_IF
 
+    IF A = #ERR_DEVICE_NOT_CONNECTED
+        ;; If Disk II this just means it is empty
+        ldy     devlst_index
+        lda     DEVLST,y
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
+        jsr     IsDiskII
+        RTS_IF ZS               ; is Disk II; that's fine
+    END_IF
+
         ;; Show an alert for other errors only if requested by the
         ;; caller. The history here is that an error should only be
         ;; shown if there is an unexpected type of error (i.e. not one
