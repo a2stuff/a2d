@@ -313,6 +313,12 @@ function a2d.CycleWindows()
   a2d.WaitForRepaint()
 end
 
+function a2d.AddShortcut(path)
+  a2d.SelectPath(path)
+  a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+  a2d.DialogOK()
+end
+
 --------------------------------------------------
 -- Mouse Keys
 --------------------------------------------------

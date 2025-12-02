@@ -1179,7 +1179,7 @@ Image File:
     * Select folder icon, select DA from Apple menu. Verify nothing happens other than open/close animation.
     * Select Electric Duet file icon, select DA from Apple menu. Verify music is played.
 
-# Desk Accessories
+# Desk Accessories - covered in `tests/desk_accessories.lua`
 
 * Launch DeskTop. Open the APPLE.MENU folder. Select a desk accessory icon. File > Open. Verify that the desk accessory launches.
 

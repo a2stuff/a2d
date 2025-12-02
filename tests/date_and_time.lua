@@ -5,21 +5,15 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
--- Add shortcut for "Darkness"
-a2d.SelectPath("/A2.DESKTOP/EXTRAS/DARKNESS")
-a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-a2d.DialogOK()
-
-
 test.Step(
   "Time format repaint",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.OAShortcut("1") -- Invoke darkness
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
+    apple2.DHRDarkness()
     a2d.DialogOK()
     test.Snap("verify full repaint and 24-hour format")
     a2d.CloseAllWindows()
@@ -93,15 +87,15 @@ a2d.WaitForRestart()
 test.Step(
   "Fresh disk image",
   function()
-    a2d.OAShortcut("1") -- invoke darkness
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.SelectAndOpen("DATE.AND.TIME")
     test.Snap("verify dialog date matches packaged file dates")
+    apple2.DHRDarkness()
     a2d.DialogOK()
     test.Snap("verify full repaint and dates now Today")
-    a2d.OAShortcut("1") -- invoke darkness
     a2d.SelectAndOpen("DATE.AND.TIME")
+    apple2.DHRDarkness()
     a2d.DialogOK()
     test.Snap("verify no full repaint")
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
@@ -344,7 +338,6 @@ test.Step(
 
     -- Use Date & Time to set date
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.OAShortcut("1") -- Invoke darkness
     a2d.SetProDOSDate(1998, 9, 13) -- so we know the delta
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.InMouseKeysMode(function(m)
@@ -352,6 +345,7 @@ test.Step(
         m.Click()
     end)
     apple2.UpArrowKey()
+    apple2.DHRDarkness()
     a2d.DialogOK()
     test.Snap("verify full repaint and Today date")
 end)
