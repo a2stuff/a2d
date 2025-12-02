@@ -338,6 +338,7 @@ function a2d.InMouseKeysMode(func)
       ButtonUp = a2d.MouseKeysButtonUp,
       Click = a2d.MouseKeysClick,
       DoubleClick = a2d.MouseKeysDoubleClick,
+      OAClick = a2d.MouseKeysOAClick,
 
       Up = a2d.MouseKeysUp,
       Down = a2d.MouseKeysDown,
@@ -364,6 +365,14 @@ function a2d.MouseKeysClick()
   emu.wait(1/60)
   a2d.MouseKeysButtonUp()
   emu.wait(1/60)
+end
+
+function a2d.MouseKeysOAClick()
+  apple2.PressOA()
+  emu.wait(1/60)
+  a2d.MouseKeysClick()
+  emu.wait(1/60)
+  apple2.ReleaseOA()
 end
 
 function a2d.MouseKeysUp(n)
@@ -425,6 +434,20 @@ function a2d.MouseKeysMoveByApproximately(x,y)
   elseif y < 0 then
     a2d.MouseKeysUp(round(-y / MOUSE_KEYS_DELTA_Y))
   end
+end
+
+function a2d.MoveWindowBy(x, y)
+  a2d.OAShortcut("M")
+  a2d.MouseKeysMoveByApproximately(x,y)
+  apple2.ReturnKey()
+  a2d.WaitForRepaint()
+end
+
+function a2d.GrowWindowBy(x, y)
+  a2d.OAShortcut("G")
+  a2d.MouseKeysMoveByApproximately(x,y)
+  apple2.ReturnKey()
+  a2d.WaitForRepaint()
 end
 
 --------------------------------------------------

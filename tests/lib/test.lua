@@ -7,6 +7,20 @@
 local test = {}
 
 local test_name = emu.subst_env("$TEST_NAME")
+-- Convert from "wildcard" pattern (with * and ?) to Lua pattern
+local test_pattern = "^" ..
+  string.gsub(
+    test_name, "([%^$()%%.%[%]*+%-?])", -- pattern special characters
+    function(s)
+      if s == "*" then
+        return ".*"
+      elseif s == "?" then
+        return "."
+      else
+        return "%" .. s
+      end
+  end) .. "$"
+
 test.count = 0
 
 local snapnum = -1
@@ -23,7 +37,7 @@ end
 
 -- test.Step("do a thing", function() ... end)
 function test.Step(title, func)
-  if test_name ~= "" and test_name ~= title then
+  if test_name ~= "" and not string.match(title, test_pattern) then
     return
   end
   test.count = test.count+1

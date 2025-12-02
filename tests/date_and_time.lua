@@ -327,13 +327,8 @@ test.Step(
     -- Show window and resize/move it
     a2d.OpenPath("/RAM1")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.OAShortcut("G") -- grow window
-    for i=1,35 do apple2.RightArrowKey() end
-    apple2.ReturnKey()
-    a2d.OAShortcut("M") -- move window
-    for i=1,25 do apple2.DownArrowKey() end
-    apple2.ReturnKey()
-    a2d.WaitForRepaint()
+    a2d.GrowWindowBy(250,0)
+    a2d.MoveWindowBy(0,100)
     test.Snap("verify date is shown in full")
 
     -- Use Date & Time to set date

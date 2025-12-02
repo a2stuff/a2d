@@ -16,7 +16,7 @@ bin/mametest tests/SCRIPTNAME.lua
 
 Options:
 
-* `--only NAME` - run only the named test step; useful for fast iteration
+* `--only PATTERN` - run only matching named test step (`*` and `?` are wildcards); useful for fast iteration
 * `--console` - don't ask MAME to run the script (but do load its config, see below), launch the Lua console instead
 * `--visible` - show the emulator window (default is headless)
 * `--audible` - play the emulator audio (default is silent)
