@@ -170,12 +170,20 @@ function a2d.OpenMenu(mth)
 end
 
 -- Invoke nth item on mth menu (1-based)
+-- (if nth is negative, from the bottom of menu)
 function a2d.InvokeMenuItem(mth, nth)
   a2d.OpenMenu(mth)
-  -- down to nth item
-  for i=1,nth do
-    apple2.DownArrowKey()
-    emu.wait(2/60)
+  if nth > 0 then
+    -- down to nth item
+    for i=1,nth do
+      apple2.DownArrowKey()
+      emu.wait(2/60)
+    end
+  else
+    for i=1,-nth do
+      apple2.UpArrowKey()
+      emu.wait(2/60)
+    end
   end
   -- invoke
   apple2.ReturnKey()
@@ -320,21 +328,29 @@ function a2d.AddShortcut(path)
   a2d.DialogOK()
 end
 
-function a2d.CopyPath(src, dst)
-  a2d.SelectPath(src)
-  a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+function a2d.CopySelectionTo(path)
+  -- Assert: there is a selection
+  --[[
+    But we don't know if it's 1 or more than 1 so we index
+    from the bottom of the menu, which is a fixed number.
+    TODO: Make this less hacky
+  ]]--
+  a2d.InvokeMenuItem(a2d.FILE_MENU, -3)
 
   --Automate file picker dialog
   apple2.ControlKey("D") -- Drives
   a2d.WaitForRepaint()
-  for segment in dst:gmatch("([^/]+)") do
+  for segment in path:gmatch("([^/]+)") do
     apple2.Type(segment)
     apple2.ControlKey("O") -- Open
     a2d.WaitForRepaint()
   end
   a2d.DialogOK()
+end
 
-  a2d.CloseAllWindows()
+function a2d.CopyPath(src, dst)
+  a2d.SelectPath(src)
+  a2d.CopyTo(dst)
 end
 
 --------------------------------------------------

@@ -1507,7 +1507,7 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Populate a ProDOS disk with several large files, then delete all but the last. Launch DeskTop. Special > Copy Disk.... Select the prepared disk. Ensure Options > Quick Copy is checked. Select an appropriate destination disk. Proceed with the copy. Verify that the "Blocks to transfer" count is accurate (i.e. less than the total block count), and the blocks read/written count up to the transfer count accurately.
 * Populate a ProDOS disk with several large files, then delete all but the last. Launch DeskTop. Special > Copy Disk.... Select the prepared disk. Select Options > Disk Copy. Select an appropriate destination disk. Proceed with the copy. Verify that the "Blocks to transfer" count is equal to the total block count of the device, and the blocks read/written count up to the transfer count accurately.
 
-# Alerts
+# Alerts - covered by `tests/alerts.lua`
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
 * Launch Shortcuts. Trigger an alert with only OK (e.g. running a shortcut that only works in DeskTop, like a DA). Verify that Escape key closes alert.

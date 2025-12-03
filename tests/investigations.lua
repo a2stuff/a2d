@@ -28,3 +28,46 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("keyboard shortcuts should not be enabled")
 end)
+
+
+test.Step(
+  "DeskTop - Escape closes alert",
+  function()
+    emu.wait(20)
+    local drive = apple2.GetDiskIIS6D1()
+    local current = drive.filename
+    drive:unload()
+
+    a2d.OpenPath("/FLOPPY1")
+    test.Snap("verify alert shown")
+    apple2.EscapeKey()
+
+    --[[
+      we seem to hang here somehow?
+
+      can't reproduce it on the console though!
+
+      CPU seems to still be chugging along, albeit in $C8xx space
+    ]]--
+
+    test.Snap("verify alert dismissed")
+    emu.wait(60)
+    test.Snap("Waited a long time")
+    apple2.Type("TRASH")
+    test.Snap("typed some shit")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveByApproximately(560,192)
+        m.MoveByApproximately(-560,-192)
+        m.MoveByApproximately(560,192)
+        m.MoveByApproximately(-560,-192)
+        m.MoveByApproximately(560,192)
+        m.MoveByApproximately(-560,-192)
+        m.MoveByApproximately(560,192)
+        m.MoveByApproximately(-560,-192)
+    end)
+    -- This seems to make us hang or crash?
+    drive:load(current)
+
+    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
+    a2d.WaitForRestart()
+end)

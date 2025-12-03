@@ -9,6 +9,7 @@ test.Step(
   "SHOW.IMAGE.FILE in Apple Menu",
   function()
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.IMAGE.FILE", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot
     a2d.WaitForRestart()
 
@@ -40,6 +41,7 @@ test.Step(
   "SHOW.TEXT.FILE in Apple Menu",
   function()
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.TEXT.FILE", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot
     a2d.WaitForRestart()
 
@@ -71,6 +73,7 @@ test.Step(
   "SHOW.FONT.FILE in Apple Menu",
   function()
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.FONT.FILE", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot
     a2d.WaitForRestart()
 
@@ -103,6 +106,7 @@ test.Step(
   "SHOW.DUET.FILE in Apple Menu",
   function()
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.DUET.FILE", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot
     a2d.WaitForRestart()
 
