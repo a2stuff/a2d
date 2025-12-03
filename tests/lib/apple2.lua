@@ -358,6 +358,10 @@ function apple2.ControlKey(key)
   apple2.ReleaseControl()
 end
 
+function apple2.SpaceKey()
+  apple2.Type(" ")
+end
+
 function apple2.TabKey()
   press_and_release("Tab")
   wait_for_kbd_strobe_clear()

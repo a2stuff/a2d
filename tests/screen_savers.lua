@@ -38,7 +38,7 @@ test.Step(
     emu.wait(1)
 
     apple2.EscapeKey()
-    apple2.ControlKey('@') -- no-op, wait for key to be consumed
+    apple2.Type('@') -- no-op, wait for key to be consumed
 
     test.ExpectNotEquals(apple2.GetDoubleHiresByte(4, 78), 0x7F, "Clock should be visible already")
 

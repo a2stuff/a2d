@@ -1117,7 +1117,7 @@ The following tests all require:
 
 # Preview
 
-Text File:
+Text File: - covered by `tests/text_preview.lua`
 * Verify that Escape key exits.
 * Verify that Space toggles Proportional/Fixed mode.
 * Verify that clicking in the right part of the title bar toggles Proportional/Fixed mode.
@@ -1142,7 +1142,7 @@ Text File:
 * Open `/TESTS/FILE.TYPES/SUDOKU.STORY`. Click on "Proportional" to change to "Fixed" font. Scroll down using down arrow key until bottom line reads "with". Scroll down again using down arrow key. Verify that the file correctly scrolled down one line. Scroll to the bottom of the file. Ensure the entire file is visible.
 * Open `/TESTS/FILE.TYPES/TOGGLE.ME`. Click "Proportional" to toggle to "Fixed". Verify that the scrollbar activates and that the thumb is at the top. Scroll down. Click "Fixed" to toggle to "Proportional". Verify that the scrollbar deactivates.
 
-Image File:
+Image File: - covered by `tests/image_preview.lua`
 * Verify that Escape key exits.
 * Verify that Apple+W exits.
 * On a IIgs or with RGB card:
