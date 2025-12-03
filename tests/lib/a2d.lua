@@ -112,6 +112,7 @@ for k,v in pairs({
     FIND_FILES             = 9,
     RUN_BASIC_HERE         = 11,
     SORT_DIRECTORY         = 12,
+    APPLE_EMPTY_SLOT       = 13,
 
     FILE_NEW_FOLDER = 1,
     FILE_OPEN       = 2,
@@ -174,7 +175,7 @@ function a2d.InvokeMenuItem(mth, nth)
   -- down to nth item
   for i=1,nth do
     apple2.DownArrowKey()
-    emu.wait(MINIMAL_REPAINT)
+    emu.wait(2/60)
   end
   -- invoke
   apple2.ReturnKey()
@@ -317,6 +318,23 @@ function a2d.AddShortcut(path)
   a2d.SelectPath(path)
   a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
   a2d.DialogOK()
+end
+
+function a2d.CopyPath(src, dst)
+  a2d.SelectPath(src)
+  a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+
+  --Automate file picker dialog
+  apple2.ControlKey("D") -- Drives
+  a2d.WaitForRepaint()
+  for segment in dst:gmatch("([^/]+)") do
+    apple2.Type(segment)
+    apple2.ControlKey("O") -- Open
+    a2d.WaitForRepaint()
+  end
+  a2d.DialogOK()
+
+  a2d.CloseAllWindows()
 end
 
 --------------------------------------------------

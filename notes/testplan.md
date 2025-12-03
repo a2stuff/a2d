@@ -1115,7 +1115,7 @@ The following tests all require:
 
 * Run on a Macintosh equipped with the IIe Option Card. Verify that DeskTop runs and the system does not hang.
 
-# Preview
+# Preview - covered by `tests/*preview*.lua`
 
 Text File: - covered by `tests/text_preview.lua`
 * Verify that Escape key exits.
@@ -1158,6 +1158,7 @@ Image File: - covered by `tests/image_preview.lua`
 * Click on the File menu, then close it. Double-click an image file. Press Escape to close the preview. Verify that the File menu is not highlighted.
 * Preview an image file. Verify that the mouse cursor is hidden. Without moving the mouse, press the Escape key. Verify that after the desktop repaints the mouse cursor becomes visible without needing to move the mouse first.
 
+The below are covered by `tests/previews_in_apple_menu.lua`
 * Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens other than open/close animation and screen refresh.
     * Select volume icon, select DA from Apple menu. Verify nothing happens other than open/close animation and screen refresh.
@@ -1179,7 +1180,7 @@ Image File: - covered by `tests/image_preview.lua`
     * Select folder icon, select DA from Apple menu. Verify nothing happens other than open/close animation.
     * Select Electric Duet file icon, select DA from Apple menu. Verify music is played.
 
-# Desk Accessories - covered in `tests/desk_accessories.lua`
+# Desk Accessories - covered by `tests/desk_accessories.lua`
 
 * Launch DeskTop. Open the APPLE.MENU folder. Select a desk accessory icon. File > Open. Verify that the desk accessory launches.
 
@@ -1245,7 +1246,7 @@ With Sci.Calc:
 * Enter '4' '5' 'COS' 'ACOS'. Verify that the result is approximately 45.
 * Enter '8' '9' 'TAN' 'ATAN'. Verify that the result is approximately 89.
 
-## Date & Time - covered in `tests/date_and_time.lua`
+## Date & Time - covered by `tests/date_and_time.lua`
 
 * Open `/TESTS/FILE.TYPES`. View > by Name. Apple Menu > Control Panels > Date and Time. Change the time format from 12- to 24-hour or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the windows are shown with the new format.
 
