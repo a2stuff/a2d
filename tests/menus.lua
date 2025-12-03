@@ -286,5 +286,14 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP")
     a2d.OpenMenu(a2d.FILE_MENU)
     test.Snap("verify New Folder, Close, Close All are enabled")
+    apple2.EscapeKey()
 end)
 
+
+test.Step(
+  "Control-Shift-2 doesn't show first menu item without shortcut",
+  function()
+    apple2.ControlKey("@")
+    a2d.WaitForRepaint()
+    test.Snap("verify About dialog not showing")
+end)

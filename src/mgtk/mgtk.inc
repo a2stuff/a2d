@@ -324,6 +324,11 @@ SetKeyEvent     = $2E           ; If set, keypresses are ignored by Tool Kit
 ;;; --------------------------------------------------
 ;;; Menu Manager Calls
 
+;;; Since 0 is a valid ASCII code (Ctrl+Shift+2 produces ^@ a.k.a.
+;;; NUL), an arbitrary value with the high bit set should be used to
+;;; signify "no shortuct".
+no_shortcut = $FF
+
 ;;; Menu Bar record:
 ;;;
 ;;; .word       count           Number of menu bar items
@@ -347,8 +352,8 @@ SetKeyEvent     = $2E           ; If set, keypresses are ignored by Tool Kit
 .struct MenuItem
         options         .byte ; bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
         mark_char       .byte ; Custom mark character if mark option set
-        char1           .byte ; ASCII code of shortcut #1 (e.g. uppercase B); or 0
-        char2           .byte ; ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
+        char1           .byte ; ASCII code of shortcut #1 (e.g. uppercase B); or no_shortcut
+        char2           .byte ; ASCII code of shortcut #2 (e.g. lowercase b, or same); or no_shortcut
         name            .addr ; Address of length-prefixed string
 .endstruct
 
@@ -883,30 +888,30 @@ ycoord: .word   AS_WORD(top)
 .endmacro
 
 ;;; For menu items with open-apple modifier shortcuts, or no shortcuts
-;;; NOTE: If shortcut is A-Z, char2 is to_lower(char1); else char2=char1
+;;; NOTE: If shortcut is A-Z, char2 is to_lower(char1)
 .macro DEFINE_MENU_ITEM saddr, shortcut
-        .if .paramcount > 1
+    .ifnblank shortcut
 
         .byte   MGTK::MenuOpt::open_apple|MGTK::MenuOpt::solid_apple ; option byte
         .byte   0               ; mark_char
         .byte   shortcut        ; char1
 
-        .if kBuildSupportsLowercase && 'A' <= shortcut && shortcut <= 'Z'
+      .if kBuildSupportsLowercase && 'A' <= shortcut && shortcut <= 'Z'
         .byte   TO_LOWER(shortcut) ; char2
-        .else
-        .byte   shortcut
-        .endif
+      .else
+        .byte   MGTK::no_shortcut
+      .endif
         .addr   saddr           ; item_str_pointer
 
-        .else
+    .else
 
         .byte   0               ; option byte
         .byte   0               ; mark_char
-        .byte   0               ; char1
-        .byte   0               ; char2
+        .byte   MGTK::no_shortcut ; char1
+        .byte   MGTK::no_shortcut ; char2
         .addr   saddr           ; item_str_pointer
 
-        .endif
+    .endif
 .endmacro
 
 ;;; For menu items with control keys (e.g. CHAR_RETURN), requiring no modifiers
@@ -914,7 +919,11 @@ ycoord: .word   AS_WORD(top)
         .byte   0               ; option byte
         .byte   0               ; mark_char
         .byte   shortcut1       ; char1
+    .ifnblank shortcut2
         .byte   shortcut2       ; char2
+    .else
+        .byte   MGTK::no_shortcut
+    .endif
         .addr   saddr           ; item_str_pointer
 .endmacro
 

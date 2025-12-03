@@ -31,6 +31,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Time window open/close animations using VBL.
 * Add Apple+Escape as shortcut to clear selection.
 * Prevent volume icon flicker on startup with empty Disk II drives.
+* Don't show About dialog when Ctrl+Shift+2 is pressed.
 
 ### Selector
 

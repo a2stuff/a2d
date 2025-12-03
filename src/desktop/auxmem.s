@@ -155,7 +155,7 @@ label_show_link:
         DEFINE_MENU_ITEM label_close_all
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_get_info, res_char_menu_item_get_info_shortcut
-        DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN, CHAR_RETURN
+        DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN
         DEFINE_MENU_ITEM label_duplicate_icon, res_char_menu_item_duplicate_shortcut
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_copy_selection

@@ -513,10 +513,15 @@ Menu record:
 
 .byte       options         bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
 .byte       mark_char       Custom mark character if mark option set
-.byte       char1           ASCII code of shortcut #1 (e.g. uppercase B); or 0
-.byte       char2           ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
+.byte       char1           ASCII code of shortcut #1 (e.g. uppercase B); MGTK::no_shortcut if none
+.byte       char2           ASCII code of shortcut #2 (e.g. lowercase b, or same); MGTK::no_shortcut if none
 .addr       name            Address of length-prefixed string
 ... repeats for each menu item
+```
+
+Since 0 is typeable character (Control+Shift+2 a.k.a. ^@, ASCII `NUL`), a byte with the high bit set signals "no shortcut".
+```
+MGTK::no_shortcut = $FF
 ```
 
 ### Window "winfo"
