@@ -156,8 +156,7 @@ test.Step(
         test.Expect(a2d.RepaintType(), "none", {snap=true})
     end)
     a2d.CloseWindow()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot
-    a2d.WaitForRestart()
+    a2d.Restart()
 end)
 
 test.Step(

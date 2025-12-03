@@ -278,11 +278,9 @@ end)
 test.Step(
   "Selector",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.OAShortcut("1") -- Enable "Copy to RAMCard"
-    a2d.OAShortcut("2") -- Enable "Show shortcuts on startup"
-    a2d.CloseWindow()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot (slot 7)
+    a2d.ToggleOptionCopyToRAMCard()
+    a2d.ToggleOptionShowShortcutsOnStartup()
+    a2d.Restart()
 
     -- Launcher: Copying to RAMCard...
     emu.wait(10) -- copying is slow

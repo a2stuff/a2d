@@ -21,12 +21,8 @@ test.Step(
   "Shortcuts - Escape closes alert",
   function()
     a2d.AddShortcut("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.OAShortcut("2") -- Enable "Show shortcuts on startup"
-    a2d.CloseWindow()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot (slot 7)
-    a2d.WaitForRestart()
+    a2d.ToggleOptionShowShortcutsOnStartup() -- Enable
+    a2d.Restart()
 
     apple2.Type("1")
     a2d.DialogOK()
@@ -35,11 +31,9 @@ test.Step(
     a2d.WaitForRepaint()
     test.Snap("verify alert dismissed")
 
-    apple2.Type("D")
+    apple2.Type("D") -- Desktop
     a2d.WaitForRestart()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.OAShortcut("2") -- Disable "Show shortcuts on startup"
-    a2d.CloseWindow()
+    a2d.ToggleOptionShowShortcutsOnStartup() -- Disable
 end)
 
 test.Step(

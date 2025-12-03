@@ -33,16 +33,9 @@ end)
 test.Step(
   "Selector (module)",
   function()
-    -- Create a shortcut
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    a2d.DialogOK()
-
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.OAShortcut("2") -- Enable "Show shortcuts on startup"
-    a2d.CloseWindow()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot (slot 7)
-    a2d.WaitForRestart()
+    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
+    a2d.Restart()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(150,60) -- over shortcut

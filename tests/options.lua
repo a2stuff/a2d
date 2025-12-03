@@ -28,7 +28,7 @@ test.Step(
   function()
     local drive = apple2.Get35Drive1()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.OAShortcut("5") -- show invisible files
+    a2d.OAShortcut("5") -- show invisible files (something harmless)
 
     local current = drive.filename
     drive:unload()

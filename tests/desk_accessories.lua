@@ -33,8 +33,7 @@ function MoveDoesntRepaintTest(name, path, x, y, opt_threshold)
       end
       a2d.CloseWindow()
       a2d.CloseAllWindows()
-      a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- restart
-      a2d.WaitForRestart()
+      a2d.Restart()
   end)
 end
 

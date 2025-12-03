@@ -355,7 +355,7 @@ end
 
 function a2d.CopyPath(src, dst)
   a2d.SelectPath(src)
-  a2d.CopyTo(dst)
+  a2d.CopySelectionTo(dst)
 end
 
 --------------------------------------------------
@@ -368,6 +368,25 @@ function a2d.RemoveClockDriverAndRestart()
   apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
   apple2.TypeLine("PR#7")
   a2d.WaitForRestart()
+end
+
+function a2d.ToggleOptionCopyToRAMCard()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+    a2d.OAShortcut("1") -- Toggle "Copy to RAMCard"
+    a2d.CloseWindow()
+    a2d.CloseAllWindows()
+end
+function a2d.ToggleOptionShowShortcutsOnStartup()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+    a2d.OAShortcut("2") -- Toggle "Show shortcuts on startup"
+    a2d.CloseWindow()
+    a2d.CloseAllWindows()
+end
+
+-- Reboot via menu equivalent of PR#7
+function a2d.Restart()
+    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
+    a2d.WaitForRestart()
 end
 
 --------------------------------------------------

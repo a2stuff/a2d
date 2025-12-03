@@ -18,8 +18,7 @@ test.Step(
     test.ExpectEquals(a2d.RepaintType(), "full", "repaint", {snap=true})
     test.Snap("verify 24-hour format shown")
     a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
-    a2d.WaitForRestart()
+    a2d.Restart()
 end)
 
 test.Step(
@@ -95,8 +94,7 @@ test.Step(
     apple2.DHRDarkness()
     a2d.DialogOK()
     test.ExpectEquals(a2d.RepaintType(), "minimal", "repaint", {snap=true})
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
-    a2d.WaitForRestart()
+    a2d.Restart()
 end)
 
 test.Step(
@@ -112,8 +110,7 @@ test.Step(
     test.Snap("verify date is modified")
     a2d.DialogOK()
     -- Should write timestamp to DESKTOP.SYSTEM. Restart to verify.
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
-    a2d.WaitForRestart()
+    a2d.Restart()
 
     -- Create new folder
     a2d.OpenPath("/RAM1")
