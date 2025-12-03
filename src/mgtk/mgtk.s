@@ -5764,6 +5764,7 @@ name       .addr
 .endproc ; GetMenuCount
 
 
+;;; Input: X = menu index
 .proc GetMenu
         stx     menu_index
         lda     #2
@@ -6107,22 +6108,28 @@ filler: ldx     menu_item_index
 
 .proc FindMenuById
         lda     #find_mode_by_id
-find_menu:
+        FALL_THROUGH_TO FindMenu
+.endproc
+
+.proc FindMenu
         sta     find_mode
 
         jsr     GetMenuCount
         ldx     #0
-loop:   jsr     GetMenu
+    DO
+        jsr     GetMenu         ; X is menu index
         bit     find_mode
-        bvs     find_menu_item_mode
-        bmi     :+
+        bvs     by_shortcut
+        bmi     by_coord
 
         lda     curmenu::menu_id          ; search by menu id
         cmp     find_menu_id
         bne     next
+
 found:  RETURN  A=curmenu::menu_id ; reload to clear Z flag
 
-:       ldax    cursor_pos::xcoord ; search by x coordinate bounds
+by_coord:
+        ldax    cursor_pos::xcoord ; search by x coordinate bounds
         cpx     curmenu::x_min+1
         bcc     next
         bne     :+
@@ -6135,58 +6142,57 @@ found:  RETURN  A=curmenu::menu_id ; reload to clear Z flag
         bcs     next
         bcc     found
 
-find_menu_item_mode:
+by_shortcut:
         jsr     FindMenuItem
         bne     found
 
 next:   ldx     menu_index
         inx
-        cpx     menu_count
-        bne     loop
+    WHILE X <> menu_count
         RETURN  A=#0
-.endproc ; FindMenuById
-
-find_menu := FindMenuById::find_menu
+.endproc ; FindMenu
 
 
 .proc FindMenuItem
         ldx     #0
-loop:   jsr     GetMenuItem
+    DO
+        jsr     GetMenuItem
         ldx     menu_item_index
         inx
         bit     find_mode
-        bvs     find_by_shortcut
-        bmi     :+
+        bvs     by_shortcut
+        bmi     by_coord
 
         cpx     find_menu_item_id
         bne     next
         rts
 
-:       lda     menu_item_y_table,x
+by_coord:
+        lda     menu_item_y_table,x
         cmp     cursor_pos::ycoord
         bcc     next
         rts
 
-find_by_shortcut:
+by_shortcut:
         lda     find_shortcut
         and     #CHAR_MASK
-        cmp     curmenuitem::shortcut1
-        beq     :+
-        cmp     curmenuitem::shortcut2
-        bne     next
+      IF A IN curmenuitem::shortcut1, curmenuitem::shortcut2
 
-:       cmp     #$20             ; is control char
+        cmp     #$20             ; is control char
         bcc     found
+
         lda     curmenuitem::options
         and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
-        bne     next
-
+       IF ZERO
         lda     curmenuitem::options
         and     find_options
         bne     found
+       END_IF
+      END_IF
 
-next:   cpx     menu_item_count
-        bne     loop
+next:
+    WHILE X <>menu_item_count
+
         ldx     #0
 found:  rts
 .endproc ; FindMenuItem
@@ -6251,18 +6257,21 @@ menu_item  .byte
 which_key  .byte
 key_mods   .byte
         END_PARAM_BLOCK
+        .assert params::menu_id = find_menu_id, error, "zp usage"
+        .assert params::menu_item = find_menu_item_id, error, "zp usage"
+        .assert params::which_key = find_shortcut, error, "zp usage"
+        .assert params::key_mods = find_options, error, "zp usage"
 
         lda     params::which_key
-        cmp     #CHAR_ESCAPE
-        bne     :+
-
+    IF A = #CHAR_ESCAPE
         lda     params::key_mods
-        bne     :+
+      IF ZERO
         jsr     KeyboardMouse
         jmp     MenuSelectImpl
+      END_IF
+    END_IF
 
-:       lda     #find_mode_by_shortcut
-        jsr     find_menu
+        CALL    FindMenu, A=#find_mode_by_shortcut
         beq     not_found
 
         lda     curmenu::disabled
@@ -6272,14 +6281,14 @@ key_mods   .byte
         and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     not_found
 
-        lda     curmenu::menu_id
-        sta     cur_open_menu_id
+        copy8   curmenu::menu_id, cur_open_menu_id
         bne     found
 
 not_found:
         lda     #0
         tax
-found:  ldy     #0
+found:
+        ldy     #0
         sta     (params_addr),y
         iny
         txa
@@ -6554,8 +6563,7 @@ restore:
 in_menu_bar:
         jsr     UnhiliteCurMenuItem
 
-        lda     #find_mode_by_coord
-        jsr     find_menu
+        CALL    FindMenu, A=#find_mode_by_coord
 
         cmp     cur_open_menu_id
         jeq     event_loop
@@ -6730,8 +6738,7 @@ finish: rts
         lda     cur_hilited_menu_item
         pha
 
-        lda     #find_mode_by_shortcut
-        jsr     find_menu
+        CALL    FindMenu, A=#find_mode_by_shortcut
         beq     fail
 
         stx     sel_menu_item_index
