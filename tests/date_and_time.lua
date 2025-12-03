@@ -78,7 +78,7 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
-RemoveClockDriverAndRestart()
+a2d.RemoveClockDriverAndRestart()
 
 test.Step(
   "Fresh disk image",

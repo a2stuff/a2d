@@ -42,7 +42,7 @@ local images = {
   S6D2 = ":sl6:diskiing:1:525",
 }
 
-function get_device(pattern)
+local function get_device(pattern)
   for name,dev in pairs(machine.devices) do
     if name:match(pattern) then return dev end
   end
@@ -173,7 +173,7 @@ end
 -- General System Configuration
 --------------------------------------------------
 
-function get_port(port_name)
+local function get_port(port_name)
   local port = machine.ioport.ports[port_name]
   if port == nil then
     error("No such port: " .. port_name)
@@ -181,7 +181,7 @@ function get_port(port_name)
   return port
 end
 
-function get_field(port_name, field_name)
+local function get_field(port_name, field_name)
   local port = get_port(port_name)
   local field = port.fields[field_name]
   if field == nil then
@@ -248,7 +248,7 @@ end
   ]]--
 
 
-function SetVideoConfig(field_name, value, mask, shift)
+local function SetVideoConfig(field_name, value, mask, shift)
   apple2.SetSystemConfig(":a2video:a2_video_config", field_name, mask << shift, value << shift)
   emu.wait(2/60)
 end
@@ -302,6 +302,12 @@ end
 
 local kbd = machine.natkeyboard
 
+local function wait_for_kbd_strobe_clear()
+  while apple2.ReadSSW("KBD") > 127 do
+    emu.wait(1/60)
+  end
+end
+
 -- https://docs.mamedev.org/luascript/ref-input.html#natural-keyboard-manager
 function apple2.Type(sequence)
   for i=1,sequence:len() do
@@ -318,19 +324,13 @@ function apple2.TypeLine(sequence)
   apple2.ReturnKey()
 end
 
-function wait_for_kbd_strobe_clear()
-  while apple2.ReadSSW("KBD") > 127 do
-    emu.wait(1/60)
-  end
-end
-
-function press(k)
+local function press(k)
   get_field(keyboard[k].port, keyboard[k].field):set_value(1)
 end
-function release(k)
+local function release(k)
   get_field(keyboard[k].port, keyboard[k].field):clear_value()
 end
-function press_and_release(k)
+local function press_and_release(k)
   press(k)
   emu.wait(2/60)
   release(k)
@@ -487,7 +487,7 @@ end
 -- Mouse
 --------------------------------------------------
 
-function clamp(n, min, max)
+local function clamp(n, min, max)
   if n < min then
     return min
   elseif n > max then
@@ -759,7 +759,7 @@ end
 -- Misc Utilities
 --------------------------------------------------
 
-function GetDHRByteAddress(row, col)
+local function GetDHRByteAddress(row, col)
   local bank = col % 2
   col = col >> 1
   local aa = (row & 0xC0) >> 6

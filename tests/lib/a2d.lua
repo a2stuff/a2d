@@ -362,7 +362,7 @@ end
 -- Configuration
 --------------------------------------------------
 
-function RemoveClockDriverAndRestart()
+function a2d.RemoveClockDriverAndRestart()
   a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
   a2d.WaitForRestart()
   apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
@@ -460,7 +460,7 @@ end
 
 local MOUSE_KEYS_DELTA_X = 8
 local MOUSE_KEYS_DELTA_Y = 4
-function round(n)
+local function round(n)
   return math.floor(n + 0.5)
 end
 

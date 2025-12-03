@@ -25,7 +25,7 @@ test.count = 0
 
 local snapnum = -1
 
-function snap(message)
+local function snap(message)
   manager.machine.video:snapshot()
   snapnum = snapnum + 1
   if message ~= nil then
@@ -89,7 +89,7 @@ function test.Expect(expr, message, options)
   end
 end
 
-function format(value)
+local function format(value)
   if type(value) == "string" then
     return string.format("%q", value)
   elseif type(value) == "boolean" then

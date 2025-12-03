@@ -65,7 +65,7 @@ test.Variants(
 end)
 
 
-RemoveClockDriverAndRestart()
+a2d.RemoveClockDriverAndRestart()
 
 test.Step(
   "Analog Clock shows alert if there is no system clock",
