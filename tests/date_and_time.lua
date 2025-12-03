@@ -77,12 +77,7 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
--- Remove clock driver
-a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-a2d.WaitForRestart()
-apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
-apple2.TypeLine("PR#7")
-a2d.WaitForRestart()
+RemoveClockDriverAndRestart()
 
 test.Step(
   "Fresh disk image",

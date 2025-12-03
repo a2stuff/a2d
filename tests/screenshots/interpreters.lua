@@ -5,9 +5,6 @@
 
   ============================================================]]--
 
--- Wait for DeskTop to start
-a2d.WaitForRestart()
-
 test.Step(
   "Applesoft BASIC",
   function()

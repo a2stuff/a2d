@@ -6,8 +6,6 @@ DISKARGS="-flop1 $FLOP1IMG"
 
 ======================================== ENDCONFIG ]]--
 
-emu.wait(50) -- IIc emulation is very slow
-
 test.Step(
   "Apple > About This Apple II",
   function()

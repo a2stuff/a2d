@@ -6,11 +6,7 @@
   ============================================================]]--
 
 -- Remove clock driver (to avoid build-relative dates)
-a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-a2d.WaitForRestart()
-apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
-apple2.TypeLine("PR#7")
-a2d.WaitForRestart()
+RemoveClockDriverAndRestart()
 
 test.Step(
   "International - full repaint",

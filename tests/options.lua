@@ -6,8 +6,6 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
-emu.wait(50) -- IIc emulation is very slow
-
 test.Step(
   "No prompt if no change",
   function()

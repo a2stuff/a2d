@@ -81,7 +81,12 @@ function a2d.WaitForCopyToRAMCard()
 end
 
 function a2d.WaitForRestart()
-  emu.wait(10)
+  if manager.machine.system.name:match("^apple2c") then
+    -- Apple IIc drive emulation is very slow
+    emu.wait(50)
+  else
+    emu.wait(10)
+  end
 end
 
 function a2d.WaitForRepaint()
@@ -354,6 +359,18 @@ function a2d.CopyPath(src, dst)
 end
 
 --------------------------------------------------
+-- Configuration
+--------------------------------------------------
+
+function RemoveClockDriverAndRestart()
+  a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+  a2d.WaitForRestart()
+  apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
+  apple2.TypeLine("PR#7")
+  a2d.WaitForRestart()
+end
+
+--------------------------------------------------
 -- Mouse Keys
 --------------------------------------------------
 
@@ -519,7 +536,7 @@ end
 --------------------------------------------------
 
 function a2d.SetProDOSDate(y,m,d)
-  local hi = (y % 100) << 1 | (m >> 4)
+  local hi = (y % 100) << 1 | (m >> 3)
   local lo = (m << 5) | d
   apple2.WriteRAMDevice(0xBF90, lo)
   apple2.WriteRAMDevice(0xBF91, hi)

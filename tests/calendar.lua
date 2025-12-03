@@ -17,12 +17,7 @@ end)
 test.Step(
   "Calendar - without real-time clock",
   function()
-    -- Remove clock driver
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.WaitForRestart()
-    apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
-    apple2.TypeLine("PR#7")
-    a2d.WaitForRestart()
+    RemoveClockDriverAndRestart()
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALENDAR")
     a2d.WaitForRepaint()

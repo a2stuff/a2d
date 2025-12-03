@@ -12,9 +12,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
   ============================================================]]--
 
--- Wait for DeskTop to start
-a2d.WaitForRestart()
-
 test.Step(
   "/RAM exists",
   function()

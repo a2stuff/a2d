@@ -6,8 +6,6 @@ DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
 ======================================== ENDCONFIG ]]--
 
-emu.wait(50) -- IIc emulation is very slow
-
 test.Step(
   "Key Caps - Apple IIc",
   function()
