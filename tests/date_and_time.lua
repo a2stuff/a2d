@@ -15,7 +15,8 @@ test.Step(
     a2d.OAShortcut("2") -- 24-hour
     apple2.DHRDarkness()
     a2d.DialogOK()
-    test.Snap("verify full repaint and 24-hour format")
+    test.ExpectEquals(a2d.RepaintType(), "full", "repaint", {snap=true})
+    test.Snap("verify 24-hour format shown")
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
     a2d.WaitForRestart()
@@ -88,11 +89,12 @@ test.Step(
     test.Snap("verify dialog date matches packaged file dates")
     apple2.DHRDarkness()
     a2d.DialogOK()
-    test.Snap("verify full repaint and dates now Today")
+    test.ExpectEquals(a2d.RepaintType(), "full", "repaint", {snap=true})
+    test.Snap("verify dates now Today")
     a2d.SelectAndOpen("DATE.AND.TIME")
     apple2.DHRDarkness()
     a2d.DialogOK()
-    test.Snap("verify no full repaint")
+    test.ExpectEquals(a2d.RepaintType(), "minimal", "repaint", {snap=true})
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- slot 7
     a2d.WaitForRestart()
 end)
@@ -337,5 +339,6 @@ test.Step(
     apple2.UpArrowKey()
     apple2.DHRDarkness()
     a2d.DialogOK()
-    test.Snap("verify full repaint and Today date")
+    test.ExpectEquals(a2d.RepaintType(), "full", "repaint", {snap=true})
+    test.Snap("verify bottom date shows Today")
 end)

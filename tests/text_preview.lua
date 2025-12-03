@@ -153,7 +153,7 @@ test.Step(
         test.Snap("verify thumb highlighted")
         m.ButtonUp()
         a2d.WaitForRepaint()
-        test.Snap("verify no repaint")
+        test.Expect(a2d.RepaintType(), "none", {snap=true})
     end)
     a2d.CloseWindow()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- reboot

@@ -17,8 +17,8 @@ test.Step(
     a2d.OAShortcut("2") -- D/M/Y
     apple2.DHRDarkness()
     a2d.DialogOK()
-
-    test.Snap("Verify full repaint and D/M/Y format")
+    test.ExpectEquals(a2d.RepaintType(), "full", "repaint", {snap=true})
+    test.Snap("verify D/M/Y format")
 end)
 
 test.Step(
@@ -30,6 +30,5 @@ test.Step(
     -- don't change anything
     apple2.DHRDarkness()
     a2d.DialogOK()
-
-    test.Snap("Verify minimal repaint")
+    test.ExpectEquals(a2d.RepaintType(), "minimal", "repaint", {snap=true})
 end)

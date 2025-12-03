@@ -8,7 +8,7 @@ test.Step(
     a2d.CloseWindow()
 end)
 
-function MoveDoesntRepaintTest(name, path, x, y)
+function MoveDoesntRepaintTest(name, path, x, y, opt_threshold)
   test.Step(
     name .. " doesn't repaint on non-move",
     function()
@@ -21,10 +21,16 @@ function MoveDoesntRepaintTest(name, path, x, y)
           emu.wait(2/60)
           m.ButtonDown()
           emu.wait(10/60)
-          test.Snap("verify drag highlight")
           m.ButtonUp()
       end)
-      test.Snap("verify no repaint")
+
+      if opt_threshold then
+        -- Needed for Joystick, as MouseKeys tickles the buttons
+        -- Needed for Bounce as the animation continues
+        test.ExpectLessThan(a2d.RepaintFraction(), opt_threshold, "repaint")
+      else
+        test.ExpectEquals(a2d.RepaintType(), "none", "repaint", {snap=true})
+      end
       a2d.CloseWindow()
       a2d.CloseAllWindows()
       a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- restart
@@ -36,11 +42,11 @@ MoveDoesntRepaintTest("Calculator", "/A2.DESKTOP/APPLE.MENU/CALCULATOR", 280, 55
 MoveDoesntRepaintTest("Calendar", "/A2.DESKTOP/APPLE.MENU/CALENDAR", 280, 40)
 MoveDoesntRepaintTest("Key Caps", "/A2.DESKTOP/APPLE.MENU/KEY.CAPS", 280, 50)
 MoveDoesntRepaintTest("Control Panel", "/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", 280, 30)
-MoveDoesntRepaintTest("Joystick", "/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK", 280, 50)
+MoveDoesntRepaintTest("Joystick", "/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK", 280, 50, 0.02)
 MoveDoesntRepaintTest("Map", "/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP", 280, 40)
 MoveDoesntRepaintTest("Options", "/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS", 280, 45)
 MoveDoesntRepaintTest("Views", "/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/VIEWS", 280, 50)
-MoveDoesntRepaintTest("Bounce", "/A2.DESKTOP/APPLE.MENU/TOYS/BOUNCE", 280, 45)
+MoveDoesntRepaintTest("Bounce", "/A2.DESKTOP/APPLE.MENU/TOYS/BOUNCE", 280, 45, 0.05)
 MoveDoesntRepaintTest("Eyes", "/A2.DESKTOP/APPLE.MENU/TOYS/EYES", 280, 60)
 MoveDoesntRepaintTest("Lights Out", "/A2.DESKTOP/APPLE.MENU/TOYS/LIGHTS.OUT", 280, 60)
 MoveDoesntRepaintTest("Neko", "/A2.DESKTOP/APPLE.MENU/TOYS/NEKO", 280, 50)

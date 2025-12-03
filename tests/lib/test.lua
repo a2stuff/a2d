@@ -61,6 +61,10 @@ function test.Failure(message)
   os.exit(1)
 end
 
+--------------------------------------------------
+-- Snapshots
+--------------------------------------------------
+
 function test.Snap(opt_title)
   snap(opt_title)
 end
@@ -72,26 +76,43 @@ function test.MultiSnap(frames, opt_title)
   end
 end
 
-function test.Expect(expr, message)
+--------------------------------------------------
+-- Expectations
+--------------------------------------------------
+
+function test.Expect(expr, message, options)
   if not expr then
+    if options and options.snap then
+      test.Snap("FAILURE - " .. message)
+    end
     error("Expectation failure: " .. message)
   end
 end
 
-function test.ExpectEquals(actual, expected, message)
-  test.Expect(actual == expected, message .. " - " .. actual .. " should equal " .. expected)
+function format(value)
+  if type(value) == "string" then
+    return string.format("%q", value)
+  elseif type(value) == "boolean" then
+    return value and "true" or "false"
+  else
+    return value
+  end
 end
 
-function test.ExpectNotEquals(actual, expected, message)
-  test.Expect(actual ~= expected, message .. " - " .. actual .. " should not equal " .. expected)
+function test.ExpectEquals(actual, expected, message, options)
+  test.Expect(actual == expected, message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options)
 end
 
-function test.ExpectLessThan(a, b, message)
-  test.Expect(a < b, message .. " - " .. a .. " should be < " .. b)
+function test.ExpectNotEquals(actual, expected, message, options)
+  test.Expect(actual ~= expected, message .. " - actual " .. format(actual) .. " should not equal " .. format(expected), options)
 end
 
-function test.ExpectLessThanOrEqual(a, b, message)
-  test.Expect(a <= b, message .. " - " .. a .. " should be <= " .. b)
+function test.ExpectLessThan(a, b, message, options)
+  test.Expect(a < b, message .. " - actual " .. format(a) .. " should be < " .. format(b), options)
+end
+
+function test.ExpectLessThanOrEqual(a, b, message, options)
+  test.Expect(a <= b, message .. " - actual " .. format(a) .. " should be <= " .. format(b), options)
 end
 
 --------------------------------------------------

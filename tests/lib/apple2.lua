@@ -759,14 +759,23 @@ end
 -- Misc Utilities
 --------------------------------------------------
 
-function apple2.GetDoubleHiresByte(row, col)
+function GetDHRByteAddress(row, col)
   local bank = col % 2
   col = col >> 1
   local aa = (row & 0xC0) >> 6
   local bbb = (row & 0x38) >> 3
   local ccc = (row & 0x07)
-  local addr = 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
+  return bank, 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
+end
+
+function apple2.GetDoubleHiresByte(row, col)
+  local bank, addr = GetDHRByteAddress(row, col)
   return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank))
+end
+
+function apple2.SetDoubleHiresByte(row, col, value)
+  local bank, addr = GetDHRByteAddress(row, col)
+  apple2.WriteRAMDevice(addr + 0x10000 * (1-bank), value)
 end
 
 function apple2.GrabTextScreen()
@@ -791,30 +800,28 @@ end
 
 --------------------------------------------------
 
+local darkness_bytes = {
+  {0x00, 0x00, 0x00, 0x00},
+  {0x08, 0x11, 0x22, 0x44},
+  {0x00, 0x00, 0x00, 0x00},
+  {0x22, 0x44, 0x08, 0x11},
+}
+
 function apple2.DHRDarkness()
-  function SetDHRByte(col, row, value)
-    local bank = col % 2
-    col = col >> 1
-    local aa = (row & 0xC0) >> 6
-    local bbb = (row & 0x38) >> 3
-    local ccc = (row & 0x07)
-    local addr = 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
-    apple2.WriteRAMDevice(addr + 0x10000 * (1-bank), value)
-  end
-
-  local bytes = {
-    {0x00, 0x00, 0x00, 0x00},
-    {0x08, 0x11, 0x22, 0x44},
-    {0x00, 0x00, 0x00, 0x00},
-    {0x22, 0x44, 0x08, 0x11},
-  }
-
   for row = 0,191 do
     for col = 0,79 do
-      SetDHRByte(col, row, bytes[row % 4 + 1][col % 4 + 1])
+      local byte = darkness_bytes[row % 4 + 1][col % 4 + 1]
+      apple2.SetDoubleHiresByte(row, col, byte)
     end
   end
 end
+
+-- Expect apple2.DHRDarkness() was previously called
+function apple2.ValidateDHRDarkness(row, col)
+  local expected = darkness_bytes[row % 4 + 1][col % 4 + 1]
+  return apple2.GetDoubleHiresByte(row, col) == expected
+end
+
 --------------------------------------------------
 
 return apple2
