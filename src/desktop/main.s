@@ -1363,6 +1363,10 @@ tmp_path_buf:
         jsr     SetCursorWatch  ; before invoking file
         jsr     rest
         jmp     SetCursorPointer ; after invoking file
+
+sys_prompt_flag:
+        .byte   0
+
 rest:
         ;; --------------------------------------------------
 
@@ -1377,8 +1381,7 @@ rest:
         ;; Get the file info to determine type.
 retry:  jsr     GetSrcFileInfo
     IF CS
-        sys_prompt_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
+        bit     sys_prompt_flag
         jpl     ShowAlert
 
         CALL    ShowAlert, A=#kErrInsertSystemDisk

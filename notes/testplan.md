@@ -844,6 +844,8 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 * Launch DeskTop. Create a shortcut for a folder that is the 8th entry in the menu. Shortcuts > Edit a Shortcut... Select the entry. Click OK. Verify that DeskTop does not hang.
 
+* Launch DeskTop. Add a shortcut for a file. Rename the file. Run the shortcut. Verify that the alert is specific e.g. "file not found", not an unknown error.
+
 
 ## File Types
 
