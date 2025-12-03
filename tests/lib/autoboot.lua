@@ -8,6 +8,7 @@ local c = coroutine.create(function()
     test = require("test")
     apple2 = require("apple2")
     a2d = require("a2d")
+    a2dtest = require("a2dtest")
     a2d.InitSystem() -- async; outside require
 
     -- Wait for DeskTop to start

@@ -14,18 +14,21 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- image file
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
@@ -45,18 +48,21 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- text file
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
@@ -76,18 +82,21 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- font file
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS/ATHENS")
@@ -108,18 +117,21 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    end)
 
     -- duet file
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/JESU.JOY")

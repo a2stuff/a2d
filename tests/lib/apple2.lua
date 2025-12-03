@@ -798,6 +798,30 @@ function apple2.GrabTextScreen()
   return screen
 end
 
+function apple2.SnapshotDHR()
+  local bytes = {}
+  for row = 0,192 do
+    for col = 0,79 do
+      bytes[row*80+col] = apple2.GetDoubleHiresByte(row, col)
+    end
+  end
+  return bytes
+end
+
+function apple2.CompareDHR(bytes)
+  for row = 0,192 do
+    for col = 0,79 do
+      local expected = bytes[row*80+col]
+      local actual = apple2.GetDoubleHiresByte(row, col)
+      if actual ~= expected then
+        print(string.format("difference at %04X - %02X vs. %02X", (row*80+col), actual, expected))
+        return false
+      end
+    end
+  end
+  return true
+end
+
 --------------------------------------------------
 
 local darkness_bytes = {
