@@ -303,7 +303,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume containing a file icon. Select the file icon. Drag the window to the bottom of the screen so that only the top of the title bar is visible. Verify that the file icon doesn't mispaint onto the desktop.
 
 
-## Menus
+## Menus - covered by `tests/menus.lua`
 
 * Launch DeskTop. Clear the selection (e.g. by clicking on the DeskTop). Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
@@ -882,7 +882,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the source window is updated.
 * Launch DeskTop. Using File > Delete try to delete a GS/OS forked file, where the containing window is visible. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the containing window is updated.
 
-## RAMCard - WIP in `tests/ramcard.lua`
+## RAMCard - WIP in `tests/ramcard.lua` and `tests/no_ramcard.lua`
 
 * Repeat the following:
   * For these permutations:

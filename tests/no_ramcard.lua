@@ -1,0 +1,17 @@
+--[[ BEGINCONFIG ========================================
+
+MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 $FLOP1IMG -flop2 $FLOP2IMG"
+
+======================================== ENDCONFIG ]]--
+
+test.Step(
+  "no ramcard, boot volume appears first",
+  function()
+    test.Snap("verify boot volume is in top right")
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    apple2.ControlKey("D")
+    a2d.WaitForRepaint()
+    test.Snap("verify boot volume is first disk")
+end)

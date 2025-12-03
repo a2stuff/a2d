@@ -5,16 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
-
---[[============================================================
-
-  "Change Type" tests
-
-  ============================================================]]--
-
--- Wait for DeskTop to start
-a2d.WaitForRestart()
-
 test.Step(
   "Change type of folder fails",
   function()
