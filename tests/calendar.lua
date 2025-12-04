@@ -17,7 +17,7 @@ end)
 test.Step(
   "Calendar - without real-time clock",
   function()
-    a2d.RemoveClockDriverAndRestart()
+    a2d.RemoveClockDriverAndReboot()
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALENDAR")
     a2d.WaitForRepaint()

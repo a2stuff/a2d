@@ -14,14 +14,6 @@ function PutSelectionOnDesktop()
       m.Click()
   end)
 end
-function SelectMultipleVolumes()
-  a2d.InMouseKeysMode(function(m)
-      m.MoveToApproximately(500,20)
-      m.ButtonDown()
-      m.MoveByApproximately(50, 100)
-      m.ButtonUp()
-  end)
-end
 
 test.Step(
   "No selection, no windows",
@@ -142,7 +134,7 @@ end)
 test.Step(
   "Multiple volumes selected, no windows",
   function()
-    SelectMultipleVolumes()
+    a2d.DragSelectMultipleVolumes()
     a2d.OpenMenu(a2d.FILE_MENU)
     test.Snap("verify ❌New Folder, ✅Open, ❌Close, ❌Close All, ✅Get Info, ❌Rename, ❌Duplicate, ✅Copy To, ❌Delete, ✅Quit")
     apple2.EscapeKey()
@@ -276,8 +268,7 @@ test.Step(
   function()
     a2d.OpenPath("/FLOPPY1")
     emu.wait(5) -- floppies are slow
-    a2d.InvokeMenuItem(a2d.FILE_MENU, -1)
-    a2d.WaitForRestart()
+    a2d.Quit()
     apple2.GetDiskIIS6D1():unload()
     apple2.ReturnKey() -- PRODOS
     a2d.WaitForRestart()

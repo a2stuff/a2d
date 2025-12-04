@@ -156,7 +156,7 @@ test.Step(
         end)
     end)
     a2d.CloseWindow()
-    a2d.Restart()
+    a2d.Reboot()
 end)
 
 test.Step(

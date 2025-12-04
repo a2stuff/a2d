@@ -35,7 +35,7 @@ test.Step(
   function()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.Restart()
+    a2d.Reboot()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(150,60) -- over shortcut

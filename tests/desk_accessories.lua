@@ -41,7 +41,7 @@ function MoveDoesntRepaintTest(name, path, x, y, opt_threshold)
 
       a2d.CloseWindow()
       a2d.CloseAllWindows()
-      a2d.Restart()
+      a2d.Reboot()
   end)
 end
 

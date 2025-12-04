@@ -378,9 +378,9 @@ end
 -- Configuration
 --------------------------------------------------
 
-function a2d.RemoveClockDriverAndRestart()
+function a2d.RemoveClockDriverAndReboot()
   a2d.DeletePath("/A2.DESKTOP/CLOCK.SYSTEM")
-  a2d.Restart()
+  a2d.Reboot()
 end
 
 function a2d.ToggleOptionCopyToRAMCard()
@@ -396,8 +396,19 @@ function a2d.ToggleOptionShowShortcutsOnStartup()
   a2d.CloseAllWindows()
 end
 
+function a2d.Quit()
+  a2d.InvokeMenuItem(a2d.FILE_MENU, -1)
+  a2d.WaitForRestart()
+end
+
+function a2d.QuitAndRestart()
+  a2d.Quit()
+  apple2.ReturnKey() -- Launch PRODOS in Bitsy Bye
+  a2d.WaitForRestart()
+end
+
 -- Reboot via menu equivalent of PR#7
-function a2d.Restart()
+function a2d.Reboot()
   a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
   a2d.WaitForRestart()
 end
@@ -531,6 +542,16 @@ function a2d.GrowWindowBy(x, y)
   a2d.MouseKeysMoveByApproximately(x,y)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
+end
+
+function a2d.DragSelectMultipleVolumes()
+  a2d.InMouseKeysMode(function(m)
+      m.MoveToApproximately(560,20)
+      m.ButtonDown()
+      m.MoveByApproximately(-80, 130)
+      m.ButtonUp()
+      a2d.WaitForRepaint()
+  end)
 end
 
 --------------------------------------------------

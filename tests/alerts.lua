@@ -22,7 +22,7 @@ test.Step(
   function()
     a2d.AddShortcut("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     a2d.ToggleOptionShowShortcutsOnStartup() -- Enable
-    a2d.Restart()
+    a2d.Reboot()
 
     apple2.Type("1")
     a2d.DialogOK()

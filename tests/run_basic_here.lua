@@ -44,7 +44,7 @@ test.Step(
   "Copied to RAMCard",
   function()
     a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.Restart()
+    a2d.Reboot()
 
     a2d.OpenPath("/TESTS")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)

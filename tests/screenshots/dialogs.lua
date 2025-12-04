@@ -280,7 +280,7 @@ test.Step(
   function()
     a2d.ToggleOptionCopyToRAMCard()
     a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Restart()
+    a2d.Reboot()
 
     -- Launcher: Copying to RAMCard...
     emu.wait(10) -- copying is slow

@@ -762,7 +762,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Open a window. Drag the window so that the left edge of the window is offscreen. Verify that the "X Items" display gets cut off. Drag the window so that the right edge of the window is offscreen. Verify that the "XK available" display gets cut off. Repeat with the window sized so that both scrollbars appear and thumbs moved to the middle of the scrollbars.
 
 
-## Window Restoration
+## Window Restoration - mostly covered by `tests/window_restoration.lua`
 
 * Launch DeskTop. Open a subdirectory folder. Quit and relaunch DeskTop. Verify that the used/free numbers in the restored windows are non-zero.
 

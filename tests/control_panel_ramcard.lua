@@ -9,7 +9,7 @@ test.Step(
   "Settings saved back to boot volume",
   function()
     a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.Restart()
+    a2d.Reboot()
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.RightArrowKey()
@@ -18,7 +18,7 @@ test.Step(
     a2d.WaitForRepaint()
     a2d.CloseWindow()
     a2d.CloseAllWindows()
-    a2d.Restart()
+    a2d.Reboot()
 
     test.Snap("verify changed desktop is retained")
 end)

@@ -16,7 +16,7 @@ test.Step(
     a2dtest.ExpectFullRepaint(a2d.DialogOK)
     test.Snap("verify 24-hour format shown")
     a2d.CloseAllWindows()
-    a2d.Restart()
+    a2d.Reboot()
 end)
 
 test.Step(
@@ -75,7 +75,7 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
-a2d.RemoveClockDriverAndRestart()
+a2d.RemoveClockDriverAndReboot()
 
 test.Step(
   "Fresh disk image",
@@ -88,7 +88,7 @@ test.Step(
     test.Snap("verify dates now Today")
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2dtest.ExpectMinimalRepaint(a2d.DialogOK)
-    a2d.Restart()
+    a2d.Reboot()
 end)
 
 test.Step(
@@ -104,7 +104,7 @@ test.Step(
     test.Snap("verify date is modified")
     a2d.DialogOK()
     -- Should write timestamp to DESKTOP.SYSTEM. Restart to verify.
-    a2d.Restart()
+    a2d.Reboot()
 
     -- Create new folder
     a2d.CreateFolder("/RAM1/NOT.TODAY")

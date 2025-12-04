@@ -814,7 +814,7 @@ function apple2.CompareDHR(bytes)
       local expected = bytes[row*80+col]
       local actual = apple2.GetDoubleHiresByte(row, col)
       if actual ~= expected then
-        print(string.format("difference at %04X - %02X vs. %02X", (row*80+col), actual, expected))
+        print(string.format("difference at row %d col %d - %02X vs. %02X", row, col, actual, expected))
         return false
       end
     end

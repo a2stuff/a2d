@@ -6,7 +6,7 @@
   ============================================================]]--
 
 -- Remove clock driver (to avoid build-relative dates)
-a2d.RemoveClockDriverAndRestart()
+a2d.RemoveClockDriverAndReboot()
 
 test.Step(
   "International - full repaint",

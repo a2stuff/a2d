@@ -27,7 +27,7 @@ function RenameTest(name, proc)
       if idx == 2 or idx == 3 then
         a2d.ToggleOptionCopyToRAMCard()
         a2d.CloseAllWindows()
-        a2d.Restart()
+        a2d.Reboot()
         a2d.WaitForCopyToRAMCard()
       end
 
@@ -84,7 +84,7 @@ function RenameTest(name, proc)
         error("NYI")
       end
       a2d.DeletePath("/A2.DESKTOP/LOCAL")
-      a2d.Restart()
+      a2d.Reboot()
   end)
 end
 

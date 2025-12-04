@@ -52,7 +52,7 @@ end
 -- test.Variants({"v1", "v2"}, function(idx) ... end}
 function test.Variants(t, func)
   for idx, name in pairs(t) do
-    test.Step(name, function() return func(idx) end)
+    test.Step(name, function() return func(idx, name) end)
   end
 end
 
