@@ -779,7 +779,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. Open a volume window. Rename the volume to "TRASH" (all uppercase). File > Quit. Load DeskTop. Verify that the restored window is named "TRASH" not "Trash".
 
 
-## Apple Menu
+## Apple Menu - covered by `tests/apple_menu.lua`
 
 * Rename the `APPLE.MENU` directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
 * Create a new `APPLE.MENU` directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.

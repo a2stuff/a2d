@@ -311,13 +311,13 @@ function a2d.DeletePath(path)
 end
 
 function a2d.CreateFolder(path)
+  local name = path
   if path:match("/") then
-    local base, name = path:match("^(.*)/([^/]+)$")
+    local base
+    base, name = path:match("^(.*)/([^/]+)$")
     if base ~= "" then
       a2d.OpenPath(base)
     end
-  else
-    name = path
   end
   a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
   apple2.ControlKey("X") -- clear
@@ -367,6 +367,7 @@ function a2d.CopySelectionTo(path)
     a2d.WaitForRepaint()
   end
   a2d.DialogOK()
+  emu.wait(10)
 end
 
 function a2d.CopyPath(src, dst)
@@ -407,9 +408,13 @@ function a2d.QuitAndRestart()
   a2d.WaitForRestart()
 end
 
--- Reboot via menu equivalent of PR#7
+-- Reboot via menu equivalent of PR#7 (or PR#5 on IIc+)
 function a2d.Reboot()
-  a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
+  if manager.machine.system.name:match("^apple2cp") then
+    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 2) -- PR#5 (list is 6,5,...)
+  else
+    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
+  end
   a2d.WaitForRestart()
 end
 
