@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="las128ex"
-MODELARGS="-ramsize 1152K -sl7 cffa2"
+MODELARGS="-sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--

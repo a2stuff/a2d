@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2gsr0"
-MODELARGS="-sl7 cffa2 -ramsize 8M"
+MODELARGS="-sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 RESOLUTION="704x462"
 

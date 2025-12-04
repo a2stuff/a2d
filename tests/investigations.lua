@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
-DISKARGS="-hard1 $HARDIMG"
+DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]--
 

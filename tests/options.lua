@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2cp"
-MODELARGS="-ramsize 1152K -gameio joy"
+MODELARGS=""
 DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
@@ -68,5 +68,6 @@ test.Step(
     a2d.CloseWindow()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
     a2d.WaitForRestart()
+    apple2.TypeLine("REM *** Did not crash ***")
     test.Snap("verify no crash to monitor")
 end)

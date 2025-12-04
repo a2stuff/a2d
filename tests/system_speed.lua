@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2c4"
-MODELARGS="-gameio joy"
+MODELARGS=""
 DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
 ======================================== ENDCONFIG ]]--

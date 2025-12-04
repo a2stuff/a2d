@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2cp"
-MODELARGS="-ramsize 1152K -gameio joy"
+MODELARGS="-ramsize 1152K"
 DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
