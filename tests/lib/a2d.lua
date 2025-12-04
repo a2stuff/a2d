@@ -94,8 +94,9 @@ function a2d.WaitForCopyToRAMCard()
 end
 
 function a2d.WaitForRestart()
-  if manager.machine.system.name:match("^apple2c") then
-    -- Apple IIc drive emulation is very slow
+  if manager.machine.system.name:match("^apple2c") or
+    manager.machine.system.name:match("^ace500") then
+    -- Floppy drives are slow
     emu.wait(50)
   else
     emu.wait(10)

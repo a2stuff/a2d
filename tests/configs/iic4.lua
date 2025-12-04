@@ -10,7 +10,5 @@ test.Step(
   "Apple > About This Apple II",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    emu.wait(5) -- IIc emulation is very slow
-    test.Snap()
-    return test.PASS
+    test.Snap(manager.machine.system.name)
 end)
