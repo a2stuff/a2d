@@ -16,7 +16,10 @@ function a2d.InitSystem()
 
   local system = manager.machine.system
 
+  ----------------------------------------
   -- Video
+  ----------------------------------------
+
   if not system.name:match("^apple2gs") then
     -- Monitor type
     if system.name:match("^apple2e") then
@@ -39,7 +42,9 @@ function a2d.InitSystem()
     apple2.SetTextColorMode(apple2.TEXTCOLOR_MODE_OFF)
   end
 
+  ----------------------------------------
   -- CPU and other options
+  ----------------------------------------
 
   if system.name:match("^apple2gs") then
     -- bit0 = ZIP, bits 1-7=speed (0-3):
@@ -68,6 +73,14 @@ function a2d.InitSystem()
     -- ":kbd_lang_select", mask=$FF="Keyboard", 0="QWERTY", 1="DVORAK"
     apple2.SetSystemConfig(":kbd_lang_select", "Keyboard", 0xFF, 0)
   end
+
+  ----------------------------------------
+  -- Caps Lock
+  ----------------------------------------
+
+  -- Caps lock state is retained between runs
+  apple2.CapsLockOff()
+
 end
 
 --------------------------------------------------

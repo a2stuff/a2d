@@ -34,7 +34,8 @@ local keyboard = {
   ["Solid Apple"] = { port = ":keyb_special", field = "Solid Apple" },
 
   -- Other
-  ["Reset"] = { port = ":keyb_special", field = "RESET" },
+  ["Reset"]       = { port = ":keyb_special", field = "RESET"     },
+  ["Caps Lock"]   = { port = ":keyb_special", field = "Caps Lock", bits = 0x01 },
 }
 
 local images = {
@@ -119,7 +120,8 @@ elseif machine.system.name:match("^apple2gs") then
     ["Solid Apple"] = { port = ":macadb:KEY3", field = "Option"  },
 
     -- Other
-    ["Reset"] = { port = ":macadb:KEY5", field = "Reset / Power" },
+    ["Reset"]     = { port = ":macadb:KEY5", field = "Reset / Power" },
+    ["Caps Lock"] = { port = ":macadb:KEY3", field = "Caps Lock", bits = 0x0200 },
   }
 
   images = {
@@ -335,6 +337,28 @@ local function press_and_release(k)
   emu.wait(2/60)
   release(k)
   emu.wait(2/60)
+end
+
+function apple2.IsCapsLockOn()
+  local key = keyboard["Caps Lock"]
+  local bits = get_port(key.port):read()
+  return (bits & key.bits) ~= 0
+end
+
+function apple2.ToggleCapsLock()
+  press_and_release("Caps Lock")
+end
+
+function apple2.CapsLockOn()
+  if not apple2.IsCapsLockOn() then
+    apple2.ToggleCapsLock()
+  end
+end
+
+function apple2.CapsLockOff()
+  if apple2.IsCapsLockOn() then
+    apple2.ToggleCapsLock()
+  end
 end
 
 function apple2.ControlReset()
