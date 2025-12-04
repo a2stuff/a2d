@@ -363,30 +363,27 @@ end
 --------------------------------------------------
 
 function a2d.RemoveClockDriverAndRestart()
-  a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-  a2d.WaitForRestart()
-  apple2.TypeLine("DELETE /A2.DESKTOP/CLOCK.SYSTEM")
-  apple2.TypeLine("PR#7")
-  a2d.WaitForRestart()
+  a2d.DeletePath("/A2.DESKTOP/CLOCK.SYSTEM")
+  a2d.Restart()
 end
 
 function a2d.ToggleOptionCopyToRAMCard()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.OAShortcut("1") -- Toggle "Copy to RAMCard"
-    a2d.CloseWindow()
-    a2d.CloseAllWindows()
+  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OAShortcut("1") -- Toggle "Copy to RAMCard"
+  a2d.CloseWindow()
+  a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.OAShortcut("2") -- Toggle "Show shortcuts on startup"
-    a2d.CloseWindow()
-    a2d.CloseAllWindows()
+  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OAShortcut("2") -- Toggle "Show shortcuts on startup"
+  a2d.CloseWindow()
+  a2d.CloseAllWindows()
 end
 
 -- Reboot via menu equivalent of PR#7
 function a2d.Restart()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
-    a2d.WaitForRestart()
+  a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
+  a2d.WaitForRestart()
 end
 
 --------------------------------------------------
@@ -394,11 +391,11 @@ end
 --------------------------------------------------
 
 function a2d.EnterMouseKeysMode()
-    a2d.OASAShortcut(" ")
+  a2d.OASAShortcut(" ")
 end
 
 function a2d.ExitMouseKeysMode()
-    apple2.EscapeKey()
+  apple2.EscapeKey()
 end
 
 function a2d.InMouseKeysMode(func)
