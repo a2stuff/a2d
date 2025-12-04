@@ -748,7 +748,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". Rename one volume with mixed case e.g. "vol1.MIXED". Rename a second volume with differently mixed case, e.g. "VOL2.mixed". Drag the first volume to the second. Verify that the newly created folder is named with the same case as the dragged volume.
 
 
-## Window Headers
+## Window Headers - covered by `tests/window_headers.lua`
 
 * Open a folder with no items. Verify window header says "0 Items"
 * Open a folder with only one item. Verify window header says "1 Item"

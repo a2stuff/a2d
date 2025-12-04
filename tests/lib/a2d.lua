@@ -311,9 +311,13 @@ function a2d.DeletePath(path)
 end
 
 function a2d.CreateFolder(path)
-  local base, name = path:match("^(.*)/([^/]+)$")
-  if base ~= "" then
-    a2d.OpenPath(base)
+  if path:match("/") then
+    local base, name = path:match("^(.*)/([^/]+)$")
+    if base ~= "" then
+      a2d.OpenPath(base)
+    end
+  else
+    name = path
   end
   a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
   apple2.ControlKey("X") -- clear
