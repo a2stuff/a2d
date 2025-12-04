@@ -12,6 +12,8 @@
 #    --nosnaps           Don't show snapshots once tests are complete
 #    --console           Don't run script, show console instead
 #    --slow              Don't run emulation unthrottled
+#    --listmedia         Print out MAME's list of drive options
+#    --listslots         Print out MAME's list of slot options
 #
 # MAMEDIR must be set to the path containing roms/ etc
 # MAMEEXE must be set to the path to the mame64 binary
@@ -33,6 +35,7 @@ AUDIBLE=""
 SNAPS=true
 CONSOLE=""
 SLOW=""
+LIST=""
 
 for arg in "$@"; do
   case $1 in
@@ -43,6 +46,8 @@ for arg in "$@"; do
     --nosnaps)   shift; SNAPS="" ;;
     --console)   shift; CONSOLE=true ;;
     --slow)      shift; SLOW=true ;;
+    --listmedia) shift; LIST="-listmedia" ;;
+    --listslots) shift; LIST="-listslots" ;;
     *)           SCRIPT="$(realpath "$1")"; shift; break ;;
   esac
 done
@@ -134,7 +139,6 @@ else
   export LUA_SCRIPT="$SCRIPT"
 fi
 
-
 if [ "$SLOW" ]; then
   THROTTLE=""
 else
@@ -157,6 +161,7 @@ output=$(
     $OUTPUTARGS \
     '$MODEL' $MODELARGS $DISKARGS \
     $THROTTLE -nosleep \
+    $LIST \
     $SCRIPTARGS" \
     2>&1 | \
     egrep --line-buffered -v "Secure coding is automatically enabled" | \
