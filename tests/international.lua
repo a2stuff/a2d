@@ -15,9 +15,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.SelectAndOpen("INTERNATIONAL")
     a2d.OAShortcut("2") -- D/M/Y
-    apple2.DHRDarkness()
-    a2d.DialogOK()
-    test.ExpectEquals(a2d.RepaintType(), "full", "repaint", {snap=true})
+    a2dtest.ExpectFullRepaint(a2d.DialogOK)
     test.Snap("verify D/M/Y format")
 end)
 
@@ -28,7 +26,5 @@ test.Step(
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.SelectAndOpen("INTERNATIONAL")
     -- don't change anything
-    apple2.DHRDarkness()
-    a2d.DialogOK()
-    test.ExpectEquals(a2d.RepaintType(), "minimal", "repaint", {snap=true})
+    a2dtest.ExpectMinimalRepaint(a2d.DialogOK)
 end)

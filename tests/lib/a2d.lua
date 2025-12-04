@@ -568,31 +568,5 @@ end
 
 --------------------------------------------------
 
-function a2d.RepaintFraction()
-  local count = 0
-  for row = 0,191 do
-    for col = 0,79 do
-      if not apple2.ValidateDHRDarkness(row, col) then
-        count = count + 1
-      end
-    end
-  end
-  return count / (192*80)
-end
-
--- Heuristic-based
-function a2d.RepaintType()
-  local fraction = a2d.RepaintFraction()
-  if fraction > 0.90 then
-    return "full"
-  elseif fraction < 0.01 then
-    return "none"
-  else
-    return "minimal"
-  end
-end
-
---------------------------------------------------
-
 
 return a2d

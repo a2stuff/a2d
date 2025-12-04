@@ -12,25 +12,33 @@ function MoveDoesntRepaintTest(name, path, x, y, opt_threshold)
   test.Step(
     name .. " doesn't repaint on non-move",
     function()
+
+      local expectfunc = a2dtest.ExpectNoRepaint
+
+      -- Needed for Joystick, as MouseKeys tickles the buttons
+      -- Needed for Bounce as the animation continues
+      if opt_threshold then
+        expectfunc = function(func)
+          a2dtest.ExpectRepaintFraction(0, opt_threshold, func)
+        end
+      end
+
       a2d.SelectPath(path)
       a2d.OpenSelection()
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(x,y)
           emu.wait(2/60)
-          apple2.DHRDarkness()
-          emu.wait(2/60)
-          m.ButtonDown()
-          emu.wait(10/60)
-          m.ButtonUp()
       end)
 
-      if opt_threshold then
-        -- Needed for Joystick, as MouseKeys tickles the buttons
-        -- Needed for Bounce as the animation continues
-        test.ExpectLessThan(a2d.RepaintFraction(), opt_threshold, "repaint")
-      else
-        test.ExpectEquals(a2d.RepaintType(), "none", "repaint", {snap=true})
-      end
+      expectfunc(function()
+          a2d.InMouseKeysMode(function(m)
+              emu.wait(2/60)
+              m.ButtonDown()
+              emu.wait(10/60)
+              m.ButtonUp()
+          end)
+      end)
+
       a2d.CloseWindow()
       a2d.CloseAllWindows()
       a2d.Restart()
