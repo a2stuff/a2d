@@ -107,18 +107,17 @@ test.Step(
     a2d.Restart()
 
     -- Create new folder
-    a2d.OpenPath("/RAM1")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-    apple2.ReturnKey()
+    a2d.CreateFolder("/RAM1/NOT.TODAY")
 
     -- Change date again to avoid "Today"
     a2d.SetProDOSDate(1999,9,13)
 
     -- Inspect file
-    a2d.SelectPath("/RAM1/NEW.FOLDER")
+    a2d.SelectPath("/RAM1/NOT.TODAY")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
     test.Snap("verify date matches set previously set date")
     a2d.DialogOK()
+    a2d.DeletePath("/RAM1/NOT.TODAY")
     a2d.CloseAllWindows()
 end)
 
@@ -305,12 +304,11 @@ test.Step(
   "Today",
   function()
     -- Create file with known date
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.WaitForRestart()
+    local y,m,d = a2d.GetProDOSDate()
     a2d.SetProDOSDate(1999, 9, 13)
-    apple2.TypeLine("CREATE /RAM1/WILL.BE.TODAY")
-    apple2.TypeLine("PR#7")
-    a2d.WaitForRestart()
+    a2d.CreateFolder("/RAM1/WILL.BE.TODAY")
+    -- Change the date so it's not current
+    a2d.SetProDOSDate(y,m,d)
 
     -- Show window and resize/move it
     a2d.OpenPath("/RAM1")

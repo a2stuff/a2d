@@ -310,6 +310,18 @@ function a2d.DeletePath(path)
   a2d.DeleteSelection()
 end
 
+function a2d.CreateFolder(path)
+  local base, name = path:match("^(.*)/([^/]+)$")
+  if base ~= "" then
+    a2d.OpenPath(base)
+  end
+  a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
+  apple2.ControlKey("X") -- clear
+  apple2.Type(name)
+  apple2.ReturnKey()
+  a2d.WaitForRepaint()
+end
+
 function a2d.EraseVolume(name)
   a2d.SelectPath("/"..name)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
@@ -551,16 +563,32 @@ end
 
 --------------------------------------------------
 
+local DATELO, DATEHI, TIMELO, TIMEHI = 0xBF90, 0xBF91, 0xBF92, 0xBF93
+
 function a2d.SetProDOSDate(y,m,d)
   local hi = (y % 100) << 1 | (m >> 3)
   local lo = (m << 5) | d
-  apple2.WriteRAMDevice(0xBF90, lo)
-  apple2.WriteRAMDevice(0xBF91, hi)
+  apple2.WriteRAMDevice(DATELO, lo)
+  apple2.WriteRAMDevice(DATEHI, hi)
+end
+
+function a2d.GetProDOSDate()
+  local word = (apple2.ReadRAMDevice(DATEHI) << 8) | apple2.ReadRAMDevice(DATELO)
+  local y = (word >> 9) & 0x7F
+  local m = (word >> 5) & 0xF
+  local d = word & 0x1F
+  return y,m,d
 end
 
 function a2d.SetProDOSTime(h, m)
-  apple2.WriteRAMDevice(0xBF92, h)
-  apple2.WriteRAMDevice(0xBF93, m)
+  apple2.WriteRAMDevice(TIMELO, m)
+  apple2.WriteRAMDevice(TIMEHI, h)
+end
+
+function a2d.GetProDOSTime()
+  local m = apple2.ReadRAMDevice(TIMELO) & 0x3F
+  local h = apple2.ReadRAMDevice(TIMEHI) & 0x1F
+  return h,m
 end
 
 --------------------------------------------------
