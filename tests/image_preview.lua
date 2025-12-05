@@ -10,19 +10,23 @@ apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
 test.Step(
   "Escape exits",
   function()
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
-    apple2.EscapeKey()
-    a2d.WaitForRepaint()
-    test.Snap("verify preview exited")
+    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OpenSelection()
+        apple2.EscapeKey()
+        a2d.WaitForRepaint()
+    end)
 end)
 
 test.Step(
   "OA+W exits",
   function()
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
-    a2d.OAShortcut("W")
-    a2d.WaitForRepaint()
-    test.Snap("verify preview exited")
+    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OpenSelection()
+        a2d.OAShortcut("W")
+        a2d.WaitForRepaint()
+    end)
 end)
 
 test.Step(

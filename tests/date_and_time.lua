@@ -22,15 +22,20 @@ end)
 test.Step(
   "Escape and Return",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
-    apple2.ReturnKey()
-    a2d.WaitForRepaint()
-    test.Snap("verify dialog closed")
-    a2d.SelectAndOpen("DATE.AND.TIME")
-    apple2.EscapeKey()
-    a2d.WaitForRepaint()
-    test.Snap("verify dialog closed")
+    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
+
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OpenSelection()
+        apple2.ReturnKey()
+        a2d.WaitForRepaint()
+    end)
+
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OpenSelection()
+        apple2.EscapeKey()
+        a2d.WaitForRepaint()
+    end)
+
     a2d.CloseAllWindows()
 end)
 

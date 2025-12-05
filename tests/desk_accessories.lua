@@ -67,15 +67,19 @@ function CloseWindowTest(name, path, x, y)
   test.Step(
     name .. " closes on OA+W",
     function()
-      a2d.OpenPath(path)
-      a2d.OAShortcut("W")
-      a2d.WaitForRepaint()
-      test.Snap("verify window closed on OA+W")
+      a2d.SelectPath(path)
+      a2dtest.ExpectNothingHappened(function()
+          a2d.OpenSelection()
+          a2d.OAShortcut("W")
+          a2d.WaitForRepaint()
+      end)
 
-      a2d.OpenPath(path)
-      a2d.WaitForRepaint()
-      a2d.OAShortcut("w")
-      test.Snap("verify window closed on OA+w")
+      a2d.SelectPath(path)
+      a2dtest.ExpectNothingHappened(function()
+          a2d.OpenSelection()
+          a2d.WaitForRepaint()
+          a2d.OAShortcut("w")
+      end)
   end)
 end
 

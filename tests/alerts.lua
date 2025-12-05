@@ -10,11 +10,12 @@ test.Step(
   function()
     a2d.AddShortcut("/A2.DESKTOP/READ.ME")
     a2d.RenamePath("/A2.DESKTOP/READ.ME", "README")
-    a2d.OAShortcut("1")
-    test.Snap("verify alert shown")
-    apple2.EscapeKey()
-    a2d.WaitForRepaint()
-    test.Snap("verify alert dismissed")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OAShortcut("1")
+        test.Snap("verify alert shown")
+        apple2.EscapeKey()
+        a2d.WaitForRepaint()
+    end)
 end)
 
 test.Step(
@@ -24,12 +25,13 @@ test.Step(
     a2d.ToggleOptionShowShortcutsOnStartup() -- Enable
     a2d.Reboot()
 
-    apple2.Type("1")
-    a2d.DialogOK()
-    test.Snap("verify alert shown")
-    apple2.EscapeKey()
-    a2d.WaitForRepaint()
-    test.Snap("verify alert dismissed")
+    a2dtest.ExpectNothingHappened(function()
+        apple2.Type("1")
+        a2d.DialogOK()
+        test.Snap("verify alert shown")
+        apple2.EscapeKey()
+        a2d.WaitForRepaint()
+    end)
 
     apple2.Type("D") -- Desktop
     a2d.WaitForRestart()
@@ -84,8 +86,7 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify down on yes")
         m.MoveByApproximately(20, 20)
-        m.ButtonUp()
-        test.Snap("verify nothing happened")
+        a2dtest.ExpectNothingHappened(m.ButtonUp)
         m.MoveToApproximately(yes_x,btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
@@ -95,8 +96,7 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify down on no")
         m.MoveByApproximately(20, 20)
-        m.ButtonUp()
-        test.Snap("verify nothing happened")
+        a2dtest.ExpectNothingHappened(m.ButtonUp)
         m.MoveToApproximately(yes_x,btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
@@ -106,8 +106,7 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify down on all")
         m.MoveByApproximately(20, 20)
-        m.ButtonUp()
-        test.Snap("verify nothing happened")
+        a2dtest.ExpectNothingHappened(m.ButtonUp)
         m.MoveToApproximately(all_x,btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue

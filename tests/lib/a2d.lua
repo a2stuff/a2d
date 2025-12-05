@@ -274,8 +274,12 @@ function a2d.OpenPath(path, opt_leave_parent)
   end
 end
 
+function a2d.SplitPath(path)
+  return path:match("^(.*)/([^/]+)$")
+end
+
 function a2d.SelectPath(path)
-  local base, name = path:match("^(.*)/([^/]+)$")
+  local base, name = a2d.SplitPath(path)
   if base ~= "" then
     a2d.OpenPath(base)
   end
@@ -328,7 +332,7 @@ function a2d.CreateFolder(path)
   local name = path
   if path:match("/") then
     local base
-    base, name = path:match("^(.*)/([^/]+)$")
+    base, name = a2d.SplitPath(path)
     if base ~= "" then
       a2d.OpenPath(base)
     end

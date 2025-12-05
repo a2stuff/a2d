@@ -17,8 +17,7 @@ test.Step(
   function()
     a2d.SelectAndOpen("DOS33.IMPORT")
     test.Snap("verify OK button is disabled ")
-    apple2.ReturnKey()
-    test.Snap("verify nothing happened")
+    a2dtest.ExpectNothingHappened(apple2.ReturnKey)
     apple2.DownArrowKey() -- select drive
     test.Snap("verify OK button is enabled")
     apple2.ReturnKey()
@@ -72,8 +71,7 @@ test.Step(
     apple2.DownArrowKey() -- select drive
     apple2.ReturnKey()
     emu.wait(10) -- floppy catalog
-    apple2.ReturnKey()
-    test.Snap("verify nothing happens")
+    a2dtest.ExpectNothingHappened(apple2.ReturnKey)
     apple2.DownArrowKey() -- select file
     apple2.ReturnKey()
     test.Snap("verify Import button flashes")

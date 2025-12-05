@@ -819,7 +819,7 @@ end
 
 function apple2.GetDoubleHiresByte(row, col)
   local bank, addr = GetDHRByteAddress(row, col)
-  return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank))
+  return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank)) & 0x7F
 end
 
 function apple2.SetDoubleHiresByte(row, col, value)

@@ -8,15 +8,19 @@
 test.Step(
   "Close all using modifier-click",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40, 26)
-        apple2.PressOA()
-        m.Click()
-        apple2.ReleaseOA()
+    a2dtest.ExpectNothingHappened(function()
+        a2d.ClearSelection()
+        a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+        a2d.InMouseKeysMode(function(m)
+            m.MoveToApproximately(40, 26)
+            apple2.PressOA()
+            m.Click()
+            apple2.ReleaseOA()
+            a2d.WaitForRepaint()
+            m.MoveToApproximately(0,0)
+        end)
+        a2d.ClearSelection()
     end)
-    a2d.WaitForRepaint()
-    test.Snap("verify all windows closed")
 end)
 
 test.Variants(
@@ -25,14 +29,17 @@ test.Variants(
     "Close all using shortcut - caps lock off",
   },
   function(idx)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
-    if idx == 1 then
-      a2d.OASAShortcut("W")
-    else
-      a2d.OASAShortcut("w")
-    end
-    a2d.WaitForRepaint()
-    test.Snap("verify all windows closed")
+    a2d.ClearSelection()
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+        if idx == 1 then
+          a2d.OASAShortcut("W")
+        else
+          a2d.OASAShortcut("w")
+        end
+        a2d.WaitForRepaint()
+        a2d.ClearSelection()
+    end)
 end)
 
 --[[
