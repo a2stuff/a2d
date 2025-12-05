@@ -8,6 +8,7 @@ local a2dtest = {}
 
 local apple2 = require("apple2")
 local a2d = require("a2d")
+local mgtk = require("mgtk")
 local test = require("test")
 
 --------------------------------------------------
@@ -62,6 +63,58 @@ function a2dtest.ExpectRepaintFraction(min, max, func, message)
   test.Expect(min <= fraction and fraction <= max,
               string.format("%s - diff about %d%%", message, math.floor(fraction * 100)),
               {snap=true})
+end
+
+--------------------------------------------------
+-- MGTK-based helpers
+--------------------------------------------------
+
+-- TODO: This changes if calling from DeskTop vs. Selector
+local bank_offset = 0x10000
+
+function a2dtest.GetFrontWindowDragCoords()
+  local window_id = mgtk.FrontWindow()
+  if window_id == 0 then
+    error("No front window!")
+  end
+  local rect = mgtk.GetWinFrameRect(window_id)
+  local x = math.floor((rect[1] + rect[3]) / 2)
+  local y = rect[2] + 4
+  return x,y
+end
+
+function a2dtest.GetFrontWindowCloseBoxCoords()
+  local window_id = mgtk.FrontWindow()
+  if window_id == 0 then
+    error("No front window!")
+  end
+  local rect = mgtk.GetWinFrameRect(window_id)
+  local x = rect[1] + 20
+  local y = rect[2] + 4
+  return x,y
+end
+
+function a2dtest.GetWindowCount()
+  local count = 0
+  local front = mgtk.FrontWindow()
+  if front == 0 then
+    return 0
+  end
+  local winfo = mgtk.GetWinPtr(front)
+  repeat
+    count = count + 1
+    winfo = winfo + bank_offset
+    winfo = apple2.ReadRAMDevice(winfo + 56) | (apple2.ReadRAMDevice(winfo + 57) << 8)
+  until winfo == 0
+  return count
+end
+
+function a2dtest.GetFrontWindowTitle()
+  local window_id = mgtk.FrontWindow()
+  if window_id == 0 then
+    error("No front window!")
+  end
+  return mgtk.GetWindowName(window_id, bank_offset)
 end
 
 --------------------------------------------------

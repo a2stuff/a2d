@@ -23,18 +23,16 @@ test.Step(
   "Escape and Return",
   function()
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
+    local count = a2dtest.GetWindowCount()
+    a2d.OpenSelection()
+    apple2.ReturnKey()
+    a2d.WaitForRepaint()
+    test.ExpectEquals(a2dtest.GetWindowCount(), count, "expect window closed")
 
-    a2dtest.ExpectNothingHappened(function()
-        a2d.OpenSelection()
-        apple2.ReturnKey()
-        a2d.WaitForRepaint()
-    end)
-
-    a2dtest.ExpectNothingHappened(function()
-        a2d.OpenSelection()
-        apple2.EscapeKey()
-        a2d.WaitForRepaint()
-    end)
+    a2d.OpenSelection()
+    apple2.EscapeKey()
+    a2d.WaitForRepaint()
+    test.ExpectEquals(a2dtest.GetWindowCount(), count, "expect window closed")
 
     a2d.CloseAllWindows()
 end)

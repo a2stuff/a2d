@@ -8,11 +8,12 @@ test.Step(
   "Key Caps - Quit",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
+    local count = a2dtest.GetWindowCount()
     apple2.PressOA()
     apple2.Type("q")
     apple2.ReleaseOA()
     a2d.WaitForRepaint()
-    test.Snap("verify the desk accessory exited")
+    test.Expect(a2dtest.GetWindowCount(), count-1, "the desk accessory should have closed")
 end)
 
 function find_field(name)

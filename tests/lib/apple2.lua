@@ -808,6 +808,17 @@ end
 -- Misc Utilities
 --------------------------------------------------
 
+-- Address must include bank offset
+function apple2.GetPascalString(addr)
+  -- NOTE: Doesn't handle non-ASCII encodings
+  local len = apple2.ReadRAMDevice(addr)
+  local str = ""
+  for i = 1,len do
+    str = str .. string.char(apple2.ReadRAMDevice(addr+i))
+  end
+  return str
+end
+
 local function GetDHRByteAddress(row, col)
   local bank = col % 2
   col = col >> 1

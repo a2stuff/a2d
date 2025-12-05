@@ -58,7 +58,7 @@ test.Step(
     test.Snap("verify alert shown")
     drive:load(current)
     a2d.DialogOK()
-    test.Snap("verify Calculator opened")
+    test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should be open")
     a2d.CloseWindow()
 end)
 
@@ -72,6 +72,6 @@ test.Step(
     test.Snap("verify alert shown")
     drive:load(current)
     a2d.DialogOK()
-    test.Snap("verify CONTROL.PANELS window opemed")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels window should be open")
     a2d.CloseWindow()
 end)

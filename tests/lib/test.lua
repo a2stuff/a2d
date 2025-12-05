@@ -103,6 +103,10 @@ function test.ExpectEquals(actual, expected, message, options)
   test.Expect(actual == expected, message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options)
 end
 
+function test.ExpectEqualsIgnoreCase(actual, expected, message, options)
+  test.Expect(actual:lower() == expected:lower(), message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options)
+end
+
 function test.ExpectNotEquals(actual, expected, message, options)
   test.Expect(actual ~= expected, message .. " - actual " .. format(actual) .. " should not equal " .. format(expected), options)
 end

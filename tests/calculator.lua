@@ -5,9 +5,6 @@
 
   ============================================================]]--
 
-local INITIAL_HEADER_X = 280
-local INITIAL_HEADER_Y = 55
-
 test.Step(
   "Cursor doesn't home",
   function()
@@ -20,8 +17,10 @@ test.Step(
   "Move window and mouse cursor",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    local x,y = a2dtest.GetFrontWindowDragCoords()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(INITIAL_HEADER_X,INITIAL_HEADER_Y)
+        m.MoveToApproximately(x,y)
         m.ButtonDown()
         m.MoveToApproximately(400,100)
         m.ButtonUp()
@@ -35,8 +34,10 @@ test.Step(
   "Window and volume icons",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    local x,y = a2dtest.GetFrontWindowDragCoords()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(INITIAL_HEADER_X,INITIAL_HEADER_Y)
+        m.MoveToApproximately(x,y)
         m.ButtonDown()
         m.MoveToApproximately(500,20)
         m.ButtonUp()
@@ -58,8 +59,10 @@ test.Step(
   "Obscured window",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    local x,y = a2dtest.GetFrontWindowDragCoords()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(INITIAL_HEADER_X,INITIAL_HEADER_Y)
+        m.MoveToApproximately(x,y)
         m.ButtonDown()
         m.MoveToApproximately(280,191)
         m.ButtonUp()

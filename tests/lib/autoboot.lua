@@ -9,6 +9,7 @@ local c = coroutine.create(function()
     apple2 = require("apple2")
     a2d = require("a2d")
     a2dtest = require("a2dtest")
+    mgtk = require("mgtk")
     a2d.InitSystem() -- async; outside require
 
     -- ACE 2200 is hard-coded to autostart at Slot 6

@@ -115,7 +115,7 @@ RenameTest(
   function(dtpath)
     -- Apple Menu > Calculator
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
-    test.Snap("verify Calculator displayed")
+    test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should have run")
     a2d.CloseWindow()
 end)
 
@@ -124,7 +124,9 @@ RenameTest(
   function(dtpath)
     -- Apple Menu > Control Panels
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    test.Snap("verify Control Panels folder displayed")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels should have run")
+    a2d.CloseWindow()
+
 end)
 
 RenameTest(

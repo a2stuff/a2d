@@ -46,8 +46,10 @@ test.Step(
   "Repaints when obscured",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+    local x,y = a2dtest.GetFrontWindowDragCoords()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(280, 45)
+        m.MoveToApproximately(x,y)
         m.ButtonDown()
         m.MoveToApproximately(280,192)
         m.ButtonUp()

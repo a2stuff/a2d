@@ -8,19 +8,17 @@
 test.Step(
   "Close all using modifier-click",
   function()
-    a2dtest.ExpectNothingHappened(function()
-        a2d.ClearSelection()
-        a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
-        a2d.InMouseKeysMode(function(m)
-            m.MoveToApproximately(40, 26)
-            apple2.PressOA()
-            m.Click()
-            apple2.ReleaseOA()
-            a2d.WaitForRepaint()
-            m.MoveToApproximately(0,0)
-        end)
-        a2d.ClearSelection()
+    a2d.ClearSelection()
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+    local x,y = a2dtest.GetFrontWindowCloseBoxCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x,y)
+        apple2.PressOA()
+        m.Click()
+        apple2.ReleaseOA()
     end)
+    a2d.WaitForRepaint()
+    test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 
 test.Variants(
@@ -30,16 +28,14 @@ test.Variants(
   },
   function(idx)
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(function()
-        a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
-        if idx == 1 then
-          a2d.OASAShortcut("W")
-        else
-          a2d.OASAShortcut("w")
-        end
-        a2d.WaitForRepaint()
-        a2d.ClearSelection()
-    end)
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+    if idx == 1 then
+      a2d.OASAShortcut("W")
+    else
+      a2d.OASAShortcut("w")
+    end
+    a2d.WaitForRepaint()
+    test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 
 --[[
@@ -64,7 +60,7 @@ test.Variants(
     else
       apple2.ReleaseOA()
     end
-    test.Snap("verify all windows closed")
+    test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 ]]--
 
@@ -85,6 +81,6 @@ end)
       a2d.OASAShortcut("w")
     end
     a2d.WaitForRepaint()
-    test.Snap("verify all windows closed")
+    test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 ]]--

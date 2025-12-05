@@ -87,11 +87,12 @@ end)
 test.Step(
   "Mouse Keys - double-click",
   function()
+    local count = a2dtest.GetWindowCount()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon_x, vol_icon_y)
         m.DoubleClick()
         a2d.WaitForRepaint()
-        test.Snap("verify window opened")
     end)
+    test.ExpectEquals(a2dtest.GetWindowCount(), count+1, "window should have opened")
     a2d.ClearSelection()
 end)

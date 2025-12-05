@@ -692,6 +692,7 @@ event_modifier_solid_apple = 1 << 1
 
 ;;; Used in FindControl
 .enum Part
+        inactive        = 0
         up_arrow        = 1
         left_arrow      = 1
         down_arrow      = 2
