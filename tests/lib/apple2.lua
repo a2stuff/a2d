@@ -575,15 +575,33 @@ end
 -- Memory
 --------------------------------------------------
 
--- This is a hardware view of memory
--- * It does not reflect bank states; aux starts at is 0x10000
--- * LCBANK1 is presented at $C000 (!!!)
--- * LCBANK2 is presented at $D000
+-- This is a "hardware" view of memory; i.e. the MMU/softswitch states
+-- are ignored, which is useful as the banking configuration changes
+-- constantly. Instead, call with explicit bank selection in the
+-- address.
+
+-- Note that internally MAME models LC memory as:
+-- * $D000/1 is presented at $C000
+-- * $D000/2 is presented at $D000
+-- * $E000 is presented at $F000
+-- * $F000 is presented at $E000
+-- For Apple IIe devices, Auxiliary RAM is a separate device. For
+-- others, it just exists at 0x10000 and up.
+
+-- The ReadRAMDevice/WriteRAMDevice calls normalize this; call with
+-- 0x0nnnn to access Main RAM and 0x1nnnn to acces Aux RAM. For
+-- LCBANK2 use 0xbCnnnn instead of 0xDnnnn.
+
 local ram = emu.item(machine.devices[":ram"].items["0/m_pointer"])
 
 function apple2.ReadRAMDevice(addr)
+  -- Assume LCBANK1 is desired
+  if (addr & 0xC000) ~= 0 then
+    addr = addr ~ 0x1000
+  end
+
   -- Apple IIe exposes Aux RAM as a separate device
-  if addr > 0x10000 and auxram ~= nil then
+  if addr >= 0x10000 and auxram ~= nil then
     return auxram:read(addr - 0x10000)
   else
     return ram:read(addr)
@@ -591,8 +609,13 @@ function apple2.ReadRAMDevice(addr)
 end
 
 function apple2.WriteRAMDevice(addr, value)
+  -- Assume LCBANK1 is desired
+  if (addr & 0xC000) ~= 0 then
+    addr = addr ~ 0x1000
+  end
+
   -- Apple IIe exposes Aux RAM as a separate device
-  if addr > 0x10000 and auxram ~= nil then
+  if addr >= 0x10000 and auxram ~= nil then
     auxram:write(addr - 0x10000, value)
   else
     ram:write(addr, value)
@@ -603,7 +626,9 @@ end
 -- Machine State
 --------------------------------------------------
 
--- This is a software view of memory; i.e. banking matters!
+-- This is a "software" view of memory; i.e. the MMU/softswitch states
+-- determines which banks (Main vs. Aux, LCBANK1 vs. LCBANK2 vs. ROM)
+-- are accessed
 
 -- Most useful for reading/writing softswitches
 local cpu = manager.machine.devices[":maincpu"]
