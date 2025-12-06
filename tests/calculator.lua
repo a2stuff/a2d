@@ -71,8 +71,9 @@ test.Step(
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()
-    apple2.Type("123.456")
-    test.Snap("verify no bad repaint while obscured")
+    a2dtest.ExpectNothingChanged(function()
+        apple2.Type("123.456")
+    end)
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT)
