@@ -10,7 +10,7 @@ test.Step(
   function()
     a2d.AddShortcut("/A2.DESKTOP/READ.ME")
     a2d.RenamePath("/A2.DESKTOP/READ.ME", "README")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.OAShortcut("1")
         a2dtest.ExpectAlertShowing()
         apple2.EscapeKey()
@@ -25,7 +25,7 @@ test.Step(
     a2d.ToggleOptionShowShortcutsOnStartup() -- Enable
     a2d.Reboot()
 
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         apple2.Type("1")
         a2d.DialogOK()
         a2dtest.ExpectAlertShowing()
@@ -86,7 +86,7 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify down on yes")
         m.MoveByApproximately(20, 20)
-        a2dtest.ExpectNothingHappened(m.ButtonUp)
+        a2dtest.ExpectNothingChanged(m.ButtonUp)
         m.MoveToApproximately(yes_x,btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
@@ -96,7 +96,7 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify down on no")
         m.MoveByApproximately(20, 20)
-        a2dtest.ExpectNothingHappened(m.ButtonUp)
+        a2dtest.ExpectNothingChanged(m.ButtonUp)
         m.MoveToApproximately(yes_x,btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
@@ -106,7 +106,7 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify down on all")
         m.MoveByApproximately(20, 20)
-        a2dtest.ExpectNothingHappened(m.ButtonUp)
+        a2dtest.ExpectNothingChanged(m.ButtonUp)
         m.MoveToApproximately(all_x,btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue

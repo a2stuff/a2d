@@ -61,10 +61,10 @@ test.Step(
     end
 
     function ProbeCenter()
-      local win, area = mgtk.FindWindow(280,96)
+      local win, area = mgtk.FindWindow(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2)
       print("window at center? " .. win .. "  area: " .. NameFromEnum(mgtk.area, area))
       if win ~= 0 then
-        local ctl, part = mgtk.FindControlEx(280,96,win)
+        local ctl, part = mgtk.FindControlEx(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2,win)
         print("ctl: " .. NameFromEnum(mgtk.ctl,ctl) .. "  part: " .. NameFromEnum(mgtk.part,part))
       end
     end

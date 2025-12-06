@@ -10,7 +10,7 @@ test.Step(
   function()
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.OAShortcut("M")
         for i=1,5 do
           apple2.RightArrowKey()
@@ -42,7 +42,7 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.OAShortcut("G")
         for i=1,5 do
           apple2.RightArrowKey()

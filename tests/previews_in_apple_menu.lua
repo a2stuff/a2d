@@ -14,19 +14,19 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
@@ -48,19 +48,19 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
@@ -82,19 +82,19 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
@@ -117,19 +117,19 @@ test.Step(
 
     -- no icon
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
     a2d.SelectPath("/A2.DESKTOP")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     end)
 

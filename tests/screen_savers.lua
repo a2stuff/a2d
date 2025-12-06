@@ -20,13 +20,14 @@ test.Variants(
 
     emu.wait(1)
 
-    a2d.InMouseKeysMode(function(m) m.Click() end)
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(20,20)
+        m.Click()
+    end)
+
     a2d.WaitForRepaint()
 
-    -- cursor is in leftmost byte
-    for col = 1,79 do
-      test.ExpectEquals(apple2.GetDoubleHiresByte(0, col), 0x7F, "Menu should not be highlighted")
-    end
+    a2dtest.ExpectMenuNotHighlighted()
     a2d.CloseAllWindows()
 end)
 
@@ -40,7 +41,7 @@ test.Step(
     apple2.EscapeKey()
     apple2.Type('@') -- no-op, wait for key to be consumed
 
-    test.ExpectNotEquals(apple2.GetDoubleHiresByte(4, 78), 0x7F, "Clock should be visible already")
+    a2dtest.ExpectClockVisible()
 
     a2d.CloseAllWindows()
 end)

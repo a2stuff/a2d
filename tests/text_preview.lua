@@ -30,11 +30,11 @@ test.Step(
 
     apple2.SpaceKey() -- toggle modes
     a2d.WaitForRepaint()
-    test.Snap("verify fixed mode")
+    test.Snap("verify Fixed mode")
 
     apple2.SpaceKey() -- toggle modes
     a2d.WaitForRepaint()
-    test.Snap("verify proportional mode")
+    test.Snap("verify Proportional mode")
 
     a2d.CloseWindow()
 end)
@@ -43,22 +43,25 @@ test.Step(
   "Click toggles modes",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
+    test.Snap("verify Proportional label baseline aligns with window title")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(500, 20)
-        m.Click()
     end)
-    a2d.WaitForRepaint()
-    test.Snap("verify fixed mode")
-    test.Snap("verify label baseline aligns with window title")
+    local dhr = a2dtest.SnapshotDHRWithoutClock()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(500, 20)
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Snap("verify proportional mode")
-    test.Snap("verify label baseline aligns with window title")
+    test.Snap("verify Fixed mode")
+    test.Snap("verify Fixed label baseline aligns with window title")
+
+    a2d.InMouseKeysMode(function(m)
+        m.Click()
+    end)
+    a2d.WaitForRepaint()
+    a2dtest.ExpectUnchangedExceptClock(dhr, "should have toggled back to Proportional")
 
     a2d.CloseWindow()
 end)
@@ -66,9 +69,11 @@ end)
 test.Step(
   "Selection retained",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
-    a2d.CloseWindow()
-    test.Snap("verify selection not cleared on exit")
+    a2d.SelectPath("/TESTS/FILE.TYPES/TOGGLE.ME")
+    a2dtest.ExpectNothingChanged(function()
+        a2d.OpenSelection()
+        a2d.CloseWindow()
+    end)
 end)
 
 test.Step(
@@ -88,48 +93,52 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT")
     test.Snap("verify scrollbar active")
 
+    local dhr = a2dtest.SnapshotDHRWithoutClock()
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
     test.Snap("verify scrolled down by one line")
 
     apple2.UpArrowKey()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled up by one line")
+    a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one line")
 
+    -- Page Down/Up using OA
     apple2.PressOA()
     apple2.DownArrowKey()
     apple2.ReleaseOA()
     a2d.WaitForRepaint()
     test.Snap("verify scrolled down by one page")
+    local dhr2 = a2dtest.SnapshotDHRWithoutClock()
 
     apple2.PressOA()
     apple2.UpArrowKey()
     apple2.ReleaseOA()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled up by one page")
+    a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
+    -- Page Down/Up using SA
     apple2.PressSA()
     apple2.DownArrowKey()
     apple2.ReleaseSA()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled down by one page")
+    a2dtest.ExpectUnchangedExceptClock(dhr2, "should have scrolled down by one page")
 
     apple2.PressSA()
     apple2.UpArrowKey()
     apple2.ReleaseSA()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled up by one page")
+    a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
     OASA(apple2.DownArrowKey)
     test.Snap("verify scrolled to end")
 
     OASA(apple2.UpArrowKey)
-    test.Snap("verify scrolled to start")
+    a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back to start")
 
     OASA(apple2.DownArrowKey)
     apple2.SpaceKey() -- toggle mode
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled to top")
+    test.Snap("verify scrolled to top and Fixed mode")
 
     a2d.CloseWindow()
 end)
@@ -172,13 +181,14 @@ test.Step(
     end)
     test.Snap("verify scrolled to about halfway through file")
 
+    local dhr = a2dtest.SnapshotDHRWithoutClock()
     apple2.UpArrowKey()
     a2d.WaitForRepaint()
     test.Snap("verify scrolled up one line")
 
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled down one line")
+    a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled down one line")
 
     a2d.CloseWindow()
 end)
@@ -187,7 +197,7 @@ test.Step(
   "Performance: First page displays immediately",
   function()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(280,96)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2)
     end)
 
     -- Disable ZIP Chip

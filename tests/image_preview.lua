@@ -11,7 +11,7 @@ test.Step(
   "Escape exits",
   function()
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.OpenSelection()
         apple2.EscapeKey()
         a2d.WaitForRepaint()
@@ -22,7 +22,7 @@ test.Step(
   "OA+W exits",
   function()
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.OpenSelection()
         a2d.OAShortcut("W")
         a2d.WaitForRepaint()
@@ -35,10 +35,10 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
     apple2.SpaceKey()
     a2d.WaitForRepaint()
-    test.Snap("verify space toggled to mono")
+    test.Snap("verify mono")
     apple2.SpaceKey()
     a2d.WaitForRepaint()
-    test.Snap("verify space toggled to color")
+    test.Snap("verify color")
     a2d.CloseWindow()
 end)
 
@@ -46,7 +46,7 @@ test.Step(
   ".A2HR opens in mono",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/HRMONO.A2HR")
-    test.Snap("verify opened in mono")
+    test.Snap("verify mono")
     a2d.CloseWindow()
 end)
 
@@ -54,7 +54,7 @@ test.Step(
   ".A2LC opens in color",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/HRCOLOR.A2LC")
-    test.Snap("verify opened in color")
+    test.Snap("verify color")
     a2d.CloseWindow()
 end)
 
@@ -66,7 +66,8 @@ test.Step(
 
     apple2.Type('@') -- no-op, wait for key to be consumed
 
-    test.ExpectNotEquals(apple2.GetDoubleHiresByte(4, 78), 0x7F, "Clock should be visible already")
+    a2dtest.ExpectClockVisible()
+
     a2d.WaitForRepaint()
 end)
 
@@ -115,7 +116,7 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/PACKED.FOT")
     emu.wait(10)
-    test.Snap("verify preview does not exit spontaneously")
+    test.Snap("verify preview still showing")
     a2d.CloseWindow()
 end)
 
@@ -125,14 +126,18 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/PREVIEW/IMAGE/PICTURE1")
     apple2.Type("S") -- start
+    local dhr = apple2.SnapshotDHR()
     for i=1,6 do
       emu.wait(3)
-      test.Snap("verify slideshow running")
+      test.Expect(not apple2.CompareDHR(dhr), "slideshow should be running", {snap=true})
+      dhr = apple2.SnapshotDHR()
     end
     apple2.Type("S") -- anything (including S) stops
+    dhr = apple2.SnapshotDHR()
     for i=1,3 do
       emu.wait(3)
-      test.Snap("verify slideshow stopped")
+      test.Expect(apple2.CompareDHR(dhr), "slideshow should be stopped", {snap=true})
+      dhr = apple2.SnapshotDHR()
     end
     a2d.CloseWindow()
 end)
@@ -142,19 +147,25 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/PREVIEW/IMAGE/PICTURE1")
     apple2.Type("S") -- start
+    local dhr = apple2.SnapshotDHR()
     for i=1,6 do
       emu.wait(3)
-      test.Snap("verify slideshow running")
+      test.Expect(not apple2.CompareDHR(dhr), "slideshow should be running", {snap=true})
+      dhr = apple2.SnapshotDHR()
     end
     apple2.Type("D") -- anything stops
+    dhr = apple2.SnapshotDHR()
     for i=1,3 do
       emu.wait(3)
-      test.Snap("verify slideshow stopped")
+      test.Expect(apple2.CompareDHR(dhr), "slideshow should be stopped", {snap=true})
+      dhr = apple2.SnapshotDHR()
     end
     apple2.Type("S") -- start
+    dhr = apple2.SnapshotDHR()
     for i=1,6 do
       emu.wait(3)
-      test.Snap("verify slideshow running")
+      test.Expect(not apple2.CompareDHR(dhr), "slideshow should be running", {snap=true})
+      dhr = apple2.SnapshotDHR()
     end
     a2d.CloseWindow()
 end)
@@ -164,20 +175,26 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/PREVIEW/IMAGE/PICTURE1")
     apple2.Type("S") -- start
+    local dhr = apple2.SnapshotDHR()
     for i=1,6 do
       emu.wait(3)
-      test.Snap("verify slideshow running")
+      test.Expect(not apple2.CompareDHR(dhr), "slideshow should be running", {snap=true})
+      dhr = apple2.SnapshotDHR()
     end
+    test.Snap("note current slide")
     apple2.LeftArrowKey()
     a2d.WaitForRepaint()
     test.Snap("verify backed up one slide")
-    emu.wait(3)
-    test.Snap("verify slideshow was stopped")
+    a2dtest.ExpectNothingChanged(function()
+        emu.wait(3)
+    end)
 
     apple2.Type("S") -- start
+    dhr = apple2.SnapshotDHR()
     for i=1,3 do
       emu.wait(3)
-      test.Snap("verify slideshow running")
+      test.Expect(not apple2.CompareDHR(dhr), "slideshow should be running", {snap=true})
+      dhr = apple2.SnapshotDHR()
     end
     a2d.CloseWindow()
 end)
@@ -205,14 +222,14 @@ test.Step(
     apple2.EscapeKey()
     a2d.WaitForRepaint()
 
-    test.Snap("verify file menu is not highlighted")
+    a2dtest.ExpectMenuNotHighlighted()
 end)
 
 test.Step(
   "Cursor reappears",
   function()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(280,96)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2)
     end)
 
     a2d.OpenPath("/TESTS/PREVIEW/IMAGE/PICTURE1")

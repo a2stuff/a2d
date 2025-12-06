@@ -531,8 +531,8 @@ local function round(n)
 end
 
 function a2d.MouseKeysHome()
-  a2d.MouseKeysLeft(round(560 / MOUSE_KEYS_DELTA_X))
-  a2d.MouseKeysUp(round(192 / MOUSE_KEYS_DELTA_Y))
+  a2d.MouseKeysLeft(round(apple2.SCREEN_WIDTH / MOUSE_KEYS_DELTA_X))
+  a2d.MouseKeysUp(round(apple2.SCREEN_HEIGHT / MOUSE_KEYS_DELTA_Y))
 end
 
 function a2d.MouseKeysMoveToApproximately(x,y)
@@ -569,7 +569,7 @@ end
 
 function a2d.DragSelectMultipleVolumes()
   a2d.InMouseKeysMode(function(m)
-      m.MoveToApproximately(560,20)
+      m.MoveToApproximately(apple2.SCREEN_WIDTH,20)
       m.ButtonDown()
       m.MoveByApproximately(-80, 130)
       m.ButtonUp()

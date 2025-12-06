@@ -51,7 +51,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x,y)
         m.ButtonDown()
-        m.MoveToApproximately(280,192)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()

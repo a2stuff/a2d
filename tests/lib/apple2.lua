@@ -5,7 +5,11 @@
 
   ============================================================]]--
 
-local apple2 = {}
+local apple2 = {
+  SCREEN_HEIGHT = 192,
+  SCREEN_WIDTH = 560,
+  SCREEN_COLUMNS = 80,
+}
 
 local machine = manager.machine
 
@@ -828,12 +832,12 @@ local function GetDHRByteAddress(row, col)
   return bank, 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
 end
 
-function apple2.GetDoubleHiresByte(row, col)
+function apple2.GetDHRByte(row, col)
   local bank, addr = GetDHRByteAddress(row, col)
   return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank)) & 0x7F
 end
 
-function apple2.SetDoubleHiresByte(row, col, value)
+function apple2.SetDHRByte(row, col, value)
   local bank, addr = GetDHRByteAddress(row, col)
   apple2.WriteRAMDevice(addr + 0x10000 * (1-bank), value)
 end
@@ -860,21 +864,23 @@ end
 
 function apple2.SnapshotDHR()
   local bytes = {}
-  for row = 0,192 do
+  for row = 0,apple2.SCREEN_HEIGHT-1 do
     for col = 0,79 do
-      bytes[row*80+col] = apple2.GetDoubleHiresByte(row, col)
+      bytes[row*80+col] = apple2.GetDHRByte(row, col)
     end
   end
   return bytes
 end
 
-function apple2.CompareDHR(bytes)
-  for row = 0,192 do
+function apple2.CompareDHR(bytes, log)
+  for row = 0,apple2.SCREEN_HEIGHT-1 do
     for col = 0,79 do
       local expected = bytes[row*80+col]
-      local actual = apple2.GetDoubleHiresByte(row, col)
+      local actual = apple2.GetDHRByte(row, col)
       if actual ~= expected then
-        print(string.format("difference at row %d col %d - %02X vs. %02X", row, col, actual, expected))
+        if log then
+          print(string.format("difference at row %d col %d - %02X vs. %02X", row, col, actual, expected))
+        end
         return false
       end
     end
@@ -892,10 +898,10 @@ local darkness_bytes = {
 }
 
 function apple2.DHRDarkness()
-  for row = 0,191 do
-    for col = 0,79 do
+  for row = 0,apple2.SCREEN_HEIGHT-1 do
+    for col = 0,apple2.SCREEN_COLUMNS-1 do
       local byte = darkness_bytes[row % 4 + 1][col % 4 + 1]
-      apple2.SetDoubleHiresByte(row, col, byte)
+      apple2.SetDHRByte(row, col, byte)
     end
   end
 end
@@ -903,7 +909,7 @@ end
 -- Expect apple2.DHRDarkness() was previously called
 function apple2.ValidateDHRDarkness(row, col)
   local expected = darkness_bytes[row % 4 + 1][col % 4 + 1]
-  return apple2.GetDoubleHiresByte(row, col) == expected
+  return apple2.GetDHRByte(row, col) == expected
 end
 
 --------------------------------------------------

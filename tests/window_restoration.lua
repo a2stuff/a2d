@@ -15,7 +15,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS")
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(a2d.QuitAndRestart)
+    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.CloseAllWindows()
 end)
 
@@ -25,7 +25,7 @@ test.Step(
     a2d.SelectAll()
     a2d.OAShortcut("O") -- File > Open
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
         a2d.WaitForRestart()
         a2d.OAShortcut("Q") -- File > Quit
@@ -34,7 +34,7 @@ test.Step(
 
     a2d.CloseAllWindows()
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
         a2d.WaitForRestart()
         a2d.OAShortcut("Q") -- File > Quit
@@ -53,7 +53,7 @@ test.Step(
       apple2.DownArrowKey()
     end
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(a2d.QuitAndRestart)
+    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.CloseAllWindows()
 end)
 
@@ -62,7 +62,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP")
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(a2d.QuitAndRestart)
+    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.CloseAllWindows()
     test.Snap("verify volume icon not dimmed")
 end)
@@ -80,7 +80,7 @@ test.Variants(
     a2d.OpenPath("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, idx)
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(a2d.QuitAndRestart)
+    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.OpenMenu(a2d.VIEW_MENU)
     test.Snap("verify "..name.." is checked")
     apple2.EscapeKey()
@@ -105,7 +105,7 @@ test.Step(
   function()
     a2d.OpenPath("/TEST/FILE.TYPES")
     a2d.ClearSelection()
-    a2dtest.ExpectNothingHappened(a2d.QuitAndRestart)
+    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.DragSelectMultipleVolumes()
     test.Snap("verify icons selected")
 end)

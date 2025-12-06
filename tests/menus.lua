@@ -284,7 +284,7 @@ end)
 test.Step(
   "Control-Shift-2 doesn't show first menu item without shortcut",
   function()
-    a2dtest.ExpectNothingHappened(function()
+    a2dtest.ExpectNothingChanged(function()
         apple2.ControlKey("@")
         a2d.WaitForRepaint()
     end)

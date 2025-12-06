@@ -18,8 +18,9 @@ test.Step(
   "Map - Indicator",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
+    local x,y = a2dtest.GetFrontWindowDragCoords()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(280,40)
+        m.MoveToApproximately(x,y)
         m.ButtonDown()
         emu.wait(10/60)
         test.Snap("verify indicator visible")
