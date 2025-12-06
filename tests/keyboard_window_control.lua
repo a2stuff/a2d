@@ -10,14 +10,14 @@ test.Step(
   function()
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
-
-    a2d.OAShortcut("M")
-    for i=1,3 do
-      apple2.RightArrowKey()
-      apple2.DownArrowKey()
-    end
-    apple2.EscapeKey()
-    test.Snap("should not have moved")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OAShortcut("M")
+        for i=1,5 do
+          apple2.RightArrowKey()
+          apple2.DownArrowKey()
+        end
+        apple2.EscapeKey()
+    end)
 end)
 
 test.Step(
@@ -27,7 +27,7 @@ test.Step(
     a2d.WaitForRepaint()
 
     a2d.OAShortcut("M")
-    for i=1,3 do
+    for i=1,5 do
       apple2.RightArrowKey()
       apple2.DownArrowKey()
     end
@@ -42,13 +42,14 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
-    a2d.OAShortcut("G")
-    for i=1,3 do
-      apple2.RightArrowKey()
-      apple2.DownArrowKey()
-    end
-    apple2.EscapeKey()
-    test.Snap("should not have resized")
+    a2dtest.ExpectNothingHappened(function()
+        a2d.OAShortcut("G")
+        for i=1,5 do
+          apple2.RightArrowKey()
+          apple2.DownArrowKey()
+        end
+        apple2.EscapeKey()
+    end)
 end)
 
 test.Step(
@@ -58,7 +59,7 @@ test.Step(
     a2d.WaitForRepaint()
 
     a2d.OAShortcut("G")
-    for i=1,3 do
+    for i=1,5 do
       apple2.RightArrowKey()
       apple2.DownArrowKey()
     end

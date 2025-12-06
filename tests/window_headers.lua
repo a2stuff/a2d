@@ -55,8 +55,8 @@ test.Step(
     test.Snap("verify right edge of header text is cut off")
     a2d.MoveWindowBy(-250, 0)
 
+    -- Get both scrollbars showing
     a2d.GrowWindowBy(-100,-50)
-    test.Snap("both scrollbars?")
 
     a2d.MoveWindowBy(-150, 0)
     test.Snap("verify left edge of header text is cut off")
