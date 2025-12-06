@@ -80,12 +80,21 @@ end
 -- Expectations
 --------------------------------------------------
 
-function test.Expect(expr, message, options)
+local function inc(level)
+  if level then
+    return level + 1
+  else
+    return 1
+  end
+end
+
+
+function test.Expect(expr, message, options, level)
   if not expr then
     if options and options.snap then
       test.Snap("FAILURE - " .. message)
     end
-    error("Expectation failure: " .. message)
+    error("Expectation failure: " .. message, inc(inc(level)))
   end
 end
 
@@ -99,24 +108,24 @@ local function format(value)
   end
 end
 
-function test.ExpectEquals(actual, expected, message, options)
-  test.Expect(actual == expected, message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options)
+function test.ExpectEquals(actual, expected, message, options, level)
+  test.Expect(actual == expected, message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options, inc(level))
 end
 
-function test.ExpectEqualsIgnoreCase(actual, expected, message, options)
-  test.Expect(actual:lower() == expected:lower(), message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options)
+function test.ExpectEqualsIgnoreCase(actual, expected, message, options, level)
+  test.Expect(actual:lower() == expected:lower(), message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options, inc(level))
 end
 
-function test.ExpectNotEquals(actual, expected, message, options)
-  test.Expect(actual ~= expected, message .. " - actual " .. format(actual) .. " should not equal " .. format(expected), options)
+function test.ExpectNotEquals(actual, expected, message, options, level)
+  test.Expect(actual ~= expected, message .. " - actual " .. format(actual) .. " should not equal " .. format(expected), options, inc(level))
 end
 
-function test.ExpectLessThan(a, b, message, options)
-  test.Expect(a < b, message .. " - actual " .. format(a) .. " should be < " .. format(b), options)
+function test.ExpectLessThan(a, b, message, options, level)
+  test.Expect(a < b, message .. " - actual " .. format(a) .. " should be < " .. format(b), options, inc(level))
 end
 
-function test.ExpectLessThanOrEqual(a, b, message, options)
-  test.Expect(a <= b, message .. " - actual " .. format(a) .. " should be <= " .. format(b), options)
+function test.ExpectLessThanOrEqual(a, b, message, options, level)
+  test.Expect(a <= b, message .. " - actual " .. format(a) .. " should be <= " .. format(b), options, inc(level))
 end
 
 --------------------------------------------------

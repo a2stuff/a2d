@@ -12,7 +12,7 @@ test.Step(
     a2d.RenamePath("/A2.DESKTOP/READ.ME", "README")
     a2dtest.ExpectNothingHappened(function()
         a2d.OAShortcut("1")
-        test.Snap("verify alert shown")
+        a2dtest.ExpectAlertShowing()
         apple2.EscapeKey()
         a2d.WaitForRepaint()
     end)
@@ -28,7 +28,7 @@ test.Step(
     a2dtest.ExpectNothingHappened(function()
         apple2.Type("1")
         a2d.DialogOK()
-        test.Snap("verify alert shown")
+        a2dtest.ExpectAlertShowing()
         apple2.EscapeKey()
         a2d.WaitForRepaint()
     end)
@@ -57,10 +57,10 @@ test.Step(
     a2d.DialogOK() -- confirm overwrite
     emu.wait(10) -- wait for copy to complete
 
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    test.Snap("verify alert dismissed")
+    a2dtest.ExpectAlertNotShowing()
 
     a2d.OAShortcut("Q")
     a2d.WaitForRestart()

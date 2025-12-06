@@ -55,7 +55,7 @@ test.Step(
     local current = drive.filename
     drive:unload()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     drive:load(current)
     a2d.DialogOK()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should be open")
@@ -69,7 +69,7 @@ test.Step(
     local current = drive.filename
     drive:unload()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     drive:load(current)
     a2d.DialogOK()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels window should be open")

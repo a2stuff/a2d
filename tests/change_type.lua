@@ -14,7 +14,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("06")
     a2d.DialogOK()
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
 end)
 
@@ -30,7 +30,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("8000")
     a2d.DialogOK()
-    test.Snap("verify no alert shown")
+    a2dtest.ExpectAlertNotShowing()
 end)
 
 test.Step(
@@ -44,7 +44,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("06")
     a2d.DialogOK()
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
     test.Snap("verify only non-folders are modified")
 end)
@@ -63,7 +63,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("8000")
     a2d.DialogOK()
-    test.Snap("verify no alert shown")
+    a2dtest.ExpectAlertNotShowing()
 end)
 
 test.Step(
@@ -75,7 +75,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("0F")
     a2d.DialogOK()
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
 end)
 
@@ -88,12 +88,12 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("0F")
     a2d.DialogOK()
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
 end)
 
 test.Step(
-  "Single error when modifying folder types",
+  "Single alert when modifying folder types",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/FOLDER")
     a2d.SelectAll()
@@ -102,7 +102,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("06")
     a2d.DialogOK()
-    test.Snap("verify alert shown")
+    a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
-    test.Snap("only a single alert was shown")
+    a2dtest.ExpectAlertNotShowing()
 end)

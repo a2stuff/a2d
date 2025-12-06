@@ -10,5 +10,5 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
     a2d.WaitForRepaint()
-    test.Snap("verify no alert shown")
+    a2dtest.ExpectAlertNotShowing()
 end)

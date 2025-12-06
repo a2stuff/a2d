@@ -27,7 +27,7 @@ function a2dtest.ExpectNothingHappened(func)
   local bytes = apple2.SnapshotDHR()
   func()
   EraseClock()
-  test.Expect(apple2.CompareDHR(bytes), "nothing should have changed", {snap=true})
+  test.Expect(apple2.CompareDHR(bytes), "nothing should have changed", {snap=true}, 1)
 end
 
 --------------------------------------------------
@@ -45,24 +45,24 @@ local function RepaintFraction()
 end
 
 function a2dtest.ExpectFullRepaint(func)
-  a2dtest.ExpectRepaintFraction(0.9, 1.0, func, "should be full repaint")
+  a2dtest.ExpectRepaintFraction(0.9, 1.0, func, "should be full repaint", 1)
 end
 
 function a2dtest.ExpectMinimalRepaint(func)
-  a2dtest.ExpectRepaintFraction(0, 0.5, func, "should be minimal repaint")
+  a2dtest.ExpectRepaintFraction(0, 0.5, func, "should be minimal repaint", 1)
 end
 
 function a2dtest.ExpectNoRepaint(func)
-  a2dtest.ExpectRepaintFraction(0, 0.01, func, "should not have repainted")
+  a2dtest.ExpectRepaintFraction(0, 0.01, func, "should not have repainted", 1)
 end
 
-function a2dtest.ExpectRepaintFraction(min, max, func, message)
+function a2dtest.ExpectRepaintFraction(min, max, func, message, level)
   apple2.DHRDarkness()
   func()
   local fraction = RepaintFraction()
   test.Expect(min <= fraction and fraction <= max,
               string.format("%s - diff about %d%%", message, math.floor(fraction * 100)),
-              {snap=true})
+              {snap=true}, level and level+1 or 1)
 end
 
 --------------------------------------------------
@@ -115,6 +115,31 @@ function a2dtest.GetFrontWindowTitle()
     error("No front window!")
   end
   return mgtk.GetWindowName(window_id, bank_offset)
+end
+
+--------------------------------------------------
+
+-- This scans for the left side of the alert bitmap at expected screen address
+function a2dtest.IsAlertShowing()
+  local bytes = {0x7F,0x7F,0x7F,0x3F,0x00,0x00,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x4F,0x0F,0x3F,0x4F,0x0F,0x3F,0x4F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x7F,0x0F,0x3F,0x1F,0x00,0x3F,0x7F,0x01,0x3F,0x7F,0x01,0x3F,0x07,0x70,0x3F,0x7F,0x01,0x3F,0x7F,0x01,0x3F,0x00,0x00,0x7F,0x7F,0x7F}
+  local index = 1
+  for row = 75,100 do
+    for col = 12,14 do
+      if bytes[index] ~= apple2.GetDoubleHiresByte(row,col) then
+        return false
+      end
+      index = index + 1
+    end
+  end
+  return true
+end
+
+function a2dtest.ExpectAlertShowing()
+  test.Expect(a2dtest.IsAlertShowing(), "an alert should be showing", nil, 1)
+end
+
+function a2dtest.ExpectAlertNotShowing()
+  test.Expect(not a2dtest.IsAlertShowing(), "an alert should not be showing", nil, 1)
 end
 
 --------------------------------------------------
