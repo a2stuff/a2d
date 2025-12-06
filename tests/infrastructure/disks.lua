@@ -6,25 +6,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 $FLOP1IMG"
 
 ======================================== ENDCONFIG ]]--
 
-
---[[============================================================
-
-  Test Script
-
-  ============================================================]]--
-
-test.Step(
-  "Move Mouse",
-  function()
-    -- Move the mouse
-    apple2.MoveMouse(480, 170)
-    test.Snap("Mouse to 480,170")
-
-    -- Move the mouse
-    apple2.MoveMouse(0, 0)
-    test.Snap("Mouse to 0,0")
-end)
-
 test.Step(
   "swap images",
   function()

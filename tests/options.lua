@@ -17,7 +17,7 @@ test.Step(
 
     a2d.CloseWindow()
     a2d.WaitForRepaint()
-    test.Snap("verify no prompt to save")
+    a2dtest.ExpectAlertNotShowing()
 
     drive:load(current)
     a2d.CloseAllWindows()
@@ -35,7 +35,7 @@ test.Step(
 
     a2d.CloseWindow()
     a2d.WaitForRepaint()
-    test.Snap("verify prompt to save")
+    a2dtest.ExpectAlertShowing()
     a2d.DialogCancel()
 
     drive:load(current)
