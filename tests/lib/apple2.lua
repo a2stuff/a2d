@@ -865,51 +865,11 @@ end
 function apple2.SnapshotDHR()
   local bytes = {}
   for row = 0,apple2.SCREEN_HEIGHT-1 do
-    for col = 0,79 do
-      bytes[row*80+col] = apple2.GetDHRByte(row, col)
+    for col = 0,apple2.SCREEN_COLUMNS-1 do
+      bytes[row*apple2.SCREEN_COLUMNS+col] = apple2.GetDHRByte(row, col)
     end
   end
   return bytes
-end
-
-function apple2.CompareDHR(bytes, log)
-  for row = 0,apple2.SCREEN_HEIGHT-1 do
-    for col = 0,79 do
-      local expected = bytes[row*80+col]
-      local actual = apple2.GetDHRByte(row, col)
-      if actual ~= expected then
-        if log then
-          print(string.format("difference at row %d col %d - %02X vs. %02X", row, col, actual, expected))
-        end
-        return false
-      end
-    end
-  end
-  return true
-end
-
---------------------------------------------------
-
-local darkness_bytes = {
-  {0x00, 0x00, 0x00, 0x00},
-  {0x08, 0x11, 0x22, 0x44},
-  {0x00, 0x00, 0x00, 0x00},
-  {0x22, 0x44, 0x08, 0x11},
-}
-
-function apple2.DHRDarkness()
-  for row = 0,apple2.SCREEN_HEIGHT-1 do
-    for col = 0,apple2.SCREEN_COLUMNS-1 do
-      local byte = darkness_bytes[row % 4 + 1][col % 4 + 1]
-      apple2.SetDHRByte(row, col, byte)
-    end
-  end
-end
-
--- Expect apple2.DHRDarkness() was previously called
-function apple2.ValidateDHRDarkness(row, col)
-  local expected = darkness_bytes[row % 4 + 1][col % 4 + 1]
-  return apple2.GetDHRByte(row, col) == expected
 end
 
 --------------------------------------------------
