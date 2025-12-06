@@ -7,6 +7,38 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
 
+function IsMono()
+  emu.wait_next_frame()
+  -- https://docs.mamedev.org/luascript/ref-core.html#video-manager
+  local pixels = manager.machine.video:snapshot_pixels()
+  local width, height = manager.machine.video:snapshot_size()
+
+  -- TODO: Make this work with IIgs border
+
+  function pixel(x,y)
+    local a = string.byte(pixels, (x + y * width) * 4 + 0)
+    local b = string.byte(pixels, (x + y * width) * 4 + 1)
+    local g = string.byte(pixels, (x + y * width) * 4 + 2)
+    local r = string.byte(pixels, (x + y * width) * 4 + 3)
+    return r,g,b,a
+  end
+
+  for y = 0,height-1 do
+    for x = 0,width-1 do
+      local r,g,b,a = pixel(x,y)
+      if r ~= g or r ~=b then
+        return false
+      end
+    end
+  end
+
+  return true
+end
+
+function IsColor()
+  return not IsMono()
+end
+
 test.Step(
   "Escape exits",
   function()
@@ -35,10 +67,10 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
     apple2.SpaceKey()
     a2d.WaitForRepaint()
-    test.Snap("verify mono")
+    test.Expect(IsMono(), "should be mono")
     apple2.SpaceKey()
     a2d.WaitForRepaint()
-    test.Snap("verify color")
+    test.Expect(IsColor(), "should be color")
     a2d.CloseWindow()
 end)
 
@@ -46,7 +78,7 @@ test.Step(
   ".A2HR opens in mono",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/HRMONO.A2HR")
-    test.Snap("verify mono")
+    test.Expect(IsMono(), "should be mono")
     a2d.CloseWindow()
 end)
 
@@ -54,7 +86,23 @@ test.Step(
   ".A2LC opens in color",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/HRCOLOR.A2LC")
-    test.Snap("verify color")
+    test.Expect(IsColor(), "should be color")
+    a2d.CloseWindow()
+end)
+
+test.Step(
+  ".A2FM opens in mono",
+  function()
+    a2d.OpenPath("/TESTS/FILE.TYPES/DHRMONO.A2FM")
+    test.Expect(IsMono(), "should be mono")
+    a2d.CloseWindow()
+end)
+
+test.Step(
+  ".A2FC opens in color",
+  function()
+    a2d.OpenPath("/TESTS/FILE.TYPES/DHRCOLOR.A2FC")
+    test.Expect(IsColor(), "should be color")
     a2d.CloseWindow()
 end)
 
