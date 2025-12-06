@@ -12,6 +12,7 @@
 #    --nosnaps           Don't show snapshots once tests are complete
 #    --console           Don't run script, show console instead
 #    --slow              Don't run emulation unthrottled
+#    --debug             Run with MAME's debugger
 #    --listmedia         Print out MAME's list of drive options
 #    --listslots         Print out MAME's list of slot options
 #
@@ -35,7 +36,7 @@ AUDIBLE=""
 SNAPS=true
 CONSOLE=""
 SLOW=""
-LIST=""
+MAMEFLAGS=""
 
 for arg in "$@"; do
   case $1 in
@@ -46,8 +47,9 @@ for arg in "$@"; do
     --nosnaps)   shift; SNAPS="" ;;
     --console)   shift; CONSOLE=true ;;
     --slow)      shift; SLOW=true ;;
-    --listmedia) shift; LIST="-listmedia" ;;
-    --listslots) shift; LIST="-listslots" ;;
+    --debug)     shift; MAMEFLAGS="$MAMEFLAGS -debug" ;;
+    --listmedia) shift; MAMEFLAGS="$MAMEFLAGS -listmedia" ;;
+    --listslots) shift; MAMEFLAGS="$MAMEFLAGS -listslots" ;;
     *)           SCRIPT="$(realpath "$1")"; shift; break ;;
   esac
 done
@@ -161,7 +163,7 @@ output=$(
     $OUTPUTARGS \
     '$MODEL' $MODELARGS $DISKARGS \
     $THROTTLE -nosleep \
-    $LIST \
+    $MAMEFLAGS \
     $SCRIPTARGS" \
     2>&1 | \
     egrep --line-buffered -v "Secure coding is automatically enabled" | \

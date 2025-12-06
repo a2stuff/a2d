@@ -1366,9 +1366,12 @@ MGTK exposes an automation interface, intended for use by automated tests. It wo
 * Wait for the keyboard strobe to be cleared.
 * Read the call result from address `$00`.
 * Load any "out" call parameters from memory.
+* Restore any bytes from copies saved above.
 * Submit any keypress.
 * Wait for the keyboard strobe to be cleared.
 
 Note that addresses assume the banking that this MGTK instance is running with. DeskTop normally runs with the Aux ZP active and MGTK-visible resoures like window titles in Aux or Aux LC memory. The Selector module has an MGTK instance in main memory and runs with the Main ZP active except for the alert code which resizes in the Aux LC bank.
 
 Automation can use this interface to query for open windows and inspect their properties.
+
+> Automation calls are *not* supported while Mouse Keys are active. Adding this is possible, but the unlock sequence would interfere with the simulated mouse button.

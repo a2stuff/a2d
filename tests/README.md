@@ -17,10 +17,14 @@ bin/mametest tests/SCRIPTNAME.lua
 Options:
 
 * `--only PATTERN` - run only matching named test step (`*` and `?` are wildcards); useful for fast iteration
-* `--console` - don't ask MAME to run the script (but do load its config, see below), launch the Lua console instead
 * `--visible` - show the emulator window (default is headless)
 * `--audible` - play the emulator audio (default is silent)
 * `--nosnaps` - don't generate snapshots
+* `--console` - don't ask MAME to run the script (but do load its config, see below), launch the Lua console instead
+* `--slow` - run at normal speed (default is unthrottled)
+* `--debug` - run with MAME's debugger
+* `--listmedia` - print MAME's list of drive options
+* `--listslots` - print MAME's list of slot options
 
 ## Configuration
 
