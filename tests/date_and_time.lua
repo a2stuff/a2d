@@ -42,7 +42,7 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     a2d.SelectAndOpen("DATE.AND.TIME")
-    for i=1,5 do
+    for i=1, 5 do
       apple2.UpArrowKey()
       apple2.UpArrowKey()
       apple2.UpArrowKey()
@@ -113,7 +113,7 @@ test.Step(
     a2d.CreateFolder("/RAM1/NOT.TODAY")
 
     -- Change date again to avoid "Today"
-    a2d.SetProDOSDate(1999,9,13)
+    a2d.SetProDOSDate(1999, 9, 13)
 
     -- Inspect file
     a2d.SelectPath("/RAM1/NOT.TODAY")
@@ -140,7 +140,7 @@ test.Step(
     test.Snap("verify period field modifiable")
     apple2.LeftArrowKey() -- to min
     apple2.LeftArrowKey() -- to hour
-    for i = 1,24 do
+    for i = 1, 24 do
       apple2.UpArrowKey()
       test.Snap("verify 12 hour cycle")
     end
@@ -162,7 +162,7 @@ test.Step(
     apple2.TabKey() -- to month
     apple2.TabKey() -- to year
     apple2.TabKey() -- to hour
-    for i = 1,24 do
+    for i = 1, 24 do
       apple2.UpArrowKey()
       test.Snap("verify 24 hour cycle")
     end
@@ -176,7 +176,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
 
     -- 31 day month
-    a2d.SetProDOSDate(2023,1,28)
+    a2d.SetProDOSDate(2023, 1, 28)
     a2d.SelectAndOpen("DATE.AND.TIME")
     apple2.UpArrowKey()
     test.Snap("verify 28/Jan/23 wraps to 29/Jan/23")
@@ -189,7 +189,7 @@ test.Step(
     a2d.DialogOK()
 
     -- 30 day month
-    a2d.SetProDOSDate(2023,4,28)
+    a2d.SetProDOSDate(2023, 4, 28)
     a2d.SelectAndOpen("DATE.AND.TIME")
     apple2.UpArrowKey()
     test.Snap("verify 28/Apr/23 wraps to 29/Apr/23")
@@ -200,14 +200,14 @@ test.Step(
     a2d.DialogOK()
 
     -- 28 day month
-    a2d.SetProDOSDate(2023,2,28)
+    a2d.SetProDOSDate(2023, 2, 28)
     a2d.SelectAndOpen("DATE.AND.TIME")
     apple2.UpArrowKey()
     test.Snap("verify 28/Feb/23 wraps to 01/Feb/23")
     a2d.DialogOK()
 
     -- 29 day month
-    a2d.SetProDOSDate(2024,2,28)
+    a2d.SetProDOSDate(2024, 2, 28)
     a2d.SelectAndOpen("DATE.AND.TIME")
     apple2.UpArrowKey()
     test.Snap("verify 28/Feb/24 wraps to 01/Feb/24")
@@ -216,6 +216,17 @@ test.Step(
     a2d.DialogOK()
 end)
 
+-- Dialog control metrics
+local incr_x, incr_y = 264, 12
+local decr_x, decr_y = 264, 25
+local field_y = 21
+local day_x = 29
+local month_x = day_x + 45
+local year_x = month_x + 45
+local hour_x = year_x + 45
+local minute_x = hour_x + 40
+local period_x = minute_x + 30
+
 test.Step(
   "Clicking fields",
   function()
@@ -223,34 +234,37 @@ test.Step(
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
 
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(400, 70)
+        m.MoveToApproximately(dialog_x + incr_x, dialog_y + incr_y)
         m.ButtonDown()
         emu.wait(10/60)
         test.Snap("verify up button inverted")
         m.ButtonUp()
-        m.MoveByApproximately(0, 10)
+
+        m.MoveToApproximately(dialog_x + decr_x, dialog_y + decr_y)
         m.ButtonDown()
         emu.wait(10/60)
         test.Snap("verify down button inverted")
         m.ButtonUp()
 
-        m.MoveToApproximately(165,75)
+        m.MoveToApproximately(dialog_x + day_x, dialog_y + field_y)
         m.Click()
         test.Snap("verify day focused")
-        m.MoveByApproximately(45,0)
+        m.MoveToApproximately(dialog_x + month_x, dialog_y + field_y)
         m.Click()
         test.Snap("verify month focused")
-        m.MoveByApproximately(40,0)
+        m.MoveToApproximately(dialog_x + year_x, dialog_y + field_y)
         m.Click()
         test.Snap("verify year focused")
-        m.MoveByApproximately(50,0)
+        m.MoveToApproximately(dialog_x + hour_x, dialog_y + field_y)
         m.Click()
         test.Snap("verify hour focused")
-        m.MoveByApproximately(40,0)
+        m.MoveToApproximately(dialog_x + minute_x, dialog_y + field_y)
         m.Click()
         test.Snap("verify minute focused")
-        m.MoveByApproximately(30,0)
+        m.MoveToApproximately(dialog_x + period_x, dialog_y + field_y)
         m.Click()
         test.Snap("verify period focused")
     end)
@@ -264,8 +278,10 @@ test.Step(
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
 
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(370,75)
+        m.MoveToApproximately(dialog_x + period_x, dialog_y + field_y)
         m.Click()
         test.Snap("verify period not focused")
     end)
@@ -279,12 +295,14 @@ test.Step(
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
 
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(250,75) -- year
+        m.MoveToApproximately(dialog_x + year_x, dialog_y + field_y) -- year
         m.Click()
         test.Snap("verify year focused")
 
-        m.MoveToApproximately(400, 70) -- up arrow
+        m.MoveToApproximately(dialog_x+incr_x, dialog_y+incr_y) -- up arrow
         m.ButtonDown()
         emu.wait(2/60)
         test.Snap("verify up button inverted")
@@ -292,10 +310,10 @@ test.Step(
         emu.wait(2/60)
         test.Snap("verify year increments")
 
-        m.MoveByApproximately(0, 10) -- down arrow
+        m.MoveToApproximately(dialog_x+decr_x, dialog_y+decr_y) -- down arrow
         m.ButtonDown()
         emu.wait(2/60)
-        test.Snap("verify up button inverted")
+        test.Snap("verify down button inverted")
         m.ButtonUp()
         emu.wait(2/60)
         test.Snap("verify year decrements")
@@ -307,25 +325,26 @@ test.Step(
   "Today",
   function()
     -- Create file with known date
-    local y,m,d = a2d.GetProDOSDate()
+    local y, m, d = a2d.GetProDOSDate()
     a2d.SetProDOSDate(1999, 9, 13)
     a2d.CreateFolder("/RAM1/WILL.BE.TODAY")
     -- Change the date so it's not current
-    a2d.SetProDOSDate(y,m,d)
+    a2d.SetProDOSDate(y, m, d)
 
     -- Show window and resize/move it
     a2d.OpenPath("/RAM1")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.GrowWindowBy(250,0)
-    a2d.MoveWindowBy(0,100)
+    a2d.GrowWindowBy(250, 0)
+    a2d.MoveWindowBy(0, 100)
     test.Snap("verify date is shown in full")
 
     -- Use Date & Time to set date
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.SetProDOSDate(1998, 9, 13) -- so we know the delta
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(250,75) -- year
+        m.MoveToApproximately(dialog_x + year_x, dialog_y+field_y) -- year
         m.Click()
     end)
     apple2.UpArrowKey()

@@ -46,12 +46,12 @@ test.Step(
   "Repaints when obscured",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    local x,y = a2dtest.GetFrontWindowDragCoords()
+    local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x,y)
+        m.MoveToApproximately(x, y)
         m.ButtonDown()
-        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()

@@ -153,7 +153,7 @@ test.Step(
   "Multiple volumes selected, open window",
   function()
     a2d.OpenPath("/A2.DESKTOP")
-    SelectMultipleVolumes()
+    a2d.DragSelectMultipleVolumes()
     a2d.OpenMenu(a2d.FILE_MENU)
     test.Snap("verify ✅New Folder, ✅Open, ✅Close, ✅Close All, ✅Get Info, ❌Rename, ❌Duplicate, ✅Copy To, ❌Delete, ✅Quit")
     apple2.EscapeKey()

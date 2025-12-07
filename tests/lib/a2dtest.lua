@@ -138,8 +138,17 @@ end
 -- MGTK-based helpers
 --------------------------------------------------
 
--- TODO: This changes if calling from DeskTop vs. Selector
 local bank_offset = 0x10000
+
+function a2dtest.SetBankOffsetForDeskTopModule()
+  bank_offset = 0x10000
+end
+function a2dtest.SetBankOffsetForDiskCopyModule()
+  bank_offset = 0x10000
+end
+function a2dtest.SetBankOffsetForSelectorModule()
+  bank_offset = 0x00000
+end
 
 function a2dtest.GetFrontWindowDragCoords()
   local window_id = mgtk.FrontWindow()
@@ -186,15 +195,20 @@ function a2dtest.GetFrontWindowTitle()
   return mgtk.GetWindowName(window_id, bank_offset)
 end
 
+-- returns x,y,width,height
 function a2dtest.GetFrontWindowContentRect()
   local winfo = bank_offset + mgtk.GetWinPtr(mgtk.FrontWindow())
   local port = winfo + 20
   local vx,vy = ram_s16(port + 0), ram_s16(port + 2)
   local x1,y1 = ram_s16(port + 8), ram_s16(port + 10)
   local x2,y2 = ram_s16(port + 12), ram_s16(port + 14)
-  return {vx, vy, (x2-x1), (y2-y1)}
+  return vx, vy, (x2-x1), (y2-y1)
 end
 
+function a2dtest.GetFrontWindowRightScrollArrowCoords()
+  local x,y,w,h = a2dtest.GetFrontWindowContentRect()
+  return x + w - 10, y + h + 5
+end
 
 --------------------------------------------------
 

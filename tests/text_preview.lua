@@ -149,13 +149,13 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT")
 
     apple2.PressSA()
-    for i = 1,70 do
+    for i = 1, 70 do
       apple2.DownArrowKey()
     end
     apple2.ReleaseSA()
     a2d.WaitForRepaint()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(530,100)
+        m.MoveToApproximately(530, 100)
         a2dtest.ExpectNoRepaint(function()
             m.ButtonDown()
             emu.wait(10/60)
@@ -174,9 +174,9 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT")
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(530,40)
+        m.MoveToApproximately(530, 40)
         m.ButtonDown()
-        m.MoveByApproximately(0,60)
+        m.MoveByApproximately(0, 60)
         m.ButtonUp()
     end)
     test.Snap("verify scrolled to about halfway through file")
@@ -197,7 +197,7 @@ test.Step(
   "Performance: First page displays immediately",
   function()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
     end)
 
     -- Disable ZIP Chip
@@ -232,7 +232,7 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/SUDOKU.STORY")
     apple2.SpaceKey() -- toggle to Fixed
     a2d.WaitForRepaint()
-    for i = 1,16 do
+    for i = 1, 16 do
       apple2.DownArrowKey()
     end
     test.Snap("verify 'with' on last line")

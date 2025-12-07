@@ -32,8 +32,9 @@ test.Step(
   function()
     a2d.SelectAndOpen("DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(260,140)
+        m.MoveToApproximately(dialog_x+95, dialog_y+70)
         m.Click()
     end)
     emu.wait(10) -- floppy catalog
@@ -56,8 +57,9 @@ test.Step(
   "Drive selection - Cancel button - Click",
   function()
     a2d.SelectAndOpen("DOS33.IMPORT")
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(320,140)
+        m.MoveToApproximately(dialog_x+155, dialog_y+70)
         m.Click()
     end)
     a2d.WaitForRepaint()

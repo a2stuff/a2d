@@ -1,16 +1,19 @@
+local file_menu_x, file_menu_y = 30, 5
+
 test.Step(
   "Mouse Keys - Pull down menu",
   function()
     a2d.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40,10) -- File
+        m.MoveToApproximately(file_menu_x, file_menu_y)
         m.ButtonDown()
-        m.MoveByApproximately(0,20) -- File > Open
+        m.MoveByApproximately(0, 25) -- File > Open
         m.ButtonUp()
         a2d.WaitForRepaint()
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
         test.Snap("verify cursor at center of screen")
     end)
+    test.Expect(a2dtest.GetWindowCount(), 1, "window should have opened")
     a2d.CloseAllWindows()
     a2d.ClearSelection()
 end)
@@ -20,14 +23,15 @@ test.Step(
   function()
     a2d.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40,10) -- File
+        m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
-        m.MoveByApproximately(0,20) -- File > Open
+        m.MoveByApproximately(0, 25) -- File > Open
         m.Click()
         a2d.WaitForRepaint()
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
         test.Snap("verify cursor at center of screen")
     end)
+    test.Expect(a2dtest.GetWindowCount(), 1, "window should have opened")
     a2d.CloseAllWindows()
     a2d.ClearSelection()
 end)
@@ -37,16 +41,16 @@ test.Step(
   function()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
-        m.MoveByApproximately(0,-apple2.SCREEN_HEIGHT)
+        m.MoveByApproximately(0, -apple2.SCREEN_HEIGHT)
         test.Snap("verify cursor at top center")
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
-        m.MoveByApproximately(0,apple2.SCREEN_HEIGHT)
+        m.MoveByApproximately(0, apple2.SCREEN_HEIGHT)
         test.Snap("verify cursor at bottom center")
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
-        m.MoveByApproximately(-apple2.SCREEN_WIDTH,0)
+        m.MoveByApproximately(-apple2.SCREEN_WIDTH, 0)
         test.Snap("verify cursor at left center")
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
-        m.MoveByApproximately(apple2.SCREEN_WIDTH,0)
+        m.MoveByApproximately(apple2.SCREEN_WIDTH, 0)
         test.Snap("verify cursor at right center")
     end)
 end)
@@ -74,9 +78,9 @@ test.Step(
   function()
     a2d.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40,10) -- File
+        m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
-        m.MoveByApproximately(0,apple2.SCREEN_HEIGHT)
+        m.MoveByApproximately(0, apple2.SCREEN_HEIGHT)
         test.Snap("verify menu still open")
         m.Click()
     end)

@@ -17,6 +17,10 @@ test.Step(
           apple2.DownArrowKey()
         end
         apple2.EscapeKey()
+
+        a2d.InMouseKeysMode(function(m)
+            m.MoveToApproximately(0,0)
+        end)
     end)
 end)
 
@@ -49,6 +53,10 @@ test.Step(
           apple2.DownArrowKey()
         end
         apple2.EscapeKey()
+
+        a2d.InMouseKeysMode(function(m)
+            m.MoveToApproximately(0,0)
+        end)
     end)
 end)
 

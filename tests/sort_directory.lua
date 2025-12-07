@@ -20,7 +20,7 @@ function ParseCat()
     name = line:match("^ ([A-Z0-9.]+)%s+%S%S%S%s+%d+%s+%d+-%a+-%d+%s+$")
     if name then
       -- elide duplicates (in case we're called during scroll)
-      if names:empty() or name ~= names[#names] then
+      if #names == 0 or name ~= names[#names] then
         table.insert(names, name)
       end
     end
@@ -41,8 +41,9 @@ test.Variants(
       a2d.SelectAndOpen("ORDER")
     else
       -- click
+      local window_x,window_y = a2dtest.GetFrontWindowContentRect()
       a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(150,60)
+          m.MoveToApproximately(window_x+130, window_y+25)
           m.DoubleClick()
       end)
       a2d.WaitForRepaint()

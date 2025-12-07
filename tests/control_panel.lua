@@ -10,13 +10,14 @@ test.Step(
   "custom and default pattern",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(130,60)
+        m.MoveToApproximately(dialog_x+66, dialog_y+24)
         m.ButtonDown()
-        m.MoveByApproximately(-20,0)
-        m.MoveByApproximately(0,-10)
-        m.MoveByApproximately(20,0)
-        m.MoveByApproximately(0,10)
+        m.MoveByApproximately(-20, 0)
+        m.MoveByApproximately(0, -10)
+        m.MoveByApproximately(20, 0)
+        m.MoveByApproximately(0, 10)
         m.ButtonUp()
     end)
     apple2.ControlKey("D")
@@ -72,7 +73,7 @@ test.Step(
   "Mouse tracking",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
-    apple2.MoveMouse(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2)
+    apple2.MoveMouse(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
     a2d.OAShortcut("2")
     -- NOTE: Mouse shouldn't move at all, but POSMOUSE in emulators is sketch
     test.MultiSnap(3, "verify mouse cursor doesn't move significantly")

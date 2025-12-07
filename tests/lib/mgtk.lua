@@ -252,6 +252,9 @@ end
 function mgtk.GetWindowName(window_id, bank_offset)
   local winfo = bank_offset + mgtk.GetWinPtr(window_id)
   local addr = apple2.ReadRAMDevice(winfo + 2) | (apple2.ReadRAMDevice(winfo + 3) << 8)
+  if addr == 0 then
+    return nil
+  end
   return apple2.GetPascalString(addr + bank_offset)
 end
 

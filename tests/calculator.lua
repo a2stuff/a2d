@@ -20,12 +20,12 @@ test.Step(
   "Move window and mouse cursor",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    local x,y = a2dtest.GetFrontWindowDragCoords()
+    local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x,y)
+        m.MoveToApproximately(x, y)
         m.ButtonDown()
-        m.MoveToApproximately(400,100)
+        m.MoveToApproximately(400, 100)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()
@@ -37,20 +37,22 @@ test.Step(
   "Window and volume icons",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    local x,y = a2dtest.GetFrontWindowDragCoords()
+    local x, y = a2dtest.GetFrontWindowDragCoords()
+
+    local drop_x, drop_y = 500, 20
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x,y)
+        m.MoveToApproximately(x, y)
         m.ButtonDown()
-        m.MoveToApproximately(500,20)
+        m.MoveToApproximately(drop_x, drop_y)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(500,20)
+        m.MoveToApproximately(drop_x, drop_y)
         m.ButtonDown()
-        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()
@@ -62,12 +64,12 @@ test.Step(
   "Obscured window",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    local x,y = a2dtest.GetFrontWindowDragCoords()
+    local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x,y)
+        m.MoveToApproximately(x, y)
         m.ButtonDown()
-        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()
@@ -76,9 +78,9 @@ test.Step(
     end)
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonDown()
-        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,30)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2, 30)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()

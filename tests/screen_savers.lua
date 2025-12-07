@@ -21,7 +21,9 @@ test.Variants(
     emu.wait(1)
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(20,20)
+        -- Move cursor away from origin so menu bar is not obscured
+        local coords_x, coords_y = 20, 20
+        m.MoveToApproximately(coords_x, coords_y)
         m.Click()
     end)
 

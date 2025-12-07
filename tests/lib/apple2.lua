@@ -600,7 +600,7 @@ local ram = emu.item(machine.devices[":ram"].items["0/m_pointer"])
 
 function apple2.ReadRAMDevice(addr)
   -- Assume LCBANK1 is desired
-  if (addr & 0xC000) ~= 0 then
+  if (addr & 0xC000) == 0xC000  then
     addr = addr ~ 0x1000
   end
 
@@ -614,7 +614,7 @@ end
 
 function apple2.WriteRAMDevice(addr, value)
   -- Assume LCBANK1 is desired
-  if (addr & 0xC000) ~= 0 then
+  if (addr & 0xC000) == 0xC000 then
     addr = addr ~ 0x1000
   end
 

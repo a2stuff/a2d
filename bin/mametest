@@ -136,7 +136,7 @@ fi
 if [ "$CONSOLE" ]; then
   SCRIPTARGS="-console"
 else
-  TIMEOUT=9999
+  TIMEOUT=10800 # 3 hours
   SCRIPTARGS="-seconds_to_run $TIMEOUT -autoboot_script $BASEDIR/tests/lib/autoboot.lua"
   export LUA_SCRIPT="$SCRIPT"
 fi

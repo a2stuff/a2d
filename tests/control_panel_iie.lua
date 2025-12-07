@@ -5,11 +5,12 @@ test.Step(
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- check RGB Color
+    local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(280, 30)
+        m.MoveToApproximately(x, y)
     end)
 
-    for i=1,14 do
+    for i=1, 14 do
       apple2.LeftArrowKey() -- change pattern
       apple2.ControlKey("D") -- set pattern
       a2d.WaitForRepaint()

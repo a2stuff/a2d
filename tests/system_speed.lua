@@ -54,8 +54,8 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     emu.wait(5) -- floppy drives are slow
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(115,124)
-        for i=1,15 do
+        m.MoveToApproximately(115, 124)
+        for i=1, 15 do
           m.Up(2)
           emu.wait(0.15)
           test.Snap("visually confirm no garbage")

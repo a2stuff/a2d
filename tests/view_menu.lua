@@ -61,8 +61,9 @@ test.Step(
     a2d.OpenPath("/TESTS/VIEW/BY.NAME/LONG.MONTHS")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.WaitForRepaint()
+    local arrow_x, arrow_y = a2dtest.GetFrontWindowRightScrollArrowCoords()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(180,90)
+        m.MoveToApproximately(arrow_x, arrow_y)
         for i=1,20 do
           m.Click()
         end
@@ -176,9 +177,11 @@ test.Step(
     a2d.OpenPath("/TESTS/VIEW/DRAGGING")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
+    local window_x,window_y = a2dtest.GetFrontWindowContentRect()
+
     a2d.ClearSelection()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(16, 48)
+        m.MoveToApproximately(window_x+11, window_y+21)
         m.Click()
         a2d.WaitForRepaint()
     end)
@@ -186,7 +189,7 @@ test.Step(
 
     a2d.ClearSelection()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40, 48)
+        m.MoveToApproximately(window_x+35, window_y+21)
         m.Click()
         a2d.WaitForRepaint()
     end)
@@ -194,7 +197,7 @@ test.Step(
 
     a2d.ClearSelection()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40, 48)
+        m.MoveToApproximately(window_x+35, window_y+21)
         m.ButtonDown()
         m.MoveToApproximately(vol_icon_x, vol_icon_y)
         m.ButtonUp()
@@ -205,14 +208,14 @@ test.Step(
 
     a2d.ClearSelection()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40, 45)
+        m.MoveToApproximately(window_x+35, window_y+18)
         m.ButtonDown()
         m.MoveByApproximately(0, 12)
         a2d.WaitForRepaint()
         test.Snap("verify dragging over folder icon highlights")
         m.ButtonUp()
         emu.wait(20/60)
-        test.Snap("verify drop on folder icon initiates copy")
+        test.Snap("verify drop on folder icon initiates move")
     end)
     emu.wait(10) -- wait for move
 

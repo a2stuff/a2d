@@ -10,9 +10,9 @@ test.Step(
   function()
     a2d.ClearSelection()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
-    local x,y = a2dtest.GetFrontWindowCloseBoxCoords()
+    local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x,y)
+        m.MoveToApproximately(x, y)
         apple2.PressOA()
         m.Click()
         apple2.ReleaseOA()

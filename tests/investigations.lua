@@ -39,7 +39,7 @@ test.Step(
     drive:unload()
 
     a2d.OpenPath("/FLOPPY1")
-    a2dtest.ExpectAlertShown()
+    a2dtest.ExpectAlertShowing()
     apple2.EscapeKey()
 
     --[[
@@ -53,7 +53,7 @@ test.Step(
       CPU seems to still be chugging along, albeit in $C8xx space
     ]]--
 
-    a2dtest.ExpectAlertNotShown()
+    a2dtest.ExpectAlertNotShowing()
     emu.wait(60)
     test.Snap("Waited a long time")
     apple2.Type("TRASH")

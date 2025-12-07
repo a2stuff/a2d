@@ -81,33 +81,33 @@ test.Step(
         local no_x  = 360
         local all_x = 420
 
-        m.MoveToApproximately(yes_x,btn_y)
+        m.MoveToApproximately(yes_x, btn_y)
         m.ButtonDown()
         emu.wait(2/60)
         test.Snap("verify down on yes")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
-        m.MoveToApproximately(yes_x,btn_y)
+        m.MoveToApproximately(yes_x, btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
 
-        m.MoveToApproximately(no_x,btn_y)
+        m.MoveToApproximately(no_x, btn_y)
         m.ButtonDown()
         emu.wait(2/60)
         test.Snap("verify down on no")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
-        m.MoveToApproximately(yes_x,btn_y)
+        m.MoveToApproximately(yes_x, btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
 
-        m.MoveToApproximately(all_x,btn_y)
+        m.MoveToApproximately(all_x, btn_y)
         m.ButtonDown()
         emu.wait(2/60)
         test.Snap("verify down on all")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
-        m.MoveToApproximately(all_x,btn_y)
+        m.MoveToApproximately(all_x, btn_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
     end)

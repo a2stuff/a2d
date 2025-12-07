@@ -257,17 +257,19 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/PREVIEW/IMAGE")
 
+    local file_menu_x, file_menu_y = 30, 5
     -- Drop file menu without activating anything
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(30,5)
+        m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
         emu.wait(10)
         m.Click()
     end)
 
     -- Double-click on image file
+    local window_x,window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(40,50)
+        m.MoveToApproximately(window_x + 35, window_y + 23)
         m.DoubleClick()
     end)
 
@@ -282,7 +284,7 @@ test.Step(
   "Cursor reappears",
   function()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2)
+        m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
     end)
 
     a2d.OpenPath("/TESTS/PREVIEW/IMAGE/PICTURE1")
