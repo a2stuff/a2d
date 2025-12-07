@@ -183,18 +183,26 @@ while IFS= read -r line ; do
   fi
 done <<< "$output"
 
-if [ "$SNAPS" ]; then
-  if ls "$SNAPDIR/$MODEL/"????.png >/dev/null 2>/dev/null; then
-    # Rename files to include snapshot names
-    for file in "$SNAPDIR/$MODEL"/????.png; do
-      dir="$(dirname "$file")"
-      num="$(basename "$file" .png)"
-      name="${snapname[10#$num]}"
-      if [ -n "$name" ]; then
-        mv "${dir}/${num}.png" "${dir}/${num} - ${name}.png"
-      fi
-    done
+if ls "$SNAPDIR/$MODEL/"????.png >/dev/null 2>/dev/null; then
+  # Rename files to include snapshot names
+  for file in "$SNAPDIR/$MODEL"/????.png; do
+    dir="$(dirname "$file")"
+    num="$(basename "$file" .png)"
+    name="${snapname[10#$num]}"
+    if [ -n "$name" ]; then
+      mv "${dir}/${num}.png" "${dir}/${num} - ${name}.png"
+    fi
+  done
 
+  echo "$output" > "$TMPDIR/output.txt"
+  mkdir -p "$TMPDIR/results"
+  results="$(basename "$SCRIPT" .lua).zip"
+  zipfile="$TMPDIR/results/$results"
+  rm -f "$zipfile"
+  zip --quiet --junk-paths "$zipfile" "$SNAPDIR/$MODEL/"*.png "$TMPDIR/output.txt"
+  echo "Wrote results to ${zipfile}"
+
+  if [ "$SNAPS" ]; then
     open "$SNAPDIR/$MODEL/"*.png
   fi
 fi
