@@ -128,6 +128,12 @@ function test.ExpectLessThanOrEqual(a, b, message, options, level)
   test.Expect(a <= b, message .. " - actual " .. format(a) .. " should be <= " .. format(b), options, inc(level))
 end
 
+function test.ExpectError(pattern, func, message, options, level)
+  local status, err = pcall(func)
+  test.Expect(not status, "saw no error; " .. message, options, inc(level))
+  test.Expect(string.match(err, pattern), message .. ", error was: " .. err, options, inc(level))
+end
+
 --------------------------------------------------
 
 return test

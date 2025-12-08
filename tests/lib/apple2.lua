@@ -58,7 +58,7 @@ end
 local scan_for_mouse = false
 if machine.system.name:match("^apple2e") then
   -- Apple IIe
-  -- * mouse card required
+  -- * mouse card required (if mouse is used)
   -- * many possible aux memory devices
   scan_for_mouse = true
   auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
@@ -165,14 +165,16 @@ else
   error("Unknown model: " .. machine.system.name)
 end
 
-if scan_for_mouse then
-  local mousedev = get_device("^:sl.:mouse$").tag
-  -- TODO: Allow operation without a mouse
-  mouse = {
-    x = { port = mousedev .. ":a2mse_x",      field = "Mouse X" },
-    y = { port = mousedev .. ":a2mse_y",      field = "Mouse Y" },
-    b = { port = mousedev .. ":a2mse_button", field = "Mouse Button" },
-  }
+function EnsureMouse()
+  if scan_for_mouse then
+    local mousedev = get_device("^:sl.:mouse$").tag
+    mouse = {
+      x = { port = mousedev .. ":a2mse_x",      field = "Mouse X" },
+      y = { port = mousedev .. ":a2mse_y",      field = "Mouse Y" },
+      b = { port = mousedev .. ":a2mse_button", field = "Mouse Button" },
+    }
+    scan_for_mouse = false
+  end
 end
 
 --------------------------------------------------
@@ -549,6 +551,8 @@ function apple2.MoveMouse(x, y)
 
 
   ]]--
+
+  EnsureMouse()
 
   local MAX_DELTA = 127
 
