@@ -10,18 +10,20 @@ test.Step(
   function()
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
-    a2dtest.ExpectNothingChanged(function()
-        a2d.OAShortcut("M")
-        for i=1,5 do
-          apple2.RightArrowKey()
-          apple2.DownArrowKey()
-        end
-        apple2.EscapeKey()
 
-        a2d.InMouseKeysMode(function(m)
-            m.MoveToApproximately(0,0)
-        end)
-    end)
+    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+
+    a2d.OAShortcut("M")
+    for i=1,5 do
+      apple2.RightArrowKey()
+      apple2.DownArrowKey()
+    end
+    apple2.EscapeKey()
+
+    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+
+    test.ExpectEquals(before[1], after[1], "should not have moved")
+    test.ExpectEquals(before[2], after[2], "should not have moved")
 end)
 
 test.Step(
@@ -30,6 +32,8 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
+    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+
     a2d.OAShortcut("M")
     for i=1,5 do
       apple2.RightArrowKey()
@@ -37,7 +41,11 @@ test.Step(
     end
     apple2.ReturnKey()
     a2d.WaitForRepaint()
-    test.Snap("should have moved right and down")
+
+    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+
+    test.ExpectLessThan(before[1], after[1], "should have moved right and down")
+    test.ExpectLessThan(before[2], after[2], "should have moved right and down")
 end)
 
 test.Step(
@@ -46,18 +54,19 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
-    a2dtest.ExpectNothingChanged(function()
-        a2d.OAShortcut("G")
-        for i=1,5 do
-          apple2.RightArrowKey()
-          apple2.DownArrowKey()
-        end
-        apple2.EscapeKey()
+    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
 
-        a2d.InMouseKeysMode(function(m)
-            m.MoveToApproximately(0,0)
-        end)
-    end)
+    a2d.OAShortcut("G")
+    for i=1,5 do
+      apple2.RightArrowKey()
+      apple2.DownArrowKey()
+    end
+    apple2.EscapeKey()
+
+    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+
+    test.ExpectEquals(before[3], after[3], "should not have grown")
+    test.ExpectEquals(before[4], after[4], "should not have grown")
 end)
 
 test.Step(
@@ -66,6 +75,8 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
+    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+
     a2d.OAShortcut("G")
     for i=1,5 do
       apple2.RightArrowKey()
@@ -73,5 +84,9 @@ test.Step(
     end
     apple2.ReturnKey()
     a2d.WaitForRepaint()
-    test.Snap("should have resized")
+
+    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+
+    test.ExpectLessThan(before[3], after[3], "should have grown")
+    test.ExpectLessThan(before[4], after[4], "should have grown")
 end)

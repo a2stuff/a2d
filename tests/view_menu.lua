@@ -227,14 +227,24 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/VIEW/DRAGGING")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+
+    apple2.DownArrowKey() -- select first item
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(30, 45)
-        m.ButtonDown()
-        m.MoveByApproximately(100, 0)
-        m.ButtonUp()
-        a2d.WaitForRepaint()
+        m.Home()
     end)
-    test.Snap("verify icon did not move")
+
+    a2dtest.ExpectNothingChanged(function()
+        local window_x,window_y = a2dtest.GetFrontWindowContentRect()
+        a2d.InMouseKeysMode(function(m)
+            m.MoveToApproximately(window_x + 25, window_y + 18)
+            m.ButtonDown()
+            m.MoveByApproximately(100, 0)
+            m.ButtonUp()
+            a2d.WaitForRepaint()
+            m.Home()
+        end)
+    end)
+
     a2d.CloseAllWindows()
 end)
 

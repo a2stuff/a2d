@@ -53,8 +53,11 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     emu.wait(5) -- floppy drives are slow
+
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(115, 124)
+        m.MoveToApproximately(dialog_x-20, dialog_y+56)
         for i=1, 15 do
           m.Up(2)
           emu.wait(0.15)

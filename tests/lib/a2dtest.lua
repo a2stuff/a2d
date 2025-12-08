@@ -210,6 +210,11 @@ function a2dtest.GetFrontWindowRightScrollArrowCoords()
   return x + w - 10, y + h + 5
 end
 
+function a2dtest.GetFrontWindowUpScrollArrowCoords()
+  local x,y,w,h = a2dtest.GetFrontWindowContentRect()
+  return x + w + 10, y + 5
+end
+
 --------------------------------------------------
 
 -- This scans for the left side of the alert bitmap at expected screen address

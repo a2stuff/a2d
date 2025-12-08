@@ -45,8 +45,12 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
     test.Snap("verify Proportional label baseline aligns with window title")
 
+    local rect = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local x = rect[1] + rect[3] - 70
+    local y = rect[2] + 4
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(500, 20)
+        m.MoveToApproximately(x, y)
     end)
     local dhr = a2dtest.SnapshotDHRWithoutClock()
 
@@ -148,6 +152,8 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT")
 
+    local up_x, up_y = a2dtest.GetFrontWindowUpScrollArrowCoords()
+
     apple2.PressSA()
     for i = 1, 70 do
       apple2.DownArrowKey()
@@ -155,7 +161,7 @@ test.Step(
     apple2.ReleaseSA()
     a2d.WaitForRepaint()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(530, 100)
+        m.MoveToApproximately(up_x, up_y + 70)
         a2dtest.ExpectNoRepaint(function()
             m.ButtonDown()
             emu.wait(10/60)
@@ -173,8 +179,10 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT")
 
+    local up_x, up_y = a2dtest.GetFrontWindowUpScrollArrowCoords()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(530, 40)
+        m.MoveToApproximately(up_x, up_y + 10)
         m.ButtonDown()
         m.MoveByApproximately(0, 60)
         m.ButtonUp()
