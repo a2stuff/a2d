@@ -625,6 +625,14 @@ function a2d.GetProDOSDate()
   local y = (word >> 9) & 0x7F
   local m = (word >> 5) & 0xF
   local d = word & 0x1F
+
+  -- https://prodos8.com/docs/technote/28/
+  if y < 40 then
+    y = y + 2000
+  else
+    y = y + 1900
+  end
+
   return y,m,d
 end
 

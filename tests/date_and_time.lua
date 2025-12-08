@@ -175,45 +175,64 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
 
+    function IncDate(y1, m1, d1, y2, m2, d2)
+      a2d.SetProDOSDate(y1, m1, d1)
+      local yy,mm,dd = a2d.GetProDOSDate()
+      a2d.SelectAndOpen("DATE.AND.TIME")
+      apple2.UpArrowKey()
+      a2d.DialogOK()
+      local y,m,d = a2d.GetProDOSDate()
+      test.ExpectEquals(
+        y, y2,
+        string.format("year: %d/%d/%d should increment to %d/%d/%d", y1, m1, d1, y2, m2, d2))
+      test.ExpectEquals(
+        m, m2,
+        string.format("month: %d/%d/%d should increment to %d/%d/%d", y1, m1, d1, y2, m2, d2))
+      test.ExpectEquals(
+        d, d2,
+        string.format("day: %d/%d/%d should increment to %d/%d/%d", y1, m1, d1, y2, m2, d2))
+    end
+
+    function DecDate(y1, m1, d1, y2, m2, d2)
+      a2d.SetProDOSDate(y1, m1, d1)
+      local yy,mm,dd = a2d.GetProDOSDate()
+      a2d.SelectAndOpen("DATE.AND.TIME")
+      apple2.DownArrowKey()
+      a2d.DialogOK()
+      local y,m,d = a2d.GetProDOSDate()
+      test.ExpectEquals(
+        y, y2,
+        string.format("year: %d/%d/%d should decrement to %d/%d/%d", y1, m1, d1, y2, m2, d2))
+      test.ExpectEquals(
+        m, m2,
+        string.format("month: %d/%d/%d should decrement to %d/%d/%d", y1, m1, d1, y2, m2, d2))
+      test.ExpectEquals(
+        d, d2,
+        string.format("day: %d/%d/%d should decrement to %d/%d/%d", y1, m1, d1, y2, m2, d2))
+    end
+
+
     -- 31 day month
-    a2d.SetProDOSDate(2023, 1, 28)
-    a2d.SelectAndOpen("DATE.AND.TIME")
-    apple2.UpArrowKey()
-    test.Snap("verify 28/Jan/23 wraps to 29/Jan/23")
-    apple2.UpArrowKey()
-    test.Snap("verify 29/Jan/23 wraps to 30/Jan/23")
-    apple2.UpArrowKey()
-    test.Snap("verify 30/Jan/23 wraps to 31/Jan/23")
-    apple2.UpArrowKey()
-    test.Snap("verify 31/Jan/23 wraps to 01/Jan/23")
-    a2d.DialogOK()
+    IncDate(2023, 1, 28, 2023, 1, 29)
+    IncDate(2023, 1, 29, 2023, 1, 30)
+    IncDate(2023, 1, 30, 2023, 1, 31)
+    IncDate(2023, 1, 31, 2023, 1, 1)
+    DecDate(2023, 1, 1, 2023, 1, 31)
 
     -- 30 day month
-    a2d.SetProDOSDate(2023, 4, 28)
-    a2d.SelectAndOpen("DATE.AND.TIME")
-    apple2.UpArrowKey()
-    test.Snap("verify 28/Apr/23 wraps to 29/Apr/23")
-    apple2.UpArrowKey()
-    test.Snap("verify 29/Apr/23 wraps to 30/Apr/23")
-    apple2.UpArrowKey()
-    test.Snap("verify 30/Apr/23 wraps to 01/Apr/23")
-    a2d.DialogOK()
+    IncDate(2023, 4, 28, 2023, 4, 29)
+    IncDate(2023, 4, 29, 2023, 4, 30)
+    IncDate(2023, 4, 30, 2023, 4, 1)
+    DecDate(2023, 4, 1, 2023, 4, 30)
 
     -- 28 day month
-    a2d.SetProDOSDate(2023, 2, 28)
-    a2d.SelectAndOpen("DATE.AND.TIME")
-    apple2.UpArrowKey()
-    test.Snap("verify 28/Feb/23 wraps to 01/Feb/23")
-    a2d.DialogOK()
+    IncDate(2023, 2, 28, 2023, 2, 1)
+    DecDate(2023, 2, 1, 2023, 2, 28)
 
     -- 29 day month
-    a2d.SetProDOSDate(2024, 2, 28)
-    a2d.SelectAndOpen("DATE.AND.TIME")
-    apple2.UpArrowKey()
-    test.Snap("verify 28/Feb/24 wraps to 01/Feb/24")
-    apple2.UpArrowKey()
-    test.Snap("verify 29/Feb/24 wraps to 01/Feb/24")
-    a2d.DialogOK()
+    IncDate(2024, 2, 28, 2024, 2, 29)
+    IncDate(2024, 2, 29, 2024, 2, 1)
+    DecDate(2024, 2, 1, 2024, 2, 29)
 end)
 
 -- Dialog control metrics
