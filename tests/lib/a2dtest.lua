@@ -254,6 +254,16 @@ function a2dtest.ExpectAlertNotShowing()
   test.Expect(not a2dtest.IsAlertShowing(), "an alert should not be showing", nil, 1)
 end
 
+function a2dtest.WaitForAlert()
+  for i = 1, 30 do
+    if a2dtest.IsAlertShowing() then
+      return
+    end
+    emu.wait(1)
+  end
+  test.Failure("Timeout (30s) waiting for alert")
+end
+
 --------------------------------------------------
 
 return a2dtest

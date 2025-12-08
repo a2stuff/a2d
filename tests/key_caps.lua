@@ -17,7 +17,7 @@ test.Step(
 end)
 
 function find_field(name)
-  for pn,p in pairs(machine.ioport.ports) do
+  for pn,p in pairs(manager.machine.ioport.ports) do
     for fn,f in pairs(p.fields) do
       if fn == name then
         return f

@@ -113,6 +113,9 @@ while read -r arg disk; do
 done < <(echo $DISKARGS | xargs -n 2)
 DISKARGS="$NEWDISKARGS"
 
+export UNFORMATTED_IMG="$TMPDIR/disks/unformatted.2mg"
+cp "res/unformatted.2mg" "$UNFORMATTED_IMG"
+
 # --------------------------------------------------
 # Prepare snapshots dir
 

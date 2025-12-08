@@ -905,7 +905,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Create a shortcut for a non-executable file at the root of a volume, set to "Copy to RAMCard" "at first use". Run the shortcut. Verify that the "Files remaining" count bottoms out at 0. Close the alert. Drag a volume icon to another volume. Verify that the "Files remaining" count bottoms out at 0.
 
 
-## Format/Erase
+## Format/Erase - covered by `tests/format_erase*.lua` and `tests/format_inserted.lua`
 
 * Repeat the following cases for Special > Format Disk and Special > Erase Disk:
   * Launch DeskTop. Run the command. Ensure left/right arrows move selection correctly.
