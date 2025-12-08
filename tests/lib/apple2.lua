@@ -874,4 +874,16 @@ end
 
 --------------------------------------------------
 
+function apple2.IsCrashedToMonitor()
+  local cpu = manager.machine.devices[":maincpu"]
+  local sp = cpu.state.SP.value
+  if sp == 0x1FE and apple2.ReadMemory(sp) == 0x4E and apple2.ReadMemory(sp+1) == 0xEB then
+    return true
+  else
+    return false
+  end
+end
+
+--------------------------------------------------
+
 return apple2

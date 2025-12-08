@@ -14,6 +14,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Launcher
 
+* Fix crash after 40 restarts.
 
 ### DeskTop
 

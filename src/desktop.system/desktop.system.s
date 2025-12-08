@@ -99,6 +99,10 @@ start:
         ;; Do this for good measure.
         cli
 
+        ;; Clear stack, because ProDOS doesn't.
+        ldx     #$FF
+        txs
+
         jsr     Check128K       ; QUITs if check fails
         jsr     ClearScreenEnable80Cols
         jsr     CheckRAMEmpty   ; QUITs if user cancels
