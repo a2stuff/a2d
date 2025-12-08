@@ -84,10 +84,12 @@ test.Step(
   "Short file keeps scrollbar inactive",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/SHORT.TEXT")
-    test.Snap("verify scrollbar inactive")
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
     apple2.SpaceKey() -- toggle modes
     a2d.WaitForRepaint()
-    test.Snap("verify scrollbar inactive")
+    hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
     a2d.CloseWindow()
 end)
 
@@ -95,7 +97,8 @@ test.Step(
   "Long file and scrolling",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT")
-    test.Snap("verify scrollbar active")
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectNotEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
 
     local dhr = a2dtest.SnapshotDHRWithoutClock()
     apple2.DownArrowKey()
@@ -257,10 +260,15 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
     apple2.SpaceKey() -- toggle to Fixed
     a2d.WaitForRepaint()
-    test.Snap("verify scrollbar active and at top")
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectNotEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
+    local hthumbpos, vthumbpos = a2dtest.GetFrontWindowScrollPos()
+    test.ExpectEquals(vthumbpos, 0, "scrollbar should be at top")
 
     OASA(apple2.DownArrowKey)
     apple2.SpaceKey() -- toggle to Proportional
     a2d.WaitForRepaint()
-    test.Snap("verify scrollbar inactive")
+
+    hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
 end)

@@ -119,6 +119,13 @@ mgtk.part = {
         thumb           = 5,
 }
 
+mgtk.scroll = {
+        option_none      = 0,
+        option_present   = 1 << 7,
+        option_thumb     = 1 << 6,
+        option_active    = 1 << 0,
+}
+
 ------------------------------------------------------------
 -- Wrapped Calls
 ------------------------------------------------------------
