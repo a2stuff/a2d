@@ -105,8 +105,8 @@ test.Variants(
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(30, 5)
-        m.Click()
     end)
+    apple2.ClickMouseButton() -- if MK is used, menus remember modifier
 
     if idx == 1 then
       a2d.OASAShortcut("O")

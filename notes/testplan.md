@@ -366,7 +366,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
 
-## Open
+## Open - covered by `tests/open.lua` and `tests/open_ejected.lua`
 
 * Open a volume with double-click.
 * Open a directory with double-click.
