@@ -4930,6 +4930,10 @@ show_unexpected_errors_flag:
         ;; Restore system state: devices, /RAM, ROM/ZP banks.
         jsr     RestoreSystem
 
+        ;; Reset stack
+        ldx     #$FF
+        txs
+
         ;; also used by launcher code
         target := *+1
         jmp     SELF_MODIFIED

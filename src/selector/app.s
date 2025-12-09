@@ -1591,14 +1591,11 @@ check_path:
 
         jsr     RestoreSystem
 
-        jsr     INVOKER
+        ;; Reset stack
+        ldx     #$FF
+        txs
 
-        ;; If we got here, invoker failed somehow. Relaunch.
-        jsr     Bell
-        jsr     Bell
-        jsr     Bell
-        MLI_CALL QUIT, quit_params
-        brk
+        jmp     INVOKER
 
 .endproc ; LaunchPath
 

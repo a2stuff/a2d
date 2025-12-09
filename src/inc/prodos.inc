@@ -488,15 +488,16 @@ int_num:        .byte   0
 .endparams
 .endmacro
 
-.macro DEFINE_QUIT_PARAMS name, ext, pathname
+.macro DEFINE_QUIT_PARAMS name, type, pathname
         WARN_IF_SHADOWING name
     .ifnblank pathname
         .assert pathname < $C000, error, "MLI params can't be in LC RAM"
     .endif
 .params name
 param_count:    .byte   4
-    .ifnblank ext
-        .byte   ext
+quit_type:
+    .ifnblank type
+        .byte   type
     .else
         .byte   0
     .endif

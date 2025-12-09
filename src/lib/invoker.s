@@ -22,11 +22,11 @@
 
         ;; Set prefix
         MLI_CALL SET_PREFIX, invoker::set_prefix_params
-        bcs     ret
+        bcs     quit
 
         ;; Check file type
         MLI_CALL GET_FILE_INFO, invoker::get_info_params
-        bcs     ret
+        bcs     quit
         lda     invoker::get_info_params::file_type
 
 ;;; Binary file (BIN) - load and invoke at A$=AuxType
@@ -55,10 +55,12 @@
 
 ;;; ProDOS 16 System file (S16) - invoke via QUIT call
         cmp     #FT_S16
-        beq     quit_call
+        bne     quit
+        copy8   #$EE, invoker::quit_params::quit_type
+        FALL_THROUGH_TO quit
 
-        ;; Failure
-ret:    rts
+quit:
+        MLI_CALL QUIT, invoker::quit_params
 
 ;;; ============================================================
 ;;; Interpreter - `INVOKER_INTERPRETER` populated by caller
@@ -86,19 +88,19 @@ use_interpreter:
 
 load_target:
         MLI_CALL OPEN, invoker::open_params
-        bcs     exit
+        bcs     quit
         lda     invoker::open_params::ref_num
         sta     invoker::read_params::ref_num
         MLI_CALL READ, invoker::read_params
-        bcs     exit
+        bcs     quit
         MLI_CALL CLOSE, invoker::close_params
-        bcs     exit
+        bcs     quit
 
         ;; If interpreter, copy filename to interpreter buffer.
         lda     INVOKER_INTERPRETER
     IF NOT_ZERO
         MLI_CALL SET_PREFIX, invoker::set_prefix_params
-        bcs     exit
+        bcs     quit
         ldy     INVOKER_FILENAME
       DO
         lda     INVOKER_FILENAME,y
@@ -136,15 +138,10 @@ load_target:
 
         ;; Set return address to the QUIT call below
         ;; (mostly for invoking BIN files)
-        PUSH_RETURN_ADDRESS quit_call
+        PUSH_RETURN_ADDRESS quit
 
         jmp_addr := *+1
         jmp     PRODOS_SYS_START
-
-quit_call:
-        MLI_CALL QUIT, invoker::quit_params
-
-exit:   rts
 
 ;;; ============================================================
 
@@ -166,7 +163,7 @@ exit:   rts
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
 
         ;; $EE = extended call signature for IIgs/GS/OS variation.
-        DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
+        DEFINE_QUIT_PARAMS quit_params, $0, INVOKER_FILENAME
 
 
 .endscope ; invoker
