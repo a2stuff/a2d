@@ -434,6 +434,7 @@ function a2d.Reboot()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
   end
   a2d.WaitForRestart()
+  apple2.ResetMouse()
 end
 
 --------------------------------------------------

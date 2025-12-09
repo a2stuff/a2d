@@ -415,7 +415,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open `/TESTS/FOLDER/SUBFOLDER`. Close the `TESTS` window. Close the `FOLDER` window. Verify that it animates into the volume icon, which becomes selected.
 
 
-## Open Then Close
+## Open Then Close - covered by `tests/open_then_close.lua`
 
 * Launch DeskTop. Open a window. Hold Solid-Apple and double-click a folder icon. Verify that the folder opens, and that the original window closes.
 * Launch DeskTop. Open a window. Select a folder icon. Hold Solid-Apple and select File > Open. Verify that the folder opens, and that the original window closes.

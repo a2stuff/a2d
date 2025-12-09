@@ -537,6 +537,20 @@ function apple2.ResetMouse()
   mouse_y = 0
 end
 
+function apple2.ClickMouseButton()
+  EnsureMouse()
+  local field = get_field(mouse.b.port, mouse.b.field)
+  field:set_value(1)
+  emu.wait(1/60)
+  field:clear_value(1)
+end
+
+function apple2.DoubleClickMouseButton()
+  apple2.ClickMouseButton()
+  emu.wait(10/60)
+  apple2.ClickMouseButton()
+end
+
 function apple2.MoveMouse(x, y)
   --[[
     reading:
@@ -565,7 +579,7 @@ function apple2.MoveMouse(x, y)
       -- print(machine.ioport.ports[mouse.x.port]:read())
     end
   until delta_x == 0
-  emu.wait(0.5)
+  emu.wait(1)
 
   repeat
     local delta_y = clamp(y - mouse_y, -MAX_DELTA, MAX_DELTA)
@@ -576,7 +590,7 @@ function apple2.MoveMouse(x, y)
       -- print(machine.ioport.ports[mouse.y.port]:read())
     end
   until delta_y == 0
-  emu.wait(0.5)
+  emu.wait(1)
 end
 
 --------------------------------------------------
