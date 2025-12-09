@@ -427,7 +427,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
 
 
-## Open Enclosing Folder
+## Open Enclosing Folder - covered by `tests/open_enclosing_folder.lua`
 
 * Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window re-opens, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
 * Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Up. Verify that the volume window is activated, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
@@ -437,7 +437,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 
 
-## Open Enclosing Folder Then Close
+## Open Enclosing Folder Then Close - covered by `tests/open_enclosing_folder_then_close.lua`
 
 * Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the volume window re-opens, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and the volume icon is selected.
 * Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Solid-Apple+Up. Verify that the volume window is activated, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and that the volume icon is selected.
