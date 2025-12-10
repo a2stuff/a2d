@@ -274,7 +274,7 @@ FormatEraseTest(
     test.Snap("verify OK button disabled")
     apple2.Type("NEW.NAME")
     test.Snap("verify OK button enabled")
-    apple2.ControlKey("X") -- clear
+    a2d.ClearTextField()
     test.Snap("verify OK button disabled")
     apple2.Type("ANOTHER.NAME")
     test.Snap("verify OK button enabled")
@@ -293,7 +293,7 @@ FormatEraseTest(
     test.Snap("verify OK button disabled")
     apple2.Type("NEW.NAME")
     test.Snap("verify OK button enabled")
-    apple2.ControlKey("X") -- clear
+    a2d.ClearTextField()
     test.Snap("verify OK button disabled")
     apple2.Type("ANOTHER.NAME")
     test.Snap("verify OK button enabled")

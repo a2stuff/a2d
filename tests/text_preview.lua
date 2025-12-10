@@ -199,7 +199,7 @@ test.Step(
 
     -- Disable ZIP Chip
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    apple2.Type("N")
+    apple2.Type("N") -- Normal Speed
     a2d.CloseWindow()
 
     a2d.SelectPath("/TESTS/FILE.TYPES/LONG.TEXT")
@@ -211,7 +211,7 @@ test.Step(
 
     -- Enable ZIP Chip
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    apple2.Type("F")
+    apple2.Type("F") -- Fast Speed
     a2d.CloseWindow()
 end)
 
@@ -229,13 +229,16 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/SUDOKU.STORY")
     apple2.SpaceKey() -- toggle to Fixed
     a2d.WaitForRepaint()
-    for i = 1, 16 do
+    for i = 1, 15 do
       apple2.DownArrowKey()
     end
+    a2d.WaitForRepaint()
     test.Snap("verify 'with' on last line")
     apple2.DownArrowKey()
+    a2d.WaitForRepaint()
     test.Snap("verify scrolled down one line")
     a2d.OASADown()
+    a2d.WaitForRepaint()
     test.Snap("verify scrolled to bottom of file")
     a2d.CloseWindow()
 end)

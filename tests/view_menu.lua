@@ -18,7 +18,7 @@ end)
 test.Step(
   "View by Date - Y2K",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenPath("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_DATE)
     a2d.WaitForRepaint()
     test.Snap("verify dates after 1999 show correctly")
@@ -29,6 +29,7 @@ test.Step(
   "View by Date - Secondarily sorted by time",
   function()
     a2d.OpenPath("/TESTS/VIEW/BY.DATE")
+    a2d.GrowWindowBy(300, 0)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_DATE)
     a2d.WaitForRepaint()
     test.Snap("verify same dates sort by time")
@@ -251,7 +252,7 @@ end)
 test.Step(
   "Rename causes refresh",
   function()
-    a2d.OpenPath("/TESTS/VIEWS/.REFRESH")
+    a2d.OpenPath("/TESTS/VIEW/RENAME.REFRESH")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.Select("ANTEATER")
     a2d.RenameSelection("YAK")
@@ -262,7 +263,7 @@ end)
 test.Step(
   "Rename causes refresh with two windows",
   function()
-    a2d.OpenPath("/TESTS/VIEWS")
+    a2d.OpenPath("/TESTS/VIEW")
     a2d.SelectAndOpen("RENAME.REFRESH")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.Select("BUNYIP")
@@ -339,7 +340,7 @@ test.Step(
     a2d.SelectAll()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     test.Snap("verify volume icons still selected")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
+    a2d.OAShortcut("I") -- File > Get Info
     emu.wait(10)
     test.Snap("verify File > Get File Info show volume info")
     a2d.DialogCancel()

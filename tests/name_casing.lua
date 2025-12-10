@@ -99,12 +99,7 @@ test.Variants(
       expected = "lower.UPPER.MiX"
     end
 
-    a2d.OpenPath("/RAM1")
-    a2d.OAShortcut("N") -- File > New Folder
-    apple2.ControlKey("X") -- clear
-    apple2.Type("lower.UPPER.MiX")
-    apple2.ReturnKey()
-    a2d.WaitForRepaint()
+    a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
     test.Snap("verify selected file is '"..expected.."'")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
@@ -212,11 +207,7 @@ test.Step(
   "Canceled rename",
   function()
     EnablePreserve()
-    a2d.OpenPath("/RAM1")
-    a2d.OAShortcut("N") -- File > New Folder
-    apple2.ControlKey("X") -- Clear
-    apple2.Type("lower.UPPER.MiX")
-    apple2.ReturnKey()
+    a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
     DisablePreserve()
     a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
     apple2.ReturnKey() -- File > Rename
@@ -247,11 +238,7 @@ test.Variants(
   },
   function(idx)
     EnablePreserve()
-    a2d.OpenPath("/RAM1")
-    a2d.OAShortcut("N") -- File > New Folder
-    apple2.ControlKey("X") -- Clear
-    apple2.Type("lower.UPPER.MiX")
-    apple2.ReturnKey()
+    a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
 
     local window_x, window_y = a2dtest.GetFrontWindowContentRect()
     local path
@@ -268,11 +255,7 @@ test.Variants(
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif idx == 2  then
       -- Move on same volume
-      a2d.OpenPath("/RAM1")
-      a2d.OAShortcut("N") -- File > New Folder
-      apple2.ControlKey("X") -- Clear
-      apple2.Type("ANOTHER.FOLDER")
-      apple2.ReturnKey()
+      a2d.CreateFolder("/RAM1/ANOTHER.FOLDER")
 
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(window_x + 45, window_y + 23)
@@ -299,11 +282,7 @@ test.Variants(
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif idx == 4 then
       -- Copy on same volume
-      a2d.OpenPath("/RAM1")
-      a2d.OAShortcut("N") -- File > New Folder
-      apple2.ControlKey("X") -- Clear
-      apple2.Type("ANOTHER.FOLDER")
-      apple2.ReturnKey()
+      a2d.CreateFolder("/RAM1/ANOTHER.FOLDER")
 
       a2d.InMouseKeysMode(function(m)
           apple2.PressSA()

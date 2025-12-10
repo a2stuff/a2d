@@ -20,7 +20,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     emu.wait(5) -- floppy drives are slow
-    apple2.Type("N")
+    apple2.Type("N") -- Normal Speed
     a2d.DialogOK()
     a2d.CloseAllWindows()
     a2dtest.ExpectNotHanging()
@@ -31,7 +31,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     emu.wait(5) -- floppy drives are slow
-    apple2.Type("F")
+    apple2.Type("F") -- Fast Speed
     a2d.DialogOK()
     a2d.CloseAllWindows()
     a2dtest.ExpectNotHanging()
@@ -42,8 +42,8 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     emu.wait(5) -- floppy drives are slow
-    apple2.Type("N")
-    apple2.Type("F")
+    apple2.Type("N") -- Normal Speed
+    apple2.Type("F") -- Fast Speed
     test.Expect(apple2.ReadSSW("RDDHIRES") < 128, "Should still be in DHR mode")
     a2d.CloseAllWindows()
 end)

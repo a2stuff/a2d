@@ -227,6 +227,14 @@ function a2d.OASAShortcut(key)
 end
 
 --------------------------------------------------
+-- Text Fields
+--------------------------------------------------
+
+function a2d.ClearTextField()
+  apple2.ControlKey("X")
+end
+
+--------------------------------------------------
 -- Automations
 --------------------------------------------------
 
@@ -309,7 +317,7 @@ end
 
 function a2d.RenameSelection(newname)
   apple2.ReturnKey()
-  apple2.ControlKey("X") -- clear
+  a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
@@ -322,7 +330,7 @@ end
 
 function a2d.DuplicateSelection(newname)
   a2d.OAShortcut("D")
-  apple2.ControlKey("X") -- clear
+  a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
@@ -354,8 +362,8 @@ function a2d.CreateFolder(path)
       a2d.OpenPath(base)
     end
   end
-  a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-  apple2.ControlKey("X") -- clear
+  a2d.OAShortcut("N") -- File > New Folder
+  a2d.ClearTextField()
   apple2.Type(name)
   apple2.ReturnKey()
   a2d.WaitForRepaint()

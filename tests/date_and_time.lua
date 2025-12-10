@@ -117,7 +117,7 @@ test.Step(
 
     -- Inspect file
     a2d.SelectPath("/RAM1/NOT.TODAY")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
+    a2d.OAShortcut("I") -- File > Get Info
     test.Snap("verify date matches set previously set date")
     a2d.DialogOK()
     a2d.DeletePath("/RAM1/NOT.TODAY")
@@ -359,9 +359,9 @@ test.Step(
 
     -- Use Date & Time to set date
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.SetProDOSDate(1998, 9, 13) -- so we know the delta
     a2d.SelectAndOpen("DATE.AND.TIME")
+    local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + year_x, dialog_y+field_y) -- year
         m.Click()

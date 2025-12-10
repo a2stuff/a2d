@@ -117,8 +117,8 @@ test.Step(
   function()
     a2d.OpenPath("/RAM1")
     for i = 1, 7 do
-      a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-      apple2.ReturnKey()
+      a2d.OAShortcut("N") -- File > New Folder
+      apple2.ReturnKey() -- accept default name
       a2d.WaitForRepaint()
     end
 
@@ -183,12 +183,12 @@ test.Step(
   function()
     a2d.OpenPath("/RAM1")
 
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-    apple2.ReturnKey()
+    a2d.OAShortcut("N") -- File > New Folder
+    apple2.ReturnKey() -- accept default name
     a2d.WaitForRepaint()
 
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-    apple2.ReturnKey()
+    a2d.OAShortcut("N") -- File > New Folder
+    apple2.ReturnKey() -- accept default name
     a2d.WaitForRepaint()
     a2d.MoveWindowBy(0,80)
 
@@ -212,12 +212,12 @@ test.Step(
   function()
     a2d.OpenPath("/RAM1")
 
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-    apple2.ReturnKey()
+    a2d.OAShortcut("N") -- File > New Folder
+    apple2.ReturnKey() -- accept default name
     a2d.WaitForRepaint()
 
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-    apple2.ReturnKey()
+    a2d.OAShortcut("N") -- File > New Folder
+    apple2.ReturnKey() -- accept default name
     a2d.WaitForRepaint()
     a2d.MoveWindowBy(0,80)
 

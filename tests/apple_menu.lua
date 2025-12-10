@@ -34,7 +34,7 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CHANGE.TYPE")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
     apple2.TabKey() -- focus on auxtype
-    apple2.ControlKey("X") -- clear
+    a2d.ClearTextField()
     apple2.Type("8642")
     a2d.DialogOK()
     a2d.Reboot()
