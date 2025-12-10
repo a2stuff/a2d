@@ -232,7 +232,7 @@ end
 
 function a2d.OpenSelection()
   a2d.OAShortcut("O")
-  a2d.WaitForRepaint()
+  a2d.WaitForRepaint() -- TODO: This is an extra wait - is it needed?
 end
 
 function a2d.OpenSelectionAndCloseCurrent()
@@ -594,12 +594,26 @@ function a2d.OADown()
   apple2.ReleaseOA()
 end
 
+-- Page Down (alias)
+function a2d.SADown()
+  apple2.PressSA()
+  apple2.DownArrowKey()
+  apple2.ReleaseSA()
+end
+
 -- Open Enclosing Folder
 -- Page Up
 function a2d.OAUp()
   apple2.PressOA()
   apple2.UpArrowKey()
   apple2.ReleaseOA()
+end
+
+-- Page Up (alias)
+function a2d.SAUp()
+  apple2.PressSA()
+  apple2.UpArrowKey()
+  apple2.ReleaseSA()
 end
 
 -- Move to Start

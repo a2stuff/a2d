@@ -111,18 +111,15 @@ test.Step(
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
     -- Page Down/Up using SA
-    apple2.PressSA()
-    apple2.DownArrowKey()
-    apple2.ReleaseSA()
+    a2d.SADown()
     a2d.WaitForRepaint()
     a2dtest.ExpectUnchangedExceptClock(dhr2, "should have scrolled down by one page")
 
-    apple2.PressSA()
-    apple2.UpArrowKey()
-    apple2.ReleaseSA()
+    a2d.SAUp()
     a2d.WaitForRepaint()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
+    -- Home/End using OA+SA
     a2d.OASADown()
     a2d.WaitForRepaint()
     test.Snap("verify scrolled to end")
