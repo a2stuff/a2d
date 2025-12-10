@@ -266,4 +266,14 @@ end
 
 --------------------------------------------------
 
+function a2dtest.ExpectNotHanging()
+  local dhr = a2dtest.SnapshotDHRWithoutClock()
+  a2d.OpenMenu(a2d.APPLE_MENU)
+  local new = a2dtest.SnapshotDHRWithoutClock()
+  test.Expect(not a2dtest.CompareDHR(dhr, new), "should have responded", {snap=true}, 1)
+  apple2.EscapeKey()
+end
+
+--------------------------------------------------
+
 return a2dtest

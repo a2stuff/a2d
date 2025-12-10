@@ -82,13 +82,7 @@ test.Step(
   "Open Apple + Solid Apple + Down",
   function()
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
-
-    apple2.PressOA()
-    apple2.PressSA()
-    apple2.DownArrowKey()
-    emu.wait(1/60)
-    apple2.ReleaseOA()
-    apple2.ReleaseSA()
+    a2d.OASADown()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
@@ -135,13 +129,7 @@ test.Step(
   function()
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        apple2.PressOA()
-        apple2.PressSA()
-        apple2.DownArrowKey()
-        emu.wait(1/60)
-        apple2.ReleaseOA()
-        apple2.ReleaseSA()
-
+        a2d.OASADown()
         a2d.WaitForRepaint()
     end)
 end)

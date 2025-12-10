@@ -1,11 +1,4 @@
 
-function OAUp()
-  apple2.PressOA()
-  apple2.UpArrowKey()
-  emu.wait(1/60)
-  apple2.ReleaseOA()
-end
-
 test.Step(
   "Open enclosing folder",
   function()
@@ -15,12 +8,12 @@ test.Step(
     a2d.CloseWindow()
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be open again")
     test.Snap("verify folder icon is selected")
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.Snap("verify volume icon is selected")
 
@@ -33,12 +26,12 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU", true)
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be open again")
     test.Snap("verify folder icon is selected")
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.Snap("verify volume icon is selected")
 
@@ -56,12 +49,12 @@ test.Step(
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "APPLE.MENU", "folder window should be on top")
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be open again")
     test.Snap("verify folder icon is selected")
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.Snap("verify volume icon is selected")
 
@@ -73,7 +66,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU", true)
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be open again")
     test.Snap("verify folder icon is selected")
@@ -90,7 +83,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU")
 
-    OAUp()
+    a2d.OAUp()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be open again")
     test.Snap("verify folder icon is selected")

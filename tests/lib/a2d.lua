@@ -209,9 +209,11 @@ function a2d.InvokeMenuItem(mth, nth)
   a2d.WaitForRepaint()
 end
 
-function a2d.OAShortcut(key)
+function a2d.OAShortcut(key, options)
   apple2.OAKey(key)
-  a2d.WaitForRepaint()
+  if not options or not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 function a2d.SAShortcut(key)
@@ -282,6 +284,8 @@ function a2d.SelectPath(path)
   local base, name = a2d.SplitPath(path)
   if base ~= "" then
     a2d.OpenPath(base)
+  else
+    a2d.CloseAllWindows()
   end
   a2d.Select(name)
 end
@@ -582,12 +586,38 @@ end
 -- Modifier Key Combos
 --------------------------------------------------
 
+-- Open Selection
+-- Page Down
 function a2d.OADown()
   apple2.PressOA()
   apple2.DownArrowKey()
   apple2.ReleaseOA()
 end
 
+-- Open Enclosing Folder
+-- Page Up
+function a2d.OAUp()
+  apple2.PressOA()
+  apple2.UpArrowKey()
+  apple2.ReleaseOA()
+end
+
+-- Move to Start
+function a2d.OALeft()
+  apple2.PressOA()
+  apple2.LeftArrowKey()
+  apple2.ReleaseOA()
+end
+
+-- Move to End
+function a2d.OARight()
+  apple2.PressOA()
+  apple2.RightArrowKey()
+  apple2.ReleaseOA()
+end
+
+-- Open Selection then Close Current
+-- Scroll to End
 function a2d.OASADown()
   apple2.PressOA()
   apple2.PressSA()
@@ -596,6 +626,17 @@ function a2d.OASADown()
   apple2.ReleaseOA()
 end
 
+-- Open Enclosing then Close Current
+-- Scroll to Start
+function a2d.OASAUp()
+  apple2.PressOA()
+  apple2.PressSA()
+  apple2.UpArrowKey()
+  apple2.ReleaseSA()
+  apple2.ReleaseOA()
+end
+
+-- Shortcut: File > Delete
 function a2d.OADelete()
   apple2.PressOA()
   apple2.DeleteKey()

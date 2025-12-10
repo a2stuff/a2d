@@ -5,15 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
-function OASA(func)
-  apple2.PressOA()
-  apple2.PressSA()
-  func()
-  apple2.ReleaseOA()
-  apple2.ReleaseSA()
-  a2d.WaitForRepaint()
-end
-
 test.Step(
   "Escape exits text preview",
   function()
@@ -110,16 +101,12 @@ test.Step(
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one line")
 
     -- Page Down/Up using OA
-    apple2.PressOA()
-    apple2.DownArrowKey()
-    apple2.ReleaseOA()
+    a2d.OADown()
     a2d.WaitForRepaint()
     test.Snap("verify scrolled down by one page")
     local dhr2 = a2dtest.SnapshotDHRWithoutClock()
 
-    apple2.PressOA()
-    apple2.UpArrowKey()
-    apple2.ReleaseOA()
+    a2d.OAUp()
     a2d.WaitForRepaint()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
@@ -136,13 +123,15 @@ test.Step(
     a2d.WaitForRepaint()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
-    OASA(apple2.DownArrowKey)
+    a2d.OASADown()
+    a2d.WaitForRepaint()
     test.Snap("verify scrolled to end")
 
-    OASA(apple2.UpArrowKey)
+    a2d.OASAUp()
+    a2d.WaitForRepaint()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back to start")
 
-    OASA(apple2.DownArrowKey)
+    a2d.OASADown()
     apple2.SpaceKey() -- toggle mode
     a2d.WaitForRepaint()
     test.Snap("verify scrolled to top and Fixed mode")
@@ -249,7 +238,7 @@ test.Step(
     test.Snap("verify 'with' on last line")
     apple2.DownArrowKey()
     test.Snap("verify scrolled down one line")
-    OASA(apple2.DownArrowKey)
+    a2d.OASADown()
     test.Snap("verify scrolled to bottom of file")
     a2d.CloseWindow()
 end)
@@ -265,7 +254,7 @@ test.Step(
     local hthumbpos, vthumbpos = a2dtest.GetFrontWindowScrollPos()
     test.ExpectEquals(vthumbpos, 0, "scrollbar should be at top")
 
-    OASA(apple2.DownArrowKey)
+    a2d.OASADown()
     apple2.SpaceKey() -- toggle to Proportional
     a2d.WaitForRepaint()
 

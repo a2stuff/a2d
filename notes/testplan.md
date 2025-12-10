@@ -622,7 +622,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Load DeskTop. Open a window for a volume in a Disk II drive. Remove the disk from the Disk II drive. Drag a file to the trash. When prompted to insert the disk, click Cancel. Verify that when the window closes the disk icon is no longer dimmed.
 
 
-## Get Info
+## Get Info - covered by `tests/get_info*.lua`
 
 * File > Get Info a non-folder file. Verify that the size shows as "_size_K".
 * File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 1 item".

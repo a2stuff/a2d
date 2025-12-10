@@ -9,10 +9,7 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
     local count = a2dtest.GetWindowCount()
-    apple2.PressOA()
-    apple2.Type("q")
-    apple2.ReleaseOA()
-    a2d.WaitForRepaint()
+    a2d.OAShortcut("q")
     test.Expect(a2dtest.GetWindowCount(), count-1, "the desk accessory should have closed")
 end)
 
