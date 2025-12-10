@@ -9092,9 +9092,9 @@ kMaxAnimationStep = 7
     END_IF
 
         ;; --------------------------------------------------
-        ;; Get icon position - used as first rect
+        ;; Get icon bounds - used as first rect
 
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
+        ITK_CALL IconTK::GetBitmapRect, icon_param ; inits `tmp_rect`
         COPY_BLOCK tmp_rect, icon_rect
 
         ;; --------------------------------------------------
