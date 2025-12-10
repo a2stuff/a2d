@@ -537,12 +537,23 @@ function apple2.ResetMouse()
   mouse_y = 0
 end
 
-function apple2.ClickMouseButton()
+function apple2.PressMouseButton()
   EnsureMouse()
   local field = get_field(mouse.b.port, mouse.b.field)
   field:set_value(1)
   emu.wait(1/60)
-  field:clear_value(1)
+end
+
+function apple2.ReleaseMouseButton()
+  EnsureMouse()
+  local field = get_field(mouse.b.port, mouse.b.field)
+  field:clear_value()
+  emu.wait(1/60)
+end
+
+function apple2.ClickMouseButton()
+  PressMouseButton()
+  ReleaseMouseButton()
 end
 
 function apple2.DoubleClickMouseButton()

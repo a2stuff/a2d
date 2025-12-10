@@ -320,6 +320,19 @@ function a2d.RenamePath(path, newname)
   a2d.RenameSelection(newname)
 end
 
+function a2d.DuplicateSelection(newname)
+  a2d.OAShortcut("D")
+  apple2.ControlKey("X") -- clear
+  apple2.Type(newname)
+  apple2.ReturnKey()
+  a2d.WaitForRepaint()
+end
+
+function a2d.DuplicatePath(path, newname)
+  a2d.SelectPath(path)
+  a2d.DuplicateSelection(newname)
+end
+
 function a2d.DeleteSelection()
   a2d.OADelete()
   emu.wait(5) -- wait for enumeration
@@ -348,10 +361,20 @@ function a2d.CreateFolder(path)
   a2d.WaitForRepaint()
 end
 
-function a2d.EraseVolume(name)
+function a2d.FormatVolume(name, opt_new_name)
+  a2d.SelectPath("/"..name)
+  a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK)
+  apple2.Type(opt_new_name or name)
+  a2d.DialogOK()
+  a2d.WaitForRepaint()
+  a2d.DialogOK() -- confirm overwrite
+  emu.wait(5)
+end
+
+function a2d.EraseVolume(name, opt_new_name)
   a2d.SelectPath("/"..name)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
-  apple2.Type(name) -- new name
+  apple2.Type(opt_new_name or name)
   a2d.DialogOK()
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
@@ -415,6 +438,12 @@ end
 function a2d.ToggleOptionShowShortcutsOnStartup()
   a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
   a2d.OAShortcut("2") -- Toggle "Show shortcuts on startup"
+  a2d.CloseWindow()
+  a2d.CloseAllWindows()
+end
+function a2d.ToggleOptionPreserveCase()
+  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OAShortcut("4") -- Toggle "Preserve uppercase and lowercase in names"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end

@@ -714,7 +714,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 * Find make a copy of a `PRODOS` system file. Rename it to have a ".SYSTEM" suffix. Verify that it updates to have an application icon. Rename it again to remove the suffix. Verify that it updates to have a system file icon. Repeat several times. Verify that the icon has not shifted in position.
 
-## Name Casing
+## Name Casing -- covered by `tests/name_casing.lua`
 
 * Verify that GS/OS volume name cases show correctly.
 * Verify that GS/OS file name cases show correctly in `/TESTS/PROPERTIES/GS.OS.NAMES`
