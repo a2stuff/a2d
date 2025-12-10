@@ -5,6 +5,21 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_floppy.dsk"
 
 ======================================== ENDCONFIG ]]--
 
+-- Helpers, since we can only toggle the flag
+local preserve_flag = true -- default state in config
+function EnablePreserve()
+  if not preserve_flag then
+    a2d.ToggleOptionPreserveCase()
+    preserve_flag = not preserve_flag
+  end
+end
+function DisablePreserve()
+  if preserve_flag then
+    a2d.ToggleOptionPreserveCase()
+    preserve_flag = not preserve_flag
+  end
+end
+
 test.Step(
   "GS/OS volume name cases show correctly",
   function()
@@ -26,48 +41,49 @@ test.Step(
     test.Snap("verify name cases are correct")
 end)
 
--- TODO: Test with flag changed.
-test.Step(
-  "AppleWorks files rename with case preservation",
-  function()
+test.Variants(
+  {
+    "AppleWorks files rename with case preservation - preserve off",
+    "AppleWorks files rename with case preservation - preserve on",
+  },
+  function(idx)
+    if idx == 1 then DisablePreserve() else EnablePreserve() end
+
     a2d.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
     a2d.RenamePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/UP.LO.MIXED")
     test.Snap("verify selected file is 'UP.lo.MiXeD'")
 
+    -- Note that behavior is the same regardless of flag state; this
+    -- is because AppleWorks files have case bits stored in auxtype
+    -- which is not optional, unlike GS/OS case bits.
+
     -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
--- TODO: Test with flag changed.
-test.Step(
-  "AppleWorks files duplicate with case preservation",
+test.Variants(
+  {
+    "AppleWorks files duplicate with case preservation - preserve off",
+    "AppleWorks files duplicate with case preservation - preserve on",
+  },
   function()
+    if idx == 1 then DisablePreserve() else EnablePreserve() end
+
     a2d.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
     a2d.DuplicatePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/UP.LO.MIXED")
     test.Snap("verify selected file is 'UP.lo.MiXeD'")
 
+    -- Note that behavior is the same regardless of flag state; this
+    -- is because AppleWorks files have case bits stored in auxtype
+    -- which is not optional, unlike GS/OS case bits.
+
     -- cleanup
     a2d.EraseVolume("RAM1")
 end)
-
--- Helpers, since we can only toggle the flag
-local preserve_flag = true -- default state in config
-function EnablePreserve()
-  if not preserve_flag then
-    a2d.ToggleOptionPreserveCase()
-    preserve_flag = not preserve_flag
-  end
-end
-function DisablePreserve()
-  if preserve_flag then
-    a2d.ToggleOptionPreserveCase()
-    preserve_flag = not preserve_flag
-  end
-end
 
 test.Variants(
   {
@@ -270,14 +286,14 @@ test.Variants(
     elseif idx == 3 then
       -- Move to another volume
 
-      apple2.PressSA()
       a2d.InMouseKeysMode(function(m)
+          apple2.PressSA()
           m.MoveToApproximately(window_x + 35, window_y + 23)
           m.ButtonDown()
           m.MoveToApproximately(vol_icon4_x, vol_icon4_y)
           m.ButtonUp()
+          apple2.ReleaseSA()
       end)
-      apple2.ReleaseSA()
       a2d.WaitForRepaint()
 
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
@@ -289,14 +305,14 @@ test.Variants(
       apple2.Type("ANOTHER.FOLDER")
       apple2.ReturnKey()
 
-      apple2.PressSA()
       a2d.InMouseKeysMode(function(m)
+          apple2.PressSA()
           m.MoveToApproximately(window_x + 45, window_y + 23)
           m.ButtonDown()
           m.MoveByApproximately(80, 0)
           m.ButtonUp()
+          apple2.ReleaseSA()
       end)
-      apple2.ReleaseSA()
       a2d.WaitForRepaint()
 
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"

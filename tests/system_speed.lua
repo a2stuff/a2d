@@ -23,7 +23,7 @@ test.Step(
     apple2.Type("N")
     a2d.DialogOK()
     a2d.CloseAllWindows()
-    -- TODO: Expect still running
+    a2dtest.ExpectNotHanging()
 end)
 
 test.Step(
@@ -34,7 +34,7 @@ test.Step(
     apple2.Type("F")
     a2d.DialogOK()
     a2d.CloseAllWindows()
-    -- TODO: Expect still running
+    a2dtest.ExpectNotHanging()
 end)
 
 test.Step(

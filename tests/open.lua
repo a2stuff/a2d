@@ -106,10 +106,8 @@ test.Step(
   "Open - animation runs",
   function()
     a2d.SelectPath("/A2.DESKTOP")
-    a2d.OpenMenu(a2d.FILE_MENU)
-    apple2.DownArrowKey() -- File > Open
-    apple2.ReturnKey()
-    test.MultiSnap(15, "verify open animation starts at volume icon")
+    a2d.OAShortcut("O", {no_wait=true})
+    test.MultiSnap(12, "verify open animation starts at volume icon")
     a2d.CloseAllWindows()
     a2d.ClearSelection()
 end)

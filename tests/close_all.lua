@@ -4,18 +4,28 @@
 
   ============================================================]]--
 
--- TODO: Test with Solid Apple (not possible with MouseKeys mode)
-test.Step(
-  "Close all using modifier-click",
-  function()
+test.Variants(
+  {
+    "Close all using Open Apple click on close box",
+    "Close all using Solid Apple click on close box",
+  },
+  function(idx)
     a2d.ClearSelection()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
-        apple2.PressOA()
+        if idx == 1 then
+          apple2.PressOA()
+        else
+          apple2.PressSA()
+        end
         m.Click()
-        apple2.ReleaseOA()
+        if idx == 1 then
+          apple2.ReleaseOA()
+        else
+          apple2.ReleaseSA()
+        end
     end)
     a2d.WaitForRepaint()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
@@ -23,8 +33,8 @@ end)
 
 test.Variants(
   {
-    "Close all using shortcut",
-    "Close all using shortcut - caps lock off",
+    "Close all using Open Apple + Solid Apple + W",
+    "Close all using Open Apple + Solid Apple + w",
   },
   function(idx)
     a2d.ClearSelection()
@@ -38,39 +48,42 @@ test.Variants(
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 
---[[
-  -- TODO: This doesn't work w/ keyboard-driven menu, or MouseKeys. Will need real mouse
-
 test.Variants(
   {
-    "Close all using menu and modifier - Solid Apple",
-    "Close all using menu and modifier - Open Apple",
+    "Close all using menu and Solid Apple",
+    "Close all using menu and Open Apple",
   },
   function(idx)
     a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
-    if idx == 1 then
-      apple2.PressSA()
-    else
-      apple2.PressOA()
-    end
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_CLOSE)
+
+    local file_menu_x, file_menu_y = 30, 5
+    a2d.InMouseKeysMode(function(m)
+        if idx == 1 then
+          apple2.PressSA()
+        else
+          apple2.PressOA()
+        end
+
+        m.MoveToApproximately(file_menu_x, file_menu_y)
+        m.Click()
+        m.MoveByApproximately(0, 35) -- File > Close
+        m.Click()
+
+        if idx == 1 then
+          apple2.ReleaseSA()
+        else
+          apple2.ReleaseOA()
+        end
+    end)
     a2d.WaitForRepaint()
-    if idx == 1 then
-      apple2.ReleaseSA()
-    else
-      apple2.ReleaseOA()
-    end
+
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
-]]--
 
---[[
-  TODO: This actually requires holding OA or SA while opening the menu
-
-  test.Variants(
+test.Variants(
   {
-    "Close All shortcut with File menu open",
-    "Close All shortcut with File menu open (caps lock off)",
+    "Close all using Open Apple + Solid Apple + W, with File menu open",
+    "Close all using Open Apple + Solid Apple + w, with File menu open",
   },
   function(idx)
     a2d.OpenPath("/A2.DESKTOP/EXTRAS") -- leave parent open
@@ -83,4 +96,3 @@ end)
     a2d.WaitForRepaint()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
-]]--

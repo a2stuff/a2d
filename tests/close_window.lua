@@ -72,7 +72,7 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP")
 
     -- NOTE: This is extremely timing-sensitive
-    apple2.OAKey("W")
+    a2d.OAShortcut("W", {no_wait=true})
     test.MultiSnap(10, "verify close animation ran")
 
     a2d.CloseAllWindows()
