@@ -9729,7 +9729,12 @@ saved_mouse_x:  .word   0
 saved_mouse_y:  .byte   0
 
 movement_cancel:  .byte   $00
+
+;;; bit7 = current button state; bit6 = last button state
 kbd_mouse_status:  .byte   $00
+
+;;; bit7 = next button state to use (assuming no changes)
+kbd_mouse_next_status: .byte $00
 
 ;;; ============================================================
 ;;; X = xlo, Y = xhi, A = y
@@ -9951,20 +9956,57 @@ restore_addr:
 stashed_addr:  .addr     0
 
 
+
+
 .proc KbdMouseMousekeys
-        jsr     ComputeModifiers  ; C=_ A=____ __SO
-        ror     a                 ; C=O A=____ ___S
-        ror     a                 ; C=S A=O___ ____
-        ror     kbd_mouse_status  ; shift solid apple into bit 7 of kbd_mouse_status
-        lda     kbd_mouse_status  ; becomes mouse button
-        sta     mouse_status
-        lda     #0
-        sta     input::modifiers
-
         jsr     GetKey
-        jcs     MousekeysInput
-
+    IF CC
+        jsr     use_next_status
         jmp     PositionKbdMouse
+    END_IF
+
+    IF A = #CHAR_ESCAPE
+        jmp     EndMouseKeys
+    END_IF
+
+    IF A = #' '
+        lda     #%10            ; down, then stay up
+        bne     new_status      ; always
+    END_IF
+
+    IF A = #','
+        lda     #%11            ; down, stay down
+        bne     new_status      ; always
+    END_IF
+
+    IF A = #'.'
+        lda     #%00            ; up, stay up
+        beq     new_status      ; always
+    END_IF
+
+        pha
+        jsr     use_next_status
+        pla
+        jmp     MousekeysInput
+
+new_status:
+        ror                     ; C = sticky next status
+        ror     kbd_mouse_next_status
+        ror                     ; C = new current status
+        jsr     update_status
+        jmp     PositionKbdMouse
+
+use_next_status:
+        lda     kbd_mouse_next_status
+        rol
+        FALL_THROUGH_TO update_status
+
+update_status:
+        ;; C goes into bit7 as new button status
+        ;; bit6 becomes "what was last button status?"
+        ror     kbd_mouse_status
+        copy8   kbd_mouse_status, mouse_status
+        rts
 .endproc ; KbdMouseMousekeys
 
 
@@ -9996,6 +10038,7 @@ stashed_addr:  .addr     0
         sta     kbd_mouse_state
         lda     #0
         sta     kbd_mouse_status ; reset mouse button status
+        sta     kbd_mouse_next_status
         COPY_BYTES 3, cursor_pos, kbd_mouse_x
 
         RETURN  C=0
@@ -10257,11 +10300,8 @@ pos:    jmp     PositionKbdMouse
 kMouseKeysDeltaX = 8
 kMouseKeysDeltaY = 4
 
+;;; Used by both `kKeyboardMouseStateMouseKeys` and `kKeyboardMouseStateForced`
 .proc MousekeysInput
-    IF A = #CHAR_ESCAPE
-        jmp     EndMouseKeys
-    END_IF
-
     IF A = #CHAR_UP
         lda     #256-kMouseKeysDeltaY
         jmp     KbdMouseAddToY

@@ -440,9 +440,15 @@ Parameters:
 
 ## Mouse Keys
 
-* To enter Mouse Keys mode, hold down both the Open-Apple key and the Solid-Apple (Option) key and then press the Space key. A confirmation sound will play.
-* Move the mouse cursor using the arrow keys. Use the Solid-Apple (or Option) key as the mouse button.
-* To exit Mouse Keys mode, press Escape. A confirmation sound will play.
+* To enter Mouse Keys mode, hold down both the Open-Apple key and the Solid-Apple (Option) key and then press <kbd>Space</kbd>. A confirmation sound will play.
+* While in Mouse Keys mode, use these keys:
+  * <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> (Arrow keys) move the mouse cursor
+  * <kbd>Space</kbd> click the mouse button
+  * <kbd>,</kbd> press and hold the mouse button
+  * <kbd>.</kbd> release the mouse button
+* To exit Mouse Keys mode, press <kbd>Esc</kbd>. A confirmation sound will play.
+
+> Earlier versions of the toolkit used different key sequences to enter, exit, and control the mouse.
 
 ## Concepts
 

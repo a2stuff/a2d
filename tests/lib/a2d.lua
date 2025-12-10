@@ -512,10 +512,7 @@ function a2d.MouseKeysDoubleClick()
 end
 
 function a2d.MouseKeysClick()
-  a2d.MouseKeysButtonDown()
-  emu.wait(1/60)
-  a2d.MouseKeysButtonUp()
-  emu.wait(1/60)
+  apple2.SpaceKey()
 end
 
 function a2d.MouseKeysOAClick()
@@ -551,11 +548,11 @@ function a2d.MouseKeysRight(n)
 end
 
 function a2d.MouseKeysButtonDown()
-  apple2.PressSA()
+  apple2.Type(",")
 end
 
 function a2d.MouseKeysButtonUp()
-  apple2.ReleaseSA()
+  apple2.Type(".")
 end
 
 local MOUSE_KEYS_DELTA_X = 8

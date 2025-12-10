@@ -29,8 +29,8 @@ test.Step(
     local window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(window_x + folder_icon_x, window_y + folder_icon_y)
+        m.DoubleClick()
     end)
-    apple2.DoubleClickMouseButton()
     a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
@@ -48,8 +48,8 @@ test.Step(
     local window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(window_x + text_icon_x, window_y + text_icon_y)
+        m.DoubleClick()
     end)
-    apple2.DoubleClickMouseButton()
     a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
@@ -229,8 +229,8 @@ test.Step(
     local window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(window_x + 40, window_y + 30)
+        m.DoubleClick()
     end)
-    apple2.DoubleClickMouseButton()
     a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
@@ -255,8 +255,8 @@ test.Variants(
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(30, 5)
+        m.Click()
     end)
-    apple2.ClickMouseButton() -- if MK is used, menus remember modifier
 
     local key = "O"
     if idx == 3 or idx == 4 then

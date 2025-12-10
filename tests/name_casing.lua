@@ -226,8 +226,8 @@ test.Variants(
   {
     "drag - copy to another volume",
     "drag - move on same volume",
-    --"drag - move to another volume", -- Uses "real" mouse, too imprecise
-    --"drag - copy to same volume", -- Uses "real" mouse, too imprecise
+    "drag - move to another volume", -- Uses "real" mouse, too imprecise
+    "drag - copy to same volume", -- Uses "real" mouse, too imprecise
   },
   function(idx)
     EnablePreserve()
@@ -270,12 +270,13 @@ test.Variants(
     elseif idx == 3 then
       -- Move to another volume
 
-      -- TODO: Debug mouse usage
       apple2.PressSA()
-      apple2.MoveMouse(window_x + 35, window_y + 23)
-      apple2.PressMouseButton()
-      apple2.MoveMouse(vol_icon4_x, vol_icon4_y)
-      apple2.ReleaseMouseButton()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(window_x + 35, window_y + 23)
+          m.ButtonDown()
+          m.MoveToApproximately(vol_icon4_x, vol_icon4_y)
+          m.ButtonUp()
+      end)
       apple2.ReleaseSA()
       a2d.WaitForRepaint()
 
@@ -288,12 +289,13 @@ test.Variants(
       apple2.Type("ANOTHER.FOLDER")
       apple2.ReturnKey()
 
-      -- TODO: Debug mouse usage
       apple2.PressSA()
-      a2d.MoveMouse(window_x + 45, window_y + 23)
-      a2d.PressMouseButton()
-      a2d.MoveMouse(80, 0)
-      a2d.ReleaseMouseButton()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(window_x + 45, window_y + 23)
+          m.ButtonDown()
+          m.MoveByApproximately(80, 0)
+          m.ButtonUp()
+      end)
       apple2.ReleaseSA()
       a2d.WaitForRepaint()
 

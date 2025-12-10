@@ -7,17 +7,13 @@ test.Step(
     local window_x,window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(window_x+30,window_x+85)
+        apple2.PressSA()
+        m.DoubleClick()
+        apple2.ReleaseSA()
     end)
-
-    apple2.PressSA()
-    apple2.DoubleClickMouseButton()
-    a2d.WaitForRepaint()
-    apple2.ReleaseSA()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
-
-    a2d.Reboot()
 end)
 
 test.Step(
@@ -25,18 +21,17 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
 
-    apple2.MoveMouse(30, 5)
-    apple2.PressSA()
-    apple2.ClickMouseButton()
-    apple2.MoveMouse(30, 40)
-    apple2.ClickMouseButton()
-    apple2.ReleaseSA()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(30, 5)
+        apple2.PressSA()
+        m.Click()
+        m.MoveByApproximately(0, 25)
+        m.Click()
+        apple2.ReleaseSA()
+    end)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
-
-    apple2.MoveMouse(0,0)
-    a2d.Reboot()
 end)
 
 test.Step(
@@ -44,18 +39,17 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
 
-    apple2.MoveMouse(30, 5)
-    apple2.PressOA()
-    apple2.ClickMouseButton()
-    apple2.MoveMouse(30, 40)
-    apple2.ClickMouseButton()
-    apple2.ReleaseOA()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(30, 5)
+        apple2.PressOA()
+        m.Click()
+        m.MoveByApproximately(0, 25)
+        m.Click()
+        apple2.ReleaseOA()
+    end)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
-
-    apple2.MoveMouse(0,0)
-    a2d.Reboot()
 end)
 
 test.Variants(
@@ -74,8 +68,6 @@ test.Variants(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
-
-    a2d.Reboot()
 end)
 
 test.Step(
@@ -86,8 +78,6 @@ test.Step(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
-
-    a2d.Reboot()
 end)
 
 test.Variants(
@@ -99,8 +89,8 @@ test.Variants(
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(30, 5)
+        m.Click()
     end)
-    apple2.ClickMouseButton() -- if MK is used, menus remember modifier
 
     if idx == 1 then
       a2d.OASAShortcut("O")
@@ -111,8 +101,6 @@ test.Variants(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
-
-    a2d.Reboot()
 end)
 
 test.Step(

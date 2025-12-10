@@ -552,8 +552,8 @@ function apple2.ReleaseMouseButton()
 end
 
 function apple2.ClickMouseButton()
-  PressMouseButton()
-  ReleaseMouseButton()
+  apple2.PressMouseButton()
+  apple2.ReleaseMouseButton()
 end
 
 function apple2.DoubleClickMouseButton()
