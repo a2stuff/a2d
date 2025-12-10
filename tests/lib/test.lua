@@ -8,9 +8,11 @@ local test = {}
 
 local test_name = emu.subst_env("$TEST_NAME")
 -- Convert from "wildcard" pattern (with * and ?) to Lua pattern
-local test_pattern = "^" ..
+local test_patterns = {}
+for chunk in test_name:gmatch("([^|]+)") do
+  local pattern  = "^" ..
   string.gsub(
-    test_name, "([%^$()%%.%[%]*+%-?])", -- pattern special characters
+    chunk, "([%^$()%%.%[%]*+%-?])", -- pattern special characters
     function(s)
       if s == "*" then
         return ".*"
@@ -20,6 +22,8 @@ local test_pattern = "^" ..
         return "%" .. s
       end
   end) .. "$"
+  table.insert(test_patterns, pattern)
+end
 
 test.count = 0
 
@@ -37,8 +41,17 @@ end
 
 -- test.Step("do a thing", function() ... end)
 function test.Step(title, func)
-  if test_name ~= "" and not string.match(title, test_pattern) then
-    return
+  if #test_patterns > 0 then
+    local match = false
+    for i,pattern in ipairs(test_patterns) do
+      if string.match(title, pattern) then
+        match = true
+        break
+      end
+    end
+    if not match then
+      return
+    end
   end
   test.count = test.count+1
 
