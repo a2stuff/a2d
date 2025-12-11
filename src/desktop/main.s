@@ -11133,10 +11133,18 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         bcc     done
 
         ;; Failed - determine why, maybe try to unlock.
-        ;; TODO: If it's a directory, this could be because it's not empty,
-        ;; e.g. if it contained files that could not be deleted.
         cmp     #ERR_ACCESS_ERROR
         bne     error
+
+        ;; Locked?
+        lda     src_file_info_params::access
+        and     #ACCESS_DEFAULT
+      IF A = #ACCESS_DEFAULT
+        ;; Already unlocked, so we just fail with unknown error.
+        ;; TODO: If it's a directory, this could be because it's not empty,
+        TAIL_CALL ShowErrorAlert, A=#kErrUnknown
+      END_IF
+
         bit     operations::all_flag
         bmi     unlock
 

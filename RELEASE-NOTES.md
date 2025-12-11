@@ -39,6 +39,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Prevent volume icon flicker on startup with empty Disk II drives.
 * Don't show About dialog when Ctrl+Shift+2 is pressed.
 * Fix hang after 60 restarts.
+* Fix error shown after non-empty directory fails to delete.
 
 ### Selector
 

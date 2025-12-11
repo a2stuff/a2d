@@ -190,7 +190,7 @@ end
 
 -- Invoke nth item on mth menu (1-based)
 -- (if nth is negative, from the bottom of menu)
-function a2d.InvokeMenuItem(mth, nth)
+function a2d.InvokeMenuItem(mth, nth, options)
   a2d.OpenMenu(mth)
   if nth > 0 then
     -- down to nth item
@@ -206,7 +206,10 @@ function a2d.InvokeMenuItem(mth, nth)
   end
   -- invoke
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+
+  if not options or not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 function a2d.OAShortcut(key, options)
@@ -216,14 +219,18 @@ function a2d.OAShortcut(key, options)
   end
 end
 
-function a2d.SAShortcut(key)
+function a2d.SAShortcut(key, options)
   apple2.SAKey(key)
-  a2d.WaitForRepaint()
+  if not options or not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
-function a2d.OASAShortcut(key)
+function a2d.OASAShortcut(key, options)
   apple2.OASAKey(key)
-  a2d.WaitForRepaint()
+  if not options or not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 --------------------------------------------------
@@ -312,9 +319,11 @@ function a2d.DialogOK(options)
   end
 end
 
-function a2d.DialogCancel()
+function a2d.DialogCancel(options)
   apple2.EscapeKey()
-  a2d.WaitForRepaint()
+  if not options or not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 function a2d.RenameSelection(newname)
@@ -507,7 +516,7 @@ end
 
 function a2d.InMouseKeysMode(func)
   a2d.EnterMouseKeysMode()
-  func({
+  local exit = func({
       ButtonDown = a2d.MouseKeysButtonDown,
       ButtonUp = a2d.MouseKeysButtonUp,
       Click = a2d.MouseKeysClick,
@@ -523,9 +532,13 @@ function a2d.InMouseKeysMode(func)
       MoveToApproximately = a2d.MouseKeysMoveToApproximately,
       MoveByApproximately = a2d.MouseKeysMoveByApproximately,
   })
-  a2d.ExitMouseKeysMode()
-  -- TODO: Without this, ClearSelection triggers menu. Why is delay needed?
-  emu.wait(10/60)
+  -- Allow returning false to not explicitly exit, e.g. if we exit
+  -- DeskTop by double-clicking an executable.
+  if exit ~= false then
+    a2d.ExitMouseKeysMode()
+    -- TODO: Without this, ClearSelection triggers menu. Why is delay needed?
+    emu.wait(10/60)
+  end
 end
 
 function a2d.MouseKeysDoubleClick()
