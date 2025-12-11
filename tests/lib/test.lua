@@ -82,13 +82,6 @@ function test.Snap(opt_title)
   snap(opt_title)
 end
 
-function test.MultiSnap(frames, opt_title)
-  for i=1,frames do
-    snap(opt_title)
-    emu.wait(1/60)
-  end
-end
-
 --------------------------------------------------
 -- Expectations
 --------------------------------------------------

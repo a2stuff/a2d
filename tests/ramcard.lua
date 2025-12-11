@@ -5,14 +5,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
-
---[[============================================================
-
-  "RAMCard" tests (poor naming)
-
-  ============================================================]]--
-
-
 function RenameTest(name, proc)
   test.Variants(
     {
@@ -185,4 +177,3 @@ RenameTest(
     a2d.DialogCancel()
     a2d.WaitForRepaint()
 end)
-

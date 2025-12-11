@@ -305,9 +305,11 @@ function a2d.ClearSelection()
   a2d.WaitForRepaint()
 end
 
-function a2d.DialogOK()
+function a2d.DialogOK(options)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  if not options or not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 function a2d.DialogCancel()
@@ -396,20 +398,29 @@ function a2d.CycleWindows()
   a2d.WaitForRepaint()
 end
 
-function a2d.AddShortcut(path)
+function a2d.AddShortcut(path, options)
   a2d.SelectPath(path)
   a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+
+  if options then
+    if options.copy == "boot" then
+      a2d.OAShortcut("3")
+    elseif options.copy == "use" then
+      a2d.OAShortcut("4")
+    end
+  end
+
   a2d.DialogOK()
 end
 
-function a2d.CopySelectionTo(path)
+function a2d.CopySelectionTo(path, is_volume, options)
   -- Assert: there is a selection
   --[[
     But we don't know if it's 1 or more than 1 so we index
     from the bottom of the menu, which is a fixed number.
     TODO: Make this less hacky
   ]]--
-  a2d.InvokeMenuItem(a2d.FILE_MENU, -3)
+  a2d.InvokeMenuItem(a2d.FILE_MENU, is_volume and -2 or -3)
 
   --Automate file picker dialog
   apple2.ControlKey("D") -- Drives
@@ -419,13 +430,17 @@ function a2d.CopySelectionTo(path)
     apple2.ControlKey("O") -- Open
     a2d.WaitForRepaint()
   end
-  a2d.DialogOK()
-  emu.wait(10)
+  a2d.DialogOK(options)
+
+  if not options or not options.no_wait then
+    emu.wait(10)
+  end
 end
 
-function a2d.CopyPath(src, dst)
+function a2d.CopyPath(src, dst, options)
   a2d.SelectPath(src)
-  a2d.CopySelectionTo(dst)
+  local is_volume = not src:match("^/.*/")
+  a2d.CopySelectionTo(dst, is_volume, options)
 end
 
 --------------------------------------------------

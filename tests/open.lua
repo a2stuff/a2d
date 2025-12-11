@@ -107,7 +107,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("O", {no_wait=true})
-    test.MultiSnap(12, "verify open animation starts at volume icon")
+    a2dtest.MultiSnap(120, "verify open animation starts at volume icon")
     a2d.CloseAllWindows()
     a2d.ClearSelection()
 end)

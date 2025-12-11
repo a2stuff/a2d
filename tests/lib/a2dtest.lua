@@ -254,14 +254,18 @@ function a2dtest.ExpectAlertNotShowing()
   test.Expect(not a2dtest.IsAlertShowing(), "an alert should not be showing", nil, 1)
 end
 
-function a2dtest.WaitForAlert()
-  for i = 1, 30 do
+function a2dtest.WaitForAlert(options)
+  local timeout = 30
+  if options and options.timeout then
+    timeout = options.timeout
+  end
+  for i = 1, timeout do
     if a2dtest.IsAlertShowing() then
       return
     end
     emu.wait(1)
   end
-  test.Failure("Timeout (30s) waiting for alert")
+  test.Failure(string.format("Timeout (%ds) waiting for alert", timeout))
 end
 
 --------------------------------------------------
@@ -272,6 +276,20 @@ function a2dtest.ExpectNotHanging()
   local new = a2dtest.SnapshotDHRWithoutClock()
   test.Expect(not a2dtest.CompareDHR(dhr, new), "should have responded", {snap=true}, 1)
   apple2.EscapeKey()
+end
+
+--------------------------------------------------
+
+function a2dtest.MultiSnap(frames, opt_title)
+  local last = nil
+  for i=1,frames/2 do
+    local dhr = a2dtest.SnapshotDHRWithoutClock()
+    if not last or not a2dtest.CompareDHR(last, dhr) then
+      test.Snap(opt_title)
+      last = dhr
+    end
+    emu.wait(2/60)
+  end
 end
 
 --------------------------------------------------
