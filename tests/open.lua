@@ -3,11 +3,11 @@ test.Step(
   "Open volume with double-click",
   function()
     a2d.SelectPath("/A2.DESKTOP")
-    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
     a2d.ClearSelection()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(vol_icon_x, vol_icon_y)
+        m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
         a2d.WaitForRepaint()
     end)

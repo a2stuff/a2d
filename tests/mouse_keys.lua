@@ -55,15 +55,15 @@ test.Step(
     end)
 end)
 
-a2d.SelectPath("/A2.DESKTOP")
-local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
-a2d.ClearSelection()
-
 test.Step(
   "Mouse Keys - stay in mousekeys mode",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(vol_icon_x, vol_icon_y)
+        m.MoveToApproximately(icon_x, icon_y)
         m.Click()
         test.Snap("verify icon selected")
         apple2.ReturnKey()
@@ -92,9 +92,13 @@ end)
 test.Step(
   "Mouse Keys - double-click",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
     local count = a2dtest.GetWindowCount()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(vol_icon_x, vol_icon_y)
+        m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
         a2d.WaitForRepaint()
     end)

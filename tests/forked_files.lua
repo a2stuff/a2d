@@ -113,14 +113,17 @@ end
 test.Step(
   "drag/drop directory with GS/OS forked files - destination window updates",
   function()
+    -- Need coords for opening a second window
     a2d.SelectPath("/RAM1")
-    local vol_icon3_x, vol_icon3_y = a2dtest.GetSelectedIconCoords()
+    local open_x, open_y = a2dtest.GetSelectedIconCoords()
 
+    -- Open first window
     a2d.SelectPath("/GS.OS.MIXED/GS.OS.FILES")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
+    -- Open second window
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(vol_icon3_x, vol_icon3_y) -- RAM1
+        m.MoveToApproximately(open_x, open_y) -- RAM1
         m.DoubleClick()
     end)
     a2d.MoveWindowBy(0, 100)
@@ -149,13 +152,13 @@ test.Step(
   "drag/drop volume with GS/OS forked files - destination window updates",
   function()
     a2d.SelectPath("/GS.OS.MIXED")
-    local vol_icon4_x, vol_icon4_y = a2dtest.GetSelectedIconCoords()
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.OpenPath("/RAM1")
     local dst_x, dst_y = GetFrontWindowCenter()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(vol_icon4_x, vol_icon4_y) -- GS.OS.MIXED
+        m.MoveToApproximately(src_x, src_y) -- GS.OS.MIXED
         m.ButtonDown()
         m.MoveToApproximately(dst_x, dst_y) -- RAM1
         m.ButtonUp()
@@ -173,6 +176,7 @@ end)
 test.Step(
   "copy directory with GS/OS forked files - destination window updates",
   function()
+    -- Need coordinates of two volume icons for multi-select
     a2d.SelectPath("/RAM1")
     local vol_icon1_x, vol_icon1_y = a2dtest.GetSelectedIconCoords()
 
