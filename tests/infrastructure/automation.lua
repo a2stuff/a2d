@@ -88,3 +88,21 @@ test.Step(
     ProbeCenter()
 
 end)
+
+test.Step(
+  "IconTK",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    test.Snap("BS?")
+    for i,icon in ipairs(a2d.GetSelectedIcons()) do
+      print("sel# " .. i .. "  icon# " .. icon.id .. " = " .. icon.name)
+    end
+
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU")
+    a2d.SelectAll()
+    for i,icon in ipairs(a2d.GetSelectedIcons()) do
+      print("sel# " .. i .. "  icon# " .. icon.id .. " = " .. icon.name)
+    end
+end)
+
+

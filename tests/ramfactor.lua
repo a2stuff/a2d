@@ -112,18 +112,22 @@ end)
 RAMCardTest(
   "Copy to RAMCard always copies",
   function()
+    a2d.OpenPath("/RAM1/DESKTOP/APPLE.MENU")
+
+    a2d.Select("CALENDAR")
+    local icon1_x, icon1_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.Select("TOYS")
+    local icon2_x, icon2_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.ClearSelection()
 
     -- Move a file
-    a2d.SelectPath("/RAM1/DESKTOP/APPLE.MENU/CALENDAR")
-    local icon1_x, icon1_y = 360, 30 -- CALENDAR
-    local icon2_x, icon2_y = 210, 30 -- TOYS
-    local window_x, window_y
-    window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x+icon1_x, window_y+icon1_y)
+        m.MoveToApproximately(icon1_x, icon1_y)
         m.ButtonDown()
 
-        m.MoveToApproximately(window_x+icon2_x, window_y+icon2_y)
+        m.MoveToApproximately(icon2_x, icon2_y)
         m.ButtonUp()
     end)
     a2d.WaitForRepaint()
@@ -143,16 +147,14 @@ RAMCardTest(
   function()
     a2d.SelectPath("/RAM1/DESKTOP/APPLE.MENU")
     a2d.MoveWindowBy(0, 100)
-    local icon_x, icon_y = 200, 30 -- APPLE.MENU
-    local src_window_x, src_window_y = a2dtest.GetFrontWindowContentRect()
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     local dst_window_x, dst_window_y, dst_window_w, dst_window_h
       = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_window_x+icon_x, src_window_y+icon_y)
-        test.Snap("over APPLE.MENU?")
+        m.MoveToApproximately(icon_x, icon_y)
         m.ButtonDown()
 
         m.MoveToApproximately(dst_window_x + dst_window_w/2,

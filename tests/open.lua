@@ -1,11 +1,11 @@
-local vol_icon_x, vol_icon_y = 520, 25 -- A2.DESKTOP
-local vol_icon2_x, vol_icon2_y = 520, 55 -- RAM1
-local folder_icon_x, folder_icon_y = 30, 60
-local text_icon_x, text_icon_y = 200, 40
 
 test.Step(
   "Open volume with double-click",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon_x, vol_icon_y)
         m.DoubleClick()
@@ -23,12 +23,12 @@ end)
 test.Step(
   "Open folder with double-click",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.MoveWindowBy(0,80) -- ensure icon remains visible
 
-    local window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x + folder_icon_x, window_y + folder_icon_y)
+        local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+        m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
     a2d.WaitForRepaint()
@@ -44,10 +44,11 @@ end)
 test.Step(
   "Open text file with double-click",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    local window_x, window_y = a2dtest.GetFrontWindowContentRect()
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x + text_icon_x, window_y + text_icon_y)
+        local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+        m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
     a2d.WaitForRepaint()
@@ -144,6 +145,14 @@ end)
 test.Step(
   "Reactivating windows",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
+    a2d.SelectPath("/RAM1")
+    local vol_icon2_x, vol_icon2_y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
     a2d.OpenPath("/A2.DESKTOP")
     a2d.Select("EXTRAS")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN)

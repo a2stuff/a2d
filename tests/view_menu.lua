@@ -84,12 +84,12 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
-local vol_icon_x = 520
-local vol_icon_y = 25
-
 test.Step(
   "View by Name - No crash",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+
     a2d.OpenPath("/TESTS")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
@@ -175,6 +175,9 @@ end)
 test.Step(
   "Icons in list can be selected and dragged",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+
     a2d.OpenPath("/TESTS/VIEW/DRAGGING")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
@@ -301,6 +304,9 @@ end)
 test.Step(
   "Volumes default to icon",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+
     a2d.OpenPath("/TESTS")
     test.Snap("verify icon view")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
@@ -332,6 +338,9 @@ end)
 test.Step(
   "Volume icon selection and multiple view switches",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+
     a2d.OpenPath("/TESTS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon_x, vol_icon_y)
@@ -395,6 +404,9 @@ end)
 test.Step(
   "Volume icon selection",
   function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+
     a2d.OpenPath("/TESTS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon_x, vol_icon_y)

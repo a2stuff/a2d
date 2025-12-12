@@ -294,4 +294,24 @@ end
 
 --------------------------------------------------
 
+function a2dtest.GetSelectedIconName()
+  local icons = a2d.GetSelectedIcons()
+  if #icons == 0 then
+    error("Selection is empty", 2)
+  end
+  local icon = icons[1]
+  return icon.name
+end
+
+function a2dtest.GetSelectedIconCoords()
+  local icons = a2d.GetSelectedIcons()
+  if #icons == 0 then
+    error("Selection is empty", 2)
+  end
+  local icon = icons[1]
+  return icon.x+10, icon.y+5
+end
+
+--------------------------------------------------
+
 return a2dtest

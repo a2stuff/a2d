@@ -354,6 +354,7 @@ end
 
 function a2d.DeleteSelection()
   a2d.OADelete()
+  -- TODO: Wait for alert
   emu.wait(5) -- wait for enumeration
   a2d.DialogOK() -- confirm delete
   emu.wait(5) -- wait for delete
@@ -793,5 +794,68 @@ end
 
 --------------------------------------------------
 
+local function ram_u8(addr)
+  return apple2.ReadRAMDevice(addr)
+end
+
+local function ram_u16(addr)
+  return ram_u8(addr) | (ram_u8(addr+1) << 8)
+end
+
+local function ram_s16(addr)
+  local v = ram_u16(addr)
+  if v & 0x8000 == 0 then
+    return v
+  else
+    return 0x10000 - v
+  end
+end
+
+local function ReadIcon(id)
+  local icon = {}
+  local icon_entries = 0x01F0D1
+
+  local IconEntry = {
+    state = 0,
+    win_flags = 1,
+    iconx = 2,
+    icony = 4,
+    typ = 6,
+    name = 7,
+    record_num = 23,
+    SIZE = 24,
+  }
+
+  local addr = icon_entries + (id-1) * IconEntry.SIZE
+
+  icon.id = id
+  icon.state = ram_u8(addr + IconEntry.state)
+  icon.window = ram_u8(addr + IconEntry.win_flags) & 0x0F
+  icon.flags = ram_u8(addr + IconEntry.win_flags) & 0xF0
+  icon.x = ram_s16(addr + IconEntry.iconx)
+  icon.y = ram_s16(addr + IconEntry.icony)
+  icon.name = apple2.GetPascalString(addr + IconEntry.name)
+  icon.type = ram_u8(addr + IconEntry.typ)
+  icon.record_num = ram_u8(addr + IconEntry.record_num)
+
+  return icon
+end
+
+function a2d.GetSelectedIcons()
+  -- TODO: Rework this so it's based on an actual API
+  local selected_icon_count_addr = 0x01DAEC
+  local selected_icon_list_addr = 0x01DAED
+
+  local selected_icon_count = apple2.ReadRAMDevice(selected_icon_count_addr)
+  local icons = {}
+
+  for i = 0, selected_icon_count-1 do
+    local id = ram_u8(selected_icon_list_addr + i)
+    table.insert(icons, ReadIcon(id))
+  end
+  return icons
+end
+
+--------------------------------------------------
 
 return a2d

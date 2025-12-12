@@ -63,22 +63,19 @@ end)
 test.Step(
   "Binary files",
   function()
-    local icon_x, icon_y = 360, 90
-    local window_x, window_y
-
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
-    window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x+icon_x, window_y+icon_y)
+        local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+        m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
     a2dtest.WaitForAlert()
     a2d.DialogCancel()
 
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
-    window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x+icon_x, window_y+icon_y)
+        local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+        m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
     a2dtest.WaitForAlert()
@@ -87,10 +84,10 @@ test.Step(
     a2d.WaitForRestart()
 
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
-    window_x, window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         apple2.PressSA()
-        m.MoveToApproximately(window_x+icon_x, window_y+icon_y)
+        local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+        m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
         apple2.ReleaseSA()
         a2dtest.MultiSnap(30, "verify launches with SA+double click")

@@ -53,7 +53,7 @@ test.Variants(
     a2d.RenamePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/UP.LO.MIXED")
-    test.Snap("verify selected file is 'UP.lo.MiXeD'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), "UP.lo.MiXeD", "name should be cased")
 
     -- Note that behavior is the same regardless of flag state; this
     -- is because AppleWorks files have case bits stored in auxtype
@@ -75,7 +75,7 @@ test.Variants(
     a2d.DuplicatePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/UP.LO.MIXED")
-    test.Snap("verify selected file is 'UP.lo.MiXeD'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), "UP.lo.MiXeD", "name should be cased")
 
     -- Note that behavior is the same regardless of flag state; this
     -- is because AppleWorks files have case bits stored in auxtype
@@ -100,10 +100,10 @@ test.Variants(
     end
 
     a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
-    test.Snap("verify selected file is '"..expected.."'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
-    test.Snap("verify selected file is '"..expected.."'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -125,10 +125,10 @@ test.Variants(
 
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.RenamePath("/RAM1/READ.ME", "lower.UPPER.MiX")
-    test.Snap("verify selected file is '"..expected.."'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
-    test.Snap("verify selected file is '"..expected.."'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -150,10 +150,10 @@ test.Variants(
 
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.DuplicatePath("/RAM1/READ.ME", "lower.UPPER.MiX")
-    test.Snap("verify selected file is '"..expected.."'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
     a2d.CloseAllWindows()
     a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
-    test.Snap("verify selected file is '"..expected.."'")
+    test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -223,11 +223,14 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
-local kVolIconDeltaY = 29
-local vol_icon1_x, vol_icon1_y = 520, 25 -- A2.DESKTOP
-local vol_icon2_x, vol_icon2_y = vol_icon1_x, vol_icon1_y + kVolIconDeltaY*1 -- TESTS
-local vol_icon3_x, vol_icon3_y = vol_icon1_x, vol_icon1_y + kVolIconDeltaY*2 -- RAM1
-local vol_icon4_x, vol_icon4_y = vol_icon1_x, vol_icon1_y + kVolIconDeltaY*3 -- GS.OS.MIXED
+a2d.SelectPath("/A2.DESKTOP")
+local vol_icon1_x, vol_icon1_y = a2dtest.GetSelectedIconCoords()
+a2d.SelectPath("/TESTS")
+local vol_icon2_x, vol_icon2_y = a2dtest.GetSelectedIconCoords()
+a2d.SelectPath("/RAM1")
+local vol_icon3_x, vol_icon3_y = a2dtest.GetSelectedIconCoords()
+a2d.SelectPath("/GS.OS.MIXED")
+local vol_icon4_x, vol_icon4_y = a2dtest.GetSelectedIconCoords()
 
 test.Variants(
   {

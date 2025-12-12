@@ -105,12 +105,14 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "GS.OS.FILES", "directory should still exist")
 end)
 
-local kVolIconDeltaY = 29
-local vol_icon1_x, vol_icon1_y = 520, 25 -- A2.DESKTOP
-local vol_icon2_x, vol_icon2_y = vol_icon1_x, vol_icon1_y + kVolIconDeltaY*1 -- TESTS
-local vol_icon3_x, vol_icon3_y = vol_icon1_x, vol_icon1_y + kVolIconDeltaY*2 -- RAM1
-local vol_icon4_x, vol_icon4_y = vol_icon1_x, vol_icon1_y + kVolIconDeltaY*3 -- GS.OS.MIXED
-local trash_icon_x, trash_icon_y = 520, 170
+a2d.SelectPath("/A2.DESKTOP")
+local vol_icon1_x, vol_icon1_y = a2dtest.GetSelectedIconCoords()
+a2d.SelectPath("/TESTS")
+local vol_icon2_x, vol_icon2_y = a2dtest.GetSelectedIconCoords()
+a2d.SelectPath("/RAM1")
+local vol_icon3_x, vol_icon3_y = a2dtest.GetSelectedIconCoords()
+a2d.SelectPath("/GS.OS.MIXED")
+local vol_icon4_x, vol_icon4_y = a2dtest.GetSelectedIconCoords()
 
 test.Step(
   "drag/drop directory with GS/OS forked files - destination window updates",
@@ -202,13 +204,14 @@ end)
 test.Step(
   "drag GS/OS forked file to trash - Cancel does not update window",
   function()
+    a2d.SelectPath("/Trash")
+    local trash_icon_x, trash_icon_y = a2dtest.GetSelectedIconCoords()
+
     a2d.SelectPath("/GS.OS.MIXED/GS.OS.FILES/INSTALLER")
     a2d.MoveWindowBy(0,100)
-
-    local icon_x, icon_y = 120, 30
-    local window_x, window_y = a2dtest.GetFrontWindowContentRect()
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x+icon_x, window_y+icon_y)
+        m.MoveToApproximately(icon_x, icon_y)
         m.ButtonDown()
 
         m.MoveToApproximately(trash_icon_x, trash_icon_y)
@@ -232,12 +235,14 @@ end)
 test.Step(
   "drag GS/OS forked file to trash - OK does update window",
   function()
+    a2d.SelectPath("/Trash")
+    local trash_icon_x, trash_icon_y = a2dtest.GetSelectedIconCoords()
+
     a2d.SelectPath("/GS.OS.MIXED/GS.OS.FILES/INSTALLER")
     a2d.MoveWindowBy(0,100)
-    local icon_x, icon_y = 120, 30
-    local window_x, window_y = a2dtest.GetFrontWindowContentRect()
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x+icon_x, window_y+icon_y)
+        m.MoveToApproximately(icon_x, icon_y)
         m.ButtonDown()
 
         m.MoveToApproximately(trash_icon_x, trash_icon_y)
