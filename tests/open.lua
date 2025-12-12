@@ -260,8 +260,9 @@ test.Variants(
   },
   function(idx)
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    local menu_x, menu_y = 30, 5
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(30, 5)
+        m.MoveToApproximately(menu_x, menu_y)
         m.Click()
     end)
 

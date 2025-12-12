@@ -105,15 +105,6 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "GS.OS.FILES", "directory should still exist")
 end)
 
-a2d.SelectPath("/A2.DESKTOP")
-local vol_icon1_x, vol_icon1_y = a2dtest.GetSelectedIconCoords()
-a2d.SelectPath("/TESTS")
-local vol_icon2_x, vol_icon2_y = a2dtest.GetSelectedIconCoords()
-a2d.SelectPath("/RAM1")
-local vol_icon3_x, vol_icon3_y = a2dtest.GetSelectedIconCoords()
-a2d.SelectPath("/GS.OS.MIXED")
-local vol_icon4_x, vol_icon4_y = a2dtest.GetSelectedIconCoords()
-
 function GetFrontWindowCenter()
   local x, y, w, h = a2dtest.GetFrontWindowContentRect()
   return x + w/2, y + h/2
@@ -122,6 +113,9 @@ end
 test.Step(
   "drag/drop directory with GS/OS forked files - destination window updates",
   function()
+    a2d.SelectPath("/RAM1")
+    local vol_icon3_x, vol_icon3_y = a2dtest.GetSelectedIconCoords()
+
     a2d.SelectPath("/GS.OS.MIXED/GS.OS.FILES")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
@@ -154,6 +148,9 @@ end)
 test.Step(
   "drag/drop volume with GS/OS forked files - destination window updates",
   function()
+    a2d.SelectPath("/GS.OS.MIXED")
+    local vol_icon4_x, vol_icon4_y = a2dtest.GetSelectedIconCoords()
+
     a2d.OpenPath("/RAM1")
     local dst_x, dst_y = GetFrontWindowCenter()
 
@@ -176,12 +173,19 @@ end)
 test.Step(
   "copy directory with GS/OS forked files - destination window updates",
   function()
+    a2d.SelectPath("/RAM1")
+    local vol_icon1_x, vol_icon1_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/GS.OS.MIXED")
+    local vol_icon2_x, vol_icon2_y = a2dtest.GetSelectedIconCoords()
+
+    -- Multi-select / Open, just to get everything visible
     a2d.CloseAllWindows()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(vol_icon3_x, vol_icon3_y) -- RAM1
+        m.MoveToApproximately(vol_icon1_x, vol_icon1_y) -- RAM1
         m.Click()
 
-        m.MoveToApproximately(vol_icon4_x, vol_icon4_y) -- GS.OS.MIXED
+        m.MoveToApproximately(vol_icon2_x, vol_icon2_y) -- GS.OS.MIXED
         apple2.PressOA()
         m.Click()
         apple2.ReleaseOA()

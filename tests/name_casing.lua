@@ -223,15 +223,6 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
-a2d.SelectPath("/A2.DESKTOP")
-local vol_icon1_x, vol_icon1_y = a2dtest.GetSelectedIconCoords()
-a2d.SelectPath("/TESTS")
-local vol_icon2_x, vol_icon2_y = a2dtest.GetSelectedIconCoords()
-a2d.SelectPath("/RAM1")
-local vol_icon3_x, vol_icon3_y = a2dtest.GetSelectedIconCoords()
-a2d.SelectPath("/GS.OS.MIXED")
-local vol_icon4_x, vol_icon4_y = a2dtest.GetSelectedIconCoords()
-
 test.Variants(
   {
     "drag - copy to another volume",
@@ -241,6 +232,10 @@ test.Variants(
   },
   function(idx)
     EnablePreserve()
+
+    a2d.SelectPath("/GS.OS.MIXED")
+    local other_vol_4_x, other_vol_4_y = a2dtest.GetSelectedIconCoords()
+
     a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
 
     local path
@@ -252,7 +247,7 @@ test.Variants(
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(x, y)
           m.ButtonDown()
-          m.MoveToApproximately(vol_icon4_x, vol_icon4_y)
+          m.MoveToApproximately(other_vol_4_x, other_vol_4_y)
           m.ButtonUp()
       end)
       a2d.WaitForRepaint()
@@ -287,7 +282,7 @@ test.Variants(
           apple2.PressSA()
           m.MoveToApproximately(x, y)
           m.ButtonDown()
-          m.MoveToApproximately(vol_icon4_x, vol_icon4_y)
+          m.MoveToApproximately(other_vol_4_x, other_vol_4_y)
           m.ButtonUp()
           apple2.ReleaseSA()
       end)
@@ -331,10 +326,16 @@ test.Step(
     a2d.RenamePath("/GS.OS.MIXED", "vol1.MIXED")
     a2d.RenamePath("/RAM1", "VOL2.mixed")
 
+    a2d.SelectPath("/VOL1.MIXED")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+    a2d.SelectPath("/VOL2.MIXED")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(vol_icon4_x, vol_icon4_y)
+        m.MoveToApproximately(src_x, src_y)
         m.ButtonDown()
-        m.MoveToApproximately(vol_icon3_x, vol_icon3_y)
+        m.MoveToApproximately(dst_x, dst_y)
         m.ButtonUp()
     end)
     a2d.WaitForRestart() -- let copy from floppy complete
