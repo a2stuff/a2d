@@ -6,6 +6,11 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Manually (not via DeskTop) eject the startup disk.
+  Select the startup disk icon. File > Open. Verify that the alert
+  displays correctly.
+]]--
 test.Step(
   "Alert shown on File > Open if disk ejected",
   function()
