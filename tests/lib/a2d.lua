@@ -97,7 +97,7 @@ function a2d.WaitForRestart()
   if manager.machine.system.name:match("^apple2c") or
     manager.machine.system.name:match("^ace500") then
     -- Floppy drives are slow
-    emu.wait(50)
+    emu.wait(60)
   else
     emu.wait(10)
   end
@@ -481,7 +481,7 @@ function a2d.ToggleOptionPreserveCase()
 end
 
 function a2d.Quit()
-  a2d.InvokeMenuItem(a2d.FILE_MENU, -1)
+  a2d.OAShortcut("Q")
   a2d.WaitForRestart()
 end
 
@@ -492,14 +492,40 @@ function a2d.QuitAndRestart()
 end
 
 -- Reboot via menu equivalent of PR#7 (or PR#5 on IIc+)
-function a2d.Reboot()
+function a2d.Reboot(options)
   if manager.machine.system.name:match("^apple2cp") then
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 2) -- PR#5 (list is 6,5,...)
   else
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
   end
-  a2d.WaitForRestart()
+  if not options or not options.no_wait then
+    a2d.WaitForRestart()
+  end
   apple2.ResetMouse()
+end
+
+-- TODO: Use this in Reboot, etc.
+-- TODO: Ensure callers wait until idle, though
+function a2d.WaitForDesktopShowing()
+  function IsDesktopShowing()
+    if apple2.ReadSSW("RDDHIRES") > 127 then -- bit7=0 = DHIRES on
+      return false
+    end
+
+    local dhr = apple2.SnapshotDHR()
+    -- skip first column, usually has cursor in it
+    for i = 1, apple2.SCREEN_COLUMNS-1 do
+      if dhr[i] ~= 0x7F then
+        return false
+      end
+    end
+
+    return true
+  end
+
+  while not IsDesktopShowing() do
+    emu.wait(1)
+  end
 end
 
 --------------------------------------------------

@@ -1013,7 +1013,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Run on system with real-time clock; verify that time shows in top-right of menu.
 * Run on system with real-time clock. Click on a volume icon. Verify that the clock still renders correctly.
 
-### RAM Expansions
+### RAM Expansions - covered by `tests/ramworks.lua`, `tests/ramcard_ejected.lua`, `tests/progress_counts.lua`
 
 The following tests all require:
 * A RAM disk such as RAMWorks (and a ProDOS driver) or a RAMFactor/"Slinky" memory expansion card.
@@ -1032,7 +1032,9 @@ The following tests all require:
 * Launch DeskTop, ensure it copies itself to RAMCard. Drag a file icon to a same-volume window so it is moved. Configure a shortcut to copy to RAMCard "at first use". Invoke the shortcut. Verify that the shortcut's files were indeed copied, not moved.
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
+
 * Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in a directory, not the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
+
 * Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut set to Copy to RAMCard at first use. Invoke the shortcut. Verify that it correctly copies to the RAMCard and runs.
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Modify a shortcut. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
@@ -1051,6 +1053,8 @@ The following tests all require:
 * Invoke `DESKTOP.SYSTEM`, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format Disk. Verify that a prompt to insert the system disk is shown.
 
 * Boot to `BASIC.SYSTEM` (without going through `DESKTOP.SYSTEM` first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disk's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
+
+### ^^^ done
 
 ### SmartPort
 
