@@ -11117,6 +11117,7 @@ retry:  jsr     GetSrcFileInfo
         ;; Recurse, and process directory
         jsr     ProcessDirectory
         jsr     DeleteRefreshProgress ; update path display
+        jsr     GetSrcFileInfo        ; ensure current; needed to diagnose errors
         ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
         FALL_THROUGH_TO do_destroy
 
@@ -11211,6 +11212,7 @@ next_file:
 
 .proc DeleteFinishDirectory
         jsr     DeleteRefreshProgress
+        jsr     GetSrcFileInfo  ; ensure current; needed to diagnose errors
         jmp     DeleteFileCommon
 .endproc ; DeleteFinishDirectory
 

@@ -607,7 +607,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Load DeskTop. Open a window for a volume in a Disk II drive. Remove the disk from the Disk II drive. Hold Solid-Apple and drag a file to another volume to move it. When prompted to insert the disk, click Cancel. Verify that when the window closes the disk icon is no longer dimmed.
 
 
-## File Deletion
+## File Deletion - covered by `tests/file_deletion.lua`
 
 * Launch DeskTop. Open two windows. Select a file in one window. Activate the other window by clicking its title bar. File > Delete. Click OK. Verify that the window with the deleted file refreshes.
 

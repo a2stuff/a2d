@@ -1,0 +1,283 @@
+--[[ BEGINCONFIG ========================================
+
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/floppy_with_files.dsk"
+
+======================================== ENDCONFIG ]]--
+
+
+--[[
+  Launch DeskTop. Open two windows. Select a file in one window.
+  Activate the other window by clicking its title bar. File > Delete.
+  Click OK. Verify that the window with the deleted file refreshes.
+]]--
+test.Step(
+  "Window with deleted file refreshes",
+  function()
+    -- Create file to delete, and remember icon position
+    a2d.SelectPath("/RAM1")
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+    a2d.CreateFolder("/RAM1/FILE")
+
+    -- Open other window, remember coords
+    a2d.OpenPath("/A2.DESKTOP")
+    local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
+
+    -- Get second window open and visible
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(icon_x, icon_y)
+        m.DoubleClick()
+    end)
+    a2d.MoveWindowBy(0,100)
+    a2d.SelectAll()
+
+    -- Activate other window by clicking on title bar
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+        a2d.WaitForRepaint()
+    end)
+
+    a2dtest.DHRDarkness()
+    a2d.DeleteSelection()
+    test.Snap("verify RAM1 window refreshes")
+end)
+
+--[[
+  Launch DeskTop. Open a window. Create folders A, B and C. Drag B
+  onto C. Drag A to the trash. Click OK in the delete confirmation
+  dialog. Verify that after the deletion, no alerts appear and volume
+  icons can still be selected.
+]]--
+test.Step(
+  "Volume selection after deletion",
+  function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/Trash")
+    local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1")
+    a2d.GrowWindowBy(200, 0)
+    a2d.CreateFolder("A")
+    a2d.CreateFolder("B")
+    a2d.CreateFolder("C")
+
+    a2d.Select("A")
+    local a_x, a_y = a2dtest.GetSelectedIconCoords()
+    a2d.Select("B")
+    local b_x, b_y = a2dtest.GetSelectedIconCoords()
+    a2d.Select("C")
+    local c_x, c_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.ClearSelection()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(b_x, b_y)
+        m.ButtonDown()
+        m.MoveToApproximately(c_x, c_y)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(a_x, a_y)
+        m.ButtonDown()
+        m.MoveToApproximately(trash_x, trash_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+    a2dtest.ExpectAlertNotShowing()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(vol_x, vol_y)
+        m.Click()
+    end)
+    local x, y = a2dtest.GetSelectedIconCoords()
+    test.ExpectEquals(x, vol_x, "vol icon should be selected")
+    test.ExpectEquals(y, vol_y, "vol icon should be selected")
+
+    a2d.EraseVolume("RAM1")
+end)
+
+--[[
+  Launch DeskTop. Open a window. Create folders A and B. Drag B onto
+  A. Drag A to the trash. Verify that the confirmation dialog counts 2
+  files. Click OK. Verify that the count stops at 0, and does not wrap
+  to 65,535.
+]]--
+test.Step(
+  "Deletion count",
+  function()
+    a2d.SelectPath("/Trash")
+    local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1")
+    a2d.GrowWindowBy(200, 0)
+    a2d.CreateFolder("A")
+    a2d.CreateFolder("B")
+
+    a2d.Select("A")
+    local a_x, a_y = a2dtest.GetSelectedIconCoords()
+    a2d.Select("B")
+    local b_x, b_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(b_x, b_y)
+        m.ButtonDown()
+        m.MoveToApproximately(a_x, a_y)
+        m.ButtonUp()
+    end)
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(a_x, a_y)
+        m.ButtonDown()
+        m.MoveToApproximately(trash_x, trash_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    test.Snap("verify count is 2 files")
+    a2d.DialogOK({no_wait=true})
+    a2dtest.MultiSnap(30, "count stops at 0")
+
+    a2d.EraseVolume("RAM1")
+end)
+
+
+--[[
+  Launch DeskTop. Open a volume window. Create a folder. Open the
+  folder's window. Go back to the volume window, and drag the folder
+  icon to the trash. Click OK in the delete confirmation dialog.
+  Verify that the folder's window closes.
+]]--
+test.Step(
+  "Window closed if folder deleted via trash",
+  function()
+    a2d.SelectPath("/Trash")
+    local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1")
+    a2d.CreateFolder("F")
+    a2d.SelectAndOpen("F")
+
+    a2d.CycleWindows()
+
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveToApproximately(trash_x, trash_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    test.ExpectEquals(a2dtest.GetWindowCount(), 1, "folder window should have closed")
+end)
+
+--[[
+  Launch DeskTop. Open a volume window. Create a folder. Open the
+  folder's window. Activate the folder's parent window and select the
+  folder icon. File > Delete. Click OK in the delete confirmation
+  dialog. Verify that the folder's window closes.
+]]--
+test.Step(
+  "Window closed if folder deleted via menu",
+  function()
+    a2d.SelectPath("/Trash")
+    local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1")
+    a2d.CreateFolder("F")
+    a2d.SelectAndOpen("F")
+
+    a2d.CycleWindows()
+
+    a2d.OADelete()
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    test.ExpectEquals(a2dtest.GetWindowCount(), 1, "folder window should have closed")
+end)
+
+--[[
+   Open `/TESTS/DELETION`. Select `X`. File > Delete. Verify that a
+   prompt is shown for deleting each file in deepest-first order (B,
+   Z, Y, X). Click Yes at each prompt. Verify that all files are
+   deleted.
+]]--
+test.Step(
+  "Nested file prompts",
+  function()
+    a2d.SelectPath("/TESTS/DELETION/X")
+    a2d.OADelete()
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2dtest.WaitForAlert()
+    test.Snap("verify prompt for B")
+    apple2.Type("Y")
+    a2d.WaitForRepaint()
+
+    a2dtest.WaitForAlert()
+    test.Snap("verify prompt for Z")
+    apple2.Type("Y")
+    a2d.WaitForRepaint()
+
+    a2dtest.WaitForAlert()
+    test.Snap("verify prompt for Y")
+    apple2.Type("Y")
+    a2d.WaitForRepaint()
+
+    a2dtest.WaitForAlert()
+    test.Snap("verify prompt for X")
+    apple2.Type("Y")
+    a2d.WaitForRepaint()
+
+    test.Snap("verify all deleted")
+end)
+
+--[[
+  Load DeskTop. Open a window for a volume in a Disk II drive. Remove
+  the disk from the Disk II drive. Drag a file to the trash. When
+  prompted to insert the disk, click Cancel. Verify that when the
+  window closes the disk icon is no longer dimmed.
+]]--
+test.Step(
+  "Ejected disk",
+  function()
+    a2d.SelectPath("/Trash")
+    local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
+
+    -- Open window
+    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+
+    -- Eject disk
+    local drive = apple2.GetDiskIIS6D1()
+    local current = drive.filename
+    drive:unload()
+
+    -- Drag to trash
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(icon_x, icon_y)
+        m.ButtonDown()
+        m.MoveToApproximately(trash_x, trash_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK() -- confirm
+    a2d.WaitForRepaint()
+
+    a2dtest.WaitForAlert()
+    a2d.DialogCancel() -- insert disk
+    a2d.WaitForRepaint()
+
+    a2dtest.WaitForAlert()
+    a2d.DialogOK() -- failure
+
+    test.Snap("verify floppy icon not dimmed")
+    drive:load(current)
+end)

@@ -630,11 +630,17 @@ function a2d.MouseKeysHome()
 end
 
 function a2d.MouseKeysMoveToApproximately(x,y)
+  if x == nil then error("nil passed as x", 2) end
+  if y == nil then error("nil passed as y", 2) end
+
   a2d.MouseKeysHome() -- known location
   a2d.MouseKeysMoveByApproximately(x, y)
 end
 
 function a2d.MouseKeysMoveByApproximately(x,y)
+  if x == nil then error("nil passed as x", 2) end
+  if y == nil then error("nil passed as y", 2) end
+
   if x > 0 then
     a2d.MouseKeysRight(round(x / MOUSE_KEYS_DELTA_X))
   elseif x < 0 then
