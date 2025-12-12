@@ -114,30 +114,32 @@ local vol_icon3_x, vol_icon3_y = a2dtest.GetSelectedIconCoords()
 a2d.SelectPath("/GS.OS.MIXED")
 local vol_icon4_x, vol_icon4_y = a2dtest.GetSelectedIconCoords()
 
+function GetFrontWindowCenter()
+  local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+  return x + w/2, y + h/2
+end
+
 test.Step(
   "drag/drop directory with GS/OS forked files - destination window updates",
   function()
     a2d.SelectPath("/GS.OS.MIXED/GS.OS.FILES")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon3_x, vol_icon3_y) -- RAM1
         m.DoubleClick()
     end)
     a2d.MoveWindowBy(0, 100)
-    local dst_window_x, dst_window_y, dst_window_w, dst_window_h
-      = a2dtest.GetFrontWindowContentRect()
+    local dst_x, dst_y = GetFrontWindowCenter()
 
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "GS.OS.MIXED", "on top")
 
     -- Drag GS.OS.FILES folder from GS.OS.MIXED to RAM1
-    local icon_x, icon_y = 30, 30
-    local src_window_x, src_window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_window_x+icon_x, src_window_y+icon_y) -- GS.OS.MIXED
+        m.MoveToApproximately(src_x, src_y) -- GS.OS.FILES
         m.ButtonDown()
-        m.MoveToApproximately(dst_window_x + dst_window_w/2,
-                              dst_window_y + dst_window_h/2) -- RAM1
+        m.MoveToApproximately(dst_x, dst_y) -- RAM1
         m.ButtonUp()
     end)
     a2dtest.WaitForAlert()
@@ -153,14 +155,12 @@ test.Step(
   "drag/drop volume with GS/OS forked files - destination window updates",
   function()
     a2d.OpenPath("/RAM1")
-    local dst_window_x, dst_window_y, dst_window_w, dst_window_h
-      = a2dtest.GetFrontWindowContentRect()
+    local dst_x, dst_y = GetFrontWindowCenter()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon4_x, vol_icon4_y) -- GS.OS.MIXED
         m.ButtonDown()
-        m.MoveToApproximately(dst_window_x + dst_window_w/2,
-                              dst_window_y + dst_window_h/2) -- RAM1
+        m.MoveToApproximately(dst_x, dst_y) -- RAM1
         m.ButtonUp()
     end)
 

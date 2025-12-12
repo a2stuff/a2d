@@ -55,8 +55,9 @@ test.Step(
     end)
 end)
 
-local vol_icon_x = 520
-local vol_icon_y = 25
+a2d.SelectPath("/A2.DESKTOP")
+local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+a2d.ClearSelection()
 
 test.Step(
   "Mouse Keys - stay in mousekeys mode",

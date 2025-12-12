@@ -5,8 +5,9 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]--
 
-local vol_icon_x = 520
-local vol_icon_y = 25
+a2d.SelectPath("/A2.DESKTOP")
+local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
+a2d.ClearSelection()
 
 function PutSelectionOnDesktop()
   a2d.InMouseKeysMode(function(m)

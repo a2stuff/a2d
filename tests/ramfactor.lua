@@ -152,13 +152,13 @@ RAMCardTest(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     local dst_window_x, dst_window_y, dst_window_w, dst_window_h
       = a2dtest.GetFrontWindowContentRect()
+    local dst_x = dst_window_x + dst_window_w/2
+    local dst_y = dst_window_y + dst_window_h + 5
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon_x, icon_y)
         m.ButtonDown()
-
-        m.MoveToApproximately(dst_window_x + dst_window_w/2,
-                              dst_window_y + dst_window_h + 5)
+        m.MoveToApproximately(dst_x, dst_y
         m.ButtonUp()
     end)
     a2dtest.WaitForAlert()

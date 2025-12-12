@@ -243,12 +243,14 @@ test.Variants(
     EnablePreserve()
     a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
 
-    local window_x, window_y = a2dtest.GetFrontWindowContentRect()
     local path
     if idx == 1 then
       -- Copy to another volume
+      a2d.Select("LOWER.UPPER.MIX")
+      local x,y = a2dtest.GetSelectedIconCoords()
+
       a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(window_x + 35, window_y + 23)
+          m.MoveToApproximately(x, y)
           m.ButtonDown()
           m.MoveToApproximately(vol_icon4_x, vol_icon4_y)
           m.ButtonUp()
@@ -258,12 +260,19 @@ test.Variants(
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif idx == 2  then
       -- Move on same volume
-      a2d.CreateFolder("/RAM1/ANOTHER.FOLDER")
+      a2d.CreateFolder("ANOTHER.FOLDER")
+      a2d.OpenPath("/RAM1")
+
+      a2d.Select("LOWER.UPPER.MIX")
+      local x1, y1 = a2dtest.GetSelectedIconCoords()
+
+      a2d.Select("ANOTHER.FOLDER")
+      local x2, y2 = a2dtest.GetSelectedIconCoords()
 
       a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(window_x + 45, window_y + 23)
+          m.MoveToApproximately(x1, y1)
           m.ButtonDown()
-          m.MoveByApproximately(80, 0)
+          m.MoveToApproximately(x2, y2)
           m.ButtonUp()
       end)
       a2d.WaitForRepaint()
@@ -271,10 +280,12 @@ test.Variants(
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"
     elseif idx == 3 then
       -- Move to another volume
+      a2d.Select("LOWER.UPPER.MIX")
+      local x,y = a2dtest.GetSelectedIconCoords()
 
       a2d.InMouseKeysMode(function(m)
           apple2.PressSA()
-          m.MoveToApproximately(window_x + 35, window_y + 23)
+          m.MoveToApproximately(x, y)
           m.ButtonDown()
           m.MoveToApproximately(vol_icon4_x, vol_icon4_y)
           m.ButtonUp()
@@ -285,13 +296,20 @@ test.Variants(
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif idx == 4 then
       -- Copy on same volume
-      a2d.CreateFolder("/RAM1/ANOTHER.FOLDER")
+      a2d.CreateFolder("ANOTHER.FOLDER")
+      a2d.OpenPath("/RAM1")
+
+      a2d.Select("LOWER.UPPER.MIX")
+      local x1,y1 = a2dtest.GetSelectedIconCoords()
+
+      a2d.Select("ANOTHER.FOLDER")
+      local x2, y2 = a2dtest.GetSelectedIconCoords()
 
       a2d.InMouseKeysMode(function(m)
           apple2.PressSA()
-          m.MoveToApproximately(window_x + 45, window_y + 23)
+          m.MoveToApproximately(x1, y1)
           m.ButtonDown()
-          m.MoveByApproximately(80, 0)
+          m.MoveToApproximately(x2, y2)
           m.ButtonUp()
           apple2.ReleaseSA()
       end)

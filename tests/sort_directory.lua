@@ -41,9 +41,12 @@ test.Variants(
       a2d.SelectAndOpen("ORDER")
     else
       -- click
-      local window_x,window_y = a2dtest.GetFrontWindowContentRect()
+      a2d.Select("ORDER")
+      local x, y = a2dtest.GetSelectedIconCoords()
+      a2d.ClearSelection()
+
       a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(window_x+130, window_y+25)
+          m.MoveToApproximately(x, y)
           m.DoubleClick()
       end)
       a2d.WaitForRepaint()

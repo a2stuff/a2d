@@ -1,12 +1,13 @@
 test.Step(
   "Solid Apple Double-Click",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
 
     -- Over "Extras"
-    local window_x,window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x+30,window_x+85)
+        m.MoveToApproximately(x, y)
         apple2.PressSA()
         m.DoubleClick()
         apple2.ReleaseSA()
@@ -20,9 +21,11 @@ test.Step(
   "Solid Apple File > Open",
   function()
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(30, 5)
+        m.MoveToApproximately(x, y)
         apple2.PressSA()
         m.Click()
         m.MoveByApproximately(0, 25)

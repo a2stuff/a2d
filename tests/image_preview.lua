@@ -272,6 +272,10 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS/PREVIEW/IMAGE")
 
+    a2d.Select("PICTURE1")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
     local file_menu_x, file_menu_y = 30, 5
     -- Drop file menu without activating anything
     a2d.InMouseKeysMode(function(m)
@@ -282,9 +286,8 @@ test.Step(
     end)
 
     -- Double-click on image file
-    local window_x,window_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x + 35, window_y + 23)
+        m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
 

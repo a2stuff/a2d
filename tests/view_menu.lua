@@ -205,8 +205,7 @@ test.Step(
         m.ButtonDown()
         m.MoveToApproximately(vol_icon_x, vol_icon_y)
         m.ButtonUp()
-        emu.wait(20/60)
-        test.Snap("verify drag to other volume icon initiates copy")
+        a2dtest.MultiSnap(30, "verify drag to other volume icon initiates copy")
     end)
     emu.wait(10) -- wait for copy
 
@@ -233,6 +232,8 @@ test.Step(
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
     apple2.DownArrowKey() -- select first item
+    local x, y = a2dtest.GetSelectedIconCoords()
+
     a2d.InMouseKeysMode(function(m)
         m.Home()
     end)
@@ -240,7 +241,7 @@ test.Step(
     a2dtest.ExpectNothingChanged(function()
         local window_x,window_y = a2dtest.GetFrontWindowContentRect()
         a2d.InMouseKeysMode(function(m)
-            m.MoveToApproximately(window_x + 25, window_y + 18)
+            m.MoveToApproximately(x, y)
             m.ButtonDown()
             m.MoveByApproximately(100, 0)
             m.ButtonUp()
@@ -368,30 +369,38 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
-local file_row1 = 50
-local file_row2 = 80
-local file_col1 = 20
-local file_col2 = 100
-local file_col3 = 180
-local file_col4 = 260
-local file_col5 = 340
-
 test.Step(
   "Selection order retained",
   function()
     a2d.OpenPath("/TESTS/VIEW/SELECTION.ORDER")
+
+    a2d.Select("ONE")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("TWO")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("THREE")
+    local x3, y3 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("FOUR")
+    local x4, y4 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("FIVE")
+    local x5, y5 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("SIX")
+    local x6, y6 = a2dtest.GetSelectedIconCoords()
+
+    a2d.ClearSelection()
+
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(file_col2, file_row1)
+        m.MoveToApproximately(x1, y1)
         m.Click()
-        m.MoveToApproximately(file_col5, file_row1)
+        m.MoveToApproximately(x2, y2)
         m.OAClick()
-        m.MoveToApproximately(file_col3, file_row1)
+        m.MoveToApproximately(x3, y3)
         m.OAClick()
-        m.MoveToApproximately(file_col1, file_row2)
+        m.MoveToApproximately(x4, y4)
         m.OAClick()
-        m.MoveToApproximately(file_col1, file_row1)
+        m.MoveToApproximately(x5, y5)
         m.OAClick()
-        m.MoveToApproximately(file_col4, file_row1)
+        m.MoveToApproximately(x6, y6)
         m.OAClick()
     end)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)

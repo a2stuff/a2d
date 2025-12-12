@@ -233,9 +233,9 @@ test.Step(
     -- Select multiple and double-click
     a2d.SelectAll()
 
-    local window_x, window_y = a2dtest.GetFrontWindowContentRect()
+    local x, y = a2dtest.GetSelectedIconCoords()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(window_x + 40, window_y + 30)
+        m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
     a2d.WaitForRepaint()
