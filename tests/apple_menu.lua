@@ -6,6 +6,20 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Rename the `APPLE.MENU` directory. Launch DeskTop. Verify that the
+  Apple Menu has two "About" items and no separator.
+
+  Create a new `APPLE.MENU` directory. Launch DeskTop. Verify that the
+  Apple Menu has two "About" items and no separator.
+
+  Create a new `APPLE.MENU` directory. Copy the `CHANGE.TYPE`
+  accessory into it. Launch DeskTop. Verify that the Apple Menu has
+  two "About" items, a separator, and "Change Type". Select the Change
+  Type icon. Apple Menu > Change Type. Change the type to $8642.
+  Restart DeskTop. Verify that the Apple Menu has two "About" items,
+  and no separator.
+]]--
 test.Step(
   "separator in Apple Menu",
   function()
@@ -48,6 +62,22 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Open the `APPLE.MENU` directory. Use Apple Menu > Change Type
+  accessory to change the AuxType of an accessory (e.g. `CALCULATOR`)
+  from $0642 to $8642. Restart DeskTop. Verify that the accessory is
+  not shown in the Apple Menu.
+
+  TODO: Missing?
+]]--
+
+
+--[[
+  Eject the startup disk. Select an accessory (e.g. Calculator) from
+  the Apple Menu. Verify that an alert is shown prompting to reinsert
+  the startup disk. Insert the startup disk and click OK. Verify that
+  the accessory launches.
+]]--
 test.Step(
   "Accessories with disk ejected",
   function()
@@ -62,6 +92,12 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Eject the startup disk. Select a folder (e.g. Control Panels) from
+  the Apple Menu. Verify that an alert is shown prompting to reinsert
+  the startup disk. Insert the startup disk and click OK. Verify that
+  the folder window opens.
+]]--
 test.Step(
   "Folder with disk ejected",
   function()

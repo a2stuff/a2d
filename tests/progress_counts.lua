@@ -5,6 +5,13 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/disk_a.2mg"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop, ensure it copies itself to RAMCard. Configure a
+  shortcut with the target in the root of a volume, and to Copy to
+  RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the
+  shortcut. Verify that the copy count goes to zero and doesn't blank
+  out.
+]]--
 test.Step(
   "Copy progress of shortcut in root directory",
   function()
@@ -34,6 +41,13 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Launch DeskTop, ensure it copies itself to RAMCard. Configure a
+  shortcut with the target in a directory, not the root of a volume,
+  and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts.
+  Invoke the shortcut. Verify that the copy count goes to zero and
+  doesn't blank out.
+]]--
 test.Step(
   "Copy progress of shortcut in non-root directory",
   function()
@@ -64,6 +78,15 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Configure a system with a RAMCard, and set DeskTop to copy itself to
+  the RAMCard on startup. Launch DeskTop. Create a shortcut for a
+  non-executable file at the root of a volume, set to "Copy to
+  RAMCard" "at first use". Run the shortcut. Verify that the "Files
+  remaining" count bottoms out at 0. Close the alert. Drag a volume
+  icon to another volume. Verify that the "Files remaining" count
+  bottoms out at 0.
+]]--
 test.Step(
   "Copy progress of a volume",
   function()

@@ -264,6 +264,11 @@ test.Step(
     apple2.EscapeKey()
 end)
 
+--[[
+  Launch DeskTop. Open a window. Verify that File > New Folder, File >
+  Close, File > Close All, and everything in the View menu are
+  enabled.
+]]--
 test.Step(
   "File menu options needing window are correct",
   function()
@@ -280,7 +285,6 @@ test.Step(
     test.Snap("verify New Folder, Close, Close All are enabled")
     apple2.EscapeKey()
 end)
-
 
 test.Step(
   "Control-Shift-2 doesn't show first menu item without shortcut",

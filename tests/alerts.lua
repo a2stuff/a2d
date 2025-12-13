@@ -5,6 +5,10 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk -fl
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Trigger an alert with only OK (e.g. running a
+  shortcut with disk ejected). Verify that Escape key closes alert.
+]]--
 test.Step(
   "DeskTop - Escape closes alert",
   function()
@@ -18,6 +22,11 @@ test.Step(
     end)
 end)
 
+--[[
+  Launch Shortcuts. Trigger an alert with only OK (e.g. running a
+  shortcut that only works in DeskTop, like a DA). Verify that Escape
+  key closes alert.
+]]--
 test.Step(
   "Shortcuts - Escape closes alert",
   function()
@@ -38,6 +47,11 @@ test.Step(
     a2d.ToggleOptionShowShortcutsOnStartup() -- Disable
 end)
 
+--[[
+  Launch DeskTop. Run Special > Copy Disk. Trigger an alert with only
+  OK (e.g. let a copy complete successfully). Verify that Escape key
+  closes alert.
+]]--
 test.Step(
   "Disk Copy - Escape closes alert",
   function()
@@ -67,6 +81,14 @@ test.Step(
     a2d.DialogOK() -- dismiss duplicate volume name alert
 end)
 
+--[[
+  Launch DeskTop. Select 3 files and drag them to another volume. Drag
+  the same 3 files to the other volume again. When the alert with
+  Yes/No/All buttons appears, mouse down on the Yes button, drag the
+  cursor off the button, and release the mouse button. Verify that
+  nothing happens. Click Yes to allow the copy to continue. Repeat for
+  No and All.
+]]--
 test.Step(
   "Yes/No/All",
   function()

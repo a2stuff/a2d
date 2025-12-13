@@ -5,6 +5,15 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Repeat the following for these permutations:
+
+  * DeskTop (1) copied to RAMCard and (2) not copied to RAMCard.
+
+  * Renaming (1) the volume that DeskTop loaded from, and renaming (2)
+    the DeskTop folder itself. (For #2, move all DeskTop files to a
+    subfolder.)
+]]--
 function RenameTest(name, proc)
   test.Variants(
     {
@@ -80,6 +89,9 @@ function RenameTest(name, proc)
   end)
 end
 
+--[[
+  File > Copy To... (overlays)
+]]--
 RenameTest(
   "overlays",
   function(dtpath)
@@ -90,6 +102,10 @@ RenameTest(
     a2d.DialogCancel()
 end)
 
+--[[
+  Special > Copy Disk (and that File > Quit returns to DeskTop)
+  (overlay + quit handler)
+]]--
 RenameTest(
   "overlay + quit handler",
   function(dtpath)
@@ -102,6 +118,9 @@ RenameTest(
     a2d.WaitForRestart()
 end)
 
+--[[
+  Apple Menu > Calculator (desk accessories)
+]]--
 RenameTest(
   "desk accessories",
   function(dtpath)
@@ -111,6 +130,9 @@ RenameTest(
     a2d.CloseWindow()
 end)
 
+--[[
+  Apple Menu > Control Panels (relative folders)
+]]--
 RenameTest(
   "relative folders",
   function(dtpath)
@@ -121,6 +143,10 @@ RenameTest(
 
 end)
 
+--[[
+  Control Panel, change desktop pattern, close, quit, restart
+  (settings)
+]]--
 RenameTest(
   "settings",
   function(dtpath)
@@ -137,6 +163,9 @@ RenameTest(
     test.Snap("verify desktop pattern changed")
 end)
 
+--[[
+  Windows are saved on exit/restored on restart (configuration)
+]]--
 RenameTest(
   "configuration",
   function(dtpath)
@@ -146,6 +175,10 @@ RenameTest(
     test.Snap("verify windows restored")
 end)
 
+--[[
+  Invoking another application (e.g. `BASIC.SYSTEM`), then quitting
+  back to DeskTop (quit handler)
+]]--
 RenameTest(
   "quit handler",
   function(dtpath)
@@ -158,6 +191,9 @@ RenameTest(
     test.Snap("verify desktop restarted")
 end)
 
+--[[
+  Modifying shortcuts (selector)
+]]--
 RenameTest(
   "selector file",
   function(dtpath)

@@ -6,6 +6,13 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Open the Control Panel DA. Use the pattern editor to
+  create a custom pattern, then click the desktop preview to apply it.
+  Close the DA. Open the Control Panel DA. Click the right arrow above
+  the desktop preview. Verify that the default checkerboard pattern is
+  shown.
+]]--
 test.Step(
   "custom and default pattern",
   function()
@@ -32,7 +39,11 @@ test.Step(
     a2d.CloseWindow()
 end)
 
-
+--[[
+  Open the Control Panel DA. Eject the startup disk. Close the DA
+  without changing any settings. Verify that you are not prompted to
+  save.
+]]--
 test.Step(
   "No prompt if no change",
   function()
@@ -50,6 +61,10 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Open the Control Panel DA. Eject the startup disk. Modify a setting
+  and close the DA. Verify that you are prompted to save.
+]]--
 test.Step(
   "Prompt if changed",
   function()
@@ -69,6 +84,12 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop, invoke Control Panel DA. Under Mouse Tracking,
+  toggle Slow and Fast. Verify that the mouse cursor doesn't warp to a
+  new position, and that the mouse cursor doesn't flash briefly on the
+  left edge of the screen.
+]]--
 test.Step(
   "Mouse tracking",
   function()

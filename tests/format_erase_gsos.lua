@@ -5,6 +5,13 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/gsos_floppy.dsk"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Run the command. Select a slot/drive containing an
+  existing volume with a GS/OS-cased name and click OK. Enter a new
+  name and click OK. Verify that the confirmation prompt shows the
+  volume with the correct case matching the volume's icon, with quotes
+  around the name.
+]]--
 test.Variants(
   {
     "Format GS/OS disk",

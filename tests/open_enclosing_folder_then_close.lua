@@ -1,4 +1,12 @@
 
+--[[
+  Launch DeskTop. Open a volume window. Open a folder. Close the
+  volume window. Press Open-Apple+Solid-Apple+Up. Verify that the
+  volume window re-opens, and that the folder window closes, and that
+  the folder icon is selected. Press Open-Apple+Solid-Apple+Up again.
+  Verify that the volume window closes, and the volume icon is
+  selected.
+]]--
 test.Step(
   "Open enclosing folder",
   function()
@@ -13,6 +21,13 @@ test.Step(
     test.Snap("verify volume icon is selected")
 end)
 
+--[[
+  Launch DeskTop. Open a volume window. Open a folder. Press
+  Open-Apple+Solid-Apple+Up. Verify that the volume window is
+  activated, and that the folder window closes, and that the folder
+  icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that
+  the volume window closes, and that the volume icon is selected.
+]]--
 test.Step(
   "Reactivate existing window",
   function()
@@ -29,7 +44,15 @@ test.Step(
     test.Snap("verify volume icon is selected")
 end)
 
-
+--[[
+  Launch DeskTop. Open a volume window. Open a folder. Activate the
+  volume window. Switch the window's view to by Name. Activate the
+  folder window. Press Open-Apple+Solid-Apple+Up. Verify that the
+  volume window is activated, and that the folder window closes, and
+  that the folder icon is selected. Press Open-Apple+Solid-Apple+Up
+  again. Verify that the volume window closes, and that the volume
+  icon is selected.
+]]--
 test.Step(
   "View change",
   function()
@@ -50,6 +73,13 @@ test.Step(
     test.Snap("verify volume icon is selected")
 end)
 
+--[[
+  Launch DeskTop. Open a volume window with multiple files. Open a
+  folder. Press Open-Apple+Solid-Apple+Up. Verify that the folder
+  window is closed, the volume window is shown, and the folder is
+  selected. Press Right Arrow. Verify that only a single icon shows as
+  selected.
+]]--
 test.Step(
   "Icon selection with keyboard",
   function()
@@ -67,6 +97,13 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open a volume window with multiple files. Open a
+  folder. Close the volume window. Press Open-Apple+Solid-Apple+Up.
+  Verify that the folder window is closed, the volume window is shown,
+  and the folder is selected. Press Right Arrow. Verify that only a
+  single icon shows as selected.
+]]--
 test.Step(
   "Icon selection with keyboard with window cycling",
   function()

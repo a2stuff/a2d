@@ -1,3 +1,7 @@
+--[[
+  Launch DeskTop. Open the APPLE.MENU folder. Select a desk accessory
+  icon. File > Open. Verify that the desk accessory launches.
+]]--
 test.Step(
   "File > Open works",
   function()
@@ -8,6 +12,13 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Repeat for every desk accessory that runs in a movable window:
+
+  Launch DeskTop. Open the DA. Click on the title bar but don't move
+  the window. Verify that the window doesn't repaint if the window is
+  not moved.
+]]--
 function MoveDoesntRepaintTest(name, path, opt_threshold)
   test.Step(
     name .. " doesn't repaint on non-move",
@@ -66,6 +77,13 @@ MoveDoesntRepaintTest("Scientific Calculator", "/A2.DESKTOP/EXTRAS/SCI.CALC")
 
 -- ============================================================
 
+--[[
+  Repeat for every desk accessory that runs in a window.
+
+  Launch DeskTop. Open the DA. Hold Apple (either Open-Apple or
+  Solid-Apple) and press W. Verify that the desk accessory exits.
+  Repeat with caps-lock off.
+]]--
 function CloseWindowTest(name, path, x, y)
   test.Step(
     name .. " closes on OA+W",

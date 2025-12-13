@@ -28,6 +28,15 @@ function ParseCat()
   return names
 end
 
+--[[
+  Open `/TESTS/SORT.DIRECTORY/ORDER`. File > Quit. Re-launch DeskTop.
+  Apple Menu > Sort Directory. Verify that the files in the window are
+  sorted.
+
+  Open `/TESTS/SORT.DIRECTORY`. Open the `ORDER` folder by
+  double-clicking. Apple Menu > Sort Directory. Verify that files are
+  sorted by type/name.
+]]--
 test.Variants(
   {
     "Files sorted - open with keyboard",
@@ -83,8 +92,14 @@ test.Variants(
 
 end)
 
+--[[
+  Load DeskTop. Ensure that every ProDOS device is online and
+  represented by an icon. Open `/TESTS/HUNDRED.FILES`. Apple Menu >
+  Sort Directory. Make sure all the files are sorted lexicographically
+  (e.g. F1, F10, F100, F101, ...)
+]]--
 test.Step(
-  "Hundred files sorted",
+  "Lexicographical sorting",
   function()
     a2d.OpenPath("/TESTS/HUNDRED.FILES")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
@@ -108,6 +123,11 @@ test.Step(
 
 end)
 
+--[[
+  Open `/TESTS/SORT.DIRECTORY/TWO.SYS.FILES`. Apple Menu > Sort
+  Directory. Verify that the files are sorted as `A.SYSTEM` then
+  `B.SYSTEM`.
+]]--
 test.Step(
   "System files sorted",
   function()

@@ -4,8 +4,13 @@ MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux rw3"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+  ======================================== ENDCONFIG ]]--
 
+--[[
+  Run DeskTop on a system with RAMWorks and using `RAM.DRV.SYSTEM`.
+  Verify that sub-directories under `APPLE.MENU` are copied to
+  `/RAM/DESKTOP/APPLE.MENU`.
+]]--
 test.Step(
   "RAM.DRV.SYSTEM",
   function()

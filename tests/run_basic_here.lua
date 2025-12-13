@@ -5,13 +5,10 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
-
---[[============================================================
-
-  "Run Basic Here" tests
-
-  ============================================================]]--
-
+--[[
+  Launch DeskTop. Open a volume window. Apple Menu > Run Basic Here.
+  Verify that `/RAM` exists.
+]]--
 test.Step(
   "/RAM exists",
   function()
@@ -26,6 +23,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open a window for a volume that is not the startup
+  disk. Apple Menu > Run Basic Here. Verify that the PREFIX is set
+  correctly.
+]]--
 test.Step(
   "PREFIX set correctly",
   function()
@@ -40,6 +42,12 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Configure a system with a RAMCard. Launch DeskTop, ensure it copies
+  itself to RAMCard. Ensure `BASIC.SYSTEM` is present on the startup
+  disk. Open a window. Apple Menu > Run Basic Here. Verify that
+  `BASIC.SYSTEM` starts.
+]]--
 test.Step(
   "Copied to RAMCard",
   function()

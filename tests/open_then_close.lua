@@ -1,3 +1,8 @@
+--[[
+  Launch DeskTop. Open a window. Hold Solid-Apple and double-click a
+  folder icon. Verify that the folder opens, and that the original
+  window closes.
+]]--
 test.Step(
   "Solid Apple Double-Click",
   function()
@@ -17,6 +22,11 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
 end)
 
+--[[
+  Launch DeskTop. Open a window. Select a folder icon. Hold
+  Solid-Apple and select File > Open. Verify that the folder opens,
+  and that the original window closes.
+]]--
 test.Step(
   "Solid Apple File > Open",
   function()
@@ -37,6 +47,11 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
 end)
 
+--[[
+  Launch DeskTop. Open a window. Select a folder icon. Hold Open-Apple
+  and select File > Open. Verify that the folder opens, and that the
+  original window closes.
+]]--
 test.Step(
   "Open Apple File > Open",
   function()
@@ -55,6 +70,11 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
 end)
 
+--[[
+  Launch DeskTop. Open a window. Select a folder icon. Press
+  Open-Apple+Solid-Apple+O. Verify that the folder opens, and that the
+  original window closes. Repeat with Caps Lock off.
+]]--
 test.Variants(
   {
     "Open Apple + Solid Apple + O",
@@ -73,6 +93,11 @@ test.Variants(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
 end)
 
+--[[
+  Launch DeskTop. Open a window. Select a folder icon. Press
+  Open-Apple+Solid-Apple+Down. Verify that the folder opens, and that
+  the original window closes.
+]]--
 test.Step(
   "Open Apple + Solid Apple + Down",
   function()
@@ -83,6 +108,11 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
 end)
 
+--[[
+  Launch DeskTop. Open a window. Select a folder icon. Open the File
+  menu, then press Open-Apple+Solid-Apple+O. Verify that the folder
+  opens, and the original window closes. Repeat with Caps Lock off.
+]]--
 test.Variants(
   {
     "With menu showing, Open Apple + Solid Apple + O",
@@ -106,15 +136,31 @@ test.Variants(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
 end)
 
-test.Step(
-  "No selection, OA+SA+O",
-  function()
+--[[
+  Launch DeskTop. Ensure nothing is selected. Press
+  Open-Apple+Solid-Apple+O. Verify that nothing happens. Repeat with
+  Caps Lock off.
+q]]--
+test.Variants(
+  {
+    "No selection, OA+SA+O",
+    "No selection, OA+SA+o",
+  },
+  function(idx)
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.OASAShortcut("O")
+        if idx == 1 then
+          a2d.OASAShortcut("O")
+        else
+          a2d.OASAShortcut("o")
+        end
     end)
 end)
 
+--[[
+  Launch DeskTop. Ensure nothing is selected. Press
+  Open-Apple+Solid-Apple+Down. Verify that nothing happens.
+]]--
 test.Step(
   "No selection, OA+SA+Down",
   function()
@@ -124,4 +170,3 @@ test.Step(
         a2d.WaitForRepaint()
     end)
 end)
-

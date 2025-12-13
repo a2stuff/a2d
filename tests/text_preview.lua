@@ -5,6 +5,9 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Verify that Escape key exits.
+]]--
 test.Step(
   "Escape exits text preview",
   function()
@@ -14,6 +17,9 @@ test.Step(
     test.Snap("verify preview exited")
 end)
 
+--[[
+  Verify that Space toggles Proportional/Fixed mode.
+]]--
 test.Step(
   "Space toggles modes",
   function()
@@ -30,6 +36,14 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Verify that clicking in the right part of the title bar toggles
+  Proportional/Fixed mode.
+
+  Verify that the "Proportional" label has the same baseline as the
+  window title. Click on "Proportional". Verify that the "Fixed" label
+  has the same baseline as the window title.
+]]--
 test.Step(
   "Click toggles modes",
   function()
@@ -61,6 +75,9 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Verify that DeskTop's selection is not cleared on exit.
+]]--
 test.Step(
   "Selection retained",
   function()
@@ -71,6 +88,15 @@ test.Step(
     end)
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/SHORT.TEXT`.
+
+  * Verify that the scrollbar is inactive.
+
+  * Click "Proportional". Verify that the scrollbar remains inactive.
+
+  * Click "Fixed". Verify that the scrollbar remains inactive.
+]]--
 test.Step(
   "Short file keeps scrollbar inactive",
   function()
@@ -84,6 +110,23 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/LONG.TEXT`.
+
+  * Verify that the scrollbar is active.
+
+  * Verify that Up/Down Arrow keys scroll by one line.
+
+  * Verify that Open-Apple plus Up/Down Arrow keys scroll by page.
+
+  * Verify that Solid-Apple plus Up/Down Arrow keys scroll by page.
+
+  * Verify that Open-Apple plus Solid-Apple plus Up/Down Arrow keys
+    scroll to start/end.
+
+  * Click the Proportional/Fixed button on the title bar. Verify that
+    the view is scrolled to the top.
+]]--
 test.Step(
   "Long file and scrolling",
   function()
@@ -136,6 +179,13 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/LONG.TEXT`.
+
+  * Scroll somewhere in the file. Click the scrollbar thumb without
+    moving it. Verify the thumb doesn't move and the content doesn't
+    scroll.
+]]--
 test.Step(
   "Touching thumb doesn't cause repaint",
   function()
@@ -163,6 +213,14 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/LONG.TEXT`.
+
+  * Verify that dragging the scroll thumb to the middle shows
+  approximately the middle of the file.
+
+  * Verify that Up/Down Arrow keys scroll by one line consistently.
+]]--
 test.Step(
   "Scroll is proportional",
   function()
@@ -190,6 +248,15 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/LONG.TEXT`.
+
+  * Verify that the first page of content appears immediately, and
+    that the watch cursor is shown while the rest of the file is
+    parsed. With any acceleration disabled, use
+    Open-Apple+Solid-Apple+Down to jump to the bottom of the file.
+    Verify that the view is displayed without undue delay.
+]]--
 test.Step(
   "Performance: First page displays immediately",
   function()
@@ -215,6 +282,10 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/TABS`. Verify that the file displays all
+  lines correctly.
+]]--
 test.Step(
   "Tabs",
   function()
@@ -223,6 +294,13 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/SUDOKU.STORY`. Click on "Proportional" to
+  change to "Fixed" font. Scroll down using down arrow key until
+  bottom line reads "with". Scroll down again using down arrow key.
+  Verify that the file correctly scrolled down one line. Scroll to the
+  bottom of the file. Ensure the entire file is visible.
+]]--
 test.Step(
   "Scroll edge case",
   function()
@@ -243,6 +321,12 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/TOGGLE.ME`. Click "Proportional" to toggle
+  to "Fixed". Verify that the scrollbar activates and that the thumb
+  is at the top. Scroll down. Click "Fixed" to toggle to
+  "Proportional". Verify that the scrollbar deactivates.
+]]--
 test.Step(
   "Toggling and scrollbar",
   function()

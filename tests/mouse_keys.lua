@@ -1,5 +1,10 @@
 local file_menu_x, file_menu_y = 30, 5
 
+--[[
+  Enter MouseKeys mode. "Pull down" a menu (using Comma) and select an
+  item (using Period). Verify that after the item is selected that
+  MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+]]--
 test.Step(
   "Mouse Keys - Pull down menu",
   function()
@@ -18,6 +23,11 @@ test.Step(
     a2d.ClearSelection()
 end)
 
+--[[
+  Enter MouseKeys mode. "Drop down" a menu (using Space) and select an
+  item (using Space). Verify that after the item is selected that
+  MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+]]--
 test.Step(
   "Mouse Keys - Drop down menu",
   function()
@@ -36,6 +46,11 @@ test.Step(
     a2d.ClearSelection()
 end)
 
+--[[
+  Use the arrow keys to move the mouse to the top, bottom, left, and
+  right edges of the screen. Verify that the mouse is clamped to the
+  edges and does not wrap.
+]]--
 test.Step(
   "Mouse Keys - screen bounds",
   function()
@@ -55,6 +70,10 @@ test.Step(
     end)
 end)
 
+--[[
+  Select an icon. Press the Return key. Verify that Mouse Keys mode is
+  not silently exited, and the cursor is not distorted.
+]]--
 test.Step(
   "Mouse Keys - stay in mousekeys mode",
   function()
@@ -74,6 +93,11 @@ test.Step(
     a2d.ClearSelection()
 end)
 
+--[[
+  Use keys to click on a menu. Without holding the button down, move
+  over the menu items. Verify that the menu does not spontaneously
+  close.
+]]--
 test.Step(
   "Mouse Keys - Menu items",
   function()
@@ -89,6 +113,9 @@ test.Step(
     a2d.ClearSelection()
 end)
 
+--[[
+  Use keys to double-click on an icon. Verify it opens.
+]]--
 test.Step(
   "Mouse Keys - double-click",
   function()

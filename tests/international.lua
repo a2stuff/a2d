@@ -1,13 +1,13 @@
 
---[[============================================================
-
-  "International" tests
-
-  ============================================================]]--
-
 -- Remove clock driver (to avoid build-relative dates)
 a2d.RemoveClockDriverAndReboot()
 
+--[[
+  Open the Control Panels folder. View > by Name. Open International.
+  Change the date format from M/D/Y to D/M/Y or vice versa. Click OK.
+  Verify that the entire desktop repaints, and that dates in the
+  window are shown with the new format.
+]]--
 test.Step(
   "International - full repaint",
   function()
@@ -19,6 +19,11 @@ test.Step(
     test.Snap("verify D/M/Y format")
 end)
 
+--[[
+  Open the Control Panels folder. View > by Name. Open International.
+  Close without changing anything. Verify that only a minimal repaint
+  happens.
+]]--
 test.Step(
   "International - minimal repaint",
   function()

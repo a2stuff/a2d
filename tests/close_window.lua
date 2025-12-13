@@ -5,12 +5,10 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
---[[============================================================
-
-  "Close Window" tests
-
-  ============================================================]]--
-
+--[[
+  Open two windows. Click the close box on the active window. Verify
+  that only the active window closes.
+]]--
 test.Step(
   "Close box normally closes only one window",
   function()
@@ -27,6 +25,13 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Open two windows. Open the File menu, then press Solid-Apple+W.
+  Verify that only the top window closes. Repeat with Caps Lock off.
+
+  Open two windows. Open the File menu, then press Open-Apple+W.
+  Verify that only the top window closes. Repeat with Caps Lock off.
+]]--
 test.Variants(
   {
     "Close shortcut with File menu open (Open Apple)",
@@ -53,6 +58,10 @@ test.Variants(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open a window. Click the close box. Verify that the
+  close animation runs.
+]]--
 test.Step(
   "Close box - animation runs",
   function()
@@ -66,6 +75,9 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+   Open a window. File > Close. Verify that the close animation runs.
+]]--
 test.Step(
   "Close shortcut - animation runs",
   function()
@@ -78,6 +90,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open a volume icon. Open a folder icon. Activate the
+  volume window. Click the close box. Verify that the close animation
+  doesn't leave garbage in the menu bar.
+]]--
 test.Step(
   "Close animation doesn't dirty menu bar",
   function()
@@ -95,6 +112,10 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open a window. Click the close box. Verify that the
+  close animation does not leave a stray rectangle on the screen.
+]]--
 test.Step(
   "Close animation doesn't leave stray rectangle",
   function()
@@ -109,6 +130,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open `/TESTS/FOLDER`. Close the `TESTS` window.
+  Close the `FOLDER` window. Verify that it animates into the volume
+  icon, which becomes selected.
+]]--
 test.Step(
   "Close animates into volume icon if parent not available",
   function()
@@ -127,6 +153,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open `/TESTS/FOLDER/SUBFOLDER`. Close the
+  `SUBFOLDER` window. Verify that it animates into the `SUBFOLDER`
+  icon in the `FOLDER` window and becomes selected.
+]]--
 test.Step(
   "Close animates into parent icon if available",
   function()
@@ -144,6 +175,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open `/TESTS/FOLDER/SUBFOLDER`. Close the `TESTS`
+  window. Close the `FOLDER` window. Verify that it animates into the
+  volume icon, which becomes selected.
+]]--
 test.Step(
   "Close animates into volume icon if not available but with other windows",
   function()

@@ -1,9 +1,8 @@
---[[============================================================
-
-  Key Caps
-
-  ============================================================]]--
-
+--[[
+  Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Turn Caps
+  Lock off. Hold Apple (either one) and press the Q key. Verify the
+  desk accessory exits.
+]]--
 test.Step(
   "Key Caps - Quit",
   function()
@@ -24,7 +23,11 @@ function find_field(name)
   error("Unable to find field \""..name.."\"")
 end
 
-
+--[[
+  Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Press the
+  semicolon/colon key. Verify that the highlight is correctly
+  positioned.
+]]--
 test.Step(
   "Key Caps - Semicolon",
   function()

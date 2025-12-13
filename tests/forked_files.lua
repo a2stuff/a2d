@@ -5,6 +5,12 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_floppy.dsk"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Try to copy files including a GS/OS forked file in
+  the selection. Verify that an alert is shown, with the filename
+  visible in the progress dialog. Verify that if OK is clicked, the
+  operation continues with other files, and the watch cursor is shown.
+]]--
 test.Step(
   "copy selected GS/OS forked files - continue",
   function()
@@ -29,6 +35,12 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Try to copy files including a GS/OS forked file in
+  the selection. Verify that an alert is shown, with the filename
+  visible in the progress dialog. Verify that if Cancel is clicked the
+  operation is aborted.
+]]--
 test.Step(
   "copy selected GS/OS forked files - cancel",
   function()
@@ -46,6 +58,13 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Try to copy files including a GS/OS forked file
+  contained in a selected folder. Verify that an alert is shown, with
+  the filename visible in the progress dialog. Verify that if OK is
+  clicked, the operation continues with other files, and if Cancel is
+  clicked the operation is aborted.
+]]--
 test.Step(
   "copy directory with GS/OS forked files - cancel second",
   function()
@@ -64,6 +83,13 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Try to delete files including a GS/OS forked file in
+  the selection. Verify that an alert is shown, with the filename
+  visible in the progress dialog. Verify that if OK is clicked, the
+  operation continues with other files, and if Cancel is clicked the
+  operation is aborted.
+]]--
 test.Step(
   "delete selected GS/OS forked files - continue",
   function()
@@ -87,6 +113,14 @@ test.Step(
     a2d.DialogCancel()
 end)
 
+--[[
+  Launch DeskTop. Try to delete files including a GS/OS forked file
+  contained in a selected folder. Verify that an alert is shown, with
+  the filename visible in the progress dialog. Verify that if OK is
+  clicked, the operation continues with other files, and if Cancel is
+  clicked the operation is aborted. Note that non-empty directories
+  will fail to be deleted.
+]]--
 test.Step(
   "delete directory with GS/OS forked files - continue",
   function()
@@ -110,6 +144,12 @@ function GetFrontWindowCenter()
   return x + w/2, y + h/2
 end
 
+--[[
+  Launch DeskTop. Using drag/drop, try to copy or move a folder
+  containing a GS/OS forked file, where the source and destination
+  windows are visible. When an alert is shown, click OK. Verify that
+  the source and destination windows are updated.
+]]--
 test.Step(
   "drag/drop directory with GS/OS forked files - destination window updates",
   function()
@@ -148,6 +188,12 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. Using drag/drop, try to copy a volume containing a
+  GS/OS forked file and other files, where the destination window is
+  visible. When an alert is shown, click OK. Verify that the
+  destination window is updated.
+]]--
 test.Step(
   "drag/drop volume with GS/OS forked files - destination window updates",
   function()
@@ -173,6 +219,12 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. Using File > Copy To..., try to copy a folder
+  containing a GS/OS forked file, where the source and destination
+  windows are visible. When an alert is shown, click OK. Verify that
+  the source and destination windows are updated.
+]]--
 test.Step(
   "copy directory with GS/OS forked files - destination window updates",
   function()
@@ -209,6 +261,11 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file.
+  When the delete confirmation dialog is shown, click Cancel. Verify
+  that the source window is not updated.
+]]--
 test.Step(
   "drag GS/OS forked file to trash - Cancel does not update window",
   function()
@@ -240,6 +297,11 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file.
+  When the delete confirmation dialog is shown, click OK. When an
+  alert is shown, click OK. Verify that the source window is updated.
+]]--
 test.Step(
   "drag GS/OS forked file to trash - OK does update window",
   function()
@@ -270,6 +332,12 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Launch DeskTop. Using File > Delete try to delete a GS/OS forked
+  file, where the containing window is visible. When the delete
+  confirmation dialog is shown, click OK. When an alert is shown,
+  click OK. Verify that the containing window is updated.
+]]--
 test.Step(
   "delete GS/OS forked file - OK does update window",
   function()

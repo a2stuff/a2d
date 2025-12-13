@@ -9,6 +9,12 @@ RESOLUTION="704x462"
 
 emu.wait(20) -- slow boot from floppy
 
+--[[
+  Launch DeskTop. Insert a non-formatted disk into a SmartPort drive
+  (e.g. Virtual ][ OmniDisk). Verify that a prompt is shown to format
+  the disk. Click OK. Enter a name, and click OK. Verify that the
+  correct slot and drive are shown in the confirmation prompt.
+]]--
 test.Step(
   "Prompt to format inserted disk",
   function()

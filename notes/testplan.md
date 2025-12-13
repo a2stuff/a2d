@@ -447,7 +447,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 
 
-## Close All - partially covered by `tests/close_all.lua`
+## Close All - covered by `tests/close_all.lua`
 
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
   * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
@@ -1013,7 +1013,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Run on system with real-time clock; verify that time shows in top-right of menu.
 * Run on system with real-time clock. Click on a volume icon. Verify that the clock still renders correctly.
 
-### RAM Expansions - covered by `tests/ramworks.lua`, `tests/ramcard_ejected.lua`, `tests/progress_counts.lua`
+### RAM Expansions - covered by `tests/ramworks.lua`, `tests/ramfactor.lua`, `tests/ramcard_ejected.lua`, `tests/progress_counts.lua`
 
 The following tests all require:
 * A RAM disk such as RAMWorks (and a ProDOS driver) or a RAMFactor/"Slinky" memory expansion card.
@@ -1053,8 +1053,6 @@ The following tests all require:
 * Invoke `DESKTOP.SYSTEM`, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format Disk. Verify that a prompt to insert the system disk is shown.
 
 * Boot to `BASIC.SYSTEM` (without going through `DESKTOP.SYSTEM` first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disk's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
-
-### ^^^ done
 
 ### SmartPort
 
@@ -1761,8 +1759,16 @@ The following steps exercise the menu as "drop down" using the keyboard to initi
 
 # Mouse Keys - covered by `tests/mouse_keys.lua`
 
-* Enter MouseKeys mode (Open-Apple+Solid-Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid-Apple (or Option) key as the mouse button, "pull down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
-* Enter MouseKeys mode (Open-Apple+Solid-Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid-Apple (or Option) key as the mouse button, "drop down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+Mouse Keys controls:
+* Enter Mouse Keys mode: Open-Apple+Solid-Apple+Space
+* Move: Arrow keys
+* Click: Space bar
+* Start a drag: Comma
+* End a drag: Period
+* Exit Mouse Keys mode: Escape
+
+* Enter MouseKeys mode. "Pull down" a menu (using Comma) and select an item (using Period). Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+* Enter MouseKeys mode. "Drop down" a menu (using Space) and select an item (using Space). Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
 
 * Perform the following tests in DeskTop using Mouse Keys mode:
   * Use the arrow keys to move the mouse to the top, bottom, left, and right edges of the screen. Verify that the mouse is clamped to the edges and does not wrap.

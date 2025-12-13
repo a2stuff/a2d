@@ -6,15 +6,15 @@ DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
 ======================================== ENDCONFIG ]]--
 
---[[============================================================
-
-  "System Speed" tests
-
-  ============================================================]]--
 
 -- Wait for DeskTop to start
 emu.wait(50) -- floppy drives are slow
 
+
+--[[
+  Run System Speed DA. Click Normal then click OK. Verify DeskTop does
+  not lock up.
+]]--
 test.Step(
   "Normal + OK doesn't crash",
   function()
@@ -26,6 +26,10 @@ test.Step(
     a2dtest.ExpectNotHanging()
 end)
 
+--[[
+  Run System Speed DA. Click Fast then click OK. Verify DeskTop does
+  not lock up.
+]]--
 test.Step(
   "Fast + OK doesn't crash",
   function()
@@ -37,6 +41,11 @@ test.Step(
     a2dtest.ExpectNotHanging()
 end)
 
+--[[
+  Run DeskTop on a IIc. Launch Control Panel > System Speed. Click
+  Normal and Fast. Verify that the display does not switch from DHR to
+  HR.
+]]--
 test.Step(
   "IIc - speed doesn't affect DHR display",
   function()
@@ -48,6 +57,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Run System Speed DA. Position the cursor to the left of the
+  animation, where it is not flickering, and move it up and down.
+  Verify that stray pixels are not left behind by the animation.
+]]--
 test.Step(
   "Animation shields cursor correctly",
   function()

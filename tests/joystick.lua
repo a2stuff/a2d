@@ -6,6 +6,11 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Configure a system with a single joystick. Run the DA. Move the
+  joystick to the right and bottom extremes. Verify that the indicator
+  does not wrap to the left or top edges.
+]]--
 test.Step(
   "Joystick Limits",
   function()
@@ -25,6 +30,14 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Configure a system with only a single joystick (or paddles 0 and 1).
+  Run the DA. Verify that only a single indicator is shown.
+
+  Configure a system with two joysticks (or paddles 2 and 3). Run the
+  DA. Verify that after the second joystick is moved, a second
+  indicator is shown.
+]]--
 test.Step(
   "Second Joystick",
   function()

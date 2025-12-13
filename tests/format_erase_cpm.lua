@@ -5,6 +5,12 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/cpm_floppy.dsk"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Run the command. Select a slot/drive containing an
+  unformatted disk. Enter a new name and click OK. Verify that the
+  confirmation prompt shows "the disk in slot # drive #", without
+  quotes.
+]]--
 test.Variants(
   {
     "Format CP/M disk",

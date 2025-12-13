@@ -1,10 +1,9 @@
 
---[[============================================================
-
-  Test Script
-
-  ============================================================]]--
-
+--[[
+  Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow
+  keys to move the window outline. Press Escape. Verify that the
+  window does not move.
+]]--
 test.Step(
   "Move window with keyboard - cancelled",
   function()
@@ -26,6 +25,11 @@ test.Step(
     test.ExpectEquals(before[2], after[2], "should not have moved")
 end)
 
+--[[
+  Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow
+  keys to move the window outline. Press Return. Verify that the
+  window moves to the new location.
+]]--
 test.Step(
   "Move window with keyboard",
   function()
@@ -48,6 +52,11 @@ test.Step(
     test.ExpectLessThan(before[2], after[2], "should have moved right and down")
 end)
 
+--[[
+  Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow
+  keys to resize the window outline. Press Escape. Verify that the
+  window does not resize.
+]]--
 test.Step(
   "Resize window with keyboard - cancelled",
   function()
@@ -69,6 +78,11 @@ test.Step(
     test.ExpectEquals(before[4], after[4], "should not have grown")
 end)
 
+--[[
+  Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow
+  keys to resize the window outline. Press Return. Verify that the
+  window resizes.
+]]--
 test.Step(
   "Resize window with keyboard",
   function()

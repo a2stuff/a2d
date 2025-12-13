@@ -5,6 +5,12 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Open `/TESTS/FILE.TYPES`. View > by Name. Apple Menu > Control
+  Panels > Date and Time. Change the time format from 12- to 24-hour
+  or vice versa. Click OK. Verify that the entire desktop repaints,
+  and that dates in the windows are shown with the new format
+]]--
 test.Step(
   "Time format repaint",
   function()
@@ -19,6 +25,14 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Run these tests on a system with a real-time clock
+]]--
+
+--[[
+  Apple Menu > Control Panels > Date and Time. Press Escape key.
+  Verify the desk accessory exits. Repeat with the Return key.
+]]--
 test.Step(
   "Escape and Return",
   function()
@@ -37,6 +51,10 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Apple Menu > Control Panels > Date and Time. Verify
+  that the date and time are read-only.
+]]--
 test.Step(
   "Read only",
   function()
@@ -56,6 +74,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Run the Date and Time DA, and change the setting to
+  12 hour. Verify that the time is shown as 12-hour, and if less than
+  10 is displayed without a leading 0.
+]]--
 test.Step(
   "12-hour",
   function()
@@ -67,6 +90,11 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Run the Date and Time DA, and change the setting to
+  24 hour. Verify that the time is shown as 24-hour, and if less than
+  10 is displayed with a leading 0.
+]]--
 test.Step(
   "24-hour",
   function()
@@ -78,8 +106,21 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Run these tests on a system without a real-time clock:
+]]--
+
 a2d.RemoveClockDriverAndReboot()
 
+--[[
+  Start with a fresh disk image. Run DeskTop. Apple Menu > Control
+  Panels. View > by Name. Open Date and Time. Verify that the date
+  shown in the dialog matches the file dates. Click OK without
+  changing anything. Verify that the entire desktop repaints, and that
+  dates in the window are shown with "Today". Open Date and Time.
+  Click OK without changing anything. Verify that the entire desktop
+  does not repaint
+]]--
 test.Step(
   "Fresh disk image",
   function()
@@ -94,6 +135,11 @@ test.Step(
     a2d.Reboot()
 end)
 
+--[[
+  Run Apple Menu > Control Panels > Date and Time. Set date. Reboot
+  system, and re-run DeskTop. Create a new folder. Use File > Get
+  Info. Verify that the date was saved/restored.
+]]--
 test.Step(
   "Change date - persisted",
   function()
@@ -124,6 +170,16 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Run the Date and Time DA, and change the setting to
+  12 hour. Verify that the time is shown as 12-hour, and if less than
+  10 is displayed without a leading 0. Use the Right Arrow and Left
+  Arrow keys and the mouse, and verify that the AM/PM field is
+  selectable. Select the AM/PM field. Use the up and down arrow keys
+  and the arrow buttons, and verify that the field toggles. Select the
+  hours field. Use the up and down arrow keys and the arrow buttons,
+  and verify that the field cycles from 1 through 12.
+]]--
 test.Step(
   "12-hour field behavior",
   function()
@@ -147,6 +203,14 @@ test.Step(
     a2d.DialogOK()
 end)
 
+--[[
+  Launch DeskTop. Run the Date and Time DA, and change the setting to
+  24 hour. Verify that the time is shown as 24-hour, and if less than
+  10 is displayed with a leading 0. Use the Right Arrow and Left Arrow
+  keys and the mouse, and verify that the AM/PM field is not
+  selectable. Use the up and down arrow keys and the arrow buttons,
+  and verify that the field cycles from 0 through 23.
+]]--
 test.Step(
   "24-hour field behavior",
   function()
@@ -169,7 +233,11 @@ test.Step(
     a2d.DialogOK()
 end)
 
-
+--[[
+  Launch DeskTop. Run the Date and Time DA. Change the month and year,
+  and verify that the day range is clamped to 28, 29, 30 or 31 as
+  appropriate, including for leap years.
+]]--
 test.Step(
   "Day ranges",
   function()
@@ -246,6 +314,17 @@ local hour_x = year_x + 45
 local minute_x = hour_x + 40
 local period_x = minute_x + 30
 
+--[[
+  Launch DeskTop. Run the Date and Time DA. Click on the up/down
+  arrows. Verify that they invert correctly when the button is down.
+
+  Launch DeskTop. Run the Date and Time DA. Click in the various
+  fields (day/month/year/hour/minutes/period). Verify that the
+  appropriate field highlights.
+
+  Launch DeskTop. Run the Date and Time DA. Change the setting to 12
+  hour. Click on the AM/PM field. Verify that the field highlights.
+]]--
 test.Step(
   "Clicking fields",
   function()
@@ -290,6 +369,11 @@ test.Step(
     a2d.DialogOK()
 end)
 
+--[[
+  Launch DeskTop. Run the Date and Time DA. Change the setting to 24
+  hour. Click where the AM/PM field would be, to the right of the
+  minutes field. Verify that nothing happens.
+]]--
 test.Step(
   "Clicking 24-hour",
   function()
@@ -307,6 +391,13 @@ test.Step(
     a2d.DialogOK()
 end)
 
+--[[
+  Launch DeskTop. Run the Date and Time DA. Click the year field.
+  Click the up arrow. Verify that the year increments. Click the down
+  arrow. Verify that the year decrements. Verify that only the clicked
+  buttons highlight, and that they un-highlight correctly when the
+  button is released.
+]]--
 test.Step(
   "Arrows",
   function()
@@ -340,6 +431,12 @@ test.Step(
     a2d.DialogOK()
 end)
 
+--[[
+  Apple Menu > Control Panels. View > by Name. Run Date and Time.
+  Change the date to the same date as one of the files in the folder.
+  Click OK. Verify that the entire desktop repaints, and that dates in
+  the window are shown with "Today".
+]]--
 test.Step(
   "Today",
   function()

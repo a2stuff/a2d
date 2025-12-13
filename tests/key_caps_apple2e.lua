@@ -6,6 +6,10 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Apple Menu > Key Caps. Verify that the "original"
+  layout is shown, with the backslash above the Return key.
+]]--
 test.Step(
   "Key Caps - Apple IIe",
   function()

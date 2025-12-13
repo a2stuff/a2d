@@ -1,9 +1,14 @@
---[[============================================================
+--[[
+  On an RGB system (IIgs, etc), go to Control Panel, check RGB Color.
+  Verify that the display shows in color. Preview an image, and verify
+  that the image shows in color and the DeskTop remains in color after
+  exiting.
 
-  RGB Display
-
-  ============================================================]]--
-
+  On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB
+  Color. Verify that the display shows in monochrome. Preview an
+  image, and verify that the image shows in color and the DeskTop
+  returns to monochrome after exiting.
+]]--
 test.Step(
   "RGB Color desktop",
   function()
@@ -34,6 +39,12 @@ test.Step(
     test.Snap("verify desktop is still in monochrome")
 end)
 
+--[[
+  Using MAME (e.g. via Ample), configure a system with Machine
+  Configuration > Monitor Type > Video-7 RGB. Start DeskTop. Open a
+  window. Apple Menu > Run Basic Here. Type `HGR : HCOLOR=3 : HPLOT
+  0,0 TO 100,100`. Verify a diagonal line appears.
+]]--
 test.Step(
   "Mode on exit",
   function()

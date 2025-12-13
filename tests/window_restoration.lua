@@ -10,6 +10,11 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk"
 
 a2d.QuitAndRestart()
 
+--[[
+  Launch DeskTop. Open a subdirectory folder. Quit and relaunch
+  DeskTop. Verify that the used/free numbers in the restored windows
+  are non-zero.
+]]--
 test.Step(
   "Subdirectory header values",
   function()
@@ -19,6 +24,13 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open some windows. Special > Copy Disk. Quit back to
+  DeskTop. Verify that the windows are restored.
+
+  Launch DeskTop. Close all windows. Special > Copy Disk. Quit back to
+  DeskTop. Verify that no windows are restored.
+]]--
 test.Step(
   "Launching Disk Copy",
   function()
@@ -43,6 +55,12 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Load DeskTop. Open a volume. Adjust the window size so that
+  horizontal and vertical scrolling is required. Scroll to the
+  bottom-right. Quit DeskTop, reload. Verify that the window size and
+  scroll position was restored correctly.
+]]--
 test.Step(
   "Window geometry and scroll position",
   function()
@@ -57,6 +75,12 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Load DeskTop. Open a volume. Quit DeskTop, reload. Verify that the
+  volume window was restored, and that the volume icon is dimmed.
+  Close the volume window. Verify that the volume icon is no longer
+  dimmed.
+]]--
 test.Step(
   "Parent icon of restored window undims",
   function()
@@ -67,6 +91,12 @@ test.Step(
     test.Snap("verify volume icon not dimmed")
 end)
 
+--[[
+  Load DeskTop. Open a window containing icons. View > by Name. Quit
+  DeskTop, reload. Verify that the window is restored, and that it
+  shows the icons in a list sorted by name, and that View > by Name is
+  checked. Repeat for other View menu options.
+]]--
 test.Variants(
   {
     "As Icons",
@@ -87,6 +117,12 @@ test.Variants(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Load DeskTop. Open a window for a volume in a Disk II drive. Quit
+  DeskTop. Remove the disk from the Disk II drive. Load DeskTop.
+  Verify that the Disk II drive is only polled once on startup, not
+  twice.
+]]--
 test.Step(
   "Disk II Drive polling",
   function()
@@ -100,6 +136,11 @@ test.Step(
     a2d.WaitForRestart()
 end)
 
+--[[
+  Launch DeskTop. Open a window. File > Quit. Launch DeskTop again.
+  Ensure the window is restored. Try to drag-select volume icons.
+  Verify that they are selected.
+]]--
 test.Step(
   "Drag selection still functions",
   function()
@@ -109,3 +150,18 @@ test.Step(
     a2d.DragSelectMultipleVolumes()
     test.Snap("verify icons selected")
 end)
+
+--[[
+  Launch DeskTop. Open a volume window. Rename the volume to "TRASH"
+  (all uppercase). File > Quit. Load DeskTop. Verify that the restored
+  window is named "TRASH" not "Trash".
+]]--
+test.Step(
+  "Trash name",
+  function()
+    a2d.OpenPath("/TESTS")
+    a2d.RenameSelection("TRASH")
+    a2d.QuitAndRestart()
+    test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "TRASH", "Case is retained")
+end)
+

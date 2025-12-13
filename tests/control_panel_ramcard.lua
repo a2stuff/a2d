@@ -5,6 +5,13 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Configure a system with a RAMCard, and ensure DeskTop is configured
+  to copy to RAMCard on startup. Launch DeskTop. Apple Menu > Control
+  Panels. Open Control Panel. Modify a setting e.g. the desktop
+  pattern. Close the window. Reboot the system. Verify that the
+  setting is retained.
+]]--
 test.Step(
   "Settings saved back to boot volume",
   function()

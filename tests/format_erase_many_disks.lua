@@ -69,6 +69,10 @@ end
 -- Arrow Keys
 ------------------------------------------------------------
 
+--[[
+  Launch DeskTop. Run the command. Ensure left/right arrows move
+  selection correctly.
+]]--
 FormatEraseTest(
   "Right arrow key",
   function(invoke)
@@ -80,6 +84,10 @@ FormatEraseTest(
     a2d.DialogCancel()
 end)
 
+--[[
+  Launch DeskTop. Run the command. Ensure left/right arrows move
+  selection correctly.
+]]--
 FormatEraseTest(
   "Left arrow key",
   function(invoke)
@@ -117,6 +125,10 @@ end)
 -- Picker
 ------------------------------------------------------------
 
+--[[
+  Configure a system with 13 volumes, not counting `/RAM`. Launch
+  DeskTop. Run the command. Verify that all 13 volumes are shown.
+]]--
 FormatEraseTest(
   "All 13 devices show",
   function(invoke)
@@ -125,6 +137,11 @@ FormatEraseTest(
     a2d.DialogCancel()
 end)
 
+--[[
+  Configure a system with at least 9 volumes. Launch DeskTop. Run the
+  command. Select a volume in the third column. Click OK. Verify that
+  the selection rectangle is fully erased.
+]]--
 FormatEraseTest(
   "Selection erased",
   function(invoke)

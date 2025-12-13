@@ -5,6 +5,10 @@
 
   ============================================================]]--
 
+--[[
+  Run Apple Menu > Calculator. Move the Calculator window. Verify that
+  the mouse cursor is drawn correctly.
+]]--
 test.Step(
   "Cursor doesn't home",
   function()
@@ -16,6 +20,10 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Run Apple Menu > Calculator. Verify that the mouse cursor does not
+  jump to the top-left of the screen.
+]]--
 test.Step(
   "Move window and mouse cursor",
   function()
@@ -33,6 +41,12 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Run Apple Menu > Calculator. Drag the Calculator window over a
+  volume icon. Then drag the Calculator window to the bottom of the
+  screen so that only the title bar is visible. Verify that volume
+  icon redraws properly.
+]]--
 test.Step(
   "Window and volume icons",
   function()
@@ -60,6 +74,12 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Run Apple Menu > Calculator. Drag the Calculator window to bottom of
+  screen so only title bar is visible. Type numbers on the keyboard.
+  Verify no numbers are painted on screen. Move window back up. Verify
+  the typed numbers were input.
+]]--
 test.Step(
   "Obscured window",
   function()
@@ -88,6 +108,17 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Repeat for Calculator and Sci.Calc:
+
+  * Enter '1' '-' '2' '='. Verify that the system does not hang.
+
+  * Enter '1' '/' '2' '='. Verify that the result has a 0 before the
+    decimal (i.e. "0.5").
+
+  * Enter '0' '-' '.' '5' '='. Verify that the result has a 0 before
+    the decimal (i.e. "-0.5").
+]]--
 test.Variants(
   {
     "Calculator - misc",
@@ -119,6 +150,18 @@ test.Variants(
     a2d.CloseWindow()
 end)
 
+--[[
+  Repeat for Calculator and Sci.Calc:
+
+  * With an English build, run the DA. Verify that '.' appears as the
+    decimal separator in calculation results and that '.' when typed
+    functions as a decimal separator.
+
+  * With an Italian build, run the DA. Verify that ',' appears as the
+    decimal separator in calculation result and that ',' when typed
+    functions as a decimal separator. Verify that when '.' is typed,
+    ',' appears.
+]]--
 test.Variants(
   {
     "Calculator - decimal separator",
@@ -175,3 +218,27 @@ test.Variants(
     SetNumberFormat(".", ",")
 end)
 
+--[[
+  With Sci.Calc:
+
+  * Enter '1' '+' '2' 'SIN' '='. Verify that the result is 1.034...
+
+  * Enter '1' 'SIN' '+' '2' '='. Verify that the result is 2.017...
+
+  * Enter '4' '5' 'SIN'. Verify that the result is 0.707...
+
+  * Enter '4' '5' '+/-' 'SIN'. Verify that the result is -0.707...
+
+  * Enter '1' '8' '0' 'COS'. Verify that the result is -1
+
+  * Enter '4' '5' 'SIN' 'ASIN. Verify that the result is approximately
+    45.
+
+  * Enter '4' '5' 'COS' 'ACOS'. Verify that the result is
+    approximately 45.
+
+  * Enter '8' '9' 'TAN' 'ATAN'. Verify that the result is
+    approximately 89.
+
+  TODO: Cover these!
+]]--

@@ -5,6 +5,11 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Launch DeskTop. Close all windows. Apple Menu > Find Files. Type
+  `PRODOS` and click Search. Verify that all volumes are searched
+  recursively.
+]]--
 test.Step(
   "Search all volumes",
   function()
@@ -17,6 +22,11 @@ test.Step(
     a2d.DialogCancel()
 end)
 
+--[[
+  Launch DeskTop. Open a volume window. Apple Menu > Find Files. Type
+  `PRODOS` and click Search. Verify that only that volume's contents
+  are searched recursively.
+]]--
 test.Step(
   "Search open volume",
   function()
@@ -29,6 +39,11 @@ test.Step(
     a2d.DialogCancel()
 end)
 
+--[[
+  Launch DeskTop. Open a volume window. Open a folder window. Apple
+  Menu > Find Files. Type `PRODOS` and click Search. Verify that only
+  that folder's contents are searched recursively.
+]]--
 test.Step(
   "Search open volume",
   function()
@@ -41,6 +56,12 @@ test.Step(
     a2d.DialogCancel()
 end)
 
+--[[
+  Launch DeskTop. Open a window. Apple Menu > Find Files. Type `*` and
+  click Search. Select a file in the list. Press Open-Apple+O. Verify
+  that the Find Files window closes, that a window containing the file
+  opens, and that the file icon is selected.
+]]--
 test.Step(
   "OA+O on selection",
   function()
@@ -55,6 +76,12 @@ test.Step(
     test.Snap("verify window opened and file selected")
 end)
 
+--[[
+  Launch DeskTop. Open a window. Apple Menu > Find Files. Type `*` and
+  click Search. Select a file in the list. Press Solid-Apple+O. Verify
+  that the Find Files window closes, that a window containing the file
+  opens, and that the file icon is selected.
+]]--
 test.Step(
   "SA+O on selection",
   function()
@@ -69,6 +96,18 @@ test.Step(
     test.Snap("verify window opened and file selected")
 end)
 
+--[[
+  Launch DeskTop. Open a window. Apple Menu > Find Files. Type `*` and
+  click Search. Double-click a file in the list. Verify that the Find
+  Files window closes, that a window containing the file opens, and
+  that the file icon is selected.
+
+  Launch DeskTop. Open a volume window. Open a folder window. Activate
+  the volume window. Apple Menu > Find Files. Type `*` and click
+  Search. Double-click a file in the list that's inside the folder.
+  Verify that the Find Files window closes, and that the file icon is
+  selected.
+]]--
 test.Step(
   "Double-click on selection in inactive window",
   function()
@@ -87,6 +126,12 @@ test.Step(
     test.Snap("verify window activated and file selected")
 end)
 
+
+--[[
+  Open `/TESTS/FIND.FILES`. Apple Menu > Find Files. Type `*` and
+  click Search. Verify that the DA doesn't crash. (But the deeply
+  nested `NOT.FOUND` file will not be found.)
+]]--
 test.Step(
   "Deeply nested",
   function()
@@ -98,6 +143,10 @@ test.Step(
     test.Snap("verify no crash")
 end)
 
+--[[
+  Rename `/TESTS` to `/ABCDEF123456789`. Open the volume. Apple Menu >
+  Find Files. Type *. Verify that the DA doesn't crash.
+]]--
 test.Step(
   "Long pathnames",
   function()
@@ -111,6 +160,11 @@ test.Step(
     a2d.RenamePath("/ABCDEF123456789", "/TESTS")
 end)
 
+--[[
+  Open `/TESTS/FOLDER/`. Apple Menu > Find Files. Type `*` and click
+  Search. Press Down Arrow once. Type Return. Press Down Arrow again.
+  Verify that only one entry in the list appears highlighted.
+]]--
 test.Step(
   "Selection",
   function()

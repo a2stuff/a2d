@@ -20,6 +20,9 @@ function DisablePreserve()
   end
 end
 
+--[[
+  Verify that GS/OS volume name cases show correctly.
+]]--
 test.Step(
   "GS/OS volume name cases show correctly",
   function()
@@ -27,6 +30,10 @@ test.Step(
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "GS.OS.mixed", "case should be shown")
 end)
 
+--[[
+  Verify that GS/OS file name cases show correctly in
+  `/TESTS/PROPERTIES/GS.OS.NAMES`
+]]--
 test.Step(
   "GS/OS file name cases show correctly",
   function()
@@ -34,6 +41,10 @@ test.Step(
     test.Snap("verify name cases are correct")
 end)
 
+--[[
+  Verify that AppleWorks file name cases show correctly in
+  `/TESTS/PROPERTIES/AW.NAMES`
+]]--
 test.Step(
   "AppleWorks file name cases show correctly",
   function()
@@ -41,6 +52,12 @@ test.Step(
     test.Snap("verify name cases are correct")
 end)
 
+--[[
+  Launch DeskTop. Select an AppleWorks file icon. File > Rename.
+  Specify a name using a mix of uppercase and lowercase. Close the
+  containing window and re-open it. Verify that the filename case is
+  retained.
+]]--
 test.Variants(
   {
     "AppleWorks files rename with case preservation - preserve off",
@@ -63,6 +80,12 @@ test.Variants(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. Select an AppleWorks file icon. File > Duplicate.
+  Specify a name using a mix of uppercase and lowercase. Close the
+  containing window and re-open it. Verify that the filename case is
+  retained.
+]]--
 test.Variants(
   {
     "AppleWorks files duplicate with case preservation - preserve off",
@@ -85,6 +108,25 @@ test.Variants(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. In the Options control panel, uncheck "Preserve
+  uppercase and lowercase in names". Then run these test cases:
+
+  Launch DeskTop. In the Options control panel, check "Preserve
+  uppercase and lowercase in names". Then run these test cases:
+]]--
+
+--[[
+  File > New Folder. Enter a name with mixed case (e.g.
+  "lower.UPPER.MiX"). Verify that the name appears with heuristic word
+  casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it.
+  Verify that the name remains unchanged.
+
+  File > New Folder. Enter a name with mixed case (e.g.
+  "lower.UPPER.MiX"). Verify that the name appears with the specified
+  case (e.g. "Lower.Upper.Mix"). Close the window and re-open it.
+  Verify that the name remains unchanged.
+]]--
 test.Variants(
   {
     "File > New Folder - preserve off",
@@ -109,6 +151,17 @@ test.Variants(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Select a non-AppleWorks file. File > Rename. Enter a name with mixed
+  case (e.g. "lower.UPPER.MiX"). Verify that the name appears with
+  heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and
+  re-open it. Verify that the name remains unchanged.
+
+  Select a non-AppleWorks file. File > Rename. Enter a name with mixed
+  case (e.g. "lower.UPPER.MiX"). Verify that the name appears with the
+  specified case (e.g. "Lower.Upper.Mix"). Close the window and
+  re-open it. Verify that the name remains unchanged.
+]]--
 test.Variants(
   {
     "File > Rename - preserve off",
@@ -134,6 +187,17 @@ test.Variants(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Select a non-AppleWorks file. File > Duplicate. Enter a name with
+  mixed case (e.g. "lower.UPPER.MiX"). Verify that the name appears
+  with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the
+  window and re-open it. Verify that the name remains unchanged
+
+  Select a non-AppleWorks file. File > Duplicate. Enter a name with
+  mixed case (e.g. "lower.UPPER.MiX"). Verify that the name appears
+  with the specified (e.g. "Lower.Upper.Mix"). Close the window and
+  re-open it. Verify that the name remains unchanged.
+]]--
 test.Variants(
   {
     "File > Duplicate - preserve off",
@@ -159,6 +223,18 @@ test.Variants(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Select a disk. Special > Format Disk. Enter a name with mixed case
+  (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that
+  the name appears with heuristic word casing (e.g.
+  "Lower.Upper.Mix"). Restart DeskTop. Verify that the name remains
+  unchanged.
+
+  Select a disk. Special > Format Disk. Enter a name with mixed case
+  (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that
+  the name appears with the specified case (e.g. "lower.UPPER.MiX").
+  Restart DeskTop. Verify that the name remains unchanged.
+]]--
 test.Variants(
   {
     "Format - preserve off",
@@ -181,6 +257,18 @@ test.Variants(
     a2d.EraseVolume("LOWER.UPPER.MIX", "RAM1")
 end)
 
+--[[
+  Select a disk. Special > Erase Disk. Enter a name with mixed case
+  (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that
+  the name appears with heuristic word casing (e.g.
+  "Lower.Upper.Mix"). Restart DeskTop. Verify that the name remains
+  unchanged.
+
+  Select a disk. Special > Erase Disk. Enter a name with mixed case
+  (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that
+  the name appears with the specified case (e.g. "lower.UPPER.MiX").
+  Restart DeskTop. Verify that the name remains unchanged.
+]]--
 test.Variants(
   {
     "Erase - preserve off",
@@ -203,6 +291,16 @@ test.Variants(
     a2d.EraseVolume("LOWER.UPPER.MIX", "RAM1")
 end)
 
+--[[
+  Launch DeskTop. In the Options control panel, check "Preserve
+  uppercase and lowercase in names". File > New Folder. Enter a name
+  with mixed case (e.g. "lower.UPPER.MiX"). In the Options control
+  panel, uncheck "Preserve uppercase and lowercase in names". Select
+  the folder. File > Rename. Click away without changing the name.
+  Verify that the name appears with heuristic word casing (e.g.
+  "Lower.Upper.Mix"). Close the window and re-open it. Verify that the
+  name remains unchanged.
+]]--
 test.Step(
   "Canceled rename",
   function()
@@ -223,6 +321,25 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. In the Options control panel, check "Preserve
+  uppercase and lowercase in names". File > New Folder. Enter a name
+  with mixed case (e.g. "lower.UPPER.MiX"). Select the folder. Then
+  run these test cases:
+
+  * Drag it to another volume to copy it. Verify that the copied file
+    retains the same mixed case name.
+
+  * Drag it to another folder on the same volume to move it. Verify
+    that the moved file retains the same mixed case name.
+
+  * Hold Solid-Apple and drag it to another volume to move it. Verify
+    that the moved file retains the same mixed case name.
+
+  * Hold Solid-Apple and drag it to another folder on the same volume
+    to copy it. Verify that the copied file retains the same mixed
+    case name.
+]]--
 test.Variants(
   {
     "drag - copy to another volume",
@@ -319,6 +436,14 @@ test.Variants(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. In the Options control panel, check "Preserve
+  uppercase and lowercase in names". Rename one volume with mixed case
+  e.g. "vol1.MIXED". Rename a second volume with differently mixed
+  case, e.g. "VOL2.mixed". Drag the first volume to the second. Verify
+  that the newly created folder is named with the same case as the
+  dragged volume
+]]--
 test.Step(
   "Copy one volume to another",
   function()

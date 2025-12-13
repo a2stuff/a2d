@@ -39,6 +39,9 @@ function IsColor()
   return not IsMono()
 end
 
+--[[
+  Verify that Escape key exits.
+]]--
 test.Step(
   "Escape exits",
   function()
@@ -50,6 +53,9 @@ test.Step(
     end)
 end)
 
+--[[
+  Verify that Apple+W exits.
+]]--
 test.Step(
   "OA+W exits",
   function()
@@ -61,6 +67,9 @@ test.Step(
     end)
 end)
 
+--[[
+  Verify that space bar toggles color/mono.
+]]--
 test.Step(
   "Space toggles color/mono",
   function()
@@ -74,6 +83,10 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/HRMONO.A2HR`. Verify it displays as mono by
+  default.
+]]--
 test.Step(
   ".A2HR opens in mono",
   function()
@@ -82,6 +95,10 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS.FILE.TYPES/HRCOLOR.A2LC`. Verify it displays as color
+  by default.
+]]--
 test.Step(
   ".A2LC opens in color",
   function()
@@ -106,6 +123,11 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Configure a system with a real-time clock. Launch DeskTop. Preview
+  an image file. Exit the preview. Verify that the menu bar clock
+  reappears immediately.
+]]--
 test.Step(
   "Clock appears immediately",
   function()
@@ -119,6 +141,14 @@ test.Step(
     a2d.WaitForRepaint()
 end)
 
+--[[
+  In a directory with multiple images, preview one image. Verify that
+  Left Arrow shows the previous image (and wraps around), Right Arrow
+  shows the next image (and wraps around), Apple+Left Arrow shows the
+  first image, and Apple+Right Arrow shows the last image. Note that
+  order is per the natural directory order, e.g. as shown in View > as
+  Icons.
+]]--
 test.Step(
   "Arrow keys",
   function()
@@ -174,6 +204,10 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Open `/TESTS/FILE.TYPES/PACKED.FOT`. Verify that the preview does
+  not immediately exit after the image loads.
+]]--
 test.Step(
   "Packed images",
   function()
@@ -183,7 +217,11 @@ test.Step(
     a2d.CloseWindow()
 end)
 
-
+--[[
+  In a directory with multiple images, preview one image. Press S.
+  Verify that a slideshow starts. Press S again, verify that the
+  slideshow stops.
+]]--
 test.Step(
   "Slideshow - S starts and stops",
   function()
@@ -206,6 +244,12 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  In a directory with multiple images, preview one image. Press S.
+  Verify that a slideshow starts. Press D (or any key that doesn't
+  have a special purpose). Verify that the slideshow stops. Press S.
+  Verify that a slideshow starts again.
+]]--
 test.Step(
   "Slideshow - S starts and anything stops and S restarts",
   function()
@@ -236,6 +280,12 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  In a directory with multiple images, preview one image. Press S.
+  Verify that a slideshow starts. Press Left Arrow. Verify that the
+  previous image is shown, and that the slideshow stops. Press S.
+  Verify that a slideshow starts again.
+]]--
 test.Step(
   "Slideshow - arrow keys work and abort slideshow",
   function()
@@ -267,6 +317,11 @@ test.Step(
     a2d.CloseWindow()
 end)
 
+--[[
+  Click on the File menu, then close it. Double-click an image file.
+  Press Escape to close the preview. Verify that the File menu is not
+  highlighted.
+]]--
 test.Step(
   "Menus not highlighted after exit",
   function()
@@ -298,6 +353,12 @@ test.Step(
     a2dtest.ExpectMenuNotHighlighted()
 end)
 
+--[[
+  Preview an image file. Verify that the mouse cursor is hidden.
+  Without moving the mouse, press the Escape key. Verify that after
+  the desktop repaints the mouse cursor becomes visible without
+  needing to move the mouse first.
+]]--
 test.Step(
   "Cursor reappears",
   function()

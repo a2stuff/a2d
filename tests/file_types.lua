@@ -4,6 +4,16 @@ MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
 
 ======================================== ENDCONFIG ]]--
 
+--[[
+  Put image file in `APPLE.MENU`, start DeskTop. Select it from the
+  Apple menu. Verify image is shown.
+
+  Put text file in `APPLE.MENU`, start DeskTop. Select it from the
+  Apple menu. Verify text is shown.
+
+  Put font file in `APPLE.MENU`, start DeskTop. Select it from the
+  Apple menu. Verify font is shown.
+]]--
 test.Step(
   "Previewable types in Apple Menu",
   function()
@@ -34,6 +44,13 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Put BASIC program in `APPLE.MENU`, start DeskTop. Select it from the
+  Apple menu. Verify it runs.
+
+  Put System program in `APPLE.MENU`, start DeskTop. Select it from
+  the Apple menu. Verify it runs.
+]]--
 test.Step(
   "Launchable types in Apple Menu",
   function()
@@ -60,6 +77,24 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
+--[[
+  Launch DeskTop. Open `SAMPLE.MEDIA`. Double-click `KARATEKA.YELL`.
+  Verify that an alert is shown. Click Cancel. Verify the alert closes
+  but nothing else happens. Repeat, but click OK. Verify that it
+  executes.
+
+  Launch DeskTop. Open `SAMPLE.MEDIA`. Hold Solid-Apple and
+  double-click `KARATEKA.YELL`. Verify that it executes.
+
+  Launch DeskTop. Open `SAMPLE.MEDIA`. Select `KARATEKA.YELL`. File >
+  Open. Verify that it executes.
+
+  Launch DeskTop. Open `SAMPLE.MEDIA`. Select `KARATEKA.YELL`. Press
+  Open-Apple+O. Verify that it executes.
+
+  Launch DeskTop. Open `SAMPLE.MEDIA`. Select `KARATEKA.YELL`. Press
+  Solid-Apple+O. Verify that it executes.
+]]--
 test.Step(
   "Binary files",
   function()
@@ -111,6 +146,23 @@ test.Step(
     a2d.WaitForRestart()
 end)
 
+--[[
+  Launch DeskTop. Select a SYS file. Rename it to have a .SYSTEM
+  suffix. Verify that it has an application (diamond and hand) icon,
+  without moving.
+
+  Launch DeskTop. Select a SYS file. Rename it to not have a .SYSTEM
+  suffix. Verify that it has a system (computer) icon, without moving.
+
+  Launch DeskTop. Select a TXT file. Rename it to have a .SHK suffix.
+  Verify that it has an archive icon, without moving.
+
+  Launch DeskTop. Select a TXT file. Rename it to have a .BXY suffix.
+  Verify that it has an archive icon, without moving.
+
+  Launch DeskTop. Select a TXT file. Rename it to have a .BNY suffix.
+  Verify that it has an archive icon, without moving.
+]]--
 test.Step(
   "renames changing icons",
   function()
@@ -156,6 +208,10 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
+--[[
+  Launch DeskTop. File > New Folder.... Name it with a .A2FC suffix.
+  Verify that it still has a folder icon.
+]]--
 test.Step(
   "renaming folders doesn't change them",
   function()

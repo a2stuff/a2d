@@ -1,3 +1,11 @@
+--[[
+  Configure a system with a color display. Open the Control Panel DA.
+  Check "RGB Color" if needed to ensure the display is in color.
+  Select one of the vertically striped patterns that appears as a
+  solid color. Click the preview area. Verify that the color matches
+  the preview. Move the DA window. Verify that colors still match.
+  Repeat with other patterns.
+]]--
 test.Step(
   "RGB Color desktop",
   function()
