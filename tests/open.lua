@@ -4,7 +4,7 @@
 
   Launch DeskTop. Double-click a volume. Verify that the volume icon
   is still selected.
-]]--
+]]
 test.Step(
   "Open volume with double-click",
   function()
@@ -36,7 +36,7 @@ end)
   window so that the folder icon will not be obscured when opened.
   Double-click the folder. Verify that the folder icon is dimmed but
   still selected.
-]]--
+]]
 test.Step(
   "Open folder with double-click",
   function()
@@ -60,7 +60,7 @@ end)
 
 --[[
   Open a text file with double-click.
-]]--
+]]
 test.Step(
   "Open text file with double-click",
   function()
@@ -85,7 +85,7 @@ end)
 
   Launch DeskTop. Select a volume. File > Open. Verify that the volume
   icon is dimmed but still selected.
-]]--
+]]
 test.Step(
   "Open volume with File > Open",
   function()
@@ -110,7 +110,7 @@ end)
   window so that the folder icon will not be obscured when opened.
   Select the folder. File > Open. Verify that the folder icon is
   dimmed but still selected.
-]]--
+]]
 test.Step(
   "Open folder with File > Open",
   function()
@@ -128,7 +128,7 @@ end)
 
 --[[
   Open a text file with File > Open.
-]]--
+]]
 test.Step(
   "Open text file with File > Open",
   function()
@@ -146,7 +146,7 @@ end)
 --[[
   Launch DeskTop. Select a volume icon. Open it. Verify that the open
   animation starts at the icon location.
-]]--
+]]
 test.Step(
   "Open - animation runs",
   function()
@@ -163,7 +163,7 @@ end)
   names (New.Folder through New.Folder.7). Edit > Select All. File >
   Open. File > New Folder. Verify that the new folder is created
   within New.Folder.7 and no alert appears.
-]]--
+]]
 test.Step(
   "Open multiple",
   function()
@@ -198,7 +198,7 @@ end)
   DeskTop. Open `/HD1`. Open `/HD1/FOLDER1`. Close `/HD1`. Open
   `/HD2`. Re-open `/HD1`. Re-open `/HD/FOLDER1`. Verify that the
   previously opened window is activated.
-]]--
+]]
 test.Step(
   "Reactivating windows",
   function()
@@ -248,7 +248,7 @@ end)
   Launch DeskTop. Open a window and select multiple folder icons. File
   > Open. Verify that the folders open, and that the icons remain
   selected and become dimmed.
-]]--
+]]
 test.Step(
   "Open multiple - menu",
   function()
@@ -281,7 +281,7 @@ end)
 --[[
   Launch DeskTop. Select two volume icons. Double-click one of the
   volume icons. Verify that two windows open.
-]]--
+]]
 test.Step(
   "Open multiple volumes - double-click",
   function()
@@ -313,7 +313,7 @@ end)
 --[[
   Launch DeskTop. Open a window. Select two folder icons. Double-click
   one of the folder icons. Verify that two windows open.
-]]--
+]]
 test.Step(
   "Open multiple - double-click",
   function()
@@ -357,7 +357,7 @@ end)
   Launch DeskTop. Open a window. Select a folder icon. Open the File
   menu, then press Open-Apple+O. Verify that the folder opens, and the
   original window remains open. Repeat with Caps Lock off.
-]]--
+]]
 test.Variants(
   {
     "With menu showing, Open Apple + O",

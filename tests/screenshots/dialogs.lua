@@ -2,13 +2,13 @@
 
 DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk -flop2 res/prodos_floppy2.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[============================================================
 
   Dump all the dialogs
 
-  ============================================================]]--
+  ============================================================]]
 
 --------------------------------------------------
 -- Apple Menu
@@ -202,7 +202,7 @@ end)
   test.Snap("Special > Check All Drives...")
   return test.PASS
   end)
-]]--
+]]
 
 test.Step(
   "Special > Copy Disk...",

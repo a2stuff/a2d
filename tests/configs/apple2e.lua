@@ -4,7 +4,7 @@ MODEL="apple2e"
 MODELARGS="-sl2 mouse -sl7 cffa202 -aux ext80"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 test.Step(
   "Apple > About This Apple II",

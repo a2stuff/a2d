@@ -2,7 +2,7 @@
 
   Utilities for Apple II DeskTop
 
-  ============================================================]]--
+  ============================================================]]
 
 local a2d = {}
 
@@ -429,7 +429,7 @@ function a2d.CopySelectionTo(path, is_volume, options)
     But we don't know if it's 1 or more than 1 so we index
     from the bottom of the menu, which is a fixed number.
     TODO: Make this less hacky
-  ]]--
+  ]]
   a2d.InvokeMenuItem(a2d.FILE_MENU, is_volume and -2 or -3)
 
   --Automate file picker dialog

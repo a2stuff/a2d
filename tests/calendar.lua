@@ -3,13 +3,13 @@
 
   "Calendar" tests
 
-  ============================================================]]--
+  ============================================================]]
 
 --[[
   Configure a system with a real-time clock. Launch DeskTop. Run the
   Calendar DA. Verify that it starts up showing the current month and
   year correctly.
-]]--
+]]
 test.Step(
   "Calendar - with real-time clock",
   function()
@@ -23,7 +23,7 @@ end)
   Configure a system without a real-time clock. Launch DeskTop. Run
   the Calendar DA. Verify that it starts up showing the build's
   release month and year correctly.
-]]--
+]]
 test.Step(
   "Calendar - without real-time clock",
   function()

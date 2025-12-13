@@ -2,7 +2,7 @@
 
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 -- NOTE: Need at least one empty Disk II drive
 
 test.Step(

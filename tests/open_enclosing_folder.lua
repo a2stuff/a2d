@@ -4,7 +4,7 @@
   volume window. Press Open-Apple+Up. Verify that the volume window
   re-opens, and that the folder icon is selected. Press Open-Apple+Up
   again. Verify that the volume icon is selected.
-]]--
+]]
 test.Step(
   "Open enclosing folder",
   function()
@@ -31,7 +31,7 @@ end)
   Open-Apple+Up. Verify that the volume window is activated, and that
   the folder icon is selected. Press Open-Apple+Up again. Verify that
   the volume icon is selected.
-]]--
+]]
 test.Step(
   "Reactivate existing window",
   function()
@@ -56,7 +56,7 @@ end)
   folder window. Press Open-Apple+Up. Verify that the volume window is
   activated, and that the folder icon is selected. Press Open-Apple+Up
   again. Verify that the volume icon is selected.
-]]--
+]]
 test.Step(
   "View change",
   function()
@@ -84,7 +84,7 @@ end)
   folder. Press Open-Apple+Up. Verify that the volume window is shown
   and the folder is selected. Press Right Arrow. Verify that only a
   single icon shows as selected.
-]]--
+]]
 test.Step(
   "Icon selection with keyboard",
   function()
@@ -107,7 +107,7 @@ end)
   folder. Close the volume window. Press Open-Apple+Up. Verify that
   the volume window is shown and the folder is selected. Press Right
   Arrow. Verify that only a single icon shows as selected.
-]]--
+]]
 test.Step(
   "Icon selection with keyboard with window cycling",
   function()

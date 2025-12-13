@@ -4,7 +4,7 @@ MODEL="apple2cp"
 MODELARGS="-ramsize 1152K"
 DISKARGS="-flop3 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 test.Step(
   "Apple > About This Apple II",

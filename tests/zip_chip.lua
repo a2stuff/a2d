@@ -2,12 +2,12 @@
 
   ZIP Chip
 
-  ============================================================]]--
+  ============================================================]]
 
 --[[
   Run DeskTop on a IIe with a ZIP CHIP installed.. Apple Menu > About
   This Apple II. Verify that a ZIP CHIP is reported.
-]]--
+]]
 test.Step(
   "ZIP Chip",
   function()

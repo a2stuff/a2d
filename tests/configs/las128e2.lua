@@ -8,7 +8,7 @@ DISKARGS="-flop1 $FLOP1IMG"
 # MODELARGS="-ramsize 1152K -sl7 cffa2"
 # DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 emu.wait(40) -- stuck with floppies for now
 

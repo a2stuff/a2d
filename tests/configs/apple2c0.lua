@@ -4,7 +4,7 @@ MODEL="apple2c0"
 MODELARGS=""
 DISKARGS="-flop1 $FLOP1IMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 test.Step(
   "Apple > About This Apple II",

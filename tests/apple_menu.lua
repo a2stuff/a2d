@@ -4,7 +4,7 @@ MODEL="apple2cp"
 MODELARGS=""
 DISKARGS="-flop3 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Rename the `APPLE.MENU` directory. Launch DeskTop. Verify that the
@@ -19,7 +19,7 @@ DISKARGS="-flop3 $HARDIMG"
   Type icon. Apple Menu > Change Type. Change the type to $8642.
   Restart DeskTop. Verify that the Apple Menu has two "About" items,
   and no separator.
-]]--
+]]
 test.Step(
   "separator in Apple Menu",
   function()
@@ -69,7 +69,7 @@ end)
   not shown in the Apple Menu.
 
   TODO: Missing?
-]]--
+]]
 
 
 --[[
@@ -77,7 +77,7 @@ end)
   the Apple Menu. Verify that an alert is shown prompting to reinsert
   the startup disk. Insert the startup disk and click OK. Verify that
   the accessory launches.
-]]--
+]]
 test.Step(
   "Accessories with disk ejected",
   function()
@@ -97,7 +97,7 @@ end)
   the Apple Menu. Verify that an alert is shown prompting to reinsert
   the startup disk. Insert the startup disk and click OK. Verify that
   the folder window opens.
-]]--
+]]
 test.Step(
   "Folder with disk ejected",
   function()

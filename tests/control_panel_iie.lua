@@ -5,7 +5,7 @@
   solid color. Click the preview area. Verify that the color matches
   the preview. Move the DA window. Verify that colors still match.
   Repeat with other patterns.
-]]--
+]]
 test.Step(
   "RGB Color desktop",
   function()

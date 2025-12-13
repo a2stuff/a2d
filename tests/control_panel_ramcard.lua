@@ -3,7 +3,7 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Configure a system with a RAMCard, and ensure DeskTop is configured
@@ -11,7 +11,7 @@ DISKARGS="-hard1 $HARDIMG"
   Panels. Open Control Panel. Modify a setting e.g. the desktop
   pattern. Close the window. Reboot the system. Verify that the
   setting is retained.
-]]--
+]]
 test.Step(
   "Settings saved back to boot volume",
   function()

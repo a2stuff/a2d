@@ -1,7 +1,7 @@
 --[[
   Double-click an item. Verify that the appropriate action button
   flashes.
-]]--
+]]
 test.Step(
   "Shortcuts picker (in DeskTop)",
   function()
@@ -25,7 +25,7 @@ end)
 --[[
   Double-click an item. Verify that the appropriate action button
   flashes.
-]]--
+]]
 test.Step(
   "Format/Erase dialog (in DeskTop)",
   function()
@@ -46,7 +46,7 @@ end)
 --[[
   Double-click an item. Verify that the appropriate action button
   flashes.
-]]--
+]]
 test.Step(
   "Selector (module)",
   function()

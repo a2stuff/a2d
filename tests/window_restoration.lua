@@ -3,7 +3,7 @@
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 -- Need to ensure DESKTOP.FILE gets written out or window headers
 -- will change
@@ -14,7 +14,7 @@ a2d.QuitAndRestart()
   Launch DeskTop. Open a subdirectory folder. Quit and relaunch
   DeskTop. Verify that the used/free numbers in the restored windows
   are non-zero.
-]]--
+]]
 test.Step(
   "Subdirectory header values",
   function()
@@ -30,7 +30,7 @@ end)
 
   Launch DeskTop. Close all windows. Special > Copy Disk. Quit back to
   DeskTop. Verify that no windows are restored.
-]]--
+]]
 test.Step(
   "Launching Disk Copy",
   function()
@@ -60,7 +60,7 @@ end)
   horizontal and vertical scrolling is required. Scroll to the
   bottom-right. Quit DeskTop, reload. Verify that the window size and
   scroll position was restored correctly.
-]]--
+]]
 test.Step(
   "Window geometry and scroll position",
   function()
@@ -80,7 +80,7 @@ end)
   volume window was restored, and that the volume icon is dimmed.
   Close the volume window. Verify that the volume icon is no longer
   dimmed.
-]]--
+]]
 test.Step(
   "Parent icon of restored window undims",
   function()
@@ -96,7 +96,7 @@ end)
   DeskTop, reload. Verify that the window is restored, and that it
   shows the icons in a list sorted by name, and that View > by Name is
   checked. Repeat for other View menu options.
-]]--
+]]
 test.Variants(
   {
     "As Icons",
@@ -122,7 +122,7 @@ end)
   DeskTop. Remove the disk from the Disk II drive. Load DeskTop.
   Verify that the Disk II drive is only polled once on startup, not
   twice.
-]]--
+]]
 test.Step(
   "Disk II Drive polling",
   function()
@@ -142,7 +142,7 @@ end)
   Launch DeskTop. Open a window. File > Quit. Launch DeskTop again.
   Ensure the window is restored. Try to drag-select volume icons.
   Verify that they are selected.
-]]--
+]]
 test.Step(
   "Drag selection still functions",
   function()
@@ -157,7 +157,7 @@ end)
   Launch DeskTop. Open a volume window. Rename the volume to "TRASH"
   (all uppercase). File > Quit. Load DeskTop. Verify that the restored
   window is named "TRASH" not "Trash".
-]]--
+]]
 test.Step(
   "Trash name",
   function()

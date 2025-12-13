@@ -3,14 +3,14 @@
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -flop1 res/pascal_floppy.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Run the command. Select a slot/drive containing a
   Pascal disk. Enter a new name and click OK. Verify that the
   confirmation prompt shows the Pascal volume name (e.g. "TGP:"), with
   quotes around the name.
-]]--
+]]
 test.Variants(
   {
     "Format Pascal disk",

@@ -3,13 +3,13 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Open a window. Hold Solid-Apple and double-click a
   folder icon. Verify that the folder opens, and that the original
   window closes.
-]]--
+]]
 test.Step(
   "Solid Apple Double-Click",
   function()
@@ -33,7 +33,7 @@ end)
   Launch DeskTop. Open a window. Select a folder icon. Hold
   Solid-Apple and select File > Open. Verify that the folder opens,
   and that the original window closes.
-]]--
+]]
 test.Step(
   "Solid Apple File > Open",
   function()
@@ -56,7 +56,7 @@ end)
   Launch DeskTop. Open a window. Select a folder icon. Hold Open-Apple
   and select File > Open. Verify that the folder opens, and that the
   original window closes.
-]]--
+]]
 test.Step(
   "Open Apple File > Open",
   function()
@@ -79,7 +79,7 @@ end)
   Launch DeskTop. Open a window. Select a folder icon. Press
   Open-Apple+Solid-Apple+O. Verify that the folder opens, and that the
   original window closes. Repeat with Caps Lock off.
-]]--
+]]
 test.Variants(
   {
     "Open Apple + Solid Apple + O",
@@ -102,7 +102,7 @@ end)
   Launch DeskTop. Open a window. Select a folder icon. Press
   Open-Apple+Solid-Apple+Down. Verify that the folder opens, and that
   the original window closes.
-]]--
+]]
 test.Step(
   "Open Apple + Solid Apple + Down",
   function()
@@ -117,7 +117,7 @@ end)
   Launch DeskTop. Open a window. Select a folder icon. Open the File
   menu, then press Open-Apple+Solid-Apple+O. Verify that the folder
   opens, and the original window closes. Repeat with Caps Lock off.
-]]--
+]]
 test.Variants(
   {
     "With menu showing, Open Apple + Solid Apple + O",
@@ -145,7 +145,7 @@ end)
   Launch DeskTop. Ensure nothing is selected. Press
   Open-Apple+Solid-Apple+O. Verify that nothing happens. Repeat with
   Caps Lock off.
-q]]--
+q]]
 test.Variants(
   {
     "No selection, OA+SA+O",
@@ -165,7 +165,7 @@ end)
 --[[
   Launch DeskTop. Ensure nothing is selected. Press
   Open-Apple+Solid-Apple+Down. Verify that nothing happens.
-]]--
+]]
 test.Step(
   "No selection, OA+SA+Down",
   function()
@@ -179,7 +179,7 @@ end)
 --[[
   Ensure failure to open recovers properly, when invoked
   from a non-menu shortcut like OA+SA+Down.
-]]--
+]]
 test.Step(
   "OA+SA+Down should not hang if disk was ejected",
   function()

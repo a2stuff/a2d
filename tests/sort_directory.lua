@@ -3,13 +3,13 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[============================================================
 
   "Sort Directory" tests
 
-  ============================================================]]--
+  ============================================================]]
 
 -- Parse on-screen output of CAT; returns filenames in array
 function ParseCat()
@@ -36,7 +36,7 @@ end
   Open `/TESTS/SORT.DIRECTORY`. Open the `ORDER` folder by
   double-clicking. Apple Menu > Sort Directory. Verify that files are
   sorted by type/name.
-]]--
+]]
 test.Variants(
   {
     "Files sorted - open with keyboard",
@@ -97,7 +97,7 @@ end)
   represented by an icon. Open `/TESTS/HUNDRED.FILES`. Apple Menu >
   Sort Directory. Make sure all the files are sorted lexicographically
   (e.g. F1, F10, F100, F101, ...)
-]]--
+]]
 test.Step(
   "Lexicographical sorting",
   function()
@@ -127,7 +127,7 @@ end)
   Open `/TESTS/SORT.DIRECTORY/TWO.SYS.FILES`. Apple Menu > Sort
   Directory. Verify that the files are sorted as `A.SYSTEM` then
   `B.SYSTEM`.
-]]--
+]]
 test.Step(
   "System files sorted",
   function()

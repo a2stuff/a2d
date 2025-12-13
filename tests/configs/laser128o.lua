@@ -4,7 +4,7 @@ MODEL="laser128o"
 MODELARGS="-sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 test.Step(
   "Apple > About This Apple II",

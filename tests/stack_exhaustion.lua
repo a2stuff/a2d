@@ -3,7 +3,7 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl6 '' -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 -- A CFFA2 is specified the repro tickles a firmware issue where low
 -- stack causes improper address calculation and we crash to the

@@ -5,7 +5,7 @@
 
   Open two windows. Hold modifier and click the close box on the
   active window. Verify that all windows close.
-]]--
+]]
 test.Variants(
   {
     "Close all using Open Apple click on close box",
@@ -36,7 +36,7 @@ end)
 --[[
   Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all
   windows close. Repeat with Caps Lock off.
-]]--
+]]
 test.Variants(
   {
     "Close all using Open Apple + Solid Apple + W",
@@ -60,7 +60,7 @@ end)
 
   Open two windows. Hold Open-Apple and select File > Close. Verify
   that all windows close.
-]]--
+]]
 test.Variants(
   {
     "Close all using menu and Solid Apple",
@@ -97,7 +97,7 @@ end)
   Open two windows. Hold Open-Apple and open the File menu, then press
   Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with
   Caps Lock off.
-]]--
+]]
 test.Variants(
   {
     "Close all using Open Apple + Solid Apple + W, with File menu open",
@@ -119,7 +119,7 @@ end)
   Open two windows. Hold Solid-Apple and open the File menu, then
   press Open-Apple+Solid-Apple+W. Verify that all windows close.
   Repeat with Caps Lock off.
-]]--
+]]
 test.Variants(
   {
     "Holding SA open menu, then OA+SA+W",

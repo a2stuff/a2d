@@ -3,7 +3,7 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/disk_a.2mg"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop, ensure it copies itself to RAMCard. Configure a
@@ -11,7 +11,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/disk_a.2mg"
   RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the
   shortcut. Verify that the copy count goes to zero and doesn't blank
   out.
-]]--
+]]
 test.Step(
   "Copy progress of shortcut in root directory",
   function()
@@ -47,7 +47,7 @@ end)
   and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts.
   Invoke the shortcut. Verify that the copy count goes to zero and
   doesn't blank out.
-]]--
+]]
 test.Step(
   "Copy progress of shortcut in non-root directory",
   function()
@@ -86,7 +86,7 @@ end)
   remaining" count bottoms out at 0. Close the alert. Drag a volume
   icon to another volume. Verify that the "Files remaining" count
   bottoms out at 0.
-]]--
+]]
 test.Step(
   "Copy progress of a volume",
   function()

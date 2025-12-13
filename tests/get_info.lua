@@ -3,12 +3,12 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   File > Get Info a non-folder file. Verify that the size shows as
   "_size_K".
-]]--
+]]
 test.Step(
   "non-folder file",
   function()
@@ -21,7 +21,7 @@ end)
 --[[
   File > Get Info a folder containing 0 files. Verify that the size
   shows as "_size_K for 1 item".
-]]--
+]]
 test.Step(
   "empty folder",
   function()
@@ -34,7 +34,7 @@ end)
 --[[
   File > Get Info a folder containing 1 file. Verify that the size
   shows as "_size_K for 2 items".
-]]--
+]]
 test.Step(
   "one item in folder",
   function()
@@ -48,7 +48,7 @@ end)
   File > Get Info a folder containing 2 or more files. Verify that the
   size shows as "_size_K for _count_ items", including the folder
   itself.
-]]--
+]]
 test.Step(
   "many items in folder",
   function()
@@ -65,7 +65,7 @@ end)
   Launch DeskTop. Select a volume icon, where the volume contains no
   files. File > Get Info. Verify that numbers are shown for number of
   files (0) and space used (a few K).
-]]--
+]]
 test.Step(
   "empty volume",
   function()
@@ -79,7 +79,7 @@ end)
 --[[
   File > Get Info a volume containing 1 file. Verify that the size
   shows as "_size_K for 1 item / _total_K".
-]]--
+]]
 test.Step(
   "volume with 1 file",
   function()
@@ -94,7 +94,7 @@ end)
 --[[
   File > Get Info a volume containing 2 or more files. Verify that the
   size shows as "_size_K for _count_ items / _total_K".
-]]--
+]]
 test.Step(
   "volume with 2 or more files",
   function()
@@ -109,7 +109,7 @@ end)
 --[[
   Open folder with new files. Use File > Get Info; verify dates after
   1999 show correctly.
-]]--
+]]
 test.Step(
   "new file dates",
   function()
@@ -122,7 +122,7 @@ end)
 --[[
   Launch DeskTop. Select a 32MB volume. File > Get Info. Verify total
   size shows as 32,768K not 0K.
-]]--
+]]
 test.Step(
   "32MB volume",
   function()
@@ -138,7 +138,7 @@ end)
   size shown is correct. Select a directory. File > Get Info, and
   dismiss. Now select the original file icon again, and File > Get
   Info. Verify that the size shown is still correct.
-]]--
+]]
 test.Step(
   "file, folder, file",
   function()
@@ -161,14 +161,14 @@ end)
   invalid." alert is not shown.
 
   TODO: See if we can repro the inspiration for this one in an emulator.
-]]--
+]]
 
 
 --[[
   Launch DeskTop. Select a volume with more than 255 files in a folder
   (e.g. Total Replay). File > Get Info. Verify that the count
   finishes.
-]]--
+]]
 test.Step(
   "more than 255 files",
   function()
@@ -182,7 +182,7 @@ end)
 --[[
   Launch DeskTop. Select `/TESTS/PROPERTIES/KNOWN.SIZE`. File > Get
   Info. Verify that "Size" is "17K for 2 items".
-]]--
+]]
 test.Step(
   "known size",
   function()
@@ -196,7 +196,7 @@ end)
   Select a volume or folder containing multiple files. File > Get
   Info. During the count of the files, press Escape. Verify that the
   count is canceled.
-]]--
+]]
 test.Step(
   "cancel enumeration",
   function()
@@ -213,7 +213,7 @@ end)
   Verify that the AuxType displays as `$4001`. Click OK. View > by
   Name. View > as Icons. File > Get Info. Verify that the AuxType
   still displays correctly.
-]]--
+]]
 test.Step(
   "auxtype",
   function()
@@ -232,7 +232,7 @@ end)
   Open a volume window containing a folder. Select the folder. File >
   Get Info. Check Locked. Click OK. Close the volume window. Re-open
   the volume window. Verify that the folder is still a folder.
-]]--
+]]
 test.Step(
   "locking folder",
   function()

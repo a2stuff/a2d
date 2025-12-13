@@ -4,7 +4,7 @@ MODEL="apple2ee"
 MODELARGS="-sl1 ssc -sl2 mouse -sl5 ramfactor -sl7 cffa2 -aux rw3"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 test.Step(
   "Apple > About This Apple II",

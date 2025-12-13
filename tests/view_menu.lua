@@ -3,12 +3,12 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-  ======================================== ENDCONFIG ]]--
+  ======================================== ENDCONFIG ]]
 
 --[[
   Open folder with files. View > by Date. Verify that DeskTop does not
   hang.
-]]--
+]]
 test.Step(
   "View by Date - doesn't hang",
   function()
@@ -22,7 +22,7 @@ end)
 --[[
   Open folder with new files. Use View > by Date; verify dates after
   1999 show correctly.
-]]--
+]]
 test.Step(
   "View by Date - Y2K",
   function()
@@ -36,7 +36,7 @@ end)
 --[[
   Open folder with new files. Use View > by Date. Verify that two
   files modified on the same date are correctly ordered by time.
-]]--
+]]
 test.Step(
   "View by Date - Secondarily sorted by time",
   function()
@@ -51,7 +51,7 @@ end)
 --[[
   Open folder with zero files. Use View > by Name. Verify that there
   is no crash.
-]]--
+]]
 test.Step(
   "View by Name - Empty folder doesn't crash",
   function()
@@ -65,7 +65,7 @@ end)
 --[[
   Open folder with one file. Use View > by Name. Verify that the entry
   paints correctly.
-]]--
+]]
 test.Step(
   "View by Name - Folder with 1 file paints correctly",
   function()
@@ -82,7 +82,7 @@ end)
   so the lines are cut off on the right. Move the horizontal scrollbar
   all the way to the right. Verify that the right edges of all lines
   are visible.
-]]--
+]]
 test.Step(
   "View by Name - Long month names can be scrolled into view",
   function()
@@ -104,7 +104,7 @@ end)
   Launch DeskTop. Open a window containing a folder. View > by Name.
   Open the folder. Verify that in the new window, the horizontal
   scrollbar is inactive.
-]]--
+]]
 test.Step(
   "View by Name - Child windows resized to fit",
   function()
@@ -121,7 +121,7 @@ end)
   separate volume window. Open a folder window. Open a subfolder
   window. View > by Name. Close the window. Verify DeskTop doesn't
   crash.
-]]--
+]]
 test.Step(
   "View by Name - No crash",
   function()
@@ -147,7 +147,7 @@ end)
   Launch DeskTop. Open a volume window. Open a folder window. View >
   by Name. Verify that the selection is still in the volume window,
   and that there is no selection in the folder window.
-]]--
+]]
 test.Step(
   "View by Name - Selection unchanged in volume",
   function()
@@ -163,7 +163,7 @@ end)
   Launch DeskTop. Open a volume window. Open a folder window. Select a
   file in the folder window. View > by Name. Verify that the selection
   is still in the folder window.
-]]--
+]]
 test.Step(
   "View by Name - Selection unchanged in folder",
   function()
@@ -186,7 +186,7 @@ a2d.AddShortcut("/A2.DESKTOP")
   command from the Shortcuts menu. Cancel. Verify that the window
   entries repaint correctly (correct types, sizes, dates) and DeskTop
   doesn't crash.
-]]--
+]]
 test.Variants(
   {
     "Repaint after Add Shortcut",
@@ -207,7 +207,7 @@ end)
   Launch DeskTop. On a volume, create folders named "A1", "B1", "A",
   and "B". View > by Name. Verify that the order is: "A", "A1", "B",
   "B1".
-]]--
+]]
 test.Step(
   "View by Name - Ordering",
   function()
@@ -222,7 +222,7 @@ end)
   Launch DeskTop. Open `/TESTS/FILE.TYPES`. View > by Type. Verify
   that the files are sorted by type name, first alphabetically
   followed by $XX types in numeric order.
-]]--
+]]
 test.Step(
   "View by Type - Ordering",
   function()
@@ -241,7 +241,7 @@ end)
   Launch DeskTop. Open a window containing multiple files. View > by
   Size. Verify that the files are sorted by size in descending order,
   with directories at the end.
-]]--
+]]
 test.Step(
   "View by Size - Ordering",
   function()
@@ -270,7 +270,7 @@ end)
   Dragging a selected icon over a non-selected folder icon in the same
   window causes it to highlight, and initiates a move or copy
   (depending on modifier keys).
-]]--
+]]
 test.Step(
   "Icons in list can be selected and dragged",
   function()
@@ -329,7 +329,7 @@ end)
   one or more icons. Drag them within the window but not over any
   other icons. Release the mouse button. Verify that the icons do not
   move.
-]]--
+]]
 test.Step(
   "Icons in list view don't move",
   function()
@@ -363,7 +363,7 @@ end)
   an icon. File > Rename. Enter a new name that would change the
   ordering. Verify that the window is refreshed and the icons are
   correctly sorted by name, and that the icon is still selected.
-]]--
+]]
 test.Step(
   "Rename causes refresh",
   function()
@@ -382,7 +382,7 @@ end)
   would change the ordering. Verify that the first window is activated
   and refreshed and the icons are correctly sorted by name, and that
   the icon is still selected and scrolled into view.
-]]--
+]]
 test.Step(
   "Rename causes refresh with two windows",
   function()
@@ -403,7 +403,7 @@ end)
   dimmed. View > by Name. Verify that the folder's icon is still
   dimmed. View > as Icons. Verify that the folder's icon is still
   dimmed.
-]]--
+]]
 test.Step(
   "Folder icons stay dimmed",
   function()
@@ -421,7 +421,7 @@ end)
   Launch DeskTop. Open a window containing a folder. View > by Name.
   Verify that the volume's icon is dimmed. View > as Icon. Verify that
   the volume's icon is still dimmed.
-]]--
+]]
 test.Step(
   "Volume icons stay dimmed",
   function()
@@ -438,7 +438,7 @@ end)
   is "as Icons". View > by Name. Open a folder. Verify that the new
   folder's view is "by Name". Open a different volume window. Verify
   that it is "as Icons".
-]]--
+]]
 test.Step(
   "Volumes default to icon",
   function()
@@ -465,7 +465,7 @@ end)
   that the view is still "as Small Icons". Activate a different
   window. Apple Menu > Control Panels. Verify that the Control.Panels
   window is activated, and the view is still "as Small Icons".
-]]--
+]]
 test.Step(
   "Folders in Apple menu",
   function()
@@ -486,7 +486,7 @@ end)
   icons are still selected, and that File > Get Info is still enabled
   (and shows the volume info). Switch window's view back to as Icons.
   Verify that the desktop volume icons are still selected.
-]]--
+]]
 test.Step(
   "Volume icon selection and multiple view switches",
   function()
@@ -514,7 +514,7 @@ end)
   Launch DeskTop. Open a window containing file icons. Select one or
   more file icons in the window. Select a different View option.
   Verify that the icons in the window remain selected.
-]]--
+]]
 test.Step(
   "File icon selection retained",
   function()
@@ -530,7 +530,7 @@ end)
   and select multiple files in a specific order. Select a different
   View option. Apple Menu > Sort Directory. View > as Icons. Verify
   that the icons appear in the selected order.
-]]--
+]]
 test.Step(
   "Selection order retained",
   function()
@@ -576,7 +576,7 @@ end)
   Launch DeskTop. Open a window containing file icons. Select one or
   more volume icons on the desktop. Select a different View option.
   Verify that the volume icons on the desktop remain selected.
-]]--
+]]
 test.Step(
   "Volume icon selection",
   function()
@@ -597,7 +597,7 @@ end)
   Launch DeskTop. Open a window. Verify that the appropriate View
   option is checked. Close the window. Verify that the View menu items
   are all disabled, and that none are checked.
-]]--
+]]
 test.Step(
   "View menu item states",
   function()

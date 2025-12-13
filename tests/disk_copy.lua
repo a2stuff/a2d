@@ -2,12 +2,12 @@
 
 DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk -flop2 res/dos33_floppy.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Double-click an item. Verify that the corresponding action button
   flashes
-]]--
+]]
 test.Step(
   "Disk Selection - Double-click",
   function()

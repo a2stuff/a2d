@@ -3,12 +3,12 @@
 
   "Calculator" tests
 
-  ============================================================]]--
+  ============================================================]]
 
 --[[
   Run Apple Menu > Calculator. Move the Calculator window. Verify that
   the mouse cursor is drawn correctly.
-]]--
+]]
 test.Step(
   "Cursor doesn't home",
   function()
@@ -23,7 +23,7 @@ end)
 --[[
   Run Apple Menu > Calculator. Verify that the mouse cursor does not
   jump to the top-left of the screen.
-]]--
+]]
 test.Step(
   "Move window and mouse cursor",
   function()
@@ -46,7 +46,7 @@ end)
   volume icon. Then drag the Calculator window to the bottom of the
   screen so that only the title bar is visible. Verify that volume
   icon redraws properly.
-]]--
+]]
 test.Step(
   "Window and volume icons",
   function()
@@ -79,7 +79,7 @@ end)
   screen so only title bar is visible. Type numbers on the keyboard.
   Verify no numbers are painted on screen. Move window back up. Verify
   the typed numbers were input.
-]]--
+]]
 test.Step(
   "Obscured window",
   function()
@@ -118,7 +118,7 @@ end)
 
   * Enter '0' '-' '.' '5' '='. Verify that the result has a 0 before
     the decimal (i.e. "-0.5").
-]]--
+]]
 test.Variants(
   {
     "Calculator - misc",
@@ -161,7 +161,7 @@ end)
     decimal separator in calculation result and that ',' when typed
     functions as a decimal separator. Verify that when '.' is typed,
     ',' appears.
-]]--
+]]
 test.Variants(
   {
     "Calculator - decimal separator",
@@ -241,4 +241,4 @@ end)
     approximately 89.
 
   TODO: Cover these!
-]]--
+]]

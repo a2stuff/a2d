@@ -3,14 +3,14 @@
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Run the command. Select a slot/drive containing an
   existing volume. Enter a new name and click OK. Verify that the
   confirmation prompt shows the volume with adjusted case matching the
   volume's icon, with quotes around the name.
-]]--
+]]
 test.Variants(
   {
     "Format ProDOS disk",

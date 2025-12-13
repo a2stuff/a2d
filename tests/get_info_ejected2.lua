@@ -2,13 +2,13 @@
 
 DISKARGS="-hard1 $HARDIMG -flop1 res/floppy_with_files.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Select a 5.25 disk volume. Remove the disk. File >
   Get Info. Verify that an alert is shown. Click OK. Verify that
   DeskTop doesn't hang or crash.
-]]--
+]]
 test.Step(
   "Alert shown on File > Get Info for disk if disk ejected",
   function()
@@ -28,7 +28,7 @@ end)
   Launch DeskTop. Select a file on a 5.25 disk. Remove the disk. File
   > Get Info. Verify that an alert is shown. Click OK. Verify that
   DeskTop doesn't hang or crash.
-]]--
+]]
 test.Step(
   "Alert shown on File > Get Info for single file if disk ejected",
   function()
@@ -48,7 +48,7 @@ end)
   Launch DeskTop. Select two files on a 5.25 disk. Remove the disk.
   File > Get Info. Verify that an alert is shown. Insert the disk
   again. Click OK. Verify that details are shown for the second file.
-]]--
+]]
 test.Step(
   "Alert shown on File > Get Info for multiple files if disk ejected",
   function()

@@ -4,7 +4,7 @@ MODEL="apple2cp"
 MODELARGS="-ramsize 1152K"
 DISKARGS="-flop3 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Configure a system with a RAMCard, and set DeskTop to not copy
@@ -12,7 +12,7 @@ DISKARGS="-flop3 $HARDIMG -flop1 res/prodos_floppy1.dsk"
   non-RAMCard volume containing DeskTop appears in the top right
   corner of the desktop. File > Copy To.... Verify that the
   non-RAMCard volume containing DeskTop is the first disk shown.
-]]--
+]]
 test.Step(
   "Volume order",
   function()
@@ -37,7 +37,7 @@ end)
   launch another app e.g. Basic.system. Eject the DeskTop volume. Exit
   the app back to DeskTop. Verify that the remaining volumes appear in
   default order.
-]]--
+]]
 test.Step(
   "Volume order when copied to RAMCard, ejected",
   function()
@@ -90,7 +90,7 @@ end)
   disk, and click OK. Verify that no further prompt is shown. Power
   cycle and launch DeskTop. Verify that the shortcut modifications are
   present.
-]]--
+]]
 test.Variants(
   {
     "No prompt - Shortcuts",
@@ -167,7 +167,7 @@ end)
     Insert the system disk, and click OK. Verify that no further
     prompt is shown. Power cycle and launch DeskTop. Verify that the
     modifications are present.
-]]--
+]]
 test.Variants(
   {
     "No prompt - Options",
@@ -235,7 +235,7 @@ end)
   Edit a Shortcut. Select a shortcut, modify it (e.g. change its name)
   and click OK. Verify that no prompt is shown for saving changes to
   the startup disk.
-]]--
+]]
 test.Step(
   "No prompt for selector entry if startup disk ejected when running from RAMCard",
   function()
@@ -281,7 +281,7 @@ end)
   DeskTop. Restart DeskTop from the original startup disk. Eject the
   startup disk. Special > Format Disk. Verify that no prompt for the
   startup disk is shown.
-]]--
+]]
 test.Step(
   "No prompt for overlay if startup disk ejected when running from RAMCard",
   function()
@@ -318,7 +318,7 @@ end)
   Invoke `DESKTOP.SYSTEM`, and hit Escape when copying to RAMCard.
   Once DeskTop has started, eject the startup disk. Special > Format
   Disk. Verify that a prompt to insert the system disk is shown.
-]]--
+]]
 test.Step(
   "Aborted copy to RAMCard correctly prompts for overlays",
   function()

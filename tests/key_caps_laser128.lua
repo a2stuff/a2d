@@ -4,12 +4,12 @@ MODEL="las128ex"
 MODELARGS="-sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Apple Menu > Key Caps. Verify that the "original"
   layout is shown, with the backslash above the Return key.
-]]--
+]]
 test.Step(
   "Key Caps - Laser 128",
   function()

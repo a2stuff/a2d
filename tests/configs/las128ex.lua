@@ -4,7 +4,7 @@ MODEL="las128ex"
 MODELARGS="-ramsize 1152K -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 test.Step(
   "Apple > About This Apple II",

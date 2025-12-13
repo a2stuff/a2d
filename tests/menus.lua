@@ -3,7 +3,7 @@
 MODELARGS="-sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 a2d.SelectPath("/A2.DESKTOP")
 local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
@@ -268,7 +268,7 @@ end)
   Launch DeskTop. Open a window. Verify that File > New Folder, File >
   Close, File > Close All, and everything in the View menu are
   enabled.
-]]--
+]]
 test.Step(
   "File menu options needing window are correct",
   function()

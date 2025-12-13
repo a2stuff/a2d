@@ -2,7 +2,7 @@
 
 DISKARGS="-hard1 $HARDIMG -flop1 res/dos33_floppy.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 a2d.OpenPath("/A2.DESKTOP/EXTRAS")
 
@@ -15,7 +15,7 @@ a2d.OpenPath("/A2.DESKTOP/EXTRAS")
 
   Select a slot/drive. Press the Return key. Verify that the OK button
   flashes and that the catalog dialog is shown.
-]]--
+]]
 test.Step(
   "Drive selection - OK button - Shortcut",
   function()
@@ -38,7 +38,7 @@ end)
 --[[
   Select a slot/drive. Click OK. Verify that the catalog screen is
   shown.
-]]--
+]]
 test.Step(
   "Drive selection - OK button - Click",
   function()
@@ -57,7 +57,7 @@ end)
 --[[
   Select a slot/drive. Press the Escape key. Verify that the Cancel
   button flashes and that the dialog closes.
-]]--
+]]
 test.Step(
   "Drive selection - Cancel button - Shortcut",
   function()
@@ -72,7 +72,7 @@ end)
 
 --[[
   Select a slot/drive. Click Cancel. Verify that the dialog closes.
-]]--
+]]
 test.Step(
   "Drive selection - Cancel button - Click",
   function()
@@ -91,7 +91,7 @@ end)
 --[[
   Select a slot/drive. Click OK. Select a file. Press the Return key.
   Verify that the Import button flashes.
-]]--
+]]
 test.Step(
   "File selection - Import button - Shortcut",
   function()
@@ -110,7 +110,7 @@ end)
 --[[
   Select a slot/drive. Click OK. Select a file. Press the Escape key.
   Verify that the Cancel button flashes and that the dialog closes.
-]]--
+]]
 test.Step(
   "File selection - Cancel button - Shortcut",
   function()

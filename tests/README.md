@@ -64,7 +64,7 @@ MODELARGS="-sl1 ssc -sl2 mouse -sl5 ramfactor -sl7 cffa2 -aux rw3"
 DISKARGS="-hard1 out/a2d_800k.2mg -flop1 res/FLOPPY1.dsk"
 RESOLUTION="560x384"
 
-================================================== ]]-- ENDCONFIG
+================================================== ENDCONFIG ]]
 ```
 
 # Files

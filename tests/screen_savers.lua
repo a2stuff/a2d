@@ -2,13 +2,13 @@
 
   "Screen Savers" tests
 
-  ============================================================]]--
+  ============================================================]]
 
 --[[
   Launch DeskTop. Apple Menu > Screen Savers. Select Melt. File > Open
   (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify
   that the File menu is not highlighted.
-]]--
+]]
 test.Variants(
   {
     "Melt - File > Open does not leave File menu highlighted",
@@ -43,7 +43,7 @@ end)
   Menu > Screen Savers. Run a screen saver that uses the full graphics
   screen and conceals the menu (Flying Toasters or Melt). Exit it.
   Verify that the menu bar clock reappears immediately.
-]]--
+]]
 test.Step(
   "Clock redraws immediately",
   function()
@@ -63,7 +63,7 @@ end)
   Launch DeskTop. Apple Menu > Screen Savers. Run Matrix. Click the
   mouse button. Verify that the screen saver exits. Run Matrix. Press
   a key. Verify that the screen saver exits.
-]]--
+]]
 test.Variants(
   {
     "Matrix exits on click",
@@ -90,7 +90,7 @@ a2d.RemoveClockDriverAndReboot()
   Configure a system with no real-time clock. Launch DeskTop. Apple
   Menu > Screen Savers. Run Analog Clock. Verify that an alert is
   shown.
-]]--
+]]
 test.Step(
   "Analog Clock shows alert if there is no system clock",
   function()
@@ -104,7 +104,7 @@ end)
   Configure a system with no real-time clock. Launch DeskTop. Apple
   Menu > Screen Savers. Run Digital Clock. Verify that an alert is
   shown.
-]]--
+]]
 test.Step(
   "Digital Clock shows alert if there is no system clock",
   function()

@@ -3,14 +3,14 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/floppy_with_files.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 
 --[[
   Launch DeskTop. Open two windows. Select a file in one window.
   Activate the other window by clicking its title bar. File > Delete.
   Click OK. Verify that the window with the deleted file refreshes.
-]]--
+]]
 test.Step(
   "Window with deleted file refreshes",
   function()
@@ -48,7 +48,7 @@ end)
   onto C. Drag A to the trash. Click OK in the delete confirmation
   dialog. Verify that after the deletion, no alerts appear and volume
   icons can still be selected.
-]]--
+]]
 test.Step(
   "Volume selection after deletion",
   function()
@@ -107,7 +107,7 @@ end)
   A. Drag A to the trash. Verify that the confirmation dialog counts 2
   files. Click OK. Verify that the count stops at 0, and does not wrap
   to 65,535.
-]]--
+]]
 test.Step(
   "Deletion count",
   function()
@@ -151,7 +151,7 @@ end)
   folder's window. Go back to the volume window, and drag the folder
   icon to the trash. Click OK in the delete confirmation dialog.
   Verify that the folder's window closes.
-]]--
+]]
 test.Step(
   "Window closed if folder deleted via trash",
   function()
@@ -182,7 +182,7 @@ end)
   folder's window. Activate the folder's parent window and select the
   folder icon. File > Delete. Click OK in the delete confirmation
   dialog. Verify that the folder's window closes.
-]]--
+]]
 test.Step(
   "Window closed if folder deleted via menu",
   function()
@@ -207,7 +207,7 @@ end)
    prompt is shown for deleting each file in deepest-first order (B,
    Z, Y, X). Click Yes at each prompt. Verify that all files are
    deleted.
-]]--
+]]
 test.Step(
   "Nested file prompts",
   function()
@@ -244,7 +244,7 @@ end)
   the disk from the Disk II drive. Drag a file to the trash. When
   prompted to insert the disk, click Cancel. Verify that when the
   window closes the disk icon is no longer dimmed.
-]]--
+]]
 test.Step(
   "Ejected disk",
   function()

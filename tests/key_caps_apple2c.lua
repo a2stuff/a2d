@@ -4,12 +4,12 @@ MODEL="apple2c4"
 MODELARGS=""
 DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Apple Menu > Key Caps. Verify that the "original"
   layout is shown, with the backslash above the Return key.
-]]--
+]]
 test.Step(
   "Key Caps - Apple IIc",
   function()

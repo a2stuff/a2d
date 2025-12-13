@@ -3,11 +3,11 @@
 MODELARGS="-sl2 mouse -sl7 cffa202 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Verify that Escape key exits.
-]]--
+]]
 test.Step(
   "Escape exits text preview",
   function()
@@ -19,7 +19,7 @@ end)
 
 --[[
   Verify that Space toggles Proportional/Fixed mode.
-]]--
+]]
 test.Step(
   "Space toggles modes",
   function()
@@ -43,7 +43,7 @@ end)
   Verify that the "Proportional" label has the same baseline as the
   window title. Click on "Proportional". Verify that the "Fixed" label
   has the same baseline as the window title.
-]]--
+]]
 test.Step(
   "Click toggles modes",
   function()
@@ -77,7 +77,7 @@ end)
 
 --[[
   Verify that DeskTop's selection is not cleared on exit.
-]]--
+]]
 test.Step(
   "Selection retained",
   function()
@@ -96,7 +96,7 @@ end)
   * Click "Proportional". Verify that the scrollbar remains inactive.
 
   * Click "Fixed". Verify that the scrollbar remains inactive.
-]]--
+]]
 test.Step(
   "Short file keeps scrollbar inactive",
   function()
@@ -126,7 +126,7 @@ end)
 
   * Click the Proportional/Fixed button on the title bar. Verify that
     the view is scrolled to the top.
-]]--
+]]
 test.Step(
   "Long file and scrolling",
   function()
@@ -185,7 +185,7 @@ end)
   * Scroll somewhere in the file. Click the scrollbar thumb without
     moving it. Verify the thumb doesn't move and the content doesn't
     scroll.
-]]--
+]]
 test.Step(
   "Touching thumb doesn't cause repaint",
   function()
@@ -220,7 +220,7 @@ end)
   approximately the middle of the file.
 
   * Verify that Up/Down Arrow keys scroll by one line consistently.
-]]--
+]]
 test.Step(
   "Scroll is proportional",
   function()
@@ -256,7 +256,7 @@ end)
     parsed. With any acceleration disabled, use
     Open-Apple+Solid-Apple+Down to jump to the bottom of the file.
     Verify that the view is displayed without undue delay.
-]]--
+]]
 test.Step(
   "Performance: First page displays immediately",
   function()
@@ -285,7 +285,7 @@ end)
 --[[
   Open `/TESTS/FILE.TYPES/TABS`. Verify that the file displays all
   lines correctly.
-]]--
+]]
 test.Step(
   "Tabs",
   function()
@@ -300,7 +300,7 @@ end)
   bottom line reads "with". Scroll down again using down arrow key.
   Verify that the file correctly scrolled down one line. Scroll to the
   bottom of the file. Ensure the entire file is visible.
-]]--
+]]
 test.Step(
   "Scroll edge case",
   function()
@@ -326,7 +326,7 @@ end)
   to "Fixed". Verify that the scrollbar activates and that the thumb
   is at the top. Scroll down. Click "Fixed" to toggle to
   "Proportional". Verify that the scrollbar deactivates.
-]]--
+]]
 test.Step(
   "Toggling and scrollbar",
   function()

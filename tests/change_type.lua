@@ -3,12 +3,12 @@
 MODELARGS="-sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Select a folder. Apple > Change Type. Modify only the type (e.g.
   `06`). Verify that an error is shown.
-]]--
+]]
 test.Step(
   "Change type of folder fails",
   function()
@@ -25,7 +25,7 @@ end)
 --[[
   Select a folder. Apple > Change Type. Modify only the aux type (e.g.
   `8000`). Verify that no error is shown.
-]]--
+]]
 test.Step(
   "Change auxtype of folder succeeds",
   function()
@@ -45,7 +45,7 @@ end)
   Select a non-folder and a folder. Apple > Change Type. Modify only
   the type (e.g. `06`). Verify that an error is shown, and only the
   non-folder is modified.
-]]--
+]]
 test.Step(
   "Change file types of folder and non-folder leaves folders alone",
   function()
@@ -65,7 +65,7 @@ end)
 --[[
   Select a non-folder and a folder. Apple > Change Type. Modify only
   the aux type (e.g. `8000`). Verify that no error is shown.
-]]--
+]]
 test.Step(
   "Change aux types of folder and non-folders",
   function()
@@ -86,7 +86,7 @@ end)
 --[[
   Select a non-folder. Apple > Change Type. Specify `0F` as the type
   and click OK. Verify that an error is shown.
-]]--
+]]
 test.Step(
   "Change type to folder is not allowed",
   function()
@@ -103,7 +103,7 @@ end)
 --[[
   Select two folders. Apple > Change Type. Modify only the type (e.g.
   `06`). Verify that only a single error is shown.
-]]--
+]]
 test.Step(
   "Single alert when modifying folder types",
   function()

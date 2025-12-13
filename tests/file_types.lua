@@ -2,7 +2,7 @@
 
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Put image file in `APPLE.MENU`, start DeskTop. Select it from the
@@ -13,7 +13,7 @@ MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
 
   Put font file in `APPLE.MENU`, start DeskTop. Select it from the
   Apple menu. Verify font is shown.
-]]--
+]]
 test.Step(
   "Previewable types in Apple Menu",
   function()
@@ -50,7 +50,7 @@ end)
 
   Put System program in `APPLE.MENU`, start DeskTop. Select it from
   the Apple menu. Verify it runs.
-]]--
+]]
 test.Step(
   "Launchable types in Apple Menu",
   function()
@@ -94,7 +94,7 @@ end)
 
   Launch DeskTop. Open `SAMPLE.MEDIA`. Select `KARATEKA.YELL`. Press
   Solid-Apple+O. Verify that it executes.
-]]--
+]]
 test.Step(
   "Binary files",
   function()
@@ -162,7 +162,7 @@ end)
 
   Launch DeskTop. Select a TXT file. Rename it to have a .BNY suffix.
   Verify that it has an archive icon, without moving.
-]]--
+]]
 test.Step(
   "renames changing icons",
   function()
@@ -211,7 +211,7 @@ end)
 --[[
   Launch DeskTop. File > New Folder.... Name it with a .A2FC suffix.
   Verify that it still has a folder icon.
-]]--
+]]
 test.Step(
   "renaming folders doesn't change them",
   function()

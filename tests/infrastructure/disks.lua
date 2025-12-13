@@ -4,7 +4,7 @@ MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl7 scsi -aux ext80"
 DISKARGS="-hard1 $HARDIMG -flop1 $FLOP1IMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 test.Step(
   "swap images",

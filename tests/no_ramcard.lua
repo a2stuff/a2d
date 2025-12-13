@@ -3,14 +3,14 @@
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Configure a system without a RAMCard. Launch DeskTop. Verify that
   the volume containing DeskTop appears in the top right corner of the
   desktop. File > Copy To.... Verify that the volume containing
   DeskTop is the first disk shown.
-]]--
+]]
 test.Step(
   "no ramcard, boot volume appears first",
   function()

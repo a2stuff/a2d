@@ -3,7 +3,7 @@
   Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow
   keys to move the window outline. Press Escape. Verify that the
   window does not move.
-]]--
+]]
 test.Step(
   "Move window with keyboard - cancelled",
   function()
@@ -29,7 +29,7 @@ end)
   Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow
   keys to move the window outline. Press Return. Verify that the
   window moves to the new location.
-]]--
+]]
 test.Step(
   "Move window with keyboard",
   function()
@@ -56,7 +56,7 @@ end)
   Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow
   keys to resize the window outline. Press Escape. Verify that the
   window does not resize.
-]]--
+]]
 test.Step(
   "Resize window with keyboard - cancelled",
   function()
@@ -82,7 +82,7 @@ end)
   Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow
   keys to resize the window outline. Press Return. Verify that the
   window resizes.
-]]--
+]]
 test.Step(
   "Resize window with keyboard",
   function()

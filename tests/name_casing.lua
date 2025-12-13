@@ -3,7 +3,7 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_floppy.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 -- Helpers, since we can only toggle the flag
 local preserve_flag = true -- default state in config
@@ -22,7 +22,7 @@ end
 
 --[[
   Verify that GS/OS volume name cases show correctly.
-]]--
+]]
 test.Step(
   "GS/OS volume name cases show correctly",
   function()
@@ -33,7 +33,7 @@ end)
 --[[
   Verify that GS/OS file name cases show correctly in
   `/TESTS/PROPERTIES/GS.OS.NAMES`
-]]--
+]]
 test.Step(
   "GS/OS file name cases show correctly",
   function()
@@ -44,7 +44,7 @@ end)
 --[[
   Verify that AppleWorks file name cases show correctly in
   `/TESTS/PROPERTIES/AW.NAMES`
-]]--
+]]
 test.Step(
   "AppleWorks file name cases show correctly",
   function()
@@ -57,7 +57,7 @@ end)
   Specify a name using a mix of uppercase and lowercase. Close the
   containing window and re-open it. Verify that the filename case is
   retained.
-]]--
+]]
 test.Variants(
   {
     "AppleWorks files rename with case preservation - preserve off",
@@ -85,7 +85,7 @@ end)
   Specify a name using a mix of uppercase and lowercase. Close the
   containing window and re-open it. Verify that the filename case is
   retained.
-]]--
+]]
 test.Variants(
   {
     "AppleWorks files duplicate with case preservation - preserve off",
@@ -114,7 +114,7 @@ end)
 
   Launch DeskTop. In the Options control panel, check "Preserve
   uppercase and lowercase in names". Then run these test cases:
-]]--
+]]
 
 --[[
   File > New Folder. Enter a name with mixed case (e.g.
@@ -126,7 +126,7 @@ end)
   "lower.UPPER.MiX"). Verify that the name appears with the specified
   case (e.g. "Lower.Upper.Mix"). Close the window and re-open it.
   Verify that the name remains unchanged.
-]]--
+]]
 test.Variants(
   {
     "File > New Folder - preserve off",
@@ -161,7 +161,7 @@ end)
   case (e.g. "lower.UPPER.MiX"). Verify that the name appears with the
   specified case (e.g. "Lower.Upper.Mix"). Close the window and
   re-open it. Verify that the name remains unchanged.
-]]--
+]]
 test.Variants(
   {
     "File > Rename - preserve off",
@@ -197,7 +197,7 @@ end)
   mixed case (e.g. "lower.UPPER.MiX"). Verify that the name appears
   with the specified (e.g. "Lower.Upper.Mix"). Close the window and
   re-open it. Verify that the name remains unchanged.
-]]--
+]]
 test.Variants(
   {
     "File > Duplicate - preserve off",
@@ -234,7 +234,7 @@ end)
   (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that
   the name appears with the specified case (e.g. "lower.UPPER.MiX").
   Restart DeskTop. Verify that the name remains unchanged.
-]]--
+]]
 test.Variants(
   {
     "Format - preserve off",
@@ -268,7 +268,7 @@ end)
   (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that
   the name appears with the specified case (e.g. "lower.UPPER.MiX").
   Restart DeskTop. Verify that the name remains unchanged.
-]]--
+]]
 test.Variants(
   {
     "Erase - preserve off",
@@ -300,7 +300,7 @@ end)
   Verify that the name appears with heuristic word casing (e.g.
   "Lower.Upper.Mix"). Close the window and re-open it. Verify that the
   name remains unchanged.
-]]--
+]]
 test.Step(
   "Canceled rename",
   function()
@@ -339,7 +339,7 @@ end)
   * Hold Solid-Apple and drag it to another folder on the same volume
     to copy it. Verify that the copied file retains the same mixed
     case name.
-]]--
+]]
 test.Variants(
   {
     "drag - copy to another volume",
@@ -443,7 +443,7 @@ end)
   case, e.g. "VOL2.mixed". Drag the first volume to the second. Verify
   that the newly created folder is named with the same case as the
   dragged volume
-]]--
+]]
 test.Step(
   "Copy one volume to another",
   function()

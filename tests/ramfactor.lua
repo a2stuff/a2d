@@ -4,7 +4,7 @@ MODEL="apple2ee"
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 function RAMCardTest(name, func1, func2)
   test.Step(
@@ -35,7 +35,7 @@ end
   Run DeskTop on a system with RAMFactor/"Slinky" RAMDisk. Verify that
   sub-directories under `APPLE.MENU` are copied to
   `/RAM5/DESKTOP/APPLE.MENU` (or appropriate volume path).
-]]--
+]]
 RAMCardTest(
   "Apple Menu subdirectories copied to Slinky RAM",
   function()
@@ -48,7 +48,7 @@ end)
   `LOCAL/DESKTOP.CONFIG` file from the startup disk, if it was
   present. Go into Control Panels and change a setting. Verify that
   `LOCAL/DESKTOP.CONFIG` is written to the startup disk.
-]]--
+]]
 RAMCardTest(
   "Desktop.config",
   function()
@@ -76,7 +76,7 @@ end)
   `LOCAL/SELECTOR.LIST` file from the startup disk, if it was present.
   Shortcuts > Add a Shortcut, and create a new shortcut. Verify that
   `LOCAL/SELECTOR.LIST` is written to the startup disk.
-]]--
+]]
 RAMCardTest(
   "Selector.list",
   function()
@@ -96,7 +96,7 @@ end)
   `/TESTS/RAMCARD/SHORTCUT/BASIC.SYSTEM`, set to copy to RAMCard at
   boot. Ensure DeskTop is set to copy to RAMCard on startup. Restart
   DeskTop. Verify that the directory is successfully copied.
-]]--
+]]
 RAMCardTest(
   "Shortcut copied on boot",
   function()
@@ -114,7 +114,7 @@ end)
   Ensure DeskTop is set to launch Shortcuts. Quit DeskTop. Launch
   Shortcuts. Select the shortcut. Verify that the directory is
   successfully copied.
-]]--
+]]
 RAMCardTest(
   "Shortcut copied on use",
   function()
@@ -145,7 +145,7 @@ end)
   to a same-volume window so it is moved. Configure a shortcut to copy
   to RAMCard "at first use". Invoke the shortcut. Verify that the
   shortcut's files were indeed copied, not moved.
-]]--
+]]
 RAMCardTest(
   "Copy to RAMCard always copies",
   function()
@@ -185,7 +185,7 @@ end)
   Drag Apple.Menu from the Desktop folder to the Control.Panels
   window. Verify that an alert is shown that an item can't be moved or
   copied into itself.
-]]--
+]]
 RAMCardTest(
   "Apple Menu > Control Panels is from the RAMCard",
   function()
@@ -216,7 +216,7 @@ end)
   (substituting the RAM disk's name for `RAM5`). Launch
   `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop
   endlessly.
-]]--
+]]
 test.Step(
   "Copy to RAMCard fails gracefully",
   function()
@@ -246,7 +246,7 @@ end)
   Launch DeskTop, ensure it copies itself to RAMCard. Configure a
   shortcut set to Copy to RAMCard at first use. Invoke the shortcut.
   Verify that it correctly copies to the RAMCard and runs.
-]]--
+]]
 test.Step(
   "Copy to RAMCard on use works",
   function()

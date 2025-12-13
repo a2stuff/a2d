@@ -3,7 +3,7 @@
 
   Generic utilities for Apple II
 
-  ============================================================]]--
+  ============================================================]]
 
 local apple2 = {
   SCREEN_HEIGHT = 192,
@@ -233,7 +233,7 @@ end
   IIc: bit 5 = "Bootup speed": 0="Standard", 1="4MHz"
 
   IIgs: bits 0-7 = "CPU type": 0="Standard", 1="7MHz ZipGS", 3="8MHz ZipGS", 5="12MHz ZipGS", 7="16MHz ZipGS"
-]]--
+]]
 
 
 
@@ -253,7 +253,7 @@ end
     "Color algorithm" 00_01110000
     "Lores artifacts" 00_10000000
     "Text color"      11_00000000
-  ]]--
+  ]]
 
 
 local function SetVideoConfig(field_name, value, mask, shift)
@@ -575,7 +575,7 @@ function apple2.MoveMouse(x, y)
     # but there's also scaling. Ugh.
 
 
-  ]]--
+  ]]
 
   EnsureMouse()
 

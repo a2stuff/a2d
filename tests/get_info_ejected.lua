@@ -4,14 +4,14 @@ MODEL="apple2cp"
 MODELARGS=""
 DISKARGS="-flop3 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Select a volume or folder containing multiple files. File > Get
   Info. During the count of the files, eject the disk. Verify that an
   alert appears. Reinsert the disk. Click Try Again. Verify that the
   count of files continues and paints in the correct location.
-]]--
+]]
 test.Step(
   "Alert shown during File > Get Info if disk ejected, Try Again works",
   function()

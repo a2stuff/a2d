@@ -3,7 +3,7 @@
 MODELARGS="-sl2 mouse -sl7 cffa202 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
@@ -19,7 +19,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
   * Select image file icon, select DA from Apple menu. Verify image is
     shown.
-]]--
+]]
 test.Step(
   "SHOW.IMAGE.FILE in Apple Menu",
   function()
@@ -68,7 +68,7 @@ end)
 
   * Select text file icon, select DA from Apple menu. Verify text is
     shown.
-]]--
+]]
 test.Step(
   "SHOW.TEXT.FILE in Apple Menu",
   function()
@@ -117,7 +117,7 @@ end)
 
   * Select font file icon, select DA from Apple menu. Verify font is
     shown.
-]]--
+]]
 test.Step(
   "SHOW.FONT.FILE in Apple Menu",
   function()
@@ -166,7 +166,7 @@ end)
 
   * Select Electric Duet file icon, select DA from Apple menu. Verify
     music is played.
-]]--
+]]
 test.Step(
   "SHOW.DUET.FILE in Apple Menu",
   function()

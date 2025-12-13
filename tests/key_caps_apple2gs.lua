@@ -5,12 +5,12 @@ MODELARGS="-sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 RESOLUTION="704x462"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended"
   layout is shown, with the backslash to the right of the space bar.
-]]--
+]]
 test.Step(
   "Key Caps - Apple IIgs",
   function()

@@ -3,7 +3,7 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv "
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Open a folder with no items. Verify window header says "0 Items"
@@ -17,7 +17,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv "
 
   Open a folder with only one item. File > New Folder. Enter a name.
   Verify that the window header says "2 Items"
-]]--
+]]
 test.Step(
   "Item counts",
   function()
@@ -50,7 +50,7 @@ end)
   File > New Folder. Enter a name. Verify that the "items" value
   increases by one, and "K in disk" increases by 0, 0.5 or 1, and that
   the "K available" decreases by 0, 0.5 or 1.
-]]--
+]]
 test.Step(
   "Available space",
   function()
@@ -79,7 +79,7 @@ end)
   that the "XK available" display gets cut off. Repeat with the window
   sized so that both scrollbars appear and thumbs moved to the middle
   of the scrollbars.
-]]--
+]]
 test.Step(
   "Header clipping",
   function()

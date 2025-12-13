@@ -3,13 +3,13 @@
 MODELARGS="-sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Close all windows. Apple Menu > Find Files. Type
   `PRODOS` and click Search. Verify that all volumes are searched
   recursively.
-]]--
+]]
 test.Step(
   "Search all volumes",
   function()
@@ -26,7 +26,7 @@ end)
   Launch DeskTop. Open a volume window. Apple Menu > Find Files. Type
   `PRODOS` and click Search. Verify that only that volume's contents
   are searched recursively.
-]]--
+]]
 test.Step(
   "Search open volume",
   function()
@@ -43,7 +43,7 @@ end)
   Launch DeskTop. Open a volume window. Open a folder window. Apple
   Menu > Find Files. Type `PRODOS` and click Search. Verify that only
   that folder's contents are searched recursively.
-]]--
+]]
 test.Step(
   "Search open volume",
   function()
@@ -61,7 +61,7 @@ end)
   click Search. Select a file in the list. Press Open-Apple+O. Verify
   that the Find Files window closes, that a window containing the file
   opens, and that the file icon is selected.
-]]--
+]]
 test.Step(
   "OA+O on selection",
   function()
@@ -81,7 +81,7 @@ end)
   click Search. Select a file in the list. Press Solid-Apple+O. Verify
   that the Find Files window closes, that a window containing the file
   opens, and that the file icon is selected.
-]]--
+]]
 test.Step(
   "SA+O on selection",
   function()
@@ -107,7 +107,7 @@ end)
   Search. Double-click a file in the list that's inside the folder.
   Verify that the Find Files window closes, and that the file icon is
   selected.
-]]--
+]]
 test.Step(
   "Double-click on selection in inactive window",
   function()
@@ -131,7 +131,7 @@ end)
   Open `/TESTS/FIND.FILES`. Apple Menu > Find Files. Type `*` and
   click Search. Verify that the DA doesn't crash. (But the deeply
   nested `NOT.FOUND` file will not be found.)
-]]--
+]]
 test.Step(
   "Deeply nested",
   function()
@@ -146,7 +146,7 @@ end)
 --[[
   Rename `/TESTS` to `/ABCDEF123456789`. Open the volume. Apple Menu >
   Find Files. Type *. Verify that the DA doesn't crash.
-]]--
+]]
 test.Step(
   "Long pathnames",
   function()
@@ -164,7 +164,7 @@ end)
   Open `/TESTS/FOLDER/`. Apple Menu > Find Files. Type `*` and click
   Search. Press Down Arrow once. Type Return. Press Down Arrow again.
   Verify that only one entry in the list appears highlighted.
-]]--
+]]
 test.Step(
   "Selection",
   function()

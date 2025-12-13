@@ -3,7 +3,7 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Repeat the following for these permutations:
@@ -13,7 +13,7 @@ DISKARGS="-hard1 $HARDIMG"
   * Renaming (1) the volume that DeskTop loaded from, and renaming (2)
     the DeskTop folder itself. (For #2, move all DeskTop files to a
     subfolder.)
-]]--
+]]
 function RenameTest(name, proc)
   test.Variants(
     {
@@ -91,7 +91,7 @@ end
 
 --[[
   File > Copy To... (overlays)
-]]--
+]]
 RenameTest(
   "overlays",
   function(dtpath)
@@ -105,7 +105,7 @@ end)
 --[[
   Special > Copy Disk (and that File > Quit returns to DeskTop)
   (overlay + quit handler)
-]]--
+]]
 RenameTest(
   "overlay + quit handler",
   function(dtpath)
@@ -120,7 +120,7 @@ end)
 
 --[[
   Apple Menu > Calculator (desk accessories)
-]]--
+]]
 RenameTest(
   "desk accessories",
   function(dtpath)
@@ -132,7 +132,7 @@ end)
 
 --[[
   Apple Menu > Control Panels (relative folders)
-]]--
+]]
 RenameTest(
   "relative folders",
   function(dtpath)
@@ -146,7 +146,7 @@ end)
 --[[
   Control Panel, change desktop pattern, close, quit, restart
   (settings)
-]]--
+]]
 RenameTest(
   "settings",
   function(dtpath)
@@ -165,7 +165,7 @@ end)
 
 --[[
   Windows are saved on exit/restored on restart (configuration)
-]]--
+]]
 RenameTest(
   "configuration",
   function(dtpath)
@@ -178,7 +178,7 @@ end)
 --[[
   Invoking another application (e.g. `BASIC.SYSTEM`), then quitting
   back to DeskTop (quit handler)
-]]--
+]]
 RenameTest(
   "quit handler",
   function(dtpath)
@@ -193,7 +193,7 @@ end)
 
 --[[
   Modifying shortcuts (selector)
-]]--
+]]
 RenameTest(
   "selector file",
   function(dtpath)

@@ -8,7 +8,7 @@
   Color. Verify that the display shows in monochrome. Preview an
   image, and verify that the image shows in color and the DeskTop
   returns to monochrome after exiting.
-]]--
+]]
 test.Step(
   "RGB Color desktop",
   function()
@@ -44,7 +44,7 @@ end)
   Configuration > Monitor Type > Video-7 RGB. Start DeskTop. Open a
   window. Apple Menu > Run Basic Here. Type `HGR : HCOLOR=3 : HPLOT
   0,0 TO 100,100`. Verify a diagonal line appears.
-]]--
+]]
 test.Step(
   "Mode on exit",
   function()

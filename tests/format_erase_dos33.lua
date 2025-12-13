@@ -3,14 +3,14 @@
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -flop1 res/dos33_floppy.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Run the command. Select a slot/drive containing a
   DOS 3.3 disk. Enter a new name and click OK. Verify that the
   confirmation prompt shows "the DOS 3.3 disk in slot # drive #",
   without quotes.
-]]--
+]]
 test.Variants(
   {
     "Format DOS 3.3 disk",

@@ -3,13 +3,13 @@
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[============================================================
 
   Miscellaneous investigations
 
-  ============================================================]]--
+  ============================================================]]
 
 test.Step(
   "Verify keyboard shortcuts option doesn't get enabled by reset (in MAME)",
@@ -20,7 +20,7 @@ test.Step(
       hard reset (Control-OA-Reset), MAME sometimes is in a state
       where MGKT can't find the mouse. Is this an emulator issue or
       real bug? Is there some firmware banking that needs fixing?
-    ]]--
+    ]]
 
     apple2.ControlOAReset()
     a2d.WaitForRestart()

@@ -4,12 +4,12 @@ MODEL="apple2cp"
 MODELARGS=""
 DISKARGS="-flop3 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Open the Options DA. Eject the startup disk. Close the DA without
   changing any settings. Verify that you are not prompted to save.
-]]--
+]]
 test.Step(
   "No prompt if no change",
   function()
@@ -30,7 +30,7 @@ end)
 --[[
   Open the Options DA. Eject the startup disk. Modify a setting and
   close the DA. Verify that you are prompted to save.
-]]--
+]]
 test.Step(
   "Prompt if changed",
   function()
@@ -55,7 +55,7 @@ end)
   only the title bar is visible. Press Apple-1, Apple-2, Apple-3.
   Verify that checkboxes don't mis-paint on the screen. Move the
   window back up. Verify that the state of the checkboxes has toggled.
-]]--
+]]
 test.Step(
   "Repaints when obscured",
   function()
@@ -81,7 +81,7 @@ end)
 --[[
   Open the Options DA. Close the DA. Apple Menu > Run Basic Here.
   Verify that the system does not crash to the monitor.
-]]--
+]]
 test.Step(
   "No crash after running",
   function()

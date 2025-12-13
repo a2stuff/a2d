@@ -3,12 +3,12 @@
 MODELARGS="-sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Launch DeskTop. Open a volume window. Apple Menu > Run Basic Here.
   Verify that `/RAM` exists.
-]]--
+]]
 test.Step(
   "/RAM exists",
   function()
@@ -27,7 +27,7 @@ end)
   Launch DeskTop. Open a window for a volume that is not the startup
   disk. Apple Menu > Run Basic Here. Verify that the PREFIX is set
   correctly.
-]]--
+]]
 test.Step(
   "PREFIX set correctly",
   function()
@@ -47,7 +47,7 @@ end)
   itself to RAMCard. Ensure `BASIC.SYSTEM` is present on the startup
   disk. Open a window. Apple Menu > Run Basic Here. Verify that
   `BASIC.SYSTEM` starts.
-]]--
+]]
 test.Step(
   "Copied to RAMCard",
   function()
