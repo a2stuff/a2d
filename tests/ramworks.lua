@@ -43,9 +43,10 @@ test.Step(
 
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    apple2.DownArrowKey() -- to PRODOS
-    apple2.DownArrowKey() -- to CLOCK.SYSTEM
-    apple2.ReturnKey()
+
+    -- In Bitsy Bye (since RAMAUX doesn't chain, it QUITs)
+    test.Expect(apple2.GrabTextScreen():match("^S7,D1:/A2.DESKTOP"), "should be at S7,S1")
+    apple2.BitsyInvokeFile("CLOCK.SYSTEM")
 
     a2d.WaitForCopyToRAMCard()
     emu.wait(40) -- extra slow

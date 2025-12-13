@@ -250,16 +250,8 @@ test.Step(
 
     -- Restart DESKTOP.SYSTEM
 
-    -- TODO: Utility for driving Bitsy Bye
-    -- NOTE: Will need to handle inverted characters
-
-    apple2.TabKey() -- to S3,D2
-    apple2.TabKey() emu.wait(5) -- to S6,D1
-    apple2.TabKey() emu.wait(5) -- to S5,D1
-    apple2.DownArrowKey() -- CLOCK.SYSTEM
-    apple2.DownArrowKey() -- README
-    apple2.DownArrowKey() -- DESKTOP.SYSTEM
-    apple2.ReturnKey()
+    apple2.BitsySelectSlotDrive("S5,D1")
+    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
     a2d.WaitForRestart()
 
     -- Ensure no prompt for saving appears
@@ -301,18 +293,8 @@ test.Step(
 
     a2d.Quit()
 
-    -- Restart DESKTOP.SYSTEM
-
-    -- TODO: Utility for driving Bitsy Bye
-    -- NOTE: Will need to handle inverted characters
-
-    apple2.TabKey() -- to S3,D2
-    apple2.TabKey() emu.wait(5) -- to S6,D1
-    apple2.TabKey() emu.wait(5) -- to S5,D1
-    apple2.DownArrowKey() -- CLOCK.SYSTEM
-    apple2.DownArrowKey() -- README
-    apple2.DownArrowKey() -- DESKTOP.SYSTEM
-    apple2.ReturnKey()
+    apple2.BitsySelectSlotDrive("S5,D1")
+    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
     a2d.WaitForRestart()
 
     -- Ensure no prompt for disk appears

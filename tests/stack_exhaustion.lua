@@ -20,7 +20,7 @@ test.Step(
     for i = 1, 50 do
       a2d.SelectAndOpen("DESKTOP.SYSTEM")
       a2d.WaitForRestart()
-      print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
+      --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
     end
@@ -38,7 +38,7 @@ test.Step(
     for i = 1, 70 do
       a2d.SelectAndOpen("KARATEKA.YELL")
       a2d.WaitForRestart()
-      print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
+      --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
     end
@@ -59,7 +59,7 @@ test.Step(
       apple2.Type("1")
       a2d.DialogOK()
       a2d.WaitForRestart()
-      print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
+      --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
     end

@@ -488,7 +488,7 @@ end
 
 function a2d.QuitAndRestart()
   a2d.Quit()
-  apple2.ReturnKey() -- Launch PRODOS in Bitsy Bye
+  apple2.BitsyInvokeFile("PRODOS")
   a2d.WaitForRestart()
 end
 

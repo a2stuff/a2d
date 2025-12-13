@@ -276,8 +276,10 @@ test.Step(
     emu.wait(5) -- floppies are slow
     a2d.Quit()
     apple2.GetDiskIIS6D1():unload()
-    apple2.ReturnKey() -- PRODOS
+
+    apple2.BitsyInvokeFile("PRODOS")
     a2d.WaitForRestart()
+
     a2d.OpenPath("/A2.DESKTOP")
     a2d.CloseWindow()
     a2d.OpenPath("/A2.DESKTOP")

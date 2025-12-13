@@ -127,9 +127,11 @@ test.Step(
   "Disk II Drive polling",
   function()
     a2d.OpenPath("/FLOPPY1")
-    a2d.Quit()
+    a2d.Quit() -- to Bitsy Bye
+
     apple2.GetDiskIIS6D1():unload()
-    apple2.ReturnKey() -- run PRODOS from Bitsy Bye
+
+    apple2.BitsyInvokeFile("PRODOS")
 
     -- TODO: Verify only polled once - watch drive access?
 

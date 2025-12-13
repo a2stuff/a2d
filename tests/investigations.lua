@@ -27,50 +27,22 @@ test.Step(
     a2d.WaitForRestart()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("keyboard shortcuts should not be enabled")
+    a2d.DialogCancel()
 end)
 
-
 test.Step(
-  "Ejecting floppy goes sideways",
+  "OA+SA+Down hangs if disk was ejected",
   function()
     emu.wait(20)
     local drive = apple2.GetDiskIIS6D1()
     local current = drive.filename
     drive:unload()
 
+    -- OpenPath implicitly uses OA+SA+Down
     a2d.OpenPath("/FLOPPY1")
     a2dtest.ExpectAlertShowing()
-    apple2.EscapeKey()
+    a2d.DialogOK()
+    a2dtest.ExpectNotHanging()
 
-    --[[
-      we seem to hang here somehow?
-
-      can't reproduce it on the console though!
-
-      maybe we're accessing the disk when it is yanked? Do something
-      modal perhaps?
-
-      CPU seems to still be chugging along, albeit in $C8xx space
-    ]]--
-
-    a2dtest.ExpectAlertNotShowing()
-    emu.wait(60)
-    test.Snap("Waited a long time")
-    apple2.Type("TRASH")
-    test.Snap("typed some shit")
-    a2d.InMouseKeysMode(function(m)
-        m.MoveByApproximately(apple2.SCREEN_WIDTH,apple2.SCREEN_HEIGHT)
-        m.MoveByApproximately(-apple2.SCREEN_WIDTH,-apple2.SCREEN_HEIGHT)
-        m.MoveByApproximately(apple2.SCREEN_WIDTH,apple2.SCREEN_HEIGHT)
-        m.MoveByApproximately(-apple2.SCREEN_WIDTH,-apple2.SCREEN_HEIGHT)
-        m.MoveByApproximately(apple2.SCREEN_WIDTH,apple2.SCREEN_HEIGHT)
-        m.MoveByApproximately(-apple2.SCREEN_WIDTH,-apple2.SCREEN_HEIGHT)
-        m.MoveByApproximately(apple2.SCREEN_WIDTH,apple2.SCREEN_HEIGHT)
-        m.MoveByApproximately(-apple2.SCREEN_WIDTH,-apple2.SCREEN_HEIGHT)
-    end)
-    -- This seems to make us hang or crash?
-    drive:load(current)
-
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    a2d.WaitForRestart()
+    -- Does not hang if OA+O is used instead of OA+SA+Down
 end)

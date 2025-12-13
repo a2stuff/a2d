@@ -31,11 +31,9 @@ test.Step(
   "Solid Apple File > Open",
   function()
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
-    local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x, y)
+        m.MoveToApproximately(30, 5)
         apple2.PressSA()
         m.Click()
         m.MoveByApproximately(0, 25)

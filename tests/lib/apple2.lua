@@ -871,24 +871,89 @@ function apple2.SetDHRByte(row, col, value)
   apple2.WriteRAMDevice(addr + 0x10000 * (1-bank), value)
 end
 
-function apple2.GrabTextScreen()
+function IterateTextScreen(char_cb, row_cb)
   local is80 = apple2.ReadSSW("RD80VID") > 127
-  local screen = ""
+  local isAlt = apple2.ReadSSW("RDALTCHAR") > 127
   for row = 0,23 do
     local base = 0x400 + (row - math.floor(row/8) * 8) * 0x80 + 40 * math.floor(row/8)
     for col = 0,39 do
       if is80 then
-        byte = apple2.ReadRAMDevice(0x10000 + base + col)
-        byte = byte & 0x7F
-        screen = screen .. string.format("%c", byte)
+        char_cb(apple2.ReadRAMDevice(0x10000 + base + col), isAlt)
       end
-      byte = apple2.ReadRAMDevice(base + col)
-      byte = byte & 0x7F
-      screen = screen .. string.format("%c", byte)
+      char_cb(apple2.ReadRAMDevice(base + col), isAlt)
     end
-    screen = screen .. "\n"
+    row_cb()
   end
+end
+function apple2.GrabTextScreen()
+  -- Apple IIe and later, non-MouseText
+  -- 0x00-0x1F: Inverse  @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
+  -- 0x20-0x3F: Inverse  !"#$%&'()*+,-./0123456789:;<=>?@
+  -- 0x40-0x5F: Flashing @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ (ALTCHAR - MouseText)
+  -- 0x60-0x7F: Flashing !"#$%&'()*+,-./0123456789:;<=>?@ (ALTCHAR - inverse lower)
+  -- 0x80-0x9F: Normal   @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
+  -- 0xA0-0xBF: Normal   !"#$%&'()*+,-./0123456789:;<=>?@
+  -- 0xC0-0xDF: Normal   @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
+  -- 0xE0-0xFF: Normal   `abcdefghijklmnopqrstuvwxyz{|}~ `
+
+  local screen = ""
+  IterateTextScreen(
+    function(byte, isAlt)
+      if     byte < 0x20 then -- 0x00-0x1F: inverse upper
+        byte = byte + 0x40
+      elseif byte < 0x40 then -- 0x20-0x3F: inverse punctuation
+        byte = byte
+      elseif byte < 0x60 then -- 0x40-0x5F: flashing upper / MouseText
+        if not isAlt then
+          byte = byte
+        else
+          byte = 0x20 -- TODO: MouseText mapping
+        end
+      elseif byte < 0x80 then -- 0x60-0x7F: flashing punctuation / inverse lower
+        if not isAlt then
+          byte = byte - 0x40
+        else
+          byte = byte
+        end
+      elseif byte < 0xA0 then -- 0x80-0x9F: normal upper
+        byte = byte - 0x40
+      else -- 0xA0-0xFF: normal punctuation / upper / lower
+        byte = byte - 0x80
+      end
+      screen = screen .. string.format("%c", byte)
+    end,
+    function()
+      screen = screen .. "\n"
+  end)
   return screen
+end
+
+function apple2.GrabInverseText()
+  local str = ""
+  IterateTextScreen(
+    function(byte, isAlt)
+      if     byte < 0x20 then -- 0x00-0x1F: inverse upper
+        byte = byte + 0x40
+      elseif byte < 0x40 then -- 0x20-0x3F: inverse punctuation
+        byte = byte
+      elseif byte < 0x60 then -- 0x40-0x5F: flashing upper / alt: MouseText
+        return
+      elseif byte < 0x80 then -- 0x60-0x7F: flashing punctuation / alt: inverse lower
+        if not isAlt then
+          return
+        else
+          byte = byte
+        end
+      elseif byte < 0xA0 then -- normal upper
+        return
+      else -- normal punctuation / upper / lower
+        return
+      end
+      str = str .. string.format("%c", byte)
+    end,
+    function()
+  end)
+  return str
 end
 
 function apple2.SnapshotDHR()
@@ -911,6 +976,25 @@ function apple2.IsCrashedToMonitor()
   else
     return false
   end
+end
+
+--------------------------------------------------
+
+-- TODO: Implement BitsyInvokePath (tab to volume, then iterate on path segments)
+
+function apple2.BitsySelectSlotDrive(sd)
+  while apple2.GrabTextScreen():match("[^:]+") ~= sd do
+    apple2.TabKey()
+    emu.wait(5)
+  end
+end
+
+function apple2.BitsyInvokeFile(name)
+  while apple2.GrabInverseText() ~= name do
+    apple2.DownArrowKey()
+    emu.wait(1)
+  end
+  apple2.ReturnKey()
 end
 
 --------------------------------------------------

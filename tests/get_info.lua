@@ -34,7 +34,7 @@ end)
 --[[
   File > Get Info a folder containing 1 file. Verify that the size
   shows as "_size_K for 2 items".
-]]-
+]]--
 test.Step(
   "one item in folder",
   function()
@@ -232,7 +232,7 @@ end)
   Open a volume window containing a folder. Select the folder. File >
   Get Info. Check Locked. Click OK. Close the volume window. Re-open
   the volume window. Verify that the folder is still a folder.
-]]-
+]]--
 test.Step(
   "locking folder",
   function()

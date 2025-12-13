@@ -67,7 +67,7 @@ RAMCardTest(
     a2d.CloseWindow()
 
     a2d.SelectPath("/A2.DESKTOP/LOCAL/DESKTOP.CONFIG")
-q    test.Snap("verify DESKTOP.CONFIG selected")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "DESKTOP.CONFIG", "file should exist")
 end)
 
 
@@ -88,7 +88,7 @@ RAMCardTest(
     a2d.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
 
     a2d.SelectPath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
-    test.Snap("verify SELECTOR.LIST selected")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "SELECTOR.LIST", "file should exist")
 end)
 
 --[[
@@ -202,7 +202,7 @@ RAMCardTest(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon_x, icon_y)
         m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y
+        m.MoveToApproximately(dst_x, dst_y)
         m.ButtonUp()
     end)
     a2dtest.WaitForAlert()
