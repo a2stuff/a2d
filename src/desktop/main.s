@@ -216,6 +216,9 @@ tick_counter:
 ;;; Menu Dispatch
 
 .proc HandleKeydown
+        tsx
+        stx     saved_stack
+
         ;; Handle accelerator keys
         lda     event_params::modifiers
         bne     modifiers       ; either Open-Apple or Solid-Apple ?
@@ -318,8 +321,6 @@ menu_accelerators:
         rts
 
 call_proc:
-        tsx
-        stx     saved_stack
         proc_addr := *+1
         jmp     SELF_MODIFIED
 

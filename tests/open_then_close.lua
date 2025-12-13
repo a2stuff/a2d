@@ -1,3 +1,10 @@
+--[[ BEGINCONFIG ========================================
+
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
+DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
+
+======================================== ENDCONFIG ]]--
+
 --[[
   Launch DeskTop. Open a window. Hold Solid-Apple and double-click a
   folder icon. Verify that the folder opens, and that the original
@@ -167,4 +174,25 @@ test.Step(
         a2d.OASADown()
         a2d.WaitForRepaint()
     end)
+end)
+
+--[[
+  Ensure failure to open recovers properly, when invoked
+  from a non-menu shortcut like OA+SA+Down.
+]]--
+test.Step(
+  "OA+SA+Down should not hang if disk was ejected",
+  function()
+    local drive = apple2.GetDiskIIS6D1()
+    local current = drive.filename
+    drive:unload()
+
+    a2d.SelectPath("/FLOPPY1")
+    a2d.OASADown()
+    a2d.WaitForRepaint()
+    a2dtest.ExpectAlertShowing()
+    a2d.DialogOK()
+    a2dtest.ExpectNotHanging()
+
+    drive:load(current)
 end)

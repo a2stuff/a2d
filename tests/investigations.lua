@@ -5,7 +5,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]--
 
-
 --[[============================================================
 
   Miscellaneous investigations
@@ -28,21 +27,4 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("keyboard shortcuts should not be enabled")
     a2d.DialogCancel()
-end)
-
-test.Step(
-  "OA+SA+Down hangs if disk was ejected",
-  function()
-    emu.wait(20)
-    local drive = apple2.GetDiskIIS6D1()
-    local current = drive.filename
-    drive:unload()
-
-    -- OpenPath implicitly uses OA+SA+Down
-    a2d.OpenPath("/FLOPPY1")
-    a2dtest.ExpectAlertShowing()
-    a2d.DialogOK()
-    a2dtest.ExpectNotHanging()
-
-    -- Does not hang if OA+O is used instead of OA+SA+Down
 end)
