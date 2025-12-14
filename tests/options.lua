@@ -6,6 +6,8 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5) -- floppies are slow
+
 --[[
   Open the Options DA. Eject the startup disk. Close the DA without
   changing any settings. Verify that you are not prompted to save.
@@ -88,7 +90,7 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
     a2d.CloseWindow()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
     apple2.TypeLine("REM *** Did not crash ***")
-    test.Snap("verify no crash to monitor")
+    test.Expect(apple2.GrabTextScreen():match("Did not crash"), "should not crash")
 end)

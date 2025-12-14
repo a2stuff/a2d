@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk -fl
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Launch DeskTop. Trigger an alert with only OK (e.g. running a
   shortcut with disk ejected). Verify that Escape key closes alert.
@@ -43,7 +45,7 @@ test.Step(
     end)
 
     apple2.Type("D") -- Desktop
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     a2d.ToggleOptionShowShortcutsOnStartup() -- Disable
 end)
 
@@ -57,7 +59,7 @@ test.Step(
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     apple2.UpArrowKey() -- S6D2
     apple2.UpArrowKey() -- S6D1
@@ -77,7 +79,7 @@ test.Step(
     a2dtest.ExpectAlertNotShowing()
 
     a2d.OAShortcut("Q")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     a2d.DialogOK() -- dismiss duplicate volume name alert
 end)
 

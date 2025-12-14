@@ -90,11 +90,14 @@ end
 local MINIMAL_REPAINT = 0.5
 
 function a2d.WaitForCopyToRAMCard()
-  emu.wait(20)
+  a2d.WaitForDesktopReady()
 end
 
 function a2d.WaitForRestart()
+  -- TODO: Most callers should use a2d.WaitForDesktopReady() instead
+
   if manager.machine.system.name:match("^apple2c") or
+    manager.machine.system.name:match("^las128e2") or
     manager.machine.system.name:match("^ace500") then
     -- Floppy drives are slow
     emu.wait(60)
@@ -103,8 +106,14 @@ function a2d.WaitForRestart()
   end
 end
 
+local repaint_time = 5
+
 function a2d.WaitForRepaint()
-  emu.wait(5)
+  emu.wait(repaint_time)
+end
+
+function a2d.ConfigureRepaintTime(s)
+  repaint_time = s
 end
 
 --------------------------------------------------
@@ -396,6 +405,7 @@ function a2d.EraseVolume(name, opt_new_name)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
   apple2.Type(opt_new_name or name)
   a2d.DialogOK()
+  -- TODO: WaitForAlert here (layering violation!)
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
   emu.wait(5)
@@ -527,6 +537,12 @@ function a2d.WaitForDesktopShowing()
   while not IsDesktopShowing() do
     emu.wait(1)
   end
+end
+
+function a2d.WaitForDesktopReady()
+  a2d.WaitForDesktopShowing()
+  emu.wait(5) -- TODO: Something better here
+  -- TODO: Some sort of assertion here
 end
 
 --------------------------------------------------

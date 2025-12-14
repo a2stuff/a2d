@@ -6,6 +6,8 @@ DISKARGS="-flop3 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5) -- slow with floppies
+
 --[[
   Configure a system with a RAMCard, and set DeskTop to not copy
   itself to the RAMCard on startup. Launch DeskTop. Verify that the
@@ -44,7 +46,7 @@ test.Step(
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 2) -- Slot 5
-    emu.wait(240) -- copying from floppy is very slow
+    a2d.WaitForDesktopReady()
 
     test.Snap("verify A2.DESKTOP volume in top right")
 
@@ -62,7 +64,7 @@ test.Step(
     local current = drive.filename
     drive:unload()
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     test.Snap("verify volumes appear in order")
 
@@ -102,8 +104,7 @@ test.Variants(
     a2d.AddShortcut("/FLOPPY1")
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopShowing()
-    emu.wait(10)
+    a2d.WaitForDesktopReady()
 
     local drive, current
     if idx > 1 then
@@ -184,8 +185,7 @@ test.Variants(
     --setup
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopShowing()
-    emu.wait(10)
+    a2d.WaitForDesktopReady()
 
     local drive, current
     if idx > 3 then
@@ -243,8 +243,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/READ.ME")
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopShowing()
-    emu.wait(10)
+    a2d.WaitForDesktopReady()
 
     a2d.Quit()
 
@@ -252,7 +251,7 @@ test.Step(
 
     apple2.BitsySelectSlotDrive("S5,D1")
     apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     -- Ensure no prompt for saving appears
     local drive = apple2.Get35Drive1()
@@ -288,14 +287,13 @@ test.Step(
     --setup
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopShowing()
-    emu.wait(10)
+    a2d.WaitForDesktopReady()
 
     a2d.Quit()
 
     apple2.BitsySelectSlotDrive("S5,D1")
     apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     -- Ensure no prompt for disk appears
     local drive = apple2.Get35Drive1()
@@ -331,7 +329,7 @@ test.Step(
       emu.wait(1)
     end
     apple2.EscapeKey()
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     -- Ensure prompt for disk appears
     local drive = apple2.Get35Drive1()

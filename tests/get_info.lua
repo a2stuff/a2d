@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   File > Get Info a non-folder file. Verify that the size shows as
   "_size_K".
@@ -174,7 +176,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/RAMCARD/SHORTCUT/HAS.256.FILES")
     a2d.OAShortcut("I")
-    a2d.WaitForRestart() -- slow
+    emu.wait(5) -- slow
     test.Snap("verify count is greater than 255")
     a2d.DialogOK()
 end)

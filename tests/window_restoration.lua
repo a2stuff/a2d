@@ -39,18 +39,18 @@ test.Step(
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-        a2d.WaitForRestart()
+        a2d.WaitForDesktopReady()
         a2d.OAShortcut("Q") -- File > Quit
-        a2d.WaitForRestart()
+        a2d.WaitForDesktopReady()
     end)
 
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-        a2d.WaitForRestart()
+        a2d.WaitForDesktopReady()
         a2d.OAShortcut("Q") -- File > Quit
-        a2d.WaitForRestart()
+        a2d.WaitForDesktopReady()
     end)
     a2d.CloseAllWindows()
 end)
@@ -135,7 +135,7 @@ test.Step(
 
     -- TODO: Verify only polled once - watch drive access?
 
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[

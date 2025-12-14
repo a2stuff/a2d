@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 a2d.SelectPath("/A2.DESKTOP")
 local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
 a2d.ClearSelection()
@@ -278,7 +280,7 @@ test.Step(
     apple2.GetDiskIIS6D1():unload()
 
     apple2.BitsyInvokeFile("PRODOS")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     a2d.OpenPath("/A2.DESKTOP")
     a2d.CloseWindow()

@@ -999,4 +999,20 @@ end
 
 --------------------------------------------------
 
+function apple2.WaitForBasicSystem(options)
+  local timeout = 30
+  if options and options.timeout then
+    timeout = options.timeout
+  end
+  for i = 1, timeout do
+    if apple2.GrabTextScreen():match("PRODOS BASIC") then
+      return
+    end
+    emu.wait(1)
+  end
+  error(string.format("Timeout (%ds) waiting for PRODOS BASIC", timeout), 2)
+end
+
+--------------------------------------------------
+
 return apple2

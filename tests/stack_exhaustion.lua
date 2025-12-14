@@ -10,8 +10,10 @@ DISKARGS="-hard1 $HARDIMG"
 -- monitor. Low stack being a problem is not specific to the CFFA,
 -- however.
 
+a2d.ConfigureRepaintTime(0.25)
+
 test.Step(
-  "Restarting launcher (takes about 122 seconds to run)",
+  "Restarting launcher (about 36s)",
   function()
     a2d.OpenPath("/A2.DESKTOP")
 
@@ -19,7 +21,7 @@ test.Step(
     local cpu = manager.machine.devices[":maincpu"]
     for i = 1, 50 do
       a2d.SelectAndOpen("DESKTOP.SYSTEM")
-      a2d.WaitForRestart()
+      a2d.WaitForDesktopReady()
       --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
@@ -29,7 +31,7 @@ test.Step(
 end)
 
 test.Step(
-  "Running external programs - DeskTop",
+  "Running external programs - DeskTop (about 50s)",
   function()
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA")
 
@@ -37,7 +39,7 @@ test.Step(
     local cpu = manager.machine.devices[":maincpu"]
     for i = 1, 70 do
       a2d.SelectAndOpen("KARATEKA.YELL")
-      a2d.WaitForRestart()
+      a2d.WaitForDesktopReady()
       --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
@@ -47,7 +49,7 @@ test.Step(
 end)
 
 test.Step(
-  "Running external programs - Selector",
+  "Running external programs - Selector (about 25s)",
   function()
     a2d.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.ToggleOptionShowShortcutsOnStartup()
@@ -58,14 +60,14 @@ test.Step(
     for i = 1, 40 do
       apple2.Type("1")
       a2d.DialogOK()
-      a2d.WaitForRestart()
+      a2d.WaitForDesktopReady()
       --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
     end
 
     apple2.Type("D") -- Desktop
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
 end)

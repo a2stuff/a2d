@@ -12,7 +12,7 @@ test.Step(
     emu.wait(2)
     test.Snap("Applesoft BASIC")
     apple2.ControlOAReset()
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     return test.PASS
 end)
 
@@ -25,7 +25,7 @@ test.Step(
     emu.wait(15)
     test.Snap("Integer BASIC")
     apple2.ControlOAReset()
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     return test.PASS
 end)
 
@@ -36,7 +36,7 @@ test.Step(
     emu.wait(5)
     test.Snap("S.A.M. Text-To-Speech")
     apple2.ControlOAReset()
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     return test.PASS
 end)
 
@@ -47,7 +47,7 @@ test.Step(
     emu.wait(5)
     test.Snap("Noise Tracker PT3")
     apple2.ControlOAReset()
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     return test.PASS
 end)
 

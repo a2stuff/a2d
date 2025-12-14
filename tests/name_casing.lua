@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 -- Helpers, since we can only toggle the flag
 local preserve_flag = true -- default state in config
 function EnablePreserve()
@@ -340,6 +342,7 @@ end)
     to copy it. Verify that the copied file retains the same mixed
     case name.
 ]]
+a2d.ConfigureRepaintTime(10)
 test.Variants(
   {
     "drag - copy to another volume",
@@ -429,6 +432,7 @@ test.Variants(
 
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"
     end
+    emu.wait(10)
 
     a2d.OpenPath(path)
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "lower.UPPER.MiX", "move should retain case")
@@ -448,8 +452,8 @@ test.Step(
   "Copy one volume to another",
   function()
     EnablePreserve()
-    a2d.RenamePath("/GS.OS.MIXED", "vol1.MIXED")
-    a2d.RenamePath("/RAM1", "VOL2.mixed")
+    a2d.RenamePath("/RAM1", "vol1.MIXED")
+    a2d.RenamePath("/GS.OS.MIXED", "VOL2.mixed")
 
     a2d.SelectPath("/VOL1.MIXED")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
@@ -463,7 +467,8 @@ test.Step(
         m.MoveToApproximately(dst_x, dst_y)
         m.ButtonUp()
     end)
-    a2d.WaitForRestart() -- let copy from floppy complete
+    emu.wait(10) -- let copy to floppy complete
+    a2dtest.ExpectAlertNotShowing()
 
     a2d.OpenPath("/VOL2.MIXED/VOL1.MIXED")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "vol1.MIXED", "vol copy should retain case")

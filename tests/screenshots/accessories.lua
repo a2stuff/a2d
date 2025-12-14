@@ -44,7 +44,7 @@ test.Step(
     a2d.WaitForRestart()
     test.Snap("Run Basic Here")
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     return test.PASS
 end)
 

@@ -4,6 +4,8 @@ MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(2)
+
 --[[
   Put image file in `APPLE.MENU`, start DeskTop. Select it from the
   Apple menu. Verify image is shown.
@@ -19,7 +21,7 @@ test.Step(
   function()
     a2d.RenamePath("/A2.DESKTOP/APPLE.MENU", "AM")
     a2d.CreateFolder("/A2.DESKTOP/APPLE.MENU")
-    a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/MONARCH", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/ROOM", "/A2.DESKTOP/APPLE.MENU")
     a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/LOREM.IPSUM", "/A2.DESKTOP/APPLE.MENU")
     a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/FONTS/ATHENS", "/A2.DESKTOP/APPLE.MENU")
     a2d.Reboot()
@@ -61,16 +63,16 @@ test.Step(
     a2d.Reboot()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
-    a2d.WaitForRestart()
-    test.Snap("verify Hello World running")
+    while not apple2.GrabTextScreen():match("Hello world!") do
+      emu.wait(1)
+    end
     apple2.ReturnKey()
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 4)
-    a2d.WaitForRestart()
-    test.Snap("verify BASIC.SYSTEM running")
+    apple2.WaitForBasicSystem()
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     a2d.DeletePath("/A2.DESKTOP/APPLE.MENU")
     a2d.RenamePath("/A2.DESKTOP/AM", "APPLE.MENU")
@@ -116,7 +118,8 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK({no_wait=true})
     a2dtest.MultiSnap(40, "verify launches with dialog OK")
-    a2d.WaitForRestart()
+    emu.wait(2) -- finish launching
+    a2d.WaitForDesktopReady()
 
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.InMouseKeysMode(function(m)
@@ -128,22 +131,26 @@ test.Step(
         a2dtest.MultiSnap(30, "verify launches with SA+double click")
         return false -- no explicit exit, since we're exiting desktop
     end)
-    a2d.WaitForRestart()
+    emu.wait(2) -- finish launching
+    a2d.WaitForDesktopReady()
 
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN, {no_wait=true})
     a2dtest.MultiSnap(30,"verify launches from menu")
-    a2d.WaitForRestart()
+    emu.wait(2) -- finish launching
+    a2d.WaitForDesktopReady()
 
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.OAShortcut("O", {no_wait=true})
     a2dtest.MultiSnap(30,"verify launches from OA shortcut")
-    a2d.WaitForRestart()
+    emu.wait(2) -- finish launching
+    a2d.WaitForDesktopReady()
 
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.SAShortcut("O", {no_wait=true})
     a2dtest.MultiSnap(30,"verify launches from SA shortcut")
-    a2d.WaitForRestart()
+    emu.wait(2) -- finish launching
+    a2d.WaitForDesktopReady()
 end)
 
 --[[

@@ -23,7 +23,7 @@ test.Step(
     ]]
 
     apple2.ControlOAReset()
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("keyboard shortcuts should not be enabled")
     a2d.DialogCancel()

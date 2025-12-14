@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/dos33_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 -- Callback called with func to invoke menu item; pass false if
 -- no volumes selected, true if volumes selected (affects menu item)
 function FormatEraseTest(name, func)
@@ -51,8 +53,8 @@ FormatEraseTest(
     a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
 
-    -- error
-    a2d.WaitForRestart()
+    -- command
+    emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
     test.Snap("verify RAM Card was formatted")
     a2d.RenamePath("/NEW.NAME", "RAM1")
@@ -136,7 +138,7 @@ FormatEraseTest(
     a2d.DialogOK()
     a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
-    a2d.WaitForRestart()
+    emu.wait(5) -- slow
     test.Snap("Verify whole name was used")
     a2d.RenamePath("/WHOLE.NAME.USED", "RAM1")
 end)
@@ -163,11 +165,12 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation prompt
+    emu.wait(10)
     a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
 
-    -- error
-    a2d.WaitForRestart()
+    -- command
+    emu.wait(5) -- slow
     a2dtest.ExpectAlertShowing()
     a2d.DialogCancel()
 end)
@@ -192,7 +195,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- successful
-    a2d.WaitForRestart()
+    emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
     test.Snap("verify icon updated with NEW.NAME")
     a2d.RenamePath("/NEW.NAME", "RAM1")
@@ -224,7 +227,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- successful
-    a2d.WaitForRestart()
+    emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
     test.Snap("verify icon updated with NEW.NAME")
     a2d.RenamePath("/NEW.NAME", "RAM1")

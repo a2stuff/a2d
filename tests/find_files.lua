@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Launch DeskTop. Close all windows. Apple Menu > Find Files. Type
   `PRODOS` and click Search. Verify that all volumes are searched
@@ -17,7 +19,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("PRODOS")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     test.Snap("verify all volumes searched")
     a2d.DialogCancel()
 end)
@@ -34,7 +36,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("PRODOS")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     test.Snap("verify only open volume searched")
     a2d.DialogCancel()
 end)
@@ -51,7 +53,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("PRODOS")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     test.Snap("verify only open folder searched")
     a2d.DialogCancel()
 end)
@@ -69,10 +71,10 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("CAL*")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     apple2.DownArrowKey() -- select first result
     a2d.OAShortcut("O")
-    a2d.WaitForRepaint()
+    emu.wait(5) -- open
     test.Snap("verify window opened and file selected")
 end)
 
@@ -89,10 +91,10 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("CAL*")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     apple2.DownArrowKey() -- select first result
     a2d.SAShortcut("O")
-    a2d.WaitForRepaint()
+    emu.wait(5) -- open
     test.Snap("verify window opened and file selected")
 end)
 
@@ -116,13 +118,13 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("CAL*")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x+23, dialog_y+2)
         m.DoubleClick()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- open
     test.Snap("verify window activated and file selected")
 end)
 
@@ -139,8 +141,9 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     test.Snap("verify no crash")
+    a2d.CloseWindow()
 end)
 
 --[[
@@ -155,7 +158,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     test.Snap("verify no crash")
     a2d.RenamePath("/ABCDEF123456789", "/TESTS")
 end)
@@ -172,10 +175,10 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
-    emu.wait(10)
+    emu.wait(10) -- searching
     apple2.DownArrowKey()
     apple2.ReturnKey()
-    emu.wait(10)
+    emu.wait(10) -- searching
     apple2.DownArrowKey()
     test.Snap("verify only one entry appears highlighted")
 end)

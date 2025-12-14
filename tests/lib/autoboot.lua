@@ -19,7 +19,7 @@ local c = coroutine.create(function()
     end
 
     -- Wait for DeskTop to start
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     -- Globals
     machine = manager.machine

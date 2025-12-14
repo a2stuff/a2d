@@ -5,11 +5,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
---[[============================================================
-
-  "Sort Directory" tests
-
-  ============================================================]]
+a2d.ConfigureRepaintTime(0.25)
 
 -- Parse on-screen output of CAT; returns filenames in array
 function ParseCat()
@@ -62,9 +58,9 @@ test.Variants(
     end
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- directory rewrite
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
 
     function ValidateOrder(filenames)
       local nums = {}
@@ -88,8 +84,7 @@ test.Variants(
     ValidateOrder(ParseCat())
 
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
-
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -102,10 +97,11 @@ test.Step(
   "Lexicographical sorting",
   function()
     a2d.OpenPath("/TESTS/HUNDRED.FILES")
+    emu.wait(10) -- slower than usual to open
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
-    a2d.WaitForRepaint()
+    emu.wait(10) -- directory rewrite
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
 
     apple2.TypeLine("HOME")
     apple2.TypeLine("CAT")
@@ -119,8 +115,7 @@ test.Step(
     end
 
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
-
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -132,10 +127,11 @@ test.Step(
   "System files sorted",
   function()
     a2d.OpenPath("/TESTS/SORT.DIRECTORY/TWO.SYS.FILES")
+    emu.wait(5) -- TODO: Why is this needed?
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- directory rewrite
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
 
     apple2.TypeLine("HOME")
     apple2.TypeLine("CAT")
@@ -146,6 +142,5 @@ test.Step(
     end
 
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
-
+    a2d.WaitForDesktopReady()
 end)

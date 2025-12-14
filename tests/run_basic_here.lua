@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Launch DeskTop. Open a volume window. Apple Menu > Run Basic Here.
   Verify that `/RAM` exists.
@@ -14,12 +16,12 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
     emu.wait(1)
     test.Expect(apple2.GrabTextScreen():match("BLOCKS FREE"), "/RAM should exist")
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     a2d.CloseAllWindows()
 end)
 
@@ -33,12 +35,12 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX")
     emu.wait(1)
     test.Expect(apple2.GrabTextScreen():match("/TESTS/"), "Prefix should be /TESTS/")
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()()
     a2d.CloseAllWindows()
 end)
 
@@ -56,7 +58,6 @@ test.Step(
 
     a2d.OpenPath("/TESTS")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
-    test.Expect(apple2.GrabTextScreen():match("PRODOS BASIC"), "BASIC should start")
+    a2d.WaitForBasicSystem()
 end)
 

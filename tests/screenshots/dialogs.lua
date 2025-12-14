@@ -198,7 +198,7 @@ end)
   "Special > Check All Drives...",
   function()
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-  a2d.WaitForRestart()
+  emu.wait(10) -- slow
   test.Snap("Special > Check All Drives...")
   return test.PASS
   end)
@@ -209,7 +209,7 @@ test.Step(
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK - 2)
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 
     -- "Disk Copy"
     a2d.InvokeMenuItem(3, 2)
@@ -267,9 +267,9 @@ test.Step(
 
     -- back to desktop
     a2d.DialogOK()
-    a2d.WaitForRestart() -- scanning drives
+    emu.wait(10) -- scanning drives
     a2d.OAShortcut('Q')
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     a2d.DialogOK() -- dismiss "two volumes with the same name"
 
     return test.PASS

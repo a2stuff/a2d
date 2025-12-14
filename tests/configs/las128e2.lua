@@ -10,8 +10,6 @@ DISKARGS="-flop1 $FLOP1IMG"
 
 ======================================== ENDCONFIG ]]
 
-emu.wait(40) -- stuck with floppies for now
-
 test.Step(
   "Apple > About This Apple II",
   function()

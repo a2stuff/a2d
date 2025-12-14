@@ -276,6 +276,9 @@ function a2dtest.ExpectNotHanging()
   local new = a2dtest.SnapshotDHRWithoutClock()
   test.Expect(not a2dtest.CompareDHR(dhr, new), "should have responded", {snap=true}, 1)
   apple2.EscapeKey()
+  a2d.WaitForRepaint()
+  local new2 = a2dtest.SnapshotDHRWithoutClock()
+  test.Expect(a2dtest.CompareDHR(dhr, new2), "should have closed", {snap=true}, 1)
 end
 
 --------------------------------------------------

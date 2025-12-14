@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Repeat the following for these permutations:
 
@@ -54,7 +56,7 @@ function RenameTest(name, proc)
         emu.wait(80) -- copy is slow
         -- Switch to copy
         a2d.OpenPath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
-        a2d.WaitForRestart()
+        a2d.WaitForDesktopReady()
 
         a2d.RenamePath("/RAM1/A2.DESKTOP", "NEWNAME")
         dtpath = "/RAM1/NEWNAME"
@@ -111,11 +113,11 @@ RenameTest(
   function(dtpath)
     -- Special > Copy Disk
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     test.Snap("verify disk copy dialog displayed")
     -- File > Quit returns to DeskTop
     a2d.OAShortcut("Q")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -185,9 +187,9 @@ RenameTest(
     -- Invoking another application (e.g. `BASIC.SYSTEM`)
     -- then quitting back to DeskTop (quit handler)
     a2d.OpenPath(dtpath.."/EXTRAS/BASIC.SYSTEM")
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
     apple2.TypeLine("BYE")
-    a2d.WaitForRestart()
+    a2d.WaitForDesktopReady()
     test.Snap("verify desktop restarted")
 end)
 
