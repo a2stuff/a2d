@@ -160,7 +160,8 @@ test.Step(
     a2d.DialogOK()
     emu.wait(10) -- searching
     test.Snap("verify no crash")
-    a2d.RenamePath("/ABCDEF123456789", "/TESTS")
+    a2d.CloseWindow()
+    a2d.RenamePath("/ABCDEF123456789", "TESTS")
 end)
 
 --[[

@@ -268,10 +268,7 @@ function a2d.OpenSelectionAndCloseCurrent()
   a2d.WaitForRepaint()
 end
 
-function a2d.Select(name)
-  a2d.ClearSelection()
-  apple2.Type(name)
-  emu.wait(0.25) -- TODO: spin here?
+local function CheckSelectionName(name)
   local selected = a2d.GetSelectedIcons()
   if #selected ~= 1 then
     manager.machine.video:snapshot()
@@ -283,6 +280,13 @@ function a2d.Select(name)
     error(string.format("Failed to select %q - have %q selected\n%s",
                         name, selected[1].name, debug.traceback()))
   end
+end
+
+function a2d.Select(name)
+  a2d.ClearSelection()
+  apple2.Type(name)
+  emu.wait(0.25) -- TODO: spin here?
+  CheckSelectionName(name)
 end
 
 function a2d.SelectAndOpen(name, opt_close_current)
@@ -357,6 +361,7 @@ function a2d.RenameSelection(newname)
   apple2.Type(newname)
   apple2.ReturnKey()
   emu.wait(5) -- I/O
+  CheckSelectionName(newname)
 end
 
 function a2d.RenamePath(path, newname)
@@ -370,6 +375,7 @@ function a2d.DuplicateSelection(newname)
   apple2.Type(newname)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
+  CheckSelectionName(newname)
 end
 
 function a2d.DuplicatePath(path, newname)
@@ -404,6 +410,7 @@ function a2d.CreateFolder(path)
   apple2.Type(name)
   apple2.ReturnKey()
   emu.wait(5) -- I/O
+  CheckSelectionName(name)
 end
 
 function a2d.FormatVolume(name, opt_new_name)
