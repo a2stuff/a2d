@@ -1,15 +1,18 @@
-
 --[[============================================================
 
   Exercise all the "Interpreters" (file type handlers)
 
   ============================================================]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 test.Step(
   "Applesoft BASIC",
   function()
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/HELLO.WORLD")
-    emu.wait(2)
+    while not apple2.GrabTextScreen():match("Hello world!") do
+      emu.wait(1)
+    end
     test.Snap("Applesoft BASIC")
     apple2.ControlOAReset()
     a2d.WaitForDesktopReady()

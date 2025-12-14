@@ -17,6 +17,7 @@ bin/mametest tests/SCRIPTNAME.lua
 Options:
 
 * `--only PATTERN` - run only matching named test steps (`*` and `?` are wildcards, `|` to separate multiple patterns); useful for fast iteration
+* `--skip N` - skip the first N tests
 * `--visible` - show the emulator window (default is headless)
 * `--audible` - play the emulator audio (default is silent)
 * `--nosnaps` - don't generate snapshots

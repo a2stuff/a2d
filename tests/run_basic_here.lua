@@ -40,7 +40,7 @@ test.Step(
     emu.wait(1)
     test.Expect(apple2.GrabTextScreen():match("/TESTS/"), "Prefix should be /TESTS/")
     apple2.TypeLine("BYE")
-    a2d.WaitForDesktopReady()()
+    a2d.WaitForDesktopReady()
     a2d.CloseAllWindows()
 end)
 
@@ -55,9 +55,10 @@ test.Step(
   function()
     a2d.ToggleOptionCopyToRAMCard() -- enable
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     a2d.OpenPath("/TESTS")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForBasicSystem()
+    apple2.WaitForBasicSystem()
 end)
 

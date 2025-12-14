@@ -7,6 +7,7 @@
 # Options
 #
 #    --only PATTERN      Run only matching named test steps (wildcards * and ?, | too)
+#    --skip N            Skip the first N tests
 #    --visible           Don't run headless (i.e. do present video)
 #    --audible           Don't run silent (i.e. do present audio)
 #    --nosnaps           Don't show snapshots once tests are complete
@@ -31,6 +32,7 @@ source "bin/util.sh"
 # Parse command line
 
 TEST_NAME=""
+SKIP_COUNT=""
 VISIBLE=""
 AUDIBLE=""
 SNAPS=true
@@ -42,6 +44,8 @@ for arg in "$@"; do
   case $1 in
     --only)      shift; TEST_NAME="$1"; shift ;;
     --only=*)    TEST_NAME="${1#--only=}"; shift ;;
+    --skip)      shift; SKIP_COUNT="$1"; shift ;;
+    --skip=*)    SKIP_COUNT="${1#--skip=}"; shift ;;
     --visible)   shift; VISIBLE=true ;;
     --audible)   shift; AUDIBLE=true ;;
     --nosnaps)   shift; SNAPS="" ;;
@@ -147,11 +151,12 @@ fi
 if [ "$SLOW" ]; then
   THROTTLE=""
 else
-  THROTTLE="-nothrottle"
+  THROTTLE="-nothrottle -nosleep"
 fi
 
 export LUA_PATH="$BASEDIR/tests/lib/?.lua;$SCRIPTDIR/?.lua"
 export TEST_NAME
+export SKIP_COUNT
 
 pushd "$MAMEDIR" > /dev/null
 exec 5>&1 # duplicate stdout filehandle
@@ -165,7 +170,7 @@ output=$(
     -snapshot_directory '$SNAPDIR' -snapsize '$RESOLUTION' \
     $OUTPUTARGS \
     '$MODEL' $MODELARGS $DISKARGS \
-    $THROTTLE -nosleep \
+    $THROTTLE \
     $MAMEFLAGS \
     $SCRIPTARGS" \
     2>&1 | \

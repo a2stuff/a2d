@@ -54,6 +54,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     -- Prior to fix, runs out of stack around iteration 30 (but doesn't crash!)
     local cpu = manager.machine.devices[":maincpu"]
@@ -70,4 +71,5 @@ test.Step(
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)

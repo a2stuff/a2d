@@ -28,6 +28,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.IMAGE.FILE", "/A2.DESKTOP/APPLE.MENU")
     a2d.CloseAllWindows()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     -- no icon
     a2d.ClearSelection()
@@ -77,6 +78,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.TEXT.FILE", "/A2.DESKTOP/APPLE.MENU")
     a2d.CloseAllWindows()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     -- no icon
     a2d.ClearSelection()
@@ -126,6 +128,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.FONT.FILE", "/A2.DESKTOP/APPLE.MENU")
     a2d.CloseAllWindows()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     -- no icon
     a2d.ClearSelection()
@@ -175,6 +178,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.DUET.FILE", "/A2.DESKTOP/APPLE.MENU")
     a2d.CloseAllWindows()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     -- no icon
     a2d.ClearSelection()

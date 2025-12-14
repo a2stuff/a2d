@@ -21,7 +21,7 @@ test.Step(
     a2d.ToggleOptionCopyToRAMCard()
     a2d.CloseAllWindows()
     a2d.Reboot()
-    a2d.WaitForCopyToRAMCard()
+    a2d.WaitForDesktopReady()
 
     -- Copy to RAMDisk, (shortcut in root directory)
     a2d.OpenPath("/A")
@@ -41,6 +41,7 @@ test.Step(
     a2d.EraseVolume("RAM1")
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -57,7 +58,7 @@ test.Step(
     a2d.ToggleOptionCopyToRAMCard()
     a2d.CloseAllWindows()
     a2d.Reboot()
-    a2d.WaitForCopyToRAMCard()
+    a2d.WaitForDesktopReady()
 
     -- Copy to RAMDisk, (shortcut in non-root directory)
     a2d.CreateFolder("/A/F")
@@ -78,6 +79,7 @@ test.Step(
     a2d.EraseVolume("RAM1")
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[

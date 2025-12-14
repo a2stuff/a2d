@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(1)
+
 test.Step(
   "Automation hook",
   function()

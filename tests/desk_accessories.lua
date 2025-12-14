@@ -10,7 +10,8 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU")
     a2d.Select("CALCULATOR")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN)
-    test.Snap("DA opened")
+    emu.wait(5)
+    test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "DA should be open")
     a2d.CloseWindow()
 end)
 
@@ -58,6 +59,7 @@ function MoveDoesntRepaintTest(name, path, opt_threshold)
       a2d.CloseWindow()
       a2d.CloseAllWindows()
       a2d.Reboot()
+      a2d.WaitForDesktopReady()
   end)
 end
 

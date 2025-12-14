@@ -5,6 +5,8 @@
 
   ============================================================]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 test.Step(
   "Cycle video modes",
   function()

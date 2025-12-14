@@ -35,6 +35,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     a2d.ToggleOptionShowShortcutsOnStartup() -- Enable
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     a2dtest.ExpectNothingChanged(function()
         apple2.Type("1")

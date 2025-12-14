@@ -11,6 +11,8 @@ local apple2 = {
   SCREEN_COLUMNS = 80,
 }
 
+local util = require("util")
+
 local machine = manager.machine
 
 --------------------------------------------------
@@ -992,11 +994,13 @@ end
 
 -- TODO: Implement BitsyInvokePath (tab to volume, then iterate on path segments)
 
-function apple2.WaitForBitsy()
-  -- TODO: Timeout
-  while not apple2.GrabTextScreen():match("BITSY") do
-    emu.wait(1)
-  end
+function apple2.WaitForBitsy(options)
+  util.WaitFor(
+    "Bitsy Bye",
+    function()
+      return apple2.GrabTextScreen():match("BITSY")
+    end,
+    options)
 end
 
 function apple2.BitsySelectSlotDrive(sd)
@@ -1017,17 +1021,12 @@ end
 --------------------------------------------------
 
 function apple2.WaitForBasicSystem(options)
-  local timeout = 30
-  if options and options.timeout then
-    timeout = options.timeout
-  end
-  for i = 1, timeout do
-    if apple2.GrabTextScreen():match("PRODOS BASIC") then
-      return
-    end
-    emu.wait(1)
-  end
-  error(string.format("Timeout (%ds) waiting for PRODOS BASIC", timeout), 2)
+  util.WaitFor(
+    "Basic System",
+    function()
+      return apple2.GrabTextScreen():match("PRODOS BASIC")
+    end,
+    options)
 end
 
 --------------------------------------------------

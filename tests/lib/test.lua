@@ -6,6 +6,13 @@
 
 local test = {}
 
+local skip_count = emu.subst_env("$SKIP_COUNT")
+if skip_count == "" then
+  skip_count = 0
+else
+  skip_count = tonumber(skip_count)
+end
+
 local test_name = emu.subst_env("$TEST_NAME")
 -- Convert from "wildcard" pattern (with * and ?) to Lua pattern
 local test_patterns = {}
@@ -54,6 +61,10 @@ function test.Step(title, func)
     end
   end
   test.count = test.count+1
+  if skip_count > 0 then
+    skip_count = skip_count - 1
+    return
+  end
 
   print("-- " .. title)
   local status, err = pcall(func)

@@ -6,6 +6,7 @@
 
 local a2dtest = {}
 
+local util = require("util")
 local apple2 = require("apple2")
 local a2d = require("a2d")
 local mgtk = require("mgtk")
@@ -255,17 +256,7 @@ function a2dtest.ExpectAlertNotShowing()
 end
 
 function a2dtest.WaitForAlert(options)
-  local timeout = 30
-  if options and options.timeout then
-    timeout = options.timeout
-  end
-  for i = 1, timeout do
-    if a2dtest.IsAlertShowing() then
-      return
-    end
-    emu.wait(1)
-  end
-  test.Failure(string.format("Timeout (%ds) waiting for alert", timeout))
+  util.WaitFor("alert", a2dtest.IsAlertShowing, options)
 end
 
 --------------------------------------------------

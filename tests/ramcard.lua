@@ -31,7 +31,7 @@ function RenameTest(name, proc)
         a2d.ToggleOptionCopyToRAMCard()
         a2d.CloseAllWindows()
         a2d.Reboot()
-        a2d.WaitForCopyToRAMCard()
+        a2d.WaitForDesktopReady()
       end
 
       -- setup
@@ -88,6 +88,7 @@ function RenameTest(name, proc)
       end
       a2d.DeletePath("/A2.DESKTOP/LOCAL")
       a2d.Reboot()
+      a2d.WaitForDesktopReady()
   end)
 end
 
@@ -98,9 +99,9 @@ RenameTest(
   "overlays",
   function(dtpath)
     -- File > Copy To...
-    a2d.SelectPath(dtpath.."/READ.ME")
+    a2d.SelectPath(dtpath.."/DESKTOP.SYSTEM")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
-    test.Snap("verify copy dialog displayed")
+    test.ExpectEquals(a2dtest.GetWindowCount(), 3, "window and dialog+listbox should be open")
     a2d.DialogCancel()
 end)
 
@@ -112,9 +113,10 @@ RenameTest(
   "overlay + quit handler",
   function(dtpath)
     -- Special > Copy Disk
+    a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
     a2d.WaitForDesktopReady()
-    test.Snap("verify disk copy dialog displayed")
+    test.ExpectEquals(a2dtest.GetWindowCount(), 2, "dialog+listbox should be open")
     -- File > Quit returns to DeskTop
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
@@ -172,9 +174,11 @@ RenameTest(
   "configuration",
   function(dtpath)
     -- Windows are saved on exit/restored on restart
-    a2d.OpenPath(dtpath.."/DESKTOP.SYSTEM")
-    a2d.WaitForCopyToRAMCard()
-    test.Snap("verify windows restored")
+    a2d.SelectPath(dtpath.."/DESKTOP.SYSTEM")
+    local count = a2dtest.GetWindowCount()
+    a2d.OpenSelection()
+    a2d.WaitForDesktopReady()
+    test.ExpectEquals(a2dtest.GetWindowCount(), count, "windows should be restored")
 end)
 
 --[[
@@ -190,7 +194,6 @@ RenameTest(
     apple2.WaitForBasicSystem()
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
-    test.Snap("verify desktop restarted")
 end)
 
 --[[

@@ -6,6 +6,7 @@
 
 local a2d = {}
 
+local util = require("util")
 local apple2 = require("apple2")
 
 --------------------------------------------------
@@ -355,7 +356,7 @@ function a2d.RenameSelection(newname)
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  emu.wait(5) -- I/O
 end
 
 function a2d.RenamePath(path, newname)
@@ -402,7 +403,7 @@ function a2d.CreateFolder(path)
   a2d.ClearTextField()
   apple2.Type(name)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  emu.wait(5) -- I/O
 end
 
 function a2d.FormatVolume(name, opt_new_name)
@@ -412,7 +413,7 @@ function a2d.FormatVolume(name, opt_new_name)
   a2d.DialogOK()
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
-  emu.wait(5)
+  emu.wait(5) -- I/O
 end
 
 function a2d.EraseVolume(name, opt_new_name)
@@ -423,7 +424,7 @@ function a2d.EraseVolume(name, opt_new_name)
   -- TODO: WaitForAlert here (layering violation!)
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
-  emu.wait(5)
+  emu.wait(5) -- I/O
 end
 
 function a2d.CycleWindows()
@@ -485,6 +486,7 @@ end
 function a2d.RemoveClockDriverAndReboot()
   a2d.DeletePath("/A2.DESKTOP/CLOCK.SYSTEM")
   a2d.Reboot()
+  a2d.WaitForDesktopReady()
 end
 
 function a2d.ToggleOptionCopyToRAMCard()
@@ -524,15 +526,15 @@ function a2d.Reboot(options)
   else
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
   end
-  if not options or not options.no_wait then
-    a2d.WaitForRestart()
-  end
   apple2.ResetMouse()
 end
 
 -- TODO: Use this in Reboot, etc.
 -- TODO: Ensure callers wait until idle, though
-function a2d.WaitForDesktopShowing()
+function a2d.WaitForDesktopShowing(options, level)
+  if options == nil then options = {} end
+  if level == nil then level = 0 end
+
   function IsDesktopShowing()
     -- TODO: Is there RDDHIRES on anything but IIc?
     if apple2.ReadSSW("RDHIRES") < 128 then
@@ -550,13 +552,11 @@ function a2d.WaitForDesktopShowing()
     return true
   end
 
-  while not IsDesktopShowing() do
-    emu.wait(1)
-  end
+  util.WaitFor("desktop", IsDesktopShowing, options, level+1)
 end
 
-function a2d.WaitForDesktopReady()
-  a2d.WaitForDesktopShowing()
+function a2d.WaitForDesktopReady(options)
+  a2d.WaitForDesktopShowing(options, 1)
   emu.wait(5) -- TODO: Something better here
   -- TODO: Some sort of assertion here
 end

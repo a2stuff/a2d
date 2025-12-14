@@ -21,10 +21,11 @@ test.Step(
   function()
     a2d.RenamePath("/A2.DESKTOP/APPLE.MENU", "AM")
     a2d.CreateFolder("/A2.DESKTOP/APPLE.MENU")
-    a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/ROOM", "/A2.DESKTOP/APPLE.MENU")
-    a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/LOREM.IPSUM", "/A2.DESKTOP/APPLE.MENU")
-    a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/FONTS/ATHENS", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS/ATHENS", "/A2.DESKTOP/APPLE.MENU")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
     test.Snap("verify image preview")
@@ -58,9 +59,10 @@ test.Step(
   function()
     a2d.RenamePath("/A2.DESKTOP/APPLE.MENU", "AM")
     a2d.CreateFolder("/A2.DESKTOP/APPLE.MENU")
-    a2d.CopyPath("/A2.DESKTOP/SAMPLE.FILES/HELLO.WORLD", "/A2.DESKTOP/APPLE.MENU")
+    a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/HELLO.WORLD", "/A2.DESKTOP/APPLE.MENU")
     a2d.CopyPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", "/A2.DESKTOP/APPLE.MENU")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
     while not apple2.GrabTextScreen():match("Hello world!") do

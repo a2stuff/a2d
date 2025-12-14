@@ -18,15 +18,17 @@ a2d.ConfigureRepaintTime(5) -- slow with floppies
 test.Step(
   "Volume order",
   function()
-    test.Snap("verify A2.DESKTOP volume in top right")
+    a2d.SelectAll()
+    local icons = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
+    test.ExpectEqualsIgnoreCase(icons[2].name, "A2.DESKTOP", "boot disk should be first")
+    test.ExpectEqualsIgnoreCase(icons[3].name, "RAM4", "ramdisk should be next")
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
     apple2.ControlKey("D") -- Drives
     a2d.WaitForRepaint()
-
     test.Snap("verify A2.DESKTOP volume is first")
-
     a2d.DialogCancel()
 end)
 
@@ -46,17 +48,19 @@ test.Step(
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.STARTUP_MENU, 2) -- Slot 5
-    a2d.WaitForDesktopReady()
+    a2d.WaitForDesktopReady({timeout=240})
 
-    test.Snap("verify A2.DESKTOP volume in top right")
+    a2d.SelectAll()
+    local icons = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
+    test.ExpectEqualsIgnoreCase(icons[2].name, "A2.DESKTOP", "boot disk should be first")
+    test.ExpectEqualsIgnoreCase(icons[3].name, "RAM4", "ramdisk should be next")
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
     apple2.ControlKey("D") -- Drives
     a2d.WaitForRepaint()
-
     test.Snap("verify A2.DESKTOP volume is first")
-
     a2d.DialogCancel()
 
     a2d.OpenPath("/RAM4/DESKTOP/EXTRAS/BASIC.SYSTEM")
@@ -66,12 +70,22 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
-    test.Snap("verify volumes appear in order")
+    a2d.CloseAllWindows()
+    a2d.SelectAll()
+    icons = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons, 3, "should have trash + 2 volumes")
+    test.ExpectEqualsIgnoreCase(icons[2].name, "RAM4", "ramdisk should be first")
 
     drive:load(current)
+    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
+    a2d.SelectAll()
+    icons = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
+
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -104,7 +118,7 @@ test.Variants(
     a2d.AddShortcut("/FLOPPY1")
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopReady()
+    a2d.WaitForDesktopReady({timeout=240})
 
     local drive, current
     if idx > 1 then
@@ -143,6 +157,7 @@ test.Variants(
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -185,7 +200,7 @@ test.Variants(
     --setup
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopReady()
+    a2d.WaitForDesktopReady({timeout=240})
 
     local drive, current
     if idx > 3 then
@@ -227,6 +242,7 @@ test.Variants(
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -243,7 +259,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/READ.ME")
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopReady()
+    a2d.WaitForDesktopReady({timeout=240})
 
     a2d.Quit()
 
@@ -273,6 +289,7 @@ test.Step(
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -287,7 +304,7 @@ test.Step(
     --setup
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopReady()
+    a2d.WaitForDesktopReady({timeout=240})
 
     a2d.Quit()
 
@@ -310,6 +327,7 @@ test.Step(
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -329,7 +347,7 @@ test.Step(
       emu.wait(1)
     end
     apple2.EscapeKey()
-    a2d.WaitForDesktopReady()
+    a2d.WaitForDesktopReady({timeout=240})
 
     -- Ensure prompt for disk appears
     local drive = apple2.Get35Drive1()
@@ -345,6 +363,7 @@ test.Step(
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 

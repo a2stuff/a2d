@@ -6,6 +6,8 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 test.Step(
   "No Mouse",
   function()

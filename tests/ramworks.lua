@@ -31,6 +31,7 @@ test.Step(
     a2d.DeletePath("/A2.DESKTOP/RAM.DRV.SYSTEM")
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 test.Step(
@@ -42,9 +43,9 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
 
     a2d.ToggleOptionCopyToRAMCard() -- Enable
-    a2d.Reboot()
 
     -- In Bitsy Bye (since RAMAUX doesn't chain, it QUITs)
+    a2d.Reboot()
     apple2.WaitForBitsy()
     test.Expect(apple2.GrabTextScreen():match("^S7,D1:/A2.DESKTOP"), "should be at S7,S1")
     apple2.BitsyInvokeFile("CLOCK.SYSTEM")
@@ -57,4 +58,5 @@ test.Step(
     a2d.DeletePath("/A2.DESKTOP/RAMAUX.SYSTEM")
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)

@@ -301,6 +301,7 @@ test.Step(
     -- BUG: This is failing - the window does fully repaint
 
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -337,6 +338,7 @@ test.Step(
     test.Snap("verify window does fully repaint")
 
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -360,5 +362,6 @@ test.Step(
     test.Snap("verify window does fully repaint")
 
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 

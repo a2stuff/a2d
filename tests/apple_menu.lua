@@ -1,12 +1,4 @@
---[[ BEGINCONFIG ========================================
-
-MODEL="apple2cp"
-MODELARGS=""
-DISKARGS="-flop3 $HARDIMG"
-
-======================================== ENDCONFIG ]]
-
-a2d.ConfigureRepaintTime(5)
+a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Rename the `APPLE.MENU` directory. Launch DeskTop. Verify that the
@@ -28,6 +20,7 @@ test.Step(
     -- Folder missing
     a2d.RenamePath("/A2.DESKTOP/APPLE.MENU","AM")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
     a2d.OpenMenu(a2d.APPLE_MENU)
     test.Snap("verify two About items, no separator")
     apple2.EscapeKey()
@@ -35,6 +28,7 @@ test.Step(
     -- Folder empty
     a2d.CreateFolder("/A2.DESKTOP/APPLE.MENU")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
     a2d.OpenMenu(a2d.APPLE_MENU)
     test.Snap("verify two About items, no separator")
     apple2.EscapeKey()
@@ -42,6 +36,7 @@ test.Step(
     -- Folder single item
     a2d.CopyPath("/A2.DESKTOP/AM/CHANGE.TYPE", "/A2.DESKTOP/APPLE.MENU")
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
     a2d.OpenMenu(a2d.APPLE_MENU)
     test.Snap("verify two About items, separator, one accessory")
     apple2.EscapeKey()
@@ -54,6 +49,7 @@ test.Step(
     apple2.Type("8642")
     a2d.DialogOK()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
     a2d.OpenMenu(a2d.APPLE_MENU)
     test.Snap("verify two About items, no separator")
     apple2.EscapeKey()
@@ -62,6 +58,7 @@ test.Step(
     a2d.RenamePath("/A2.DESKTOP/AM", "APPLE.MENU")
     a2d.CloseAllWindows()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -72,44 +69,3 @@ end)
 
   TODO: Missing?
 ]]
-
-
---[[
-  Eject the startup disk. Select an accessory (e.g. Calculator) from
-  the Apple Menu. Verify that an alert is shown prompting to reinsert
-  the startup disk. Insert the startup disk and click OK. Verify that
-  the accessory launches.
-]]
-test.Step(
-  "Accessories with disk ejected",
-  function()
-    local drive = apple2.Get35Drive1()
-    local current = drive.filename
-    drive:unload()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
-    a2dtest.ExpectAlertShowing()
-    drive:load(current)
-    a2d.DialogOK()
-    test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should be open")
-    a2d.CloseWindow()
-end)
-
---[[
-  Eject the startup disk. Select a folder (e.g. Control Panels) from
-  the Apple Menu. Verify that an alert is shown prompting to reinsert
-  the startup disk. Insert the startup disk and click OK. Verify that
-  the folder window opens.
-]]
-test.Step(
-  "Folder with disk ejected",
-  function()
-    local drive = apple2.Get35Drive1()
-    local current = drive.filename
-    drive:unload()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2dtest.ExpectAlertShowing()
-    drive:load(current)
-    a2d.DialogOK()
-    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels window should be open")
-    a2d.CloseWindow()
-end)

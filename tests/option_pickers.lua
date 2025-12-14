@@ -55,6 +55,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.ToggleOptionShowShortcutsOnStartup() -- enable
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     a2dtest.SetBankOffsetForSelectorModule()
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()

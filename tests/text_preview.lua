@@ -6,6 +6,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(5)
+a2d.RemoveClockDriverAndReboot() -- avoid clock-based repaints
 
 --[[
   Verify that Escape key exits.
@@ -213,6 +214,7 @@ test.Step(
     end)
     a2d.CloseWindow()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[

@@ -25,6 +25,7 @@ test.Step(
     test.Snap("verify 24-hour format shown")
     a2d.CloseAllWindows()
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -135,6 +136,7 @@ test.Step(
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2dtest.ExpectMinimalRepaint(a2d.DialogOK)
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -156,6 +158,7 @@ test.Step(
     a2d.DialogOK()
     -- Should write timestamp to DESKTOP.SYSTEM. Restart to verify.
     a2d.Reboot()
+    a2d.WaitForDesktopReady()
 
     -- Create new folder
     a2d.CreateFolder("/RAM1/NOT.TODAY")

@@ -6,6 +6,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 $FLOP1IMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 test.Step(
   "swap images",
   function()

@@ -19,7 +19,7 @@ function RAMCardTest(name, func1, func2)
 
       a2d.ToggleOptionCopyToRAMCard() -- Enable
       a2d.Reboot()
-      a2d.WaitForCopyToRAMCard()
+      a2d.WaitForDesktopReady()
 
       if not func2 then
         func1()
@@ -230,8 +230,8 @@ test.Step(
     emu.wait(5) -- sort operation
     a2d.CloseAllWindows()
     a2d.Reboot()
-
     apple2.WaitForBasicSystem()
+
     apple2.TypeLine("CREATE /RAM1/DESKTOP")
     apple2.TypeLine("CREATE /RAM1/DESKTOP/MODULES")
     apple2.TypeLine("BSAVE /RAM1/DESKTOP/MODULES/DESKTOP,A0,L0")
@@ -241,7 +241,7 @@ test.Step(
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.DeletePath("/A2.DESKTOP/BASIC.SYSTEM")
     a2d.Reboot()
-    a2d.WaitForCopyToRAMCard()
+    a2d.WaitForDesktopReady()
 
     a2dtest.ExpectNotHanging()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -259,9 +259,8 @@ test.Step(
   "Copy to RAMCard on use works",
   function()
     a2d.ToggleOptionCopyToRAMCard() -- Enable
-    a2d.DeletePath("/A2.DESKTOP/BASIC.SYSTEM")
     a2d.Reboot()
-    a2d.WaitForCopyToRAMCard()
+    a2d.WaitForDesktopReady()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2d.OAShortcut("1")
