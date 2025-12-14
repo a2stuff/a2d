@@ -6,6 +6,8 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 --[[
   Rename the `APPLE.MENU` directory. Launch DeskTop. Verify that the
   Apple Menu has two "About" items and no separator.

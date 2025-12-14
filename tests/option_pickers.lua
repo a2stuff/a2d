@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Double-click an item. Verify that the appropriate action button
   flashes.

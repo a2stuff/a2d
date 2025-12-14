@@ -157,7 +157,7 @@ pushd "$MAMEDIR" > /dev/null
 exec 5>&1 # duplicate stdout filehandle
 output=$(
   # eval here to allow configs to specify empty variables e.g. -sl6 ''
-  eval "'$MAMEEXE' \
+  time eval "'$MAMEEXE' \
     -skip_gameinfo -nosamples \
     -window -nomax -resolution '$RESOLUTION' -nounevenstretch \
     -mouse \

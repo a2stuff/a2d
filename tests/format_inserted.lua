@@ -7,6 +7,8 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 emu.wait(20) -- slow boot from floppy
 
 --[[

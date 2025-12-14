@@ -6,6 +6,8 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 --[[
   Launch DeskTop. Manually (not via DeskTop) eject the startup disk.
   Select the startup disk icon. File > Open. Verify that the alert

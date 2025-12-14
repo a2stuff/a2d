@@ -43,6 +43,8 @@ DISKARGS="\
   "
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 -- Callback called with func to invoke menu item; pass false if
 -- no volumes selected, true if volumes selected (affects menu item)
 function FormatEraseTest(name, func)

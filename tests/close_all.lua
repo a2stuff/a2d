@@ -1,4 +1,6 @@
 
+a2d.ConfigureRepaintTime(0.5)
+
 --[[
   Repeat the following case with these modifiers: Open-Apple,
   Solid-Apple:

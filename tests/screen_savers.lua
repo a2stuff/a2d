@@ -1,8 +1,4 @@
---[[============================================================
-
-  "Screen Savers" tests
-
-  ============================================================]]
+a2d.ConfigureRepaintTime(1)
 
 --[[
   Launch DeskTop. Apple Menu > Screen Savers. Select Melt. File > Open

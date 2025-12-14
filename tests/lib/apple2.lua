@@ -613,13 +613,16 @@ end
 -- constantly. Instead, call with explicit bank selection in the
 -- address.
 
--- Note that internally MAME models LC memory as:
+-- Note that internally MAME models LC memory on the IIe as:
 -- * $D000/1 is presented at $C000
 -- * $D000/2 is presented at $D000
 -- * $E000 is presented at $F000
 -- * $F000 is presented at $E000
 -- For Apple IIe devices, Auxiliary RAM is a separate device. For
 -- others, it just exists at 0x10000 and up.
+--
+-- The IIgs swaps E/F, but not the two D banks!
+
 
 -- The ReadRAMDevice/WriteRAMDevice calls normalize this; call with
 -- 0x0nnnn to access Main RAM and 0x1nnnn to acces Aux RAM. For
@@ -627,11 +630,21 @@ end
 
 local ram = emu.item(machine.devices[":ram"].items["0/m_pointer"])
 
-function apple2.ReadRAMDevice(addr)
+local function swizzle(addr)
   -- Assume LCBANK1 is desired
-  if (addr & 0xC000) == 0xC000  then
-    addr = addr ~ 0x1000
+  if machine.system.name:match("^apple2gs") then
+    if (addr & 0xE000) == 0xE000 then
+      return addr ~ 0x1000
+    end
+  elseif (addr & 0xC000) == 0xC000 then
+    return addr ~ 0x1000
   end
+  --print("not swizzled")
+  return addr
+end
+
+function apple2.ReadRAMDevice(addr)
+  addr = swizzle(addr)
 
   -- Apple IIe exposes Aux RAM as a separate device
   if addr >= 0x10000 and auxram ~= nil then
@@ -642,10 +655,7 @@ function apple2.ReadRAMDevice(addr)
 end
 
 function apple2.WriteRAMDevice(addr, value)
-  -- Assume LCBANK1 is desired
-  if (addr & 0xC000) == 0xC000 then
-    addr = addr ~ 0x1000
-  end
+  addr = swizzle(addr)
 
   -- Apple IIe exposes Aux RAM as a separate device
   if addr >= 0x10000 and auxram ~= nil then
@@ -981,6 +991,13 @@ end
 --------------------------------------------------
 
 -- TODO: Implement BitsyInvokePath (tab to volume, then iterate on path segments)
+
+function apple2.WaitForBitsy()
+  -- TODO: Timeout
+  while not apple2.GrabTextScreen():match("BITSY") do
+    emu.wait(1)
+  end
+end
 
 function apple2.BitsySelectSlotDrive(sd)
   while apple2.GrabTextScreen():match("[^:]+") ~= sd do

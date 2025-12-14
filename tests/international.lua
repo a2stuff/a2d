@@ -1,3 +1,4 @@
+a2d.ConfigureRepaintTime(1)
 
 -- Remove clock driver (to avoid build-relative dates)
 a2d.RemoveClockDriverAndReboot()

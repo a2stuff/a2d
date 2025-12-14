@@ -1,3 +1,6 @@
+
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Turn Caps
   Lock off. Hold Apple (either one) and press the Q key. Verify the

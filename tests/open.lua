@@ -1,3 +1,4 @@
+a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Open a volume with double-click.
@@ -180,12 +181,15 @@ test.Step(
     a2d.MoveWindowBy(0,80)
     a2d.SelectAll()
     a2d.OpenSelection()
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 8, "8 windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "NEW.FOLDER.7", "folder name should be New.Folder.7")
     test.Snap("verify folder icons selected and dimmed")
 
     a2d.CloseAllWindows()
+    emu.wait(5)
+
     a2d.OpenPath("/RAM1")
     a2d.SelectAll()
     a2d.DeleteSelection()
@@ -266,6 +270,7 @@ test.Step(
     -- Select multiple and File > Open
     a2d.SelectAll()
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN)
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
     test.Snap("verify folder icons selected and dimmed")
@@ -305,7 +310,7 @@ test.Step(
         m.MoveToApproximately(icon1_x, icon1_y)
         m.DoubleClick()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "2 windows should be open")
 end)
@@ -336,7 +341,7 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
     test.Snap("verify folder icons selected and dimmed")
@@ -382,7 +387,7 @@ test.Variants(
     else
       a2d.SAShortcut(key)
     end
-    a2d.WaitForRepaint()
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")

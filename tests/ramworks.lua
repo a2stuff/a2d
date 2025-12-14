@@ -6,6 +6,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
   ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Run DeskTop on a system with RAMWorks and using `RAM.DRV.SYSTEM`.
   Verify that sub-directories under `APPLE.MENU` are copied to
@@ -21,9 +23,7 @@ test.Step(
 
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-
-    a2d.WaitForCopyToRAMCard()
-    emu.wait(40) -- extra slow
+    a2d.WaitForDesktopReady()
 
     a2d.OpenPath("/RAM/DESKTOP/APPLE.MENU/TOYS")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "TOYS", "should be copied to RAMCard")
@@ -45,11 +45,11 @@ test.Step(
     a2d.Reboot()
 
     -- In Bitsy Bye (since RAMAUX doesn't chain, it QUITs)
+    apple2.WaitForBitsy()
     test.Expect(apple2.GrabTextScreen():match("^S7,D1:/A2.DESKTOP"), "should be at S7,S1")
     apple2.BitsyInvokeFile("CLOCK.SYSTEM")
 
     a2d.WaitForCopyToRAMCard()
-    emu.wait(40) -- extra slow
 
     a2d.OpenPath("/RAMA/DESKTOP/APPLE.MENU/TOYS")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "TOYS", "should be copied to RAMCard")

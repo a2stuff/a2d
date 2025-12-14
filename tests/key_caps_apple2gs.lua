@@ -7,6 +7,8 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended"
   layout is shown, with the backslash to the right of the space bar.

@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Open two windows. Click the close box on the active window. Verify
   that only the active window closes.
@@ -54,7 +56,7 @@ test.Variants(
       a2d.SAShortcut("w")
     end
     a2d.WaitForRepaint()
-    test.Snap("verify only one window closed")
+    test.ExpectEquals(a2dtest.GetWindowCount(), count - 1, "one window should have closed")
     a2d.CloseAllWindows()
 end)
 

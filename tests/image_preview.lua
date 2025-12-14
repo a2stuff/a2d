@@ -5,6 +5,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
 apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
 
 function IsMono()
@@ -45,7 +46,7 @@ end
 test.Step(
   "Escape exits",
   function()
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     a2dtest.ExpectNothingChanged(function()
         a2d.OpenSelection()
         apple2.EscapeKey()
@@ -59,7 +60,7 @@ end)
 test.Step(
   "OA+W exits",
   function()
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     a2dtest.ExpectNothingChanged(function()
         a2d.OpenSelection()
         a2d.OAShortcut("W")
@@ -73,7 +74,7 @@ end)
 test.Step(
   "Space toggles color/mono",
   function()
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     apple2.SpaceKey()
     a2d.WaitForRepaint()
     test.Expect(IsMono(), "should be mono")
@@ -131,7 +132,7 @@ end)
 test.Step(
   "Clock appears immediately",
   function()
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     apple2.EscapeKey()
 
     apple2.Type('@') -- no-op, wait for key to be consumed

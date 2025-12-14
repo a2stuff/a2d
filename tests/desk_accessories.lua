@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Launch DeskTop. Open the APPLE.MENU folder. Select a desk accessory
   icon. File > Open. Verify that the desk accessory launches.
@@ -76,6 +78,8 @@ MoveDoesntRepaintTest("CD Remote", "/A2.DESKTOP/EXTRAS/CD.REMOTE")
 MoveDoesntRepaintTest("Scientific Calculator", "/A2.DESKTOP/EXTRAS/SCI.CALC")
 
 -- ============================================================
+
+a2d.ConfigureRepaintTime(1)
 
 --[[
   Repeat for every desk accessory that runs in a window.

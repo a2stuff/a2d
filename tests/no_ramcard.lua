@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 $FLOP1IMG -flop2 $FLOP2IMG
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Configure a system without a RAMCard. Launch DeskTop. Verify that
   the volume containing DeskTop appears in the top right corner of the

@@ -1,9 +1,4 @@
-
---[[============================================================
-
-  "Calculator" tests
-
-  ============================================================]]
+a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Run Apple Menu > Calculator. Move the Calculator window. Verify that
@@ -36,7 +31,8 @@ test.Step(
         m.MoveToApproximately(400, 100)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- slow repaint
+
     test.Snap("verify mouse cursor painted correctly")
     a2d.CloseWindow()
 end)
@@ -61,7 +57,7 @@ test.Step(
         m.MoveToApproximately(drop_x, drop_y)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- slow repaint
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(drop_x, drop_y)
@@ -69,7 +65,8 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- slow repaint
+
     test.Snap("verify volume icons repaint correctly")
     a2d.CloseWindow()
 end)
@@ -92,7 +89,8 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- slow repaint
+
     a2dtest.ExpectNothingChanged(function()
         apple2.Type("123.456")
     end)
@@ -103,7 +101,8 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, 30)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    emu.wait(5) -- slow repaint
+
     test.Snap("verify display is 123.456")
     a2d.CloseWindow()
 end)

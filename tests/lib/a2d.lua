@@ -113,6 +113,9 @@ function a2d.WaitForRepaint()
 end
 
 function a2d.ConfigureRepaintTime(s)
+  if s == nil or s == 0 then
+    error("specify a non-zero time", 2)
+  end
   repaint_time = s
 end
 
@@ -267,6 +270,18 @@ end
 function a2d.Select(name)
   a2d.ClearSelection()
   apple2.Type(name)
+  emu.wait(0.25) -- TODO: spin here?
+  local selected = a2d.GetSelectedIcons()
+  if #selected ~= 1 then
+    manager.machine.video:snapshot()
+    error(string.format("Failed to select %q - have %d selected\n%s",
+                        name, #selected, debug.traceback()))
+  end
+  if name:lower() ~= selected[1].name:lower() then
+    manager.machine.video:snapshot()
+    error(string.format("Failed to select %q - have %q selected\n%s",
+                        name, selected[1].name, debug.traceback()))
+  end
 end
 
 function a2d.SelectAndOpen(name, opt_close_current)
@@ -493,13 +508,13 @@ end
 
 function a2d.Quit()
   a2d.OAShortcut("Q")
-  a2d.WaitForRestart()
+  apple2.WaitForBitsy()
 end
 
 function a2d.QuitAndRestart()
   a2d.Quit()
   apple2.BitsyInvokeFile("PRODOS")
-  a2d.WaitForRestart()
+  a2d.WaitForDesktopReady()
 end
 
 -- Reboot via menu equivalent of PR#7 (or PR#5 on IIc+)
@@ -519,7 +534,8 @@ end
 -- TODO: Ensure callers wait until idle, though
 function a2d.WaitForDesktopShowing()
   function IsDesktopShowing()
-    if apple2.ReadSSW("RDDHIRES") > 127 then -- bit7=0 = DHIRES on
+    -- TODO: Is there RDDHIRES on anything but IIc?
+    if apple2.ReadSSW("RDHIRES") < 128 then
       return false
     end
 
@@ -869,6 +885,7 @@ function a2d.GetSelectedIcons()
   local selected_icon_list_addr = 0x01DAED
 
   local selected_icon_count = apple2.ReadRAMDevice(selected_icon_count_addr)
+
   local icons = {}
 
   for i = 0, selected_icon_count-1 do

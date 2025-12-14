@@ -1,4 +1,6 @@
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow
   keys to move the window outline. Press Escape. Verify that the

@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Launch DeskTop. Open a window. Hold Solid-Apple and double-click a
   folder icon. Verify that the folder opens, and that the original
@@ -189,9 +191,10 @@ test.Step(
 
     a2d.SelectPath("/FLOPPY1")
     a2d.OASADown()
-    a2d.WaitForRepaint()
+    emu.wait(5) -- slow floppy
     a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
+    emu.wait(5) -- slow floppy
     a2dtest.ExpectNotHanging()
 
     drive:load(current)

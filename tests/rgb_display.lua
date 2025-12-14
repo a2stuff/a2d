@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(1)
+
 --[[
   On an RGB system (IIgs, etc), go to Control Panel, check RGB Color.
   Verify that the display shows in color. Preview an image, and verify

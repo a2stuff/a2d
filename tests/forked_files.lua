@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Launch DeskTop. Try to copy files including a GS/OS forked file in
   the selection. Verify that an alert is shown, with the filename
@@ -52,8 +54,8 @@ test.Step(
     a2d.DialogCancel()
 
     a2d.OpenPath("/RAM1")
-    test.Snap("verify 1 file copied")
     a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "1 file should be copied")
     a2d.DeleteSelection()
     a2d.CloseAllWindows()
 end)
@@ -77,8 +79,8 @@ test.Step(
     a2d.DialogCancel()
 
     a2d.OpenPath("/RAM1/GS.OS.FILES")
-    test.Snap("verify 2 files copied")
     a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "2 files should be copied")
     a2d.DeleteSelection()
     a2d.CloseAllWindows()
 end)
@@ -184,6 +186,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
     test.Snap("verify destination window updated")
+    emu.wait(5)
 
     a2d.EraseVolume("RAM1")
 end)
@@ -215,6 +218,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
     test.Snap("verify destination window updated")
+    emu.wait(5)
 
     a2d.EraseVolume("RAM1")
 end)
@@ -257,6 +261,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
     test.Snap("verify destination window activated and updated")
+    emu.wait(5)
 
     a2d.EraseVolume("RAM1")
 end)
@@ -291,6 +296,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2dtest.DHRDarkness()
     a2d.DialogCancel()
+    emu.wait(5)
     test.Snap("verify window does not fully repaint")
     -- BUG: This is failing - the window does fully repaint
 
@@ -327,6 +333,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2dtest.DHRDarkness()
     a2d.DialogOK()
+    emu.wait(5)
     test.Snap("verify window does fully repaint")
 
     a2d.Reboot()
@@ -349,6 +356,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2dtest.DHRDarkness()
     a2d.DialogOK()
+    emu.wait(5)
     test.Snap("verify window does fully repaint")
 
     a2d.Reboot()

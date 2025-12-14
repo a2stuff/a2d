@@ -6,6 +6,8 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Configure a system with a single joystick. Run the DA. Move the
   joystick to the right and bottom extremes. Verify that the indicator

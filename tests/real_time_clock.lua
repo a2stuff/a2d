@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Run on system with real-time clock; verify that time shows in
   top-right of menu.

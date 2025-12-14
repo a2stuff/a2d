@@ -4,6 +4,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/floppy_with_files.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(2)
+
 --[[
   Launch DeskTop. Select a 5.25 disk volume. Remove the disk. File >
   Get Info. Verify that an alert is shown. Click OK. Verify that

@@ -6,6 +6,8 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 --[[
   Launch DeskTop. Open the Control Panel DA. Use the pattern editor to
   create a custom pattern, then click the desktop preview to apply it.

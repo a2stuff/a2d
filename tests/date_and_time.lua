@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(2)
+
 --[[
   Open `/TESTS/FILE.TYPES`. View > by Name. Apple Menu > Control
   Panels > Date and Time. Change the time format from 12- to 24-hour

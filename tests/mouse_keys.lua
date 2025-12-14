@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(0.25)
+
 local file_menu_x, file_menu_y = 30, 5
 
 --[[

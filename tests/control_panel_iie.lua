@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(2)
+
 --[[
   Configure a system with a color display. Open the Control Panel DA.
   Check "RGB Color" if needed to ensure the display is in color.

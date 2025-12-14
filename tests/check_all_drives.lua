@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG"
 ======================================== ENDCONFIG ]]
 -- NOTE: Need at least one empty Disk II drive
 
+a2d.ConfigureRepaintTime(5)
+
 test.Step(
   "No error if floppy is empty",
   function()

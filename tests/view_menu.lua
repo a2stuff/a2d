@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
   ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(2)
+
 --[[
   Open folder with files. View > by Date. Verify that DeskTop does not
   hang.

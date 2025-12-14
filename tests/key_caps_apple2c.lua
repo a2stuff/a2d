@@ -6,6 +6,8 @@ DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 --[[
   Launch DeskTop. Apple Menu > Key Caps. Verify that the "original"
   layout is shown, with the backslash above the Return key.

@@ -1,3 +1,5 @@
+a2d.ConfigureRepaintTime(5)
+
 test.Step(
   "No error",
   function()

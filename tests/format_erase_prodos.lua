@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 --[[
   Launch DeskTop. Run the command. Select a slot/drive containing an
   existing volume. Enter a new name and click OK. Verify that the

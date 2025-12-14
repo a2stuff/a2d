@@ -4,6 +4,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/dos33_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(1)
+
 a2d.OpenPath("/A2.DESKTOP/EXTRAS")
 
 --[[
@@ -119,7 +121,7 @@ test.Step(
     apple2.ReturnKey()
     emu.wait(10) -- floppy catalog
     apple2.EscapeKey()
-    test.Snap("verify Cancel button flashes")
+    test.Snap("verify Close button flashes")
     a2d.WaitForRepaint()
     test.Snap("verify dialog closes")
 end)

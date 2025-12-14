@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 --[[
   Select a folder. Apple > Change Type. Modify only the type (e.g.
   `06`). Verify that an error is shown.

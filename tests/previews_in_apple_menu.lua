@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(2)
+
 --[[
   Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
 
@@ -46,7 +48,7 @@ test.Step(
     end)
 
     -- image file
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
     test.Snap("verify preview shown")
     a2d.CloseWindow()

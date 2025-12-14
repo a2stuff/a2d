@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/pascal_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(5)
+
 --[[
   Launch DeskTop. Run the command. Select a slot/drive containing a
   Pascal disk. Enter a new name and click OK. Verify that the

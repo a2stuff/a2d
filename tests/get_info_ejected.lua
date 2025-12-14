@@ -6,6 +6,8 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(2)
+
 --[[
   Select a volume or folder containing multiple files. File > Get
   Info. During the count of the files, eject the disk. Verify that an

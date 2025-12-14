@@ -1,3 +1,4 @@
+a2d.ConfigureRepaintTime(1)
 
 --[[
   Launch DeskTop. Open a volume window. Open a folder. Close the

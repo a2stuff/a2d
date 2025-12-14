@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(2)
+
 -- Need to ensure DESKTOP.FILE gets written out or window headers
 -- will change
 
@@ -146,7 +148,7 @@ end)
 test.Step(
   "Drag selection still functions",
   function()
-    a2d.OpenPath("/TEST/FILE.TYPES")
+    a2d.OpenPath("/TESTS/FILE.TYPES")
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.DragSelectMultipleVolumes()

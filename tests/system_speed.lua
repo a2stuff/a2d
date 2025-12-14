@@ -6,10 +6,7 @@ DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 
 ======================================== ENDCONFIG ]]
 
-
--- Wait for DeskTop to start
-emu.wait(50) -- floppy drives are slow
-
+a2d.ConfigureRepaintTime(2)
 
 --[[
   Run System Speed DA. Click Normal then click OK. Verify DeskTop does

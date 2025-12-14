@@ -5,6 +5,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/floppy_with_files.dsk"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.5)
 
 --[[
   Launch DeskTop. Open two windows. Select a file in one window.
@@ -173,6 +174,7 @@ test.Step(
     end)
     a2dtest.WaitForAlert()
     a2d.DialogOK()
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "folder window should have closed")
 end)
@@ -198,6 +200,7 @@ test.Step(
     a2d.OADelete()
     a2dtest.WaitForAlert()
     a2d.DialogOK()
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "folder window should have closed")
 end)
