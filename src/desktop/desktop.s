@@ -15,7 +15,7 @@
         .include "../toolkits/optk.inc"
         .include "../lib/alert_dialog.inc"
         .include "../common.inc"
-        .include .concat("../desk.acc/res/filenames.res.", kBuildLang)
+        .include .concat("../desk_acc/res/filenames.res.", kBuildLang)
 
 ;;; ============================================================
 ;;; File Structure

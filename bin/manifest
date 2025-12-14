@@ -27,9 +27,9 @@ source "bin/util.sh"
 get_da_loc_name() {
     local name="$1"
     local res="res_filename_${name//./_}"
-    local filename="src/desk.acc/res/filenames.res.${lang}"
+    local filename="src/desk_acc/res/filenames.res.${lang}"
     if [[ -n "$no_loc_da_names" ]]; then
-      filename="src/desk.acc/res/filenames.res.en"
+      filename="src/desk_acc/res/filenames.res.en"
     fi
     local match=$(egrep -i "^\.define ${res} " "${filename}" | cut -d' ' -f3 | tr -d '"')
     echo "${match:-$name}"
@@ -107,7 +107,7 @@ emit add_file $disposition "res/package/SAM.BIN" "Extras" "SAM" 000000
 # Part 5: Desk Accessories (optional and extra)
 
 # Add Desk Accessories
-for line in $(cat src/desk.acc/TARGETS | bin/targets.pl); do
+for line in $(cat src/desk_acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
     loc=$(get_da_loc_name "$file")

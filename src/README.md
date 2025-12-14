@@ -1,11 +1,11 @@
 * [common](common)
   * Resources used across build targets.
-* [desk.acc](desk.acc)
+* [desk_acc](desk_acc)
   * "Desk Accessories" - small applications that generally live in the Apple Menu.
 * [desktop](desktop)
   * The main "Finder"-like application.
-* [desktop.system](desktop.system)
-  * The launcher that invokes DeskTop.
+* [launcher](launcher)
+  * The `DESKTOP.SYSTEM` launcher that invokes DeskTop.
 * [disk_copy](disk_copy)
   * A separate module used for copying disks. Launched from DeskTop.
 * [extras](extras)

@@ -10,7 +10,7 @@ max_seg_size=$(( 0x1C00 - 0x800 ))
 
 make
 printf "                       Main    Aux  Main%%  Aux%% \n"
-for file in $(cat src/desk.acc/TARGETS | bin/targets.pl targets | sort); do
+for file in $(cat src/desk_acc/TARGETS | bin/targets.pl targets | sort); do
     aux_lo=$(xxd -p -l1 -s0 "out/${file}.da")
     aux_hi=$(xxd -p -l1 -s1 "out/${file}.da")
     aux=$(( 0x${aux_hi}${aux_lo} ))

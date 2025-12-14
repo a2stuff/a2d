@@ -11,7 +11,7 @@ Contributions welcome! Preliminaries:
 
 ### Desk Accessories
 
-These are pretty easy to write. See the bug tracker (links below) for examples, but anything is welcome. Look at existing DA code for examples, and see the [API](desk.acc/API.md) and [MGTK](mgtk/MGTK.md) docs for more details.
+These are pretty easy to write. See the bug tracker (links below) for examples, but anything is welcome. Look at existing DA code for examples, and see the [API](desk_acc/API.md) and [MGTK](mgtk/MGTK.md) docs for more details.
 
 ### Bug Fixes & Enhancements
 

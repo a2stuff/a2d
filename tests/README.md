@@ -89,3 +89,10 @@ Not tests - these just dump screenshots of the app, for documentation or e.g. va
 
 Not tests, just example machine configurations. These verify that the abstractions in `lib/apple2.lua` work.
 
+## `infrastructure/`
+
+Tests for the testing libraries themselves.
+
+## `desk_acc/`, `desktop/`, `disk_copy/`, `selector/`, `launcher/`
+
+Tests specific to various components of the application.

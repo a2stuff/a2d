@@ -27,7 +27,7 @@
 * [shk](shk)
   * Generates a ShrinkIt! archive for distribution.
 * [targets.pl](targets.pl)
-  * Parses the `desk.acc/TARGETS` file, generates requested lists.
+  * Parses the `desk_acc/TARGETS` file, generates requested lists.
 
 ## Internationalization/Localization
 

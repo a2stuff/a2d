@@ -91,7 +91,7 @@ A handful of re-usable libraries that don't have fancy MLI-style interfaces are 
 
 ## Desk Accessories
 
-* [Desk Accessory APIs](../desk.acc/API.md)
+* [Desk Accessory APIs](../desk_acc/API.md)
 * [DeskTop APIs](../desktop/APIs.md)
 
 Desk Accessories are small applications that run within DeskTop. They are constructed using the above APIs/libraries, and integrate into the hosting application using APIs specific to DeskTop - provided as jump table entries.
