@@ -36,6 +36,7 @@ local keyboard = {
 
   -- modifiers
   ["Control"]     = { port = ":keyb_special", field = "Control"     },
+  ["Shift"]       = { port = ":keyb_special", field = "Left Shift"  },
   ["Open Apple"]  = { port = ":keyb_special", field = "Open Apple"  },
   ["Solid Apple"] = { port = ":keyb_special", field = "Solid Apple" },
 
@@ -111,7 +112,7 @@ elseif machine.system.name:match("^apple2gs") then
 
   keyboard = {
     ["Return"]      = { port = ":macadb:KEY2", field = "Return" },
-    ["Delete"]      = { port = ":macadb:KEY7", field = "Delete" },
+    ["Delete"]      = { port = ":macadb:KEY3", field = "Backspace" },
     ["Escape"]      = { port = ":macadb:KEY3", field = "Esc" },
     ["Tab"]         = { port = ":macadb:KEY3", field = "Tab" },
 
@@ -121,9 +122,10 @@ elseif machine.system.name:match("^apple2gs") then
     ["Down Arrow"]  = { port = ":macadb:KEY3", field = "Down Arrow"  },
 
     -- modifiers
-    ["Control"]     = { port = ":macadb:KEY3", field = "Control" },
-    ["Open Apple"]  = { port = ":macadb:KEY3", field = "Command" },
-    ["Solid Apple"] = { port = ":macadb:KEY3", field = "Option"  },
+    ["Control"]     = { port = ":macadb:KEY3", field = "Control"    },
+    ["Shift"]       = { port = ":macadb:KEY3", field = "Shift"      },
+    ["Open Apple"]  = { port = ":macadb:KEY3", field = "Command"    },
+    ["Solid Apple"] = { port = ":macadb:KEY3", field = "Option"     },
 
     -- Other
     ["Reset"]     = { port = ":macadb:KEY5", field = "Reset / Power" },
@@ -461,6 +463,16 @@ end
 
 function apple2.ReleaseControl()
   release("Control")
+  emu.wait(1/60)
+end
+
+function apple2.PressShift()
+  press("Shift")
+  emu.wait(1/60)
+end
+
+function apple2.ReleaseShift()
+  release("Shift")
   emu.wait(1/60)
 end
 

@@ -203,7 +203,7 @@ function a2dtest.GetFrontWindowContentRect()
   local vx,vy = ram_s16(port + 0), ram_s16(port + 2)
   local x1,y1 = ram_s16(port + 8), ram_s16(port + 10)
   local x2,y2 = ram_s16(port + 12), ram_s16(port + 14)
-  return vx, vy, (x2-x1), (y2-y1)
+  return vx, vy, (x2+x1), (y2+y1)
 end
 
 function a2dtest.GetFrontWindowRightScrollArrowCoords()

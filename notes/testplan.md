@@ -935,7 +935,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 * Launch DeskTop. Insert a non-formatted disk into a SmartPort drive (e.g. Virtual ][ OmniDisk). Verify that a prompt is shown to format the disk. Click OK. Enter a name, and click OK. Verify that the correct slot and drive are shown in the confirmation prompt.
 
-## Keyboard
+## Keyboard - covered by `tests/desktop/keyboard*.lua`
 
 * Close all windows. Start typing a volume name. Verify that a prefix-matching volume, or the subsequent volume (in lexicographic order) is selected, or the last volume (in lexicographic order).
 * Close all windows. Start typing a volume name. Move the mouse. Start typing another filename. Verify that the matching is reset.
