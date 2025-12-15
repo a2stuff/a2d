@@ -280,7 +280,11 @@ test.Step(
 
     a2dtest.WaitForAlert()
     a2d.DialogOK() -- failure
+    emu.wait(5) -- slow I/O
 
-    test.Snap("verify floppy icon not dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
+    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+
     drive:load(current)
 end)

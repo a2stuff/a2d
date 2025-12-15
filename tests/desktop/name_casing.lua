@@ -40,7 +40,12 @@ test.Step(
   "GS/OS file name cases show correctly",
   function()
     a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.NAMES")
-    test.Snap("verify name cases are correct")
+    a2d.SelectAll()
+    local icons = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons, 3, "3 files should be present")
+    test.ExpectEquals(icons[1].name, "lower", "case should match")
+    test.ExpectEquals(icons[2].name, "UPPER", "case should match")
+    test.ExpectEquals(icons[3].name, "mIxEd.CaSe", "case should match")
 end)
 
 --[[
@@ -51,7 +56,12 @@ test.Step(
   "AppleWorks file name cases show correctly",
   function()
     a2d.OpenPath("/TESTS/PROPERTIES/AW.NAMES")
-    test.Snap("verify name cases are correct")
+    a2d.SelectAll()
+    local icons = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons, 3, "3 files should be present")
+    test.ExpectEquals(icons[1].name, "lower.UPPER.SS", "case should match")
+    test.ExpectEquals(icons[2].name, "UPPER.lower.WP", "case should match")
+    test.ExpectEquals(icons[3].name, "mIxEd.CaSe.DB", "case should match")
 end)
 
 --[[

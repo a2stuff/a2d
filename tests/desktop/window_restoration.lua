@@ -90,7 +90,10 @@ test.Step(
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.CloseAllWindows()
-    test.Snap("verify volume icon not dimmed")
+
+    a2d.SelectPath("/A2.DESKTOP")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 end)
 
 --[[
@@ -152,7 +155,8 @@ test.Step(
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.DragSelectMultipleVolumes()
-    test.Snap("verify icons selected")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 3, "volume icons should be selected")
 end)
 
 --[[

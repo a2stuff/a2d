@@ -9,6 +9,22 @@ local a2d = {}
 local util = require("util")
 local apple2 = require("apple2")
 
+local function default_options(o)
+  local options = {}
+  if o then
+    for k, v in pairs(o) do
+      options[k] = v
+    end
+  end
+
+  if options.level == nil then
+    options.level = 1
+  end
+
+  options.level = options.level + 1
+  return options
+end
+
 --------------------------------------------------
 -- Reset configuration
 --------------------------------------------------
@@ -204,6 +220,8 @@ end
 -- Invoke nth item on mth menu (1-based)
 -- (if nth is negative, from the bottom of menu)
 function a2d.InvokeMenuItem(mth, nth, options)
+  options = default_options(options)
+
   a2d.OpenMenu(mth)
   if nth > 0 then
     -- down to nth item
@@ -220,28 +238,34 @@ function a2d.InvokeMenuItem(mth, nth, options)
   -- invoke
   apple2.ReturnKey()
 
-  if not options or not options.no_wait then
+  if not options.no_wait then
     a2d.WaitForRepaint()
   end
 end
 
 function a2d.OAShortcut(key, options)
+  options = default_options(options)
+
   apple2.OAKey(key)
-  if not options or not options.no_wait then
+  if not options.no_wait then
     a2d.WaitForRepaint()
   end
 end
 
 function a2d.SAShortcut(key, options)
+  options = default_options(options)
+
   apple2.SAKey(key)
-  if not options or not options.no_wait then
+  if not options.no_wait then
     a2d.WaitForRepaint()
   end
 end
 
 function a2d.OASAShortcut(key, options)
+  options = default_options(options)
+
   apple2.OASAKey(key)
-  if not options or not options.no_wait then
+  if not options.no_wait then
     a2d.WaitForRepaint()
   end
 end
@@ -268,30 +292,37 @@ function a2d.OpenSelectionAndCloseCurrent()
   a2d.WaitForRepaint()
 end
 
-local function CheckSelectionName(name)
+local function CheckSelectionName(name, options)
+  options = default_options(options)
+
   local selected = a2d.GetSelectedIcons()
   if #selected ~= 1 then
     manager.machine.video:snapshot()
-    error(string.format("Failed to select %q - have %d selected\n%s",
-                        name, #selected, debug.traceback()))
+    error(string.format("Failed to select %q - have %d selected",
+                        name, #selected))
   end
   if name:lower() ~= selected[1].name:lower() then
     manager.machine.video:snapshot()
-    error(string.format("Failed to select %q - have %q selected\n%s",
-                        name, selected[1].name, debug.traceback()))
+    error(string.format("Failed to select %q - have %q selected",
+                        name, selected[1].name))
   end
 end
 
-function a2d.Select(name)
+function a2d.Select(name, options)
+  options = default_options(options)
+
   a2d.ClearSelection()
   apple2.Type(name)
   emu.wait(0.25) -- TODO: spin here?
-  CheckSelectionName(name)
+  CheckSelectionName(name, options)
 end
 
-function a2d.SelectAndOpen(name, opt_close_current)
-  a2d.Select(name)
-  if opt_close_current then
+-- additional option: {close_current=true}
+function a2d.SelectAndOpen(name, options)
+  options = default_options(options)
+
+  a2d.Select(name, options)
+  if options.close_current then
     a2d.OpenSelectionAndCloseCurrent()
   else
     a2d.OpenSelection()
@@ -313,10 +344,19 @@ function a2d.CloseAllWindows()
   a2d.WaitForRepaint()
 end
 
-function a2d.OpenPath(path, opt_leave_parent)
+-- additional option: {leave_parent=true}
+function a2d.OpenPath(path, options)
+  options = default_options(options)
+
+  if options.leave_parent then
+    options.close_current = false
+  else
+    options.close_current = true
+  end
+
   a2d.CloseAllWindows()
   for segment in path:gmatch("([^/]+)") do
-    a2d.SelectAndOpen(segment, not opt_leave_parent)
+    a2d.SelectAndOpen(segment, options)
   end
 end
 
@@ -342,15 +382,19 @@ function a2d.ClearSelection()
 end
 
 function a2d.DialogOK(options)
+  options = default_options(options)
+
   apple2.ReturnKey()
-  if not options or not options.no_wait then
+  if not options.no_wait then
     a2d.WaitForRepaint()
   end
 end
 
 function a2d.DialogCancel(options)
+  options = default_options(options)
+
   apple2.EscapeKey()
-  if not options or not options.no_wait then
+  if not options.no_wait then
     a2d.WaitForRepaint()
   end
 end
@@ -457,6 +501,8 @@ function a2d.AddShortcut(path, options)
 end
 
 function a2d.CopySelectionTo(path, is_volume, options)
+  options = default_options(options)
+
   -- Assert: there is a selection
   --[[
     But we don't know if it's 1 or more than 1 so we index
@@ -475,7 +521,7 @@ function a2d.CopySelectionTo(path, is_volume, options)
   end
   a2d.DialogOK(options)
 
-  if not options or not options.no_wait then
+  if not options.no_wait then
     emu.wait(10)
   end
 end
@@ -882,6 +928,8 @@ local function ReadIcon(id)
   icon.name = apple2.GetPascalString(addr + IconEntry.name)
   icon.type = ram_u8(addr + IconEntry.typ)
   icon.record_num = ram_u8(addr + IconEntry.record_num)
+  icon.dimmed = (icon.state & 0x80) ~= 0
+  icon.highlighted = (icon.state & 0x40) ~= 0
 
   return icon
 end

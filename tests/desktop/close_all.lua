@@ -15,7 +15,7 @@ test.Variants(
   },
   function(idx)
     a2d.ClearSelection()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -46,13 +46,12 @@ test.Variants(
   },
   function(idx)
     a2d.ClearSelection()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     if idx == 1 then
       a2d.OASAShortcut("W")
     else
       a2d.OASAShortcut("w")
     end
-    a2d.WaitForRepaint()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 
@@ -69,7 +68,7 @@ test.Variants(
     "Close all using menu and Open Apple",
   },
   function(idx)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
     local file_menu_x, file_menu_y = 30, 5
     a2d.InMouseKeysMode(function(m)
@@ -128,7 +127,7 @@ test.Variants(
     "Holding SA open menu, then OA+SA+w",
   },
   function(idx)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", true) -- leave parent open
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
     local file_menu_x, file_menu_y = 30, 5
     a2d.InMouseKeysMode(function(m)

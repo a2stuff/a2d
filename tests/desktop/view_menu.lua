@@ -60,7 +60,7 @@ test.Step(
     a2d.OpenPath("/TESTS/VIEW/BY.NAME/EMPTY")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.WaitForRepaint()
-    test.Snap("verify no crash")
+    a2dtest.ExpectNotHanging()
     a2d.CloseAllWindows()
 end)
 
@@ -141,7 +141,7 @@ test.Step(
     a2d.SelectAndOpen("CONTROL.PANELS")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.CloseWindow()
-    test.Snap("verify no crash")
+    a2dtest.ExpectNotHanging()
     a2d.CloseAllWindows()
 end)
 
@@ -413,9 +413,17 @@ test.Step(
     a2d.SelectAndOpen("ALIASES")
     a2d.CycleWindows()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    test.Snap("verify folder icon is dimmed")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "ALIASES", "clicked icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
+
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_AS_ICONS)
-    test.Snap("verify folder icon is still dimmed")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "ALIASES", "clicked icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
+
     a2d.CloseAllWindows()
 end)
 
@@ -429,9 +437,17 @@ test.Step(
   function()
     a2d.OpenPath("/TESTS")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    test.Snap("verify volume icon is dimmed")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "TESTS", "volume icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
+
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_AS_ICONS)
-    test.Snap("verify volume icon is still dimmed")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "TESTS", "volume icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
+
     a2d.CloseAllWindows()
 end)
 
@@ -501,14 +517,19 @@ test.Step(
         m.Click()
     end)
     a2d.SelectAll()
+
+    local count = #a2d.GetSelectedIcons()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    test.Snap("verify volume icons still selected")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "icons should still be selected")
+
     a2d.OAShortcut("I") -- File > Get Info
     emu.wait(10)
     test.Snap("verify File > Get File Info show volume info")
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_AS_ICONS)
-    test.Snap("verify volume icons still selected")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "icons should still be selected")
+
     a2d.CloseAllWindows()
 end)
 
@@ -522,8 +543,9 @@ test.Step(
   function()
     a2d.OpenPath("/A2.DESKTOP")
     a2d.SelectAll()
+    local count = #a2d.GetSelectedIcons()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    test.Snap("verify file icons still selected")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "icons should still be selected")
     a2d.CloseAllWindows()
 end)
 
@@ -570,7 +592,17 @@ test.Step(
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_AS_ICONS)
-    test.Snap("verify sorted order")
+
+    a2d.SelectAll()
+    local icons = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons, 6, "five icons should be selected")
+    test.ExpectEqualsIgnoreCase(icons[1].name, "ONE", "selection order should be retained")
+    test.ExpectEqualsIgnoreCase(icons[2].name, "TWO", "selection order should be retained")
+    test.ExpectEqualsIgnoreCase(icons[3].name, "THREE", "selection order should be retained")
+    test.ExpectEqualsIgnoreCase(icons[4].name, "FOUR", "selection order should be retained")
+    test.ExpectEqualsIgnoreCase(icons[5].name, "FIVE", "selection order should be retained")
+    test.ExpectEqualsIgnoreCase(icons[6].name, "SIX", "selection order should be retained")
+
     a2d.CloseAllWindows()
 end)
 
@@ -591,7 +623,10 @@ test.Step(
         m.Click()
     end)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    test.Snap("verify A2.DESKTOP volume icon still selected")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "A2.DESKTOP", "clicked icon should be selected")
+
     a2d.CloseAllWindows()
 end)
 

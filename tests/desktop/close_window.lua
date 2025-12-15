@@ -150,7 +150,10 @@ test.Step(
     a2dtest.MultiSnap(120, "verify windows animates into volume icon")
 
     a2d.WaitForRepaint()
-    test.Snap("verify volume icon is selected")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "TESTS", "clicked icon should be selected")
+    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
     a2d.CloseAllWindows()
 end)
@@ -172,7 +175,10 @@ test.Step(
     a2dtest.MultiSnap(120, "verify windows animates into folder icon")
 
     a2d.WaitForRepaint()
-    test.Snap("verify SUBFOLDER icon is selected")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "SUBFOLDER", "clicked icon should be selected")
+    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
     a2d.CloseAllWindows()
 end)
@@ -197,7 +203,10 @@ test.Step(
     a2dtest.MultiSnap(120, "verify windows animates into volume icon")
 
     a2d.WaitForRepaint()
-    test.Snap("verify volume icon is selected")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "TESTS", "clicked icon should be selected")
+    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
     a2d.CloseAllWindows()
 end)

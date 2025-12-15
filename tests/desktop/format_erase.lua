@@ -139,7 +139,6 @@ FormatEraseTest(
     a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
     emu.wait(5) -- slow
-    test.Snap("Verify whole name was used")
     a2d.RenamePath("/WHOLE.NAME.USED", "RAM1")
 end)
 
@@ -197,7 +196,6 @@ FormatEraseTest(
     -- successful
     emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
-    test.Snap("verify icon updated with NEW.NAME")
     a2d.RenamePath("/NEW.NAME", "RAM1")
 end)
 
@@ -229,7 +227,6 @@ FormatEraseTest(
     -- successful
     emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
-    test.Snap("verify icon updated with NEW.NAME")
     a2d.RenamePath("/NEW.NAME", "RAM1")
 end)
 

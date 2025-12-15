@@ -84,7 +84,7 @@ test.Step(
 
     print("-----------------------")
 
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS", true)
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS", {leave_parent=true})
 
     DumpWindows()
     ProbeCenter()

@@ -86,7 +86,11 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon_x, icon_y)
         m.Click()
-        test.Snap("verify icon selected")
+
+        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+        test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "A2.DESKTOP", "clicked icon should be selected")
+        test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+
         apple2.ReturnKey()
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
         test.Snap("verify cursor at screen center")

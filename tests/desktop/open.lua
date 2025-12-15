@@ -21,7 +21,9 @@ test.Step(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be on top")
-    test.Snap("verify volume icon is selected and dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "A2.DESKTOP", "clicked icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
 
     a2d.CloseAllWindows()
     a2d.ClearSelection()
@@ -53,7 +55,9 @@ test.Step(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be on top")
-    test.Snap("verify folder icon is selected and dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "EXTRAS", "clicked icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
 
     a2d.CloseAllWindows()
     a2d.ClearSelection()
@@ -95,7 +99,9 @@ test.Step(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be on top")
-    test.Snap("verify volume icon is selected and dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "A2.DESKTOP", "clicked icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
 
     a2d.CloseAllWindows()
     a2d.ClearSelection()
@@ -121,7 +127,9 @@ test.Step(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be on top")
-    test.Snap("verify folder icon is selected and dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "EXTRAS", "clicked icon should be selected")
+    test.Expect(a2d.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
 
     a2d.CloseAllWindows()
     a2d.ClearSelection()
@@ -185,7 +193,11 @@ test.Step(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 8, "8 windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "NEW.FOLDER.7", "folder name should be New.Folder.7")
-    test.Snap("verify folder icons selected and dimmed")
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 7, "second icon should still be selected")
+    for i = 1, 7 do
+      test.Expect(a2d.GetSelectedIcons()[i].dimmed, "selected icon should be dimmed")
+    end
 
     a2d.CloseAllWindows()
     emu.wait(5)
@@ -273,7 +285,10 @@ test.Step(
     emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
-    test.Snap("verify folder icons selected and dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "two icons should be selected")
+    for i = 1, 2 do
+      test.Expect(a2d.GetSelectedIcons()[i].dimmed, "selected icon should be dimmed")
+    end
 
     a2d.CloseAllWindows()
     a2d.OpenPath("/RAM1")
@@ -344,7 +359,10 @@ test.Step(
     emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
-    test.Snap("verify folder icons selected and dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "two icons should be selected")
+    for i = 1, 2 do
+      test.Expect(a2d.GetSelectedIcons()[i].dimmed, "selected icon should be dimmed")
+    end
 
     a2d.CloseAllWindows()
     a2d.OpenPath("/RAM1")

@@ -31,8 +31,8 @@ test.Step(
     a2d.DialogOK()
 
     a2d.OpenPath("/RAM1")
-    test.Snap("verify 3 files copied")
     a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 3, "3 files should be copied")
     a2d.DeleteSelection()
     a2d.CloseAllWindows()
 end)
