@@ -1706,7 +1706,7 @@ This covers:
 
 * Double-click an item. Verify that the appropriate action button flashes.
 
-# Menus
+# Menus - covered by `tests/desktop/menus2.lua`
 
 * Click to open a menu. Without clicking again, move the mouse pointer up and down over the menu items, while simultaneously tapping the 'A' key. Verify that the key presses do not cause other menus to open instead.
 * Click to open a menu. Move the mouse over menu bar items and menu items. Verify that the highlight changes immediately when the mouse pointer hot spot is over the next item, not delayed by one movement. For example, if the mouse moves down and the next item doesn't highlight, moving the mouse right also shouldn't cause it to highlight.
