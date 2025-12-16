@@ -788,7 +788,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Eject the startup disk. Select an accessory (e.g. Calculator) from the Apple Menu. Verify that an alert is shown prompting to reinsert the startup disk. Insert the startup disk and click OK. Verify that the accessory launches.
 * Eject the startup disk. Select a folder (e.g. Control Panels) from the Apple Menu. Verify that an alert is shown prompting to reinsert the startup disk. Insert the startup disk and click OK. Verify that the folder window opens.
 
-## Shortcuts (in DeskTop)
+## Shortcuts (in DeskTop) - covered by `tests/desktop/shortcuts*.lua`
 
 * Delete the `LOCAL/SELECTOR.LIST` file from the startup disk, if it was present. Launch DeskTop. Verify that DeskTop does not hang.
 * Delete the `LOCAL/SELECTOR.LIST` file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled, and the menu has no separator. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled, and the menu has a separator, and the shortcut appears. Delete the shortcut. Verify that the menu has its initial state again.

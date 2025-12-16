@@ -49,7 +49,7 @@ test.Step(
   "Run Basic Here",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/RUN.BASIC.HERE")
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
     test.Snap("Run Basic Here")
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()

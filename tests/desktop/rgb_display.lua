@@ -53,7 +53,7 @@ test.Step(
     apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
     a2d.OpenPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
-    a2d.WaitForRestart()
+    apple2.WaitForBasicSystem()
     apple2.TypeLine("HGR : HCOLOR=3 : HPLOT 0,0 TO 100,100")
     emu.wait(5)
     test.Snap("verify a diagonal line is drawn")
