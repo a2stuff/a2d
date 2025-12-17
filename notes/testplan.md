@@ -6,7 +6,7 @@ The `/TESTS` volume can be found as `res/tests.hdv` in the repo. Test cases shou
 
 When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then each subsequent folder, leaving intermediate windows open.
 
-# Launcher
+# Launcher - covered by `tests/launcher/*.lua`
 
 * Without starting DeskTop, launch `BASIC.SYSTEM`. Set a prefix (e.g. `PREFIX /RAM`). Invoke `DESKTOP.SYSTEM` with an absolute path (e.g. `-/A2.DESKTOP/DESKTOP.SYSTEM`). Verify that it starts correctly.
 * Move DeskTop into a subdirectory of a volume (e.g. `/VOL/A2D`). Without starting DeskTop, launch `BASIC.SYSTEM`. Set a prefix to a parent directory of desktop (e.g. `PREFIX /VOL`). Invoke `DESKTOP.SYSTEM` with a relative path (e.g. `-A2D/DESKTOP.SYSTEM`). Verify that it starts correctly.

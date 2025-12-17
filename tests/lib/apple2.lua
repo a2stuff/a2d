@@ -64,7 +64,9 @@ if machine.system.name:match("^apple2e") then
   -- * mouse card required (if mouse is used)
   -- * many possible aux memory devices
   scan_for_mouse = true
-  auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
+  if emu.subst_env("$WAITFORDESKTOP") == "true" then
+    auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
+  end
 
 elseif machine.system.name:match("^apple2c") then
   -- Apple IIc / Apple IIc Plus

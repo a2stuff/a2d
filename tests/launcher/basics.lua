@@ -51,16 +51,6 @@ test.Step(
     a2d.WaitForDesktopReady()
 end)
 
-
---[[
-  Configure a system with a RAMCard, and ensure DeskTop is configured
-  to copy to RAMCard on startup. Configure a shortcut to copy to
-  RAMCard "at boot". Launch DeskTop. Verify the shortcut's files were
-  copied to RAMCard. Quit DeskTop. Re-launch DeskTop from the original
-  startup disk. Eject the disk containing the shortcut. Run the
-  shortcut. Verify that it launches correctly.
-]]
-
 --[[
   Configure a system with a RAMCard, and ensure DeskTop is configured
   to copy to RAMCard on startup. Configure a shortcut to copy to
@@ -68,11 +58,27 @@ end)
   copying to RAMCard, press Esc. Verify that when the DeskTop appears
   the Apple menu is not activated.
 ]]
---[[
-  Configure an Apple IIe system with no card in the Aux slot. Invoke
-  `DESKTOP.SYSTEM` from a launcher (e.g. Bitsy Bye). Verify the
-  launcher is restarted and does not crash or hang.
-]]
+test.Step(
+  "Esc to abort gets cleared from input buffer",
+  function()
+    a2d.ToggleOptionCopyToRAMCard()
+    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
+    a2d.CloseAllWindows()
+    a2d.Reboot()
+    util.WaitFor(
+      "shortcut copying", function()
+        return apple2.GrabTextScreen():upper():match("/EXTRAS/")
+    end)
+    apple2.EscapeKey()
+
+    a2d.WaitForDesktopReady()
+    test.Snap("verify menu not showing")
+
+    a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    a2d.EraseVolume("RAM1")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end)
 
 --[[
   Launch `BASIC.SYSTEM`. Save a file to `/RAM`. Invoke
@@ -110,15 +116,6 @@ test.Step(
     apple2.TypeLine("-/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 end)
-
---[[
-  Configure a system with a RAMCard, and ensure DeskTop is configured
-  to copy to RAMCard on startup. Invoke `DESKTOP.SYSTEM`. After the
-  progress bar advances a few ticks but before it gets more than
-  halfway, press Escape. Wait for DeskTop to start. File > Quit.
-  Invoke `DESKTOP.SYSTEM` again. Open the `SAMPLE.MEDIA` folder and
-  select `APPLEVISION`. File > Open. Verify that it starts.
-]]
 
 --[[
   Configure a system with a RAMCard, and ensure DeskTop is configured
