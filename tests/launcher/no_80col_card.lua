@@ -4,6 +4,7 @@ MODEL="apple2ee"
 MODELARGS="-sl2 mouse -aux ''"
 DISKARGS="-flop1 res/ProDOS_2_4_3.po -flop2 $FLOP1IMG"
 WAITFORDESKTOP="false"
+CHECKAUXMEMORY="false"
 
 ======================================== ENDCONFIG ]]
 

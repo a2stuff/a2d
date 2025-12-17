@@ -1055,7 +1055,7 @@ The following tests all require:
 
 * Boot to `BASIC.SYSTEM` (without going through `DESKTOP.SYSTEM` first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disk's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
 
-### SmartPort
+### SmartPort - covered by `tests/desktop/smartport*.lua`
 
 * Configure a system with more than 2 drives on a SmartPort controller. Boot ProDOS 2.4 (any patch version). Launch DeskTop. Special > Format Disk. Verify that correct device names are shown for the mirrored drives.
 * Configure a system with more than 2 drives on a SmartPort controller. Boot into ProDOS 2.0.1, 2.0.2, or 2.0.3. Launch DeskTop. Special > Format Disk. Verify that correct device names are shown for the mirrored drives.

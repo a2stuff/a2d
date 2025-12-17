@@ -64,7 +64,7 @@ if machine.system.name:match("^apple2e") then
   -- * mouse card required (if mouse is used)
   -- * many possible aux memory devices
   scan_for_mouse = true
-  if emu.subst_env("$WAITFORDESKTOP") == "true" then
+  if emu.subst_env("$CHECKAUXMEMORY") == "true" then
     auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
   end
 

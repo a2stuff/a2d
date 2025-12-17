@@ -101,6 +101,7 @@ MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi -aux rw3"
 DISKARGS="-hard1 $HARDIMG"
 RESOLUTION="560x384"
 WAITFORDESKTOP="true"
+CHECKAUXMEMORY="true"
 
 CONFIG="$(cat "$SCRIPT" | sed -n '/BEGINCONFIG/,/ENDCONFIG/p' | egrep -v 'BEGINCONFIG|ENDCONFIG' || true)"
 if [ -n "$CONFIG" ]; then
@@ -159,6 +160,7 @@ export LUA_PATH="$BASEDIR/tests/lib/?.lua;$SCRIPTDIR/?.lua"
 export TEST_NAME
 export SKIP_COUNT
 export WAITFORDESKTOP
+export CHECKAUXMEMORY
 
 pushd "$MAMEDIR" > /dev/null
 exec 5>&1 # duplicate stdout filehandle
