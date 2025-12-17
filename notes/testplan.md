@@ -1423,7 +1423,7 @@ For the following test cases, insert a DOS 3.3 disk then run the DA.
 * Select a slot/drive. Click OK. Select a file. Press the Return key. Verify that the Import button flashes.
 * Select a slot/drive. Click OK. Select a file. Press the Escape key. Verify that the Cancel button flashes and that the dialog closes.
 
-# Shortcuts (Module)
+# Shortcuts (Module) - covered by `tests/selector/*.lua`
 
 Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shortcuts on startup. Launching `DESKTOP.SYSTEM` should load the Shortcuts module instead of DeskTop, as long as there is at least one shortcut configured.
 
@@ -1453,7 +1453,7 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Invoke the shortcut again. Verify that the files are copied to the RAMCard and that the program starts correctly.
 * Configure a shortcut for a program with a long path to copy to RAMCard "at first use". Invoke the shortcut. Verify that long paths do not render over the dialog's frame.
 
-* Configure a shortcut for `EXTRAS\BINSCII`. Launch Shortcuts. Invoke BINSCII. Verify that the display is not truncated.
+* Configure a shortcut for `EXTRAS/BINSCII`. Launch Shortcuts. Invoke BINSCII. Verify that the display is not truncated.
 
 * Launch Shortcuts. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
 * Launch Shortcuts. Select an item. Verify that the OK button becomes enabled. File > Run a Program... Cancel the dialog. Verify that selection is cleared and that the OK button is disabled.
