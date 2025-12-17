@@ -258,9 +258,10 @@ test.Step(
 
     -- Cancel copy
     a2d.Reboot({no_wait=true})
-    while not apple2.GrabTextScreen():match("Press Esc to cancel") do
-      emu.wait(1)
-    end
+    util.WaitFor(
+      "cancel message", function()
+        return apple2.GrabTextScreen():match("Press Esc to cancel")
+    end)
     apple2.EscapeKey()
     a2d.WaitForDesktopReady({timeout=240})
 

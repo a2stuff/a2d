@@ -5,6 +5,7 @@ local c = coroutine.create(function()
     emu.wait(1/60) -- allow logging to get ready
 
     -- Dependencies
+    util = require("util")
     test = require("test")
     apple2 = require("apple2")
     a2d = require("a2d")
@@ -19,7 +20,9 @@ local c = coroutine.create(function()
     end
 
     -- Wait for DeskTop to start
-    a2d.WaitForDesktopReady()
+    if emu.subst_env("$WAITFORDESKTOP") == "true" then
+      a2d.WaitForDesktopReady()
+    end
 
     -- Globals
     machine = manager.machine

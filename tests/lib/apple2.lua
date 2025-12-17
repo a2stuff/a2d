@@ -165,6 +165,17 @@ elseif machine.system.name:match("^ace2200") then
   keyboard["Open Apple"].field = "Open F"
   keyboard["Solid Apple"].field = "Solid F"
   keyboard["Reset"].field = "RESET"
+elseif machine.system.name:match("^apple2p") then
+  -- minimal support for launcher testing
+  keyboard = {
+    ["Control"]     = { port = ":keyb_special", field = "Control"     },
+    ["Shift"]       = { port = ":keyb_special", field = "Left Shift"  },
+
+    ["Right Arrow"] = { port = ":X2", field = "→"      },
+    ["Down Arrow"]  = { port = ":X2", field = "↓"      },
+    ["Return"]      = { port = ":X4", field = "Return" },
+    ["Escape"]      = { port = ":X4", field = "Esc"    }
+  }
 else
   error("Unknown model: " .. machine.system.name)
 end
@@ -351,6 +362,9 @@ end
 
 function apple2.IsCapsLockOn()
   local key = keyboard["Caps Lock"]
+  if key == nil then
+    return false -- Apple ][+ compat
+  end
   local bits = get_port(key.port):read()
   return (bits & key.bits) ~= 0
 end
@@ -1017,14 +1031,14 @@ end
 
 function apple2.BitsySelectSlotDrive(sd)
   while apple2.GrabTextScreen():match("[^:]+") ~= sd do
-    apple2.TabKey()
+    apple2.ControlKey("I") -- for Apple ][+ compat
     emu.wait(5)
   end
 end
 
 function apple2.BitsyInvokeFile(name)
   while apple2.GrabInverseText() ~= name do
-    apple2.DownArrowKey()
+    apple2.RightArrowKey() -- for Apple ][+ compat
     emu.wait(1)
   end
   apple2.ReturnKey()

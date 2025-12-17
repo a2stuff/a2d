@@ -303,7 +303,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume containing a file icon. Select the file icon. Drag the window to the bottom of the screen so that only the top of the title bar is visible. Verify that the file icon doesn't mispaint onto the desktop.
 
 
-## Menus - covered by `tests/menus.lua`
+## Menus - covered by `tests/desktop/menus.lua`
 
 * Launch DeskTop. Clear the selection (e.g. by clicking on the DeskTop). Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
@@ -366,7 +366,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
 
-## Open - covered by `tests/open.lua` and `tests/open_ejected.lua`
+## Open - covered by `tests/desktop/open.lua` and `tests/desktop/open_ejected.lua`
 
 * Open a volume with double-click.
 * Open a directory with double-click.
@@ -398,7 +398,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
 
 
-## Close Window - covered by `tests/close_window.lua`
+## Close Window - covered by `tests/desktop/close_window.lua`
 
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
 * Open two windows. Open the File menu, then press Solid-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
@@ -415,7 +415,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open `/TESTS/FOLDER/SUBFOLDER`. Close the `TESTS` window. Close the `FOLDER` window. Verify that it animates into the volume icon, which becomes selected.
 
 
-## Open Then Close - covered by `tests/open_then_close.lua`
+## Open Then Close - covered by `tests/desktop/open_then_close.lua`
 
 * Launch DeskTop. Open a window. Hold Solid-Apple and double-click a folder icon. Verify that the folder opens, and that the original window closes.
 * Launch DeskTop. Open a window. Select a folder icon. Hold Solid-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
@@ -427,7 +427,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
 
 
-## Open Enclosing Folder - covered by `tests/open_enclosing_folder.lua`
+## Open Enclosing Folder - covered by `tests/desktop/open_enclosing_folder.lua`
 
 * Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window re-opens, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
 * Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Up. Verify that the volume window is activated, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
@@ -437,7 +437,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 
 
-## Open Enclosing Folder Then Close - covered by `tests/open_enclosing_folder_then_close.lua`
+## Open Enclosing Folder Then Close - covered by `tests/desktop/open_enclosing_folder_then_close.lua`
 
 * Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the volume window re-opens, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and the volume icon is selected.
 * Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Solid-Apple+Up. Verify that the volume window is activated, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and that the volume icon is selected.
@@ -447,7 +447,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 
 
-## Close All - covered by `tests/close_all.lua`
+## Close All - covered by `tests/desktop/close_all.lua`
 
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
   * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
@@ -457,7 +457,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Open two windows. Hold Open-Apple and open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 * Open two windows. Hold Solid-Apple and open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 
-## View Menu - covered by `tests/view_menu.lua`
+## View Menu - covered by `tests/desktop/view_menu.lua`
 
 * Open folder with files. View > by Date. Verify that DeskTop does not hang.
 
@@ -607,7 +607,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Load DeskTop. Open a window for a volume in a Disk II drive. Remove the disk from the Disk II drive. Hold Solid-Apple and drag a file to another volume to move it. When prompted to insert the disk, click Cancel. Verify that when the window closes the disk icon is no longer dimmed.
 
 
-## File Deletion - covered by `tests/file_deletion.lua`
+## File Deletion - covered by `tests/desktop/file_deletion.lua`
 
 * Launch DeskTop. Open two windows. Select a file in one window. Activate the other window by clicking its title bar. File > Delete. Click OK. Verify that the window with the deleted file refreshes.
 
@@ -622,7 +622,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Load DeskTop. Open a window for a volume in a Disk II drive. Remove the disk from the Disk II drive. Drag a file to the trash. When prompted to insert the disk, click Cancel. Verify that when the window closes the disk icon is no longer dimmed.
 
 
-## Get Info - covered by `tests/get_info*.lua`
+## Get Info - covered by `tests/desktop/get_info*.lua`
 
 * File > Get Info a non-folder file. Verify that the size shows as "_size_K".
 * File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 1 item".
@@ -639,6 +639,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. Select a volume icon, where the volume contains no files. File > Get Info. Verify that numbers are shown for number of files (0) and space used (a few K).
 * Launch DeskTop. Select a file icon. File > Get Info. Verify that the size shown is correct. Select a directory. File > Get Info, and dismiss. Now select the original file icon again, and File > Get Info. Verify that the size shown is still correct.
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. File > Get Info. Verify that a "The specified path name is invalid." alert is not shown.
+> This can not be (currently) tested in MAME.
 
 * Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). File > Get Info. Verify that the count finishes.
 * Launch DeskTop. Select `/TESTS/PROPERTIES/KNOWN.SIZE`. File > Get Info. Verify that "Size" is "17K for 2 items".
@@ -714,7 +715,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 * Find make a copy of a `PRODOS` system file. Rename it to have a ".SYSTEM" suffix. Verify that it updates to have an application icon. Rename it again to remove the suffix. Verify that it updates to have a system file icon. Repeat several times. Verify that the icon has not shifted in position.
 
-## Name Casing -- covered by `tests/name_casing.lua`
+## Name Casing -- covered by `tests/desktop/name_casing.lua`
 
 * Verify that GS/OS volume name cases show correctly.
 * Verify that GS/OS file name cases show correctly in `/TESTS/PROPERTIES/GS.OS.NAMES`
@@ -748,7 +749,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". Rename one volume with mixed case e.g. "vol1.MIXED". Rename a second volume with differently mixed case, e.g. "VOL2.mixed". Drag the first volume to the second. Verify that the newly created folder is named with the same case as the dragged volume.
 
 
-## Window Headers - covered by `tests/window_headers.lua`
+## Window Headers - covered by `tests/desktop/window_headers.lua`
 
 * Open a folder with no items. Verify window header says "0 Items"
 * Open a folder with only one item. Verify window header says "1 Item"
@@ -762,7 +763,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Open a window. Drag the window so that the left edge of the window is offscreen. Verify that the "X Items" display gets cut off. Drag the window so that the right edge of the window is offscreen. Verify that the "XK available" display gets cut off. Repeat with the window sized so that both scrollbars appear and thumbs moved to the middle of the scrollbars.
 
 
-## Window Restoration - mostly covered by `tests/window_restoration.lua`
+## Window Restoration - mostly covered by `tests/desktop/window_restoration.lua`
 
 * Launch DeskTop. Open a subdirectory folder. Quit and relaunch DeskTop. Verify that the used/free numbers in the restored windows are non-zero.
 
@@ -779,7 +780,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. Open a volume window. Rename the volume to "TRASH" (all uppercase). File > Quit. Load DeskTop. Verify that the restored window is named "TRASH" not "Trash".
 
 
-## Apple Menu - covered by `tests/apple_menu.lua`
+## Apple Menu - covered by `tests/desktop/apple_menu.lua`
 
 * Rename the `APPLE.MENU` directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
 * Create a new `APPLE.MENU` directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
@@ -847,7 +848,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. Add a shortcut for a file. Rename the file. Run the shortcut. Verify that the alert is specific e.g. "file not found", not an unknown error.
 
 
-## File Types -- covered by `tests/file_types.lua`
+## File Types -- covered by `tests/desktop/file_types.lua`
 
 * Put image file in `APPLE.MENU`, start DeskTop. Select it from the Apple menu. Verify image is shown.
 * Put text file in `APPLE.MENU`, start DeskTop. Select it from the Apple menu. Verify text is shown.
@@ -870,7 +871,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 * Launch DeskTop. File > New Folder.... Name it with a .A2FC suffix. Verify that it still has a folder icon.
 
-## Forked files -- covered by `tests/forked_files.lua`
+## Forked files -- covered by `tests/desktop/forked_files.lua`
 
 * Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and the watch cursor is shown.
 * Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if Cancel is clicked the operation is aborted.
@@ -884,7 +885,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the source window is updated.
 * Launch DeskTop. Using File > Delete try to delete a GS/OS forked file, where the containing window is visible. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the containing window is updated.
 
-## RAMCard - covered by `tests/ramcard*.lua` and `tests/progress_counts.lua`
+## RAMCard - covered by `tests/desktop/ramcard*.lua` and `tests/progress_counts.lua`
 
 * Repeat the following:
   * For these permutations:
@@ -907,7 +908,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Create a shortcut for a non-executable file at the root of a volume, set to "Copy to RAMCard" "at first use". Run the shortcut. Verify that the "Files remaining" count bottoms out at 0. Close the alert. Drag a volume icon to another volume. Verify that the "Files remaining" count bottoms out at 0.
 
 
-## Format/Erase - covered by `tests/format_erase*.lua` and `tests/format_inserted.lua`
+## Format/Erase - covered by `tests/desktop/format_erase*.lua` and `tests/desktop/format_inserted.lua`
 
 * Repeat the following cases for Special > Format Disk and Special > Erase Disk:
   * Launch DeskTop. Run the command. Ensure left/right arrows move selection correctly.
@@ -1004,16 +1005,16 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 
 ## Hardware Configurations
 
-### Slot 2 - covered by `tests/slot2.lua`
+### Slot 2 - covered by `tests/desktop/slot2.lua`
 
 * Configure a system with a drive controller (Disk II or SmartPort) in slot 2. Launch DeskTop. Verify that Slot 2 appears in the Startup menu.
 
-### Real-Time Clock - covered by `tests/real_time_clock.lua`
+### Real-Time Clock - covered by `tests/desktop/real_time_clock.lua`
 
 * Run on system with real-time clock; verify that time shows in top-right of menu.
 * Run on system with real-time clock. Click on a volume icon. Verify that the clock still renders correctly.
 
-### RAM Expansions - covered by `tests/ramworks.lua`, `tests/ramfactor.lua`, `tests/ramcard_ejected.lua`, `tests/progress_counts.lua`
+### RAM Expansions - covered by `tests/launcher/ramworks.lua`, `tests/desktop/ramfactor.lua`, `tests/desktop/ramcard_ejected.lua`, `tests/progress_counts.lua`
 
 The following tests all require:
 * A RAM disk such as RAMWorks (and a ProDOS driver) or a RAMFactor/"Slinky" memory expansion card.
@@ -1062,8 +1063,9 @@ The following tests all require:
 * Configure a system with a SmartPort controller in slot 1 and one drive. Launch DeskTop. Special > Format Disk. Select the drive in slot 1. Verify that the format succeeds. Repeat for slots 2, 4, 5, 6 and 7.
 
 * With a Floppy Emu in SmartPort mode, ensure that the 32MB image shows up as an option.
+> This can not be (currently) tested in MAME.
 
-### RGB Display - covered by `tests/rgb_display.lua`
+### RGB Display - covered by `tests/desktop/rgb_display.lua`
 
 * On an RGB system (IIgs, etc), go to Control Panel, check RGB Color. Verify that the display shows in color. Preview an image, and verify that the image shows in color and the DeskTop remains in color after exiting.
 * On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Preview an image, and verify that the image shows in color and the DeskTop returns to monochrome after exiting.
@@ -1072,8 +1074,9 @@ The following tests all require:
 ### Z80 Card
 
 * Configure a system with a Z80 card and without a No-Slot Clock. Boot a package disk including the CLOCK.SYSTEM driver. Verify that it doesn't hang.
+> This can not be (currently) tested in MAME.
 
-### ZIP CHIP - covered by `tests/zip_chip.lua`
+### ZIP CHIP - covered by `tests/desk_acc/this_apple_zip_chip.lua`
 
 * Run DeskTop on a IIe with a ZIP CHIP installed.. Apple Menu > About This Apple II. Verify that a ZIP CHIP is reported.
 
@@ -1100,30 +1103,40 @@ The following tests all require:
 
 * Use the Options control panel (in DeskTop) to show Shortcuts on startup. Launch Shortcuts. File > Run a Program.... Select `BASIC.SYSTEM` and click OK. that super-hires mode is not erroneously activated.
 
-### Apple IIc
+### Apple IIc - covered by `tests/desktop/apple2c.lua`
 
 * Run DeskTop on a IIc (or IIc+). Start `BASIC.SYSTEM`. Run `POKE 1275,0`. `BYE` to return to DeskTop. Verify that the progress bar has a gray background, not "VWVWVW..."
 
-### Apple IIc+
+### Apple IIc+ - covered by `tests/selector/banking.lua` and `tests/desk_acc/this_apple_apple2cp.lua`
 
 * Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
+> This can not be (currently) tested in MAME.
+
 * Configure a disk with ProDOS 2.4.3. Run DeskTop on a IIc+. Create a shortcut to launch `BASIC.SYSTEM`. Use Control Panel > Options to set Shortcuts to run on startup. Restart. From Shortcuts, invoke the `BASIC.SYSTEM` shortcut. Verify that it doesn't crash. Restart. From Shortcuts, invoke DeskTop. Verify that it doesn't crash.
 * Run DeskTop on a IIc+. Apple Menu > About This Apple II. Verify that a ZIP CHIP is not reported.
 
 ### Laser 128
 
 * Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
+> This can not be (currently) tested in MAME.
+
 * Run on Laser 128, with a Floppy Emu. Select a volume icon. Special > Eject Disk. Verify that the Floppy Emu does not crash.
+> This can not be (currently) tested in MAME.
+
 * Run on Laser 128. Launch DeskTop. Open a volume. Click on icons one by one. Verify selection changes from icon to icon, and isn't extended as if a Open-Apple key/button or Shift is down.
+> This can not be (currently) tested in MAME.
+
 * Run on Laser 128EX at 3.6MHz and multiple SmartPort devices. Launch DeskTop. Move the mouse for several seconds. Verify that the system does not hang.
+> This can not be (currently) tested in MAME.
 
 ### Macintosh IIe Option Card
 
 * Run on a Macintosh equipped with the IIe Option Card. Verify that DeskTop runs and the system does not hang.
+> This can not be (currently) tested in MAME.
 
-# Preview - covered by `tests/*preview*.lua`
+# Preview - covered by `tests/desk_acc/*preview*.lua`
 
-Text File: - covered by `tests/text_preview.lua`
+Text File: - covered by `tests/desk_acc/text_preview.lua`
 * Verify that Escape key exits.
 * Verify that Space toggles Proportional/Fixed mode.
 * Verify that clicking in the right part of the title bar toggles Proportional/Fixed mode.
@@ -1148,7 +1161,7 @@ Text File: - covered by `tests/text_preview.lua`
 * Open `/TESTS/FILE.TYPES/SUDOKU.STORY`. Click on "Proportional" to change to "Fixed" font. Scroll down using down arrow key until bottom line reads "with". Scroll down again using down arrow key. Verify that the file correctly scrolled down one line. Scroll to the bottom of the file. Ensure the entire file is visible.
 * Open `/TESTS/FILE.TYPES/TOGGLE.ME`. Click "Proportional" to toggle to "Fixed". Verify that the scrollbar activates and that the thumb is at the top. Scroll down. Click "Fixed" to toggle to "Proportional". Verify that the scrollbar deactivates.
 
-Image File: - covered by `tests/image_preview.lua`
+Image File: - covered by `tests/desk_acc/image_preview.lua`
 * Verify that Escape key exits.
 * Verify that Apple+W exits.
 * On a IIgs or with RGB card:
@@ -1164,7 +1177,7 @@ Image File: - covered by `tests/image_preview.lua`
 * Click on the File menu, then close it. Double-click an image file. Press Escape to close the preview. Verify that the File menu is not highlighted.
 * Preview an image file. Verify that the mouse cursor is hidden. Without moving the mouse, press the Escape key. Verify that after the desktop repaints the mouse cursor becomes visible without needing to move the mouse first.
 
-The below are covered by `tests/previews_in_apple_menu.lua`
+The below are covered by `tests/desk_acc/previews_in_apple_menu.lua`
 * Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens other than open/close animation and screen refresh.
     * Select volume icon, select DA from Apple menu. Verify nothing happens other than open/close animation and screen refresh.
@@ -1186,7 +1199,7 @@ The below are covered by `tests/previews_in_apple_menu.lua`
     * Select folder icon, select DA from Apple menu. Verify nothing happens other than open/close animation.
     * Select Electric Duet file icon, select DA from Apple menu. Verify music is played.
 
-# Desk Accessories - covered by `tests/desk_accessories.lua`
+# Desk Accessories - covered by `tests/desk_acc/desk_accessories.lua`
 
 * Launch DeskTop. Open the APPLE.MENU folder. Select a desk accessory icon. File > Open. Verify that the desk accessory launches.
 
@@ -1196,7 +1209,7 @@ Repeat for every desk accessory that runs in a movable window:
 Repeat for every desk accessory that runs in a window.
 * Launch DeskTop. Open the DA. Hold Apple (either Open-Apple or Solid-Apple) and press W. Verify that the desk accessory exits. Repeat with caps-lock off.
 
-## Control Panel - covered by `tests/control_panel*.lua`
+## Control Panel - covered by `tests/desk_acc/control_panel*.lua`
 
 * Launch DeskTop. Open the Control Panel DA. Use the pattern editor to create a custom pattern, then click the desktop preview to apply it. Close the DA. Open the Control Panel DA. Click the right arrow above the desktop preview. Verify that the default checkerboard pattern is shown.
 
@@ -1209,23 +1222,23 @@ Repeat for every desk accessory that runs in a window.
 
 * Configure a system with a RAMCard, and ensure DeskTop is configured to copy to RAMCard on startup. Launch DeskTop. Apple Menu > Control Panels. Open Control Panel. Modify a setting e.g. the desktop pattern. Close the window. Reboot the system. Verify that the setting is retained.
 
-## Options - covered by `tests/options.lua`
+## Options - covered by `tests/desk_acc/options.lua`
 
 * Open the Options DA. Eject the startup disk. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Options DA. Eject the startup disk. Modify a setting and close the DA. Verify that you are prompted to save.
 * Open the Options DA. Move the window to the bottom of the screen so only the title bar is visible. Press Apple-1, Apple-2, Apple-3. Verify that checkboxes don't mis-paint on the screen. Move the window back up. Verify that the state of the checkboxes has toggled.
 * Open the Options DA. Close the DA. Apple Menu > Run Basic Here. Verify that the system does not crash to the monitor.
 
-## Sounds
+## Sounds - covered by `tests/desk_acc/sounds.lua`
 
 * Open the Sounds DA. Select one of the "Obnoxious" sounds. Exit the DA. Run `BASIC.SYSTEM` from the EXTRAS/ folder. Verify that the system does not crash to the monitor.
 
-## International - covered by `tests/international.lua`
+## International - covered by `tests/desk_acc/international.lua`
 
 * Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
 * Open the Control Panels folder. View > by Name. Open International. Close without changing anything. Verify that only a minimal repaint happens.
 
-## Calculator and Sci.Calc - covered by `tests/calculator.lua`
+## Calculator and Sci.Calc - covered by `tests/desk_acc/calculator.lua`
 
 * Run Apple Menu > Calculator. Move the Calculator window. Verify that the mouse cursor is drawn correctly.
 
@@ -1252,7 +1265,7 @@ With Sci.Calc:
 * Enter '4' '5' 'COS' 'ACOS'. Verify that the result is approximately 45.
 * Enter '8' '9' 'TAN' 'ATAN'. Verify that the result is approximately 89.
 
-## Date & Time - covered by `tests/date_and_time.lua`
+## Date & Time - covered by `tests/desk_acc/date_and_time.lua`
 
 * Open `/TESTS/FILE.TYPES`. View > by Name. Apple Menu > Control Panels > Date and Time. Change the time format from 12- to 24-hour or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the windows are shown with the new format.
 
@@ -1277,12 +1290,12 @@ Run these tests on a system without a real-time clock:
 * Apple Menu > Control Panels. View > by Name. Run Date and Time. Change the date to the same date as one of the files in the folder. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with "Today".
 * Start with a fresh disk image. Run DeskTop. Apple Menu > Control Panels. View > by Name. Open Date and Time. Verify that the date shown in the dialog matches the file dates. Click OK without changing anything. Verify that the entire desktop repaints, and that dates in the window are shown with "Today". Open Date and Time. Click OK without changing anything. Verify that the entire desktop does not repaint.
 
-## Calendar - covered by `tests/calendar.lua`
+## Calendar - covered by `tests/desk_acc/calendar.lua`
 
 * Configure a system with a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.
 * Configure a system without a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the build's release month and year correctly.
 
-## Sort Directory - covered by `tests/sort_directory.lua`
+## Sort Directory - covered by `tests/desk_acc/sort_directory.lua`
 
 * Open `/TESTS/SORT.DIRECTORY/ORDER`. File > Quit. Re-launch DeskTop. Apple Menu > Sort Directory. Verify that the files in the window are sorted.
 
@@ -1292,7 +1305,7 @@ Run these tests on a system without a real-time clock:
 
 * Open `/TESTS/SORT.DIRECTORY/TWO.SYS.FILES`. Apple Menu > Sort Directory. Verify that the files are sorted as `A.SYSTEM` then `B.SYSTEM`.
 
-## Key Caps - covered by `tests/key_caps*.lua`
+## Key Caps - covered by `tests/desk_acc/key_caps*.lua`
 
 * Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
 * Repeat on an Apple IIe, Apple IIc, and Laser 128:
@@ -1301,12 +1314,12 @@ Run these tests on a system without a real-time clock:
   * Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended" layout is shown, with the backslash to the right of the space bar.
 * Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Press the semicolon/colon key. Verify that the highlight is correctly positioned.
 
-## Map - covered by `tests/map.lua`
+## Map - covered by `tests/desk_acc/map.lua`
 
 * Launch DeskTop. Apple Menu > Control Panels. Open Map. Type a known city name e.g. "San Francisco". Click Find. Verify that the city is highlighted on the map and the Latitude/Longitude are updated.
 * Launch DeskTop. Apple Menu > Control Panels. Open Map. Wait for the blinking indicator to be visible (this will be easier to observe in emulators with acceleration disabled), and drag the window to a new location. Type a city name (e.g. "San Francisco"). Click Find. Verify that the indicator blinks correctly only in the new location.
 
-## Screen Savers - covered by `tests/screen_savers.lua`
+## Screen Savers - covered by `tests/desk_acc/screen_savers.lua`
 
 * Launch DeskTop. Apple Menu > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
 * Configure a system with a real-time clock. Launch DeskTop. Apple Menu > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
@@ -1316,7 +1329,7 @@ Run these tests on a system without a real-time clock:
 * Configure a system with no real-time clock. Launch DeskTop. Apple Menu > Screen Savers. Run Analog Clock. Verify that an alert is shown.
 * Configure a system with no real-time clock. Launch DeskTop. Apple Menu > Screen Savers. Run Digital Clock. Verify that an alert is shown.
 
-## About This Apple II
+## About This Apple II - mostly covered by `tests/desk_acc/this_apple*.lua`
 
 * Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Apple Menu > About This Apple II. Verify that the Mockingboard is detected.
 
@@ -1329,10 +1342,11 @@ Run these tests on a system without a real-time clock:
 * Configure a IIc or IIc+ in MAME. Launch DeskTop. Apple > About This Apple II. Verify that the system doesn't hang probing Slot 2.
 
 * Configure a IIe system with a 16MB RAMFactor card (e.g. GR8RAM from https://garrettsworkshop.com/) with a single 16MB partition. Apple > About This Apple II. Verify that the calculated memory size is accurate, i.e. it is not off by 64k.
+> This can not be (currently) tested in MAME.
 
 * Configure a system without a RAMWorks. Verify that the DA does not erroneously detect 16MB of RAMWorks memory.
 
-## System Speed - covered by `tests/system_speed.lua`
+## System Speed - covered by `tests/desk_acc/system_speed.lua`
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
 * Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
@@ -1347,19 +1361,19 @@ Run these tests on a system without a real-time clock:
 * Launch DeskTop. Apple Menu > Puzzle. Scramble then solve the puzzle. After the victory sound plays, click on the puzzle again. Verify that the puzzle scrambles and that it can be solved again.
 * Launch DeskTop. Apple Menu > Puzzle. Scramble the puzzle. Move the window so that only the title bar of the window is visible on screen. Use the arrow keys to move puzzle pieces. Verify that the puzzle pieces don't mispaint on the desktop.
 
-## Run Basic Here - covered by `tests/run_basic_here.lua`
+## Run Basic Here - covered by `tests/desk_acc/run_basic_here.lua`
 
 * Launch DeskTop. Open a volume window. Apple Menu > Run Basic Here. Verify that `/RAM` exists.
 * Launch DeskTop. Open a window for a volume that is not the startup disk. Apple Menu > Run Basic Here. Verify that the PREFIX is set correctly.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure `BASIC.SYSTEM` is present on the startup disk. Open a window. Apple Menu > Run Basic Here. Verify that `BASIC.SYSTEM` starts.
 
-## Joystick - covered by `tests/joystick.lua`
+## Joystick - covered by `tests/desk_acc/joystick.lua`
 
 * Configure a system with only a single joystick (or paddles 0 and 1). Run the DA. Verify that only a single indicator is shown.
 * Configure a system with two joysticks (or paddles 2 and 3). Run the DA. Verify that after the second joystick is moved, a second indicator is shown.
 * Configure a system with a single joystick. Run the DA. Move the joystick to the right and bottom extremes. Verify that the indicator does not wrap to the left or top edges.
 
-## Find Files - covered by `tests/find_files.lua`
+## Find Files - covered by `tests/desk_acc/find_files.lua`
 
 * Launch DeskTop. Close all windows. Apple Menu > Find Files. Type `PRODOS` and click Search. Verify that all volumes are searched recursively.
 * Launch DeskTop. Open a volume window. Apple Menu > Find Files. Type `PRODOS` and click Search. Verify that only that volume's contents are searched recursively.
@@ -1377,11 +1391,16 @@ Run these tests on a system without a real-time clock:
 ## Print Screen
 
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Print Screen DA. Verify it prints a screenshot.
+> This can not be (currently) tested in MAME.
+
 * Configure a system with a non-SSC in Slot 1. Invoke the Print Screen DA. Verify an alert is shown.
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Print Screen DA. Invoke the Print Catalog DA. Verify that the catalog is printed on separate lines, not all overprinted on the same line onto one.
-* Using MAME (e.g. via Ample), configure a system with an SSC in Slot 1 and a Serial Printer. Invoke the Print Screen DA. Verify that the File menu is not corrupted.
+> This can not be (currently) tested in MAME.
 
-## Change Type - covered by `tests/change_type.lua`
+* Using MAME (e.g. via Ample), configure a system with an SSC in Slot 1 and a Serial Printer. Invoke the Print Screen DA. Verify that the File menu is not corrupted.
+> This can not be (currently) tested in MAME.
+
+## Change Type - covered by `tests/desk_acc/change_type.lua`
 
 * Select a folder. Apple > Change Type. Modify only the type (e.g. `06`). Verify that an error is shown.
 * Select a folder. Apple > Change Type. Modify only the aux type (e.g. `8000`). Verify that no error is shown.
@@ -1390,7 +1409,7 @@ Run these tests on a system without a real-time clock:
 * Select a non-folder. Apple > Change Type. Specify `0F` as the type and click OK. Verify that an error is shown.
 * Select two folders. Apple > Change Type. Modify only the type (e.g. `06`). Verify that only a single error is shown.
 
-## DOS 3.3 Import - covered by `tests/dos33_import.lua`
+## DOS 3.3 Import - covered by `tests/desk_acc/dos33_import.lua`
 
 For the following test cases, insert a DOS 3.3 disk then run the DA.
 
@@ -1777,7 +1796,7 @@ Mouse Keys controls:
   * Use keys to double-click on an icon. Verify it opens.
 
 
-# Keyboard Window Control - covered by `tests/keyboard_window_control.lua`
+# Keyboard Window Control - covered by `tests/desktop/keyboard_window_control.lua`
 
 These shortcuts only apply in DeskTop.
 

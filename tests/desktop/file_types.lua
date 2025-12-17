@@ -65,9 +65,10 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
-    while not apple2.GrabTextScreen():match("Hello world!") do
-      emu.wait(1)
-    end
+    util.WaitFor(
+      "hello world", function()
+        return apple2.GrabTextScreen():match("Hello world!")
+    end)
     apple2.ReturnKey()
     a2d.WaitForDesktopReady()
 
