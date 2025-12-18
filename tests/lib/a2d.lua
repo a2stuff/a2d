@@ -646,7 +646,11 @@ function a2d.InMouseKeysMode(func)
   -- Allow returning false to not explicitly exit, e.g. if we exit
   -- DeskTop by double-clicking an executable.
   if exit ~= false then
+    -- TODO: Without this, clicks can be treated as drags. Investigate!
+    emu.wait(10/60)
+
     a2d.ExitMouseKeysMode()
+
     -- TODO: Without this, ClearSelection triggers menu. Why is delay needed?
     emu.wait(10/60)
   end

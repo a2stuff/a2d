@@ -151,11 +151,28 @@ function a2dtest.SetBankOffsetForSelectorModule()
   bank_offset = 0x00000
 end
 
-function a2dtest.GetFrontWindowDragCoords()
+function a2dtest.GetFrontWindowID()
   local window_id = mgtk.FrontWindow()
   if window_id == 0 then
     error("No front window!", 2)
   end
+  return window_id
+end
+
+function a2dtest.GetNextWindowID(window_id)
+  local winfo = mgtk.GetWinPtr(window_id) + bank_offset
+  local next = apple2.ReadRAMDevice(winfo + 56) | (apple2.ReadRAMDevice(winfo + 57) << 8)
+  if next == 0 then
+    return 0
+  end
+  return apple2.ReadRAMDevice(next + bank_offset)
+end
+
+function a2dtest.GetFrontWindowDragCoords()
+  return a2dtest.GetWindowDragCoords(a2dtest.GetFrontWindowID())
+end
+
+function a2dtest.GetWindowDragCoords(window_id)
   local rect = mgtk.GetWinFrameRect(window_id)
   local x = math.floor((rect[1] + rect[3]) / 2)
   local y = rect[2] + 4
@@ -189,16 +206,18 @@ function a2dtest.GetWindowCount()
 end
 
 function a2dtest.GetFrontWindowTitle()
-  local window_id = mgtk.FrontWindow()
-  if window_id == 0 then
-    error("No front window!", 2)
-  end
+  return a2dtest.GetWindowTitle(a2dtest.GetFrontWindowID())
+end
+function a2dtest.GetWindowTitle(window_id)
   return mgtk.GetWindowName(window_id, bank_offset)
 end
 
 -- returns x,y,width,height
 function a2dtest.GetFrontWindowContentRect()
-  local winfo = bank_offset + mgtk.GetWinPtr(mgtk.FrontWindow())
+  return a2dtest.GetWindowContentRect(a2dtest.GetFrontWindowID())
+end
+function a2dtest.GetWindowContentRect(window_id)
+  local winfo = bank_offset + mgtk.GetWinPtr(window_id)
   local port = winfo + 20
   local vx,vy = ram_s16(port + 0), ram_s16(port + 2)
   local x1,y1 = ram_s16(port + 8), ram_s16(port + 10)

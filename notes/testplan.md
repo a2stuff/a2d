@@ -215,7 +215,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a window. Click a volume icon. Click an empty area within the window. Edit > Select All. Verify that icons within the window are selected.
 * Launch DeskTop. Open a window. Click a volume icon. Click an icon within the window. Edit > Select All. Verify that icons within the window are selected.
 * Launch DeskTop. Open a window. Click a volume icon. Click an empty space on the desktop. Edit > Select All. Verify that volume icons are selected.
-* Launch DeskTop. Open a window. Click a file icon. Click an empty space on the desktop. Edit > Select All. Verify that volume icons are selected.
+* Launch DeskTop. Open a window. Click a file icon. Click an empty space on the desktop. Edit > Select All. Verify that file icons are selected.
 
 * Launch DeskTop. Open a volume window. Drag a selection rectangle so that it covers only the top row of pixels of an icon. Verify that the icon is selected.
 
