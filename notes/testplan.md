@@ -1080,7 +1080,7 @@ The following tests all require:
 
 * Run DeskTop on a IIe with a ZIP CHIP installed.. Apple Menu > About This Apple II. Verify that a ZIP CHIP is reported.
 
-### Apple IIgs
+### Apple IIgs - covered by `tests/*/*apple2gs.lua`
 
 * On a IIgs, launch DeskTop. Verify that it appears in monochrome. Quit DeskTop and launch another graphical ProDOS-8 program. Verify that it appears in color.
 
@@ -1098,10 +1098,12 @@ The following tests all require:
 * On a IIgs, launch DeskTop. Launch a IIgs-native program e.g. NoiseTracker. Exit and return to DeskTop. Verify that the display is not garbled.
 
 * On the KEGS, GSport or GSplus IIgs emulators, launch DeskTop. Verify the emulator does not crash.
+> This can not be (currently) tested in MAME.
 
 * On the Crossrunner IIgs emulator, launch DeskTop. Verify it does not hang on startup.
+> This can not be (currently) tested in MAME.
 
-* Use the Options control panel (in DeskTop) to show Shortcuts on startup. Launch Shortcuts. File > Run a Program.... Select `BASIC.SYSTEM` and click OK. that super-hires mode is not erroneously activated.
+* Use the Options control panel (in DeskTop) to show Shortcuts on startup. Launch Shortcuts. File > Run a Program.... Select `BASIC.SYSTEM` and click OK. Verify that super-hires mode is not erroneously activated.
 
 ### Apple IIc - covered by `tests/desktop/apple2c.lua`
 

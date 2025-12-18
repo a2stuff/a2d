@@ -21,24 +21,24 @@ test.Step(
     apple2.ControlKey("D") -- set pattern
     a2d.OAShortcut("1") -- check RGB Color
     a2d.CloseWindow()
-    test.Snap("verify desktop is in color")
+    test.Expect(apple2.IsColor(), "desktop should be in color")
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
     emu.wait(5) -- loading time
-    test.Snap("verify image is in color")
+    test.Expect(apple2.IsColor(), "image should be in in color")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    test.Snap("verify desktop is still in color")
+    test.Expect(apple2.IsColor(), "desktop should still be in color")
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- uncheck RGB Color
     a2d.CloseWindow()
-    test.Snap("verify desktop is in monochrome")
+    test.Expect(apple2.IsMono(), "image should be in in monochrome")
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
     emu.wait(5) -- loading time
-    test.Snap("verify image is in color again")
+    test.Expect(apple2.IsColor(), "image should be in in color")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    test.Snap("verify desktop is still in monochrome")
+    test.Expect(apple2.IsMono(), "desktop should be in monochrome")
 end)
 
 --[[

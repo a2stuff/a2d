@@ -1059,4 +1059,49 @@ end
 
 --------------------------------------------------
 
+function apple2.IsMono()
+  --[[
+    IIgs border is 72 (left/right) x 40 (top/bottom) ... but the edge
+    pixels are blurred. So make the border black.
+    TODO: Something less hacky than this
+  ]]
+  if manager.machine.system.name:match("^apple2gs") then
+    apple2.WriteSSW("CLOCKCTL", 0)
+    emu.wait(2/60)
+  end
+
+  emu.wait_next_frame()
+
+  -- https://docs.mamedev.org/luascript/ref-core.html#video-manager
+  local bytes = manager.machine.video:snapshot_pixels()
+  local width, height = manager.machine.video:snapshot_size()
+
+  function pixel(x,y)
+    local a = string.byte(bytes, (x + y * width) * 4 + 0)
+    local b = string.byte(bytes, (x + y * width) * 4 + 1)
+    local g = string.byte(bytes, (x + y * width) * 4 + 2)
+    local r = string.byte(bytes, (x + y * width) * 4 + 3)
+    return r,g,b,a
+  end
+
+  local fr,fg,fb = pixel(0,0)
+
+  for y = 0, height-1 do
+    for x = 0, width-1 do
+      local r,g,b,a = pixel(x,y)
+      if r ~= g or r ~=b then
+        return false
+      end
+    end
+  end
+
+  return true
+end
+
+function apple2.IsColor()
+  return not apple2.IsMono()
+end
+
+--------------------------------------------------
+
 return apple2
