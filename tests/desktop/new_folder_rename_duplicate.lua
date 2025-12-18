@@ -791,7 +791,37 @@ end)
   Verify that the name is clipped and does not mispaint within the
   window.
 ]]
--- TODO: Implement me!
+test.Step(
+  "icon painting with long renames",
+  function()
+    a2d.RenamePath("/RAM1", "MMMMMMMMMMMMMMM")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x+5, y+5)
+        m.ButtonDown()
+        m.MoveToApproximately(apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+    test.Snap("verify no mispaint on left edge of screen")
+
+    a2d.OpenSelection()
+    x, y = a2dtest.GetFrontWindowDragCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x+5, y+5)
+        m.ButtonDown()
+        m.MoveToApproximately(apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+    test.Snap("verify no mispaint on left edge of screen")
+
+    a2d.CloseAllWindows()
+    a2d.RenamePath("/MMMMMMMMMMMMMMM", "RAM1")
+    a2d.Reboot() -- put icon back where it belongs
+    a2d.WaitForDesktopReady()
+end)
+
 
 --[[
   Launch DeskTop. Open a window. File > New Folder, enter a unique
