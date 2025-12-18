@@ -656,7 +656,7 @@ For the following cases, open `/TESTS` and `/TESTS/FOLDER`:
 * Open a volume window containing a folder. Select the folder. File > Get Info. Check Locked. Click OK. Close the volume window. Re-open the volume window. Verify that the folder is still a folder.
 
 
-## New Folder, Rename & Duplicate
+## New Folder, Rename & Duplicate - covered by `tests/desktop/new_folder_rename_duplicate.lua`
 
 * Create a new folder (File > New Folder) - verify that it is selected / scrolled into view.
 * Select a file. File > Duplicate. Verify that the new file is selected / scrolled into view / prompting for rename.

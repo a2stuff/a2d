@@ -284,12 +284,10 @@ local function CheckSelectionName(name, options)
 
   local selected = a2d.GetSelectedIcons()
   if #selected ~= 1 then
-    manager.machine.video:snapshot()
     error(string.format("Failed to select %q - have %d selected",
                         name, #selected), options.level)
   end
   if name:lower() ~= selected[1].name:lower() then
-    manager.machine.video:snapshot()
     error(string.format("Failed to select %q - have %q selected",
                         name, selected[1].name), options.level)
   end
@@ -387,18 +385,20 @@ function a2d.DialogCancel(options)
   end
 end
 
-function a2d.RenameSelection(newname)
+function a2d.RenameSelection(newname, options)
+  options = default_options(options)
   apple2.ReturnKey()
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
   emu.wait(5) -- I/O
-  CheckSelectionName(newname)
+  CheckSelectionName(newname, options)
 end
 
-function a2d.RenamePath(path, newname)
-  a2d.SelectPath(path)
-  a2d.RenameSelection(newname)
+function a2d.RenamePath(path, newname, options)
+  options = default_options(options)
+  a2d.SelectPath(path, options)
+  a2d.RenameSelection(newname, options)
 end
 
 function a2d.DuplicateSelection(newname)
