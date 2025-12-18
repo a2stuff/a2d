@@ -504,7 +504,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a window. Verify that the appropriate View option is checked. Close the window. Verify that the View menu items are all disabled, and that none are checked.
 
 
-## ProDOS Interaction
+## ProDOS Interaction - covered by `tests/desktop/prodos*.lua`
 
 * Launch DeskTop, File > Quit, run `BASIC.SYSTEM`. Ensure `/RAM` exists.
 
