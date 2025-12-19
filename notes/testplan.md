@@ -162,7 +162,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 
 * Configure a system with a SmartPort hard drive, RAMFactor card, and Disk II controller card with drives but no floppies. (MAME works) Launch DeskTop. Verify that the RAMCard volume icon doesn't flicker when the desktop is initially painted. (This will be easier to observe in emulators with acceleration disabled.)
 
-## Selection
+## Selection - covered by `tests/desktop/selection*.lua`
 
 * Launch DeskTop. Open a window. Select a file icon. Drag a selection rectangle around another file icon in the same window. Verify that the initial selection is cleared and only the second icon is selected.
 * Launch DeskTop. Select a volume icon. Drag a selection rectangle around another volume icon. Verify that the initial selection is cleared and only the second icon is selected.
@@ -194,7 +194,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open two windows containing file icons. Clear selection by clicking on the desktop. Repeat the following cases with these modifiers: Open-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
   * Select an icon. Activate the other window by clicking on the title bar. Hold modifier and click another icon in the inactive window. Verify that the icon highlights on mouse down, and the window activates on mouse up, and both icons are selected.
   * Select an icon. Activate the other window by clicking on the title bar. Hold modifier and click the selected icon in the inactive window. Verify that the icon unhighlights and the window activates on mouse down.
-  * Select an icon. Activate the other window by clicking on the title bar. Hold modifier and drag another icon within the inactive window. Verify that the icon highlights and both icons are dragged, and that the window activates on mouse down.
+  * Select an icon. Activate the other window by clicking on the title bar. Hold modifier and drag another icon within the inactive window. Verify that the icon highlights and both icons are dragged. Release the modifier before ending the drag. Verify that the window activates on mouse up, and that both icons are moved.
 
 * Launch DeskTop. Click on a volume icon. Hold Solid-Apple and click on a different volume icon. Verify that selection changes to the second icon.
 * Launch DeskTop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click on a different file icon. Verify that selection changes to the second icon.

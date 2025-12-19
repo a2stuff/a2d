@@ -9974,12 +9974,12 @@ stashed_addr:  .addr     0
         bne     new_status      ; always
     END_IF
 
-    IF A = #','
+    IF A IN #',', #'<'
         lda     #%11            ; down, stay down
         bne     new_status      ; always
     END_IF
 
-    IF A = #'.'
+    IF A IN #'.', #'>'
         lda     #%00            ; up, stay up
         beq     new_status      ; always
     END_IF
