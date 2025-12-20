@@ -339,7 +339,11 @@ function a2d.OpenPath(path, options)
     options.close_current = true
   end
 
-  a2d.CloseAllWindows()
+  if options.keep_windows then
+    a2d.FocusDesktop()
+  else
+    a2d.CloseAllWindows()
+  end
   for segment in path:gmatch("([^/]+)") do
     a2d.SelectAndOpen(segment, options)
   end
@@ -354,6 +358,8 @@ function a2d.SelectPath(path, options)
   local base, name = a2d.SplitPath(path)
   if base ~= "" then
     a2d.OpenPath(base, options)
+  elseif options.keep_windows then
+    a2d.FocusDesktop()
   else
     a2d.CloseAllWindows()
   end
@@ -363,6 +369,13 @@ end
 function a2d.ClearSelection()
   apple2.PressOA()
   apple2.EscapeKey()
+  apple2.ReleaseOA()
+  a2d.WaitForRepaint()
+end
+
+function a2d.FocusDesktop()
+  apple2.PressOA()
+  apple2.ControlKey("D")
   apple2.ReleaseOA()
   a2d.WaitForRepaint()
 end
@@ -458,8 +471,9 @@ function a2d.FormatVolume(name, opt_new_name)
   emu.wait(5) -- I/O
 end
 
-function a2d.EraseVolume(name, opt_new_name)
-  a2d.SelectPath("/"..name)
+function a2d.EraseVolume(name, opt_new_name, options)
+  options = default_options(options)
+  a2d.SelectPath("/"..name, options)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
   apple2.Type(opt_new_name or name)
   a2d.DialogOK()

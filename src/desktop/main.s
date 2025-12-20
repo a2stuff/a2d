@@ -280,6 +280,8 @@ modifiers:
         jeq     CmdOpenParent
         cmp     #CHAR_ESCAPE    ; Apple-Esc (Clear Selection)
         jeq     ClearSelection
+        cmp     #CHAR_CTRL_D
+        jeq     CmdFocusDesktop
 
         ldx     active_window_id
     IF NOT_ZERO
@@ -4259,6 +4261,14 @@ found:  inx
     END_IF
         rts
 .endproc ; CmdCycleWindows
+
+;;; ============================================================
+;;; Focus Desktop
+
+.proc CmdFocusDesktop
+        copy8   #0, focused_window_id
+        rts
+.endproc ; CmdFocusDesktop
 
 ;;; ============================================================
 ;;; Flip Screen
