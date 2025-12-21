@@ -309,6 +309,7 @@ function a2d.SelectAndOpen(name, options)
   a2d.Select(name, options)
   if options.close_current then
     a2d.OpenSelectionAndCloseCurrent()
+    a2d.WaitForRepaint()
   else
     a2d.OpenSelection()
   end
@@ -414,13 +415,17 @@ function a2d.RenamePath(path, newname, options)
   a2d.RenameSelection(newname, options)
 end
 
-function a2d.DuplicateSelection(newname)
+function a2d.DuplicateSelection(newname, options)
+  options = default_options(options)
+  if newname == nil then
+    error("DuplicateSelection: nil passed as newname", options.level)
+  end
   a2d.OAShortcut("D")
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
-  CheckSelectionName(newname)
+  CheckSelectionName(newname, options)
 end
 
 function a2d.DuplicatePath(path, newname)
@@ -641,6 +646,7 @@ end
 
 function a2d.InMouseKeysMode(func)
   a2d.EnterMouseKeysMode()
+  local last_x, last_y
   local exit = func({
       ButtonDown = a2d.MouseKeysButtonDown,
       ButtonUp = a2d.MouseKeysButtonUp,
@@ -654,8 +660,24 @@ function a2d.InMouseKeysMode(func)
       Right = a2d.MouseKeysRight,
 
       Home = a2d.MouseKeysHome,
-      MoveToApproximately = a2d.MouseKeysMoveToApproximately,
-      MoveByApproximately = a2d.MouseKeysMoveByApproximately,
+
+      MoveToApproximately = function(x, y)
+        if last_x == nil then
+          a2d.MouseKeysMoveToApproximately(x, y)
+        else
+          a2d.MouseKeysMoveByApproximately(x - last_x, y - last_y)
+        end
+        last_x, last_y = x, y
+      end,
+
+      MoveByApproximately = function(x, y)
+        a2d.MouseKeysMoveByApproximately(x, y)
+        if last_x ~= nil then
+          last_x = last_x + x
+          last_y = last_y + y
+        end
+      end,
+
   })
   -- Allow returning false to not explicitly exit, e.g. if we exit
   -- DeskTop by double-clicking an executable.

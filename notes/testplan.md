@@ -538,7 +538,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Select multiple files, including a folder containing files. Hold Solid-Apple and drag the files to a folder on the same volume. Verify that the progress dialog shows "Copying" and that the number of files listed matches the number of selected files plus the number of files in the folder.
 * Select multiple files, including a folder containing files. Hold Solid-Apple and drag the files to another volume. Verify that the progress dialog shows "Moving" and that the number of files listed matches the number of selected files plus the number of files in the folder.
 
-* Select a volume icon. Hold Solid-Apple and drag the volume icon to another volume icon or window from another volume. Verify that the progress dialog shows "Copying" and that the number of files listed matches the number of files in the volume.
+* Select a volume icon. Hold Solid-Apple and drag the volume icon to another volume icon or window from another volume. Verify that the progress dialog shows "Copying" and that the number of files listed matches the number of files in the volume plus one.
 
 * Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy, e.g. a 100K file on a 140K disk. Verify that the file is moved successfully and no error is shown.
 * Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.

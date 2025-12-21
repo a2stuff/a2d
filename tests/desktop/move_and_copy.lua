@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl5 ramfactor -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
@@ -27,7 +27,6 @@ test.Step(
     a2d.MoveWindowBy(0, 100)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
-
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(src_x, src_y)
@@ -228,7 +227,7 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenPath("RAM1", {keep_windows=true})
+    a2d.OpenPath("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
@@ -344,65 +343,246 @@ end)
   matches the number of selected files plus the number of files in the
   folder.
 ]]
+test.Step(
+  "copy multiple files and folder to another volume",
+  function()
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.CopyPath("/A2.DESKTOP/DESKTOP.SYSTEM", "/RAM1/FOLDER")
+
+    a2d.SelectPath("/RAM5")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1")
+    a2d.Select("READ.ME")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+    a2d.SelectAll()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    emu.wait(0.25)
+    test.Snap("verify Copying 3 files")
+    emu.wait(5)
+
+    a2d.SelectPath("/RAM1/READ.ME")
+    a2d.SelectPath("/RAM1/FOLDER")
+    a2d.SelectPath("/RAM1/FOLDER/DESKTOP.SYSTEM")
+    a2d.SelectPath("/RAM5/READ.ME")
+    a2d.SelectPath("/RAM5/FOLDER")
+    a2d.SelectPath("/RAM5/FOLDER/DESKTOP.SYSTEM")
+
+    a2d.EraseVolume("/RAM1")
+    a2d.EraseVolume("/RAM5")
+end)
 
 --[[
   Select a volume icon. Hold Solid-Apple and drag the volume icon to
   another volume icon or window from another volume. Verify that the
   progress dialog shows "Copying" and that the number of files listed
-  matches the number of files in the volume.
+  matches the number of files in the volume plus one.
 ]]
+test.Step(
+  "dragging volume icon with Solid-Apple",
+  function()
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.CopyPath("/A2.DESKTOP/DESKTOP.SYSTEM", "/RAM1/FOLDER")
 
---[[
-  Launch DeskTop. Try to move a file (drag on same volume) where there
-  is not enough space to make a temporary copy, e.g. a 100K file on a
-  140K disk. Verify that the file is moved successfully and no error
-  is shown.
-]]
---[[
-  Launch DeskTop. Try to copy a file (drag to different volume) where
-  there is not enough space to make the copy. Verify that the error
-  message says that the file is too large to copy.
-]]
---[[
-  Launch DeskTop. Drag multiple selected files to a different volume,
-  where one of the middle files will be too large to fit on the target
-  volume but that subsequently selected files will fit. Verify that an
-  error message says that the file is too large to copy, and that
-  clicking OK continues to copy the remaining files.
-]]
---[[
-  Launch DeskTop. Drag a single folder or volume containing multiple
-  files to a different volume, where one of the files will be too
-  large to fit on the target volume but all other files will fit.
-  Verify that an error message says that the file is too large to
-  copy, and that clicking OK continues to copy the remaining files.
-]]
+    a2d.SelectPath("/RAM1")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/RAM5")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseSA()
+    end)
+    emu.wait(0.25)
+    test.Snap("verify Copying 4 files") -- vol becomes folder, makes it +1
+    emu.wait(5)
+
+    a2d.SelectPath("/RAM1/READ.ME")
+    a2d.SelectPath("/RAM1/FOLDER")
+    a2d.SelectPath("/RAM1/FOLDER/DESKTOP.SYSTEM")
+
+    a2d.OpenPath("/RAM5")
+    a2d.OpenPath("/RAM5/RAM1")
+    emu.wait(1)
+    a2d.SelectPath("/RAM5/RAM1/READ.ME")
+    a2d.SelectPath("/RAM5/RAM1/FOLDER")
+    a2d.SelectPath("/RAM5/RAM1/FOLDER/DESKTOP.SYSTEM")
+
+    a2d.EraseVolume("/RAM1")
+    a2d.EraseVolume("/RAM5")
+end)
 
 --[[
   Launch DeskTop. Open a window. File > New Folder, enter name. Copy
   the file to another folder or volume. Verify that the "Files
   remaining" count bottoms out at 0.
 ]]
+test.Step(
+  "copy new folder progress bottoms out at 0",
+  function()
+    a2d.OpenPath("/RAM1")
+    a2d.CreateFolder("FOLDER")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/RAM5", {keep_windows=true})
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.MultiSnap(60, "verify copy count ends at 0")
+
+    a2d.EraseVolume("/RAM1")
+    a2d.EraseVolume("/RAM5")
+end)
+
+
 --[[
   Launch DeskTop. Open a window. File > New Folder, enter name. Move
   the file to another folder or volume. Verify that the "Files
   remaining" count bottoms out at 0.
 ]]
+test.Step(
+  "move new folder progress bottoms out at 0",
+  function()
+    a2d.OpenPath("/RAM1")
+    a2d.CreateFolder("FOLDER")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/RAM5", {keep_windows=true})
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseSA()
+    end)
+    a2dtest.MultiSnap(60, "verify move count ends at 0")
+
+    a2d.EraseVolume("/RAM1")
+    a2d.EraseVolume("/RAM5")
+end)
+
 --[[
   Launch DeskTop. Copy multiple selected files to another volume.
   Repeat the copy. When prompted to overwrite, alternate clicking Yes
   and No. Verify that the "Files remaining" count decreases to zero.
 ]]
+test.Step(
+  "copy progress ends at 0 even if files skipped",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU/TOYS/BOUNCE", "/RAM1")
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU/TOYS/EYES", "/RAM1")
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU/TOYS/LIGHTS.OUT", "/RAM1")
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU/TOYS/NEKO", "/RAM1")
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE", "/RAM1")
+
+    a2d.SelectPath("/RAM5")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1")
+    a2d.SelectAll()
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    emu.wait(5)
+
+    -- Now copy again
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    apple2.Type("Y")
+    a2d.WaitForRepaint()
+    a2dtest.WaitForAlert()
+    apple2.Type("N")
+    a2d.WaitForRepaint()
+    a2dtest.WaitForAlert()
+    apple2.Type("Y")
+    a2d.WaitForRepaint()
+    a2dtest.WaitForAlert()
+    apple2.Type("N")
+    a2d.WaitForRepaint()
+    a2dtest.WaitForAlert()
+    apple2.Type("Y")
+    a2dtest.MultiSnap(60, "verify count ends at 0")
+
+    a2d.EraseVolume("/RAM1")
+    a2d.EraseVolume("/RAM5")
+end)
 
 --[[
   Load DeskTop. Create a folder e.g. `/RAM/F`. Try to copy the folder
   into itself using File > Copy To.... Verify that an error is shown.
 ]]
+test.Step(
+  "Error copying folder into itself using File > Copy To",
+  function()
+    a2d.CreateFolder("/RAM1/F")
+    a2d.CopyPath("/RAM1/F", "/RAM1/F")
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.EraseVolume("/RAM1")
+end)
+
 --[[
   Load DeskTop. Create a folder e.g. `/RAM/F`. Open the containing
   window, and the folder itself. Try to move it into itself by
   dragging. Verify that an error is shown.
 ]]
+test.Step(
+  "Error moving folder into itself using drag/drop",
+  function()
+    a2d.CreateFolder("/RAM1/F")
+
+    a2d.OpenPath("/RAM1/F")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local dst_x, dst_y = x + w / 2, y + h / 2
+
+    a2d.SelectPath("/RAM1/F", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.EraseVolume("/RAM1")
+end)
+
 --[[
   Load DeskTop. Create a folder e.g. `/RAM/F`, and a sibling folder
   e.g. `/RAM/B`. Open the containing window, and the first folder
@@ -410,27 +590,142 @@ end)
   folder's window by dragging. Verify that an error is shown before
   any moves occur.
 ]]
+test.Step(
+  "Invalid move into self stopped before anything actually happens",
+  function()
+    a2d.CreateFolder("/RAM1/F")
+    a2d.CreateFolder("/RAM1/B")
+
+    a2d.OpenPath("/RAM1/F")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local dst_x, dst_y = x + w / 2, y + h / 2
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    a2d.SelectAll()
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.SelectPath("/RAM1/F")
+    a2d.SelectPath("/RAM1/B")
+    a2d.OpenPath("/RAM1/F")
+    test.Expect(#a2d.GetSelectedIcons(), 0, "no files should be moved")
+
+    a2d.EraseVolume("/RAM1")
+end)
+
 --[[
   Load DeskTop. Create a folder e.g. `/RAM/F`. Open the containing
   window, and the folder itself. Try to copy it into itself by
   dragging with an Apple key depressed. Verify that an error is shown.
 ]]
+test.Step(
+  "Error copying folder into itself using drag/drop",
+  function()
+    a2d.CreateFolder("/RAM1/F")
+
+    a2d.OpenPath("/RAM1/F")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local dst_x, dst_y = x + w / 2, y + h / 2
+
+    a2d.SelectPath("/RAM1/F", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseSA()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.EraseVolume("/RAM1")
+end)
+
 --[[
   Load DeskTop. Open a volume window. Drag a file icon from the volume
   window to the volume icon. Verify that an error is shown.
 ]]
+test.Step(
+  "Error dragging file onto its own volume",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/A2.DESKTOP", {keep_windows=true})
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+end)
+
 --[[
   Load DeskTop. Create a folder, and a file within the folder with the
   same name as the folder (e.g. `/RAM/F` and `/RAM/F/F`). Try to copy
   the file over the folder using File > Copy To.... Verify that an
   error is shown.
 ]]
+test.Step(
+  "Error copying file over ancestor using File > Copy To",
+  function()
+    a2d.CreateFolder("/RAM1/F")
+    a2d.CreateFolder("/RAM1/F/F")
+    a2d.CopyPath("/RAM1/F/F", "/RAM1")
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.EraseVolume("/RAM1")
+end)
+
 --[[
   Load DeskTop. Create a folder, and a file within the folder with the
   same name as the folder (e.g. `/RAM/F` and `/RAM/F/F`). Try to move
   the file over the folder using drag and drop. Verify that an error
   is shown.
 ]]
+test.Step(
+  "Error copying file over ancestor using drag/drop",
+  function()
+    a2d.CreateFolder("/RAM1/F")
+    a2d.CreateFolder("/RAM1/F/F")
+
+    a2d.SelectPath("/RAM1/F/F")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/RAM1", {keep_windows=true})
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.EraseVolume("/RAM1")
+end)
+
 --[[
   Load DeskTop. Create a folder, and a file within the folder with the
   same name as the folder, and another file (e.g. `/RAM/F` and
@@ -438,6 +733,37 @@ end)
   into the parent folder using drag and drop. Verify that an error is
   shown before any files are moved.
 ]]
+test.Step(
+  "Invalid move over ancestor stopped  before anything actually happens",
+  function()
+    a2d.CreateFolder("/RAM1/F")
+    a2d.CreateFolder("/RAM1/F/F")
+    a2d.CreateFolder("/RAM1/F/B")
+
+    a2d.SelectPath("/RAM1")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1/F")
+    a2d.SelectAll()
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.SelectPath("/RAM1/F/F")
+    a2d.SelectPath("/RAM1/F/B")
+    a2d.OpenPath("/RAM1")
+    a2d.SelectAll()
+    test.Expect(#a2d.GetSelectedIcons(), 1, "no files should be moved")
+
+    a2d.EraseVolume("/RAM1")
+end)
 
 --[[
   Load DeskTop. Create a folder on a volume. Create a non-folder file
@@ -445,6 +771,35 @@ end)
   to the second volume. When prompted to overwrite, click Yes. Verify
   that the volume contains a folder of the appropriate name.
 ]]
+test.Step(
+  "Overwrite file with empty folder",
+  function()
+    a2d.CreateFolder("/RAM1/NAME")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM5")
+    a2d.RenamePath("/RAM5/READ.ME", "NAME")
+
+    a2d.SelectPath("/RAM1/NAME")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/RAM5", {keep_windows=true})
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert() -- overwrite?
+    apple2.Type("Y")
+    emu.wait(5)
+
+    a2d.OpenPath("/RAM5/NAME") -- copy exists
+    a2d.SelectPath("/RAM1/NAME") -- original exists
+
+    a2d.EraseVolume("/RAM1")
+    a2d.EraseVolume("/RAM5")
+end)
+
 --[[
   Load DeskTop. Create a folder on a volume, containing a non-folder
   file. Create a non-folder file with the same name as the folder on a
@@ -452,12 +807,63 @@ end)
   to overwrite, click Yes. Verify that the volume contains a folder of
   the appropriate name, containing a non-folder file.
 ]]
+test.Step(
+  "Error overwriting file with non-empty folder",
+  function()
+    a2d.CreateFolder("/RAM1/NAME")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1/NAME")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM5")
+    a2d.RenamePath("/RAM5/READ.ME", "NAME")
+
+    a2d.SelectPath("/RAM1/NAME")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/RAM5", {keep_windows=true})
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert() -- overwrite?
+    apple2.Type("Y")
+    emu.wait(5)
+
+    a2d.SelectPath("/RAM5/NAME/READ.ME") -- copy exists
+    a2d.SelectPath("/RAM1/NAME/READ.ME") -- original exists
+
+    a2d.EraseVolume("/RAM1")
+    a2d.EraseVolume("/RAM5")
+end)
+
 --[[
   Load DeskTop. Create a non-folder file on a volume. Create a folder
   with the same name as the file on a second volume. Drag the file
   onto the second volume. Verify that an alert is shown about
   overwriting a directory.
 ]]
+test.Step(
+  "Error overwriting folder with file",
+  function()
+    a2d.CreateFolder("/RAM1/READ.ME")
+
+    a2d.SelectPath("/RAM1")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Ensure the startup disk has a name that would be case-adjusted by
@@ -465,110 +871,605 @@ end)
   startup disk. Apple Menu > Control Panels. Drag a DA file to the
   startup disk window. Verify that the file is moved, not copied.
 ]]
+-- TODO: Implement me
 
 --[[
   Launch DeskTop. Use File > Copy To... to copy a file. Verify that
   the file is indeed copied, not moved.
 ]]
+test.Step(
+  "Copy actually copies",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A2.DESKTOP/EXTRAS")
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS/READ.ME")
+    a2d.DeletePath("/A2.DESKTOP/EXTRAS/READ.ME")
+end)
+
 --[[
   Launch DeskTop. Drag a file icon to a same-volume window so it is
   moved, not copied. Use File > Copy To... to copy a file. Verify that
   the file is indeed copied, not moved.
 ]]
+test.Step(
+  "Copy actually copies, even after a move",
+  function()
+    a2d.CreateFolder("/RAM1/A")
+    a2d.CreateFolder("/RAM1/B")
+    a2d.OpenPath("/RAM1")
+    a2d.Select("B")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+    a2d.Select("A")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    emu.wait(1)
+    a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should have moved")
+
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A2.DESKTOP/EXTRAS")
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS/READ.ME")
+    a2d.DeletePath("/A2.DESKTOP/EXTRAS/READ.ME")
+
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[For the following cases, open `/TESTS` and `/TESTS/FOLDER`:]]
+
+-- NOTE: Using RAM1 instead of TESTS for easier reset
 
 --[[
   Drag a file icon from another volume onto the `TESTS` icon. Verify
   that the `TESTS` window activates and refreshes, and that the
   `TESTS` window's used/free numbers update. Click on the `FOLDER`
   window. Verify that the `FOLDER` window's used/free numbers update.
-]]
---[[
+
   Drag a file icon from another volume onto the `TESTS` window. Verify
   that the `TESTS` window activates and refreshes, and that the
   `TESTS` window's item count/used/free numbers update. Click on the
   `FOLDER` window. Verify that the `FOLDER` window's used/free numbers
   update.
-]]
---[[
+
   Copy a file from another volume to the `TESTS` icon using File >
   Copy To.... Verify that the `TESTS` window activates and refreshes,
   and that the `TESTS` window's item count/used/free numbers update.
   Click on the `FOLDER` window. Verify that the `FOLDER` window's
   used/free numbers update.
 ]]
+test.Variants(
+  {
+    "Same-volume child window updates when activated - drag to icon",
+    "Same-volume child window updates when activated - drag to window",
+    "Same-volume child window updates when activated - File > Copy To",
+  },
+  function(idx)
+    a2d.CreateFolder("/RAM1/FOLDER")
+    local dst_x, dst_y
+    if idx == 1 then
+      a2d.SelectPath("/RAM1")
+      dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+    end
+
+    a2d.OpenPath("/RAM1/FOLDER")
+    a2d.MoveWindowBy(200, 100)
+    local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    if idx == 2 then
+      local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+      dst_x, dst_y = x + w / 2, y + h / 2
+    end
+
+    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.GrowWindowBy(-100, -100)
+    a2d.Select("READ.ME")
+    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    if idx == 1 or idx == 2 then
+      local src_x, src_y = a2dtest.GetSelectedIconCoords()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(src_x, src_y)
+          m.ButtonDown()
+          m.MoveToApproximately(dst_x, dst_y)
+          m.ButtonUp()
+      end)
+    elseif idx == 3 then
+      a2d.CopySelectionTo("/RAM1")
+    end
+    emu.wait(1)
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    test.Snap("verify RAM1 used/free numbers updated")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+    test.Snap("verify FOLDER used/free numbers updated")
+
+    a2d.EraseVolume("RAM1")
+end)
+
+
 --[[
   Drag a file icon from another volume onto the `FOLDER` window.
   Verify that the `FOLDER` window activates and refreshes, and that
   the `FOLDER` window's item count/used/free numbers update. Click on
   the `TESTS` window. Verify that the `TESTS` window's used/free
   numbers update.
-]]
---[[
+
   Copy file from another volume to `/TESTS/FOLDER` using File > Copy
   File.... Verify that the `FOLDER` window activates and refreshes,
   and that the `FOLDER` window's item count/used/free numbers update.
   Click on the `TESTS` window. Verify that the `TESTS` window's
   used/free numbers update.
 ]]
+test.Variants(
+  {
+    "Same-volume parent window updates when activated - drag to window",
+    "Same-volume parent window updates when activated - File > Copy To",
+  },
+  function(idx)
+    a2d.CreateFolder("/RAM1/FOLDER")
+
+    a2d.OpenPath("/RAM1/FOLDER")
+    a2d.MoveWindowBy(200, 100)
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local dst_x, dst_y = x + w / 2, y + h / 2
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
+
+    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.GrowWindowBy(-100, -100)
+    a2d.Select("READ.ME")
+    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    if idx == 1 then
+      local src_x, src_y = a2dtest.GetSelectedIconCoords()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(src_x, src_y)
+          m.ButtonDown()
+          m.MoveToApproximately(dst_x, dst_y)
+          m.ButtonUp()
+      end)
+    elseif idx == 2 then
+      a2d.CopySelectionTo("/RAM1/FOLDER")
+    end
+    emu.wait(1)
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+    test.Snap("verify FOLDER used/free numbers updated")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    test.Snap("verify RAM1 used/free numbers updated")
+
+    a2d.EraseVolume("RAM1")
+end)
+
 --[[
   Drag a file icon from the `TESTS` window to the trash. Verify that
   the `TESTS` window refreshes, and that the `TESTS` window's item
   count/used/free numbers update. Click on the `FOLDER` window. Verify
   that the `FOLDER` window's used/free numbers update.
-]]
---[[
+
   Delete a file from the `TESTS` window using File > Delete. Verify
   that the `TESTS` window refreshes, and that the `TESTS` window's
   item count/used/free numbers update. Click on the `FOLDER` window.
   Verify that the `FOLDER` window's used/free numbers update.
 ]]
+test.Variants(
+  {
+    "Same-volume child window updates when activated - drag to trash",
+    "Same-volume child window updates when activated - File > Delete",
+  },
+  function(idx)
+    a2d.SelectPath("/Trash")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.OpenPath("/RAM1/FOLDER")
+    a2d.MoveWindowBy(200, 100)
+    local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+
+    a2d.Select("READ.ME")
+    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    if idx == 1 then
+      local src_x, src_y = a2dtest.GetSelectedIconCoords()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(src_x, src_y)
+          m.ButtonDown()
+          m.MoveToApproximately(dst_x, dst_y)
+          m.ButtonUp()
+      end)
+      a2dtest.WaitForAlert()
+      a2d.DialogOK()
+    elseif idx == 2 then
+      a2d.DeleteSelection()
+    end
+    emu.wait(1)
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    test.Snap("verify RAM1 used/free numbers updated")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    test.Snap("verify FOLDER used/free numbers updated")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+
+    a2d.EraseVolume("RAM1")
+end)
+
 --[[
   Drag a file icon from the `FOLDER` window to the trash. Verify that
   the `FOLDER` window refreshes, and that the `FOLDER` window's item
   count/used/free numbers update. Click on the `TESTS` window. Verify
   that the `TESTS` window's used/free numbers update.
-]]
---[[
+
   Delete a file from the `FOLDER` window using File > Delete. Verify
   that the `FOLDER` window refreshes, and that the `FOLDER` window's
   item count/used/free numbers update. Click on the `TESTS` window.
   Verify that the `TESTS` window's used/free numbers update.
 ]]
+test.Variants(
+  {
+    "Same-volume parent window updates when activated - drag to trash",
+    "Same-volume parent window updates when activated - File > Delete",
+  },
+  function(idx)
+    a2d.SelectPath("/Trash")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1/FOLDER")
+
+    a2d.OpenPath("/RAM1/FOLDER")
+    a2d.MoveWindowBy(200, 100)
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
+
+    a2d.CycleWindows()
+    a2d.Select("READ.ME")
+    test.Snap("note RAM1 used/free numbers")
+
+    if idx == 1 then
+      local src_x, src_y = a2dtest.GetSelectedIconCoords()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(src_x, src_y)
+          m.ButtonDown()
+          m.MoveToApproximately(dst_x, dst_y)
+          m.ButtonUp()
+      end)
+      a2dtest.WaitForAlert()
+      a2d.DialogOK()
+    elseif idx == 2 then
+      a2d.DeleteSelection()
+    end
+    emu.wait(1)
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+    test.Snap("verify FOLDER used/free numbers updated")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    test.Snap("verify RAM1 used/free numbers updated")
+
+    a2d.EraseVolume("RAM1")
+end)
+
 --[[
   Duplicate a file in the `FOLDER` window using File > Duplicate.
   Verify that the `FOLDER` window refreshes, and that the `FOLDER`
   window's item count/used/free numbers update. Click on the `TESTS`
   window. Verify that the `TESTS` window's used/free numbers update.
 ]]
+test.Step(
+  "Same-volume child window updates when activated - Duplicate",
+  function()
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1/FOLDER")
+
+    a2d.OpenPath("/RAM1/FOLDER")
+    a2d.MoveWindowBy(200, 100)
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
+
+    a2d.CycleWindows()
+    a2d.Select("READ.ME")
+    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    a2d.DuplicateSelection("DUPE")
+    emu.wait(1)
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+    test.Snap("verify FOLDER used/free numbers updated")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    test.Snap("verify RAM1 used/free numbers updated")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+
+    a2d.EraseVolume("RAM1")
+end)
+
 --[[
   Drag a file icon in the `TESTS` window onto the `FOLDER` icon while
   holding Apple to copy it. Verify that the `FOLDER` window activates
   and refreshes, and that the `FOLDER` window's item count/used/free
   numbers update. Click on the `TESTS` window. Verify that the `TESTS`
   window's used/free numbers update.
-]]
---[[
+
   Drag a file icon in the `TESTS` window onto the `FOLDER` window
   while holding Apple to copy it. Verify that the `FOLDER` window
   activates and refreshes, and that the `FOLDER` window's item
   count/used/free numbers update. Click on the `TESTS` window. Verify
   that the `TESTS` window's used/free numbers update.
 ]]
+test.Variants(
+  {
+    "Same-volume child window updates when activated - copy - drag to icon",
+    "Same-volume child window updates when activated - copy - drag to window",
+  },
+  function(idx)
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+
+    local dst_x, dst_y
+    a2d.OpenPath("/RAM1/FOLDER")
+    a2d.MoveWindowBy(200, 100)
+    if idx == 2 then
+      local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+      dst_x, dst_y = x + w / 2, y + h / 2
+    end
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+    local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
+
+    a2d.Select("FOLDER")
+    if idx == 1 then
+      dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+    end
+
+    a2d.Select("READ.ME")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseSA()
+    end)
+    emu.wait(1)
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+    test.Snap("verify FOLDER used/free numbers updated")
+    a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should be copied")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    test.Snap("verify RAM1 used/free numbers updated")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "file should be copied")
+
+    a2d.EraseVolume("RAM1")
+end)
+
 
 --[[
   Repeat the following in an active and inactive window. In the
   inactive window case, verify that at the end of the test that the
   window is activated.
+]]
+function ActiveInactiveTest(name, func1, func2)
+  test.Variants(
+    {
+      name .. " - active",
+      name .. " - inactive",
+    },
+    function(idx)
+      a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+      a2d.CopyPath("/A2.DESKTOP/PRODOS", "/RAM1")
+      a2d.CloseAllWindows()
 
+      if idx == 2 then
+        a2d.OpenPath("/RAM5")
+        a2d.MoveWindowBy(0, 100)
+      end
+
+      local x, y = func1()
+
+      if idx == 2 then
+        a2d.CycleWindows()
+      end
+
+      func2(x, y)
+
+      if idx == 2 then
+        test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+      end
+
+      a2d.EraseVolume("RAM1")
+  end)
+end
+
+--[[
   * Drag a single file icon and drop it within the same window. Verify the icon is moved.
+]]
+ActiveInactiveTest(
+  "Drag a single file icon and drop it within the same window",
+  function()
+    a2d.SelectPath("/RAM1/READ.ME", {keep_windows=true})
+    return a2dtest.GetSelectedIconCoords()
+  end,
+  function(x, y)
+    test.Snap("note icon position")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveToApproximately(x + 20, y + 10)
+        m.ButtonUp()
+    end)
+    emu.wait(1)
+    test.Snap("verify icon was moved")
+end)
+
+--[[
   * Drag multiple file icons and drop them within the same window. Verify the icons are moved.
+]]
+ActiveInactiveTest(
+  "Drag multiple file icons and drop them within the same window",
+  function()
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.SelectAll()
+    return a2dtest.GetSelectedIconCoords()
+  end,
+  function(x, y)
+    test.Snap("note icon positions")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveToApproximately(x + 20, y + 10)
+        m.ButtonUp()
+    end)
+    emu.wait(1)
+    test.Snap("verify icons were moved")
+end)
+
+--[[
   * Drag a single file icon and drop it within the same window while holding either Open-Apple or Solid-Apple. Verify the icon is duplicated.
+]]
+ActiveInactiveTest(
+  "Drag a single file icon and drop it within the same window w/ OA or SA",
+  function()
+    a2d.SelectPath("/RAM1/READ.ME", {keep_windows=true})
+    return a2dtest.GetSelectedIconCoords()
+  end,
+  function(x, y)
+    test.Snap("note icon position")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveToApproximately(x + 20, y + 10)
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseSA()
+    end)
+    emu.wait(1)
+    test.Snap("verify icon was duplicated")
+    apple2.ReturnKey()
+    emu.wait(1)
+end)
+
+--[[
   * Drag multiple file icons and drop them within the same window while holding either Open-Apple or Solid-Apple. Verify nothing happens.
+]]
+ActiveInactiveTest(
+  "Drag multiple file icons and drop them within the same window w/ OA or SA",
+  function()
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.SelectAll()
+    return a2dtest.GetSelectedIconCoords()
+  end,
+  function(x, y)
+    test.Snap("note icon positions")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveToApproximately(x + 20, y + 10)
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseSA()
+    end)
+    emu.wait(1)
+    test.Snap("verify nothing changed (except activation)")
+end)
+
+--[[
   * Drag a single file icon and drop it within the same window while holding both Open-Apple and Solid-Apple. Verify that an alias is created.
+]]
+ActiveInactiveTest(
+  "Drag a single file icon and drop it within the same window w/ OA + SA",
+  function()
+    a2d.SelectPath("/RAM1/READ.ME", {keep_windows=true})
+    return a2dtest.GetSelectedIconCoords()
+  end,
+  function(x, y)
+    test.Snap("note icon position")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveToApproximately(x + 20, y + 10)
+        apple2.PressOA()
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseSA()
+        apple2.ReleaseOA()
+    end)
+    emu.wait(5)
+    test.Snap("verify an alias was created")
+    apple2.ReturnKey()
+    emu.wait(1)
+end)
+
+--[[
   * Drag multiple file icons and drop them within the same window while holding both Open-Apple and Solid-Apple. Verify nothing happens.
 ]]
+ActiveInactiveTest(
+  "Drag multiple file icons and drop them within the same window w/ OA + SA",
+  function()
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.SelectAll()
+    return a2dtest.GetSelectedIconCoords()
+  end,
+  function(x, y)
+    test.Snap("note icon positions")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveToApproximately(x + 20, y + 10)
+        apple2.PressOA()
+        apple2.PressSA()
+        m.ButtonUp()
+        apple2.ReleaseOA()
+        apple2.ReleaseSA()
+    end)
+    emu.wait(1)
+    test.Snap("verify nothing changed (except activation)")
+end)
+
+
 --[[
   Launch DeskTop. Find a folder containing a file where the folder and
   file's creation dates (File > Get Info) differ. Copy the folder.
@@ -622,6 +1523,28 @@ end)
   Launch DeskTop. Drag `/TESTS/EMPTY.FOLDER` to another volume. Verify
   that it is copied.
 ]]
+test.Step(
+  "Empty folders get copied too",
+  function()
+    a2d.SelectPath("/RAM1")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/TESTS/EMPTY.FOLDER")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    emu.wait(1)
+
+    a2d.SelectPath("/RAM1/EMPTY.FOLDER")
+
+    a2d.EraseVolume("RAM1")
+end)
+
 
 --[[
   Configure a system with removable disks, e.g. Disk II in S6D1, and
@@ -641,6 +1564,38 @@ end)
   name to the volume. When prompted to overwrite, click Yes. Verify
   that the file was replaced.
 ]]
+test.Step(
+  "Overring locked files works",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.RenamePath("/RAM1/READ.ME", "PRODOS")
+
+    a2d.SelectPath("/RAM1/PRODOS")
+    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
+    apple2.ControlKey("L")
+    a2d.DialogOK()
+
+    a2d.SelectPath("/A2.DESKTOP/PRODOS")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/RAM1", {keep_windows=true})
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    apple2.Type("Y")
+    a2d.DialogOK()
+    emu.wait(1)
+
+    a2d.SelectPath("/RAM1/PRODOS")
+
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Load DeskTop. Open a window for a volume in a Disk II drive. Remove
