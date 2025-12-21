@@ -521,7 +521,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Configure a system with a Mockingboard. Launch DeskTop. Open `AUTUMN.PT3` in the `SAMPLE.MEDIA` folder. Verify that the `PT3PLR.SYSTEM` player launches correctly and that it plays the selected song.
 
 
-## File Moving and Copying
+## File Moving and Copying - covered by `tests/desktop/move_and_copy*.lua`
 
 * Move a file by dragging - same volume - target is window.
 * Move a file by dragging - same volume - target is volume icon.

@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl5 ramfactor -sl7 cffa2 -aux ext80"
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/floppy_with_files.dsk"
 
 ======================================== ENDCONFIG ]]
 
@@ -334,7 +334,6 @@ test.Variants(
     emu.wait(2)
     a2d.EraseVolume("RAM1")
 end)
-
 
 --[[
   Select multiple files, including a folder containing files. Hold
@@ -864,14 +863,6 @@ test.Step(
 
     a2d.EraseVolume("RAM1")
 end)
-
---[[
-  Ensure the startup disk has a name that would be case-adjusted by
-  DeskTop, e.g. `/HD` but that shows as "Hd". Launch DeskTop. Open the
-  startup disk. Apple Menu > Control Panels. Drag a DA file to the
-  startup disk window. Verify that the file is moved, not copied.
-]]
--- TODO: Implement me
 
 --[[
   Launch DeskTop. Use File > Copy To... to copy a file. Verify that
@@ -1469,38 +1460,41 @@ ActiveInactiveTest(
     test.Snap("verify nothing changed (except activation)")
 end)
 
-
---[[
-  Launch DeskTop. Find a folder containing a file where the folder and
-  file's creation dates (File > Get Info) differ. Copy the folder.
-  Select the file in the copied folder. File > Get Info. Verify that
-  the file creation and modification dates match the original.
-]]
---[[
-  Launch DeskTop. Find a folder containing files and folders. Copy the
-  folder to another volume. Using File > Get Info, compare the source
-  and destination folders and files (both the top level folder and
-  nested folders). Verify that the creation and modification dates
-  match the original.
-]]
 --[[
   Launch DeskTop. Drag a volume icon onto another volume icon (with
   sufficient capacity). Verify that no alert is shown. Repeat, but
   drag onto a volume window instead.
 ]]
---[[
-  Launch DeskTop. Drag a volume icon onto a folder icon (with
-  sufficient capacity). Verify that no alert is shown, and that the
-  folder's creation date is unchanged and its modification date is
-  updated. Repeat, but drag onto a folder window instead.
-]]
---[[
-  Launch DeskTop. Drag a volume icon onto another volume icon where
-  there is not enough capacity for all of the files but there is
-  capacity for some files. Verify that the copy starts and that when
-  an alert is shown the progress dialog references a specific file,
-  not the source volume itself.
-]]
+test.Variants(
+  {
+    "Drag volume to volume icon",
+    "Drag volume to volume window",
+  },
+  function(idx)
+    local dst_x, dst_y
+    if idx == 1 then
+      a2d.SelectPath("/RAM1")
+      dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+    else
+      a2d.OpenPath("/RAM1")
+      a2d.MoveWindowBy(0, 100)
+      local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+      dst_x, dst_y = x + w / 2, y + h / 2
+    end
+
+    a2d.SelectPath("/WITH.FILES", {keep_windows=true})
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    emu.wait(30)
+    a2dtest.ExpectAlertNotShowing()
+
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Launch DeskTop. Open two windows containing multiple files. Select
@@ -1510,6 +1504,26 @@ end)
   canceled and the progress dialog is closed, and that the second
   window's contents do not refresh.
 ]]
+test.Step(
+  "copy aborted during enumeration doesn't refresh target window",
+  function()
+    a2d.OpenPath("/RAM1")
+    a2d.MoveWindowBy(0, 100)
+
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS", {keep_windows=true})
+    a2d.SelectAll()
+    a2dtest.DHRDarkness()
+    a2d.CopySelectionTo("/RAM1", false, {no_wait=true})
+    emu.wait(0.25)
+    apple2.EscapeKey()
+    emu.wait(5)
+    test.Snap("verify RAM1 window did not refresh")
+
+    a2d.EraseVolume("RAM1")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end)
+
 --[[
   Launch DeskTop. Open two windows containing multiple files. Select
   multiples files in the first window. File > Copy To.... Select the
@@ -1518,6 +1532,25 @@ end)
   started, press Escape. Verify that the second window's contents do
   refresh.
 ]]
+test.Step(
+  "copy aborted after enumeration does refresh target window",
+  function()
+    a2d.OpenPath("/RAM1")
+    a2d.MoveWindowBy(0, 100)
+
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS", {keep_windows=true})
+    a2d.SelectAll()
+    a2dtest.DHRDarkness()
+    a2d.CopySelectionTo("/RAM1", false, {no_wait=true})
+    emu.wait(2)
+    apple2.EscapeKey()
+    emu.wait(5)
+    test.Snap("verify RAM1 window did not refresh")
+
+    a2d.EraseVolume("RAM1")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end)
 
 --[[
   Launch DeskTop. Drag `/TESTS/EMPTY.FOLDER` to another volume. Verify
@@ -1545,17 +1578,6 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
-
---[[
-  Configure a system with removable disks, e.g. Disk II in S6D1, and
-  prepare two ProDOS disks with volume names `SRC` and `DST`, and a
-  small file (2K or less is ideal) on `SRC`. Mount `SRC`. Launch
-  DeskTop. Open `SRC` and select the file. File > Copy To.... Eject
-  the disk and insert `DST`. Click Drives. Select `DST` and click OK.
-  When prompted, insert the appropriate source and destination disks
-  until the copy is complete. Inspect the contents of the file and
-  verify that it was copied byte-for-byte correctly.
-]]
 
 --[[
   Launch DeskTop. Drag a file to another volume to copy it. Open the
@@ -1597,10 +1619,3 @@ test.Step(
     a2d.EraseVolume("RAM1")
 end)
 
---[[
-  Load DeskTop. Open a window for a volume in a Disk II drive. Remove
-  the disk from the Disk II drive. Hold Solid-Apple and drag a file to
-  another volume to move it. When prompted to insert the disk, click
-  Cancel. Verify that when the window closes the disk icon is no
-  longer dimmed.
-]]
