@@ -85,6 +85,9 @@ test.Step(
     end)
     a2d.WaitForRepaint()
     test.Snap("verify icon name is clipped on left but renders")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
 end)
 
 --[[
@@ -182,6 +185,64 @@ end)
   Hold scroll arrow. Verify icon scrolls into view, and eventually the
   scrollbar deactivates. Repeat with right edge.
 ]]
+test.Step(
+  "scrollbar deactivates when not needed",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.SelectPath("/RAM1/READ.ME")
+
+    -- Left
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(icon_x, icon_y)
+        m.ButtonDown()
+        m.MoveToApproximately(x+5, icon_y)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectNotEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + 5, y + h + 5)
+        m.ButtonDown()
+        emu.wait(1)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
+
+    -- Right
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(icon_x, icon_y)
+        m.ButtonDown()
+        m.MoveToApproximately(x+w-5, icon_y)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectNotEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + w - 5, y + h + 5)
+        m.ButtonDown()
+        emu.wait(1)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
+
 --[[
   Launch DeskTop. Open a window with 11-15 icons. Verify scrollbars
   are not active.
@@ -198,6 +259,14 @@ end)
   Launch DeskTop. Open a folder using Apple menu (e.g. Control Panels)
   or a shortcut. Verify that the used/free numbers are non-zero.
 ]]
+test.Step(
+  "Windows opened from Apple Menu have used/free numbers",
+  function()
+    a2d.CloseAllWindows()
+    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    emu.wait(1)
+    test.Snap("verify the window has non-zero used/free numbers")
+end)
 
 --[[
   Launch DeskTop. Open a folder containing subfolders. Select all the
@@ -208,6 +277,31 @@ end)
   parent window correctly shows only the previously opened folder as
   selected.
 ]]
+test.Step(
+  "Correct selection when child window is closed",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU")
+    a2d.Select("CONTROL.PANELS")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.SelectAll()
+    local count = #a2d.GetSelectedIcons()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.DoubleClick()
+    end)
+    emu.wait(5)
+    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not have changed")
+    while a2dtest.GetFrontWindowTitle():upper() ~= "APPLE.MENU" do
+      a2d.CycleWindows()
+      emu.wait(1)
+    end
+    test.Snap("verify selected folder icons are dimmed")
+    a2d.CycleWindows()
+    local name = a2dtest.GetFrontWindowTitle()
+    a2d.CloseWindow()
+    emu.wait(1)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), name, "only closed window should be selected")
+end)
 
 --[[
   Launch DeskTop. Open a window containing folders and files. Scroll
@@ -216,6 +310,43 @@ end)
   over the obscured part of the folder. Verify the folder doesn't
   highlight.
 ]]
+test.Step(
+  "dragging over obscured part of folder doesn't highlight",
+  function()
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.OpenPath("/RAM1")
+
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    a2d.Select("FOLDER")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x1, y1+5)
+        m.ButtonDown()
+        m.MoveByApproximately(0, -10)
+        m.ButtonUp()
+    end)
+
+    a2d.Select("READ.ME")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x2, y2)
+        m.ButtonDown()
+        m.MoveToApproximately(x2, y+5) -- Y only first
+        m.MoveToApproximately(x1, y+5)
+        emu.wait(5)
+        test.Snap("verify folder not highlighted")
+        m.ButtonUp()
+    end)
+    emu.wait(1)
+
+    a2d.Select("READ.ME") -- verify not moved
+
+    -- cleanup
+    a2d.EraseVolume("/RAM1")
+end)
+
 --[[
   Launch DeskTop. Open a window containing folders and files. Scroll
   the window so a folder is partially or fully outside the visual area
@@ -224,6 +355,44 @@ end)
   but doesn't render past window bounds. Continue dragging over the
   obscured part of the folder. Verify that the folder unhighlights.
 ]]
+test.Step(
+  "dragging over visible part of folder highlights, but highlights if needed",
+  function()
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.OpenPath("/RAM1")
+
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    a2d.Select("FOLDER")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x1, y1+5)
+        m.ButtonDown()
+        m.MoveByApproximately(0, -10)
+        m.ButtonUp()
+    end)
+
+    a2d.Select("READ.ME")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x2, y2)
+        m.ButtonDown()
+        m.MoveToApproximately(x1, y+15)
+        emu.wait(5)
+        test.Snap("verify folder highlighted")
+        m.MoveToApproximately(x1, y+5)
+        emu.wait(5)
+        test.Snap("verify folder not highlighted")
+        m.ButtonUp()
+    end)
+    emu.wait(1)
+
+    a2d.Select("READ.ME") -- verify not moved
+
+    -- cleanup
+    a2d.EraseVolume("/RAM1")
+end)
 
 --[[
   Launch DeskTop. Open two windows containing folders and files. Drag
@@ -893,6 +1062,7 @@ test.Step(
     a2d.MoveWindowBy(20, 0)
     test.Snap("verify icon B rendered correctly")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 

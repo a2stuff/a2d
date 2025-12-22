@@ -99,3 +99,17 @@ Tests for the testing libraries themselves.
 ## `desk_acc/`, `desktop/`, `disk_copy/`, `selector/`, `launcher/`
 
 Tests specific to various components of the application.
+
+# Tips For Authoring Tests
+
+* Apple IIc and IIc+ models are slow in MAME. @mgcaret points out that on real hardware the processor slows to 1MHZ when accessing 800K drives. Prefer using a `superdrive` card in an Apple IIe instead.
+* Drive assignments are a pain, especialy with SCSI cards. See the [MAMEDEV Page](https://wiki.mamedev.org/index.php/Driver:Apple_II#More_configuration) for some notes. Basically, MAME does things bottom-up, whereas the Apple II ("autostart ROM") and SCSI do things top-down.
+* Controlling the mouse precisely with MAME is elusive, so MouseKeys mode is used in most tests. Is it most convenient with the `a2d.InMouseKeys()` helper. This works great with some exceptions:
+  * Since it is quantized (and differently for x/y), errors creep in over time. Add an `m.Home()` if this happens.
+  * You can't press shortcut keys or <kbd>Esc</kbd> in MouseKeys mode. This makes testing edge cases challenging.
+* The API in `a2d` is limited to driving the UI primarily through the keyboard. For example, `a2d.OpenPath()` works bu closing all windows, then using type-down selection on each segment followed by the OA+SA+Down shortcut to open the selection while closing the current window. This is generally sufficient but some things require creativity:
+  * As noted, methods like `a2d.SelectPath()` and `a2d.OpenPath()` by default close all windows first. If you need multiple windows open for an operation you need get creative()
+    * Add a shortcut (e.g. via `a2d.AddShortcut()`) for a dependent window, use `a2d.OpenPath()` to open the initial window, then `a2d.OAShortcut("1")` (etc) to open the second window.
+    * Use the `{keep_windows=true}` option to override the default. But note that this works by setting focus to the desktop and opening windows via typing. If you open "/DISK1" and then try to open "/DISK1/FOLDER1" the second "hijacks" the window of the first. Re-ordering the actions is usually sufficient.
+* The `a2d` library implicitly has short waits after each action using `a2d.WaitForRepaint()`. The duration of this delay can (and should) be changed by calling `a2d.ConfigureRepaintTiming()`. While this is convenient, experience has shown that manual delays using `emu.wait(N)` after an action that "takes too long" are more maintainable; adding a single extra wait is better than trying to tweak the global settings.. Even better, of course, are using functions that delay until a milestone has been reached (the desktop is visible, an alert is showing, etc).
+
