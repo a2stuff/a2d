@@ -140,7 +140,7 @@ end
 function s16(params, offset)
   local v = u16(params, offset)
   if v & 0x8000 ~= 0 then
-    return 0x10000 - v
+    return v - 0x10000
   else
     return v
   end
@@ -252,7 +252,7 @@ function ram_s16(addr)
   if v & 0x8000 == 0 then
     return v
   else
-    return 0x10000 - v
+    return v - 0x10000
   end
 end
 

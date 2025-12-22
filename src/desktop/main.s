@@ -282,6 +282,8 @@ modifiers:
         jeq     ClearSelection
         cmp     #CHAR_CTRL_D
         jeq     CmdFocusDesktop
+        cmp     #CHAR_CTRL_W
+        jeq     CmdFocusWindow
 
         ldx     active_window_id
     IF NOT_ZERO
@@ -4265,10 +4267,17 @@ found:  inx
 ;;; ============================================================
 ;;; Focus Desktop
 
-.proc CmdFocusDesktop
-        copy8   #0, focused_window_id
+.proc CmdFocusDesktopOrWindowImpl
+window:
+        lda     active_window_id
+        SKIP_NEXT_2_BYTE_INSTRUCTION
+desktop:
+        lda     #0
+        sta     focused_window_id
         rts
-.endproc ; CmdFocusDesktop
+.endproc ; CmdFocusDesktopOrWindowImpl
+CmdFocusDesktop = CmdFocusDesktopOrWindowImpl::desktop
+CmdFocusWindow = CmdFocusDesktopOrWindowImpl::window
 
 ;;; ============================================================
 ;;; Flip Screen

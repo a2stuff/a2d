@@ -381,6 +381,13 @@ function a2d.FocusDesktop()
   a2d.WaitForRepaint()
 end
 
+function a2d.FocusActiveWindow()
+  apple2.PressOA()
+  apple2.ControlKey("W")
+  apple2.ReleaseOA()
+  a2d.WaitForRepaint()
+end
+
 function a2d.DialogOK(options)
   options = default_options(options)
 
@@ -659,7 +666,10 @@ function a2d.InMouseKeysMode(func)
       Left = a2d.MouseKeysLeft,
       Right = a2d.MouseKeysRight,
 
-      Home = a2d.MouseKeysHome,
+      Home = function()
+        a2d.MouseKeysHome()
+        last_x, last_y = 0, 0
+      end,
 
       MoveToApproximately = function(x, y)
         if last_x == nil then

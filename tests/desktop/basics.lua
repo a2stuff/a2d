@@ -1,0 +1,1040 @@
+--[[ BEGINCONFIG ========================================
+
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
+
+======================================== ENDCONFIG ]]
+
+a2d.ConfigureRepaintTime(0.25)
+
+--[[
+  Open a volume, open a folder, close just the volume window; re-open
+  the volume, re-open the folder, ensure the previous window is
+  activated.
+]]
+test.Step(
+  "child windows should be re-activated not duplicated",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    local window_id = mgtk.FrontWindow()
+    a2d.CycleWindows()
+    a2d.CloseWindow()
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    test.ExpectEquals(mgtk.FrontWindow(), window_id, "window should be re-activated")
+end)
+
+--[[
+  Open a window for a volume; open a window for a folder; close volume
+  window; close folder window. Repeat 10 times to verify that the
+  volume table doesn't have leaks.
+]]
+test.Step(
+  "volume table shouldn't leak",
+  function()
+    for i = 1, 10 do
+      a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+      a2d.CycleWindows()
+      a2d.CloseWindow()
+      a2d.CloseWindow()
+    end
+end)
+
+--[[
+  Launch DeskTop. Open a volume window with many items. Adjust the
+  window so that the scrollbars are active. Drag a file icon slightly
+  within the middle of the view, so that the scrollbars don't change.
+  Verify that the scrollbars don't repaint/flicker.
+]]
+test.Step(
+  "moving an icon doesn't always cause scrollbars to repaint",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    a2d.GrowWindowBy(-100, -50)
+    emu.wait(1)
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveByApproximately(10, 10)
+        a2dtest.ExpectRepaintFraction(
+          0, 0.1,
+          function()
+            m.ButtonUp()
+            emu.wait(1)
+          end,
+          "scrollbars do not repaint")
+    end)
+end)
+
+--[[
+  Launch DeskTop. Open a window with only one icon. Drag icon so name
+  is to left of window bounds. Ensure icon name renders.
+]]
+test.Step(
+  "icon name should still render even if left is clipped",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.RenamePath("/RAM1/READ.ME","MMMMMMMMMMMMMMM")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(icon_x, icon_y)
+        m.ButtonDown()
+        m.MoveToApproximately(x+5, icon_y)
+        m.ButtonUp()
+    end)
+    a2d.WaitForRepaint()
+    test.Snap("verify icon name is clipped on left but renders")
+end)
+
+--[[
+  Launch DeskTop. Open a volume window with icons. Drag leftmost icon
+  to the left to make horizontal scrollbar activate. Click horizontal
+  scrollbar so viewport shifts left. Verify dragged icon still
+  renders.
+]]
+test.Step(
+  "icon with negative X renders after viewport shifts left",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/PRODOS")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    for i = 1, 5 do
+      local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(icon_x, icon_y)
+          m.ButtonDown()
+          m.MoveToApproximately(x+5, icon_y)
+          m.ButtonUp()
+          m.MoveToApproximately(x + 5, y + h + 5)
+          m.Click()
+          m.Click()
+          m.Click()
+      end)
+      a2d.WaitForRepaint()
+    end
+    test.Snap("verify icon renders")
+end)
+
+--[[
+  Launch DeskTop. Open a volume window with icons. Drag leftmost icon
+  to the left to make horizontal scrollbar activate. Click horizontal
+  scrollbar so viewport shifts left. Move window to the right so it
+  overlaps desktop icons. Verify DeskTop doesn't lock up.
+]]
+test.Step(
+  "icon with negative X doesn't mess up volume rendering",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/PRODOS")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(icon_x, icon_y)
+        m.ButtonDown()
+        m.MoveToApproximately(x+5, icon_y)
+        m.ButtonUp()
+        m.MoveToApproximately(x + 5, y + h + 5)
+        m.Click()
+        m.Click()
+        m.Click()
+    end)
+
+    a2d.MoveWindowBy(300, 0)
+    a2dtest.ExpectNotHanging()
+end)
+
+--[[
+  Launch DeskTop. Open a volume window with icons. Resize the window
+  so that the horizontal scrollbar is active. Move the window so the
+  left edge of the scrollbar thumb is off-screen to the left. Click on
+  the right arrow, and verify that the window scrolls correctly.
+  Repeat for the page right region.
+]]
+test.Variants(
+  {
+    "scrollbar with clipped thumb still works - right arrow",
+    "scrollbar with clipped thumb still works - right pager",
+  },
+  function(idx)
+    a2d.OpenPath("/A2.DESKTOP")
+    a2d.GrowWindowBy(-50, 0)
+    a2d.MoveWindowBy(-40, 0)
+    emu.wait(1)
+    test.Snap("verify thumb cut off on left")
+
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.InMouseKeysMode(function(m)
+        if idx == 1 then
+          m.MoveToApproximately(x + w - 5, y + h + 5)
+        else
+          m.MoveToApproximately(x + w - 50, y + h + 5)
+        end
+        m.Click()
+    end)
+    a2d.WaitForRepaint()
+    test.Snap("verify window scrolled right")
+end)
+
+--[[
+  Launch DeskTop. Open a window with a single icon. Move the icon so
+  it overlaps the left edge of the window. Verify scrollbar appears.
+  Hold scroll arrow. Verify icon scrolls into view, and eventually the
+  scrollbar deactivates. Repeat with right edge.
+]]
+--[[
+  Launch DeskTop. Open a window with 11-15 icons. Verify scrollbars
+  are not active.
+]]
+
+--[[
+  Launch DeskTop. Open a volume window with multiple icons but that do
+  not require the scrollbars to be active. Drag the first icon over to
+  the right so that it is partially clipped by the window's right or
+  bottom edge. Verify that the appropriate scrollbars activate.
+]]
+
+--[[
+  Launch DeskTop. Open a folder using Apple menu (e.g. Control Panels)
+  or a shortcut. Verify that the used/free numbers are non-zero.
+]]
+
+--[[
+  Launch DeskTop. Open a folder containing subfolders. Select all the
+  icons in the folder. Double-click one of the subfolders. Verify that
+  the selection is retained in the parent window, with the subfolder
+  icons dimmed. Position a child window over top of the parent so it
+  overlaps some of the icons. Close the child window. Verify that the
+  parent window correctly shows only the previously opened folder as
+  selected.
+]]
+
+--[[
+  Launch DeskTop. Open a window containing folders and files. Scroll
+  the window so a folder is partially or fully outside the visual area
+  (e.g. behind title bar, header, or scrollbars). Drag a file icon
+  over the obscured part of the folder. Verify the folder doesn't
+  highlight.
+]]
+--[[
+  Launch DeskTop. Open a window containing folders and files. Scroll
+  the window so a folder is partially or fully outside the visual area
+  (e.g. behind title bar, header, or scrollbars). Drag a file icon
+  over the visible part of the folder. Verify the folder highlights
+  but doesn't render past window bounds. Continue dragging over the
+  obscured part of the folder. Verify that the folder unhighlights.
+]]
+
+--[[
+  Launch DeskTop. Open two windows containing folders and files. Drag
+  a file icon from one window over a folder in the other window.
+  Verify that the folder highlights. Drop the file. Verify that the
+  file is copied or moved to the correct target folder.
+]]
+--[[
+  Launch DeskTop. Open two windows containing folders and files.
+  Scroll one window so a folder is partially or fully outside the
+  visual area (e.g. behind title bar, header, or scrollbars). Drag a
+  file icon from the other window over the obscured part of the
+  folder. Verify the folder doesn't highlight.
+]]
+--[[
+  Launch DeskTop. Open two windows containing folders and files.
+  Scroll one window so a folder is partially or fully outside the
+  visual area (e.g. behind title bar, header, or scrollbars). Drag a
+  file icon from the other window over the visible part of the folder.
+  Verify the folder highlights but doesn't render past window bounds.
+  Continue dragging over the obscured part of the folder. Verify that
+  the folder unhighlights.
+]]
+
+--[[
+  Launch DeskTop. Open a window containing folders and files. Open
+  another window, for an empty volume. Drag an icon from the first to
+  the second. Ensure no scrollbars activate in the target window.
+]]
+--[[
+  Launch DeskTop. Open a window containing folders and files, with no
+  scrollbars active. Open another window. Drag an icon from the first
+  to the second. Ensure no scrollbars activate in the source window.
+]]
+
+--[[
+  Launch DeskTop. Open two windows. Select a file in one window.
+  Activate the other window by clicking its title bar. File >
+  Duplicate. Enter a new name. Verify that the window with the
+  selected file refreshes.
+]]
+--[[
+  Launch DeskTop. Open two windows. Select a file in one window.
+  Activate the other window by clicking its title bar. File > Rename.
+  Enter a new name. Verify that the icon is renamed.
+]]
+
+
+--[[
+  Launch DeskTop. Double-click on a file that DeskTop can't open (and
+  where no `BASIS.SYSTEM` is present). Click OK in the "This file
+  cannot be opened." alert. Double-click on the file again. Verify
+  that the alert renders with an opaque background.
+]]
+
+--[[
+  Launch DeskTop. Open
+  `/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF123`.
+  Try to copy a file into the folder. Verify that stray pixels do not
+  appear in the top line of the screen.
+]]
+
+
+
+--[[
+  Configure a system with two volumes of the same name. Launch
+  DeskTop. Verify that an error is shown, and only one volume appears.
+]]
+
+--[[
+  Launch DeskTop. Select multiple volume icons (at least 4). Drag the
+  bottom icon up so that the top two icons are completely off the
+  screen. Release the mouse button. Drag the icons back down. Verify
+  that while dragging, all icons have outlines, and when done dragging
+  all icons reposition correctly.
+]]
+--[[
+  Launch DeskTop. Open a window with at least 3 rows of icons.
+  Position the window at the top of the screen. Edit > Select All.
+  Drag an icon from the bottom row so that the top icons end up
+  completely off-screen. Release the mouse button. Drag the icons back
+  down. Verify that all icons reposition correctly.
+]]
+--[[
+  Launch DeskTop. Open a window with multiple icons. Select multiple
+  icons (e.g. 3). Start dragging the icons. Note the shape of the drag
+  outlines. Drag over a volume icon. Verify that the drag outline does
+  not become permanently clipped.
+]]
+--[[
+  Launch DeskTop. Open a window with multiple icons. Resize the window
+  so some of the icons aren't visible without scrolling. Edit > Select
+  All. Drag the icons. Verify that drag outlines are shown even for
+  hidden icons.
+]]
+--[[
+  Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Edit > Select All.
+  Start dragging the icons. Verify that the drag is not prevented.
+]]
+test.Step(
+  "Can drag unlimited icons",
+  function()
+    a2d.OpenPath("/TESTS/HUNDRED.FILES")
+    emu.wait(5)
+    a2d.SelectAll()
+    emu.wait(5)
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveByApproximately(10, 10)
+        test.Snap("verify drag is active")
+        m.ButtonUp()
+        m.MoveByApproximately(-10, -10)
+    end)
+end)
+
+--[[
+  Launch DeskTop. Open a window. Create folders A, B and C. Open A,
+  and create a folder X. Open B, and create a folder Y. Drag A and B
+  into C. Double-click on X. Verify it opens. Double-click on Y.
+  Verify it opens. Open C. Double-click on A. Verify that the existing
+  A window activates. Double-click on B. Verify that the existing B
+  window activates.
+]]
+
+--[[
+  Launch DeskTop. Open a volume window containing a folder. Open the
+  folder window. Note that the folder icon is dimmed. Close the volume
+  window. Open the volume window again. Verify that the folder icon is
+  dimmed.
+]]
+--[[
+  Launch DeskTop. Open a volume window. In the volume window, create a
+  new folder F1 and open it. Note that the F1 icon is dimmed. In the
+  volume window, create a new folder F2. Verify that the F1 icon is
+  still dimmed.
+]]
+--[[
+  Launch DeskTop. Open a volume window containing a file and a folder.
+  Open the folder window. Drag the file to the folder icon (not the
+  window). Verify that the folder window activates and updates to show
+  the file.
+]]
+
+--[[
+  Launch DeskTop. Open a volume containing no files. Verify that the
+  default minimum window size is used - about 170px by 50px not
+  counting title/scrollbars.
+]]
+test.Step(
+  "empty window default size",
+  function()
+    a2d.OpenPath("/RAM1")
+    local x, w, w, h = a2dtest.GetFrontWindowContentRect()
+    test.ExpectGreaterThan(w, 150, "window should be ~170px wide")
+    test.ExpectLessThan(w, 200, "window should be ~170px wide")
+
+    test.ExpectGreaterThan(h, 40, "window should be ~50px tall")
+    test.ExpectLessThan(h, 60, "window should be ~50px tall")
+end)
+
+--[[
+  Launch DeskTop. Open two windows. Attempt to drag the inactive
+  window by dragging its title bar. Verify that the window activates
+  and the drag works.
+]]
+test.Step(
+  "drag inactive window",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    local x, y = a2dtest.GetFrontWindowDragCoords()
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.ButtonDown()
+        m.MoveByApproximately(20, 20)
+        m.ButtonUp()
+    end)
+    emu.wait(2)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
+    local new_x, new_y = a2dtest.GetFrontWindowDragCoords()
+    test.ExpectNotEquals(x, new_x, "window should have moved")
+end)
+
+--[[
+  Launch DeskTop. Open two windows. Click on an icon in the inactive
+  window. Verify that the window activates and that the icon is
+  selected.
+]]
+test.Step(
+  "icon click in inactive window",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    local x, y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.Click()
+    end)
+    emu.wait(2)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
+end)
+
+--[[
+  Launch DeskTop. Open two volume windows. Click and drag in the
+  inactive window without selecting any icons. Verify that the window
+  activates and that the drag rectangle appears, and that when the
+  button is released the volume icon is selected.
+]]
+test.Step(
+  "volume icon selected after drag in inactive window",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local click_x, click_y = x + w - 5, y + h - 5
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.ButtonDown()
+        m.MoveByApproximately(20, -20)
+        test.Snap("verify window activates and drag rectangle appears")
+        m.ButtonUp()
+    end)
+    emu.wait(1)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
+end)
+
+--[[
+  Launch DeskTop. Open two volume windows. Click in the inactive
+  window without selecting any icons. Verify that the window activates
+  and the volume icon is selected.
+]]
+test.Step(
+  "volume icon selected after window click - inactive window",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local click_x, click_y = x + w - 5, y + h - 5
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 100)
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    emu.wait(1)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
+end)
+
+--[[
+  Launch DeskTop. Open a volume window. Click on the desktop to clear
+  selection. Click in an empty area within the window. Verify that the
+  volume icon is selected.
+]]
+test.Step(
+  "volume icon selected after window click - no selection",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local click_x, click_y = x + w - 5, y + h - 5
+
+    a2d.ClearSelection()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    emu.wait(1)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
+end)
+
+--[[
+  Launch DeskTop. Open a volume window. Select a file icon. Click in
+  an empty area within the window. Verify that the volume icon is
+  selected.
+]]
+test.Step(
+  "volume icon selected after window click - file selection",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local click_x, click_y = x + w - 5, y + h - 5
+
+    a2d.Select("READ.ME")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(click_x, click_y)
+        m.Click()
+    end)
+    emu.wait(1)
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
+end)
+
+--[[
+  Launch DeskTop. Select a volume icon. Drag it over an empty space on
+  the desktop. Release the mouse button. Verify that the icon is
+  moved.
+]]
+--[[
+  Launch DeskTop. Select a volume icon. Drag it over an empty space on
+  the desktop. Without releasing the mouse button, press the Escape
+  key. Verify that the drag is canceled and the icon does not move.
+]]
+-- TODO: Since Esc exits MouseKeys mode, can't test this yet.
+
+--[[
+  Launch DeskTop. Select a volume icon. Drag it over an empty space on
+  the desktop. Hold either Apple key or both Apple keys and release
+  the mouse button. Verify that the drag is canceled and the icon does
+  not move.
+]]
+
+--[[
+  Launch DeskTop. Select a volume icon. Drag it over another icon on
+  the desktop, which should highlight. Without releasing the mouse
+  button, press the Escape key. Verify that the drag is canceled, the
+  target icon is unhighlighted, and the dragged icon does not move.
+]]
+-- TODO: Since Esc exits MouseKeys mode, can't test this yet.
+
+--[[
+  Launch DeskTop. Select a file icon. Drag it over an empty space in
+  the window. Without releasing the mouse button, press the Escape
+  key. Verify that the drag is canceled and the icon does not move.
+]]
+-- TODO: Since Esc exits MouseKeys mode, can't test this yet.
+
+--[[
+  Launch DeskTop. Select a file icon. Drag it over a folder icon,
+  which should highlight. Without releasing the mouse button, press
+  the Escape key. Verify that the drag is canceled, the target icon is
+  unhighlighted, and the dragged icon does not move.
+]]
+-- TODO: Since Esc exits MouseKeys mode, can't test this yet.
+
+--[[
+  Launch DeskTop. Clear selection. Hold both Open-Apple and
+  Solid-Apple and start to drag a volume icon. Verify that the drag
+  outline of the volume is shown.
+]]
+test.Step(
+  "can OA+SA drag a volume icon",
+  function()
+    a2d.SelectPath("/RAM1")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        apple2.PressOA()
+        apple2.PressSA()
+        m.ButtonDown()
+        m.MoveByApproximately(-100, 0)
+        test.Snap("verify drag outline visible")
+        m.ButtonUp()
+        apple2.ReleaseSA()
+        apple2.ReleaseOA()
+    end)
+end)
+
+--[[
+  Launch DeskTop. Open `/TESTS/FOLDER`. Start dragging `FLE` and do
+  not release the button. Drag it over then off `SUBFOLDER`. Verify
+  the folder highlights/unhighlights. Drag it over then off a volume
+  icon. Verify that the volume icon highlights/unhighlights. Drag it
+  over the folder icon again. Verify that the folder highlights.
+]]
+
+--[[
+* Repeat the following:
+  * For these permutations, as the specified window area:
+    * Title bar
+    * Scroll bars
+    * Resize box
+    * Header (items/in disk/available)
+  * Verify:
+    * Launch DeskTop. Open a window with a file icon. Drag the icon so that the mouse pointer is over the same window's specified area. Release the mouse button. Verify that the icon does not move.
+    * Launch DeskTop. Open two windows for different volumes. Drag an icon from one window over the specified area of the other window. Release the mouse button. Verify that the file is copied to the target volume.
+]]
+test.Variants(
+  {
+    "Drop icon on title bar",
+    "Drop icon on scroll bar",
+    "Drop icon on resize box",
+    "Drop icon on header",
+  },
+  function(idx)
+    function GetDropCoords()
+      local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+      if idx == 1 then
+        return x + w / 2, y - 5 -- title bar
+      elseif idx == 2 then
+        return x + w / 2, y + h + 5 -- scroll bar
+      elseif idx == 3 then
+        return x + w + 5, y + h + 5 -- resize box
+      elseif idx == 4 then
+        return x + w / 2, y + 5 -- header
+      end
+    end
+
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    -- Same window
+    local dst_x, dst_y = GetDropCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.Home()
+    end)
+    a2dtest.ExpectNothingChanged(function()
+        a2d.InMouseKeysMode(function(m)
+            m.MoveToApproximately(src_x, src_y)
+            m.ButtonDown()
+            m.MoveToApproximately(dst_x, dst_y)
+            m.ButtonUp()
+            m.Home()
+        end)
+    end)
+
+    -- Other window
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.MoveWindowBy(0, 80)
+    dst_x, dst_y = GetDropCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(src_x, src_y)
+        m.ButtonDown()
+        m.MoveToApproximately(dst_x, dst_y)
+        m.ButtonUp()
+    end)
+    emu.wait(5)
+    a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should have copied")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
+
+--[[
+  Launch DeskTop. Open `/TESTS/FILE.TYPES`. Select `ROOM.A2FC`. File >
+  Open. Press Escape. Apple Menu > Calculator (or any other DA).
+  Verify that the DA launches correctly.
+]]
+test.Step(
+  "DA launches after image preview",
+  function()
+    a2d.OpenPath("/TESTS/FILE.TYPES/ROOM.A2FC")
+    emu.wait(5)
+    apple2.EscapeKey()
+
+    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
+    emu.wait(5)
+    a2dtest.ExpectAlertNotShowing()
+    a2d.CloseWindow()
+    a2d.CloseAllWindows()
+    a2dtest.ExpectNotHanging()
+end)
+
+--[[
+  Launch DeskTop. Apple Menu > About Apple II DeskTop. Click anywhere
+  on the screen. Verify that the dialog closes.
+]]
+test.Step(
+  "About dialog closes on click",
+  function()
+    a2d.CloseAllWindows()
+    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
+    a2d.InMouseKeysMode(function(m)
+        m.Click()
+    end)
+    emu.wait(1)
+    test.ExpectEquals(a2dtest.GetWindowCount(), 0, "dialog should have dismissed")
+end)
+
+--[[
+  Launch DeskTop. Apple Menu > About Apple II DeskTop. Press any
+  non-modifier key screen. Verify that the dialog closes.
+]]
+test.Step(
+  "About dialog closes on key",
+  function()
+    a2d.CloseAllWindows()
+    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
+    apple2.Type("A")
+    emu.wait(1)
+    test.ExpectEquals(a2dtest.GetWindowCount(), 0, "dialog should have dismissed")
+end)
+
+--[[
+* Launch DeskTop. Open `/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789`. Rename the `/TESTS` volume to `/TESTSXXXXXXXXXX` so that the total path length of the innermost files would be longer than 64 characters. Repeat the following operations, and verify that an error is shown and DeskTop doesn't crash or hang:
+  * Select the `ABCDEF123` folder. File > Open.
+  * Select the `ABCDEF123` folder. File > Get Info.
+  * Select the `ABCDEF123` folder. File > Rename
+  * Select the `ABCDEF123` folder. File > Duplicate
+  * Select the `ABCDEF123` folder. File > Copy To... (and pick a target)
+  * Select the `ABCDEF123` folder. Shortcuts > Add a Shortcut...
+  * Drag a file icon onto the `ABCDEF123` folder.
+  * Drag the `ABCDEF123` folder to another volume.
+  * Drag the `ABCDEF123` folder to the Trash.
+  * Repeat the previous cases, but with `LONGIMAGE` file.
+]]
+test.Variants(
+  {
+    "overlong paths - folder",
+    "overlong paths - file",
+  },
+  function(idx)
+    a2d.OpenPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
+    emu.wait(1)
+    a2d.SelectPath("/TESTS", {keep_windows=true})
+    a2d.RenameSelection("TESTSXXXXXXXXXX")
+    a2d.FocusActiveWindow()
+    if idx == 1 then
+      a2d.Select("ABCDEF123")
+    else
+      a2d.Select("LONGIMAGE")
+    end
+    local target_x, target_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OAShortcut("O") -- File > Open
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.OAShortcut("I") -- File > Get Info
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    apple2.ReturnKey() -- File > Rename
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.CopySelectionTo("/RAM1") -- File > Copy To...
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    -- Drag file to folder
+    if idx == 1 then
+      a2d.Select("LONGIMAGE")
+      local src_x, src_y = a2dtest.GetSelectedIconCoords()
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(src_x, src_y)
+          m.ButtonDown()
+          m.MoveToApproximately(target_x, target_y)
+          m.ButtonUp()
+      end)
+      a2dtest.WaitForAlert()
+      a2d.DialogOK()
+    end
+
+    -- Drag to volume
+    a2d.SelectPath("/RAM1", {keep_windows=true})
+    local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(target_x, target_y)
+        m.ButtonDown()
+        m.MoveToApproximately(vol_x, vol_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    -- Drag folder to Trash
+    a2d.SelectPath("/Trash", {keep_windows=true})
+    local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(target_x, target_y)
+        m.ButtonDown()
+        m.MoveToApproximately(trash_x, trash_y)
+        m.ButtonUp()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
+end)
+
+--[[
+  Copy `MODULES/SHOW.IMAGE.FILE` to the `APPLE.MENU` folder. Restart.
+  Open `/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789`.
+  Rename the `/TESTS` volume to `/TESTSXXXXXXXXXX`. Select the
+  `LONGIMAGE` file. Apple Menu > Show Image File. Verify that an alert
+  is shown.
+]]
+test.Step(
+  "overlong paths - launching DAs with selection",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.IMAGE.FILE", "/A2.DESKTOP/APPLE.MENU")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+
+    a2d.SelectPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/LONGIMAGE")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.SelectPath("/TESTS", {keep_windows=true})
+    a2d.RenameSelection("TESTSXXXXXXXXXX")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.Click()
+    end)
+
+    a2d.InvokeMenuItem(a2d.APPLE_MENU, -1)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+
+    a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
+    a2d.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.IMAGE.FILE")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end)
+
+--[[
+  Open `/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789`. Copy
+  `APPLE.MENU/KEY.CAPS` to the folder. Rename the `/TESTS` volume to
+  `/TESTSXXXXXXXXXX`. Select the copy of `KEY.CAPS`. File > Open.
+  Verify that an alert is shown.
+]]
+test.Step(
+  "overlong paths - launching DAs",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS",
+                 "/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
+    a2d.SelectPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/KEY.CAPS")
+    local x, y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/TESTS", {keep_windows=true})
+    a2d.RenameSelection("TESTSXXXXXXXXXX")
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.DoubleClick()
+    end)
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+    a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
+end)
+
+--[[
+  From `BASIC.SYSTEM`, create `/VOL/A/B` on an otherwise empty volume.
+  Launch DeskTop. Open `/VOL/A`. Close `/VOL`. Open another volume
+  with multiple icons. Verify that the window for `A` still renders
+  the icon for `B` correctly.
+]]
+test.Step(
+  "child icon rendering",
+  function()
+    a2d.CreateFolder("/RAM1/A")
+    a2d.CreateFolder("/RAM1/A/B")
+    a2d.OpenPath("/RAM1")
+    a2d.SelectAndOpen("A", {close_current=false})
+    a2d.MoveWindowBy(0, 100)
+    a2d.CycleWindows()
+    a2d.CloseWindow()
+    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.CycleWindows()
+    a2d.MoveWindowBy(20, 0)
+    test.Snap("verify icon B rendered correctly")
+
+    a2d.EraseVolume("RAM1")
+end)
+
+--[[
+* Repeat the following test cases for these operations: Copy, Move, Delete:
+  * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the window contents do not refresh.
+  * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed, and that (apart from the source window for Copy) the window contents do refresh.
+]]
+
+--[[
+  Open `/TESTS/HUNDRED.FILES`, without resizing the window. Scroll up
+  and down by one tick, by one page, and to the top/bottom. Verify
+  that such operations scroll by an integral number of icons, i.e. the
+  last row of labels are always the same distance from the bottom of
+  the window.
+]]
+test.Step(
+  "Default scrolling is by integral number of icons",
+  function()
+    a2d.OpenPath("/TESTS/HUNDRED.FILES")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    emu.wait(5)
+    a2d.InMouseKeysMode(function(m)
+        test.Snap("note icon positions")
+        for i = 1, 2 do
+          -- Down by one tick
+          m.MoveToApproximately(x + w + 10, y + h - 5)
+          m.Click()
+          emu.wait(2)
+          test.Snap("icons should still be aligned")
+        end
+        for i = 1, 2 do
+          -- Up by one tick
+          m.MoveToApproximately(x + w + 10, y + 5)
+          m.Click()
+          emu.wait(2)
+          test.Snap("icons should still be aligned")
+        end
+        for i = 1, 2 do
+          -- Down by one page
+          m.MoveToApproximately(x + w + 10, y + h - 20)
+          m.Click()
+          emu.wait(2)
+          test.Snap("icons should still be aligned")
+        end
+        for i = 1, 2 do
+          -- Up by one page
+          m.MoveToApproximately(x + w + 10, y + 20)
+          m.Click()
+          emu.wait(2)
+          test.Snap("icons should still be aligned")
+        end
+        m.Home()
+        -- to bottom
+        m.MoveToApproximately(x + w + 10, y + h - 5)
+        for i = 1, 20 do
+          m.Click()
+          emu.wait(2)
+        end
+        test.Snap("icons should still be aligned")
+        -- to top
+        m.MoveToApproximately(x + w + 10, y + 5)
+        for i = 1, 20 do
+          m.Click()
+          emu.wait(2)
+        end
+        test.Snap("icons should still be aligned")
+    end)
+end)
+
+--[[
+  Launch DeskTop. Open a volume window with enough icons that a
+  scrollbar appears. Click on an active part of the scrollbar. Verify
+  that the scrollbar responds immediately, not after the double-click
+  detection delay expires.
+]]
+test.Step(
+  "Active scrollbars respond immediately",
+  function()
+    a2d.OpenPath("/TESTS")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + w + 5, y + h / 2)
+        m.Click()
+        a2dtest.MultiSnap(60, "should repaint quickly")
+    end)
+end)
+
+--[[
+  Launch DeskTop. Open a volume window where the vertical and
+  horizontal scrollbars are inactive. Click on each inactive
+  scrollbar. Verify nothing happens.
+]]
+test.Step(
+  "Inactive scrollbar are inactive",
+  function()
+    a2d.OpenPath("/RAM1")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.InMouseKeysMode(function(m) m.Home() end)
+    a2dtest.ExpectNothingChanged(function()
+        a2d.InMouseKeysMode(function(m)
+            m.MoveToApproximately(x + w + 5, y + h / 2)
+            m.Click()
+            m.MoveToApproximately(x + w / 2, y + h + 5)
+            m.Click()
+            m.Home()
+        end)
+    end)
+end)
+
+--[[
+  Open `TESTS/FILE.TYPES`. Verify that an icon appears for the
+  `TEST08` file.
+]]
+test.Step(
+  "File type $08 works",
+  function()
+    a2d.SelectPath("/TESTS/FILE.TYPES/TEST08")
+end)
+
+--[[
+  Open `TESTS/FILE.TYPES`. Verify that an icon appears for the
+  `TEST01` file.
+]]
+test.Step(
+  "File type $01 works",
+  function()
+    a2d.SelectPath("/TESTS/FILE.TYPES/TEST01")
+end)
+
+--[[
+  Configure a system with a SmartPort hard drive, RAMFactor card, and
+  Disk II controller card with drives but no floppies. (MAME works)
+  Launch DeskTop. Verify that the RAMCard volume icon doesn't flicker
+  when the desktop is initially painted. (This will be easier to
+  observe in emulators with acceleration disabled.)
+]]
+test.Step(
+  "Drives don't flicker if Disk II devices are empty",
+  function()
+    a2d.CloseAllWindows()
+    a2d.Reboot()
+    emu.wait(1)
+    a2dtest.MultiSnap(240, "verify RAMCard icon doesn't flicker")
+end)

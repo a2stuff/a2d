@@ -42,6 +42,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix error shown after non-empty directory fails to delete.
 * Fix hang after non-menu shortcut if window fails to open.
 * Add Apple+Control+D as shortcut to focus desktop.
+* Add Apple+Control+W as shortcut to focus window.
 
 ### Selector
 

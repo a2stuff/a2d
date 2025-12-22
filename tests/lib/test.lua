@@ -12,6 +12,12 @@ if skip_count == "" then
 else
   skip_count = tonumber(skip_count)
 end
+local run_count = emu.subst_env("$RUN_COUNT")
+if run_count == "" then
+  run_count = nil
+else
+  run_count = tonumber(run_count)
+end
 
 local test_name = emu.subst_env("$TEST_NAME")
 -- Convert from "wildcard" pattern (with * and ?) to Lua pattern
@@ -70,6 +76,13 @@ function test.Step(title, func)
   local status, err = pcall(func)
   if not status then
     test.Failure(err)
+  end
+
+  if run_count then
+    run_count = run_count - 1
+    if run_count == 0 then
+      os.exit(0)
+    end
   end
 end
 
