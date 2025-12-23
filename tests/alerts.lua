@@ -22,6 +22,9 @@ test.Step(
         apple2.EscapeKey()
         a2d.WaitForRepaint()
     end)
+
+    -- cleanup
+    a2d.RenamePath("/A2.DESKTOP/README", "READ.ME")
 end)
 
 --[[
@@ -45,6 +48,7 @@ test.Step(
         a2d.WaitForRepaint()
     end)
 
+    -- cleanup
     apple2.Type("D") -- Desktop
     a2d.WaitForDesktopReady()
     a2d.ToggleOptionShowShortcutsOnStartup() -- Disable

@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/floppy_with_files.dsk"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl6 superdrive -sl7 cffa2 -aux ext80"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/floppy_with_files.2mg"
 
 ======================================== ENDCONFIG ]]
 

@@ -1,11 +1,11 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_floppy.dsk"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl6 superdrive -sl7 cffa2"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_800k.2mg"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
+a2d.ConfigureRepaintTime(0.5)
 
 --[[
   Launch DeskTop. Try to copy files including a GS/OS forked file in
