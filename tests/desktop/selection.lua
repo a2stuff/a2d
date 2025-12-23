@@ -28,12 +28,7 @@ test.Step(
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Select("PRODOS")
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x-30, y-5)
-        m.ButtonDown()
-        m.MoveByApproximately(60, 25)
-        m.ButtonUp()
-    end)
+    a2d.Drag(x-30, y-5, x+30, y+20)
     a2d.WaitForRepaint()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "only new icon should be selected")
@@ -53,12 +48,7 @@ test.Step(
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Select("A2.DESKTOP")
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x-30, y-5)
-        m.ButtonDown()
-        m.MoveByApproximately(60, 25)
-        m.ButtonUp()
-    end)
+    a2d.Drag(x-30, y-5, x+30, y+20)
     a2d.WaitForRepaint()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "only new icon should be selected")

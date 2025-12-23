@@ -28,12 +28,7 @@ test.Step(
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1)
 
     a2d.OpenPath("/RAM1")
@@ -60,12 +55,7 @@ test.Step(
     a2d.Select("READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1)
 
     a2d.OpenPath("/RAM1/FOLDER")
@@ -93,12 +83,7 @@ test.Step(
     a2d.Select("FOLDER")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1)
 
     a2d.OpenPath("/RAM1")
@@ -131,14 +116,7 @@ test.Step(
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(1)
 
     a2d.OpenPath("/RAM1")
@@ -166,14 +144,7 @@ test.Step(
     a2d.Select("READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(1)
 
     a2d.OpenPath("/RAM1/FOLDER")
@@ -200,14 +171,7 @@ test.Step(
     a2d.Select("FOLDER")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(1)
 
     a2d.OpenPath("/RAM1")
@@ -232,12 +196,7 @@ test.Step(
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1)
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.SelectPath("/RAM1/READ.ME")
@@ -257,12 +216,7 @@ test.Step(
     a2d.SelectPath("/RAM1", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1)
 
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
@@ -357,12 +311,7 @@ test.Step(
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.SelectAll()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(0.25)
     test.Snap("verify Copying 3 files")
     emu.wait(5)
@@ -397,14 +346,7 @@ test.Step(
     a2d.SelectPath("/RAM5")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(0.25)
     test.Snap("verify Copying 4 files") -- vol becomes folder, makes it +1
     emu.wait(5)
@@ -439,12 +381,7 @@ test.Step(
     a2d.SelectPath("/RAM5", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.MultiSnap(60, "verify copy count ends at 0")
 
     a2d.EraseVolume("/RAM1")
@@ -467,14 +404,7 @@ test.Step(
     a2d.SelectPath("/RAM5", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(src_x, src_y,dst_x, dst_y, {sa_drop=true})
     a2dtest.MultiSnap(60, "verify move count ends at 0")
 
     a2d.EraseVolume("/RAM1")
@@ -502,21 +432,11 @@ test.Step(
     a2d.SelectAll()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(5)
 
     -- Now copy again
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     apple2.Type("Y")
     a2d.WaitForRepaint()
@@ -570,12 +490,7 @@ test.Step(
     a2d.MoveWindowBy(0, 100)
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
@@ -604,12 +519,7 @@ test.Step(
     a2d.SelectAll()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
 
     a2dtest.WaitForAlert()
     a2d.DialogOK()
@@ -640,14 +550,7 @@ test.Step(
     a2d.MoveWindowBy(0, 100)
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
@@ -667,12 +570,7 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 end)
@@ -713,12 +611,7 @@ test.Step(
     a2d.SelectPath("/RAM1", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
@@ -746,12 +639,7 @@ test.Step(
     a2d.SelectAll()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
@@ -782,12 +670,7 @@ test.Step(
 
     a2d.SelectPath("/RAM5", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert() -- overwrite?
     apple2.Type("Y")
     emu.wait(5)
@@ -819,12 +702,7 @@ test.Step(
 
     a2d.SelectPath("/RAM5", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert() -- overwrite?
     apple2.Type("Y")
     emu.wait(5)
@@ -852,12 +730,7 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
@@ -892,12 +765,7 @@ test.Step(
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     a2d.Select("A")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1)
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should have moved")
@@ -964,12 +832,7 @@ test.Variants(
 
     if idx == 1 or idx == 2 then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
-      a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(src_x, src_y)
-          m.ButtonDown()
-          m.MoveToApproximately(dst_x, dst_y)
-          m.ButtonUp()
-      end)
+      a2d.Drag(src_x, src_y, dst_x, dst_y)
     elseif idx == 3 then
       a2d.CopySelectionTo("/RAM1")
     end
@@ -1025,12 +888,7 @@ test.Variants(
 
     if idx == 1 then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
-      a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(src_x, src_y)
-          m.ButtonDown()
-          m.MoveToApproximately(dst_x, dst_y)
-          m.ButtonUp()
-      end)
+      a2d.Drag(src_x, src_y, dst_x, dst_y)
     elseif idx == 2 then
       a2d.CopySelectionTo("/RAM1/FOLDER")
     end
@@ -1083,12 +941,7 @@ test.Variants(
 
     if idx == 1 then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
-      a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(src_x, src_y)
-          m.ButtonDown()
-          m.MoveToApproximately(dst_x, dst_y)
-          m.ButtonUp()
-      end)
+      a2d.Drag(src_x, src_y, dst_x, dst_y)
       a2dtest.WaitForAlert()
       a2d.DialogOK()
     elseif idx == 2 then
@@ -1144,12 +997,7 @@ test.Variants(
 
     if idx == 1 then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
-      a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(src_x, src_y)
-          m.ButtonDown()
-          m.MoveToApproximately(dst_x, dst_y)
-          m.ButtonUp()
-      end)
+      a2d.Drag(src_x, src_y, dst_x, dst_y)
       a2dtest.WaitForAlert()
       a2d.DialogOK()
     elseif idx == 2 then
@@ -1251,14 +1099,7 @@ test.Variants(
 
     test.Snap("note RAM1 and FOLDER used/free numbers")
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(1)
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
@@ -1326,12 +1167,7 @@ ActiveInactiveTest(
   end,
   function(x, y)
     test.Snap("note icon position")
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x, y)
-        m.ButtonDown()
-        m.MoveToApproximately(x + 20, y + 10)
-        m.ButtonUp()
-    end)
+    a2d.Drag(x, y, x + 20, y + 10)
     emu.wait(1)
     test.Snap("verify icon was moved")
 end)
@@ -1348,12 +1184,7 @@ ActiveInactiveTest(
   end,
   function(x, y)
     test.Snap("note icon positions")
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x, y)
-        m.ButtonDown()
-        m.MoveToApproximately(x + 20, y + 10)
-        m.ButtonUp()
-    end)
+    a2d.Drag(x, y, x + 20, y + 10)
     emu.wait(1)
     test.Snap("verify icons were moved")
 end)
@@ -1369,14 +1200,7 @@ ActiveInactiveTest(
   end,
   function(x, y)
     test.Snap("note icon position")
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x, y)
-        m.ButtonDown()
-        m.MoveToApproximately(x + 20, y + 10)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(x, y, x + 20, y + 10, {sa_drop=true})
     emu.wait(1)
     test.Snap("verify icon was duplicated")
     apple2.ReturnKey()
@@ -1395,14 +1219,7 @@ ActiveInactiveTest(
   end,
   function(x, y)
     test.Snap("note icon positions")
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x, y)
-        m.ButtonDown()
-        m.MoveToApproximately(x + 20, y + 10)
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(x, y, x + 20, y + 10, {sa_drop=true})
     emu.wait(1)
     test.Snap("verify nothing changed (except activation)")
 end)
@@ -1418,16 +1235,7 @@ ActiveInactiveTest(
   end,
   function(x, y)
     test.Snap("note icon position")
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x, y)
-        m.ButtonDown()
-        m.MoveToApproximately(x + 20, y + 10)
-        apple2.PressOA()
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseSA()
-        apple2.ReleaseOA()
-    end)
+    a2d.Drag(x, y, x + 20, y + 10, {oa_drop=true, sa_drop=true})
     emu.wait(5)
     test.Snap("verify an alias was created")
     apple2.ReturnKey()
@@ -1446,16 +1254,7 @@ ActiveInactiveTest(
   end,
   function(x, y)
     test.Snap("note icon positions")
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x, y)
-        m.ButtonDown()
-        m.MoveToApproximately(x + 20, y + 10)
-        apple2.PressOA()
-        apple2.PressSA()
-        m.ButtonUp()
-        apple2.ReleaseOA()
-        apple2.ReleaseSA()
-    end)
+    a2d.Drag(x, y, x + 20, y + 10, {oa_drop=true, sa_drop=true})
     emu.wait(1)
     test.Snap("verify nothing changed (except activation)")
 end)
@@ -1484,12 +1283,7 @@ test.Variants(
 
     a2d.SelectPath("/WITH.FILES", {keep_windows=true})
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(30)
     a2dtest.ExpectAlertNotShowing()
 
@@ -1565,12 +1359,7 @@ test.Step(
     a2d.SelectPath("/TESTS/EMPTY.FOLDER")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1)
 
     a2d.SelectPath("/RAM1/EMPTY.FOLDER")
@@ -1603,12 +1392,7 @@ test.Step(
     a2d.SelectPath("/RAM1", {keep_windows=true})
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     apple2.Type("Y")
     a2d.DialogOK()

@@ -1,11 +1,11 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2 -aux ext80"
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_floppy.dsk"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl5 superdrive -sl6 '' -sl7 cffa2 -aux ext80"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/gsos_800k.2mg"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
+a2d.ConfigureRepaintTime(0.5)
 
 -- Helpers, since we can only toggle the flag
 local preserve_flag = true -- default state in config
@@ -352,7 +352,6 @@ end)
     to copy it. Verify that the copied file retains the same mixed
     case name.
 ]]
-a2d.ConfigureRepaintTime(10)
 test.Variants(
   {
     "drag - copy to another volume",
@@ -374,12 +373,7 @@ test.Variants(
       a2d.Select("LOWER.UPPER.MIX")
       local x,y = a2dtest.GetSelectedIconCoords()
 
-      a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(x, y)
-          m.ButtonDown()
-          m.MoveToApproximately(other_vol_4_x, other_vol_4_y)
-          m.ButtonUp()
-      end)
+      a2d.Drag(x, y, other_vol_4_x, other_vol_4_y)
       a2d.WaitForRepaint()
 
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
@@ -394,12 +388,7 @@ test.Variants(
       a2d.Select("ANOTHER.FOLDER")
       local x2, y2 = a2dtest.GetSelectedIconCoords()
 
-      a2d.InMouseKeysMode(function(m)
-          m.MoveToApproximately(x1, y1)
-          m.ButtonDown()
-          m.MoveToApproximately(x2, y2)
-          m.ButtonUp()
-      end)
+      a2d.Drag(x1, y1, x2, y2)
       a2d.WaitForRepaint()
 
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"
@@ -471,12 +460,7 @@ test.Step(
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     a2d.ClearSelection()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(10) -- let copy to floppy complete
     a2dtest.ExpectAlertNotShowing()
 

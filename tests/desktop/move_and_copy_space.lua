@@ -42,12 +42,7 @@ test.Step(
     a2d.Select("FOLDER")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(40)
     a2dtest.ExpectAlertNotShowing()
 

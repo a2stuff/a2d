@@ -812,6 +812,31 @@ function a2d.DragSelectMultipleVolumes()
   end)
 end
 
+function a2d.Drag(src_x, src_y, dst_x, dst_y, options)
+  a2d.InMouseKeysMode(function(m)
+      m.MoveToApproximately(src_x, src_y)
+      m.ButtonDown()
+      m.MoveToApproximately(dst_x, dst_y)
+
+      if options and options.oa_drop then
+        apple2.PressOA()
+      end
+      if options and options.sa_drop then
+        apple2.PressSA()
+      end
+
+      m.ButtonUp()
+
+      if options and options.oa_drop then
+        apple2.ReleaseOA()
+      end
+      if options and options.sa_drop then
+        apple2.ReleaseSA()
+      end
+
+  end)
+end
+
 --------------------------------------------------
 -- Modifier Key Combos
 --------------------------------------------------

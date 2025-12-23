@@ -33,8 +33,9 @@ test.Step(
     a2d.OpenPath("/RAM1")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 3, "3 files should be copied")
-    a2d.DeleteSelection()
-    a2d.CloseAllWindows()
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
 end)
 
 --[[
@@ -56,8 +57,9 @@ test.Step(
     a2d.OpenPath("/RAM1")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "1 file should be copied")
-    a2d.DeleteSelection()
-    a2d.CloseAllWindows()
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
 end)
 
 --[[
@@ -81,8 +83,9 @@ test.Step(
     a2d.OpenPath("/RAM1/GS.OS.FILES")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "2 files should be copied")
-    a2d.DeleteSelection()
-    a2d.CloseAllWindows()
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
 end)
 
 --[[
@@ -175,12 +178,9 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "GS.OS.MIXED", "on top")
 
     -- Drag GS.OS.FILES folder from GS.OS.MIXED to RAM1
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y) -- GS.OS.FILES
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y) -- RAM1
-        m.ButtonUp()
-    end)
+    a2d.Drag(
+      src_x, src_y, -- GS.OS.FILES
+      dst_x, dst_y) -- RAM1
     a2dtest.WaitForAlert()
     a2d.DialogOK()
     a2dtest.WaitForAlert()
@@ -188,6 +188,7 @@ test.Step(
     test.Snap("verify destination window updated")
     emu.wait(5)
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -206,12 +207,9 @@ test.Step(
     a2d.OpenPath("/RAM1")
     local dst_x, dst_y = GetFrontWindowCenter()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y) -- GS.OS.MIXED
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y) -- RAM1
-        m.ButtonUp()
-    end)
+    a2d.Drag(
+      src_x, src_y, -- GS.OS.MIXED
+      dst_x, dst_y) -- RAM1
 
     a2dtest.WaitForAlert()
     a2d.DialogOK()
@@ -220,6 +218,7 @@ test.Step(
     test.Snap("verify destination window updated")
     emu.wait(5)
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -263,6 +262,7 @@ test.Step(
     test.Snap("verify destination window activated and updated")
     emu.wait(5)
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -280,13 +280,7 @@ test.Step(
     a2d.SelectPath("/GS.OS.MIXED/GS.OS.FILES/INSTALLER")
     a2d.MoveWindowBy(0,100)
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(icon_x, icon_y)
-        m.ButtonDown()
-
-        m.MoveToApproximately(trash_icon_x, trash_icon_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(icon_x, icon_y, trash_icon_x, trash_icon_y)
 
     -- confirm deletion
     a2dtest.WaitForAlert()
@@ -318,13 +312,7 @@ test.Step(
     a2d.SelectPath("/GS.OS.MIXED/GS.OS.FILES/INSTALLER")
     a2d.MoveWindowBy(0,100)
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(icon_x, icon_y)
-        m.ButtonDown()
-
-        m.MoveToApproximately(trash_icon_x, trash_icon_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(icon_x, icon_y, trash_icon_x, trash_icon_y)
 
     -- confirm deletion
     a2dtest.WaitForAlert()

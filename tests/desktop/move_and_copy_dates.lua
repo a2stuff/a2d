@@ -29,12 +29,7 @@ test.Step(
 
     a2d.SelectPath("/RAM1/FOLDER")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
 
     a2d.SelectPath("/RAM1/FOLDER")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)

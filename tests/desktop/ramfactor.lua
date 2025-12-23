@@ -163,13 +163,7 @@ RAMCardTest(
     a2d.ClearSelection()
 
     -- Move a file
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(icon1_x, icon1_y)
-        m.ButtonDown()
-
-        m.MoveToApproximately(icon2_x, icon2_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(icon1_x, icon1_y, icon2_x, icon2_y)
     a2d.WaitForRepaint()
 
     -- Ensure "Copy to RAMCard" doesn't accidentally move
@@ -202,12 +196,7 @@ RAMCardTest(
     local dst_x = dst_window_x + dst_window_w/2
     local dst_y = dst_window_y + dst_window_h + 5
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(icon_x, icon_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(icon_x, icon_y, dst_x, dst_y)
     a2dtest.WaitForAlert()
     test.Snap("verify alert is about copy into itself")
     a2d.DialogOK()

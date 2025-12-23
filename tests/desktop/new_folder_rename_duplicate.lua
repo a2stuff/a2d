@@ -359,12 +359,7 @@ test.Step(
     local icons = a2d.GetSelectedIcons()
     test.Expect(#icons, 1, "only one icon should be selected")
     local icon = icons[1]
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(icon.x+5, icon.y+5)
-        m.ButtonDown()
-        m.MoveToApproximately(100, apple2.SCREEN_HEIGHT)
-        m.ButtonUp()
-    end)
+    a2d.Drag(icon.x+5, icon.y+5, 100, apple2.SCREEN_HEIGHT)
     a2d.WaitForRepaint()
 
     a2dtest.ExpectNothingChanged(function()
@@ -393,12 +388,7 @@ test.Step(
 
     a2d.OpenSelection()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(icon.x+5, icon.y+5)
-        m.ButtonDown()
-        m.MoveToApproximately(100, apple2.SCREEN_HEIGHT)
-        m.ButtonUp()
-    end)
+    a2d.Drag(icon.x+5, icon.y+5, 100, apple2.SCREEN_HEIGHT)
     a2d.WaitForRepaint()
 
     a2dtest.ExpectNothingChanged(function()
@@ -431,12 +421,7 @@ test.Step(
     a2d.OpenSelection()
     a2d.ClearSelection()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(icon.x+5, icon.y+5)
-        m.ButtonDown()
-        m.MoveToApproximately(100, apple2.SCREEN_HEIGHT)
-        m.ButtonUp()
-    end)
+    a2d.Drag(icon.x+5, icon.y+5, 100, apple2.SCREEN_HEIGHT)
     a2d.WaitForRepaint()
 
     a2dtest.ExpectNothingChanged(function()
@@ -594,12 +579,7 @@ test.Step(
     a2d.Select("B")
     local b_x, b_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(b_x+5, b_y+5)
-        m.ButtonDown()
-        m.MoveByApproximately(a_x - b_x, a_y - b_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(b_x, b_y, a_x, a_y)
     emu.wait(1)
 
     a2d.OAShortcut("N") -- File > New Folder
@@ -796,23 +776,13 @@ test.Step(
   function()
     a2d.RenamePath("/RAM1", "MMMMMMMMMMMMMMM")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x+5, y+5)
-        m.ButtonDown()
-        m.MoveToApproximately(apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
-        m.ButtonUp()
-    end)
+    a2d.Drag(x+5, y+5, apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
     a2d.WaitForRepaint()
     test.Snap("verify no mispaint on left edge of screen")
 
     a2d.OpenSelection()
-    x, y = a2dtest.GetFrontWindowDragCoords()
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x+5, y+5)
-        m.ButtonDown()
-        m.MoveToApproximately(apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
-        m.ButtonUp()
-    end)
+    local x, y = a2dtest.GetFrontWindowDragCoords()
+    a2d.Drag(x+5, y+5, apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
     a2d.WaitForRepaint()
     test.Snap("verify no mispaint on left edge of screen")
 

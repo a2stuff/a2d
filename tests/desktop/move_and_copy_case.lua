@@ -33,12 +33,7 @@ test.Step(
     a2d.Select("CONTROL.PANEL")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(src_x, src_y)
-        m.ButtonDown()
-        m.MoveToApproximately(dst_x, dst_y)
-        m.ButtonUp()
-    end)
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(5)
 
     a2d.SelectPath("/HARD.DISK/CONTROL.PANEL")
