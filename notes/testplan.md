@@ -19,7 +19,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Configure a system with a RAMCard, and ensure DeskTop is configured to copy to RAMCard on startup, but hasn't yet. Manually copy all DeskTop files to the RAMCard. Launch the copy of `DESKTOP.SYSTEM` on the RAMCard. Verify that it doesn't try to copy itself to that RAMCard.
 
 
-# DeskTop
+# DeskTop - covered by `tests/desktop/basics.lua`, `tests/desktop/duplicate_volumes.lua`, `tests/desktop/drives.lua`, `tests/desktop/max_icons.lua`,
 
 * Open a volume, open a folder, close just the volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
@@ -109,10 +109,18 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Release the mouse button. Verify that the icon is moved.
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled and the icon does not move.
+> This can not be (currently) tested in MAME.
+
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Hold either Apple key or both Apple keys and release the mouse button. Verify that the drag is canceled and the icon does not move.
 * Launch DeskTop. Select a volume icon. Drag it over another icon on the desktop, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled, the target icon is unhighlighted, and the dragged icon does not move.
+> This can not be (currently) tested in MAME.
+
 * Launch DeskTop. Select a file icon. Drag it over an empty space in the window. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled and the icon does not move.
+> This can not be (currently) tested in MAME.
+
 * Launch DeskTop. Select a file icon. Drag it over a folder icon, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled, the target icon is unhighlighted, and the dragged icon does not move.
+> This can not be (currently) tested in MAME.
+
 * Launch DeskTop. Clear selection. Hold both Open-Apple and Solid-Apple and start to drag a volume icon. Verify that the drag outline of the volume is shown.
 
 * Launch DeskTop. Open `/TESTS/FOLDER`. Start dragging `FLE` and do not release the button. Drag it over then off `SUBFOLDER`. Verify the folder highlights/unhighlights. Drag it over then off a volume icon. Verify that the volume icon highlights/unhighlights. Drag it over the folder icon again. Verify that the folder highlights.
