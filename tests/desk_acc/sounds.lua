@@ -26,3 +26,31 @@ test.Step(
     end
 end)
 
+--[[
+  Click on an item. Verify it is selected, and plays the sound. Click
+  on the same selected item. Verify it plays the sound again.
+]]
+test.Step(
+  "Clicking on an item again plays the sound again",
+  function()
+    print("NOTE: Run this test with --slow --audible")
+    print(" * MouseKeys entry sound (lo-hi)")
+    print(" * IIgs Bonk")
+    print(" * IIgs Bonk")
+    print(" * IIgs Bonk")
+    print(" * MouseKeys exit sound (hi-lo)")
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + w / 2, y + 15)
+        m.Click()
+        emu.wait(1)
+        m.Click()
+        emu.wait(1)
+        m.Click()
+        emu.wait(1)
+    end)
+
+    a2d.DialogCancel()
+end)

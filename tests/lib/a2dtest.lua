@@ -249,6 +249,13 @@ function a2dtest.GetFrontWindowScrollPos()
   return hthumbpos, vthumbpos
 end
 
+function a2dtest.GetFrontWindowScrollMax()
+  local winfo = bank_offset + mgtk.GetWinPtr(mgtk.FrontWindow())
+  local hthumbmax = ram_u8(winfo + 6)
+  local vthumbmax = ram_u8(winfo + 8)
+  return hthumbmax, vthumbmax
+end
+
 --------------------------------------------------
 
 -- This scans for the left side of the alert bitmap at expected screen address

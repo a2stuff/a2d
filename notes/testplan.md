@@ -1683,7 +1683,7 @@ Watch out for:
  * Caret being placed in the wrong place by a click.
  * Mispaint when cleared with Control+X (or Clear key on IIgs)
 
-# List Box Controls
+# List Box Controls - covered by `tests/list_box.lua`
 
 This covers:
 * File Pickers
