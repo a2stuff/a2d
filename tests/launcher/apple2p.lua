@@ -7,6 +7,8 @@ WAITFORDESKTOP="false"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Configure an Apple II+ system. Invoke `DESKTOP.SYSTEM` from a
   launcher (e.g. Bitsy Bye). Verify the launcher is restarted and does

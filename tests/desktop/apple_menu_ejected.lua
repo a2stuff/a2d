@@ -1,12 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS=""
-DISKARGS="-flop3 $HARDIMG"
+MODELARGS="-sl2 mouse -sl6 superdrive -aux ext80"
+DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
+a2d.ConfigureRepaintTime(1)
+local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[
   Eject the startup disk. Select an accessory (e.g. Calculator) from
@@ -17,13 +17,14 @@ a2d.ConfigureRepaintTime(5)
 test.Step(
   "Accessories with disk ejected",
   function()
-    local drive = apple2.Get35Drive1()
+    local drive = s6d1
     local current = drive.filename
     drive:unload()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
     a2dtest.ExpectAlertShowing()
     drive:load(current)
     a2d.DialogOK()
+    emu.wait(1)
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should be open")
     a2d.CloseWindow()
 end)
@@ -37,7 +38,7 @@ end)
 test.Step(
   "Folder with disk ejected",
   function()
-    local drive = apple2.Get35Drive1()
+    local drive = s6d1
     local current = drive.filename
     drive:unload()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)

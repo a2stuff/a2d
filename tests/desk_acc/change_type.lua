@@ -5,7 +5,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
+a2d.ConfigureRepaintTime(1)
 
 --[[
   Select a folder. Apple > Change Type. Modify only the type (e.g.
@@ -61,6 +61,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
+    emu.wait(1)
     test.Snap("verify only non-folders are modified")
 end)
 

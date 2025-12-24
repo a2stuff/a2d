@@ -1,3 +1,4 @@
+a2d.ConfigureRepaintTime(0.25)
 
 test.Step(
   "waiting for alert",

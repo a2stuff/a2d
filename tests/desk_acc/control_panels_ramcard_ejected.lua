@@ -1,12 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS="-ramsize 1152K"
-DISKARGS="-flop3 $HARDIMG -flop1 res/prodos_floppy1.dsk"
+MODELARGS="-sl2 mouse -sl4 ramfactor -sl7 superdrive -aux ext80"
+DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5) -- slow with floppies
+a2d.ConfigureRepaintTime(2) -- slow with floppies
+local s7d1 = manager.machine.images[":sl7:superdrive:fdc:0:35hd"]
 
 --[[
   Repeat the following cases with the Options. International, and
@@ -53,7 +53,7 @@ test.Variants(
     local drive, current
     if idx > 3 then
       -- Ensure prompt for saving appears
-      drive = apple2.Get35Drive1()
+      drive = s7d1
       current = drive.filename
       drive:unload()
     end

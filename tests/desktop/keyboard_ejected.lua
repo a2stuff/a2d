@@ -1,12 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS=""
-DISKARGS="-flop3 $HARDIMG"
+MODELARGS="-sl2 mouse -sl6 superdrive -aux ext80"
+DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
+a2d.ConfigureRepaintTime(1)
+local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[
   Launch DeskTop. Close all windows. Eject all disks, and verify that
@@ -16,7 +16,7 @@ a2d.ConfigureRepaintTime(5)
 test.Step(
   "Arrows with no volumes",
   function()
-    apple2.Get35Drive1():unload()
+    s6d1:unload()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
 
 

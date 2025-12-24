@@ -1,12 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS=""
-DISKARGS="-flop3 $HARDIMG"
+MODELARGS="-sl2 mouse -sl6 superdrive -aux ext80"
+DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
+a2d.ConfigureRepaintTime(1)
+local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[
   Launch DeskTop. Open the Control Panel DA. Use the pattern editor to
@@ -49,7 +49,7 @@ end)
 test.Step(
   "No prompt if no change",
   function()
-    local drive = apple2.Get35Drive1()
+    local drive = s6d1
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
 
     local current = drive.filename
@@ -70,7 +70,7 @@ end)
 test.Step(
   "Prompt if changed",
   function()
-    local drive = apple2.Get35Drive1()
+    local drive = s6d1
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("9") -- caret blink speed
 

@@ -1,12 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS="-ramsize 1152K"
-DISKARGS="-flop3 $HARDIMG"
+MODELARGS="-sl2 mouse -sl4 ramfactor -sl5 superdrive -sl6 '' -aux ext80"
+DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
+a2d.ConfigureRepaintTime(1)
+local s5d1 = manager.machine.images[":sl5:superdrive:fdc:0:35hd"]
 
 --[[
   Repeat for the Shortcuts > Edit, Delete, and Run a Shortcut commands
@@ -26,8 +26,9 @@ test.Variants(
   },
   function(idx)
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    emu.wait(5) -- floppy needs a little extra time
 
-    local drive = apple2.Get35Drive1()
+    local drive = s5d1
     local image = drive.filename
     drive:unload()
 
@@ -79,6 +80,7 @@ test.Step(
     a2d.CloseAllWindows()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
+    emu.wait(5) -- floppy needs a little extra time
     a2d.CloseAllWindows()
     a2d.Reboot()
     a2d.WaitForDesktopReady({timeout=360})
@@ -88,7 +90,7 @@ test.Step(
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have copied")
     a2d.CloseAllWindows()
 
-    local drive = apple2.Get35Drive1()
+    local drive = s5d1
     local image = drive.filename
     drive:unload()
 
@@ -127,6 +129,7 @@ test.Step(
     a2d.CloseAllWindows()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
+    emu.wait(5) -- floppy needs a little extra time
     a2d.CloseAllWindows()
     a2d.OAShortcut("1")
     apple2.WaitForBasicSystem({timeout=120})
@@ -138,7 +141,7 @@ test.Step(
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have copied")
     a2d.CloseAllWindows()
 
-    local drive = apple2.Get35Drive1()
+    local drive = s5d1
     local image = drive.filename
     drive:unload()
 

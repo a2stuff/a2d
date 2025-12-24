@@ -8,6 +8,8 @@ CHECKAUXMEMORY="false"
 
 ======================================== ENDCONFIG ]]
 
+a2d.ConfigureRepaintTime(0.25)
+
 --[[
   Configure an Apple IIe system with no card in the Aux slot. Invoke
   `DESKTOP.SYSTEM` from a launcher (e.g. Bitsy Bye). Verify the
