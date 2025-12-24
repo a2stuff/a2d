@@ -1,12 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS="-ramsize 1152K"
-DISKARGS="-flop3 $HARDIMG"
+MODELARGS="-sl1 '' -sl2 mouse -sl4 ramfactor -sl6 superdrive -aux ext80"
+DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(2)
+a2d.ConfigureRepaintTime(1)
+local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[
   Launch Shortcuts. Eject the disk with DeskTop on it. Type D (don't
@@ -21,7 +21,7 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 
-    local drive = apple2.Get35Drive1()
+    local drive = s6d1
     local image = drive.filename
     drive:unload()
 
@@ -56,7 +56,7 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady({timeout=360})
 
-    local drive = apple2.Get35Drive1()
+    local drive = s6d1
     local image = drive.filename
     drive:unload()
 
@@ -68,6 +68,7 @@ test.Step(
 
     drive:load(image)
 
+    -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -86,7 +87,7 @@ end)
   program starts correctly.
 ]]
 test.Step(
-  "Shortcut copied at boot",
+  "Shortcut copied at use",
   function()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2d.ToggleOptionShowShortcutsOnStartup() -- enable
@@ -102,7 +103,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     -- Run with the disk ejected
-    local drive = apple2.Get35Drive1()
+    local drive = s6d1
     local image = drive.filename
     drive:unload()
 
@@ -114,6 +115,7 @@ test.Step(
 
     drive:load(image)
 
+    -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")

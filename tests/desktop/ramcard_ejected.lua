@@ -1,12 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS="-ramsize 1152K"
-DISKARGS="-flop3 $HARDIMG -flop1 res/prodos_floppy1.dsk"
+MODELARGS="-sl1 '' -sl2 mouse -sl4 ramfactor -sl7 superdrive -aux ext80"
+DISKARGS="-flop1 res/prodos_floppy1.dsk -flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5) -- slow with floppies
+a2d.ConfigureRepaintTime(1)
+local s7d1 = manager.machine.images[":sl7:superdrive:fdc:0:35hd"]
 
 --[[
   Configure a system with a RAMCard, and set DeskTop to not copy
@@ -47,7 +47,7 @@ test.Step(
   function()
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 2) -- Slot 5
+    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1)
     a2d.WaitForDesktopReady({timeout=240})
 
     a2d.SelectAll()
@@ -64,7 +64,7 @@ test.Step(
     a2d.DialogCancel()
 
     a2d.OpenPath("/RAM4/DESKTOP/EXTRAS/BASIC.SYSTEM")
-    local drive = apple2.Get35Drive1()
+    local drive = s7d1
     local current = drive.filename
     drive:unload()
     apple2.TypeLine("BYE")
@@ -78,6 +78,7 @@ test.Step(
 
     drive:load(current)
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
+    emu.wait(5)
     a2d.SelectAll()
     icons = a2d.GetSelectedIcons()
     test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
@@ -123,7 +124,7 @@ test.Variants(
     local drive, current
     if idx > 1 then
       -- Ensure prompt for saving appears
-      drive = apple2.Get35Drive1()
+      drive = s7d1
       current = drive.filename
       drive:unload()
     end
@@ -180,12 +181,12 @@ test.Step(
 
     -- Restart DESKTOP.SYSTEM
 
-    apple2.BitsySelectSlotDrive("S5,D1")
+    apple2.BitsySelectSlotDrive("S7,D1")
     apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
     -- Ensure no prompt for saving appears
-    local drive = apple2.Get35Drive1()
+    local drive = s7d1
     local current = drive.filename
     drive:unload()
 
@@ -223,12 +224,12 @@ test.Step(
 
     a2d.Quit()
 
-    apple2.BitsySelectSlotDrive("S5,D1")
+    apple2.BitsySelectSlotDrive("S7,D1")
     apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
     -- Ensure no prompt for disk appears
-    local drive = apple2.Get35Drive1()
+    local drive = s7d1
     local current = drive.filename
     drive:unload()
     a2d.ClearSelection()
@@ -237,6 +238,7 @@ test.Step(
     a2dtest.ExpectAlertNotShowing()
     a2d.DialogCancel()
     drive:load(current)
+    emu.wait(5)
 
     -- cleanup
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -266,7 +268,7 @@ test.Step(
     a2d.WaitForDesktopReady({timeout=240})
 
     -- Ensure prompt for disk appears
-    local drive = apple2.Get35Drive1()
+    local drive = s7d1
     local current = drive.filename
     drive:unload()
     a2d.ClearSelection()
