@@ -1398,7 +1398,7 @@ Run these tests on a system without a real-time clock:
 
 * Open `/TESTS/FOLDER/`. Apple Menu > Find Files. Type `*` and click Search. Press Down Arrow once. Type Return. Press Down Arrow again. Verify that only one entry in the list appears highlighted.
 
-## Print Screen
+## Print Screen - partially covered by `tests/desk_acc/print_screen.lua`
 
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Print Screen DA. Verify it prints a screenshot.
 > This can not be (currently) tested in MAME.
