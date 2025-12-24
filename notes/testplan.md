@@ -1614,7 +1614,7 @@ For Shortcuts's File > Run a Program... file picker:
 * Click the Drives button. Select a volume. Verify that the OK button is dimmed.
 * Select a folder. Verify that the OK button is dimmed.
 
-# Text Input Fields
+# Text Input Fields - covered by `tests/line_edit.lua`
 
 This covers:
  * DeskTop's modal name dialog, used in:
