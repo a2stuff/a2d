@@ -19,13 +19,15 @@ This covers:
    * With window moved to bottom of screen so that only the title bar is visible.
 ]]
 
-function LineEditTest(name, activation_func, rect_func, cleanup_func)
+local filename_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789."
+
+local printable_chars = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+
+function LineEditTest(name, limits, activation_func, rect_func, cleanup_func)
 
   --------------------------------------------------
   -- Keyboard Input
   --------------------------------------------------
-
--- TODO: Test input limits
 
 --[[
  * Type a printable character.
@@ -64,16 +66,15 @@ function LineEditTest(name, activation_func, rect_func, cleanup_func)
    * Mouse cursor should be hidden until moved.
    * Test at start, in middle, and at end of the string.
 ]]
+  function Reset()
+    apple2.ControlKey("X") -- clear
+  end
 
   test.Step(
     name .. " - keyboard input",
     function()
 
       activation_func()
-
-      function Reset()
-        apple2.ControlKey("X") -- clear
-      end
 
       -- Insert - caret at start/end
       Reset()
@@ -273,7 +274,112 @@ function LineEditTest(name, activation_func, rect_func, cleanup_func)
       for i = 1, 3 do apple2.DeleteKey() end
       test.Snap("verify GOOD (Apple+Right - caret at end)")
 
-        cleanup_func()
+      cleanup_func()
+  end)
+
+  --------------------------------------------------
+  -- Input Limits
+  --------------------------------------------------
+
+  test.Step(
+    name .. " - input limits",
+    function()
+      activation_func()
+
+      -- Allowed characters - start of range
+      Reset()
+      apple2.Type("X")
+      local n = limits.max - 5 -- "X' ... "GOOD"
+      print("n="..n)
+      -- inserted
+      for i = 1,n do
+        apple2.Type(limits.chars:sub(i, i))
+      end
+      apple2.Type("GOOD")
+      -- ignored
+      for i = 1,n do
+        apple2.Type(limits.chars:sub(i, i))
+      end
+      -- trim back down
+      a2d.OALeft()
+      for i = 1,n+1 do
+        apple2.ControlKey("F")
+      end
+      test.Snap("verify GOOD (accepted characters/limits)")
+
+      -- Allowed characters - end of range
+      Reset()
+      apple2.Type("X")
+      local n = limits.max - 5 -- "X' ... "GOOD"
+      print("n="..n)
+      -- inserted
+      for i = 1,n do
+        local idx = #limits.chars - i + 1
+        apple2.Type(limits.chars:sub(idx, idx))
+      end
+      apple2.Type("GOOD")
+      -- ignored
+      for i = 1,n do
+        local idx = #limits.chars - i + 1
+        apple2.Type(limits.chars:sub(idx, idx))
+      end
+      -- trim back down
+      a2d.OALeft()
+      for i = 1,n+1 do
+        apple2.ControlKey("F")
+      end
+      test.Snap("verify GOOD (more accepted characters/limits)")
+
+      -- Disallowed characters - end of range
+      Reset()
+      apple2.Type("GO")
+      -- control characters
+      -- TODO
+      apple2.ControlKey("@")
+      apple2.ControlKey("A")
+      apple2.ControlKey("B")
+      -- apple2.ControlKey("C") "Close" in File Picker
+      -- apple2.ControlKey("D") "Drives" in File Picker
+      apple2.ControlKey("E")
+      -- Control+F = Forward Delete
+      apple2.ControlKey("G")
+      -- Control+I = Tab
+      -- Control+J = Down Arrow
+      -- Control+K = Up Arrow
+      apple2.ControlKey("L")
+      -- Control+M = Return
+      apple2.ControlKey("N")
+      -- apple2.ControlKey("O") "Open" in File Picker
+      apple2.ControlKey("P")
+      apple2.ControlKey("Q")
+      apple2.ControlKey("R")
+      apple2.ControlKey("S")
+      apple2.ControlKey("T")
+      -- Control+U = Right Arrow
+      apple2.ControlKey("V")
+      apple2.ControlKey("W")
+      -- Control+X = Clear
+      apple2.ControlKey("Y")
+      apple2.ControlKey("Z")
+      -- Control+[ = Escape
+      apple2.ControlKey("\\")
+      apple2.ControlKey("]")
+      apple2.ControlKey("^")
+      apple2.ControlKey("_")
+
+      -- characters outside range
+      for i = 1, #printable_chars do
+        local c = printable_chars:sub(i, i)
+        if not limits.chars:find(c, 1, true) then
+          apple2.Type(c)
+        end
+      end
+
+      apple2.Type("OD")
+      test.Snap("verify GOOD (disallowed characters)")
+
+
+      cleanup_func()
   end)
 
   --------------------------------------------------
@@ -412,6 +518,10 @@ end
 
 LineEditTest(
   "format/erase name prompt",
+  {
+    max = 15,
+    chars = filename_chars,
+  },
   function()
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK)
@@ -427,6 +537,10 @@ end)
 
 LineEditTest(
   "modeless rename",
+  {
+    max = 15,
+    chars = filename_chars,
+  },
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_RENAME)
@@ -442,6 +556,10 @@ end)
 
 LineEditTest(
   "extended file picker",
+  {
+    max = 14,
+    chars = printable_chars,
+  },
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
@@ -458,6 +576,10 @@ end)
 
 LineEditTest(
   "Find Files DA",
+  {
+    max = 15,
+    chars = filename_chars .. "?*",
+  },
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
   end,
@@ -473,6 +595,10 @@ end)
 
 LineEditTest(
   "Map DA - on screen",
+  {
+    max = 15,
+    chars = printable_chars,
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
   end,
@@ -488,6 +614,10 @@ end)
 
 LineEditTest(
   "Map DA - line edit partially obscured",
+  {
+    max = 15,
+    chars = printable_chars,
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
@@ -505,6 +635,10 @@ end)
 
 LineEditTest(
   "Map DA - line edit fully obscured",
+  {
+    max = 15,
+    chars = printable_chars,
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
@@ -522,6 +656,10 @@ end)
 
 LineEditTest(
   "Map DA - window obscured",
+  {
+    max = 15,
+    chars = printable_chars,
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
