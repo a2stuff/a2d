@@ -627,7 +627,7 @@ dest_ok:
 
         ;; DOS 3.3?
         jsr     IsDOS33BootBlock
-       IF EQ
+       IF CC
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         tax                     ; slot/drive
@@ -1681,7 +1681,7 @@ remainder:      .word   0              ; (out)
         bpl     show_name       ; ProDOS
 
         ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
-        bvs     ret             ; DOS 3.3
+        bvc     ret             ; DOS 3.3
 
         lda     source_disk_format
         and     #$0F

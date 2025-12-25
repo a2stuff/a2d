@@ -1020,8 +1020,6 @@ end
 
 --------------------------------------------------
 
--- TODO: Implement BitsyInvokePath (tab to volume, then iterate on path segments)
-
 function apple2.WaitForBitsy(options)
   util.WaitFor(
     "Bitsy Bye",
@@ -1031,11 +1029,56 @@ function apple2.WaitForBitsy(options)
     options)
 end
 
+function apple2.GetBitsyLocation()
+  local slot_drive, path = apple2.GrabTextScreen():match("^([^:]+):(/[^\n ]+)")
+  return slot_drive, path
+end
+
 function apple2.BitsySelectSlotDrive(sd)
-  while apple2.GrabTextScreen():match("[^:]+") ~= sd do
+  local slot_drive, path = apple2.GetBitsyLocation()
+
+  while path:match("^/.*/") do
+    apple2.EscapeKey()
+    emu.wait(5)
+    slot_drive, path = apple2.GetBitsyLocation()
+  end
+
+  while slot_drive ~= sd do
     apple2.ControlKey("I") -- for Apple ][+ compat
     emu.wait(5)
+    slot_drive, path = apple2.GetBitsyLocation()
   end
+end
+
+function apple2.BitsySelectVolume(name)
+  local slot_drive, path = apple2.GetBitsyLocation()
+
+  while path:match("^/.*/") do
+    apple2.EscapeKey()
+    emu.wait(5)
+    slot_drive, path = apple2.GetBitsyLocation()
+  end
+
+  while path ~= "/" .. name do
+    apple2.ControlKey("I") -- for Apple ][+ compat
+    emu.wait(5)
+    slot_drive, path = apple2.GetBitsyLocation()
+  end
+end
+
+function apple2.BitsyInvokePath(path)
+  local segments = {}
+  for segment in path:gmatch("([^/]+)") do
+    table.insert(segments, segment)
+  end
+  -- volume
+  apple2.BitsySelectVolume(segments[1])
+  -- directories
+  for i = 2, #segments-1 do
+    apple2.BitsyInvokeFile("/" .. segments[i])
+  end
+  -- file
+  apple2.BitsyInvokeFile(segments[#segments])
 end
 
 function apple2.BitsyInvokeFile(name)
