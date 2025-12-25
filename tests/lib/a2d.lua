@@ -586,6 +586,12 @@ function a2d.ToggleOptionPreserveCase()
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
+function a2d.ToggleOptionShowInvisible()
+  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OAShortcut("5") -- Toggle "Show invisible files"
+  a2d.CloseWindow()
+  a2d.CloseAllWindows()
+end
 
 function a2d.Quit()
   a2d.OAShortcut("Q")

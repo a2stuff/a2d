@@ -1547,7 +1547,7 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Launch DeskTop. Run Special > Copy Disk. Trigger an alert with only OK (e.g. let a copy complete successfully). Verify that Escape key closes alert.
 * Launch DeskTop. Select 3 files and drag them to another volume. Drag the same 3 files to the other volume again. When the alert with Yes/No/All buttons appears, mouse down on the Yes button, drag the cursor off the button, and release the mouse button. Verify that nothing happens. Click Yes to allow the copy to continue. Repeat for No and All.
 
-# File Picker
+# File Picker - covered by `tests/file_picker.lua`
 
 This covers:
 

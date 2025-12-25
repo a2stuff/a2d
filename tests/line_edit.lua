@@ -456,6 +456,12 @@ function LineEditTest(name, limits, activation_func, rect_func, cleanup_func)
 
       if x ~= nil then
 
+        a2d.InMouseKeysMode(function(m)
+            m.MoveToApproximately(x + w / 2, y + h / 2)
+            test.Snap("verify cursor is I-beam")
+            m.MoveToApproximately(x + w / 2, y + h / 2 - 20)
+            test.Snap("verify cursor is arrow")
+        end)
 
         --[[
           * Click to left of string. Verify the mouse cursor is not

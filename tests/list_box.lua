@@ -404,6 +404,7 @@ ListBoxTest(
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+    a2dtest.SetBankOffsetForDiskCopyModule()
     a2d.WaitForDesktopReady()
     emu.wait(10)
   end,
@@ -416,6 +417,7 @@ ListBoxTest(
   function()
     -- double_click_func
     a2d.OAShortcut("Q")
+    a2dtest.SetBankOffsetForDeskTopModule()
     a2d.WaitForDesktopReady()
   end
 )
