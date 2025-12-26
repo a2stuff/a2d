@@ -7,6 +7,9 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/sparse_800k.2mg -flop2 res/empty_800k.2mg"
 
 a2d.ConfigureRepaintTime(0.25)
 
+local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
+local s6d2 = manager.machine.images[":sl6:superdrive:fdc:1:35hd"]
+
 --[[
   Populate a ProDOS disk with several large files, then delete all but
   the last. Launch DeskTop. Special > Copy Disk.... Select the
@@ -29,18 +32,14 @@ test.Variants(
     "copying disk with early unused blocks - Disk Copy",
   },
   function(idx)
+    local image1 = s6d1.filename
+    local image2 = s6d2.filename
+
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
     a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(3, idx) -- Quick Copy or Disk Copy
-
-    -- BUG: On second iteration:
-    --  DeskTop does not complain about duplicate volumes
-    --  S6D1 and S6D2 show as "Unknown"
-    --  clicking "OK" after "insert source" is a no-op
-    -- "sparseness" doesn't seem to matter; repros w/ "full_800k.2mg"
-    -- ...but does seem specific to superdrive, doesn't repro w/ CFFA2
 
     -- select source
     apple2.UpArrowKey() -- S6D2
@@ -72,6 +71,10 @@ test.Variants(
     end
     test.Snap("verify blocks read/written match transfer count")
     a2d.DialogOK()
+
+    -- re-insert the disks, since we eject them after the copy
+    s6d1:load(image1)
+    s6d2:load(image2)
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
