@@ -39,6 +39,8 @@ test.Variants(
     --  DeskTop does not complain about duplicate volumes
     --  S6D1 and S6D2 show as "Unknown"
     --  clicking "OK" after "insert source" is a no-op
+    -- "sparseness" doesn't seem to matter; repros w/ "full_800k.2mg"
+    -- ...but does seem specific to superdrive, doesn't repro w/ CFFA2
 
     -- select source
     apple2.UpArrowKey() -- S6D2

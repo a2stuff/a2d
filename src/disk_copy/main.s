@@ -209,12 +209,14 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         lsr16   block_count_div8    ; /= 8
         lsr16   block_count_div8
         lsr16   block_count_div8
-        ;; consider:
-        ;;    LDA auxlc::block_count_table,x
-        ;;    AND #$07
-        ;;    IF NE
-        ;;      INC16 block_count_div8
-        ;;    END_IF
+
+        ;; Did we round down?
+        lda     auxlc::block_count_table,x
+        and     #$07
+    IF NE
+        inc16   block_count_div8
+    END_IF
+
         copy16  block_count_div8, auxlc::block_count_div8
 
         bit     auxlc::source_disk_format
@@ -279,9 +281,6 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
 
         sub16   block_count_div8, #$200, block_count_div8
         RTS_IF NEG
-
-        lda     block_count_div8
-        RTS_IF ZERO
 
         add16   block_params::data_buffer, #$200, block_params::data_buffer
 
@@ -570,6 +569,17 @@ bloop:  asl
 
         ecmp16  ptr, #volume_bitmap
     WHILE NE
+
+        ldax    count
+        ;; edge case for 32MB volumes
+        ;; TODO: Does ProDOS-8 allow other non-multiple-of-8 sizes?
+    IF A = #0
+      IF X = #0
+        ldax    #$FFFF
+      END_IF
+    END_IF
+
+        rts
 
         RETURN  AX=count
 .endproc ; CountActiveBlocksInVolumeBitmap

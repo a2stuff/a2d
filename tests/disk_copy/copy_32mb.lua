@@ -60,6 +60,9 @@ test.Variants(
 
     -- complete
     a2dtest.WaitForAlert({timeout=7200})
+    if idx == 2 then
+      test.Snap("verify total block counts are 65,535")
+    end
     a2d.DialogOK()
 
     -- cleanup

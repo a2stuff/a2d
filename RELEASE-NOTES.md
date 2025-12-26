@@ -52,6 +52,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Don't erroneously show "DOS 3.3 disk copy" when source format is unknown.
 * Flash OK button when a disk is selected via double-click.
+* Fix copying all blocks on 32MB volumes
 
 ### Desk Accessories
 
