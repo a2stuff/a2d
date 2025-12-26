@@ -448,17 +448,7 @@ InitDialog:
         ;; --------------------------------------------------
         ;; Draw dialog window
 
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
-        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
-
-        MGTK_CALL MGTK::MoveTo, point_title
-        ldax    #label_quick_copy
-        bit     disk_copy_flag
-    IF NS
-        ldax    #label_disk_copy
-    END_IF
-        jsr     DrawStringCentered
+        jsr     DrawTitle
 
         BTK_CALL BTK::Draw, dialog_ok_button
         jsr     UpdateOKButton
@@ -931,6 +921,14 @@ do_jump:
         copy8   #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
+        FALL_THROUGH_TO DrawTitle
+.endproc ; SetCopyModeImpl
+CmdQuickCopy := SetCopyModeImpl::quick_copy
+CmdDiskCopy := SetCopyModeImpl::disk_copy
+
+;;; ============================================================
+
+.proc DrawTitle
         ;; Update dialog title
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_erase_title
@@ -941,9 +939,7 @@ do_jump:
         ldax    #label_disk_copy
     END_IF
         TAIL_CALL DrawStringCentered
-.endproc ; SetCopyModeImpl
-CmdQuickCopy := SetCopyModeImpl::quick_copy
-CmdDiskCopy := SetCopyModeImpl::disk_copy
+.endproc ; DrawTitle
 
 ;;; ============================================================
 
