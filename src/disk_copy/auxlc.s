@@ -1553,6 +1553,15 @@ next_device:
         CALL    main::GetDeviceBlocksUsingDriver, A=drive_unitnum_table,x, XY=addr ; result in X,Y
     END_IF
 
+        ;; MAME/CFFA2 will return $0000 for 33,554,432 byte image;
+        ;; detect this and use $FFFF instead.
+    IF X = #0
+      IF Y = #0
+        dex
+        dey
+      END_IF
+    END_IF
+
         ;; X,Y = block count
         tmp := $06
         stx     tmp

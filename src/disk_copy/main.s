@@ -209,6 +209,12 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         lsr16   block_count_div8    ; /= 8
         lsr16   block_count_div8
         lsr16   block_count_div8
+        ;; consider:
+        ;;    LDA auxlc::block_count_table,x
+        ;;    AND #$07
+        ;;    IF NE
+        ;;      INC16 block_count_div8
+        ;;    END_IF
         copy16  block_count_div8, auxlc::block_count_div8
 
         bit     auxlc::source_disk_format

@@ -1478,7 +1478,7 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Launch DeskTop. Create a shortcut for `/TESTS/ALIASES/DELETED.ALIAS`. Launch Shortcuts. Invoke the shortcut. Verify that an alert is shown.
 * Launch DeskTop. Create a shortcut for `/TESTS/ALIASES/BASIC.ALIAS`. Delete the alias. Launch Shortcuts. Invoke the shortcut. Verify that an alert is shown.
 
-# Disk Copy
+# Disk Copy - covered by `tests/disk_copy/*.lua`
 
 * Launch DeskTop. Special > Copy Disk.... File > Quit. Special > Copy Disk.... Ensure drive list is correct.
 

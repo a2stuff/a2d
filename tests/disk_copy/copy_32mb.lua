@@ -5,6 +5,11 @@ DISKARGS="-flop1 $HARDIMG -hard1 res/tests.hdv -hard2 res/empty_32mb.hdv"
 
 ======================================== ENDCONFIG ]]
 
+--[[
+  NOTE: Disk images should be exactly 33,554,432 bytes (32MiB); this
+  causes MAME/CFFA2 driver to return $0000 as the block count.
+]]
+
 a2d.ConfigureRepaintTime(0.25)
 
 --[[
@@ -53,11 +58,8 @@ test.Variants(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
-    -- Quick Copy - crashing to monitor!
-    -- Disk Copy - trashing DHR screen!
-
     -- complete
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({timeout=7200})
     a2d.DialogOK()
 
     -- cleanup

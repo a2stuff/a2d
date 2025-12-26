@@ -127,27 +127,91 @@ test.Step(
 end)
 
 --[[
-  Launch DeskTop. Special > Copy Disk. Copy a disk with more than 999
-  blocks. Verify thousands separators are shown in block counts.
-]]
---[[
   Launch DeskTop. Special > Copy Disk.... Make a device selection
   (using mouse or keyboard) but don't click OK. Open the menu (using
   mouse or keyboard) but dismiss it. Verify that source device wasn't
   accepted.
 ]]
+test.Step(
+  "Using menu with keyboard doesn't commit selection",
+  function()
+    DiskCopy()
+
+    -- make selection
+    apple2.DownArrowKey()
+
+    -- interact with menu
+    apple2.EscapeKey()
+    emu.wait(1)
+    apple2.EscapeKey()
+    emu.wait(1)
+
+    test.Snap("verify still selecting source")
+
+    -- cleanup
+    a2d.OAShortcut("Q")
+    a2d.WaitForDesktopReady()
+end)
+
 --[[
   Launch DeskTop. Special > Copy Disk.... Select a drive using the
   mouse or keyboard, but don't click OK. Double-click the same drive.
   Verify that it was accepted, and that a prompt for an appropriate
   destination drive was shown.
 ]]
+test.Step(
+  "Double-clicking selected item commits",
+  function()
+    DiskCopy()
+
+    -- select first item
+    apple2.DownArrowKey()
+
+    -- double-click first item
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + w / 2, y + 5)
+        m.DoubleClick()
+    end)
+    a2d.WaitForRepaint()
+
+    test.Snap("verify now selecting destination (S7D1)")
+
+    -- cleanup
+    a2d.OAShortcut("Q")
+    a2d.WaitForDesktopReady()
+end)
+
 --[[
   Launch DeskTop. Special > Copy Disk.... Select a drive using the
   mouse or keyboard, but don't click OK. Double-click a different
   drive. Verify that it was accepted, and that a prompt for an
   appropriate destination drive was shown.
 ]]
+test.Step(
+  "Double-clicking other item commits",
+  function()
+    DiskCopy()
+
+    -- select second first item
+    apple2.DownArrowKey()
+    apple2.DownArrowKey()
+
+    -- double-click first item
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + w / 2, y + 5)
+        m.DoubleClick()
+    end)
+    a2d.WaitForRepaint()
+
+    test.Snap("verify now selecting destination (S7D1)")
+
+    -- cleanup
+    a2d.OAShortcut("Q")
+    a2d.WaitForDesktopReady()
+end)
+
 --[[
   Rename the `MODULES/DISK.COPY` file to something else. Launch
   DeskTop. Special > Copy Disk.... Verify that an alert is shown.
@@ -208,6 +272,11 @@ end)
   OmniDisks as Source and Destination. Verify that after being
   prompted to insert the source and destination disks, a "Are you sure
   you want to erase ...?" confirmation prompt is shown.
+
+  NOTE: See fd51f6d - the issue is that Virtual ][ OmniDisks do not
+  report support for formatting.
+
+  TODO: See if this can be reproduced in MAME.
 ]]
 
 --[[
@@ -338,31 +407,3 @@ test.Step(
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
 end)
-
---[[
-  Launch DeskTop. Special > Copy Disk.... Select a source disk and a
-  destination disk. Cancel the copy. Verify that the OK button is
-  disabled.
-]]
---[[
-  Launch DeskTop. Special > Copy Disk.... Select a source disk and a
-  destination disk. Allow the copy to complete. Verify that the OK
-  button is disabled.
-]]
---[[
-  Populate a ProDOS disk with several large files, then delete all but
-  the last. Launch DeskTop. Special > Copy Disk.... Select the
-  prepared disk. Ensure Options > Quick Copy is checked. Select an
-  appropriate destination disk. Proceed with the copy. Verify that the
-  "Blocks to transfer" count is accurate (i.e. less than the total
-  block count), and the blocks read/written count up to the transfer
-  count accurately.
-]]
---[[
-  Populate a ProDOS disk with several large files, then delete all but
-  the last. Launch DeskTop. Special > Copy Disk.... Select the
-  prepared disk. Select Options > Disk Copy. Select an appropriate
-  destination disk. Proceed with the copy. Verify that the "Blocks to
-  transfer" count is equal to the total block count of the device, and
-  the blocks read/written count up to the transfer count accurately.
-]]
