@@ -4172,7 +4172,7 @@ ret:    rts
 
         jsr     CacheFocusedWindowIconList
         lda     cached_window_icon_count
-        beq     finish          ; nothing to select!
+        RTS_IF  ZERO            ; nothing to select!
 
         ldx     cached_window_icon_count
         dex
@@ -4192,19 +4192,7 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Repaint the icons
 
-        lda     cached_window_id
-    IF ZERO
-        jsr     InitSetDesktopPort
-    ELSE
-        jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; CHECKED
-    END_IF
-    IF ZERO                     ; Skip drawing if obscured
-        jsr     CachedIconsScreenToWindow
-        ITK_CALL IconTK::DrawAll, cached_window_id ; CHECKED
-        jsr     CachedIconsWindowToScreen
-    END_IF
-
-finish: rts
+        jmp     RedrawSelectedIcons
 .endproc ; CmdSelectAll
 
 ;;; ============================================================
@@ -6180,6 +6168,7 @@ err:    RETURN  C=1
         ;; Map icons to window space
         jsr     CachedIconsScreenToWindow
 
+        ;; Assert: window is top-most (since `IconTK::DrawAll` doesn't clip)
         ITK_CALL IconTK::DrawAll, cached_window_id
 
 .ifdef DEBUG
