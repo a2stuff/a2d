@@ -5581,6 +5581,9 @@ beyond:
         ;; Close and tidy up
 
         jsr     ClearSelection
+        pla
+        pha
+        jsr     CacheWindowIconList
 
         jsr     RemoveAndFreeCachedWindowIcons
         jsr     ClearAndStoreCachedWindowIconList
@@ -6243,6 +6246,7 @@ done:
 
 ;;; ============================================================
 
+;;; NOTE: May change `cached_window_id`
 .proc ClearSelection
         lda     selected_icon_count
         RTS_IF ZERO
