@@ -558,6 +558,11 @@ function a2d.CopyPath(src, dst, options)
   a2d.CopySelectionTo(dst, is_volume, options)
 end
 
+function a2d.CheckAllDrives()
+  a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
+  emu.wait(10)
+end
+
 --------------------------------------------------
 -- Configuration
 --------------------------------------------------

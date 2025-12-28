@@ -235,6 +235,11 @@ function a2dtest.GetFrontWindowUpScrollArrowCoords()
   return x + w + 10, y + 5
 end
 
+function a2dtest.GetFrontWindowDownScrollArrowCoords()
+  local x,y,w,h = a2dtest.GetFrontWindowContentRect()
+  return x + w + 10, y + h - 5
+end
+
 function a2dtest.GetFrontWindowScrollOptions()
   local winfo = bank_offset + mgtk.GetWinPtr(mgtk.FrontWindow())
   local hscroll = ram_u8(winfo + 4)

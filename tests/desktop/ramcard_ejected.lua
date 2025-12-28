@@ -77,16 +77,15 @@ test.Step(
     test.ExpectEqualsIgnoreCase(icons[2].name, "RAM4", "ramdisk should be first")
 
     drive:load(current)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(5)
+    a2d.CheckAllDrives()
     a2d.SelectAll()
     icons = a2d.GetSelectedIcons()
     test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
 
+    -- cleanup
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
-    a2d.Reboot()
-    a2d.WaitForDesktopReady()
+    a2d.CheckAllDrives()
 end)
 
 --[[

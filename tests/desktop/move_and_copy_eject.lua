@@ -27,8 +27,7 @@ test.Step(
     local drive = apple2.GetDiskIIS6D1()
     local src = drive.filename
 
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(8)
+    a2d.CheckAllDrives()
 
     a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
@@ -53,21 +52,18 @@ test.Step(
     end
 
     emu.wait(8)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(5)
+    a2d.CheckAllDrives()
 
     a2d.OpenPath("/FLOPPY2/LOREM.IPSUM")
 
     emu.wait(5)
     test.Snap("verify file contents")
 
+    -- cleanup
     a2d.CloseWindow()
-
     drive:unload()
     drive:load(src)
-
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(5)
+    a2d.CheckAllDrives()
 end)
 
 

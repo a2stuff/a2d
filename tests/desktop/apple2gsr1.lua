@@ -107,9 +107,9 @@ test.Step(
     emu.wait(5)
     a2dtest.ExpectAlertNotShowing()
 
+    -- cleanup
     drive:load(image)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(5)
+    a2d.CheckAllDrives()
 end)
 
 --[[

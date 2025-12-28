@@ -13,17 +13,14 @@ test.Step(
   function()
 
     apple2.GetSCSIHD(7, 6):load("/Users/josh/dev/a2d/res/tests.hdv")
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    a2d.WaitForRepaint()
+    a2d.CheckAllDrives()
     test.Snap("swapped hard1")
 
     apple2.GetDiskIIS6D1():unload()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    a2d.WaitForRepaint()
+    a2d.CheckAllDrives()
     test.Snap("flop1 ejected")
 
     apple2.GetDiskIIS6D2():unload() -- harmless if already empty
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    a2d.WaitForRepaint()
+    a2d.CheckAllDrives()
     test.Snap("flop2 ejected")
 end)

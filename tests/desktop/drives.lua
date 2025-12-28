@@ -29,8 +29,7 @@ s4d1:unload()
 local disk_d = s4d2.filename
 s4d2:unload()
 
-a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-emu.wait(10)
+a2d.CheckAllDrives()
 
 --[[
   Launch DeskTop. Open a window for a volume icon. Open a folder
@@ -56,8 +55,7 @@ test.Step(
   "window close on Check All Drives",
   function()
     a2d.OpenPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(5)
+    a2d.CheckAllDrives()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "window should close")
 end)
 
@@ -72,8 +70,7 @@ test.Step(
     a2d.ClearSelection()
     a2d.Reboot()
     a2d.WaitForDesktopReady()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(5)
+    a2d.CheckAllDrives()
     a2dtest.ExpectAlertNotShowing()
 end)
 
@@ -90,14 +87,12 @@ test.Step(
     a2d.WaitForDesktopReady()
     test.Snap("note volume icon positions")
     s5d1:load(disk_a)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(10)
+    a2d.CheckAllDrives()
     test.Snap("verify new icon does not overlap old icons")
 
     -- cleanup
     s5d1:unload()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(5)
+    a2d.CheckAllDrives()
 end)
 
 --[[
@@ -109,14 +104,12 @@ test.Step(
   "Eject then Check All Drives works",
   function()
     s5d1:load(disk_a)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(10)
+    a2d.CheckAllDrives()
 
     a2d.SelectPath("/A")
     a2d.OAShortcut("E") -- Special > Eject Disk
     emu.wait(10)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(10)
+    a2d.CheckAllDrives()
     a2dtest.ExpectNotHanging()
 
     test.ExpectError(
@@ -153,8 +146,7 @@ test.Step(
 
     -- cleanup
     s6d1:unload()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(10)
+    a2d.CheckAllDrives()
 end)
 
 --[[
@@ -166,14 +158,12 @@ test.Step(
   "format floppy prompt - Check All Drives",
   function()
     s6d1:load(pascal_image)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    a2dtest.WaitForAlert()
+    a2d.CheckAllDrives()
     a2d.DialogCancel()
 
     -- cleanup
     s6d1:unload()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-    emu.wait(10)
+    a2d.CheckAllDrives()
 end)
 
 --[[

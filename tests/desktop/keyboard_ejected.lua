@@ -17,8 +17,7 @@ test.Step(
   "Arrows with no volumes",
   function()
     s6d1:unload()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES)
-
+    a2d.CheckAllDrives()
 
     a2d.ClearSelection()
     apple2.RightArrowKey()

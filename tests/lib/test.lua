@@ -53,7 +53,12 @@ end
 --------------------------------------------------
 
 -- test.Step("do a thing", function() ... end)
+local in_step_flag = false
 function test.Step(title, func)
+  if in_step_flag then
+    error("test.Step() called within test.Step() - did you mean test.Snap()?", 2)
+  end
+
   if #test_patterns > 0 then
     local match = false
     for i,pattern in ipairs(test_patterns) do
@@ -72,11 +77,13 @@ function test.Step(title, func)
     return
   end
 
+  in_step_flag = true
   print("-- " .. title)
   local status, err = pcall(func)
   if not status then
     test.Failure(err)
   end
+  in_step_flag = false
 
   if run_count then
     run_count = run_count - 1
