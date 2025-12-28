@@ -13,11 +13,54 @@ a2d.ConfigureRepaintTime(0.25)
   both. Drag both to a new location. Verify that the icons are
   repainted in the new location, and erased from the old location.
 ]]
+test.Step(
+  "overlapping icons - both dragged",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.SelectPath("/RAM1/READ.ME")
+    a2d.DuplicateSelection("DUPE")
+    a2d.OpenPath("/RAM1")
+    a2d.Select("READ.ME")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("DUPE")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+    a2d.Drag(x2, y2, x1, y1)
+    a2d.SelectAll()
+    test.Snap("note previous location")
+    a2d.Drag(x1, y1, x2, y2)
+    a2d.WaitForRepaint()
+    test.Snap("verify both icons moved")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
+
 --[[
   Open a window. Position two icons so one overlaps another. Select
   only one icon. Drag it to a new location. Verify that the the both
   icons repaint correctly.
 ]]
+test.Step(
+  "overlapping icons - one dragged",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.SelectPath("/RAM1/READ.ME")
+    a2d.DuplicateSelection("DUPE")
+    a2d.OpenPath("/RAM1")
+    a2d.Select("READ.ME")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("DUPE")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+    a2d.Drag(x2, y2, x1, y1)
+    a2d.Select("DUPE")
+    test.Snap("note previous location")
+    a2d.Drag(x1, y1, x2, y2)
+    a2d.WaitForRepaint()
+    test.Snap("verify one icon moved, both repaint correctly")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Position a volume icon in the middle of the DeskTop. Incrementally
@@ -96,6 +139,20 @@ end)
   overlapped desktop icons. Drag icons a few pixels to the right.
   Verify that window is not over-drawn.
 ]]
+test.Step(
+  "desktop icons vs. windows",
+  function()
+    a2d.SelectPath("/A2.DESKTOP")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.OpenPath("/RAM1")
+    a2d.MoveWindowBy(300, 0)
+    a2d.FocusDesktop()
+    a2d.SelectAll()
+    test.Snap("verify icons clipped by window")
+    a2d.Drag(x, y, x+10, y)
+    test.Snap("verify moved icons clipped by window")
+end)
+
 --[[
   Position two windows so that the right edges are exactly aligned,
   and the windows vertically overlap by several pixels. Activate the
