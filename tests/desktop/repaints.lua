@@ -1,5 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
+MODEL="apple2ep"
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl5 ramfactor -sl7 cffa2 -aux ext80"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
@@ -139,6 +140,42 @@ end)
   * Launch DeskTop. Open a volume window with many icons. Click on a file icon to select it. Modifier-click the icon to deselect it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
   * Launch DeskTop. Open a volume window with many icons. Modifier-click on a file icon to select it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
 ]]
+test.Variants(
+  {
+    "modifier de-select - Open Apple",
+    "modifier de-select - Shift (Platinum IIe)",
+    "modifier select - Open Apple",
+    "modifier select - Shift (Platinum IIe)",
+  },
+  function(idx)
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    local x, y = a2dtest.GetSelectedIconCoords()
+
+    if idx == 3 or idx == 4 then
+      a2d.ClearSelection()
+    end
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+
+        if idx == 1 or idx == 3 then
+          apple2.PressOA()
+        elseif idx == 2 or idx == 4 then
+          apple2.PressShift()
+        end
+
+        m.Click()
+
+        if idx == 1 or idx == 3 then
+          apple2.ReleaseOA()
+        elseif idx == 2 or idx == 4 then
+          apple2.ReleaseShift()
+        end
+    end)
+
+    a2d.Drag(0, 60, 450, 190)
+    test.Snap("verify no file icons repaint on desktop")
+end)
 
 --[[
   Launch DeskTop. Open a volume window. Click in the header area
@@ -237,28 +274,333 @@ end)
   Launch DeskTop. Open 3 windows. Close the top one. Verify that the
   repaint is correct.
 ]]
+test.Step(
+  "closing top window repaints correctly",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS", {leave_parent=true})
+    a2d.CloseWindow()
+    emu.wait(5)
+    test.Snap("verify no mispaint")
+end)
+
 --[[
   Launch DeskTop. Close all windows. Press an arrow key multiple
   times. Verify that only one volume icon is highlighted at a time.
 ]]
+test.Step(
+  "arrow key doesn't select multiple volumes",
+  function()
+    a2d.CloseAllWindows()
+    emu.wait(5)
+    a2d.ClearSelection()
+    for i = 1, 4 do
+      apple2.DownArrowKey()
+      a2d.WaitForRepaint()
+      test.Snap("verify only one volume selected")
+    end
+end)
 
 --[[
   For the following cases, "obscure a window" means to move a window to the bottom of the screen so that only the title bar is visible:
-
-  * Launch DeskTop. Open a window with icons. View > by Name. Obscure the window. View > as Icons. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that it contains icons.
-  * Launch DeskTop. Open a window with icons. Obscure the window. View > by Name. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that the contents display as a list.
-  * Launch DeskTop. Open a window with at least two icons. Select the first icon. Obscure the window. Press the right arrow key. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. Obscure the window. Edit > Select All. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. Edit > Select All. Obscure the window. Click on the desktop to clear selection. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with folder icons. Open a second window from one of the folders. Verify that the folder icon in the first window is dimmed. Obscure the first window. Close the second window. Verify that the folder icon doesn't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. Select (but don't open) a folder. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
-  * Launch DeskTop. Open `/TESTS`. Select (but don't open) `TOO.MANY.FILES`. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
-  * Launch DeskTop. Open a window. Obscure the window. File > New Folder, enter a name. Verify that the folder icon doesn't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. Obscure the window. File > Quit. Relaunch DeskTop. Verify that the restored window's icons don't appear on the desktop, and that the menu bar is not glitched.
-  * Launch DeskTop. Open two windows with icons. Obscure one window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
-  * Launch DeskTop. Open two windows with icons. Activate a window, View > by Name, and then obscure the window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
-  * Launch DeskTop. Open a window with icons. Select an icon. Obscure the window. File > Rename, enter a new name. Verify that the icon does not paint on the desktop.
 ]]
+function ObscuredWindowTest(name, pre_func, mid_func, post_func)
+  test.Step(
+    "obscured window - " .. name,
+    function()
+      pre_func()
+      a2d.WaitForRepaint()
+
+      local x, y = a2dtest.GetFrontWindowDragCoords()
+      a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
+      a2d.WaitForRepaint()
+
+      mid_func()
+      a2d.WaitForRepaint()
+
+      if post_func then
+        local x2, y2 = a2dtest.GetFrontWindowDragCoords()
+        a2d.Drag(x2, y2, x, y)
+        a2d.WaitForRepaint()
+
+        post_func()
+        a2d.WaitForRepaint()
+      end
+  end)
+end
+
+--[[
+  Launch DeskTop. Open a window with icons. View > by Name. Obscure
+  the window. View > as Icons. Verify that the window contents don't
+  appear on the desktop. Move the window so the contents are visible.
+  Verify that it contains icons.
+]]
+ObscuredWindowTest(
+  "View by name, then as icons",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+  end,
+  function()
+    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_AS_ICONS)
+    a2d.WaitForRepaint()
+    test.Snap("verify file icons don't mispaint on desktop")
+  end,
+  function()
+    test.Snap("verify window contains icons")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with icons. Obscure the window. View >
+  by Name. Verify that the window contents don't appear on the
+  desktop. Move the window so the contents are visible. Verify that
+  the contents display as a list.
+]]
+ObscuredWindowTest(
+  "View by name while obscured",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+  end,
+  function()
+    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+    a2d.WaitForRepaint()
+    test.Snap("verify contents don't mispaint on desktop")
+  end,
+  function()
+    test.Snap("verify contents display as list")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with at least two icons. Select the
+  first icon. Obscure the window. Press the right arrow key. Verify
+  that the icons don't appear on the desktop.
+]]
+ObscuredWindowTest(
+  "Arrow navigation",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    apple2.RightArrowKey()
+  end,
+  function()
+    apple2.RightArrowKey()
+    test.Snap("verify icons don't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with icons. Obscure the window. Edit >
+  Select All. Verify that the icons don't appear on the desktop.
+]]
+ObscuredWindowTest(
+  "Select All",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+  end,
+  function()
+    a2d.SelectAll()
+    test.Snap("verify icons don't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with icons. Edit > Select All. Obscure
+  the window. Click on the desktop to clear selection. Verify that the
+  icons don't appear on the desktop.
+]]
+ObscuredWindowTest(
+  "Clearing selection",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    a2d.SelectAll()
+  end,
+  function()
+    a2d.ClearSelection()
+    test.Snap("verify icons don't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with folder icons. Open a second
+  window from one of the folders. Verify that the folder icon in the
+  first window is dimmed. Obscure the first window. Close the second
+  window. Verify that the folder icon doesn't appear on the desktop.
+]]
+ObscuredWindowTest(
+  "Un-dimming",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.MoveWindowBy(0, 100)
+    emu.wait(5)
+    test.Snap("verify EXTRAS is dimmed")
+    a2d.CycleWindows()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be active")
+  end,
+  function()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be active")
+    a2d.CycleWindows()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "window should be active")
+    a2d.CloseWindow()
+    emu.wait(5)
+    test.Snap("verify EXTRAS icon doesn't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with icons. Select (but don't open) a
+  folder. Obscure the window. File > Open. Verify that the folder icon
+  does not appear on the desktop.
+]]
+ObscuredWindowTest(
+  "dimming",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+  end,
+  function()
+    a2d.OpenSelection()
+    emu.wait(5)
+    test.Snap("verify EXTRAS icon doesn't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open `/TESTS`. Select (but don't open)
+  `TOO.MANY.FILES`. Obscure the window. File > Open. Verify that the
+  folder icon does not appear on the desktop.
+]]
+ObscuredWindowTest(
+  "failed open",
+  function()
+    a2d.SelectPath("/TESTS/TOO.MANY.FILES")
+  end,
+  function()
+    a2d.OpenSelection()
+    a2dtest.WaitForAlert()
+    a2d.DialogOK()
+    emu.wait(5)
+    test.Snap("verify TOO.MANY.FILES icon doesn't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window. Obscure the window. File > New
+  Folder, enter a name. Verify that the folder icon doesn't appear on
+  the desktop.
+]]
+ObscuredWindowTest(
+  "new folder",
+  function()
+    a2d.OpenPath("/RAM1")
+  end,
+  function()
+    a2d.CreateFolder("NEW.NAME")
+    emu.wait(5)
+    test.Snap("verify folder icon doesn't mispaint on desktop")
+  end,
+  function()
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with icons. Obscure the window. File >
+  Quit. Relaunch DeskTop. Verify that the restored window's icons
+  don't appear on the desktop, and that the menu bar is not glitched.
+]]
+ObscuredWindowTest(
+  "window restoration",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+  end,
+  function()
+    a2d.Quit()
+    apple2.WaitForBitsy()
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
+    a2d.WaitForDesktopReady()
+    test.Snap("verify file icons don't mispaint on desktop or menu")
+  end
+)
+
+--[[
+  Launch DeskTop. Open two windows with icons. Obscure one window.
+  Click on the other window's title bar. Click on the obscured
+  window's title bar. Verify that the window contents don't repaint on
+  the desktop.
+]]
+ObscuredWindowTest(
+  "activating window",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenPath("/TESTS", {keep_windows=true})
+  end,
+  function()
+    local id1 = mgtk.FrontWindow()
+    local x1, y1 = a2dtest.GetWindowDragCoords(id1)
+
+    local id2 = a2dtest.GetNextWindowID(id1)
+    local x2, y2 = a2dtest.GetWindowDragCoords(id2)
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x2, y2)
+        m.Click()
+        m.MoveToApproximately(x1, y1)
+        m.Click()
+    end)
+    test.Snap("verify window contents don't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open two windows with icons. Activate a window, View
+  > by Name, and then obscure the window. Click on the other window's
+  title bar. Click on the obscured window's title bar. Verify that the
+  window contents don't repaint on the desktop.
+]]
+ObscuredWindowTest(
+  "activating window with list view",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenPath("/TESTS", {keep_windows=true})
+    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+  end,
+  function()
+    local id1 = mgtk.FrontWindow()
+    local x1, y1 = a2dtest.GetWindowDragCoords(id1)
+
+    local id2 = a2dtest.GetNextWindowID(id1)
+    local x2, y2 = a2dtest.GetWindowDragCoords(id2)
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x2, y2)
+        m.Click()
+        m.MoveToApproximately(x1, y1)
+        m.Click()
+    end)
+    test.Snap("verify window contents don't mispaint on desktop")
+  end
+)
+
+--[[
+  Launch DeskTop. Open a window with icons. Select an icon. Obscure
+  the window. File > Rename, enter a new name. Verify that the icon
+  does not paint on the desktop.
+]]
+ObscuredWindowTest(
+  "rename while obscured",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.SelectPath("/RAM1/READ.ME")
+  end,
+  function()
+    a2d.RenameSelection("NEW.NAME")
+    test.Snap("verify file icon doesn't mispaint on desktop")
+  end,
+  function()
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+  end
+)
 
 --[[
   Launch DeskTop. Open a window. Try to move the window so that the
@@ -356,12 +698,68 @@ end)
   volume icon. Click elsewhere on the desktop. Verify the icon isn't
   mispainted.
 ]]
+test.Step(
+  "mispaints after drag selection and clearing selection",
+  function()
+    a2d.SelectPath("/RAM1")
+    local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/A2.DESKTOP")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.Drag(x + 5, y + 15, x + w - 5, y + h - 5)
+    a2d.InMouseKeysMode(function(m)
+        -- click to clear selection
+        m.MoveToApproximately(0, apple2.SCREEN_HEIGHT)
+        m.Click()
+        m.Home()
+
+        -- click on volume icon
+        m.MoveToApproximately(vol_x, vol_y)
+        m.Click()
+
+        -- click elsewhere
+        m.MoveToApproximately(0, apple2.SCREEN_HEIGHT)
+        m.Click()
+    end)
+    a2d.WaitForRepaint()
+
+    test.Snap("verify no mispaint")
+end)
+
 --[[
   Launch DeskTop. Open a window containing multiple icons. Drag-select
   several icons. Click on the desktop to clear selection. Click on a
   volume icon. File > Rename. Enter a new valid name. Verify that no
   alert is shown.
 ]]
+test.Step(
+  "mispaints after drag selection, clearing selection, and rename",
+  function()
+    a2d.SelectPath("/RAM1")
+    local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.OpenPath("/A2.DESKTOP")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.Drag(x + 5, y + 15, x + w - 5, y + h - 5)
+    a2d.InMouseKeysMode(function(m)
+        -- click to clear selection
+        m.MoveToApproximately(0, apple2.SCREEN_HEIGHT)
+        m.Click()
+        m.Home()
+
+        -- click on volume icon
+        m.MoveToApproximately(vol_x, vol_y)
+        m.Click()
+    end)
+    a2d.WaitForRepaint()
+
+    a2d.RenameSelection("NEW.NAME")
+    emu.wait(5)
+    a2dtest.ExpectAlertNotShowing()
+
+    -- cleanup
+    a2d.RenamePath("/NEW.NAME", "RAM1")
+end)
 
 --[[
   Launch DeskTop. Open a window. Create a folder with a short name
@@ -385,6 +783,7 @@ end)
   that the visible portions of folder 1 repaint (not dimmed) and
   folder 2 repaint (dimmed).
 ]]
+
 --[[
   Disable any acceleration. Launch DeskTop. Open a volume window
   containing a folder with a long name. Double-click the folder to
@@ -392,6 +791,38 @@ end)
   dimming effect doesn't extend past the bounding box of the icon,
   even temporarily.
 ]]
+test.Step(
+  "dimming effect",
+  function()
+    -- Disable ZIP Chip
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
+    apple2.Type("N") -- Normal Speed
+    a2d.CloseWindow()
+
+    a2d.CreateFolder("/RAM1/MMMMMMMMMMMMMMM")
+    a2d.OpenPath("/RAM1")
+    a2d.MoveWindowBy(0, 80)
+    a2d.Select("MMMMMMMMMMMMMMM")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    a2d.ClearSelection()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.DoubleClick()
+        a2dtest.MultiSnap(30, "verify dimming doesn't extend past icon bounding box")
+    end)
+    emu.wait(5)
+
+    -- cleanup
+    -- Enable ZIP Chip
+    a2d.ConfigureRepaintTime(1)
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
+    a2d.ConfigureRepaintTime(0.25)
+    apple2.Type("F") -- Fast Speed
+    a2d.CloseWindow()
+
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Launch DeskTop. Apple Menu > Control Panels. Close the window by
