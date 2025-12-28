@@ -5351,6 +5351,7 @@ END_PARAM_BLOCK
         jsr     ExtendSelectionModifierDown
         bmi     :+
 clear:  jsr     ClearSelection
+        CALL    CacheWindowIconList, A=window_id
 :
 
         ;; --------------------------------------------------

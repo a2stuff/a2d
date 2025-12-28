@@ -174,7 +174,7 @@ end)
   window.
 ]]
 test.Step(
-  "drag select on desktop doesn't select file icons - after icon click",
+  "drag select on desktop doesn't select file icons - with file icon selection",
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.MoveWindowBy(40, 30)
@@ -183,8 +183,6 @@ test.Step(
     a2d.Drag(rect[1] - 20, rect[2] - 10,
              rect[3] + 20, rect[4] + 10)
     a2d.InMouseKeysMode(function(m) m.Home() end)
-
-    -- BUG: Bad paint inside window!!!
 
     test.Snap("verify no mispaint")
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "nothing should be selected")
