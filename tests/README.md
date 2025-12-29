@@ -41,6 +41,12 @@ The default system configuration is:
 * Slot 7: SCSI card, w/ 800K package image
 * No-Slot Clock under system ROM
 
+> TODO: Make the default config simpler:
+> * aux ext80 instead of rw3
+> * slot 1 empty by default
+> * slot 4 empty by default
+> * slot 7 CFFA2 instead of SCSI
+
 Tests can define custom MAME configuration. The contents of a config block are executed by `mametest` to override environment variable that are used when MAME launches.
 
 * `MODEL` - the system type, e.g. `"apple2ee"`, `"apple2gsr1"` etc
@@ -72,8 +78,6 @@ RESOLUTION="560x384"
 ```
 
 # Files
-
-Most files in this directory correspond to `../notes/testplan.md`.
 
 ## `lib/` - Libraries
 

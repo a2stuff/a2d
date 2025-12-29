@@ -238,6 +238,68 @@ end)
 
   * Enter '8' '9' 'TAN' 'ATAN'. Verify that the result is
     approximately 89.
-
-  TODO: Cover these!
 ]]
+test.Step(
+  "Sci.Calc - Trig functions",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS/SCI.CALC")
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    function Click(cx, cy)
+      a2d.InMouseKeysMode(function(m)
+          m.MoveToApproximately(x + cx, y + cy)
+          m.Click()
+      end)
+    end
+
+    function Sin() Click(30, 10) end
+    function ASin() Click(65, 10) end
+    function Cos() Click(30, 25) end
+    function ACos() Click(65, 25) end
+    function Tan() Click(30, 40) end
+    function ATan() Click(65, 40) end
+    function Neg() Click(30, 90) end
+
+    apple2.Type("1+2") Sin() apple2.Type("=")
+    a2d.WaitForRepaint()
+    test.Snap("verify result is 1.034...")
+    apple2.EscapeKey()
+
+    apple2.Type("1") Sin() apple2.Type("+2=")
+    a2d.WaitForRepaint()
+    test.Snap("verify result is 2.017...")
+    apple2.EscapeKey()
+
+    apple2.Type("45") Sin()
+    a2d.WaitForRepaint()
+    test.Snap("verify result is 0.707...")
+    apple2.EscapeKey()
+
+    apple2.Type("45") Neg() Sin()
+    a2d.WaitForRepaint()
+    test.Snap("verify result is -0.707...")
+    apple2.EscapeKey()
+
+    apple2.Type("180") Cos()
+    a2d.WaitForRepaint()
+    test.Snap("verify result is -1")
+    apple2.EscapeKey()
+
+    apple2.Type("45") Sin() ASin()
+    a2d.WaitForRepaint()
+    test.Snap("verify result is approximately 45")
+    apple2.EscapeKey()
+    -- BUG: This is giving ~52 ! Regression from v1.5
+
+    apple2.Type("45") Cos() ACos()
+    a2d.WaitForRepaint()
+    test.Snap("verify result is approximately 45")
+    apple2.EscapeKey()
+
+    apple2.Type("89") Tan() ATan()
+    a2d.WaitForRepaint()
+    test.Snap("verify result is approximately 89")
+    apple2.EscapeKey()
+
+    a2d.CloseWindow()
+end)
