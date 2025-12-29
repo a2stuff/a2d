@@ -138,6 +138,10 @@ end)
   Position a window partially overlapping desktop icons. Select
   overlapped desktop icons. Drag icons a few pixels to the right.
   Verify that window is not over-drawn.
+
+  Position a window so that the right edge overlaps volume icons.
+  Select the volume icons. Clear selection by clicking on the desktop.
+  Verify that the right edge of the window is not overdrawn.
 ]]
 test.Step(
   "desktop icons vs. windows",
@@ -150,45 +154,12 @@ test.Step(
     a2d.SelectAll()
     test.Snap("verify icons clipped by window")
     a2d.Drag(x, y, x+10, y)
-    test.Snap("verify moved icons clipped by window")
-end)
+    test.Snap("verify icons clipped by window")
 
---[[
-  Position two windows so that the right edges are exactly aligned,
-  and the windows vertically overlap by several pixels. Activate the
-  upper window. Drag a floppy disk volume icon so that it is partially
-  occluded by the bottom-right of the upper window. Verify that the
-  visible parts of the icon repaint correctly and that DeskTop does
-  not hang.
-]]
---[[
-  Position two windows so that the left edges are exactly aligned, and
-  the windows vertically overlap by several pixels. Activate the upper
-  window. Drag a floppy disk volume icon so that it is partially
-  occluded by the bottom-left corner of the upper window. Verify that
-  the visible parts of the icon repaint correctly and that DeskTop
-  does not hang.
-]]
---[[
-  Position two windows so that the bottom-right corner of one overlaps
-  the top-left corner of the other by several pixels. Drag a
-  floppy disk volume icon so that it should show on both sides of
-  overlap. Verify that the visible parts of the icon repaint
-  correctly.
-]]
---[[
-  Position a window so that the right edge overlaps volume icons.
-  Select the volume icons. Clear selection by clicking on the desktop.
-  Verify that the right edge of the window is not overdrawn.
-]]
---[[
-  Open five volume windows containing many files so that the windows
-  have large initial sizes. Drag the top-most so that the right edge
-  aligns with another window's right edge and overlaps a volume icon.
-  Drag another window that was previously overlapping the same icon so
-  that the right edge aligns with the other windows. Verify that the
-  volume icons repaint correctly and that the system does not hang.
-]]
+    a2d.Drag(x+10, y, x, y)
+    a2d.ClearSelection()
+    test.Snap("verify icons clipped by window")
+end)
 
 --[[
   Repeat the following cases with these modifiers: Open-Apple, Shift
@@ -326,6 +297,26 @@ end)
   the selected file (e.g. with the title bar). File > Rename. Enter a
   new name. Verify that the active window is not mis-painted.
 ]]
+test.Step(
+  "rename in inactive window",
+  function()
+    a2d.OpenPath("/A2.DESKTOP")
+
+    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.CreateFolder("FOLDER")
+    local x, y = a2dtest.GetSelectedIconCoords()
+
+    a2d.CycleWindows()
+    local drag_x, drag_y = a2dtest.GetFrontWindowDragCoords()
+    a2d.Drag(drag_x, drag_y, x, y+5)
+    test.Snap("overlap?")
+
+    a2d.RenameSelection("NEW.NAME")
+    test.Snap("verify no mispaint")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Launch DeskTop. Open 3 windows. Close the top one. Verify that the
@@ -819,19 +810,35 @@ test.Step(
 end)
 
 --[[
-  Launch DeskTop. Open a window. Create a folder with a short name
-  (e.g. "A"). Open the folder. Drag the folder's window so it covers
-  just the left edge of the icon. Drag it away. Verify that the folder
-  repaints. Repeat for the right edge.
-]]
-
---[[
   Launch DeskTop. Open a volume window containing a folder. Open the
   folder. Verify that the folder appears as dimmed. Position the
   window partially over the dimmed folder. Move the window to reveal
   the whole folder. Verify that the folder is repainted cleanly (no
   visual glitches).
 ]]
+test.Step(
+  "dimmed folder partial repaint",
+  function()
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.OpenPath("/RAM1/FOLDER", {leave_parent=true})
+    a2d.ClearSelection()
+    a2d.MoveWindowBy(15, 30)
+    a2d.MoveWindowBy(50, 50)
+    test.Snap("verify dimmed folder pattern painted perfectly")
+
+    a2d.OpenPath("/RAM1")
+    a2d.MoveWindowBy(10, 10)
+    a2d.Select("FOLDER")
+    a2d.OpenSelection()
+    a2d.ClearSelection()
+    a2d.MoveWindowBy(25, 45)
+    a2d.MoveWindowBy(50, 50)
+    test.Snap("verify dimmed folder pattern painted perfectly")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
+
 --[[
   Launch DeskTop. Open a volume window containing two folders (1 and
   2). Open both folder windows, and verify that both folder icons are
@@ -840,6 +847,27 @@ end)
   that the visible portions of folder 1 repaint (not dimmed) and
   folder 2 repaint (dimmed).
 ]]
+test.Step(
+  "folder repaint dimmed and not dimmed",
+  function()
+    a2d.CreateFolder("/RAM1/F1")
+    a2d.CreateFolder("/RAM1/F2")
+    a2d.OpenPath("/RAM1")
+    a2d.SelectAll()
+    a2d.OpenSelection()
+    a2d.MoveWindowBy(200, 100)
+    while a2dtest.GetFrontWindowTitle():upper() ~= "F1" do
+      a2d.CycleWindows()
+      emu.wait(1)
+    end
+    a2d.MoveWindowBy(0, 30)
+    test.Snap("verify window F1 overlaps both folder icons")
+    a2d.CloseWindow()
+    test.Snap("verify icons repaint correctly (F1 not dimmed, F2 dimmed)")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Disable any acceleration. Launch DeskTop. Open a volume window
@@ -910,6 +938,31 @@ end)
   Activate the parent window. Verify that the "in disk" and
   "available" values now update.
 ]]
+test.Step(
+  "header partial repaint doesn't glitch",
+  function()
+    a2d.CreateFolder("/RAM1/FOLDER")
+    a2d.OpenPath("/RAM1/FOLDER", {leave_parent=true})
+    a2d.MoveWindowBy(0, 10)
+    test.Snap("verify FOLDER partially covers RAM1's header")
+
+    a2d.SelectPath("/TESTS/COPYING/SIZES/IS.200K", {keep_windows=true})
+    a2d.MoveWindowBy(0, 60)
+    a2d.CopySelectionTo("/RAM1/FOLDER")
+
+    test.Snap("verify FOLDER header updated")
+    a2d.MoveWindowBy(0, 50)
+    emu.wait(1)
+    test.Snap("verify RAM1 header repainted with old values (and no glitches)")
+    while a2dtest.GetFrontWindowTitle():upper() ~= "RAM1" do
+      a2d.CycleWindows()
+      emu.wait(1)
+    end
+    test.Snap("verify RAM1 header repainted with new values")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
 
 --[[
   Launch DeskTop. Open a volume window with icons. Move window so only
@@ -1196,6 +1249,65 @@ end)
   that the previously selected icon is still "on top". Repeat the
   above tests with the other icon.
 ]]
+test.Step(
+  "overlapping icon repaint order is persistent",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.DuplicatePath("/RAM1/READ.ME", "BBBBBBBBBBBBBBB")
+    a2d.RenamePath("/RAM1/READ.ME", "AAAAAAAAAAAAAAA")
+
+    a2d.OpenPath("/RAM1")
+
+    a2d.Select("AAAAAAAAAAAAAAA")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("BBBBBBBBBBBBBBB")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+    a2d.Drag(x2, y2, x1+10, y1+5)
+
+    -- Start with first icon selected
+    a2d.Select("AAAAAAAAAAAAAAA")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    test.Snap("verify AAAAAAAAAAAAAAA is on top")
+
+    -- Just open/close rather than activating/dragging over/dragging off
+    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.CloseWindow()
+    test.Snap("verify AAAAAAAAAAAAAAA is on top")
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.OAClick()
+    end)
+    test.Snap("verify AAAAAAAAAAAAAAA is on top")
+
+    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.CloseWindow()
+    test.Snap("verify AAAAAAAAAAAAAAA is on top")
+
+    -- Now with second icon selected
+    a2d.Select("BBBBBBBBBBBBBBB")
+    local x, y = a2dtest.GetSelectedIconCoords()
+    test.Snap("verify BBBBBBBBBBBBBBB is on top")
+
+    -- Just open/close rather than activating/dragging over/dragging off
+    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.CloseWindow()
+    test.Snap("verify BBBBBBBBBBBBBBB is on top")
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x, y)
+        m.OAClick()
+    end)
+    test.Snap("verify BBBBBBBBBBBBBBB is on top")
+
+    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.CloseWindow()
+    test.Snap("verify BBBBBBBBBBBBBBB is on top")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
+
 
 --[[
   Launch DeskTop. Open a volume. Open a folder within the volume.
@@ -1211,13 +1323,6 @@ test.Step(
     a2dtest.ExpectNotHanging()
     test.Snap("verify correct repaint")
 end)
-
---[[
-  Launch DeskTop. Open a volume. Open a folder. Drag the folder window
-  so that it obscures the top-most edge of an icon in the volume
-  window. Drag the folder away. Verify that the icon in the volume
-  window repaints.
-]]
 
 --[[
   Launch DeskTop. Open a volume. Drag the window so that it partially

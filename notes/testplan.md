@@ -228,7 +228,7 @@ When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then ea
 * Launch DeskTop. Open a volume window. Drag a selection rectangle so that it covers only the top row of pixels of an icon. Verify that the icon is selected.
 
 
-## Repaints
+## Repaints - `covered by tests/desktop/repaint*.lua`
 
 * Open a window. Position two icons so one overlaps another. Select both. Drag both to a new location. Verify that the icons are repainted in the new location, and erased from the old location.
 * Open a window. Position two icons so one overlaps another. Select only one icon. Drag it to a new location. Verify that the the both icons repaint correctly.
