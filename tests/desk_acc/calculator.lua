@@ -289,7 +289,6 @@ test.Step(
     a2d.WaitForRepaint()
     test.Snap("verify result is approximately 45")
     apple2.EscapeKey()
-    -- BUG: This is giving ~52 ! Regression from v1.5
 
     apple2.Type("45") Cos() ACos()
     a2d.WaitForRepaint()

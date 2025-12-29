@@ -763,9 +763,8 @@ ret:    rts
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        copy8   #MGTK::EventKind::button_down, event_params::kind ; Needed in `DepressButton`
 
-        ptr := $06
+        ptr := $FA
 
         copy16  #first_button, ptr
 loop:   ldy     #0
@@ -799,7 +798,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         sta     key
 
         ;; Buttons
-        ptr := $06
+        ptr := $FA
 
         copy16  #first_button, ptr
 loop:   ldy     #0
@@ -1325,47 +1324,29 @@ kRegSize = 6
 
 ;;; Needed before FMULTT / FDIVT
 .proc FixSGNCPR
+        pha
         lda     FAC_SIGN
         eor     ARG_SIGN
         sta     SGNCPR          ; compared sign for mul/div
-
-        ;; Like `LOAD.ARG.FROM.YA`
-        lda     FAC             ; set status bits on FAC exponent
-
+        pla
         rts
 .endproc ; FixSGNCPR
 
 ;;; ============================================================
 
-;;; Input: A,X = button rectangle; `event_params` must be valid
 .proc DepressButton
         stax    invert_addr
         stax    inrect_params
 
-        ;; --------------------------------------------------
-        ;; Keyboard?
-        lda     event_params::kind
-    IF A = #MGTK::EventKind::key_down
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        RTS_IF A = #MGTK::Error::window_obscured
 
-        ;; Match delay in BTK::Flash
-        jsr     invert_rect
-        ldx     #5
-      DO
-        txa
-        pha
-        MGTK_CALL MGTK::WaitVBL
-        pla
-        tax
-        dex
-      WHILE NOT ZERO
-        jmp     invert_rect
+        MGTK_CALL MGTK::SetPort, grafport
 
-    END_IF
+        button_state := $FC
 
-        ;; --------------------------------------------------
-        ;; Mouse
-
-        button_state := $10
+        MGTK_CALL MGTK::SetPattern, black_pattern
+        MGTK_CALL MGTK::SetPenMode, penmode_xor
         SET_BIT7_FLAG button_state
 
 invert: jsr     invert_rect
@@ -1395,21 +1376,17 @@ inside: lda     button_state    ; inside, and down
         SET_BIT7_FLAG button_state ; inside, was not down so set down
         jmp     invert          ; and show it
 
-done:   lda     button_state    ; high bit set if button down
+done:   lda     button_state                    ; high bit set if button down
         pha
     IF NOT_ZERO
-        jsr     invert_rect     ; Back to normal
+        jsr     invert_rect                        ; Back to normal
     END_IF
+        MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
         pla
         rts
 
 invert_rect:
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        RTS_IF  A = #MGTK::Error::window_obscured
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPattern, black_pattern
-        MGTK_CALL MGTK::SetPenMode, penmode_xor
-        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, invert_addr
+        MGTK_CALL MGTK::PaintRect, 0, invert_addr
         rts
 .endproc ; DepressButton
 
@@ -1496,7 +1473,7 @@ end:    rts
         MGTK_CALL MGTK::SetTextBG, settextbg_params
 
         ;; Buttons
-        ptr := $06
+        ptr := $FA
 
         copy16  #first_button, ptr
 loop:   ldy     #0
