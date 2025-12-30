@@ -47,8 +47,7 @@ test.Step(
     -- In Bitsy Bye (since RAMAUX doesn't chain, it QUITs)
     a2d.Reboot()
     apple2.WaitForBitsy()
-    test.Expect(apple2.GrabTextScreen():match("^S7,D1:/A2.DESKTOP"), "should be at S7,S1")
-    apple2.BitsyInvokeFile("CLOCK.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/CLOCK.SYSTEM")
 
     a2d.WaitForCopyToRAMCard()
 

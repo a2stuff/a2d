@@ -563,7 +563,6 @@ ObscuredWindowTest(
   end,
   function()
     a2d.Quit()
-    apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
     test.Snap("verify file icons don't mispaint on desktop or menu")

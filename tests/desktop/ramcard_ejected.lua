@@ -85,7 +85,8 @@ test.Step(
     -- cleanup
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM4")
-    a2d.CheckAllDrives()
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
 
 --[[
@@ -180,8 +181,7 @@ test.Step(
 
     -- Restart DESKTOP.SYSTEM
 
-    apple2.BitsySelectSlotDrive("S7,D1")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
     -- Ensure no prompt for saving appears
@@ -222,9 +222,7 @@ test.Step(
     a2d.WaitForDesktopReady({timeout=240})
 
     a2d.Quit()
-
-    apple2.BitsySelectSlotDrive("S7,D1")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
     -- Ensure no prompt for disk appears

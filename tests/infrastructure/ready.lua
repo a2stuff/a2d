@@ -19,7 +19,7 @@ test.Step(
       end,
       "should timeout")
 
-    apple2.BitsyInvokeFile("PRODOS")
+    apple2.BitsyInvokePath("/A2.DESKTOP/PRODOS")
     a2d.WaitForDesktopReady()
 end)
 
@@ -42,7 +42,7 @@ test.Step(
       end,
       "should timeout")
 
-    apple2.BitsyInvokeFile("PRODOS")
+    apple2.BitsyInvokePath("/A2.DESKTOP/PRODOS")
     a2d.WaitForDesktopReady()
 end)
 

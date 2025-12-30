@@ -290,7 +290,6 @@ function LineEditTest(name, limits, activation_func, rect_func, cleanup_func)
       Reset()
       apple2.Type("X")
       local n = limits.max - 5 -- "X' ... "GOOD"
-      print("n="..n)
       -- inserted
       for i = 1,n do
         apple2.Type(limits.chars:sub(i, i))
@@ -311,7 +310,6 @@ function LineEditTest(name, limits, activation_func, rect_func, cleanup_func)
       Reset()
       apple2.Type("X")
       local n = limits.max - 5 -- "X' ... "GOOD"
-      print("n="..n)
       -- inserted
       for i = 1,n do
         local idx = #limits.chars - i + 1

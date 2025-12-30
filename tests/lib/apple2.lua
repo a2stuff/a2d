@@ -1024,7 +1024,8 @@ function apple2.WaitForBitsy(options)
   util.WaitFor(
     "Bitsy Bye",
     function()
-      return apple2.GrabTextScreen():match("BITSY")
+      local text = apple2.GrabTextScreen()
+      return text:match("BITSY") and text:match("^([^:]+):(/[^\n ]+)")
     end,
     options)
 end

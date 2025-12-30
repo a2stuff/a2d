@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODELARGS="-sl2 mouse -sl7 cffa2"
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/prodos_floppy1.dsk"
+DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
@@ -274,16 +274,6 @@ end)
 test.Step(
   "File menu options needing window are correct",
   function()
-    a2d.OpenPath("/FLOPPY1")
-    emu.wait(5) -- floppies are slow
-    a2d.Quit()
-    apple2.GetDiskIIS6D1():unload()
-
-    apple2.BitsyInvokeFile("PRODOS")
-    a2d.WaitForDesktopReady()
-
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.CloseWindow()
     a2d.OpenPath("/A2.DESKTOP")
     a2d.OpenMenu(a2d.FILE_MENU)
     test.Snap("verify New Folder, Close, Close All are enabled")

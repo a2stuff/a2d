@@ -344,8 +344,7 @@ test.Step(
     s5d1:unload()
 
     apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S7,D1")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
     for i = 1, 7 do

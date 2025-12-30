@@ -10,9 +10,7 @@ test.Step(
   function()
     a2d.Quit()
     apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S7,D1")
-    apple2.BitsyInvokeFile("/EXTRAS")
-    apple2.BitsyInvokeFile("BASIC.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
     util.WaitFor(
@@ -21,8 +19,7 @@ test.Step(
     end)
     apple2.TypeLine("BYE")
     apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S7,D1")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 end)
 
@@ -34,8 +31,7 @@ test.Step(
   function()
     a2d.Quit()
     apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S7,D1")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 end)
 

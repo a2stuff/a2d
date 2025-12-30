@@ -165,7 +165,7 @@ test.Step(
 
     a2d.DialogOK()
     s5d2:load(image)
-    a2d.OAShortcut("Q") -- File > Quit
+    apple2.ControlOAReset()
     a2d.WaitForDesktopReady()
 end)
 

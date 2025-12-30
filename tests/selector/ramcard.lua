@@ -34,7 +34,7 @@ test.Step(
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
+    a2d.EraseVolume("RAM1")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)
@@ -99,9 +99,11 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
+    -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    a2d.EraseVolume("RAM1")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)
@@ -131,9 +133,11 @@ test.Step(
     a2d.DialogOK()
     test.Snap("verify shortcuts list renders correctly")
 
+    -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    a2d.EraseVolume("RAM1")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)
@@ -172,9 +176,11 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
+    -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    a2d.EraseVolume("RAM1")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)
@@ -203,9 +209,11 @@ test.Step(
     emu.wait(5)
     a2d.WaitForDesktopReady()
 
+    -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    a2d.EraseVolume("RAM1")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)

@@ -34,9 +34,7 @@ test.Step(
     a2d.Quit()
 
     -- Re-launch from original startup disk
-    apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S6,D1")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
     -- Eject the disk
@@ -83,9 +81,7 @@ test.Step(
     a2d.Quit()
 
     -- Re-launch from original startup disk
-    apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S6,D1")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady({timeout=360})
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/APPLEVISION")
     util.WaitFor(

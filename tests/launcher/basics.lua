@@ -13,8 +13,7 @@ test.Step(
   "launch with PREFIX set",
   function()
     a2d.Quit()
-    apple2.BitsyInvokeFile("/EXTRAS")
-    apple2.BitsyInvokeFile("BASIC.SYSTEM")
+    apple2.BitsyInvokePath("A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX /RAM")
     apple2.TypeLine("-/A2.DESKTOP/DESKTOP.SYSTEM")
@@ -36,11 +35,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP", "/RAM1")
     emu.wait(30) -- slow copy
     a2d.Quit()
-    apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S1,D1")
-    apple2.BitsyInvokeFile("/A2.DESKTOP")
-    apple2.BitsyInvokeFile("/EXTRAS")
-    apple2.BitsyInvokeFile("BASIC.SYSTEM")
+    apple2.BitsyInvokePath("/RAM1/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX /RAM1")
     apple2.TypeLine("-A2.DESKTOP/DESKTOP.SYSTEM")
@@ -90,9 +85,7 @@ test.Step(
   "/RAM not empty warning",
   function()
     a2d.Quit()
-    apple2.WaitForBitsy()
-    apple2.BitsyInvokeFile("/EXTRAS")
-    apple2.BitsyInvokeFile("BASIC.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("10 PRINT \"HELLO WORLD\"")
     apple2.TypeLine("SAVE /RAM/HELLO")
@@ -105,9 +98,7 @@ test.Step(
     apple2.EscapeKey()
 
     apple2.WaitForBitsy()
-    apple2.EscapeKey() -- pop up to root
-    apple2.BitsyInvokeFile("/EXTRAS")
-    apple2.BitsyInvokeFile("BASIC.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
     emu.wait(5)
@@ -131,10 +122,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP", "/RAM1")
     emu.wait(30) -- slow copy
     a2d.Quit()
-    apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S1,D1")
-    apple2.BitsyInvokeFile("/A2.DESKTOP")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
     a2d.OpenPath("/RAM1")
     a2d.SelectAll()

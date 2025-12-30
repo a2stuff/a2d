@@ -134,13 +134,19 @@ test.Step(
     a2d.OpenPath("/FLOPPY1")
     a2d.Quit() -- to Bitsy Bye
 
-    apple2.GetDiskIIS6D1():unload()
+    local drive = apple2.GetDiskIIS6D1()
+    local image = drive.filename
+    drive:unload()
 
-    apple2.BitsyInvokeFile("PRODOS")
+    apple2.BitsyInvokePath("/A2.DESKTOP/PRODOS")
 
     -- TODO: Verify only polled once - watch drive access?
 
     a2d.WaitForDesktopReady()
+
+    -- cleanup
+    drive:load(image)
+    a2d.CheckAllDrives()
 end)
 
 --[[

@@ -18,8 +18,7 @@ test.Step(
   "Apple II+",
   function()
     apple2.WaitForBitsy()
-    apple2.BitsySelectSlotDrive("S6,D2")
-    apple2.BitsyInvokeFile("DESKTOP.SYSTEM")
+    apple2.BitsyInvokePath("/A2.DESKTOP.1/DESKTOP.SYSTEM")
     while not apple2.GrabTextScreen():match("PRESS A KEY TO QUIT") do
       emu.wait(0.25)
     end

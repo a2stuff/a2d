@@ -497,6 +497,7 @@ ListBoxTest(
   nil, -- no repopulate_inactive proc, tricky
   function()
     -- double_click_func
+    emu.wait(5)
     a2d.DialogCancel()
   end
 )
