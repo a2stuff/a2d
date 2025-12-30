@@ -10034,15 +10034,43 @@ eof:    RETURN  A=#$FF
 .proc ValidateStorageType
     IF A >= #ST_TREE_FILE+1     ; only seedling/sapling/tree supported
         ;; Unsupported type - show error, and either abort or return failure
-        CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#aux::str_alert_unsupported_type
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialogWithFailedResult
+
+        CALL    ShowAlertBasedOnFileCount, AX=#aux::str_alert_unsupported_type
         RETURN  C=1
     END_IF
 
         ;; Return success
         RETURN  C=0
 .endproc ; ValidateStorageType
+
+;;; ============================================================
+
+;;; Input: A,X = message, `file_count` set appropriately
+;;; Output:
+;;; * If final file (`file_count` is 0) OK shown and does not return.
+;;; * Otherwise, OK/Cancel shown and returns only if OK selected
+.proc ShowAlertBasedOnFileCount
+        ldy     file_count+1
+        bne     ok_cancel
+        ldy     file_count
+        beq     continue
+        ASSERT_EQUALS AlertButtonOptions::OK, 0
+ok_cancel:
+        ldy     #AlertButtonOptions::OKCancel
+continue:
+        sty     options
+        CALL    ShowAlertParams ; A,X set by caller, Y = AlertButtonOptions
+
+        options := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        beq     fail            ; only OK was offered
+
+        cmp     #kAlertResultCancel
+        beq     fail
+        rts
+
+fail:   jmp     CloseFilesCancelDialogWithFailedResult
+.endproc ; ShowAlertBasedOnFileCount
 
 ;;; ============================================================
 
@@ -10400,10 +10428,7 @@ retry:  jsr     GetDstFileInfo
     IF NS
         ldax    #aux::str_large_move_prompt
     END_IF
-        CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel ; A,X = string
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialogWithFailedResult
-
+        CALL    ShowAlertBasedOnFileCount ; A,X = string
         RETURN  C=1
 .endproc ; _CheckSpaceAvailable
 

@@ -428,7 +428,7 @@ function a2d.DuplicateSelection(newname, options)
     error("DuplicateSelection: nil passed as newname", options.level)
   end
   a2d.OAShortcut("D")
-  a2d.WaitForRepaint() -- extra, in case activation is needed
+  emu.wait(10) -- same as CopySelectionTo
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()

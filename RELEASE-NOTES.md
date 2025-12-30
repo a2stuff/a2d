@@ -43,6 +43,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix hang after non-menu shortcut if window fails to open.
 * Add Apple+Control+D as shortcut to focus desktop.
 * Add Apple+Control+W as shortcut to focus window.
+* Fix behavior after File > Duplicate failed due to space or storage type.
 
 ### Selector
 
