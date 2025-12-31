@@ -44,6 +44,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Add Apple+Control+D as shortcut to focus desktop.
 * Add Apple+Control+W as shortcut to focus window.
 * Fix behavior after File > Duplicate failed due to space or storage type.
+* Set empty window maprect so that when restored with new file scrollbars are inactive.
 
 ### Selector
 

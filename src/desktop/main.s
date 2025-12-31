@@ -7074,11 +7074,16 @@ assign_height:
 ;;;
 ;;; Note: Assumes icons are in window coordinates.
 .proc AdjustViewportForNewIcons
-        ;; No-op if window is empty
         lda     cached_window_icon_count
-    IF NOT_ZERO
+    IF ZERO
+        ;; This is to handle the case where an empty window is persisted
+        ;; then a file is added and the window is restored. For at least
+        ;; the single icon case it should not cause scrollbars to appear.
+        copy16  #AS_WORD(-kMaxIconTotalWidth/2), iconbb_rect+MGTK::Rect::x1
+    ELSE
         ;; Window space
         jsr     ComputeIconsBBox
+    END_IF
 
         winfo_ptr := $06
         tmpw := $08
@@ -7093,7 +7098,6 @@ assign_height:
         add16in (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
         add16in (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
-    END_IF
         rts
 .endproc ; AdjustViewportForNewIcons
 

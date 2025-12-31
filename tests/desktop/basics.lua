@@ -252,6 +252,28 @@ test.Step(
 end)
 
 --[[
+  Open an empty window. Exit desktop, add a file to the directory, and
+  restart. Verify scrollbars don't appear.
+]]
+test.Step(
+  "No scrollbars when file added to empty directory outside DeskTop",
+  function()
+    a2d.OpenPath("/RAM1")
+    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    apple2.WaitForBasicSystem()
+    apple2.TypeLine("10 NEW")
+    apple2.TypeLine("SAVE MMMMMMMMMMMMMMM")
+    apple2.TypeLine("BYE")
+    a2d.WaitForDesktopReady()
+    local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
+    test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "h scrollbar should be inactive")
+    test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "v scrollbar should be inactive")
+
+    -- cleanup
+    a2d.EraseVolume("RAM1")
+end)
+
+--[[
   Launch DeskTop. Open a volume window with multiple icons but that do
   not require the scrollbars to be active. Drag the first icon over to
   the right so that it is partially clipped by the window's right or
