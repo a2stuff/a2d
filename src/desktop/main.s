@@ -1088,8 +1088,6 @@ last_disk_in_devices_table:
 
 ;;; Preserves Y
 .proc CheckDisksInDevices
-        status_buffer := $800
-
         tya                     ; preserve Y
         pha
 
@@ -1097,7 +1095,7 @@ last_disk_in_devices_table:
     IF NOT_ZERO
         stx     disk_in_device_table
       DO
-        CALL    check_disk_in_drive, A=removable_device_table,x
+        CALL    CheckDiskInDevice, A=removable_device_table,x
         sta     disk_in_device_table,x
         dex
       WHILE NOT_ZERO
@@ -1106,10 +1104,13 @@ last_disk_in_devices_table:
         pla
         tay                     ; restore Y
         rts
+.endproc ; CheckDisksInDevices
 
 ;;; Input: A = unit_number
 ;;; Preserves X
-check_disk_in_drive:
+.proc CheckDiskInDevice
+        status_buffer := $800
+
         tay                     ; Y = unit_number
         txa                     ; preserve X
         pha
@@ -1143,7 +1144,25 @@ finish: pla
 
         ;; params for call
         DEFINE_SP_STATUS_PARAMS status_params, 1, status_buffer, 0
-.endproc ; CheckDisksInDevices
+.endproc ; CheckDiskInDevice
+
+;;; Inputs: A = unmasked unit number
+.proc UpdateDiskInDevicesTables
+        ;; Is this unit in `removable_devices_table`?
+        ldx     removable_device_table
+    IF NOT_ZERO
+      DO
+       IF A = removable_device_table,x
+        jsr     CheckDiskInDevice ; preserves X
+        sta     disk_in_device_table,x
+        sta     last_disk_in_devices_table,x
+        rts
+       END_IF
+        dex
+      WHILE NOT ZERO
+    END_IF
+        rts
+.endproc ; UpdateDiskInDevicesTables
 
 ;;; ============================================================
 
@@ -4837,6 +4856,13 @@ close_loop:
         ITK_CALL IconTK::FreeIcon, icon_param
         jsr     StoreCachedWindowIconList
     END_IF
+
+        ;; --------------------------------------------------
+        ;; If removable, update table to prevent a later re-check
+
+        ldy     devlst_index
+        lda     DEVLST,y
+        jsr     UpdateDiskInDevicesTables ; A = unmasked unit num
 
         ;; --------------------------------------------------
         ;; Try to create a new volume icon
