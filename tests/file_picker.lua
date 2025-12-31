@@ -593,6 +593,39 @@ test.Step(
 end)
 
 --[[
+  The Directory and Disk names (above the list box and buttons
+  respectively) should be empty when the path is empty.
+]]
+test.Step(
+  "Dir and Disk names when path is empty",
+  function()
+    -- Navigated to empty path
+    a2d.AddShortcut("/RAM1")
+
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    apple2.UpArrowKey()
+    a2d.DialogOK()
+    emu.wait(5)
+    test.Snap("verify showing drives list and dir/disk names empty")
+    apple2.PressOA()
+    apple2.Type("A2.DESKTOP")
+    apple2.ReleaseOA()
+    apple2.ControlKey("O") -- open
+    emu.wait(5)
+    apple2.ControlKey("D") -- drives
+    emu.wait(5)
+    test.Snap("verify showing drives list and dir/disk names empty")
+
+    -- cleanup
+    a2d.DialogCancel()
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    apple2.UpArrowKey()
+    a2d.DialogOK()
+    emu.wait(5)
+end)
+
+
+--[[
 * Launch DeskTop. Special > Format Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy To.... Verify that the file list is populated.
 ]]
 
