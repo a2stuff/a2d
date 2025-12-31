@@ -753,8 +753,8 @@ test.Step(
         test.Snap("verify icons mostly offscreen")
         m.ButtonDown()
         m.MoveToApproximately(x, y)
+        emu.wait(1)
         test.Snap("verify icons have drag outlines")
-        -- BUG: the offscreen icons do not have drag outlines!
         m.ButtonUp()
         emu.wait(1)
         test.Snap("verify icons reposition correctly")
