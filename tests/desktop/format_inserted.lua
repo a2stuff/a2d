@@ -1,15 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2gsr1"
-MODELARGS="-ramsize 8M"
-DISKARGS="-flop3 $HARDIMG"
-RESOLUTION="704x462"
+MODELARGS="-sl1 '' -sl2 mouse -sl6 '' -sl7 superdrive -aux ext80"
+DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(5)
-
-emu.wait(20) -- slow boot from floppy
+local s7d2 = manager.machine.images[":sl7:superdrive:fdc:1:35hd"]
 
 --[[
   Launch DeskTop. Insert a non-formatted disk into a SmartPort drive
@@ -20,7 +17,7 @@ emu.wait(20) -- slow boot from floppy
 test.Step(
   "Prompt to format inserted disk",
   function()
-    apple2.Get35Drive2():load(emu.subst_env("$UNFORMATTED_IMG"))
+    s7d2:load(emu.subst_env("$UNFORMATTED_IMG"))
     a2dtest.WaitForAlert()
 
     -- respond to alert
@@ -30,5 +27,14 @@ test.Step(
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
 
-    test.Snap("verify prompt shows slot 5, drive 2")
+    a2dtest.WaitForAlert()
+    test.Snap("verify prompt shows slot 7, drive 2")
+    a2d.DialogOK()
+
+    util.WaitFor(
+      "selection",
+      function() return
+          #a2d.GetSelectedIcons() == 1 and
+          a2dtest.GetSelectedIconName():upper() == "NEW.NAME" end,
+      {timeout=120})
 end)

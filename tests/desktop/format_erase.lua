@@ -57,6 +57,9 @@ FormatEraseTest(
     emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
     test.Snap("verify RAM Card was formatted")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should be selected")
+
+    -- cleanup
     a2d.RenamePath("/NEW.NAME", "RAM1")
 end)
 
@@ -139,6 +142,10 @@ FormatEraseTest(
     a2dtest.ExpectAlertShowing()
     a2d.DialogOK()
     emu.wait(5) -- slow
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHOLE.NAME.USED", "volume should be selected")
+
+    -- cleanup
     a2d.RenamePath("/WHOLE.NAME.USED", "RAM1")
 end)
 
@@ -196,6 +203,9 @@ FormatEraseTest(
     -- successful
     emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should be selected")
+
+    -- cleanup
     a2d.RenamePath("/NEW.NAME", "RAM1")
 end)
 
@@ -227,6 +237,9 @@ FormatEraseTest(
     -- successful
     emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should be selected")
+
+    -- cleanup
     a2d.RenamePath("/NEW.NAME", "RAM1")
 end)
 

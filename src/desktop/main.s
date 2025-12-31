@@ -3428,7 +3428,10 @@ exec:
         RTS_IF NOT_ZERO
 
         txa
-        TAIL_CALL CheckDriveByUnitNumber, Y=#kCheckDriveDoNotShowUnexpectedErrors ; A = unit number
+        pha                     ; A = unit number
+        CALL CheckDriveByUnitNumber, Y=#kCheckDriveDoNotShowUnexpectedErrors ; A = unit number
+        pla                     ; A = unit number
+        TAIL_CALL SelectUnitNum
 
 unit:   sta     unit_num
         copy8   #FormatEraseAction::format, action
@@ -3438,6 +3441,16 @@ unit:   sta     unit_num
 CmdFormatDisk := CmdFormatEraseDiskImpl::format
 CmdEraseDisk := CmdFormatEraseDiskImpl::erase
 FormatUnitNum := CmdFormatEraseDiskImpl::unit
+
+;;; ============================================================
+
+.proc SelectUnitNum
+        jsr     UnitNumberToDeviceIndex
+        lda     device_to_icon_map,x
+        RTS_IF  ZERO
+
+        TAIL_CALL SelectIconAndEnsureVisible ; A = icon id
+.endproc ; SelectUnitNum
 
 ;;; ============================================================
 
@@ -4758,6 +4771,26 @@ pending_alert:
         .byte   0
 
 ;;; ============================================================
+
+;;; Input: A = unit number (masked or unmasked)
+;;; Output: X = index in `DEVLST`
+;;; Assert: unit is present in the list
+.proc UnitNumberToDeviceIndex
+        and     #UNIT_NUM_MASK
+        sta     compare
+        ldx     DEVCNT
+    DO
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        compare := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        BREAK_IF EQ
+        dex
+    WHILE POS
+        rts
+.endproc ; UnitNumberToDeviceIndex
+
+;;; ============================================================
 ;;; Check > [drive] command - obsolete, but core still used
 ;;; following Format (etc)
 ;;;
@@ -4772,17 +4805,8 @@ kCheckDriveShowUnexpectedErrors = $80
 ;;; Input: A = unit number, Y = show unexpected errors flag
 
 by_unit_number:
-        ;; Map unit number to index in DEVLST
-        sta     compare
-        ldx     DEVCNT
-    DO
-        lda     DEVLST,x
-        and     #UNIT_NUM_MASK
-        compare := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        beq     common
-        dex
-    WHILE POS                   ; always
+        jsr     UnitNumberToDeviceIndex
+        jmp     common
 
 ;;; --------------------------------------------------
 ;;; After an Open/Eject/Rename action
