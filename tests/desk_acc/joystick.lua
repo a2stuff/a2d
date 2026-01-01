@@ -1,6 +1,5 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2e"
 MODELARGS="-gameio joy -sl2 mouse -sl7 cffa202 -aux ext80"
 DISKARGS="-hard1 $HARDIMG"
 

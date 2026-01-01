@@ -1,14 +1,13 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2cp"
-MODELARGS=""
-DISKARGS="-flop3 $HARDIMG"
+MODELARGS="-sl2 mouse -sl6 superdrive -aux ext80"
+DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-local s5d1 = manager.machine.images[":fdc:2:35dd"]
+local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
-a2d.ConfigureRepaintTime(2)
+a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Select a volume or folder containing multiple files. File > Get
@@ -19,12 +18,12 @@ a2d.ConfigureRepaintTime(2)
 test.Step(
   "Alert shown during File > Get Info if disk ejected, Try Again works",
   function()
-    local drive = s5d1
+    local drive = s6d1
     local current = drive.filename
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I", {no_wait=true})
-    emu.wait(1)
+    emu.wait(0.5)
     drive:unload()
 
     a2dtest.WaitForAlert()

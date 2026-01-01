@@ -1,12 +1,4 @@
---[[ BEGINCONFIG ========================================
-
-MODEL="apple2c4"
-MODELARGS=""
-DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
-
-======================================== ENDCONFIG ]]
-
-a2d.ConfigureRepaintTime(2)
+a2d.ConfigureRepaintTime(1)
 
 --[[
   Run System Speed DA. Click Normal then click OK. Verify DeskTop does
@@ -15,8 +7,7 @@ a2d.ConfigureRepaintTime(2)
 test.Step(
   "Normal + OK doesn't crash",
   function()
-    a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    emu.wait(5) -- floppy drives are slow
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("N") -- Normal Speed
     a2d.DialogOK()
     a2d.CloseAllWindows()
@@ -30,28 +21,11 @@ end)
 test.Step(
   "Fast + OK doesn't crash",
   function()
-    a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    emu.wait(5) -- floppy drives are slow
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("F") -- Fast Speed
     a2d.DialogOK()
     a2d.CloseAllWindows()
     a2dtest.ExpectNotHanging()
-end)
-
---[[
-  Run DeskTop on a IIc. Launch Control Panel > System Speed. Click
-  Normal and Fast. Verify that the display does not switch from DHR to
-  HR.
-]]
-test.Step(
-  "IIc - speed doesn't affect DHR display",
-  function()
-    a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    emu.wait(5) -- floppy drives are slow
-    apple2.Type("N") -- Normal Speed
-    apple2.Type("F") -- Fast Speed
-    test.Expect(apple2.ReadSSW("RDDHIRES") < 128, "Should still be in DHR mode")
-    a2d.CloseAllWindows()
 end)
 
 --[[
@@ -62,8 +36,7 @@ end)
 test.Step(
   "Animation shields cursor correctly",
   function()
-    a2d.OpenPath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    emu.wait(5) -- floppy drives are slow
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
 
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
 
@@ -77,6 +50,7 @@ test.Step(
           emu.wait(0.15)
           test.Snap("visually confirm no garbage")
         end
-        a2d.CloseAllWindows()
     end)
+    a2d.DialogOK()
+    a2d.CloseAllWindows()
 end)
