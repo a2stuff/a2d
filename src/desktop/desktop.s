@@ -38,7 +38,7 @@
         DEFSEG SegmentInvoker,     $0290, $0160
 
         ;; Dynamically loaded overlays
-        DEFSEG OverlayFormatErase,  $0800, $0F00
+        DEFSEG OverlayFormatErase,  $0800, $1000
         DEFSEG OverlayShortcutPick, $5000, $0800
         DEFSEG OverlayFileDialog,   $6000, $0A00
         DEFSEG OverlayFileCopy,     $7000, $0100

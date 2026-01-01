@@ -47,6 +47,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Set empty window maprect so that when restored with new file scrollbars are inactive.
 * Fix volume icon flicker after Check All Drives for removable disks.
 * Select volume icomn after Format/Erase.
+* Fix display of long device names in Format/Erase volume picker.
 
 ### Selector
 

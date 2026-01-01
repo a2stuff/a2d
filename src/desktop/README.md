@@ -122,6 +122,8 @@ When running, memory use includes:
    * [Icon ToolKit](APIs.md)
    * [LineEdit ToolKit](../toolkits/LETK.md)
    * [Button ToolKit](../toolkits/BTK.md)
+   * [ListBox ToolKit](../toolkits/LBTK.md)
+   * [Option Picker ToolKit](../toolkits/OPTK.md)
    * Alert dialog resources/code
 
 ...and in the Aux language card area (accessible from both aux and

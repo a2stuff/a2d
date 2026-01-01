@@ -10,6 +10,7 @@ Desk Accessories:
   * [LineEdit ToolKit](../toolkits/LETK.md)
   * [Button ToolKit](../toolkits/BTK.md)
   * [ListBox ToolKit](../toolkits/LBTK.md)
+  * [Option Picker ToolKit](../toolkits/OPTK.md)
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 * Aux Entry Points
 

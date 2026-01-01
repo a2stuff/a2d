@@ -359,10 +359,40 @@ no:     RETURN  A=#$80
 
 ;;; Input: A = index in `DEVLST`
 .proc DrawDeviceNameForIndex
+        buf := text_buffer2
+        ptr := $06
+
+        ;; Look up device name in table
         asl     a
         tay
-        copy16  device_name_table,y, @addr
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        copy16  device_name_table,y, ptr
+        CALL    main::CopyPtr1ToBuf, AX=#buf
+
+PARAM_BLOCK string_width_params, $06
+str     .addr
+width   .word
+END_PARAM_BLOCK
+
+        ;; Check the length; shrink until it fits
+        copy16  #buf, string_width_params::str
+    DO
+        MGTK_CALL MGTK::StringWidth, string_width_params
+        cmp16   string_width_params::width, #kVolPickerItemWidth
+        BREAK_IF LT
+        ;; Shrink by one character, replace last 3 with "..."
+        dec     buf
+        ldy     buf
+        lda     #'.'
+        ldx     #3
+      DO
+        sta     buf,y
+        dey
+        dex
+      WHILE NOT ZERO
+    WHILE NOT POS               ; always
+
+        ;; Draw it
+        MGTK_CALL MGTK::DrawString, buf
         rts
 .endproc ; DrawDeviceNameForIndex
 
