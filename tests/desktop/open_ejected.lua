@@ -6,6 +6,8 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
+local s5d1 = manager.machine.images[":fdc:2:35dd"]
+
 a2d.ConfigureRepaintTime(5)
 
 --[[
@@ -16,7 +18,7 @@ a2d.ConfigureRepaintTime(5)
 test.Step(
   "Alert shown on File > Open if disk ejected",
   function()
-    local drive = apple2.Get35Drive1()
+    local drive = s5d1
     drive:unload()
 
     a2d.SelectPath("/A2.DESKTOP")

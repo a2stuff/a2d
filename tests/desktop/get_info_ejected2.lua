@@ -4,6 +4,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/floppy_with_files.dsk"
 
 ======================================== ENDCONFIG ]]
 
+local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
+
 a2d.ConfigureRepaintTime(2)
 
 --[[
@@ -14,7 +16,7 @@ a2d.ConfigureRepaintTime(2)
 test.Step(
   "Alert shown on File > Get Info for disk if disk ejected",
   function()
-    local drive = apple2.GetDiskIIS6D1()
+    local drive = s6d1
     local current = drive.filename
 
     a2d.SelectPath("/WITH.FILES")
@@ -34,7 +36,7 @@ end)
 test.Step(
   "Alert shown on File > Get Info for single file if disk ejected",
   function()
-    local drive = apple2.GetDiskIIS6D1()
+    local drive = s6d1
     local current = drive.filename
 
     a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
@@ -54,7 +56,7 @@ end)
 test.Step(
   "Alert shown on File > Get Info for multiple files if disk ejected",
   function()
-    local drive = apple2.GetDiskIIS6D1()
+    local drive = s6d1
     local current = drive.filename
 
     a2d.OpenPath("/WITH.FILES")

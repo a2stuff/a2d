@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/floppy_with_files.dsk"
 
 ======================================== ENDCONFIG ]]
 
+local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
+
 a2d.ConfigureRepaintTime(0.5)
 
 --[[
@@ -234,9 +236,8 @@ test.Step(
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
 
     -- Eject disk
-    local drive = apple2.GetDiskIIS6D1()
-    local current = drive.filename
-    drive:unload()
+    local current = s6d1.filename
+    s6d1:unload()
 
     -- Drag to trash
     a2d.Drag(icon_x, icon_y, trash_x, trash_y)
@@ -256,5 +257,5 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
     test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
-    drive:load(current)
+    s6d1:load(current)
 end)

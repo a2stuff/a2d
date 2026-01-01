@@ -116,4 +116,25 @@ Tests specific to various components of the application.
     * Add a shortcut (e.g. via `a2d.AddShortcut()`) for a dependent window, use `a2d.OpenPath()` to open the initial window, then `a2d.OAShortcut("1")` (etc) to open the second window.
     * Use the `{keep_windows=true}` option to override the default. But note that this works by setting focus to the desktop and opening windows via typing. If you open "/DISK1" and then try to open "/DISK1/FOLDER1" the second "hijacks" the window of the first. Re-ordering the actions is usually sufficient.
 * The `a2d` library implicitly has short waits after each action using `a2d.WaitForRepaint()`. The duration of this delay can (and should) be changed by calling `a2d.ConfigureRepaintTiming()`. While this is convenient, experience has shown that manual delays using `emu.wait(N)` after an action that "takes too long" are more maintainable; adding a single extra wait is better than trying to tweak the global settings.. Even better, of course, are using functions that delay until a milestone has been reached (the desktop is visible, an alert is showing, etc).
+* Access to virtual disk drives is via the `manager.machine.images` collection.
+  * The accessed objects provide:
+    * `drive.filename` - get the current image path
+    * `drive:load(name)` - insert/replace a disk image
+    * `drive:unload()` - eject a disk image
+  * The keys in `images` depend heavily on the configuration:
+    * For a Disk II controller in Slot 6:
+      * `local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]`
+      * `local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]`
+    * For a Superdrive controller in Slot 5:
+      * `local s5d1 = manager.machine.images[":sl5:superdrive:fdc:0:35hd"]`
+      * `local s5d2 = manager.machine.images[":sl5:superdrive:fdc:1:35hd"]`
+    * For a SCSI controller in Slot 7:
+      * `local s7d1 = manager.machine.images[":sl7:scsi:scsibus:6:harddisk:image"]`
+    * For an Apple IIgs or Apple IIc+
+      * `local s6d1 = manager.machine.images[":fdc:0:525"]`
+      * `local s6d2 = manager.machine.images[":fdc:1:525"]`
+      * `local s5d1 = manager.machine.images[":fdc:2:35dd"]`
+      * `local s5d2 = manager.machine.images[":fdc:3:35dd"]`
+  * ... and so on. Since this depends so heavily on the configuration which varies between tests, no abstraction is (currently) provided for this. The convention is to provide this mapping at the top of the test file for tests that do interact with the virtual drives.
+
 

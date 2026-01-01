@@ -5,6 +5,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
+local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
+
 a2d.ConfigureRepaintTime(0.25)
 
 --[[
@@ -185,7 +187,7 @@ end)
 test.Step(
   "OA+SA+Down should not hang if disk was ejected",
   function()
-    local drive = apple2.GetDiskIIS6D1()
+    local drive = s6d1
     local current = drive.filename
     drive:unload()
 

@@ -7,8 +7,8 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/disk_c.2mg -flop2 res/disk_d.2mg -flop3 res
 
 a2d.ConfigureRepaintTime(0.25)
 
-local s6d1 = apple2.GetDiskIIS6D1()
-local s6d2 = apple2.GetDiskIIS6D2()
+local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
+local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
 
 local pascal_image = s6d1.filename
 s6d1:unload()

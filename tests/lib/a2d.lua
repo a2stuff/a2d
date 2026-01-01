@@ -559,6 +559,7 @@ function a2d.CopyPath(src, dst, options)
 end
 
 function a2d.CheckAllDrives(options)
+  options = default_options(options)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES, options)
   if not options.no_wait then
     emu.wait(10)

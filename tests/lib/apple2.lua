@@ -45,11 +45,6 @@ local keyboard = {
   ["Caps Lock"]   = { port = ":keyb_special", field = "Caps Lock", bits = 0x01 },
 }
 
-local images = {
-  S6D1 = ":sl6:diskiing:0:525",
-  S6D2 = ":sl6:diskiing:1:525",
-}
-
 local function get_device(pattern)
   for name,dev in pairs(machine.devices) do
     if name:match(pattern) then return dev end
@@ -77,18 +72,6 @@ elseif machine.system.name:match("^apple2c") then
     y = { port = ":mse_y",      field = "Mouse Y" },
     b = { port = ":mse_button", field = "Mouse Button" },
   }
-  images = {
-    S6D1 = ":sl6:0:525",
-    S6D2 = ":sl6:1:525",
-  }
-  if machine.system.name:match("^apple2cp") then
-    images = {
-      S6D1 = ":fdc:0:525",
-      S6D2 = ":fdc:1:525",
-      FDC2 = ":fdc:2:35dd",
-      FDC3 = ":fdc:3:35dd",
-    }
-  end
 elseif machine.system.name:match("^las.*128") then
   -- Laser 128
   -- * built-in mouse port
@@ -132,13 +115,6 @@ elseif machine.system.name:match("^apple2gs") then
     -- Other
     ["Reset"]     = { port = ":macadb:KEY5", field = "Reset / Power" },
     ["Caps Lock"] = { port = ":macadb:KEY3", field = "Caps Lock", bits = 0x0200 },
-  }
-
-  images = {
-    S6D1 = ":fdc:0:525",
-    S6D2 = ":fdc:1:525",
-    FDC2 = ":fdc:2:35dd",
-    FDC3 = ":fdc:3:35dd",
   }
 elseif machine.system.name:match("^ace500") then
   -- Franklin ACE 500
@@ -815,66 +791,6 @@ function apple2.ReadSSW(symbol)
 end
 function apple2.WriteSSW(symbol, value)
   apple2.WriteMemory(ssw[symbol], value)
-end
-
-
---------------------------------------------------
--- Disks/Drives
---------------------------------------------------
-
--- These return image, objects:
--- https://docs.mamedev.org/luascript/ref-devices.html#image-device-interface
--- Useful methods:
---  image:load(path_to_image_file) -- swap
---  image:unload() -- eject, for floppies only!
-
--- SCSI controller devices
-function apple2.GetSCSIHD(slot, id)
-  local image = manager.machine.images[":sl"..slot..":scsi:scsibus:"..id..":harddisk:image"]
-  if not image then
-    error("No SCSI in slot "..slot.." and/or hard disk at ID " .. id)
-  end
-  return image
-end
-function apple2.GetSCSICD(slot, id)
-  local image = manager.machine.images[":sl"..slot..":scsi:scsibus:"..id..":cdrom:image"]
-  if not image then
-    error("No SCSI in slot "..slot.." and/or CD-ROM at ID " .. id)
-  end
-  return image
-end
-
--- These abstract over the various hardware that looks like S6,Dn to most software
-function apple2.GetDiskIIS6D1()
-  local image = manager.machine.images[images.S6D1]
-  if not image then
-    error("No Disk II in S6,D2")
-  end
-  return image
-end
-
-function apple2.GetDiskIIS6D2()
-  local image = manager.machine.images[images.S6D2]
-  if not image then
-    error("No Disk II in S6,D2")
-  end
-  return image
-end
-
--- For Apple IIgs and Apple IIc+ only (so far)
-function apple2.Get35Drive1()
-  local image = manager.machine.images[images.FDC2]
-  if not image then
-    error("No 3.5\" drive 1")
-  end
-  return image
-end
-function apple2.Get35Drive2()
-  local image = manager.machine.images[images.FDC3]
-  if not image then
-    error("No 3.5\" drive 1")
-  end
-  return image
 end
 
 --------------------------------------------------

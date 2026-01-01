@@ -5,6 +5,9 @@ DISKARGS="-hard1 $HARDIMG -flop1 res/floppy_with_files.dsk -flop2 res/prodos_flo
 
 ======================================== ENDCONFIG ]]
 
+local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
+local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
+
 a2d.ConfigureRepaintTime(1)
 
 --[[
@@ -20,11 +23,11 @@ a2d.ConfigureRepaintTime(1)
 test.Step(
   "File > Copy To with disk swapping",
   function()
-    local drive2 = apple2.GetDiskIIS6D2()
+    local drive2 = s6d2
     local dst = drive2.filename
     drive2:unload()
 
-    local drive = apple2.GetDiskIIS6D1()
+    local drive = s6d1
     local src = drive.filename
 
     a2d.CheckAllDrives()
@@ -77,7 +80,7 @@ end)
 test.Step(
   "Drag with disk ejected",
   function()
-    local drive = apple2.GetDiskIIS6D1()
+    local drive = s6d1
     local src = drive.filename
 
     a2d.SelectPath("/RAM1")
