@@ -3773,8 +3773,6 @@ END_PARAM_BLOCK
         ENTRY_POINTS_FOR_A left, kDirLeft, right, kDirRight, up, kDirUp, down, kDirDown
         sta     dir
 
-        jsr     CacheFocusedWindowIconList
-
 ;;; --------------------------------------------------
 ;;; If a list view, use index-based logic
 
@@ -3789,6 +3787,8 @@ END_PARAM_BLOCK
 
 ;;; --------------------------------------------------
 ;;; Identify a starting icon
+
+        jsr     CacheFocusedWindowIconList
 
         lda     selected_icon_count
         jeq     fallback

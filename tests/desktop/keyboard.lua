@@ -814,9 +814,7 @@ test.Variants(
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.WaitForRepaint()
 
-    -- TODO: Fails without this, as selection is on the volume.
-    -- Is this correct or not?
-    a2d.ClearSelection()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "single volume should be selected")
 
     a2dtest.ExpectNothingChanged(function()
         if idx == 1 then
@@ -826,6 +824,8 @@ test.Variants(
         end
         a2d.WaitForRepaint()
     end)
+
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "single volume should be selected")
 end)
 
 --[[
