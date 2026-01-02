@@ -136,14 +136,85 @@ test.Step(
 end)
 
 --[[
-  Open a window containing no files. Start typing a filename. Verify
-  that nothing is selected.
+  Open a window containing no files. Verify selection doesn't change.
 ]]
 test.Step(
-  "type down does nothing in empty windows",
+  "type down in empty windows does not change selection",
   function()
+    -- Volume selection
     a2d.OpenPath("/RAM1")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should be selected")
     apple2.Type("ANYTHING")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should still be selected")
+
+    -- Selection in another window
+    a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
+    a2d.CycleWindows()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should be selected")
+    apple2.Type("ANYTHING")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should still be selected")
+
+    -- No selection in another window
+    a2d.ClearSelection()
+    apple2.Type("ANYTHING")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "nothing should be selected")
+end)
+
+--[[
+  Use tab in a window containing no files. Verify selection doesn't change.
+]]
+test.Step(
+  "tab in empty windows does not change selection",
+  function()
+    -- Volume selection
+    a2d.OpenPath("/RAM1")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should be selected")
+    apple2.TabKey()
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should still be selected")
+
+    -- Selection in another window
+    a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
+    a2d.CycleWindows()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should be selected")
+    apple2.TabKey()
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should still be selected")
+
+    -- No selection in another window
+    a2d.ClearSelection()
+    apple2.TabKey()
+    a2d.WaitForRepaint()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "nothing should be selected")
+end)
+
+--[[
+  Use arrow keys in a window containing no files. Verify selection doesn't change.
+
+  (somewhat redundant with a test below)
+]]
+test.Step(
+  "arrow keys in empty windows does not change selection",
+  function()
+    -- Volume selection
+    a2d.OpenPath("/RAM1")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should be selected")
+    apple2.DownArrowKey()
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should still be selected")
+
+    -- Selection in another window
+    a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
+    a2d.CycleWindows()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should be selected")
+    apple2.DownArrowKey()
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should still be selected")
+
+    -- No selection in another window
+    a2d.ClearSelection()
+    apple2.DownArrowKey()
+    a2d.WaitForRepaint()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "nothing should be selected")
 end)
 
@@ -322,7 +393,7 @@ test.Step(
     local icons = a2d.GetSelectedIcons()
     test.ExpectEquals(#icons, 1, "volume should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "RAM1", "volume should be selected")
-    test.Expect(not icons[1].dimmed, "volume should not be dimmed selected")
+    test.Expect(not icons[1].dimmed, "volume should not be dimmed")
 end)
 
 --[[
@@ -762,6 +833,8 @@ end)
   containing no icons. Select an icon in the first window. Activate
   the other window without changing selection. Press an arrow key.
   Verify that selection remains unchanged.
+
+  (somewhat redundant with a test above)
 ]]
 test.Step(
   "Arrow keys in empty windows don't change selection",
@@ -795,8 +868,7 @@ test.Step(
     apple2.RightArrowKey()
     a2d.WaitForRepaint()
 
-    -- TODO: Fails! Is this regression or intentional change?
-    --    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "first icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "first icon should be selected")
 end)
 
 --[[

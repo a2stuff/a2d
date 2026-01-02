@@ -4042,13 +4042,19 @@ typedown_buf:
 ;;; Load the entry table for the window to be used for keyboard
 ;;; selection - usually the active window, unless the desktop
 ;;; has been clicked. Also clears selection if it isn't in
-;;; that window.
+;;; that window -- if the focused window is non-empty.
 
 .proc CacheFocusedWindowIconList
         lda     focused_window_id
     IF A <> selected_window_id
         pha
+
+        tax
+        lda     window_entry_count_table,x
+      IF NOT ZERO
         jsr     ClearSelection
+      END_IF
+
         pla
     END_IF
         jmp     CacheWindowIconList
