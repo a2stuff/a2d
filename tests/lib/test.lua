@@ -101,7 +101,7 @@ function test.Variants(t, func)
 end
 
 function test.Failure(message)
-  print(message)
+  io.stderr:write(message .. "\n")
   os.exit(1)
 end
 

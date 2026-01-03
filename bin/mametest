@@ -168,6 +168,9 @@ export RUN_COUNT
 export WAITFORDESKTOP
 export CHECKAUXMEMORY
 
+export COLOR_RED="$(tput setaf 1)"
+export COLOR_RESET="$(tput sgr0)"
+
 pushd "$MAMEDIR" > /dev/null
 exec 5>&1 # duplicate stdout filehandle
 output=$(
@@ -183,7 +186,7 @@ output=$(
     $THROTTLE \
     $MAMEFLAGS \
     $SCRIPTARGS" \
-    2>&1 | \
+       2> >(while read line; do echo "${COLOR_RED}${line}${COLOR_RESET}" >&1; done) | \
     egrep --line-buffered -v "Secure coding is automatically enabled" | \
     tee /dev/fd/5
       )
