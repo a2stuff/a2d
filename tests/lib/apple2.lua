@@ -145,15 +145,34 @@ elseif machine.system.name:match("^ace2200") then
   keyboard["Reset"].field = "RESET"
 elseif machine.system.name:match("^apple2p") then
   -- minimal support for launcher testing
-  keyboard = {
-    ["Control"]     = { port = ":keyb_special", field = "Control"     },
-    ["Shift"]       = { port = ":keyb_special", field = "Left Shift"  },
 
-    ["Right Arrow"] = { port = ":X2", field = "→"      },
-    ["Down Arrow"]  = { port = ":X2", field = "↓"      },
-    ["Return"]      = { port = ":X4", field = "Return" },
-    ["Escape"]      = { port = ":X4", field = "Esc"    }
-  }
+  if machine.ioport.ports[":keyb_special"] then
+    -- MAME through 0.283
+    keyboard = {
+      ["Control"]     = { port = ":keyb_special", field = "Control"     },
+      ["Shift"]       = { port = ":keyb_special", field = "Left Shift"  },
+
+      ["Right Arrow"] = { port = ":X2", field = "→" },
+      ["Down Arrow"]  = { port = ":X2", field = "↓"  },
+      ["Return"]      = { port = ":X4", field = "Return" },
+      ["Escape"]      = { port = ":X4", field = "Esc"    }
+    }
+  elseif machine.ioport.ports[":kbd:nkbd:keyb_special"] then
+    -- MAME from 0.284
+    keyboard = {
+      ["Control"]     = { port = ":kbd:nkbd:keyb_special", field = "Ctrl"        },
+      ["Shift"]       = { port = ":kbd:nkbd:keyb_special", field = "Left Shift"  },
+
+      ["Right Arrow"] = { port = ":kbd:nkbd:X2", field = "Cursor Right" },
+      ["Down Arrow"]  = { port = ":kbd:nkbd:X2", field = "Cursor Left"  },
+      ["Return"]      = { port = ":kbd:nkbd:X4", field = "Return" },
+      ["Escape"]      = { port = ":kbd:nkbd:X4", field = "Esc"    }
+    }
+  else
+    error(string.format(
+            "Unable to identify keyboard port for %s - was MAME updated?",
+            machine.system.name))
+  end
 else
   error("Unknown model: " .. machine.system.name)
 end
