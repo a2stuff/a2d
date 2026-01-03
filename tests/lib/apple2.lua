@@ -634,7 +634,16 @@ end
 -- 0x0nnnn to access Main RAM and 0x1nnnn to acces Aux RAM. For
 -- LCBANK2 use 0xbCnnnn instead of 0xDnnnn.
 
-local ram = emu.item(machine.devices[":ram"].items["0/m_pointer"])
+-- RAM should be device tag ":ram" item name "0/m_pointer" but
+-- MAME 0.284 introduced https://github.com/mamedev/mame/issues/14762
+-- so hunt for it using pattern matching.
+local ram
+for i,_ in pairs(machine.devices[":ram"].items) do
+  if i:match("0/.*m_pointer") then
+    ram = emu.item(machine.devices[":ram"].items[i])
+    break
+  end
+end
 
 local function swizzle(addr)
   -- Assume LCBANK1 is desired
