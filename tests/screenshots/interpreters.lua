@@ -17,7 +17,6 @@ test.Step(
     test.Snap("Applesoft BASIC")
     apple2.ControlOAReset()
     a2d.WaitForDesktopReady()
-    return test.PASS
 end)
 
 test.Step(
@@ -30,7 +29,6 @@ test.Step(
     test.Snap("Integer BASIC")
     apple2.ControlOAReset()
     a2d.WaitForDesktopReady()
-    return test.PASS
 end)
 
 test.Step(
@@ -41,7 +39,6 @@ test.Step(
     test.Snap("S.A.M. Text-To-Speech")
     apple2.ControlOAReset()
     a2d.WaitForDesktopReady()
-    return test.PASS
 end)
 
 test.Step(
@@ -52,7 +49,6 @@ test.Step(
     test.Snap("Noise Tracker PT3")
     apple2.ControlOAReset()
     a2d.WaitForDesktopReady()
-    return test.PASS
 end)
 
 -- TODO: AW

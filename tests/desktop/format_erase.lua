@@ -50,7 +50,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
 
     -- command
@@ -79,7 +79,7 @@ FormatEraseTest(
     invoke(true)
     apple2.Type("UNIQUE.NAME")
     a2d.DialogOK()
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt confirms overwrite, not a duplicate name")
     a2d.DialogCancel()
 end)
@@ -96,7 +96,7 @@ FormatEraseTest(
     invoke(true)
     apple2.Type("A2.DESKTOP")
     a2d.DialogOK()
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt says the name is in use")
     a2d.DialogCancel()
     a2d.DialogCancel()
@@ -114,7 +114,7 @@ FormatEraseTest(
     invoke(true)
     apple2.Type("RAM1")
     a2d.DialogOK()
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt confirms overwrite, not a duplicate name")
     a2d.DialogCancel()
 end)
@@ -139,7 +139,7 @@ FormatEraseTest(
       apple2.LeftArrowKey()
     end
     a2d.DialogOK()
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
     emu.wait(5) -- slow
 
@@ -171,13 +171,11 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation prompt
-    emu.wait(10)
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
 
     -- command
-    emu.wait(5) -- slow
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogCancel()
 end)
 
@@ -197,7 +195,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
 
     -- successful
@@ -231,7 +229,7 @@ FormatEraseTest(
     a2d.WaitForRepaint()
 
     -- confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
 
     -- successful
@@ -318,7 +316,7 @@ FormatEraseTest(
 
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt names selected volume")
 
     a2d.DialogCancel()

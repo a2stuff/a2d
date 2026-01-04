@@ -278,10 +278,6 @@ function a2dtest.IsAlertShowing()
   return true
 end
 
-function a2dtest.ExpectAlertShowing()
-  test.Expect(a2dtest.IsAlertShowing(), "an alert should be showing", nil, 1)
-end
-
 function a2dtest.ExpectAlertNotShowing()
   test.Expect(not a2dtest.IsAlertShowing(), "an alert should not be showing", nil, 1)
 end

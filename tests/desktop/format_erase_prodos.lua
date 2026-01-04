@@ -31,7 +31,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt says ProDOS disk name with adjusted case")
 
     a2d.DialogCancel()

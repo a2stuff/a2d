@@ -31,8 +31,8 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt just mentions slot 6, drive1")
-    
+
     a2d.DialogCancel()
 end)

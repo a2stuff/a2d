@@ -193,8 +193,7 @@ test.Step(
 
     a2d.SelectPath("/FLOPPY1")
     a2d.OASADown()
-    emu.wait(5) -- slow floppy
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
     emu.wait(5) -- slow floppy
     a2dtest.ExpectNotHanging()

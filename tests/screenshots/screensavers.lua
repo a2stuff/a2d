@@ -14,7 +14,6 @@ test.Step(
     test.Snap("Analog Clock")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -25,7 +24,6 @@ test.Step(
     test.Snap("Digital Clock")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -36,7 +34,6 @@ test.Step(
     test.Snap("Flying Toasters")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -47,7 +44,6 @@ test.Step(
     test.Snap("Helix")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -58,7 +54,6 @@ test.Step(
     test.Snap("Invert")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -69,7 +64,6 @@ test.Step(
     test.Snap("Matrix")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -80,7 +74,6 @@ test.Step(
     test.Snap("Melt")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -91,7 +84,6 @@ test.Step(
     test.Snap("Message")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)
 
 test.Step(
@@ -102,5 +94,4 @@ test.Step(
     test.Snap("Rod's Pattern")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    return test.PASS
 end)

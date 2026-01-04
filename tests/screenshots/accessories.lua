@@ -23,8 +23,7 @@ function OpenFileTest(name, path)
       a2d.OpenPath(path)
       test.Snap(name)
       a2d.CloseWindow()
-      return test.PASS
-  end)
+    end)
 end
 
 OpenFileTest("Calendar", "/A2.DESKTOP/APPLE.MENU/CALENDAR")
@@ -40,7 +39,6 @@ test.Step(
     emu.wait(10)
     test.Snap("Find Files")
     a2d.CloseWindow()
-    return test.PASS
 end)
 
 OpenFileTest("Key Caps", "/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
@@ -53,7 +51,6 @@ test.Step(
     test.Snap("Run Basic Here")
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
-    return test.PASS
 end)
 
 --------------------------------------------------
@@ -98,7 +95,6 @@ test.Step(
     emu.wait(10) -- DOS 3.3 CATALOG can be slow
     test.Snap("File selection")
     a2d.CloseWindow()
-    return test.PASS
 end)
 
 OpenFileTest("Scientific Calculator", "/A2.DESKTOP/EXTRAS/SCI.CALC")

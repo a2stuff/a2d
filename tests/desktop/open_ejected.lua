@@ -23,6 +23,6 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN-1)
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
 end)
 

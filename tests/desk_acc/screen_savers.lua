@@ -91,7 +91,7 @@ test.Step(
   "Analog Clock shows alert if there is no system clock",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/ANALOG.CLOCK")
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
     a2d.CloseAllWindows()
 end)
@@ -105,7 +105,7 @@ test.Step(
   "Digital Clock shows alert if there is no system clock",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/DIGITAL.CLOCK")
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogOK()
     a2d.CloseAllWindows()
 end)

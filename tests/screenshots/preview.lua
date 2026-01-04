@@ -14,7 +14,6 @@ test.Step(
     test.Snap("Image Preview")
     apple2.EscapeKey()
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -25,7 +24,6 @@ test.Step(
     test.Snap("Electric Duet Preview")
     apple2.EscapeKey()
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -36,7 +34,6 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "MONACO.EN", "window title should match")
     test.Snap("Font Preview")
     a2d.CloseAllWindows()
-    return test.PASS
 end)
 
 test.Step(
@@ -51,5 +48,4 @@ test.Step(
     test.Snap("Text Preview")
     apple2.EscapeKey()
     a2d.CloseAllWindows()
-    return test.PASS
 end)

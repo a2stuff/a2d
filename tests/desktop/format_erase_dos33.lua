@@ -31,7 +31,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt says DOS 3.3 disk in slot 6, drive 1")
 
     a2d.DialogCancel()

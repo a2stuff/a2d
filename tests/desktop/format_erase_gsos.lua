@@ -32,8 +32,8 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt says GS/OS disk name with assigned case")
-    
+
     a2d.DialogCancel()
 end)

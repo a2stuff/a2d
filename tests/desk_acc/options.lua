@@ -44,8 +44,7 @@ test.Step(
     drive:unload()
 
     a2d.CloseWindow()
-    a2d.WaitForRepaint()
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     a2d.DialogCancel()
 
     drive:load(current)

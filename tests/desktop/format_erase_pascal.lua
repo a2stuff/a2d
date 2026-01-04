@@ -31,8 +31,8 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.ExpectAlertShowing()
+    a2dtest.WaitForAlert()
     test.Snap("verify prompt names Pascal disk 'TK:'")
-    
+
     a2d.DialogCancel()
 end)
