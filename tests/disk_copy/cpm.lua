@@ -17,9 +17,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "CP/M Pascal disk names in source label",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     -- source
     apple2.DownArrowKey() -- S7,D1
@@ -55,9 +53,7 @@ end)
 test.Step(
   "CP/M disk names in overwrite prompt",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     -- source
     apple2.DownArrowKey() -- S7,D1

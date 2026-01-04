@@ -43,9 +43,7 @@ test.Step(
   "/RAM exists after Disk Copy",
   function()
     a2d.CloseAllWindows()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")

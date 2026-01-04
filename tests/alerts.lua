@@ -62,8 +62,7 @@ end)
 test.Step(
   "Disk Copy - Escape closes alert",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+    a2d.CopyDisk()
     a2d.WaitForDesktopReady()
 
     apple2.UpArrowKey() -- S6D2

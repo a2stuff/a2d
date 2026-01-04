@@ -22,9 +22,7 @@ test.Step(
     a2d.OAShortcut("1") -- check RGB Color
     a2d.CloseWindow()
 
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
     test.Expect(apple2.IsColor(), "desktop should be in color")
 
     apple2.PressOA()
@@ -58,9 +56,7 @@ end)
 test.Step(
   "RGB Monochrome vs. IIgs Control Panel",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
     test.Expect(apple2.IsMono(), "desktop should be in monochrome")
 
     apple2.PressOA()

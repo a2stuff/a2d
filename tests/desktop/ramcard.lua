@@ -77,7 +77,7 @@ function RenameTest(name, proc)
       if idx == 1 then
         a2d.RenamePath("/NEWNAME", "A2.DESKTOP")
       elseif idx == 2 then
-        a2d.RenamePath("/NEWNAME", "/RAM1")
+        a2d.RenamePath("/NEWNAME", "RAM1")
         a2d.EraseVolume("RAM1")
       elseif idx == 3 then
         a2d.EraseVolume("RAM1")
@@ -114,8 +114,7 @@ RenameTest(
   function(dtpath)
     -- Special > Copy Disk
     a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "dialog+listbox should be open")
     -- File > Quit returns to DeskTop
     a2d.OAShortcut("Q")

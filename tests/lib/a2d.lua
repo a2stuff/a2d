@@ -408,6 +408,10 @@ end
 
 function a2d.RenameSelection(newname, options)
   options = default_options(options)
+  if newname:match("^/") then
+    error(string.format("%s: new name %q should not be a path",
+                        debug.getinfo(1,"n").name, newname), options.level)
+  end
   apple2.ReturnKey()
   a2d.ClearTextField()
   apple2.Type(newname)
@@ -418,6 +422,10 @@ end
 
 function a2d.RenamePath(path, newname, options)
   options = default_options(options)
+  if newname:match("^/") then
+    error(string.format("%s: new name %q should not be a path",
+                        debug.getinfo(1,"n").name, newname), options.level)
+  end
   a2d.SelectPath(path, options)
   a2d.RenameSelection(newname, options)
 end
@@ -437,6 +445,10 @@ function a2d.DuplicateSelection(newname, options)
 end
 
 function a2d.DuplicatePath(path, newname)
+  if newname:match("^/") then
+    error(string.format("%s: new name %q should not be a path",
+                        debug.getinfo(1,"n").name, newname), options.level)
+  end
   a2d.SelectPath(path)
   a2d.DuplicateSelection(newname)
 end
@@ -488,12 +500,24 @@ function a2d.EraseVolume(name, opt_new_name, options)
   options = default_options(options)
   a2d.SelectPath("/"..name, options)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
+  a2d.ClearTextField()
   apple2.Type(opt_new_name or name)
   a2d.DialogOK()
   -- TODO: WaitForAlert here (layering violation!)
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
   emu.wait(5) -- I/O
+end
+
+function a2d.CopyDisk(opt_path)
+  if opt_path == nil then
+    a2d.ClearSelection()
+    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+  else
+    a2d.SelectPath(opt_path)
+    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK)
+  end
+  a2d.WaitForDesktopReady()
 end
 
 function a2d.CycleWindows()

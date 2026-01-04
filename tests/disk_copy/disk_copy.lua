@@ -13,8 +13,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "Disk Selection - Double-click",
   function()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
     local listbox_x, listbox_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)

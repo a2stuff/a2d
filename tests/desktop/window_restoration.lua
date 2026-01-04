@@ -42,8 +42,7 @@ test.Step(
     a2d.OAShortcut("O") -- File > Open
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-        a2d.WaitForDesktopReady()
+        a2d.CopyDisk()
         a2d.OAShortcut("Q") -- File > Quit
         a2d.WaitForDesktopReady()
     end)
@@ -51,8 +50,7 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-        a2d.WaitForDesktopReady()
+        a2d.CopyDisk()
         a2d.OAShortcut("Q") -- File > Quit
         a2d.WaitForDesktopReady()
     end)

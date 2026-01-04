@@ -29,9 +29,7 @@ test.Variants(
     "Disk Copy 32MB",
   },
   function(idx)
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     a2d.InvokeMenuItem(3, idx) -- Options > Quick Copy or Disk Copy
 

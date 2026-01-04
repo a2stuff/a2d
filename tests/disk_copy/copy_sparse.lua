@@ -35,9 +35,7 @@ test.Variants(
     local image1 = s6d1.filename
     local image2 = s6d2.filename
 
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     a2d.InvokeMenuItem(3, idx) -- Quick Copy or Disk Copy
 

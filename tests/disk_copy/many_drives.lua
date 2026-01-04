@@ -52,9 +52,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "scrollbar enabled with 9 or more drives",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectNotEquals(vscroll & mgtk.scroll.option_active, 0, "v scrollbar should be active")

@@ -16,9 +16,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "GS/OS disk names in list",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     test.Snap("verify GS/OS disk names in list have assigned case")
 
@@ -37,9 +35,7 @@ end)
 test.Step(
   "GS/OS disk names in source label",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     -- source
     apple2.DownArrowKey() -- S7,D1
@@ -75,9 +71,7 @@ end)
 test.Step(
   "GS/OS disk names in overwrite prompt",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     -- source
     apple2.DownArrowKey() -- S7,D1

@@ -20,9 +20,7 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
     test.Snap("verify Disk Copy started")
 
     -- cleanup

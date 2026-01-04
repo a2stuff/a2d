@@ -402,10 +402,8 @@ ListBoxTest(
   "Disk Copy",
   {},
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+    a2d.CopyDisk()
     a2dtest.SetBankOffsetForDiskCopyModule()
-    a2d.WaitForDesktopReady()
     emu.wait(10)
   end,
   function()

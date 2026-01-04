@@ -24,9 +24,7 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     test.Snap("verify S3,D1 RAM disk is in list")
 
@@ -54,9 +52,7 @@ test.Step(
     apple2.BitsyInvokePath("/A2.DESKTOP/CLOCK.SYSTEM")
     a2d.WaitForDesktopReady()
 
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     test.Snap("verify S3,D1 RAM disk is in list")
 

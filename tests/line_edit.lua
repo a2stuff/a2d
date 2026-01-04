@@ -528,7 +528,8 @@ LineEditTest(
   },
   function()
     a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK)
+    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
+    a2d.ClearTextField()
   end,
   function()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()

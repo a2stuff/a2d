@@ -7,17 +7,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 a2d.ConfigureRepaintTime(0.25)
 
-function DiskCopy(opt_path)
-  if opt_path == nil then
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-  else
-    a2d.SelectPath(opt_path)
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK)
-  end
-  a2d.WaitForDesktopReady()
-end
-
 --[[
   Launch DeskTop. Special > Copy Disk.... File > Quit. Special > Copy
   Disk.... Ensure drive list is correct.
@@ -25,12 +14,12 @@ end
 test.Step(
   "drive list not corrupted on re-launch",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
 
-    DiskCopy()
+    a2d.CopyDisk()
     test.Snap("verify drive list is correct (S7D1, S6D1, S6D2)")
 
     -- cleanup
@@ -45,7 +34,7 @@ end)
 test.Step(
   "escape key works to control menu",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     apple2.EscapeKey()
     a2d.WaitForRepaint()
@@ -64,7 +53,7 @@ end)
 test.Step(
   "OA+Q returns to DeskTop",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
@@ -78,7 +67,7 @@ end)
 test.Step(
   "SA+Q returns to DeskTop",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     a2d.SAShortcut("Q")
     a2d.WaitForDesktopReady()
@@ -92,7 +81,7 @@ end)
 test.Step(
   "Invoke with no selection",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     test.Snap("verify no selection, OK button is dimmed")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
@@ -110,7 +99,7 @@ end)
 test.Step(
   "Invoke with selection",
   function()
-    DiskCopy("/A2.DESKTOP")
+    a2d.CopyDisk("/A2.DESKTOP")
 
     test.Snap("verify selection, OK button is not dimmed")
 
@@ -135,7 +124,7 @@ end)
 test.Step(
   "Using menu with keyboard doesn't commit selection",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     -- make selection
     apple2.DownArrowKey()
@@ -162,7 +151,7 @@ end)
 test.Step(
   "Double-clicking selected item commits",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     -- select first item
     apple2.DownArrowKey()
@@ -191,7 +180,7 @@ end)
 test.Step(
   "Double-clicking other item commits",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     -- select second first item
     apple2.DownArrowKey()
@@ -242,7 +231,7 @@ test.Step(
     a2d.ClearSelection()
     test.Snap("before")
     a2dtest.ExpectNothingChanged(function()
-        DiskCopy()
+        a2d.CopyDisk()
         a2d.OAShortcut("Q")
         a2d.WaitForDesktopReady()
         a2d.ClearSelection()
@@ -256,7 +245,7 @@ end)
 test.Step(
   "scrollbar disabled with 8 or fewer drives",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "h scrollbar should be inactive")
@@ -291,7 +280,7 @@ end)
 test.Step(
   "OK button disabled when selection cleared",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     test.Snap("verify OK button disabled")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
@@ -369,7 +358,7 @@ end)
 test.Step(
   "Read Drives resets OK button state",
   function()
-    DiskCopy()
+    a2d.CopyDisk()
 
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 

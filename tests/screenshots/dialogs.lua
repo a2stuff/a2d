@@ -184,9 +184,7 @@ end)
 test.Step(
   "Special > Copy Disk...",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK - 2)
-    a2d.WaitForDesktopReady()
+    a2d.CopyDisk()
 
     -- "Disk Copy"
     a2d.InvokeMenuItem(3, 2)
@@ -198,8 +196,8 @@ test.Step(
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     apple2.DownArrowKey()
-    test.Snap("Special > Copy Disk...")
-    a2d.DialogOK("Disk Copy - \"Quick Copy\" option")
+    test.Snap("Disk Copy - \"Quick Copy\" option")
+    a2d.DialogOK()
 
     -- select destination
     apple2.DownArrowKey()
@@ -261,11 +259,11 @@ test.Step(
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2d.Reboot()
-    a2d.WaitForDesktopReady()
 
     -- Launcher: Copying to RAMCard...
-    emu.wait(5) -- copying is slow
+    emu.wait(5)
     test.Snap("Selector - Copying app to RAMCard...")
+    a2d.WaitForDesktopReady()
 
     -- Shortcuts dialog
     emu.wait(10) -- let copying finish
