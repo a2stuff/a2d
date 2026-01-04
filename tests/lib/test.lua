@@ -77,9 +77,26 @@ function test.Step(title, func)
     return
   end
 
+
+  function handler(arg)
+    if not arg:match("Expectation failure:") then
+      --[[
+        If this was not an expectation failure but another exception
+        it represents either a bug in the test or a bug in one of the
+        libraries. Append a full stack trace.
+      ]]
+      local traceback = debug.traceback(nil, 2)
+      local fn1, st1 = traceback:match("\t%[C%]: in function '(.-)'(.-)\n\t%[C%]: in function '(.-)'")
+      if fn1 and st1 then
+        arg = arg .. "\ntraceback:" .. st1
+      end
+    end
+    return arg
+  end
+
   in_step_flag = true
   print("-- " .. title)
-  local status, err = pcall(func)
+  local status, err = xpcall(func, handler)
   if not status then
     test.Failure(err)
   end

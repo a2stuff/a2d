@@ -186,7 +186,7 @@ output=$(
     $THROTTLE \
     $MAMEFLAGS \
     $SCRIPTARGS" \
-       2> >(while read line; do echo "${COLOR_RED}${line}${COLOR_RESET}" >&1; done) | \
+       2> >(IFS='' ; while read line; do echo "${COLOR_RED}${line}${COLOR_RESET}" >&1; done) | \
     egrep --line-buffered -v "Secure coding is automatically enabled" | \
     tee /dev/fd/5
       )
