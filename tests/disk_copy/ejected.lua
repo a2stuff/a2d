@@ -159,9 +159,11 @@ test.Step(
     apple2.EscapeKey() -- abort the copy
     a2dtest.WaitForAlert()
 
+    test.Snap("verify tip is erased")
     a2d.DialogOK()
     s5d2:load(image)
-    apple2.ControlOAReset()
+
+    a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
 end)
 

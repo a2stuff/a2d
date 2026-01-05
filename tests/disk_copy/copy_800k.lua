@@ -90,6 +90,7 @@ test.Step(
     -- copying...
     a2dtest.WaitForAlert({timeout=480})
     test.Snap("verify block counts have thousands separators")
+    test.Snap("verify tip is erased")
     a2d.DialogOK()
 
     emu.wait(5)

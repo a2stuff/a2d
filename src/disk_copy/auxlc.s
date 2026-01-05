@@ -510,9 +510,8 @@ InitDialog:
         copy8   destination_index_table,x, dest_drive_index
         CLEAR_BIT7_FLAG listbox_enabled_flag
 
-        jsr     SetPortForDialog
+        jsr     SetPortAndEraseTip
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
-        MGTK_CALL MGTK::PaintRect, rect_erase_tip
 
         ;; Erase the drive selection listbox
         MGTK_CALL MGTK::GetWinFrameRect, win_frame_rect_params
@@ -736,12 +735,14 @@ copy_success:
         CALL    main::EjectDisk, A=drive_unitnum_table,x
     END_IF
 
+        jsr     SetPortAndEraseTip
         CALL    ShowAlertDialog, A=#kAlertMsgCopySuccessful ; no args
         jmp     InitDialog
 
 copy_failure:
         jsr     main::FreeVolBitmapPages
 
+        jsr     SetPortAndEraseTip
         CALL    ShowAlertDialog, A=#kAlertMsgCopyFailure ; no args
         jmp     InitDialog
 
@@ -1288,6 +1289,14 @@ fallback:
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
 .endproc ; SetPortForDialog
+
+;;; ============================================================
+
+.proc SetPortAndEraseTip
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::PaintRect, rect_erase_tip
+        rts
+.endproc ; SetPortAndEraseTip
 
 ;;; ============================================================
 
