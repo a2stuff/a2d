@@ -449,6 +449,8 @@ InitDialog:
         ;; Draw dialog window
 
         jsr     DrawTitle
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
 
         BTK_CALL BTK::Draw, dialog_ok_button
         jsr     UpdateOKButton
