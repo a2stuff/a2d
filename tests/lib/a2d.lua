@@ -320,9 +320,12 @@ function a2d.SelectAll()
   emu.wait(2)
 end
 
-function a2d.CloseWindow()
-  a2d.OAShortcut("W")
-  a2d.WaitForRepaint()
+function a2d.CloseWindow(options)
+  options = default_options(options)
+  a2d.OAShortcut("W", options)
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 function a2d.CloseAllWindows()

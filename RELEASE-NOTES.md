@@ -48,6 +48,9 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix volume icon flicker after Check All Drives for removable disks.
 * Select volume icomn after Format/Erase.
 * Fix display of long device names in Format/Erase volume picker.
+* Animate Apple > About Apple II DeskTop window open/closed.
+* Animate Apple > About This Apple II window open/closed.
+* Animate Date & Time DA window open/closed when menu clock is clicked.
 
 ### Selector
 

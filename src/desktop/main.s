@@ -469,7 +469,7 @@ offset_table:
       IF NOT_ZERO
         cmp16   event_params::xcoord, #460 ; TODO: Hard coded?
        IF GE
-        TAIL_CALL InvokeDeskAccWithIcon, Y=#$FF, AX=#str_date_and_time
+        TAIL_CALL LaunchPassedPathOnSystemDisk, AX=#str_date_and_time
        END_IF
       END_IF
 
@@ -2127,8 +2127,16 @@ CmdAbout := AboutDialogProc
 ;;; ============================================================
 
 .proc CmdAboutThisApple
-        TAIL_CALL InvokeDeskAccWithIcon, Y=#$FF, AX=#str_about_this_apple
+        ldax    #str_about_this_apple
+        FALL_THROUGH_TO LaunchPassedPathOnSystemDisk
 .endproc ; CmdAboutThisApple
+
+;;; ============================================================
+
+.proc LaunchPassedPathOnSystemDisk
+        CALL    CopyToSrcPath
+        TAIL_CALL LaunchFileWithPathOnSystemDisk
+.endproc ; LaunchPassedPathOnSystemDisk
 
 ;;; ============================================================
 
@@ -12918,6 +12926,12 @@ ok:     RETURN  A=#0
 ;;; "About" dialog
 
 .proc AboutDialogProc
+        ;; Use system disk as animation source
+        MLI_CALL GET_PREFIX, get_prefix_params
+        dec     src_path_buf    ; remove trailing '/'
+        CALL    IconToAnimate, AX=#src_path_buf
+        pha
+        CALL    AnimateWindowOpen, X=#$FF ; desktop
 
         MGTK_CALL MGTK::OpenWindow, winfo_about_dialog
         CALL    SafeSetPortFromWindowId, A=#winfo_about_dialog::kWindowId
@@ -12940,7 +12954,13 @@ ok:     RETURN  A=#0
     WHILE A <> #MGTK::EventKind::key_down
 
         MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
-        jmp     ClearUpdates ; following CloseWindow
+        jsr     ClearUpdates ; following CloseWindow
+
+        pla
+        TAIL_CALL AnimateWindowClose, X=#$FF ; desktop
+
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, src_path_buf
+
 .endproc ; AboutDialogProc
 
 ;;; ============================================================
