@@ -4903,6 +4903,13 @@ savesize        .word
         inx
         stx     mouse_scale_x
 
+        ;; --------------------------------------------------
+        ;; With ROM banked in, determine mouse scaling and VBL
+
+        bit     RDLCRAM
+        php
+        bit     ROMIN2          ; Bank ROM
+
         ldax    #vbl_iie_proc   ; default
         bit     subid
     IF VC
@@ -4912,11 +4919,16 @@ savesize        .word
         inc     mouse_scale_y
 
         ldax    #vbl_iic_proc
+
+        ;; Franklin ACE 500?
+        ldy     $FB1E
+      IF Y = #$AD
+        ;; From testing on real hardware, ACE 500 (unlike ACE 2x00)
+        ;; does not seem to support either IIe-like or IIc-like VBL.
+        ldax    #vbl_none_proc
+      END_IF
     ELSE
         ;; IIe or IIgs?
-        bit     RDLCRAM
-        php
-        bit     ROMIN2          ; Bank ROM
 
         CALL    IDROUTINE, C=1
       IF CC
@@ -4934,13 +4946,16 @@ savesize        .word
         ldax    #vbl_none_proc
       END_IF
 
+    END_IF
+        stax    vbl_proc_addr
+
         plp
       IF NS
         bit     LCBANK1         ; Bank RAM back in if needed
         bit     LCBANK1
       END_IF
-    END_IF
-        stax    vbl_proc_addr
+
+        ;; --------------------------------------------------
 
         ldx     slot_num
         jsr     FindMouse
