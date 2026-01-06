@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="laser128o"
-MODELARGS="-sl7 cffa2"
+MODEL="apple2ee"
+MODELARGS="-sl2 mouse -sl3 midi -sl4 '' -sl7 cffa202 -aux rw3"
 DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
@@ -9,9 +9,9 @@ DISKARGS="-hard1 $HARDIMG"
 a2d.ConfigureRepaintTime(0.25)
 
 test.Step(
-  "Apple > About This Apple II",
+  "Slot 3 - Passport MIDI",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Snap(manager.machine.system.name)
+    test.Snap("verify Slot 3: Passport MIDI detected")
 end)

@@ -60,7 +60,7 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
 
 kDAWindowId     = $80
 kDAWidth        = 400
-kDAHeight       = 118
+kDAHeight       = 129
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
@@ -116,7 +116,7 @@ grafport:       .tag    MGTK::GrafPort
 .macro DEFINE_BITMAP identifier, width, height
         WARN_IF_SHADOWING .ident(.sprintf("%s_bitmap", .string(identifier)))
 .params .ident(.sprintf("%s_bitmap", .string(identifier)))
-        DEFINE_POINT viewloc, 88 - (width/2), 19 - (height/2)
+        DEFINE_POINT viewloc, 68 - (width/2), 19 - (height/2)
 mapbits:        .addr   .ident(.sprintf("%s_bits", .string(identifier)))
 mapwidth:       .byte   (width + 6) / 7
 reserved:       .res    1
@@ -493,20 +493,21 @@ pravetz_bits:
 
 ;;; ============================================================
 
-        DEFINE_POINT model_pos, 150, 12
-        DEFINE_POINT pdver_pos, 150, 23
-        DEFINE_POINT mem_pos, 150, 34
+        DEFINE_POINT model_pos, 130, 12
+        DEFINE_POINT pdver_pos, 130, 23
+        DEFINE_POINT mem_pos, 130, 34
 
         DEFINE_POINT line1, 0, 37
         DEFINE_POINT line2, kDAWidth, 37
 
-        DEFINE_POINT pos_slot1, 45, 50
-        DEFINE_POINT pos_slot2, 45, 61
-        DEFINE_POINT pos_slot3, 45, 72
-        DEFINE_POINT pos_slot4, 45, 83
-        DEFINE_POINT pos_slot5, 45, 94
-        DEFINE_POINT pos_slot6, 45, 105
-        DEFINE_POINT pos_slot7, 45, 116
+        DEFINE_POINT pos_aux,   100, 50
+        DEFINE_POINT pos_slot1, 100, 61
+        DEFINE_POINT pos_slot2, 100, 72
+        DEFINE_POINT pos_slot3, 100, 83
+        DEFINE_POINT pos_slot4, 100, 94
+        DEFINE_POINT pos_slot5, 100, 105
+        DEFINE_POINT pos_slot6, 100, 116
+        DEFINE_POINT pos_slot7, 100, 127
 
 ;;; ============================================================
 
@@ -642,6 +643,11 @@ str_prodos_version:
         kVersionStrMinor = res_const_prodos_version_pattern_offset2
         kVersionStrPatch = res_const_prodos_version_pattern_offset3
 
+str_aux:
+        PASCAL_STRING res_string_aux_slot
+str_ramworks_prefix:
+        PASCAL_STRING res_string_auxmem_infix
+
 str_slot_n:
         PASCAL_STRING res_string_slot_n_pattern
         kStrSlotNOffset = res_const_slot_n_pattern_offset1
@@ -659,6 +665,7 @@ str_list_separator:
 
 memory:.word    0
 memory_is_mb_flag:      .byte   0 ; bit7
+rw_banks:       .byte   0
 
 ;;; ============================================================
 
@@ -716,6 +723,7 @@ str_thunderclock: PASCAL_STRING res_string_card_type_thunderclock
 str_applecat:   PASCAL_STRING res_string_card_type_applecat
 str_workstation: PASCAL_STRING res_string_card_type_workstation
 str_cricket:    PASCAL_STRING res_string_device_type_cricket
+str_ramworks:   PASCAL_STRING res_string_device_type_ramworks
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
 str_none:       PASCAL_STRING res_string_none
@@ -1282,7 +1290,7 @@ egg:    .byte   0
         lda     slot
         ora     #'0'
         sta     str_slot_n + kStrSlotNOffset
-        CALL    DrawStringFromMain, AX=#str_slot_n
+        CALL    DrawStringRightFromMain, AX=#str_slot_n
 
         ;; Possibilities:
         ;; * ProDOS thinks there's a card - may be firmware or no firmware
@@ -1294,23 +1302,45 @@ egg:    .byte   0
         and     mask
       IF NOT_ZERO
         ;; ProDOS thinks there's a card...
+
+        lda     slot
+       IF A = #3
+        ;; Special case for Slot 3
+        bit     ROMIN2
+        jsr     DetectLeChatMauveEve
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
+        IF ZC
+        ldax    #str_lcmeve
+        bcc     draw_no_sp      ; always
+        END_IF
+
+       ELSE
+        ;; Normal slots
         CALL    ProbeSlot, A=slot ; check for matching firmware
-        bcs     draw
+        bcs     draw_maybe_sp
 
         ;; check non-firmware cases in case of false-positive (e.g. emulator)
         CALL    ProbeSlotNoFirmware, A=slot
-        bcs     draw
+        bcs     draw_no_sp
 
         ldax    #str_unknown
-        bne     draw            ; always
+        bne     draw_no_sp      ; always
+       END_IF
       END_IF
 
         CALL    ProbeSlotNoFirmware, A=slot
-        bcs     draw
+        bcs     draw_no_sp
 
         ldax    #str_empty
 
-draw:   php
+draw_no_sp:
+        clv
+
+draw_maybe_sp:
+        php
         jsr     DrawStringFromMain
         plp
       IF VS
@@ -1330,31 +1360,21 @@ draw:   php
        END_IF
       END_IF
 
-        ;; Special case for Slot 3 cards
-        lda     slot
-      IF A = #3
-        bit     ROMIN2
-        jsr     DetectLeChatMauveEve
-        php
-        bit     LCBANK1
-        bit     LCBANK1
-        plp
-       IF ZC
-        CALL    DrawStringFromMain, AX=#str_list_separator
-        CALL    DrawStringFromMain, AX=#str_lcmeve
-       ELSE
-        CALL    SetSlotPtr, A=slot
-        CALL    WithInterruptsDisabled, AX=#DetectUthernet2
-        IF CS
-        CALL    DrawStringFromMain, AX=#str_list_separator
-        CALL    DrawStringFromMain, AX=#str_uthernet2
-        END_IF
-       END_IF
-      END_IF
-
         lsr     mask
         dec     slot
     WHILE NOT ZERO
+
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
+        CALL    DrawStringRightFromMain, AX=#str_aux
+        ldax    #str_80col
+        ldy     rw_banks
+    IF Y <> #1
+        ldax    #str_ramworks
+    END_IF
+        CALL    DrawStringFromMain
+        CALL    DrawStringFromMain, AX=#str_ramworks_prefix
+        CALL    DrawStringFromMain, AX=#str_ramworks_memory
+        CALL    DrawStringFromMain, AX=#str_memory_kb_suffix
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
@@ -1869,13 +1889,26 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 ;;; Assert: Main is banked in (for `CheckSlinkyMemory` call)
 .proc IdentifyMemory
         copy16  #0, memory
+
+        ;; RamWorks
         jsr     CheckRamworksMemory
         sty     memory          ; Y is number of 64k banks
+        sty     rw_banks
     IF Y = #0                   ; 0 means 256 banks
         inc     memory+1
     END_IF
-        inc16   memory          ; Main 64k memory
+        tmp := $06
+        copy16  memory, tmp
+        ldy     #6
+      DO
+        asl16   tmp             ; * 64
+        dey
+      WHILE NOT_ZERO
+        CALL IntToStringWithSeparators, AX=tmp
+        COPY_STRING str_from_int, str_ramworks_memory
 
+        ;; Other
+        inc16   memory          ; Main 64k memory
         jsr     CheckIIgsMemory
         jsr     CheckSlinkyMemory
 
@@ -2105,12 +2138,12 @@ slot:
 
 
 ;;; ============================================================
-;;; Input: 16-bit unsigned integer in A,X
-;;; Output: `str_from_int` populated, with separator if needed
 
 str_from_int:
         PASCAL_STRING "000,000"
 
+str_ramworks_memory:
+        PASCAL_STRING "000,000"
 
 ;;; ============================================================
 ;;; Identify CPU - string pointer returned in A,X
@@ -2394,30 +2427,60 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 .endproc ; IsAlpha
 
 ;;; ============================================================
+
+;;; Input: A,X = address of length-prefixed string
+;;; Output: A = length of string, Z = 1 if empty
+.proc CopyStringFromMain
+        stax    STARTLO
+
+        ldy     #0
+        lda     (STARTLO),y
+        pha
+    IF NOT ZERO
+        clc
+        adc     STARTLO
+        sta     ENDLO
+        lda     STARTHI
+        adc     #0
+        sta     ENDHI
+        copy16  #aux::buf_string, DESTINATIONLO
+        CALL    AUXMOVE, C=1    ; main>aux
+    END_IF
+        pla
+        rts
+.endproc ; CopyStringFromMain
+
+;;; ============================================================
 ;;; Copies string main>aux before drawing
 ;;; Input: A,X = address of length-prefixed string
 
 .proc DrawStringFromMain
-        params  := $06
-        textptr := $06
-        textlen := $08
-
-        stax    textptr
-        stax    STARTLO
-        ldy     #0
-        lda     (textptr),y
-    IF NOT_ZERO
-        sta     textlen
-        copy16  #aux::buf_string+1, textptr
-
-        copy16  #aux::buf_string, DESTINATIONLO
-        add16_8 STARTLO, textlen, ENDLO
-        CALL    AUXMOVE, C=1    ; main>aux
-
-        JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
+        jsr     CopyStringFromMain
+    IF NOT ZERO
+        JUMP_TABLE_MGTK_CALL MGTK::DrawString, aux::buf_string
     END_IF
         rts
 .endproc ; DrawStringFromMain
+
+;;; ============================================================
+;;; Copies string main>aux before drawing
+;;; Input: A,X = address of length-prefixed string
+
+.proc DrawStringRightFromMain
+        jsr     CopyStringFromMain
+    IF NOT ZERO
+        params = $06
+        str := $06
+        width := $08
+        copy16  #aux::buf_string, str
+        JUMP_TABLE_MGTK_CALL MGTK::StringWidth, params
+        sub16   #0, width, params+MGTK::Point::xcoord
+        copy16  #0, params+MGTK::Point::ycoord
+        JUMP_TABLE_MGTK_CALL MGTK::Move, params
+        JUMP_TABLE_MGTK_CALL MGTK::DrawString, aux::buf_string
+    END_IF
+        rts
+.endproc ; DrawStringRightFromMain
 
 ;;; ============================================================
 

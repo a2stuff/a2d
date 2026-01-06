@@ -65,7 +65,9 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Desk Accessories
 
-* About This Apple II: Add accessories to IIgs bitmap.
+* About This Apple II
+  * Add accessories to IIgs bitmap.
+  * Show Aux slot separately from Slot 3; include aux-specific memory count
 * DOS 3.3 Import: Fix keyboard shortcut handling.
 * Sounds: Time "Silent" menu bar flash using VBL.
 

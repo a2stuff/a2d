@@ -26,8 +26,10 @@
 .define res_const_prodos_version_pattern_offset1 8
 .define res_const_prodos_version_pattern_offset2 10
 .define res_const_prodos_version_pattern_offset3 12
+.define res_string_aux_slot "AUX:   "
 .define res_string_slot_n_pattern "slot #:   "
 .define res_const_slot_n_pattern_offset1 6
+.define res_string_auxmem_infix ": "
 .define res_string_memory_prefix "pamet: "
 .define res_string_memory_kb_suffix "k"
 .define res_string_memory_mb_suffix "mb"
@@ -63,6 +65,7 @@
 .define res_string_device_type_nvram "NVRAM blokowo u-wo"
 .define res_string_device_type_booti "BOOTI blokowo u-wo"
 .define res_string_device_type_xdrive "XDRIVE blokowo u-wo"
+.define res_string_device_type_ramworks "RAMWORKS"
 .define res_string_unknown "(neizwestno)"
 .define res_string_empty "(prazno)"
 .define res_string_none "(nqma)"
