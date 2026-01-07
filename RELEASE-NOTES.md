@@ -16,6 +16,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Comma presses and holds the mouse button
   * Period releases the mouse button
   * Solid Apple is now just a modifier as normal
+* Improve appearance of watch cursor.
 
 ### Launcher
 
