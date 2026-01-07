@@ -34,17 +34,17 @@ local s7d1 = manager.machine.images[":sl7:superdrive:fdc:0:35hd"]
 ]]
 test.Variants(
   {
-    "No prompt - Options",
-    "No prompt - International",
-    "No prompt - Control Panel",
-    "Prompt to save - Options",
-    "Prompt to save - International",
-    "Prompt to save - Control Panel",
-    "Prompt to insert startup disk - Options",
-    "Prompt to insert startup disk - International",
-    "Prompt to insert startup disk - Control Panel",
+    { "No prompt - Options", "OPTIONS"},
+    { "No prompt - International", "INTERNATIONAL"},
+    { "No prompt - Control Panel", "CONTROL.PANEL"},
+    { "Prompt to save - Options", "OPTIONS"},
+    { "Prompt to save - International", "INTERNATIONAL"},
+    { "Prompt to save - Control Panel", "CONTROL.PANEL"},
+    { "Prompt to insert startup disk - Options", "OPTIONS"},
+    { "Prompt to insert startup disk - International", "INTERNATIONAL"},
+      { "Prompt to insert startup disk - Control Panel", "CONTROL.PANEL"},
   },
-  function(idx)
+  function(idx, name, da)
     --setup
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
@@ -58,13 +58,7 @@ test.Variants(
       drive:unload()
     end
 
-    if idx == 1 or idx == 4 or idx == 7 then
-      a2d.OpenPath("/RAM4/DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    elseif idx == 2 or idx == 5 or idx == 8 then
-      a2d.OpenPath("/RAM4/DESKTOP/APPLE.MENU/CONTROL.PANELS/INTERNATIONAL")
-    elseif idx == 3 or idx == 6 or idx == 9 then
-      a2d.OpenPath("/RAM4/DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
-    end
+    a2d.OpenPath("/RAM4/DESKTOP/APPLE.MENU/CONTROL.PANELS/" .. da)
     a2d.OAShortcut("1")
     a2d.OAShortcut("1")
     a2d.CloseWindow()

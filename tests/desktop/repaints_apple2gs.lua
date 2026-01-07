@@ -15,16 +15,14 @@ a2d.ConfigureRepaintTime(0.25)
 ]]
 test.Variants(
   {
-    "modifier de-select - Shift (Apple IIgs)",
-    "modifier select - Shift (Apple IIgs)",
+    {"modifier de-select - Shift (Apple IIgs)", function() end},
+    {"modifier select - Shift (Apple IIgs)", a2d.ClearSelection},
   },
-  function(idx)
+  function(idx, name, func)
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    if idx == 2 then
-      a2d.ClearSelection()
-    end
+    func()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)

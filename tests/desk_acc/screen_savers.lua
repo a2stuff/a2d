@@ -7,18 +7,12 @@ a2d.ConfigureRepaintTime(1)
 ]]
 test.Variants(
   {
-    "Melt - File > Open does not leave File menu highlighted",
-    "Melt - Apple-Down does not leave File menu highlighted",
+    {"Melt - File > Open does not leave File menu highlighted", function() a2d.OAShortcut("O") end},
+    {"Melt - Apple-Down does not leave File menu highlighted", function() a2d.OADown() end},
   },
-  function(idx)
+  function(idx, name, func)
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MELT")
-
-    if idx == 1 then
-      a2d.OAShortcut("O")
-    else
-      a2d.OADown()
-    end
-
+    func()
     emu.wait(1)
 
     a2d.InMouseKeysMode(function(m)
@@ -62,21 +56,18 @@ end)
 ]]
 test.Variants(
   {
-    "Matrix exits on click",
-    "Matrix exits on key",
+    {"Matrix exits on click", apple2.ClickMouseButton },
+    {"Matrix exits on key", apple2.ReturnKey },
   },
-  function(idx)
+  function(idx, name, func)
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MATRIX")
     emu.wait(1)
 
-    if idx == 1 then
-      a2d.InMouseKeysMode(function(m) m.Click() end)
-    else
-      apple2.ReturnKey()
-    end
+    func()
 
     a2d.WaitForRepaint()
     a2d.CloseAllWindows()
+    test.ExpectEquals(mgtk.FrontWindow(), 0, "all windows should be closed")
 end)
 
 

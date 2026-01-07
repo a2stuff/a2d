@@ -61,14 +61,11 @@ end)
 function ModifierTest(name, func)
   test.Variants(
     {
-      name .. " - Open Apple",
-      name .. " - Shift",
+      {name .. " - Open Apple", apple2.PressOA, apple2.ReleaseOA},
+      {name .. " - Shift", apple2.PressShift, apple2.ReleaseShift},
       -- TODO: Apple IIgs as well
     },
-    function(idx)
-      local Press = idx == 1 and apple2.PressOA or apple2.PressShift
-      local Release = idx == 1 and apple2.ReleaseOA or apple2.ReleaseShift
-
+    function(idx, name, Press, Release)
       a2d.CloseAllWindows()
       a2d.ClearSelection()
 
@@ -1026,11 +1023,11 @@ end)
 ]]
 test.Variants(
   {
-    "focus after clicking title bar of window",
-    "focus after clicking header of window",
-    "focus after clicking scroll bar of window",
+    {"focus after clicking title bar of window", "titlebar"},
+    {"focus after clicking header of window", "header"},
+    {"focus after clicking scroll bar of window", "scrollbar"},
   },
-  function(idx)
+  function(idx, name, where)
     a2d.CloseAllWindows()
 
     a2d.Select("A2.DESKTOP")
@@ -1051,11 +1048,11 @@ test.Variants(
     -- click target
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        if idx == 1 then
+        if where == "title" then
           m.MoveToApproximately(x + w / 2, y - 5)
-        elseif idx == 2 then
+        elseif where == "header" then
           m.MoveToApproximately(x + w / 2, y + 5)
-        elseif idx == 3 then
+        elseif where == "scrollbar" then
           m.MoveToApproximately(x + w / 2, y + h + 5)
         end
         m.Click()

@@ -403,18 +403,14 @@ end)
 ]]
 test.Variants(
   {
-    "no windows, right arrow key",
-    "no windows, down arrow key",
+    {"no windows, right arrow key", apple2.RightArrowKey},
+    {"no windows, down arrow key", apple2.DownArrowKey}
   },
-  function(idx)
+  function(idx, name, keyfunc)
     a2d.CloseAllWindows()
     a2d.ClearSelection()
 
-    if idx == 1 then
-      apple2.RightArrowKey()
-    else
-      apple2.DownArrowKey()
-    end
+    keyfunc()
     a2d.WaitForRepaint()
 
     local icons = a2d.GetSelectedIcons()

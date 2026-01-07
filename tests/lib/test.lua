@@ -112,8 +112,14 @@ end
 
 -- test.Variants({"v1", "v2"}, function(idx) ... end}
 function test.Variants(t, func)
-  for idx, name in pairs(t) do
-    test.Step(name, function() return func(idx, name) end)
+  for idx, value in pairs(t) do
+    if type(value) == "table" then
+      test.Step(value[1], function() return func(idx, table.unpack(value)) end)
+    elseif type(value) == "string" then
+      test.Step(value, function() return func(idx, value) end)
+    else
+      error("Pass name or table (starting with name) to test.Variants")
+    end
   end
 end
 

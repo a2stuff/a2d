@@ -134,20 +134,16 @@ end)
 ]]
 test.Variants(
   {
-    "OA+R shortcut",
-    "SA+R shortcut",
+    {"OA+R shortcut", a2d.OAShortcut},
+    {"SA+R shortcut", a2d.SAShortcut},
   },
-  function(idx)
+  function(idx, name, func)
     a2d.AddShortcut("/A2.DESKTOP/READ.ME")
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 
-    if idx == 1 then
-      a2d.OAShortcut("R")
-    else
-      a2d.SAShortcut("R")
-    end
+    func("R")
     emu.wait(5)
     test.Snap("verify 'Run a Program...' dialog appears")
     a2d.DialogCancel()
@@ -169,20 +165,17 @@ end)
 ]]
 test.Variants(
   {
-    "OA+6 shortcut",
-    "SA+6 shortcut",
+    {"OA+6 shortcut", a2d.OAShortcut},
+    {"SA+6 shortcut", a2d.SAShortcut},
   },
-  function(idx)
+  function(idx, name, func)
     a2d.AddShortcut("/A2.DESKTOP/READ.ME")
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 
-    if idx == 1 then
-      a2d.OAShortcut("6")
-    else
-      a2d.SAShortcut("6")
-    end
+    func("6")
+
     apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
 

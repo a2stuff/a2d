@@ -36,25 +36,17 @@ end)
 ]]
 test.Variants(
   {
-    "Close shortcut with File menu open (Open Apple)",
-    "Close shortcut with File menu open (Open Apple, caps lock off)",
-    "Close shortcut with File menu open (Solid Apple)",
-    "Close shortcut with File menu open (Solid Apple, caps lock off)",
+    { "Close shortcut with File menu open (Open Apple)", a2d.OAShortcut, "W" },
+    { "Close shortcut with File menu open (Open Apple, caps lock off)", a2d.OAShortcut, "w"},
+    { "Close shortcut with File menu open (Solid Apple)", a2d.SAShortcut, "W"},
+      { "Close shortcut with File menu open (Solid Apple, caps lock off)", a2d.SAShortcut, "W"},
   },
-  function(idx)
+  function(idx, name, func, arg)
     a2d.OpenPath("/A2.DESKTOP")
     a2d.SelectAndOpen("EXTRAS")
     local count = a2dtest.GetWindowCount()
     a2d.OpenMenu(a2d.FILE_MENU)
-    if idx == 1 then
-      a2d.OAShortcut("W")
-    elseif idx == 2 then
-      a2d.OAShortcut("w")
-    elseif idx == 3 then
-      a2d.SAShortcut("W")
-    else
-      a2d.SAShortcut("w")
-    end
+    func(arg)
     a2d.WaitForRepaint()
     test.ExpectEquals(a2dtest.GetWindowCount(), count - 1, "one window should have closed")
     a2d.CloseAllWindows()

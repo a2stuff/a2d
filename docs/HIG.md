@@ -8,6 +8,7 @@ Note that these are for inspiration, not to be dutifully followed.
 * [Apple Human Interface Guidelines](https://www.brutaldeluxe.fr/documentation/cortland/v1_06_HumanInterfaceGuidelines.pdf), Second Beta Draft, July 1986.
 * [Human Interface Guidelines: the Apple Desktop Interface](https://archive.org/details/human-interface-guidelines), Final Draft, December 1986.
 * [Human Interface Guidelines: The Apple Desktop Interface _For any Macintosh or Apple II computer_](https://archive.org/details/applehumaninterf00appl), 1987.
+* [Macintosh Human Interface Guidelines](https://archive.org/details/macintoshhumanin0000unse), 1992.
 * [Cortland (IIgs) Finder Specification](http://www.brutaldeluxe.fr/documentation/cortland/v2_08_FinderIconsAndDisksOhMy.pdf), July 1986.
 
 ## Font
@@ -81,7 +82,7 @@ Note that these are for inspiration, not to be dutifully followed.
 ## Progress Bars
 
 * Total height is 10 pixels, including a 1px border.
-* Pattern is 75% dark / 25% light.
+* Pattern is 75% light / 25% dark when empty, and fills with 75% dark / 25% light.
 
 ## Keyboard
 

@@ -120,15 +120,11 @@ end)
 ]]
 test.Variants(
   {
-    "Calculator - misc",
-    "Sci.Calc - misc",
+    {"Calculator - misc", "/A2.DESKTOP/APPLE.MENU/CALCULATOR"},
+    {"Sci.Calc - misc", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
-  function(idx)
-    if idx == 1 then
-      a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    else
-      a2d.OpenPath("/A2.DESKTOP/EXTRAS/SCI.CALC")
-    end
+  function(idx, name, path)
+    a2d.OpenPath(path)
     a2d.WaitForRepaint()
 
     apple2.Type("1-2=")
@@ -163,15 +159,11 @@ end)
 ]]
 test.Variants(
   {
-    "Calculator - decimal separator",
-    "Sci.Calc - decimal separator",
+    { "Calculator - decimal separator", "/A2.DESKTOP/APPLE.MENU/CALCULATOR"},
+    { "Sci.Calc - decimal separator", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
-  function(idx)
-    if idx == 1 then
-      a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    else
-      a2d.OpenPath("/A2.DESKTOP/EXTRAS/SCI.CALC")
-    end
+  function(idx, name, path)
+    a2d.OpenPath(path)
     a2d.WaitForRepaint()
 
     apple2.Type("12.34")
@@ -194,11 +186,7 @@ test.Variants(
     -- Change decimal separator
     SetNumberFormat(",", ".")
 
-    if idx == 1 then
-      a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    else
-      a2d.OpenPath("/A2.DESKTOP/EXTRAS/SCI.CALC")
-    end
+    a2d.OpenPath(path)
     a2d.WaitForRepaint()
 
     apple2.Type("12,34")

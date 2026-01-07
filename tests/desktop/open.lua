@@ -383,12 +383,12 @@ end)
 ]]
 test.Variants(
   {
-    "With menu showing, Open Apple + O",
-    "With menu showing, Solid Apple + O",
-    "With menu showing, Open Apple + o",
-    "With menu showing, Solid Apple + o",
+    {"With menu showing, Open Apple + O", a2d.OAShortcut, "O"},
+    {"With menu showing, Solid Apple + O", a2d.SAShortcut, "O"},
+    {"With menu showing, Open Apple + o", a2d.OAShortcut, "o"},
+    {"With menu showing, Solid Apple + o", a2d.SAShortcut, "o"},
   },
-  function(idx)
+  function(idx, name, func, key)
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
     local menu_x, menu_y = 30, 5
     a2d.InMouseKeysMode(function(m)
@@ -396,15 +396,7 @@ test.Variants(
         m.Click()
     end)
 
-    local key = "O"
-    if idx == 3 or idx == 4 then
-      key = "o"
-    end
-    if idx == 1 or idx == 3 then
-      a2d.OAShortcut(key)
-    else
-      a2d.SAShortcut(key)
-    end
+    func(key)
     emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
