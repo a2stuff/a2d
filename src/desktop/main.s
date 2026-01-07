@@ -991,8 +991,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 .proc EraseWindowBackground
         MGTK_CALL MGTK::ShieldCursor, window_grafport+MGTK::GrafPort::maprect
         MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
-        MGTK_CALL MGTK::UnshieldCursor
-        rts
+        jmp     UnshieldCursor
 .endproc ; EraseWindowBackground
 
 ;;; ============================================================
@@ -10216,14 +10215,17 @@ operation_traversal_callbacks_for_copy:
         jmp     OpenProgressDialog
 
 .proc _CopyDialogEnumerationCallback
-        jsr     SetPortForProgressDialog
+        jsr     SetPortForProgressDialogAndShieldCursor
+
         bit     move_flags
     IF NC
         CALL    DrawProgressDialogLabel, Y=#0, AX=#aux::str_copy_copying
     ELSE
         CALL    DrawProgressDialogLabel, Y=#0, AX=#aux::str_move_moving
     END_IF
-        jmp     DrawFileCountWithSuffix
+        jsr     DrawFileCountWithSuffix
+
+        jmp     UnshieldCursor
 .endproc ; _CopyDialogEnumerationCallback
 
 ;;; Lifecycle callbacks for copy operation (`operation_lifecycle_callbacks`)
@@ -10537,7 +10539,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
 
 .proc CopyUpdateProgress
         jsr     DecrementFileCount
-        jsr     SetPortForProgressDialog
+        jsr     SetPortForProgressDialogAndShieldCursor
 
         CALL    CopyToBuf0, AX=#src_path_buf
         CALL    DrawProgressDialogLabel, Y=#1, AX=#aux::str_copy_from
@@ -10547,7 +10549,9 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         CALL    DrawProgressDialogLabel, Y=#2, AX=#aux::str_copy_to
         jsr     DrawDestFilePath
 
-        jmp     DrawProgressDialogFilesRemaining
+        jsr     DrawProgressDialogFilesRemaining
+
+        jmp     UnshieldCursor
 .endproc ; CopyUpdateProgress
 
 ;;; ============================================================
@@ -11158,9 +11162,12 @@ operation_traversal_callbacks_for_delete:
         jmp     OpenProgressDialog
 
 .proc _DeleteDialogEnumerationCallback
-        jsr     SetPortForProgressDialog
+        jsr     SetPortForProgressDialogAndShieldCursor
+
         CALL    DrawProgressDialogLabel, Y=#0, AX=#aux::str_delete_count
-        jmp     DrawFileCountWithSuffix
+        jsr     DrawFileCountWithSuffix
+
+        jmp     UnshieldCursor
 .endproc ; _DeleteDialogEnumerationCallback
 
 .proc _DeleteDialogConfirmCallback
@@ -11337,13 +11344,14 @@ next_file:
 ;;; Does not decrement count, just repaints path so that the correct
 ;;; path is visible if an alert is shown when finishing a directory.
 .proc DeleteRefreshProgress
-        jsr     SetPortForProgressDialog
+        jsr     SetPortForProgressDialogAndShieldCursor
 
         CALL    CopyToBuf0, AX=#src_path_buf
         CALL    DrawProgressDialogLabel, Y=#1, AX=#aux::str_file_colon
         jsr     DrawTargetFilePath
 
-        jmp     DrawProgressDialogFilesRemaining
+        jsr     DrawProgressDialogFilesRemaining
+        jmp     UnshieldCursor
 .endproc ; DeleteRefreshProgress
 
 ;;; ============================================================
@@ -13525,6 +13533,12 @@ ignore: RETURN  C=1
         TAIL_CALL SafeSetPortFromWindowId, A=#winfo_progress_dialog::kWindowId
 .endproc ; SetPortForProgressDialog
 
+.proc SetPortForProgressDialogAndShieldCursor
+        jsr     SetPortForProgressDialog
+        MGTK_CALL MGTK::ShieldCursor, aux::progress_dialog_frame_rect
+        rts
+.endproc ; SetPortForProgressDialogAndShieldCursor
+
 ;;; ============================================================
 
 .proc CloseProgressDialog
@@ -14011,6 +14025,13 @@ params:  .res    3
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
 .endproc ; SetCursorIBeam
+
+;;; ============================================================
+
+.proc UnshieldCursor
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
+.endproc ; UnshieldCursor
 
 ;;; ============================================================
 

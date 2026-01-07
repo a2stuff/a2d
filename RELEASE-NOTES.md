@@ -51,6 +51,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Animate Apple > About Apple II DeskTop window open/closed.
 * Animate Apple > About This Apple II window open/closed.
 * Animate Date & Time DA window open/closed when menu clock is clicked.
+* Reduce cursor flickering when copying / deleting files.
 
 ### Selector
 
