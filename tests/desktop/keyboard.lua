@@ -425,18 +425,14 @@ end)
 ]]
 test.Variants(
   {
-    "no windows, left arrow key",
-    "no windows, up arrow key",
+    {"no windows, left arrow key", apple2.LeftArrowKey},
+    {"no windows, up arrow key", apple2.UpArrowKey},
   },
-  function(idx)
+  function(idx, name, keyfunc)
     a2d.CloseAllWindows()
     a2d.ClearSelection()
 
-    if idx == 1 then
-      apple2.LeftArrowKey()
-    else
-      apple2.UpArrowKey()
-    end
+    keyfunc()
     a2d.WaitForRepaint()
 
     local icons = a2d.GetSelectedIcons()
@@ -477,17 +473,13 @@ end)
 ]]
 test.Variants(
   {
-    "window, no selection, right arrow",
-    "window, no selection, down arrow",
+    {"window, no selection, right arrow", apple2.RightArrowKey},
+    {"window, no selection, down arrow", apple2.DownArrowKey},
   },
-  function(idx)
+  function(idx, name, keyfunc)
     a2d.OpenPath("/A2.DESKTOP")
     emu.wait(1)
-    if idx == 1 then
-      apple2.RightArrowKey()
-    else
-      apple2.DownArrowKey()
-    end
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "first icon should be selected")
 end)
@@ -498,17 +490,13 @@ end)
 ]]
 test.Variants(
   {
-    "window, no selection, left arrow",
-    "window, no selection, up arrow",
+    {"window, no selection, left arrow", apple2.LeftArrowKey},
+    {"window, no selection, up arrow", apple2.UpArrowKey},
   },
-  function(idx)
+  function(idx, name, keyfunc)
     a2d.OpenPath("/A2.DESKTOP")
     emu.wait(1)
-    if idx == 1 then
-      apple2.LeftArrowKey()
-    else
-      apple2.UpArrowKey()
-    end
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "LOCAL", "last icon should be selected")
 end)
@@ -526,12 +514,12 @@ end)
 ]]
 test.Variants(
   {
-    "window, selection in inactive window, right arrow",
-    "window, selection in inactive window, down arrow",
-    "window, selection in inactive window, left arrow",
-    "window, selection in inactive window, up arrow",
+    {"window, selection in inactive window, right arrow", apple2.RightArrowKey, "first"},
+    {"window, selection in inactive window, down arrow", apple2.DownArrowKey, "first"},
+    {"window, selection in inactive window, left arrow", apple2.LeftArrowKey, "last"},
+    {"window, selection in inactive window, up arrow", apple2.UpArrowKey, "last"},
   },
-  function(idx)
+  function(idx, name, keyfunc, which)
     a2d.CloseAllWindows()
 
     -- Open two windows, both containing icons
@@ -556,18 +544,10 @@ test.Variants(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be on top")
 
     -- Press key
-    if idx == 1 then
-      apple2.RightArrowKey()
-    elseif idx == 2 then
-      apple2.DownArrowKey()
-    elseif idx == 3 then
-      apple2.LeftArrowKey()
-    elseif idx == 4 then
-      apple2.UpArrowKey()
-    end
+    keyfunc()
     a2d.WaitForRepaint()
 
-    if idx == 1 or idx == 2 then
+    if which == "first" then
       test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "first icon should be selected")
     else
       test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "LOCAL", "last icon should be selected")
@@ -649,12 +629,12 @@ end)
 ]]
 test.Variants(
   {
-    "window open, click volume, click title bar",
-    "window open, click volume, click header",
-    "window open, click volume, click h scroll bar",
-    "window open, click volume, click v scroll bar",
+    {"window open, click volume, click title bar", "titlebar"},
+    {"window open, click volume, click header", "header"},
+    {"window open, click volume, click h scroll bar", "hscroll"},
+    {"window open, click volume, click v scroll bar", "vscroll"},
   },
-  function(idx)
+  function(idx, name, where)
     a2d.SelectPath("/A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.OpenSelection()
@@ -667,19 +647,19 @@ test.Variants(
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "confirm click")
 
     local win_x, win_y, win_w, win_h = a2dtest.GetFrontWindowContentRect()
-    if idx == 1 then
+    if where == "titlebar" then
       -- title bar
       x = win_x + win_w/2
       y = win_y - 5
-    elseif idx == 2 then
+    elseif where == "header" then
       -- header
       x = win_x + win_w/2
       y = win_y + 5
-    elseif idx == 3 then
+    elseif where == "hscroll" then
       -- h scroll bar
       x = win_x + win_w / 2
       y = win_y + win_h + 5
-    elseif idx == 4 then
+    elseif where == "vscroll" then
       -- v scroll bar
       x = win_x + win_w + 5
       y = win_y + win_h / 2
@@ -874,10 +854,10 @@ end)
 ]]
 test.Variants(
   {
-    "right arrow in list view",
-    "left arrow in list view",
+    {"right arrow in list view", apple2.RightArrowKey},
+    {"left arrow in list view", apple2.LeftArrowKey},
   },
-  function(idx)
+  function(idx, name, keyfunc)
     a2d.OpenPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.WaitForRepaint()
@@ -885,11 +865,7 @@ test.Variants(
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "single volume should be selected")
 
     a2dtest.ExpectNothingChanged(function()
-        if idx == 1 then
-          apple2.RightArrowKey()
-        else
-          apple2.LeftArrowKey()
-        end
+        keyfunc()
         a2d.WaitForRepaint()
     end)
 
@@ -911,10 +887,10 @@ end)
 ]]
 test.Variants(
   {
-    "list view, down arrow does not wrap",
-    "list view, up arrow does not wrap",
+    {"list view, down arrow does not wrap", "down"},
+    {"list view, up arrow does not wrap", "up"},
   },
-  function(idx)
+  function(idx, name, which)
     a2d.OpenPath("/A2.DESKTOP")
 
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_DATE)
@@ -929,7 +905,7 @@ test.Variants(
     a2d.WaitForRepaint()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should be cleared")
 
-    if idx == 1 then
+    if which == "down" then
       apple2.DownArrowKey()
       a2d.WaitForRepaint()
       test.ExpectEquals(a2dtest.GetSelectedIconName(), icons[1].name, "first icon should be selected")
@@ -981,16 +957,24 @@ end)
 ]]
 test.Variants(
   {
-    "cycle - OA + tab",
-    "cycle - OA + backtick",
-    "cycle - OA + tilde",
-    "cycle - OA + shift-tab",
-    "cycle - SA + tab",
-    "cycle - SA + backtick",
-    "cycle - SA + tilde",
-    "cycle - SA + shift-tab",
+    {"cycle - OA + tab", apple2.PressOA, apple2.ReleaseOA,
+     apple2.TabKey, "forwards"},
+    {"cycle - OA + backtick", apple2.PressOA, apple2.ReleaseOA,
+     function() apple2.Type("`") end, "forwards"},
+    {"cycle - OA + tilde", apple2.PressOA, apple2.ReleaseOA,
+     function() apple2.Type("~") end, "backwards"},
+    {"cycle - OA + shift-tab", apple2.PressOA, apple2.ReleaseOA,
+     function() apple2.PressShift() apple2.TabKey() apple2.ReleaseShift() end, "backwards"},
+    {"cycle - SA + tab", apple2.PressSA, apple2.ReleaseSA,
+     apple2.TabKey, "forwards"},
+    {"cycle - SA + backtick", apple2.PressSA, apple2.ReleaseSA,
+     function() apple2.Type("`") end, "forwards"},
+    {"cycle - SA + tilde", apple2.PressSA, apple2.ReleaseSA,
+     function() apple2.Type("~") end, "backwards"},
+    {"cycle - SA + shift-tab", apple2.PressSA, apple2.ReleaseSA,
+     function() apple2.PressShift() apple2.TabKey() apple2.ReleaseShift() end, "backwards"},
   },
-  function(idx)
+  function(idx, name, press, release, keyfunc, dir)
     a2d.OpenPath("/RAM1")
     a2d.CreateFolder("A")
     a2d.CreateFolder("B")
@@ -1002,36 +986,18 @@ test.Variants(
 
     local sequence = ""
     for i = 1, 6 do
-      if idx < 5 then
-        apple2.PressOA()
-      else
-        apple2.PressSA()
-      end
+      press()
 
-      if idx == 1 or idx == 5 then
-        apple2.TabKey()
-      elseif idx == 2 or idx == 6 then
-        apple2.Type("`")
-      elseif idx == 3 or idx == 7 then
-        apple2.Type("~")
-      elseif idx == 4 or idx == 8 then
-        apple2.PressShift()
-        apple2.TabKey()
-        apple2.ReleaseShift()
-      end
+      keyfunc()
 
       a2d.WaitForRepaint()
 
-      if idx < 5 then
-        apple2.ReleaseOA()
-      else
-        apple2.ReleaseSA()
-      end
+      release()
 
       sequence = sequence .. a2dtest.GetFrontWindowTitle()
     end
 
-    if idx == 1 or idx == 2 or idx == 5 or idx == 6 then
+    if dir == "forwards" then
       test.ExpectEquals(sequence, "ABCABC", "should cycle forwards")
     else
       test.ExpectEquals(sequence, "BACBAC", "should cycle backwards")

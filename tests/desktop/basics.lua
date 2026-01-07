@@ -151,10 +151,10 @@ end)
 ]]
 test.Variants(
   {
-    "scrollbar with clipped thumb still works - right arrow",
-    "scrollbar with clipped thumb still works - right pager",
+    {"scrollbar with clipped thumb still works - right arrow", "arrow"},
+    {"scrollbar with clipped thumb still works - right pager", "page"},
   },
-  function(idx)
+  function(idx, name, where)
     a2d.OpenPath("/A2.DESKTOP")
     a2d.GrowWindowBy(-50, 0)
     a2d.MoveWindowBy(-40, 0)
@@ -163,7 +163,7 @@ test.Variants(
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        if idx == 1 then
+        if where == "arrow" then
           m.MoveToApproximately(x + w - 5, y + h + 5)
         else
           m.MoveToApproximately(x + w - 50, y + h + 5)
@@ -1253,11 +1253,14 @@ end)
 ]]
 test.Variants(
   {
-    "Drop volume icon - with OA",
-    "Drop volume icon - with SA",
-    "Drop volume icon - with OA+SA",
+    {"Drop volume icon - with OA", apple2.PressOA, apple2.ReleaseOA},
+    {"Drop volume icon - with SA", apple2.PressSA, apple2.ReleaseSA},
+    {"Drop volume icon - with OA+SA",
+     function() apple2.PressOA() apple2.PressSA() end,
+     function() apple2.ReleaseOA() apple2.ReleaseSA() end
+    },
   },
-  function(idx)
+  function(idx, name, press, release)
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
 
@@ -1267,19 +1270,9 @@ test.Variants(
 
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
 
-        if idx == 1 or idx == 3 then
-          apple2.PressOA()
-        elseif idx == 2 or idx == 3 then
-          apple2.PressSA()
-        end
-
+        press()
         m.ButtonUp()
-
-        if idx == 1 or idx == 3 then
-          apple2.ReleaseOA()
-        elseif idx == 2 or idx == 3 then
-          apple2.ReleaseSA()
-        end
+        release()
     end)
 
     local new_x, new_y = a2dtest.GetSelectedIconCoords()
@@ -1390,21 +1383,21 @@ end)
 ]]
 test.Variants(
   {
-    "Drop icon on title bar",
-    "Drop icon on scroll bar",
-    "Drop icon on resize box",
-    "Drop icon on header",
+    {"Drop icon on title bar", "titlebar"},
+    {"Drop icon on scroll bar", "scrollbar"},
+    {"Drop icon on resize box", "resizebox"},
+    {"Drop icon on header", "header"},
   },
-  function(idx)
+  function(idx, name, where)
     function GetDropCoords()
       local x, y, w, h = a2dtest.GetFrontWindowContentRect()
-      if idx == 1 then
+      if where == "titlebar" then
         return x + w / 2, y - 5 -- title bar
-      elseif idx == 2 then
+      elseif where == "scrollbar" then
         return x + w / 2, y + h + 5 -- scroll bar
-      elseif idx == 3 then
+      elseif where == "resizebox" then
         return x + w + 5, y + h + 5 -- resize box
-      elseif idx == 4 then
+      elseif where == "header" then
         return x + w / 2, y + 5 -- header
       end
     end
@@ -1505,16 +1498,16 @@ end)
 ]]
 test.Variants(
   {
-    "overlong paths - folder",
-    "overlong paths - file",
+    {"overlong paths - folder", "folder"},
+    {"overlong paths - file", "file"},
   },
-  function(idx)
+  function(idx, name, which)
     a2d.OpenPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
     emu.wait(1)
     a2d.SelectPath("/TESTS", {keep_windows=true})
     a2d.RenameSelection("TESTSXXXXXXXXXX")
     a2d.FocusActiveWindow()
-    if idx == 1 then
+    if which == "folder" then
       a2d.Select("ABCDEF123")
     else
       a2d.Select("LONGIMAGE")
@@ -1542,7 +1535,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Drag file to folder
-    if idx == 1 then
+    if which == "folder" then
       a2d.Select("LONGIMAGE")
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
       a2d.Drag(src_x, src_y, target_x, target_y)
@@ -1658,17 +1651,17 @@ end)
 ]]
 test.Variants(
   {
-    "copy aborted during enumeration",
-    "move aborted during enumeration",
-    "delete aborted during enumeration",
-    "copy aborted after enumeration",
-    "move aborted after enumeration",
-    "delete aborted after enumeration",
+    {"copy aborted during enumeration", "copy", "during"},
+    {"move aborted during enumeration", "move", "during"},
+    {"delete aborted during enumeration", "delete", "during"},
+    {"copy aborted after enumeration", "copy", "after"},
+    {"move aborted after enumeration", "move", "after"},
+    {"delete aborted after enumeration", "delete", "after"},
   },
-  function(idx)
+  function(idx, name, what, when)
     local dst_x, dst_y
 
-    if idx == 3 or idx == 6 then
+    if what == "delete" then
       a2d.SelectPath("/Trash")
       dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     end
@@ -1676,7 +1669,7 @@ test.Variants(
     a2d.CopyPath("/A2.DESKTOP/EXTRAS", "/RAM1")
     a2d.CloseAllWindows()
 
-    if idx == 1 or idx == 2 or idx == 4 or idx == 5 then
+    if what == "copy" or what == "move" then
       a2d.CreateFolder("/RAM1/FOLDER")
       a2d.OpenPath("/RAM1/FOLDER")
       a2d.MoveWindowBy(300, 60)
@@ -1699,7 +1692,7 @@ test.Variants(
 
         a2dtest.DHRDarkness()
 
-        if idx == 1 or idx == 4 then
+        if what == "copy" then
           apple2.PressSA() -- copy
           m.ButtonUp()
           apple2.ReleaseSA()
@@ -1713,19 +1706,19 @@ test.Variants(
         return false
     end)
 
-    if idx == 6 then
+    if what == "delete" and when == "after" then
       a2dtest.WaitForAlert()
       a2d.DialogOK({no_wait=true})
     end
 
-    if idx <= 3 then
+    if when == "during" then
       -- abort during enumeration
       emu.wait(0.25)
       test.Snap("verify enumerating")
       apple2.EscapeKey()
     else
       -- abort after enumeration
-      if idx == 6 then
+      if what == "delete" then
         emu.wait(0.5) -- already enumerated, so shorter wait
       else
         emu.wait(2)
@@ -1735,18 +1728,21 @@ test.Variants(
     end
 
     emu.wait(10)
-    if idx == 1 or idx == 2 then
-      test.Snap("verify EXTRAS and FOLDER windows did not repaint")
-    elseif idx == 3 then
-      test.Snap("verify EXTRAS windows did not repaint")
-    elseif idx == 4 then
-      test.Snap("verify EXTRAS folder did not repaint but FOLDER window did repaint")
-    elseif idx == 5 then
-      test.Snap("verify EXTRAS and FOLDER windows did repaint")
-    elseif idx == 6 then
-      test.Snap("verify EXTRAS folder did repaint")
+    if when == "during" then
+      if what == "copy" or what == "move" then
+        test.Snap("verify EXTRAS and FOLDER windows did not repaint")
+      elseif what == "delete" then
+        test.Snap("verify EXTRAS windows did not repaint")
+      end
+    else
+      if what == "copy" then
+        test.Snap("verify EXTRAS folder did not repaint but FOLDER window did repaint")
+      elseif what == "move" then
+        test.Snap("verify EXTRAS and FOLDER windows did repaint")
+      elseif what == "delete" then
+        test.Snap("verify EXTRAS folder did repaint")
+      end
     end
-
 
     -- cleanup (and repaint screen)
     a2d.EraseVolume("RAM1")

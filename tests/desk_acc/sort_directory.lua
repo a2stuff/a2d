@@ -35,13 +35,13 @@ end
 ]]
 test.Variants(
   {
-    "Files sorted - open with keyboard",
-    "Files sorted - open with click"
+    {"Files sorted - open with keyboard", "keyboard"},
+    {"Files sorted - open with click", "click"},
   },
-  function(idx)
+  function(idx, name, which)
     a2d.OpenPath("/TESTS/SORT.DIRECTORY")
 
-    if idx == 1 then
+    if which == "keyboard" then
       -- keyboard
       a2d.SelectAndOpen("ORDER")
     else

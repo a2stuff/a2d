@@ -28,10 +28,10 @@ local s6d2 = manager.machine.images[":sl6:superdrive:fdc:1:35hd"]
 ]]
 test.Variants(
   {
-    "copying disk with early unused blocks - Quick Copy",
-    "copying disk with early unused blocks - Disk Copy",
+    {"copying disk with early unused blocks - Quick Copy", "quick"},
+    {"copying disk with early unused blocks - Disk Copy", "disk"},
   },
-  function(idx)
+  function(idx, name, what)
     local image1 = s6d1.filename
     local image2 = s6d2.filename
 
@@ -62,7 +62,7 @@ test.Variants(
 
     -- copying...
     a2dtest.WaitForAlert({timeout=600})
-    if idx == 1 then
+    if what == "quick" then
       test.Snap("verify transfer blocks is less than 1600")
     else
       test.Snap("verify transfer blocks is 1600")

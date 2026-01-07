@@ -170,35 +170,25 @@ end)
 ]]
 test.Variants(
   {
-    "modifier de-select - Open Apple",
-    "modifier de-select - Shift (Platinum IIe)",
-    "modifier select - Open Apple",
-    "modifier select - Shift (Platinum IIe)",
+    {"modifier de-select - Open Apple", false, apple2.PressOA, apple2.ReleaseOA},
+    {"modifier de-select - Shift (Platinum IIe)", false, apple2.PressShift, apple2.ReleaseShift},
+    {"modifier select - Open Apple", true, apple2.PressOA, apple2.ReleaseOA},
+    {"modifier select - Shift (Platinum IIe)", true, apple2.PressShift, apple2.ReleaseShift},
   },
-  function(idx)
+  function(idx, name, do_select, press, release)
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    if idx == 3 or idx == 4 then
+    if do_select then
       a2d.ClearSelection()
     end
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
 
-        if idx == 1 or idx == 3 then
-          apple2.PressOA()
-        elseif idx == 2 or idx == 4 then
-          apple2.PressShift()
-        end
-
+        press()
         m.Click()
-
-        if idx == 1 or idx == 3 then
-          apple2.ReleaseOA()
-        elseif idx == 2 or idx == 4 then
-          apple2.ReleaseShift()
-        end
+        release()
     end)
 
     a2d.Drag(0, 60, 450, 190)

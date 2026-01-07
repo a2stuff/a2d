@@ -18,10 +18,10 @@ a2d.ConfigureRepaintTime(0.25)
 ]]
 test.Variants(
   {
-    "cycle - OA + shift-tab",
-    "cycle - SA + shift-tab",
+    {"cycle - OA + shift-tab", apple2.PressOA, apple2.ReleaseOA},
+    {"cycle - SA + shift-tab", apple2.PressSA, apple2.ReleaseSA},
   },
-  function(idx)
+  function(idx, name, press, release)
     a2d.CreateFolder("/A2.DESKTOP/TMP")
     a2d.OpenPath("/A2.DESKTOP/TMP")
     a2d.CreateFolder("A")
@@ -33,40 +33,20 @@ test.Variants(
 
     local sequence = ""
     for i = 1, 6 do
-      if idx < 5 then
-        apple2.PressOA()
-      else
-        apple2.PressSA()
-      end
+      press()
 
-      if idx == 1 or idx == 5 then
-        apple2.TabKey()
-      elseif idx == 2 or idx == 6 then
-        apple2.Type("`")
-      elseif idx == 3 or idx == 7 then
-        apple2.Type("~")
-      elseif idx == 4 or idx == 8 then
-        apple2.PressShift()
-        apple2.TabKey()
-        apple2.ReleaseShift()
-      end
+      apple2.PressShift()
+      apple2.TabKey()
+      apple2.ReleaseShift()
 
       a2d.WaitForRepaint()
 
-      if idx < 5 then
-        apple2.ReleaseOA()
-      else
-        apple2.ReleaseSA()
-      end
+      release()
 
       sequence = sequence .. a2dtest.GetFrontWindowTitle()
     end
 
-    if idx == 1 or idx == 2 or idx == 5 or idx == 6 then
-      test.ExpectEquals(sequence, "ABCABC", "should cycle forwards")
-    else
-      test.ExpectEquals(sequence, "BACBAC", "should cycle backwards")
-    end
+    test.ExpectEquals(sequence, "BACBAC", "should cycle backwards")
 
     a2d.DeletePath("/A2.DESKTOP/TMP")
 end)

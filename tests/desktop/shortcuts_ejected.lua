@@ -20,11 +20,11 @@ local s5d1 = manager.machine.images[":sl5:superdrive:fdc:0:35hd"]
 ]]
 test.Variants(
   {
-    "Edit a Shortcut, startup disk ejected",
-    "Delete a Shortcut, startup disk ejected",
-    "Run a Shortcut, startup disk ejected",
+    {"Edit a Shortcut, startup disk ejected", a2d.SHORTCUTS_EDIT_A_SHORTCUT},
+    {"Delete a Shortcut, startup disk ejected", a2d.SHORTCUTS_DELETE_A_SHORTCUT},
+    {"Run a Shortcut, startup disk ejected", a2d.SHORTCUTS_RUN_A_SHORTCUT},
   },
-  function(idx)
+  function(idx, name, item)
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     emu.wait(5) -- floppy needs a little extra time
 
@@ -32,26 +32,14 @@ test.Variants(
     local image = drive.filename
     drive:unload()
 
-    if idx == 1 then
-      a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
-    elseif idx == 2 then
-      a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
-    else
-      a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
-    end
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, item)
 
     a2dtest.WaitForAlert()
     a2d.DialogCancel()
 
     drive:load(image)
 
-    if idx == 1 then
-      a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
-    elseif idx == 2 then
-      a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
-    else
-      a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
-    end
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, item)
 
     a2dtest.ExpectAlertNotShowing()
     a2d.DialogCancel()

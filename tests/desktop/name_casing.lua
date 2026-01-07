@@ -72,11 +72,11 @@ end)
 ]]
 test.Variants(
   {
-    "AppleWorks files rename with case preservation - preserve off",
-    "AppleWorks files rename with case preservation - preserve on",
+    {"AppleWorks files rename with case preservation - preserve off", DisablePreserve},
+    {"AppleWorks files rename with case preservation - preserve on", EnablePreserve},
   },
-  function(idx)
-    if idx == 1 then DisablePreserve() else EnablePreserve() end
+  function(idx, name, func)
+    func()
 
     a2d.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
     a2d.RenamePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
@@ -100,11 +100,11 @@ end)
 ]]
 test.Variants(
   {
-    "AppleWorks files duplicate with case preservation - preserve off",
-    "AppleWorks files duplicate with case preservation - preserve on",
+    {"AppleWorks files duplicate with case preservation - preserve off", DisablePreserve},
+    {"AppleWorks files duplicate with case preservation - preserve on", EnablePreserve},
   },
-  function()
-    if idx == 1 then DisablePreserve() else EnablePreserve() end
+  function(idx, name, func)
+    func()
 
     a2d.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
     a2d.DuplicatePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
@@ -141,17 +141,11 @@ end)
 ]]
 test.Variants(
   {
-    "File > New Folder - preserve off",
-    "File > New Folder - preserve on",
+    {"File > New Folder - preserve off", DisablePreserve, "Lower.Upper.Mix"},
+    {"File > New Folder - preserve on", EnablePreserve, "lower.UPPER.MiX"},
   },
-  function(idx)
-    if idx == 1 then DisablePreserve() else EnablePreserve() end
-    local expected
-    if idx == 1 then
-      expected = "Lower.Upper.Mix"
-    else
-      expected = "lower.UPPER.MiX"
-    end
+  function(idx, name, func, expected)
+    func()
 
     a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
@@ -176,17 +170,11 @@ end)
 ]]
 test.Variants(
   {
-    "File > Rename - preserve off",
-    "File > Rename - preserve on",
+    {"File > Rename - preserve off", DisablePreserve, "Lower.Upper.Mix"},
+    {"File > Rename - preserve on", EnablePreserve, "lower.UPPER.MiX"},
   },
-  function(idx)
-    if idx == 1 then DisablePreserve() else EnablePreserve() end
-    local expected
-    if idx == 1 then
-      expected = "Lower.Upper.Mix"
-    else
-      expected = "lower.UPPER.MiX"
-    end
+  function(idx, name, func, expected)
+    func()
 
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.RenamePath("/RAM1/READ.ME", "lower.UPPER.MiX")
@@ -212,17 +200,11 @@ end)
 ]]
 test.Variants(
   {
-    "File > Duplicate - preserve off",
-    "File > Duplicate - preserve on",
+    {"File > Duplicate - preserve off", DisablePreserve, "Lower.Upper.Mix"},
+    {"File > Duplicate - preserve on", EnablePreserve, "lower.UPPER.MiX"},
   },
-  function(idx)
-    if idx == 1 then DisablePreserve() else EnablePreserve() end
-    local expected
-    if idx == 1 then
-      expected = "Lower.Upper.Mix"
-    else
-      expected = "lower.UPPER.MiX"
-    end
+  function(idx, name, func, expected)
+    func()
 
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.DuplicatePath("/RAM1/READ.ME", "lower.UPPER.MiX")
@@ -249,17 +231,11 @@ end)
 ]]
 test.Variants(
   {
-    "Format - preserve off",
-    "Format - preserve on",
+    {"Format - preserve off", DisablePreserve, "Lower.Upper.Mix"},
+    {"Format - preserve on", EnablePreserve, "lower.UPPER.MiX"},
   },
-  function(idx)
-    if idx == 1 then DisablePreserve() else EnablePreserve() end
-    local expected
-    if idx == 1 then
-      expected = "Lower.Upper.Mix"
-    else
-      expected = "lower.UPPER.MiX"
-    end
+  function(idx, name, func, expected)
+    func()
 
     a2d.FormatVolume("RAM1", "lower.UPPER.MiX")
     a2d.OpenPath("/LOWER.UPPER.MIX")
@@ -283,17 +259,11 @@ end)
 ]]
 test.Variants(
   {
-    "Erase - preserve off",
-    "Erase - preserve on",
+    {"Erase - preserve off", DisablePreserve, "Lower.Upper.Mix"},
+    {"Erase - preserve on", EnablePreserve, "lower.UPPER.MiX"},
   },
-  function(idx)
-    if idx == 1 then DisablePreserve() else EnablePreserve() end
-    local expected
-    if idx == 1 then
-      expected = "Lower.Upper.Mix"
-    else
-      expected = "lower.UPPER.MiX"
-    end
+  function(idx, name, func, expected)
+    func()
 
     a2d.EraseVolume("RAM1", "lower.UPPER.MiX")
     a2d.OpenPath("/LOWER.UPPER.MIX")
@@ -354,12 +324,12 @@ end)
 ]]
 test.Variants(
   {
-    "drag - copy to another volume",
-    "drag - move on same volume",
-    "drag - move to another volume", -- Uses "real" mouse, too imprecise
-    "drag - copy to same volume", -- Uses "real" mouse, too imprecise
+    {"drag - copy to another volume", "copy", "other"},
+    {"drag - move on same volume", "move", "same"},
+    {"drag - move to another volume", "move", "other"}, -- Uses "real" mouse, too imprecise
+    {"drag - copy to same volume", "copy", "same"}, -- Uses "real" mouse, too imprecise
   },
-  function(idx)
+  function(idx, name, action, disk)
     EnablePreserve()
 
     a2d.SelectPath("/GS.OS.MIXED")
@@ -368,7 +338,7 @@ test.Variants(
     a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
 
     local path
-    if idx == 1 then
+    if action == "copy" and disk == "other" then
       -- Copy to another volume
       a2d.Select("LOWER.UPPER.MIX")
       local x,y = a2dtest.GetSelectedIconCoords()
@@ -377,7 +347,7 @@ test.Variants(
       a2d.WaitForRepaint()
 
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
-    elseif idx == 2  then
+    elseif action == "move" and disk == "same" then
       -- Move on same volume
       a2d.CreateFolder("ANOTHER.FOLDER")
       a2d.OpenPath("/RAM1")
@@ -392,7 +362,7 @@ test.Variants(
       a2d.WaitForRepaint()
 
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"
-    elseif idx == 3 then
+    elseif action == "move" and disk == "other" then
       -- Move to another volume
       a2d.Select("LOWER.UPPER.MIX")
       local x,y = a2dtest.GetSelectedIconCoords()
@@ -408,7 +378,7 @@ test.Variants(
       a2d.WaitForRepaint()
 
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
-    elseif idx == 4 then
+    elseif action == "copy" and disk == "same" then
       -- Copy on same volume
       a2d.CreateFolder("ANOTHER.FOLDER")
       a2d.OpenPath("/RAM1")

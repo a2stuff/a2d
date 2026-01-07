@@ -35,11 +35,11 @@ a2d.ConfigureRepaintTime(0.25)
 ]]
 test.Variants(
   {
-    "Device names - ProDOS 2.4",
-    "Device names - ProDOS 2.0",
+    {"Device names - ProDOS 2.4", 2.4},
+    {"Device names - ProDOS 2.0", 2.0},
   },
-  function(idx)
-    if idx == 2 then
+  function(idx, name, version)
+    if version == 2.0 then
       a2d.CopyPath("/TESTS/PRODOS/PRODOS.203", "/A2.DESKTOP")
       a2d.RenamePath("/A2.DESKTOP/PRODOS", "PRODOS.24")
       a2d.RenamePath("/A2.DESKTOP/PRODOS.203", "PRODOS")
@@ -74,7 +74,7 @@ test.Variants(
     end
     a2d.CloseAllWindows()
 
-    if idx == 2 then
+    if version == 2.0 then
       a2d.DeletePath("/A2.DESKTOP/PRODOS")
       a2d.RenamePath("/A2.DESKTOP/PRODOS.24", "PRODOS")
       a2d.CloseAllWindows()

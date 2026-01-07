@@ -19,15 +19,63 @@ a2d.ConfigureRepaintTime(0.25)
 function RenameTest(name, proc)
   test.Variants(
     {
-      name .. " - Not copied to RAMCard, rename load volume",
-      name .. " - Copied to RAMCard, rename load volume",
-      name .. " - Copied to RAMCard, rename load folder",
-      name .. " - Not copied to RAMCard, rename load folder",
+      {name .. " - Not copied to RAMCard, rename load volume", false,
+       function() -- setup
+         a2d.RenamePath("/A2.DESKTOP", "NEWNAME")
+         return "/NEWNAME"
+       end,
+       function() -- cleanup
+         a2d.RenamePath("/NEWNAME", "A2.DESKTOP")
+       end,
+      },
+
+      {name .. " - Copied to RAMCard, rename load volume", true,
+       function() -- setup
+         a2d.RenamePath("/RAM1", "NEWNAME")
+         return "/NEWNAME/DESKTOP"
+       end,
+       function() -- cleanup
+         a2d.RenamePath("/NEWNAME", "RAM1")
+         a2d.EraseVolume("RAM1")
+       end,
+      },
+
+      {name .. " - Copied to RAMCard, rename load folder", true,
+       function() -- setup
+         a2d.RenamePath("/RAM1/DESKTOP", "NEWNAME")
+         return "/RAM1/NEWNAME"
+       end,
+       function() -- cleanup
+         a2d.EraseVolume("RAM1")
+       end,
+      },
+
+      {name .. " - Not copied to RAMCard, rename load folder", false,
+       function() -- setup
+         -- Copy to /RAM1
+         a2d.SelectPath("/A2.DESKTOP")
+         a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO - 4)
+         apple2.ControlKey("D") -- Drives
+         emu.wait(10) -- empty floppies
+         apple2.Type("RAM1")
+         a2d.DialogOK() -- confirm copy
+         emu.wait(80) -- copy is slow
+         -- Switch to copy
+         a2d.OpenPath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
+         a2d.WaitForDesktopReady()
+
+         a2d.RenamePath("/RAM1/A2.DESKTOP", "NEWNAME")
+         return "/RAM1/NEWNAME"
+       end,
+       function() -- cleanup
+         a2d.EraseVolume("RAM1")
+       end,
+      },
     },
-    function(idx)
+    function(idx, name, copied, setup, cleanup)
 
       -- configure
-      if idx == 2 or idx == 3 then
+      if copied then
         a2d.ToggleOptionCopyToRAMCard()
         a2d.CloseAllWindows()
         a2d.Reboot()
@@ -35,34 +83,7 @@ function RenameTest(name, proc)
       end
 
       -- setup
-      local dtpath
-      if idx == 1 then
-        a2d.RenamePath("/A2.DESKTOP", "NEWNAME")
-        dtpath = "/NEWNAME"
-      elseif idx == 2 then
-        a2d.RenamePath("/RAM1", "NEWNAME")
-        dtpath = "/NEWNAME/DESKTOP"
-      elseif idx == 3 then
-        a2d.RenamePath("/RAM1/DESKTOP", "NEWNAME")
-        dtpath = "/RAM1/NEWNAME"
-      elseif idx == 4 then
-        -- Copy to /RAM1
-        a2d.SelectPath("/A2.DESKTOP")
-        a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO - 4)
-        apple2.ControlKey("D") -- Drives
-        emu.wait(10) -- empty floppies
-        apple2.Type("RAM1")
-        a2d.DialogOK() -- confirm copy
-        emu.wait(80) -- copy is slow
-        -- Switch to copy
-        a2d.OpenPath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
-        a2d.WaitForDesktopReady()
-
-        a2d.RenamePath("/RAM1/A2.DESKTOP", "NEWNAME")
-        dtpath = "/RAM1/NEWNAME"
-      else
-        error("NYI")
-      end
+      local dtpath = setup()
 
       a2d.CloseAllWindows()
       a2d.ClearSelection()
@@ -73,19 +94,7 @@ function RenameTest(name, proc)
       a2d.ClearSelection()
 
       -- cleanup
-
-      if idx == 1 then
-        a2d.RenamePath("/NEWNAME", "A2.DESKTOP")
-      elseif idx == 2 then
-        a2d.RenamePath("/NEWNAME", "RAM1")
-        a2d.EraseVolume("RAM1")
-      elseif idx == 3 then
-        a2d.EraseVolume("RAM1")
-      elseif idx == 4 then
-        a2d.EraseVolume("RAM1")
-      else
-        error("NYI")
-      end
+      cleanup()
       a2d.DeletePath("/A2.DESKTOP/LOCAL")
       a2d.Reboot()
       a2d.WaitForDesktopReady()

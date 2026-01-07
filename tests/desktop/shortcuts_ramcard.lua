@@ -235,22 +235,15 @@ end)
 -- Implicitly here we're set to copy to RAMCard
 test.Variants(
   {
-    "permutations: copy enabled - menu and list - on boot",
-    "permutations: copy enabled - menu and list - on use",
-    "permutations: copy enabled - menu and list - never",
-    "permutations: copy enabled - list only - on boot",
-    "permutations: copy enabled - list only - on use",
-    "permutations: copy enabled - list only - never",
+    {"permutations: copy enabled - menu and list - on boot", false, "boot"},
+    {"permutations: copy enabled - menu and list - on use", false, "use"},
+    {"permutations: copy enabled - menu and list - never", false, nil},
+    {"permutations: copy enabled - list only - on boot", true, "boot"},
+    {"permutations: copy enabled - list only - on use", true, "use"},
+    {"permutations: copy enabled - list only - never", true, nil},
   },
-  function(idx)
-    local options
-    if     idx == 1 then options = {copy="boot"}
-    elseif idx == 2 then options = {copy="use"}
-    elseif idx == 3 then options = {}
-    elseif idx == 4 then options = {list_only=true, copy="boot"}
-    elseif idx == 5 then options = {list_only=true, copy="use"}
-    elseif idx == 6 then options = {list_only=true}
-    end
+  function(idx, name, list_only, copy)
+    local options = {list_only=list_only, copy=copy}
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", options)
     a2d.CloseAllWindows()
@@ -280,22 +273,15 @@ a2d.WaitForDesktopReady()
 
 test.Variants(
   {
-    "permutations: copy disabled - menu and list - on boot",
-    "permutations: copy disabled - menu and list - on use",
-    "permutations: copy disabled - menu and list - never",
-    "permutations: copy disabled - list only - on boot",
-    "permutations: copy disabled - list only - on use",
-    "permutations: copy disabled - list only - never",
+    {"permutations: copy disabled - menu and list - on boot", false, "boot"},
+    {"permutations: copy disabled - menu and list - on use", false, "use"},
+    {"permutations: copy disabled - menu and list - never", false, nil},
+    {"permutations: copy disabled - list only - on boot", true, "boot"},
+    {"permutations: copy disabled - list only - on use", true, "use"},
+    {"permutations: copy disabled - list only - never", true, nil},
   },
-  function(idx)
-    local options
-    if     idx == 1 then options = {copy="boot"}
-    elseif idx == 2 then options = {copy="use"}
-    elseif idx == 3 then options = {}
-    elseif idx == 4 then options = {list_only=true, copy="boot"}
-    elseif idx == 5 then options = {list_only=true, copy="use"}
-    elseif idx == 6 then options = {list_only=true}
-    end
+  function(idx, name, list_only, copy)
+    local options = {list_only=list_only, copy=copy}
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", options)
     a2d.CloseAllWindows()

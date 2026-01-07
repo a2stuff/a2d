@@ -65,11 +65,11 @@ function ModifierTest(name, func)
       {name .. " - Shift", apple2.PressShift, apple2.ReleaseShift},
       -- TODO: Apple IIgs as well
     },
-    function(idx, name, Press, Release)
+    function(idx, name, press, release)
       a2d.CloseAllWindows()
       a2d.ClearSelection()
 
-      func(Press, Release)
+      func(press, release)
   end)
 end
 

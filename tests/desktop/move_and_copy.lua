@@ -239,10 +239,10 @@ end)
 ]]
 test.Variants(
   {
-    "Moving count is accurate",
-    "Copying count is accurate",
+    {"Moving count is accurate", "move"},
+    {"Copying count is accurate", "copy"},
   },
-  function(idx)
+  function(idx, name, action)
     a2d.CreateFolder("/RAM1/SRC")
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.CopyPath("/A2.DESKTOP/PRODOS", "/RAM1/SRC")
@@ -268,7 +268,7 @@ test.Variants(
         m.ButtonDown()
         m.MoveToApproximately(x3, y3)
 
-        if idx == 1 then
+        if action == "move" then
           m.ButtonUp()
         else
           apple2.PressSA()
@@ -279,7 +279,7 @@ test.Variants(
     end)
     emu.wait(0.25)
 
-    if idx == 1 then
+    if action == "move" then
       test.Snap("verify dialog shows 'Moving: 2 files'")
     else
       test.Snap("verify dialog shows 'Copying: 4 files'")
@@ -802,14 +802,14 @@ end)
 ]]
 test.Variants(
   {
-    "Same-volume child window updates when activated - drag to icon",
-    "Same-volume child window updates when activated - drag to window",
-    "Same-volume child window updates when activated - File > Copy To",
+    {"Same-volume child window updates when activated - drag to icon", "icon"},
+    {"Same-volume child window updates when activated - drag to window", "window"},
+    {"Same-volume child window updates when activated - File > Copy To", nil},
   },
-  function(idx)
+  function(idx, name, target)
     a2d.CreateFolder("/RAM1/FOLDER")
     local dst_x, dst_y
-    if idx == 1 then
+    if target == "icon" then
       a2d.SelectPath("/RAM1")
       dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     end
@@ -820,7 +820,7 @@ test.Variants(
 
     a2d.OpenPath("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
-    if idx == 2 then
+    if target == "window" then
       local x, y, w, h = a2dtest.GetFrontWindowContentRect()
       dst_x, dst_y = x + w / 2, y + h / 2
     end
@@ -830,10 +830,10 @@ test.Variants(
     a2d.Select("READ.ME")
     test.Snap("note RAM1 and FOLDER used/free numbers")
 
-    if idx == 1 or idx == 2 then
+    if target ~= nil then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
       a2d.Drag(src_x, src_y, dst_x, dst_y)
-    elseif idx == 3 then
+    else
       a2d.CopySelectionTo("/RAM1")
     end
     emu.wait(1)
@@ -866,10 +866,10 @@ end)
 ]]
 test.Variants(
   {
-    "Same-volume parent window updates when activated - drag to window",
-    "Same-volume parent window updates when activated - File > Copy To",
+    {"Same-volume parent window updates when activated - drag to window", true},
+    {"Same-volume parent window updates when activated - File > Copy To", false},
   },
-  function(idx)
+  function(idx, name, drag)
     a2d.CreateFolder("/RAM1/FOLDER")
 
     a2d.OpenPath("/RAM1/FOLDER")
@@ -886,10 +886,10 @@ test.Variants(
     a2d.Select("READ.ME")
     test.Snap("note RAM1 and FOLDER used/free numbers")
 
-    if idx == 1 then
+    if drag then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
       a2d.Drag(src_x, src_y, dst_x, dst_y)
-    elseif idx == 2 then
+    else
       a2d.CopySelectionTo("/RAM1/FOLDER")
     end
     emu.wait(1)
@@ -919,10 +919,10 @@ end)
 ]]
 test.Variants(
   {
-    "Same-volume child window updates when activated - drag to trash",
-    "Same-volume child window updates when activated - File > Delete",
+    {"Same-volume child window updates when activated - drag to trash", true},
+    {"Same-volume child window updates when activated - File > Delete", false},
   },
-  function(idx)
+  function(idx, name, drag)
     a2d.SelectPath("/Trash")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
@@ -939,12 +939,12 @@ test.Variants(
     a2d.Select("READ.ME")
     test.Snap("note RAM1 and FOLDER used/free numbers")
 
-    if idx == 1 then
+    if drag then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
       a2d.Drag(src_x, src_y, dst_x, dst_y)
       a2dtest.WaitForAlert()
       a2d.DialogOK()
-    elseif idx == 2 then
+    else
       a2d.DeleteSelection()
     end
     emu.wait(1)
@@ -974,10 +974,10 @@ end)
 ]]
 test.Variants(
   {
-    "Same-volume parent window updates when activated - drag to trash",
-    "Same-volume parent window updates when activated - File > Delete",
+    {"Same-volume parent window updates when activated - drag to trash", true},
+    {"Same-volume parent window updates when activated - File > Delete", false},
   },
-  function(idx)
+  function(idx, name, drag)
     a2d.SelectPath("/Trash")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
@@ -995,12 +995,12 @@ test.Variants(
     a2d.Select("READ.ME")
     test.Snap("note RAM1 used/free numbers")
 
-    if idx == 1 then
+    if drag then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
       a2d.Drag(src_x, src_y, dst_x, dst_y)
       a2dtest.WaitForAlert()
       a2d.DialogOK()
-    elseif idx == 2 then
+    else
       a2d.DeleteSelection()
     end
     emu.wait(1)
@@ -1070,17 +1070,17 @@ end)
 ]]
 test.Variants(
   {
-    "Same-volume child window updates when activated - copy - drag to icon",
-    "Same-volume child window updates when activated - copy - drag to window",
+    {"Same-volume child window updates when activated - copy - drag to icon", "icon"},
+    {"Same-volume child window updates when activated - copy - drag to window", "window"},
   },
-  function(idx)
+  function(idx, name, target)
     a2d.CreateFolder("/RAM1/FOLDER")
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
 
     local dst_x, dst_y
     a2d.OpenPath("/RAM1/FOLDER")
     a2d.MoveWindowBy(200, 100)
-    if idx == 2 then
+    if target == "window" then
       local x, y, w, h = a2dtest.GetFrontWindowContentRect()
       dst_x, dst_y = x + w / 2, y + h / 2
     end
@@ -1090,7 +1090,7 @@ test.Variants(
     local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.Select("FOLDER")
-    if idx == 1 then
+    if target == "icon" then
       dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     end
 
@@ -1127,28 +1127,28 @@ end)
 function ActiveInactiveTest(name, func1, func2)
   test.Variants(
     {
-      name .. " - active",
-      name .. " - inactive",
+      {name .. " - active", true},
+      {name .. " - inactive", false},
     },
-    function(idx)
+    function(idx, name, active)
       a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
       a2d.CopyPath("/A2.DESKTOP/PRODOS", "/RAM1")
       a2d.CloseAllWindows()
 
-      if idx == 2 then
+      if not active then
         a2d.OpenPath("/RAM5")
         a2d.MoveWindowBy(0, 100)
       end
 
       local x, y = func1()
 
-      if idx == 2 then
+      if not active then
         a2d.CycleWindows()
       end
 
       func2(x, y)
 
-      if idx == 2 then
+      if not active then
         test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
       end
 
@@ -1201,7 +1201,7 @@ ActiveInactiveTest(
   function(x, y)
     test.Snap("note icon position")
     a2d.Drag(x, y, x + 20, y + 10, {sa_drop=true})
-    emu.wait(1)
+    emu.wait(5)
     test.Snap("verify icon was duplicated")
     apple2.ReturnKey()
     emu.wait(1)
@@ -1237,7 +1237,10 @@ ActiveInactiveTest(
     test.Snap("note icon position")
     a2d.Drag(x, y, x + 20, y + 10, {oa_drop=true, sa_drop=true})
     emu.wait(5)
+
     test.Snap("verify an alias was created")
+    -- BUG: Failing in inactive window - a duplicate is created
+
     apple2.ReturnKey()
     emu.wait(1)
 end)
@@ -1266,12 +1269,12 @@ end)
 ]]
 test.Variants(
   {
-    "Drag volume to volume icon",
-    "Drag volume to volume window",
+    {"Drag volume to volume icon", "icon"},
+    {"Drag volume to volume window", "window"},
   },
-  function(idx)
+  function(idx, name, target)
     local dst_x, dst_y
-    if idx == 1 then
+    if target == "icon" then
       a2d.SelectPath("/RAM1")
       dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     else
@@ -1287,6 +1290,7 @@ test.Variants(
     emu.wait(30)
     a2dtest.ExpectAlertNotShowing()
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -1313,6 +1317,7 @@ test.Step(
     emu.wait(5)
     test.Snap("verify RAM1 window did not refresh")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
@@ -1339,8 +1344,10 @@ test.Step(
     emu.wait(2)
     apple2.EscapeKey()
     emu.wait(5)
-    test.Snap("verify RAM1 window did not refresh")
 
+    test.Snap("verify RAM1 window did refresh")
+
+    -- cleanup
     a2d.EraseVolume("RAM1")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
@@ -1364,6 +1371,7 @@ test.Step(
 
     a2d.SelectPath("/RAM1/EMPTY.FOLDER")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -1400,6 +1408,7 @@ test.Step(
 
     a2d.SelectPath("/RAM1/PRODOS")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 

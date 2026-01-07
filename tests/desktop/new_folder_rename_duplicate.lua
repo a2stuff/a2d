@@ -260,15 +260,11 @@ end)
 ]]
 test.Variants(
   {
-    "file icon hit testing",
-    "volume icon hit testing",
+    {"file icon hit testing", "/A2.DESKTOP/READ.ME"},
+    {"volume icon hit testing", "/A2.DESKTOP"},
   },
-  function(idx)
-    if idx == 1 then
-      a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    else
-      a2d.SelectPath("/A2.DESKTOP")
-    end
+  function(idx, name, path)
+    a2d.SelectPath(path)
     local icons = a2d.GetSelectedIcons()
     test.Expect(#icons, 1, "only one icon should be selected")
     local icon = icons[1]

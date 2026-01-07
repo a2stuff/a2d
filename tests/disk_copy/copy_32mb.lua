@@ -25,10 +25,10 @@ a2d.ConfigureRepaintTime(0.25)
 
 test.Variants(
   {
-    "Quick Copy 32MB",
-    "Disk Copy 32MB",
+    {"Quick Copy 32MB", "quick"},
+    {"Disk Copy 32MB", "disk"},
   },
-  function(idx)
+  function(idx, name, what)
     a2d.CopyDisk()
 
     a2d.InvokeMenuItem(3, idx) -- Options > Quick Copy or Disk Copy
@@ -58,7 +58,7 @@ test.Variants(
 
     -- complete
     a2dtest.WaitForAlert({timeout=7200})
-    if idx == 2 then
+    if what == "disk" then
       test.Snap("verify total block counts are 65,535")
     end
     a2d.DialogOK()

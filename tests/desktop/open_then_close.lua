@@ -86,17 +86,13 @@ end)
 ]]
 test.Variants(
   {
-    "Open Apple + Solid Apple + O",
-    "Open Apple + Solid Apple + o",
+    {"Open Apple + Solid Apple + O", "O"},
+    {"Open Apple + Solid Apple + o", "o"},
   },
-  function(idx)
+  function(idx, name, key)
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
 
-    if idx == 1 then
-      a2d.OASAShortcut("O")
-    else
-      a2d.OASAShortcut("o")
-    end
+    a2d.OASAShortcut(key)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
@@ -124,21 +120,17 @@ end)
 ]]
 test.Variants(
   {
-    "With menu showing, Open Apple + Solid Apple + O",
-    "With menu showing, Open Apple + Solid Apple + o",
+    {"With menu showing, Open Apple + Solid Apple + O", "O"},
+    {"With menu showing, Open Apple + Solid Apple + o", "o"},
   },
-  function(idx)
+  function(idx, name, key)
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(30, 5)
         m.Click()
     end)
 
-    if idx == 1 then
-      a2d.OASAShortcut("O")
-    else
-      a2d.OASAShortcut("o")
-    end
+    a2d.OASAShortcut(key)
     a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
@@ -152,17 +144,13 @@ end)
 q]]
 test.Variants(
   {
-    "No selection, OA+SA+O",
-    "No selection, OA+SA+o",
+    {"No selection, OA+SA+O", "O"},
+    {"No selection, OA+SA+o", "o"},
   },
-  function(idx)
+  function(idx, name, key)
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        if idx == 1 then
-          a2d.OASAShortcut("O")
-        else
-          a2d.OASAShortcut("o")
-        end
+        a2d.OASAShortcut(key)
     end)
 end)
 
