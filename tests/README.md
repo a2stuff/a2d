@@ -77,6 +77,19 @@ RESOLUTION="560x384"
 ================================================== ENDCONFIG ]]
 ```
 
+## ADTPro VEDrive
+
+Tests using ADTPro's Virtual Ethernet Drive are supported if you're using Ample's MAME.
+
+* Have https://github.com/bobbimanners/ProDOS-Utils/ cloned parallel to your `a2d` repo
+* Specify an `uthernet2` card in the test config; works in Slot 3 with `-sl3`
+* Define `VEDISK1` and `VEDISK2` in the test config, pointing at .po, .hdv or .2mg disk images.
+
+If you get a warning from Ample/MAME about VMNet Permissions, follow the instructions.
+
+See `tests/infrastructure/vedrive.lua` for an example.
+
+
 # Files
 
 ## `lib/` - Libraries
