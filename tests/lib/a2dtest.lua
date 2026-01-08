@@ -94,12 +94,7 @@ for row = 0,apple2.SCREEN_HEIGHT-1 do
 end
 
 function a2dtest.DHRDarkness()
-  for row = 0,apple2.SCREEN_HEIGHT-1 do
-    for col = 0,apple2.SCREEN_COLUMNS-1 do
-      local byte = darkness_bytes[row % 4 + 1][col % 4 + 1]
-      apple2.SetDHRByte(row, col, byte)
-    end
-  end
+  apple2.OverwriteDHR(darkness_ref)
 end
 
 --------------------------------------------------

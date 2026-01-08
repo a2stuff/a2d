@@ -226,7 +226,7 @@ output=$(
     $MAMEFLAGS \
     $SCRIPTARGS" \
        2> >(IFS='' ; while read line; do echo "${COLOR_RED}${line}${COLOR_RESET}" >&1; done) | \
-    egrep --line-buffered -v "Secure coding is automatically enabled" | \
+    egrep --line-buffered -v "Secure coding is automatically enabled|Average speed:" | \
     tee /dev/fd/5
       )
 popd > /dev/null

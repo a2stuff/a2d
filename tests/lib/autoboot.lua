@@ -1,50 +1,18 @@
-package.path = emu.subst_env("$LUA_PATH") .. ";" .. package.path
+--[[
+  This file is loaded every time the machine is hard reset.
 
--- Run in an async context
-local c = coroutine.create(function()
-    emu.wait(1/60) -- allow logging to get ready
+  The require() happens only once, so this loads/executes a single copy of
+  executor.lua which maintains state across hard resets.
 
-    -- Dependencies
-    util = require("util")
-    test = require("test")
-    apple2 = require("apple2")
-    a2d = require("a2d")
-    a2dtest = require("a2dtest")
-    mgtk = require("mgtk")
-    a2d.InitSystem() -- async; outside require
+  The executor.Go() call is executed on startup and after every
+  hard reset.
+]]
 
-    -- ACE 2200 is hard-coded to autostart at Slot 6
-    if manager.machine.system.name:match("^ace2200") then
-      apple2.ControlReset()
-      apple2.TypeLine("PR#7")
-    end
+local prefix = emu.subst_env("$LUA_PATH") .. ";"
+if package.path:sub(1, #prefix) ~= prefix then
+  package.path = prefix .. package.path
+end
 
-    -- Wait for DeskTop to start
-    if emu.subst_env("$WAITFORDESKTOP") == "true" then
-      a2d.WaitForDesktopReady()
-    end
+require("executor")
 
-    -- Globals
-    machine = manager.machine
-
-    -- Execute passed script
-    local chunk_function, err = loadfile(emu.subst_env("$LUA_SCRIPT"), "t", _ENV)
-    if err then
-      print(err)
-      os.exit(1)
-    end
-
-    local result = chunk_function()
-    if result then
-      return
-    end
-
-    if test.count == 0 then
-      print("no tests run!")
-      os.exit(1)
-    end
-
-    -- Success by default
-    os.exit(0)
-end)
-coroutine.resume(c)
+executor.Go()

@@ -5,6 +5,7 @@
   ============================================================]]
 
 local test = {}
+local steps = {}
 
 local skip_count = emu.subst_env("$SKIP_COUNT")
 if skip_count == "" then
@@ -77,6 +78,17 @@ function test.Step(title, func)
     return
   end
 
+  table.insert(steps, {title=title, func=func})
+end
+
+function test.HasMoreSteps()
+  return #steps > 0
+end
+
+function test.RunNextStep()
+  local step = table.remove(steps, 1)
+  local title = step.title
+  local func = step.func
 
   function handler(arg)
     if not arg:match("Expectation failure:") then

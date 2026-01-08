@@ -1,4 +1,3 @@
-
 --[[============================================================
 
   Generic utilities for Apple II
@@ -60,7 +59,7 @@ if machine.system.name:match("^apple2e") then
   -- * many possible aux memory devices
   scan_for_mouse = true
   if emu.subst_env("$CHECKAUXMEMORY") == "true" then
-    auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
+    auxram = function() return emu.item(get_device("^:aux:").items["0/m_ram"]) end
   end
 
 elseif machine.system.name:match("^apple2c") then
@@ -120,7 +119,7 @@ elseif machine.system.name:match("^ace500") then
   -- Franklin ACE 500
   -- * has built-in mouse port
   -- * built-in aux memory device
-  auxram = emu.item(get_device("^:aux$").items["0/m_ram"])
+  auxram = function() return emu.item(get_device("^:aux$").items["0/m_ram"]) end
 
   mouse = {
     x = { port = ":mse_x",      field = "Mouse X" },
@@ -136,7 +135,7 @@ elseif machine.system.name:match("^ace2200") then
   -- Franklin ACE 2200
   -- * mouse card required
   -- * built-in aux memory device
-  auxram = emu.item(get_device("^:aux$").items["0/m_ram"])
+  auxram = function() emu.item(get_device("^:aux$").items["0/m_ram"]) end
 
   scan_for_mouse = true
 
@@ -320,7 +319,7 @@ end
 -- Keyboard Input
 --------------------------------------------------
 
-local kbd = machine.natkeyboard
+local function kbd() return machine.natkeyboard end
 
 local function wait_for_kbd_strobe_clear()
   while apple2.ReadSSW("KBD") > 127 do
@@ -331,8 +330,8 @@ end
 -- https://docs.mamedev.org/luascript/ref-input.html#natural-keyboard-manager
 function apple2.Type(sequence)
   for i=1,sequence:len() do
-    kbd:post(sequence:sub(i,i))
-    while kbd.is_posting do
+    kbd():post(sequence:sub(i,i))
+    while kbd().is_posting do
       emu.wait(1/60)
     end
     wait_for_kbd_strobe_clear()
@@ -648,7 +647,6 @@ end
 --
 -- The IIgs swaps E/F, but not the two D banks!
 
-
 -- The ReadRAMDevice/WriteRAMDevice calls normalize this; call with
 -- 0x0nnnn to access Main RAM and 0x1nnnn to acces Aux RAM. For
 -- LCBANK2 use 0xbCnnnn instead of 0xDnnnn.
@@ -656,11 +654,11 @@ end
 -- RAM should be device tag ":ram" item name "0/m_pointer" but
 -- MAME 0.284 introduced https://github.com/mamedev/mame/issues/14762
 -- so hunt for it using pattern matching.
-local ram
-for i,_ in pairs(machine.devices[":ram"].items) do
-  if i:match("0/.*m_pointer") then
-    ram = emu.item(machine.devices[":ram"].items[i])
-    break
+local ram = function()
+  for i,_ in pairs(machine.devices[":ram"].items) do
+    if i:match("0/.*m_pointer") then
+      return emu.item(machine.devices[":ram"].items[i])
+    end
   end
 end
 
@@ -677,25 +675,31 @@ local function swizzle(addr)
   return addr
 end
 
-function apple2.ReadRAMDevice(addr)
+function apple2.ReadRAMDevice(addr, ramdev, auxdev)
+  if ramdev == nil then ramdev = ram() end
+  if auxdev == nil then auxdev = auxram() end
+
   addr = swizzle(addr)
 
   -- Apple IIe exposes Aux RAM as a separate device
   if addr >= 0x10000 and auxram ~= nil then
-    return auxram:read(addr - 0x10000)
+    return auxdev:read(addr - 0x10000)
   else
-    return ram:read(addr)
+    return ramdev:read(addr)
   end
 end
 
-function apple2.WriteRAMDevice(addr, value)
+function apple2.WriteRAMDevice(addr, value, ramdev, auxdev)
+  if ramdev == nil then ramdev = ram() end
+  if auxdev == nil then auxdev = auxram() end
+
   addr = swizzle(addr)
 
   -- Apple IIe exposes Aux RAM as a separate device
   if addr >= 0x10000 and auxram ~= nil then
-    auxram:write(addr - 0x10000, value)
+    auxdev:write(addr - 0x10000, value)
   else
-    ram:write(addr, value)
+    ramdev:write(addr, value)
   end
 end
 
@@ -708,15 +712,16 @@ end
 -- are accessed
 
 -- Most useful for reading/writing softswitches
-local cpu = manager.machine.devices[":maincpu"]
-local mem = cpu.spaces["program"]
+
+function cpu() return machine.devices[":maincpu"] end
+function mem() return cpu().spaces["program"] end
 
 function apple2.ReadMemory(addr)
-  return mem:read_u8(addr)
+  return mem():read_u8(addr)
 end
 
 function apple2.WriteMemory(addr, value)
-  return mem:write_u8(addr, value)
+  return mem():write_u8(addr, value)
 end
 
 local ssw = {
@@ -827,11 +832,13 @@ end
 
 -- Address must include bank offset
 function apple2.GetPascalString(addr)
+  local ramdev, auxdev = ram(), auxram()
+
   -- NOTE: Doesn't handle non-ASCII encodings
-  local len = apple2.ReadRAMDevice(addr)
+  local len = apple2.ReadRAMDevice(addr, ramdev, auxdev)
   local str = ""
   for i = 1,len do
-    str = str .. string.char(apple2.ReadRAMDevice(addr+i))
+    str = str .. string.char(apple2.ReadRAMDevice(addr+i, ramdev, auxdev))
   end
   return str
 end
@@ -845,26 +852,34 @@ local function GetDHRByteAddress(row, col)
   return bank, 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
 end
 
-function apple2.GetDHRByte(row, col)
+function apple2.GetDHRByte(row, col, ramdev, auxdev)
+  if ramdev == nil then ramdev = ram() end
+  if auxdev == nil then auxdev = auxram() end
+
   local bank, addr = GetDHRByteAddress(row, col)
-  return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank)) & 0x7F
+  return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank), ramdev, auxdev) & 0x7F
 end
 
 function apple2.SetDHRByte(row, col, value)
+  if ramdev == nil then ramdev = ram() end
+  if auxdev == nil then auxdev = auxram() end
+
   local bank, addr = GetDHRByteAddress(row, col)
-  apple2.WriteRAMDevice(addr + 0x10000 * (1-bank), value)
+  apple2.WriteRAMDevice(addr + 0x10000 * (1-bank), value, ramdev, auxdev)
 end
 
 function IterateTextScreen(char_cb, row_cb)
+  local ramdev, auxdev = ram(), auxram()
+
   local is80 = apple2.ReadSSW("RD80VID") > 127
   local isAlt = apple2.ReadSSW("RDALTCHAR") > 127
   for row = 0,23 do
     local base = 0x400 + (row - math.floor(row/8) * 8) * 0x80 + 40 * math.floor(row/8)
     for col = 0,39 do
       if is80 then
-        char_cb(apple2.ReadRAMDevice(0x10000 + base + col), isAlt)
+        char_cb(apple2.ReadRAMDevice(0x10000 + base + col, ramdev, auxdev), isAlt)
       end
-      char_cb(apple2.ReadRAMDevice(base + col), isAlt)
+      char_cb(apple2.ReadRAMDevice(base + col, ramdev, auxdev), isAlt)
     end
     row_cb()
   end
@@ -941,20 +956,31 @@ function apple2.GrabInverseText()
 end
 
 function apple2.SnapshotDHR()
+  local ramdev, auxdev = ram(), auxram()
+
   local bytes = {}
   for row = 0,apple2.SCREEN_HEIGHT-1 do
     for col = 0,apple2.SCREEN_COLUMNS-1 do
-      bytes[row*apple2.SCREEN_COLUMNS+col] = apple2.GetDHRByte(row, col)
+      bytes[row*apple2.SCREEN_COLUMNS+col] = apple2.GetDHRByte(row, col, ramdev, auxdev)
     end
   end
   return bytes
 end
 
+function apple2.OverwriteDHR(bytes)
+  local ramdev, auxdev = ram(), auxram()
+
+  for row = 0,apple2.SCREEN_HEIGHT-1 do
+    for col = 0,apple2.SCREEN_COLUMNS-1 do
+      apple2.SetDHRByte(row, col, bytes[row*apple2.SCREEN_COLUMNS+col], ramdev, auxdev)
+    end
+  end
+end
+
 --------------------------------------------------
 
 function apple2.IsCrashedToMonitor()
-  local cpu = manager.machine.devices[":maincpu"]
-  local sp = cpu.state.SP.value
+  local sp = cpu().state.SP.value
   if sp == 0x1FE and apple2.ReadMemory(sp) == 0x4E and apple2.ReadMemory(sp+1) == 0xEB then
     return true
   else
@@ -1053,7 +1079,7 @@ function apple2.IsMono()
     pixels are blurred. So make the border black.
     TODO: Something less hacky than this
   ]]
-  if manager.machine.system.name:match("^apple2gs") then
+  if machine.system.name:match("^apple2gs") then
     apple2.WriteSSW("CLOCKCTL", 0)
     emu.wait(2/60)
   end
@@ -1061,8 +1087,8 @@ function apple2.IsMono()
   emu.wait_next_frame()
 
   -- https://docs.mamedev.org/luascript/ref-core.html#video-manager
-  local bytes = manager.machine.video:snapshot_pixels()
-  local width, height = manager.machine.video:snapshot_size()
+  local bytes = machine.video:snapshot_pixels()
+  local width, height = machine.video:snapshot_size()
 
   function pixel(x,y)
     local a = string.byte(bytes, (x + y * width) * 4 + 0)
