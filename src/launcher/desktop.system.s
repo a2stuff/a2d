@@ -90,10 +90,6 @@ header_orig_prefix:
 
 ;;; ============================================================
 
-        DEFINE_CLOSE_PARAMS close_everything_params
-
-;;; ============================================================
-
 start:
         ;; Old ProDOS leaves interrupts inhibited on start.
         ;; Do this for good measure.
@@ -1586,6 +1582,11 @@ read:   sta     read_params::ref_num
 .endproc ; InvokeSelectorOrDesktopImpl
 InvokeSelectorOrDesktop := InvokeSelectorOrDesktopImpl::start
 
+;;; ============================================================
+
+        ;; Used by `InvokeSelectorOrDesktop` so outside the danger zone
+        .assert * >= MODULE_BOOTSTRAP + kModuleBootstrapSize, error, "overlapping addresses"
+        DEFINE_CLOSE_PARAMS close_everything_params
 
 ;;; ============================================================
 ;;; Loaded at $1000 by DeskTop on Quit, and copies $1100-$13FF
