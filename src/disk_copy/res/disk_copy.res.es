@@ -39,7 +39,6 @@
 .define res_string_prompt_erase_slot_drive_pattern "]Est\x10s seguro de que quieres borrar el disco en la ranura # unidad #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 62
 .define res_const_prompt_erase_slot_drive_pattern_offset2 71
-.define res_string_error_dest_format_fail "[El disco de destino no puede inicializarse!"
 .define res_string_error_dest_protected "[El disco de destino est\x10 protegido contra escritura!"
 .define res_string_error_format_error "Error de inicializaci\x13n."
 .define res_string_label_status_copy_success "La copia fue exitosa."

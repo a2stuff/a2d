@@ -256,19 +256,6 @@ test.Step(
 end)
 
 --[[
-  Configure Virtual II with two OmniDisks formatted as ProDOS volumes
-  mounted. Launch DeskTop. Special > Copy Disk.... Select the
-  OmniDisks as Source and Destination. Verify that after being
-  prompted to insert the source and destination disks, a "Are you sure
-  you want to erase ...?" confirmation prompt is shown.
-
-  NOTE: See fd51f6d - the issue is that Virtual ][ OmniDisks do not
-  report support for formatting.
-
-  TODO: See if this can be reproduced in MAME.
-]]
-
---[[
   Launch DeskTop. Special > Copy Disk.... Verify that the OK button is
   disabled. Select an item in the list with the keyboard. Verify that
   the OK button enables. Click in the blank space in the list below

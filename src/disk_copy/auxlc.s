@@ -16,20 +16,19 @@ default_block_buffer := main::default_block_buffer
 ;;; ============================================================
 
 ;;; number of alert messages
-kNumAlertMessages = 12
+kNumAlertMessages = 11
 
 kAlertMsgInsertSource           = 0 ; No bell, *
 kAlertMsgInsertDestination      = 1 ; No bell, *
 kAlertMsgConfirmErase           = 2 ; No bell, X,Y = pointer to volume name
-kAlertMsgDestinationFormatFail  = 3 ; Bell
-kAlertMsgFormatError            = 4 ; Bell
-kAlertMsgDestinationProtected   = 5 ; Bell
-kAlertMsgConfirmEraseSlotDrive  = 6 ; No bell, X = unit number
-kAlertMsgConfirmEraseDOS33      = 7 ; No bell, X = unit number
-kAlertMsgCopySuccessful         = 8 ; No bell
-kAlertMsgCopyFailure            = 9 ; No bell
-kAlertMsgInsertSourceOrCancel   = 10 ; No bell, *
-kAlertMsgInsertDestinationOrCancel = 11 ; No bell, *
+kAlertMsgFormatError            = 3 ; Bell
+kAlertMsgDestinationProtected   = 4 ; Bell
+kAlertMsgConfirmEraseSlotDrive  = 5 ; No bell, X = unit number
+kAlertMsgConfirmEraseDOS33      = 6 ; No bell, X = unit number
+kAlertMsgCopySuccessful         = 7 ; No bell
+kAlertMsgCopyFailure            = 8 ; No bell
+kAlertMsgInsertSourceOrCancel   = 9 ; No bell, *
+kAlertMsgInsertDestinationOrCancel = 10 ; No bell, *
 ;;; "Bell" or "No bell" determined by the `MaybeBell` proc.
 ;;; * = the 'InsertXOrCancel' variants are selected automatically when
 ;;; InsertX is specified if X flag is non-zero, and the unit number in
@@ -47,7 +46,6 @@ start:
 ;;; Resources
 
 pencopy:        .byte   MGTK::pencopy
-penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
 .params hilitemenu_params
@@ -347,6 +345,7 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
         DEFINE_LABEL blocks_read, res_string_label_blocks_read, kBlocksTextX, kSourceTextY
         DEFINE_LABEL blocks_written, res_string_label_blocks_written, kBlocksTextX, kDestTextY
         DEFINE_LABEL blocks_to_transfer, res_string_label_blocks_to_transfer, kBlocksTextX, kInfoTextY
+        DEFINE_RECT  shield_block_counts_rect, kBlocksTextX, kSourceTextY - kSystemFontHeight, kDialogWidth - kBorderDX*2, kDestTextY
 
         DEFINE_LABEL source, res_string_source, kOverviewTextX, kSourceTextY
         DEFINE_LABEL destination, res_string_destination, kOverviewTextX, kDestTextY
@@ -476,9 +475,6 @@ InitDialog:
         jsr     SetCursorPointer ; after enumerating devices
         CLEAR_BIT7_FLAG selection_mode_flag
 
-        LBTK_CALL LBTK::Init, lb_params
-        jsr     UpdateOKButton
-
         ;; --------------------------------------------------
         ;; Loop until there's a selection (or drive check)
         jsr     WaitForSelection
@@ -498,8 +494,6 @@ InitDialog:
         ;; Prepare for destination selection
         jsr     EnumerateDestinationDevices
         SET_BIT7_FLAG selection_mode_flag
-        LBTK_CALL LBTK::Init, lb_params
-        jsr     UpdateOKButton
 
         ;; --------------------------------------------------
         ;; Loop until there's a selection (or drive check)
@@ -752,6 +746,9 @@ copy_failure:
 ;;; Output: A = selection
 
 .proc WaitForSelection
+        LBTK_CALL LBTK::Init, lb_params
+        jsr     UpdateOKButton
+
 loop:   jsr     EventLoop
         bmi     loop
         beq     check
@@ -1587,10 +1584,12 @@ next_device:
 .proc DrawStatus
         phax
         jsr     SetPortForDialog
+        MGTK_CALL MGTK::ShieldCursor, rect_status
         MGTK_CALL MGTK::PaintRect, rect_status
         MGTK_CALL MGTK::MoveTo, point_status
         plax
-        jmp     DrawStringCentered
+        jsr     DrawStringCentered
+        jmp     UnshieldCursor
 .endproc ; DrawStatus
 
 .proc DrawStatusWriting
@@ -1615,18 +1614,22 @@ next_device:
         jsr     SetPortForDialog
         inc16   blocks_read
         CALL    IntToStringWithSeparators, AX=blocks_read
+        MGTK_CALL MGTK::ShieldCursor, shield_block_counts_rect
         MGTK_CALL MGTK::MoveTo, blocks_read_label_pos
         MGTK_CALL MGTK::DrawString, blocks_read_label_str
-        jmp     DrawIntString
+        jsr     DrawIntString
+        jmp     UnshieldCursor
 .endproc ; IncAndDrawBlocksRead
 
 .proc IncAndDrawBlocksWritten
         jsr     SetPortForDialog
         inc16   blocks_written
         CALL    IntToStringWithSeparators, AX=blocks_written
+        MGTK_CALL MGTK::ShieldCursor, shield_block_counts_rect
         MGTK_CALL MGTK::MoveTo, blocks_written_label_pos
         MGTK_CALL MGTK::DrawString, blocks_written_label_str
-        FALL_THROUGH_TO DrawIntString
+        jsr     DrawIntString
+        jmp     UnshieldCursor
 .endproc ; IncAndDrawBlocksWritten
 
 .proc DrawIntString
@@ -1652,6 +1655,7 @@ remainder:      .word   0              ; (out)
 
 .proc DrawProgressBar
         MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::ShieldCursor, progress_frame
         MGTK_CALL MGTK::FrameRect, progress_frame
         copy16  transfer_blocks, progress_muldiv_params::denominator
 
@@ -1677,8 +1681,13 @@ remainder:      .word   0              ; (out)
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_bar
-        rts
+        FALL_THROUGH_TO UnshieldCursor
 .endproc ; DrawProgressBar
+
+.proc UnshieldCursor
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
+.endproc ; UnshieldCursor
 
 ;;; ============================================================
 
@@ -1925,8 +1934,6 @@ kLenConfirmErase = .strlen(res_string_prompt_erase_prefix)
 str_confirm_erase_suffix:
         PASCAL_STRING res_string_prompt_erase_suffix
 
-str_dest_format_fail:
-        PASCAL_STRING res_string_error_dest_format_fail
 str_format_error:
         PASCAL_STRING res_string_error_format_error
 str_dest_protected:
@@ -1956,7 +1963,6 @@ alert_table:
         .byte   kAlertMsgInsertSource
         .byte   kAlertMsgInsertDestination
         .byte   kAlertMsgConfirmErase
-        .byte   kAlertMsgDestinationFormatFail
         .byte   kAlertMsgFormatError
         .byte   kAlertMsgDestinationProtected
         .byte   kAlertMsgConfirmEraseSlotDrive
@@ -1971,7 +1977,6 @@ message_table:
         .addr   str_insert_source
         .addr   str_insert_dest
         .addr   str_confirm_erase
-        .addr   str_dest_format_fail
         .addr   str_format_error
         .addr   str_dest_protected
         .addr   str_confirm_erase_sd
@@ -1986,7 +1991,6 @@ alert_button_options_table:
         .byte   AlertButtonOptions::OKCancel    ; kAlertMsgInsertSource
         .byte   AlertButtonOptions::OKCancel    ; kAlertMsgInsertDestination
         .byte   AlertButtonOptions::OKCancel    ; kAlertMsgConfirmErase
-        .byte   AlertButtonOptions::OK          ; kAlertMsgDestinationFormatFail
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgFormatError
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgDestinationProtected
         .byte   AlertButtonOptions::OKCancel    ; kAlertMsgConfirmEraseSlotDrive
@@ -2001,7 +2005,6 @@ alert_options_table:
         .byte   0                       ; kAlertMsgInsertSource
         .byte   0                       ; kAlertMsgInsertDestination
         .byte   0                       ; kAlertMsgConfirmErase
-        .byte   AlertOptions::Beep      ; kAlertMsgDestinationFormatFail
         .byte   AlertOptions::Beep      ; kAlertMsgFormatError
         .byte   AlertOptions::Beep      ; kAlertMsgDestinationProtected
         .byte   0                       ; kAlertMsgConfirmEraseSlotDrive

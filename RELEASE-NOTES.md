@@ -64,6 +64,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Flash OK button when a disk is selected via double-click.
 * Fix copying all blocks on 32MB volumes.
 * Erase tip once copy is complete.
+* Reduce cursor flickering during copy.
 
 ### Desk Accessories
 

@@ -41,6 +41,10 @@ The following tests have not (yet) been automated because the Escape key conflic
 
 > Coverage in `tests/disk_copy/`
 
+* Configure Virtual II with two OmniDisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Copy Disk.... Select the  OmniDisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Are you sure  you want to erase ...?" confirmation prompt is shown.
+> NOTE: See fd51f6d - the issue is that Virtual ][ OmniDisks do not report support for formatting.
+> This can not be (currently) tested in MAME.
+
 ## Desk Accessories
 
 > Coverage in `tests/desk_acc`

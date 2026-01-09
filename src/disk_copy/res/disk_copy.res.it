@@ -39,7 +39,6 @@
 .define res_string_prompt_erase_slot_drive_pattern "Sei sicuro di voler cancellare il disco in slot # lettore #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 49
 .define res_const_prompt_erase_slot_drive_pattern_offset2 59
-.define res_string_error_dest_format_fail "Il disco destinazione non pu| essere inizializzato!"
 .define res_string_error_dest_protected "Il disco destinazione } protetto in scrittura!"
 .define res_string_error_format_error "Errore durante l'inizializzazione."
 .define res_string_label_status_copy_success "Copia completata."
