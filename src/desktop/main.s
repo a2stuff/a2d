@@ -8124,6 +8124,7 @@ records_base_ptr:
         scmp16  pos_col::ycoord, viewport+MGTK::Rect::y2
         bpl     ret
 
+        copy16  pos_col::ycoord, list_view_shield_rect::y1
         add16   pos_col::ycoord, #kListViewRowHeight, pos_col::ycoord
 
         ;; Above top?
@@ -8133,6 +8134,9 @@ ret:    rts
 
         ;; Draw it!
 in_range:
+        copy16  pos_col::ycoord, list_view_shield_rect::y2
+        MGTK_CALL MGTK::ShieldCursor, list_view_shield_rect
+
         CALL    set_pos, AX=#kColLock
         jsr     _PrepareColLock
         lda     text_buffer2
@@ -8151,7 +8155,7 @@ in_range:
         CALL    set_pos, AX=#kColDate
         jsr     ComposeDateString
         MGTK_CALL MGTK::DrawString, text_buffer2
-        rts
+        jmp     UnshieldCursor
 
 set_pos:
         stax    pos_col::xcoord

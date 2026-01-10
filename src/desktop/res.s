@@ -864,6 +864,8 @@ win_view_by_table:
         kColType = 200
         kColDate = 231
 
+        DEFINE_RECT list_view_shield_rect, kColSize - 50, SELF_MODIFIED, kListViewWidth, SELF_MODIFIED
+
 ;;; Scratch buffer visible to MGTK, primarily used for list view columns.
 kTextBuffer2Len = 49
 text_buffer2:    .res   kTextBuffer2Len, 0
