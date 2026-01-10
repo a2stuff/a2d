@@ -830,18 +830,24 @@ function a2d.MouseKeysMoveByApproximately(x,y)
   end
 end
 
-function a2d.MoveWindowBy(x, y)
+function a2d.MoveWindowBy(x, y, options)
+  options = default_options(options)
   a2d.OAShortcut("M")
   a2d.MouseKeysMoveByApproximately(x,y)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
-function a2d.GrowWindowBy(x, y)
+function a2d.GrowWindowBy(x, y, options)
+  options = default_options(options)
   a2d.OAShortcut("G")
   a2d.MouseKeysMoveByApproximately(x,y)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 function a2d.DragSelectMultipleVolumes()

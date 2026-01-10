@@ -4647,6 +4647,8 @@ _Preamble:
         rts
 .endproc ; _MaybeUpdateVThumb
 
+;;; Input: X=axis (`MGTK::Point::xcoord` or `MGTK::Point::ycoord`)
+;;; Output: N=0 is scrollbar should be inactive, N=1 if it should be active
 .proc _CheckDeactivate
         scmp16  ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
     IF POS
@@ -4667,6 +4669,8 @@ _Preamble:
         TAIL_CALL _UpdateThumb, A=setthumb_muldiv_params::result, X=#MGTK::Ctl::vertical_scroll_bar
 .endproc ; _SetVThumbFromViewport
 
+;;; Input: X=axis (`MGTK::Point::xcoord` or `MGTK::Point::ycoord`)
+;;; Scrambles A,X,Y
 .proc _CalcThumbFromViewport
         sub16   viewport+MGTK::Rect::topleft,x, ubox+MGTK::Rect::topleft,x, setthumb_muldiv_params::number
         sub16   ubox+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::topleft,x, tmpw
@@ -4692,38 +4696,80 @@ _Preamble:
 .proc ActivateCtlsSetThumbs
         jsr     _Preamble
 
-        scmp16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
-        bmi     activate_hscroll
-        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
-        bmi     activate_hscroll
+        ;; --------------------------------------------------
+        ;; Horizontal scrollbar
 
+        CALL    _CheckDeactivate, X=#MGTK::Point::xcoord
+    IF POS
         ;; deactivate horizontal scrollbar
         CALL    _ActivateCtl, X=#MGTK::Ctl::horizontal_scroll_bar, A=#MGTK::activatectl_deactivate
-        beq     check_vscroll   ; always
-
-activate_hscroll:
+    ELSE
         ;; activate horizontal scrollbar
         CALL    _ActivateCtl, X=#MGTK::Ctl::horizontal_scroll_bar, A=#MGTK::activatectl_activate
-
         jsr     _SetHThumbFromViewport
-        FALL_THROUGH_TO check_vscroll
+    END_IF
 
         ;; --------------------------------------------------
+        ;; Vertical scrollbar
 
-check_vscroll:
-        scmp16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
-        bmi     activate_vscroll
-        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
-        bmi     activate_vscroll
-
+        CALL    _CheckDeactivate, X=#MGTK::Point::ycoord
+    IF POS
         ;; deactivate vertical scrollbar
         TAIL_CALL _ActivateCtl, X=#MGTK::Ctl::vertical_scroll_bar, A=#MGTK::activatectl_deactivate
+    END_IF
 
-activate_vscroll:
         ;; activate vertical scrollbar
         CALL    _ActivateCtl, X=#MGTK::Ctl::vertical_scroll_bar, A=#MGTK::activatectl_activate
         jmp     _SetVThumbFromViewport
 .endproc ; ActivateCtlsSetThumbs
+
+;;; --------------------------------------------------
+;;; Like `ActivateCtlsSetThumbs` but updates Winfo directly, so
+;;; no repaints are done. Needed after a resize where a repaint
+;;; will follow.
+;;; TODO: Support pre-creation windows
+.proc ActivateCtlsSetThumbsWinfo
+        jsr     _Preamble
+
+        winfo_ptr := $06
+        CALL    GetWindowPtr, A=active_window_id
+        stax    winfo_ptr
+
+        ;; Horizontal scrollbar
+        ldx     #MGTK::Point::xcoord
+        ldy     #MGTK::Winfo::hscroll
+        copy8   #MGTK::Winfo::hthumbpos, pos_offset
+        jsr     do_axis
+
+        ;; Vertical scrollbar
+        ldx     #MGTK::Point::ycoord
+        ldy     #MGTK::Winfo::vscroll
+        copy8   #MGTK::Winfo::vthumbpos, pos_offset
+        FALL_THROUGH_TO do_axis
+
+do_axis:
+        jsr     _CheckDeactivate
+    IF POS
+        ;; deactivate
+        lda     (winfo_ptr),y
+        and     #AS_BYTE(~MGTK::Scroll::option_active)
+        sta     (winfo_ptr),y
+        rts
+    END_IF
+
+        ;; activate
+        lda     (winfo_ptr),y
+        ora     #MGTK::Scroll::option_active
+        sta     (winfo_ptr),y
+
+        ;; update thumb
+        CALL    _CalcThumbFromViewport ; X=#MGTK::Point::xcoord set above
+        pos_offset := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        lda     setthumb_muldiv_params::result
+        sta     (winfo_ptr),y
+        rts
+.endproc ; ActivateCtlsSetThumbsWinfo
 
 ;;; --------------------------------------------------
 ;;; Inputs: A=activate/deactivate, X=which_ctl
@@ -4763,6 +4809,7 @@ ScrollTrackVThumb := ScrollManager::TrackVThumb
 ;;; both horizontal and vertical scrollbars, based on the window's
 ;;; viewport and contents.
 ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
+ScrollUpdateWinfo := ScrollManager::ActivateCtlsSetThumbsWinfo
 
 ;;; ============================================================
 
@@ -5585,7 +5632,10 @@ beyond:
 .proc DoWindowResize
         copy8   active_window_id, growwindow_params::window_id
         MGTK_CALL MGTK::GrowWindow, growwindow_params
-        jmp     ScrollUpdate
+
+        ;; Modify the Winfo directly to avoid scrollbars painting
+        ;; before the rest of the window.
+        TAIL_CALL ScrollUpdateWinfo
 .endproc ; DoWindowResize
 
 ;;; ============================================================
@@ -5912,6 +5962,10 @@ no_win:
 
         jsr     CachedIconsWindowToScreen
         jsr     DrawCachedWindowHeaderAndEntries
+
+        ;; This may cause scrollbars to be repainted if activation state changes.
+        ;; TODO: Use new `ScrollUpdateWinfo` and move it up above `MGTK::OpenWindow`
+        ;; ... but has dependencies on `active_window_id`, icon mapping, etc.
         jmp     ScrollUpdate
 
 ;;; ------------------------------------------------------------

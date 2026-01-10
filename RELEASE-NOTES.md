@@ -54,6 +54,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Animate Date & Time DA window open/closed when menu clock is clicked.
 * Reduce cursor flickering when copying / deleting files.
 * Reduce cursor flickering while list view rows are drawn.
+* Don't repaint scrollbars before window when resizing.
 
 ### Selector
 
