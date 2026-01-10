@@ -465,7 +465,7 @@ current_unit_num:
 ;;; Index into DEVLST while iterating devices.
 devnum: .byte   0
 
-        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
+        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, SPStatusRequest::DIB
 
 dib_buffer:     .tag SPDIB
 

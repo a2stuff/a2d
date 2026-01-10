@@ -23,6 +23,15 @@
         Write           = $09
 .endenum
 
+;; Request codes for STATUS calls
+.enum SPStatusRequest
+        DeviceStatus    = $00   ; Return device status
+        DCB             = $01   ; Return device control block (DCB)
+        NewlineStatus   = $02   ; Return newline status (character devices only)
+        DIB             = $03   ; Return device information block (DIB)
+        UniDisk35       = $05   ; Return UniDisk 3.5 status
+.endenum
+
 .struct SPDIB
         .union
 Number_Devices          .byte   ; if unit_num == 0 && status_code == 0
@@ -82,6 +91,15 @@ status_code:    .byte   sc
         .refto status_code
 .endparams
 .endmacro
+
+;;; Request codes for CONTROL calls
+.enum SPControlRequest
+        Reset                   = $00
+        SetDCB                  = $01
+        SetNewlineStatus        = $02
+        ServiceDeviceInterrupt  = $03
+        Eject                   = $04
+.endenum
 
 .macro DEFINE_SP_CONTROL_PARAMS name, un, cl, cc
         WARN_IF_SHADOWING name

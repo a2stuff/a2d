@@ -162,7 +162,7 @@ params:  .res    3
     END_IF
         rts
 
-        DEFINE_SP_CONTROL_PARAMS control_params, 0, list, $04 ; For Apple/UniDisk 3.5: Eject disk
+        DEFINE_SP_CONTROL_PARAMS control_params, 0, list, SPControlRequest::Eject
 
 list:   .word   0               ; 0 items in list
 
@@ -320,7 +320,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
 
         RETURN  A=#0
 
-        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, SPStatusRequest::DIB
 .endproc ; IsDriveEjectable
 
 ;;; ============================================================

@@ -2132,7 +2132,7 @@ sig_values:
 slot:
         .byte   0
 
-        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, SPStatusRequest::DIB
 
 .endproc ; CheckSlinkyMemory
 
@@ -2234,7 +2234,7 @@ p658xx: bit     ROMIN2
 
 .proc ShowSmartPortDeviceNamesImpl
 
-        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, SPStatusRequest::DIB
 
         slot_ptr := $06
 

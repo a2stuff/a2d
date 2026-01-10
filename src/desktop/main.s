@@ -1142,7 +1142,7 @@ finish: pla
         rts
 
         ;; params for call
-        DEFINE_SP_STATUS_PARAMS status_params, 1, status_buffer, 0
+        DEFINE_SP_STATUS_PARAMS status_params, 1, status_buffer, SPStatusRequest::DeviceStatus
 .endproc ; CheckDiskInDevice
 
 ;;; Inputs: A = unmasked unit number
@@ -8723,7 +8723,7 @@ map_delta_y:    .word   0
 
 .proc GetDeviceTypeImpl
 dib_buffer := $800
-        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, SPStatusRequest::DIB
 
         ;; Avoid Initializer memory ($800-$1200)
         block_buffer := $1E00
@@ -12695,8 +12695,8 @@ do_str2:
 
         rts
 
-        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
-        DEFINE_SP_CONTROL_PARAMS control_params, SELF_MODIFIED_BYTE, list, $04 ; For Apple/UniDisk 3.3: Eject disk
+        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, SPStatusRequest::DIB
+        DEFINE_SP_CONTROL_PARAMS control_params, SELF_MODIFIED_BYTE, list, SPControlRequest::Eject
 
 list:   .word   0               ; 0 items in list
 .endproc ; SmartportEject
