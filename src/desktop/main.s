@@ -4384,8 +4384,8 @@ END_PARAM_BLOCK
 
 _Preamble:
         jsr     CacheActiveWindowIconList
-
-        jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
+_PreamblePreCached:
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF NC
         ;; Icon view
         ldx     #kIconViewScrollTickH
@@ -4399,7 +4399,8 @@ _Preamble:
         sty     tick_v
 
         ;; Compute effective viewport
-        jsr     ApplyActiveWinfoToWindowGrafport
+        lda     cached_window_id
+        jsr     ApplyWinfoToWindowGrafport
         add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
         COPY_STRUCT MGTK::Point, viewport+MGTK::Rect::topleft, old
 
@@ -4727,9 +4728,9 @@ _Preamble:
 ;;; Like `ActivateCtlsSetThumbs` but updates Winfo directly, so
 ;;; no repaints are done. Needed after a resize where a repaint
 ;;; will follow.
-;;; TODO: Support pre-creation windows
+;;; Input: `cached_window_id` set (and actually cached)
 .proc ActivateCtlsSetThumbsWinfo
-        jsr     _Preamble
+        jsr     _PreamblePreCached
 
         winfo_ptr := $06
         CALL    GetWindowPtr, A=active_window_id
@@ -5635,6 +5636,7 @@ beyond:
 
         ;; Modify the Winfo directly to avoid scrollbars painting
         ;; before the rest of the window.
+        jsr     CacheActiveWindowIconList
         TAIL_CALL ScrollUpdateWinfo
 .endproc ; DoWindowResize
 
@@ -5955,18 +5957,16 @@ no_win:
         ;; Set path, name, size, contents, and volume free/used.
         jsr     _PrepareNewWindow
 
+        ;; Initialize scrollbar state in Winfo
+        jsr     CachedIconsWindowToScreen
+        jsr     ScrollUpdateWinfo
+
         ;; Create the window
         CALL    GetWindowPtr, A=cached_window_id ; A,X points at Winfo
         stax    @addr
         MGTK_CALL MGTK::OpenWindow, 0, @addr
 
-        jsr     CachedIconsWindowToScreen
-        jsr     DrawCachedWindowHeaderAndEntries
-
-        ;; This may cause scrollbars to be repainted if activation state changes.
-        ;; TODO: Use new `ScrollUpdateWinfo` and move it up above `MGTK::OpenWindow`
-        ;; ... but has dependencies on `active_window_id`, icon mapping, etc.
-        jmp     ScrollUpdate
+        jmp     DrawCachedWindowHeaderAndEntries
 
 ;;; ------------------------------------------------------------
 ;;; Set up path and coords for new window, contents and free/used.

@@ -252,6 +252,17 @@ test.Step(
 end)
 
 --[[
+  Open a window that will require vertical scrollbars. Verify that the
+  scrollbars do not repaint after the contents.
+]]
+test.Step(
+  "Scrollbars in new window paint before items",
+  function()
+    a2d.OpenPath("/TESTS", {no_wait=true})
+    a2dtest.MultiSnap(60, "verify scrollbars paint before items")
+end)
+
+--[[
   Open an empty window. Exit desktop, add a file to the directory, and
   restart. Verify scrollbars don't appear.
 ]]
