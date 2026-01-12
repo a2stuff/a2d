@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ==================================================
 
 MODEL="apple2ee"
-MODELARGS="-aux ext80 -sl1 mouse -sl2 cffa2 -sl6 '' -sl7 cffa2"
+MODELARGS="-sl1 mouse -sl2 cffa2 -sl6 '' -sl7 cffa2"
 DISKARGS="-hard1 res/disk_a.2mg -hard3 $HARDIMG"
 
 ================================================== ENDCONFIG ]]

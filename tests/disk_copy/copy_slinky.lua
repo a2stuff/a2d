@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl1 memexp -sl2 memexp -sl4 mouse -sl6 '' -sl7 cffa2 -aux ext80"
+MODELARGS="-sl1 memexp -sl2 memexp -sl4 mouse -sl6 '' -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]

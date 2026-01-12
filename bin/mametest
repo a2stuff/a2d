@@ -103,7 +103,7 @@ if [ ! -f "$HARDIMG" ]; then
 fi
 
 MODEL="apple2ee"
-MODELARGS="-sl2 mouse -sl7 cffa2 -aux rw3"
+MODELARGS="-sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
 RESOLUTION="560x384"
 WAITFORDESKTOP="true"

@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ==================================================
 
 MODEL="apple2ee"
-MODELARGS="-aux ext80 -sl2 mouse -sl1 cffa2 -sl6 '' -sl7 cffa2"
+MODELARGS="-sl2 mouse -sl1 cffa2 -sl6 '' -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard3 res/disk_a.2mg"
 WAITFORDESKTOP="false"
 

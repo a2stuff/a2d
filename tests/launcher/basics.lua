@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2ee"
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi -aux rw3"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi"
 DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]

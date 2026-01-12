@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl1 mouse -sl2 diskiing -sl7 cffa2 -aux ext80"
+MODELARGS="-sl1 mouse -sl2 diskiing -sl7 cffa2"
 
 ======================================== ENDCONFIG ]]
 

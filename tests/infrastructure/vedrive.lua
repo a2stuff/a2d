@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODEL="apple2ee"
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl3 uthernet2 -sl7 cffa2 -aux ext80"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl3 uthernet2 -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 VEDISK1=res/floppy_with_files.2mg
 VEDISK2=res/disk_b.2mg

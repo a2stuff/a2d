@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-aux ext80 \
+MODELARGS="\
   -sl1 ramfactor \
   -sl2 mouse \
   -sl4 superdrive \

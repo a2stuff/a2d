@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-gameio joy -sl2 mouse -sl7 cffa202 -aux ext80"
+MODELARGS="-gameio joy -sl2 mouse -sl7 cffa202"
 DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]

@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-aux ext80 -sl2 mouse \
+MODELARGS="-sl2 mouse \
   -sl7 scsi \
   -sl7:scsi:scsibus:6 harddisk           \
   -sl7:scsi:scsibus:5 aplcdsc            \

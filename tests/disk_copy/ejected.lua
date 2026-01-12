@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl2 mouse -sl5 superdrive -sl6 superdrive -aux ext80"
+MODELARGS="-sl2 mouse -sl5 superdrive -sl6 superdrive"
 DISKARGS="-flop3 $HARDIMG -flop1 res/full_800k.2mg -flop2 res/empty_800k.2mg"
 
 ======================================== ENDCONFIG ]]

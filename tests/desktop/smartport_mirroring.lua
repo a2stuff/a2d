@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ==================================================
 
 MODEL="apple2ee"
-  MODELARGS="-aux ext80 -sl2 mouse -sl4 scsi -sl5 scsi -sl6 '' -sl7 superdrive \
+  MODELARGS="-sl2 mouse -sl4 scsi -sl5 scsi -sl6 '' -sl7 superdrive \
   \
   -sl5:scsi:scsibus:6 harddisk              \
   -sl5:scsi:scsibus:5 harddisk              \

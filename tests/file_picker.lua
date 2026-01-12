@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl4 ramfactor -sl5 ramfactor -sl6 superdrive -sl7 cffa2 -aux ext80"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl4 ramfactor -sl5 ramfactor -sl6 superdrive -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv -flop1 res/disk_b.2mg -flop2 res/disk_a.2mg"
 
 ======================================== ENDCONFIG ]]
