@@ -34,7 +34,6 @@ The default system configuration is:
 
 * Apple IIe Enhanced (`apple2ee`)
 * Aux: 8MB RAMWorks card
-* Slot 1: 8MB RAMFactor card
 * Slot 2: Mouse card
 * Slot 4: Mockingboard
 * Slot 6: Disk II Controller w/ 2 (empty) drives
@@ -43,7 +42,6 @@ The default system configuration is:
 
 > TODO: Make the default config simpler:
 > * aux ext80 instead of rw3
-> * slot 1 empty by default
 > * slot 4 empty by default
 > * slot 7 CFFA2 instead of SCSI
 

@@ -1,3 +1,11 @@
+--[[ BEGINCONFIG ========================================
+
+MODEL="apple2ee"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi -aux rw3"
+DISKARGS="-hard1 $HARDIMG"
+
+======================================== ENDCONFIG ]]
+
 a2d.ConfigureRepaintTime(0.25)
 
 --[[
