@@ -33,17 +33,14 @@ Options:
 The default system configuration is:
 
 * Apple IIe Enhanced (`apple2ee`)
-* Aux: Extended 80 Column Card
+* Aux: Extended 80 Column Card (MAME default for `apple2ee`)
 * Slot 2: Mouse card
-* Slot 4: Mockingboard
-* Slot 6: Disk II Controller w/ 2 (empty) drives
+* Slot 4: Mockingboard (MAME default for `apple2ee`)
+* Slot 6: Disk II Controller w/ 2 (empty) drives (MAME default for `apple2ee`)
 * Slot 7: CFFA2 card, w/ 800K package image
-* No-Slot Clock under system ROM
+* No-Slot Clock under system ROM (MAME default for `apple2ee`)
 
-> TODO: Make the default config simpler:
-> * slot 4 empty by default
-
-Tests can define custom MAME configuration. The contents of a config block are executed by `mametest` to override environment variable that are used when MAME launches.
+Tests can define custom MAME configurations. The contents of an optional config block are executed by `mametest` to override environment variable that are used when MAME launches.
 
 * `MODEL` - the system type, e.g. `"apple2ee"`, `"apple2gsr1"` etc
 * `MODELARGS` - slot and other configuration, e.g. `"-sl2 mouse"`
