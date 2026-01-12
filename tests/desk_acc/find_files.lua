@@ -1,6 +1,5 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
 
 ======================================== ENDCONFIG ]]

@@ -1,10 +1,3 @@
---[[ BEGINCONFIG ========================================
-
-MODELARGS="-sl2 mouse -sl7 cffa2"
-DISKARGS="-hard1 $HARDIMG"
-
-======================================== ENDCONFIG ]]
-
 a2d.ConfigureRepaintTime(0.25)
 
 --[[
