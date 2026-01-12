@@ -85,6 +85,8 @@ SCRIPTDIR="$(dirname "$SCRIPT")"
 TMPDIR=/tmp/mametest
 mkdir -p "$TMPDIR"/disks
 
+CFGDIR="$BASEDIR/tests/cfg"
+
 NVRAMDIR="$TMPDIR"/nvram
 mkdir -p "$NVRAMDIR"
 rm -rf "$NVRAMDIR"/*
@@ -218,6 +220,7 @@ output=$(
     -skip_gameinfo -nosamples \
     -window -nomax -resolution '$RESOLUTION' -nounevenstretch \
     -mouse \
+    -cfg_directory '$CFGDIR' \
     -nvram_directory '$NVRAMDIR' \
     -snapshot_directory '$SNAPDIR' -snapsize '$RESOLUTION' \
     $OUTPUTARGS \
