@@ -37,13 +37,12 @@ The default system configuration is:
 * Slot 2: Mouse card
 * Slot 4: Mockingboard
 * Slot 6: Disk II Controller w/ 2 (empty) drives
-* Slot 7: SCSI card, w/ 800K package image
+* Slot 7: CFFA2 card, w/ 800K package image
 * No-Slot Clock under system ROM
 
 > TODO: Make the default config simpler:
 > * aux ext80 instead of rw3
 > * slot 4 empty by default
-> * slot 7 CFFA2 instead of SCSI
 
 Tests can define custom MAME configuration. The contents of a config block are executed by `mametest` to override environment variable that are used when MAME launches.
 
