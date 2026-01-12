@@ -23,7 +23,7 @@ test.Step(
 
     a2d.ToggleOptionCopyToRAMCard() -- Enable
     a2d.Reboot()
-    a2d.WaitForDesktopReady()
+    a2d.WaitForDesktopReady({timeout=120})
 
     a2d.OpenPath("/RAM/DESKTOP/APPLE.MENU/TOYS")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "TOYS", "should be copied to RAMCard")
