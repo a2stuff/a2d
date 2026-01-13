@@ -240,25 +240,20 @@ end
 ------------------------------------------------------------
 
 local function ram_u8(addr)
-  return apple2.ReadRAMDevice(addr)
+  return apple2.GetRAMDeviceProxy().read_u8(addr)
 end
 
 local function ram_u16(addr)
-  return ram_u8(addr) | (ram_u8(addr+1) << 8)
+  return apple2.GetRAMDeviceProxy().read_u16(addr)
 end
 
 local function ram_s16(addr)
-  local v = ram_u16(addr)
-  if v & 0x8000 == 0 then
-    return v
-  else
-    return v - 0x10000
-  end
+  return apple2.GetRAMDeviceProxy().read_s16(addr)
 end
 
 function mgtk.GetWindowName(window_id, bank_offset)
   local winfo = bank_offset + mgtk.GetWinPtr(window_id)
-  local addr = apple2.ReadRAMDevice(winfo + 2) | (apple2.ReadRAMDevice(winfo + 3) << 8)
+  local addr = ram_u16(winfo + 2)
   if addr == 0 then
     return nil
   end

@@ -164,7 +164,7 @@ test.Step(
     a2d.CreateFolder("/RAM1/NOT.TODAY")
 
     -- Change date again to avoid "Today"
-    a2d.SetProDOSDate(1999, 9, 13)
+    apple2.SetProDOSDate(1999, 9, 13)
 
     -- Inspect file
     a2d.SelectPath("/RAM1/NOT.TODAY")
@@ -249,12 +249,12 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
 
     function IncDate(y1, m1, d1, y2, m2, d2)
-      a2d.SetProDOSDate(y1, m1, d1)
-      local yy,mm,dd = a2d.GetProDOSDate()
+      apple2.SetProDOSDate(y1, m1, d1)
+      local yy,mm,dd = apple2.GetProDOSDate()
       a2d.SelectAndOpen("DATE.AND.TIME")
       apple2.UpArrowKey()
       a2d.DialogOK()
-      local y,m,d = a2d.GetProDOSDate()
+      local y,m,d = apple2.GetProDOSDate()
       test.ExpectEquals(
         y, y2,
         string.format("year: %d/%d/%d should increment to %d/%d/%d", y1, m1, d1, y2, m2, d2))
@@ -267,12 +267,12 @@ test.Step(
     end
 
     function DecDate(y1, m1, d1, y2, m2, d2)
-      a2d.SetProDOSDate(y1, m1, d1)
-      local yy,mm,dd = a2d.GetProDOSDate()
+      apple2.SetProDOSDate(y1, m1, d1)
+      local yy,mm,dd = apple2.GetProDOSDate()
       a2d.SelectAndOpen("DATE.AND.TIME")
       apple2.DownArrowKey()
       a2d.DialogOK()
-      local y,m,d = a2d.GetProDOSDate()
+      local y,m,d = apple2.GetProDOSDate()
       test.ExpectEquals(
         y, y2,
         string.format("year: %d/%d/%d should decrement to %d/%d/%d", y1, m1, d1, y2, m2, d2))
@@ -446,11 +446,11 @@ test.Step(
   "Today",
   function()
     -- Create file with known date
-    local y, m, d = a2d.GetProDOSDate()
-    a2d.SetProDOSDate(1999, 9, 13)
+    local y, m, d = apple2.GetProDOSDate()
+    apple2.SetProDOSDate(1999, 9, 13)
     a2d.CreateFolder("/RAM1/WILL.BE.TODAY")
     -- Change the date so it's not current
-    a2d.SetProDOSDate(y, m, d)
+    apple2.SetProDOSDate(y, m, d)
 
     -- Show window and resize/move it
     a2d.OpenPath("/RAM1")
@@ -461,7 +461,7 @@ test.Step(
 
     -- Use Date & Time to set date
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SetProDOSDate(1998, 9, 13) -- so we know the delta
+    apple2.SetProDOSDate(1998, 9, 13) -- so we know the delta
     a2d.SelectAndOpen("DATE.AND.TIME")
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)

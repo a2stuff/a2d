@@ -700,6 +700,37 @@ function apple2.WriteRAMDevice(addr, value)
   end
 end
 
+function apple2.GetRAMDeviceProxy()
+  local function read_u8(addr)
+    return apple2.ReadRAMDevice(addr)
+  end
+
+  local function write_u8(addr, value)
+    return apple2.WriteRAMDevice(addr, value)
+  end
+
+  local function read_u16(addr)
+    return read_u8(addr) | (read_u8(addr+1) << 8)
+  end
+
+  local function read_s16(addr)
+    local v = read_u16(addr)
+    if v & 0x8000 == 0 then
+      return v
+    else
+      return v - 0x10000
+    end
+  end
+
+  return {
+    read_u8 = read_u8,
+    read_u16 = read_u16,
+    read_s16 = read_s16,
+
+    write_u8 = write_u8,
+  }
+end
+
 --------------------------------------------------
 -- Machine State
 --------------------------------------------------
@@ -1089,6 +1120,69 @@ end
 
 function apple2.IsColor()
   return not apple2.IsMono()
+end
+
+--------------------------------------------------
+-- ProDOS Date/Time
+--------------------------------------------------
+
+local DATELO, DATEHI, TIMELO, TIMEHI = 0xBF90, 0xBF91, 0xBF92, 0xBF93
+
+function apple2.SetProDOSDate(y,m,d)
+  local hi = (y % 100) << 1 | (m >> 3)
+  local lo = (m << 5) | d
+
+  local ram = apple2.GetRAMDeviceProxy()
+  ram.write_u8(DATELO, lo)
+  ram.write_u8(DATEHI, hi)
+end
+
+function apple2.GetProDOSDate()
+  local word = apple2.GetRAMDeviceProxy().read_u16(DATELO)
+  local y = (word >> 9) & 0x7F
+  local m = (word >> 5) & 0xF
+  local d = word & 0x1F
+
+  -- https://prodos8.com/docs/technote/28/
+  if y < 40 then
+    y = y + 2000
+  else
+    y = y + 1900
+  end
+
+  return y,m,d
+end
+
+function apple2.SetProDOSTime(h, m)
+  local ram = apple2.GetRAMDeviceProxy()
+  apple2.WriteRAMDevice(TIMELO, m)
+  apple2.WriteRAMDevice(TIMEHI, h)
+end
+
+function apple2.GetProDOSTime()
+  local m = apple2.ReadRAMDevice(TIMELO) & 0x3F
+  local h = apple2.ReadRAMDevice(TIMEHI) & 0x1F
+  return h,m
+end
+
+--------------------------------------------------
+-- ProDOS Devices
+--------------------------------------------------
+
+function apple2.GetProDOSDeviceList()
+  local DEVCNT = 0xBF31
+  local DEVLST = 0xBF32
+  local count = apple2.ReadRAMDevice(DEVCNT) + 1
+
+  local list = {}
+  for i = 0, count-1 do
+    local unit = apple2.ReadRAMDevice(DEVLST + i)
+    local slot = (unit & 0x70) >> 4
+    local drive = ((unit & 0x80) >> 7) + 1
+    table.insert(list, {slot=slot, drive=drive})
+  end
+
+  return list
 end
 
 --------------------------------------------------

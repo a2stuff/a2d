@@ -139,24 +139,17 @@ end
 -- MGTK-based helpers
 --------------------------------------------------
 
--- TODO: Promote these into apple2
 local function ram_u8(addr)
-  return apple2.ReadRAMDevice(addr)
+  return apple2.GetRAMDeviceProxy().read_u8(addr)
 end
 
 local function ram_u16(addr)
-  return ram_u8(addr) | (ram_u8(addr+1) << 8)
+  return apple2.GetRAMDeviceProxy().read_u16(addr)
 end
 
 local function ram_s16(addr)
-  local v = ram_u16(addr)
-  if v & 0x8000 == 0 then
-    return v
-  else
-    return 0x10000 - v
-  end
+  return apple2.GetRAMDeviceProxy().read_s16(addr)
 end
-
 
 local bank_offset = 0x10000
 
@@ -180,11 +173,11 @@ end
 
 function a2dtest.GetNextWindowID(window_id)
   local winfo = mgtk.GetWinPtr(window_id) + bank_offset
-  local next = apple2.ReadRAMDevice(winfo + 56) | (apple2.ReadRAMDevice(winfo + 57) << 8)
+  local next = read_u16(winfo + 56)
   if next == 0 then
     return 0
   end
-  return apple2.ReadRAMDevice(next + bank_offset)
+  return ram_u8(next + bank_offset)
 end
 
 function a2dtest.GetFrontWindowDragCoords()
@@ -219,7 +212,7 @@ function a2dtest.GetWindowCount()
   repeat
     count = count + 1
     winfo = winfo + bank_offset
-    winfo = apple2.ReadRAMDevice(winfo + 56) | (apple2.ReadRAMDevice(winfo + 57) << 8)
+    winfo = ram_u16(winfo + 56)
   until winfo == 0
   return count
 end

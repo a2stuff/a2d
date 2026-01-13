@@ -9,19 +9,16 @@ test.Step(
     -- Addr must include bank offset
     function PrintWinfo(addr)
       local bank = addr & 0xFF0000
+      local ram = apple2.GetRAMDeviceProxy()
+
       function u8(offset)
-        return apple2.ReadRAMDevice(addr + offset)
+        return ram.read_u8(addr + offset)
       end
       function u16(offset)
-        return u8(offset) | (u8(offset+1) << 8)
+        return ram.read_u16(addr + offset)
       end
       function s16(offset)
-        local v = u16(offset)
-        if v & 0x8000 == 0 then
-          return v
-        else
-          return 0x10000 - v
-        end
+        return ram.read_s16(addr + offset)
       end
 
       local id = u8(0)

@@ -965,45 +965,19 @@ function a2d.OADelete()
 end
 
 --------------------------------------------------
--- Dates
+-- Helpers
 --------------------------------------------------
 
--- TODO: API to disable clock driver (clear MACHID bit and JMP)
-
-local DATELO, DATEHI, TIMELO, TIMEHI = 0xBF90, 0xBF91, 0xBF92, 0xBF93
-
-function a2d.SetProDOSDate(y,m,d)
-  local hi = (y % 100) << 1 | (m >> 3)
-  local lo = (m << 5) | d
-  apple2.WriteRAMDevice(DATELO, lo)
-  apple2.WriteRAMDevice(DATEHI, hi)
+local function ram_u8(addr)
+  return apple2.GetRAMDeviceProxy().read_u8(addr)
 end
 
-function a2d.GetProDOSDate()
-  local word = (apple2.ReadRAMDevice(DATEHI) << 8) | apple2.ReadRAMDevice(DATELO)
-  local y = (word >> 9) & 0x7F
-  local m = (word >> 5) & 0xF
-  local d = word & 0x1F
-
-  -- https://prodos8.com/docs/technote/28/
-  if y < 40 then
-    y = y + 2000
-  else
-    y = y + 1900
-  end
-
-  return y,m,d
+local function ram_u16(addr)
+  return apple2.GetRAMDeviceProxy().read_u16(addr)
 end
 
-function a2d.SetProDOSTime(h, m)
-  apple2.WriteRAMDevice(TIMELO, m)
-  apple2.WriteRAMDevice(TIMEHI, h)
-end
-
-function a2d.GetProDOSTime()
-  local m = apple2.ReadRAMDevice(TIMELO) & 0x3F
-  local h = apple2.ReadRAMDevice(TIMEHI) & 0x1F
-  return h,m
+local function ram_s16(addr)
+  return apple2.GetRAMDeviceProxy().read_s16(addr)
 end
 
 --------------------------------------------------
@@ -1012,28 +986,10 @@ end
 
 -- TODO: Build some sort of proper API
 
-
 local DESKTOP_SYMBOLS = {}
 for pair in emu.subst_env("$DESKTOP_SYMBOLS"):gmatch("([^ ]+)") do
   local k,v = pair:match("^(.+)=(.+)$")
   DESKTOP_SYMBOLS[k] = tonumber(v, 16)
-end
-
-local function ram_u8(addr)
-  return apple2.ReadRAMDevice(addr)
-end
-
-local function ram_u16(addr)
-  return ram_u8(addr) | (ram_u8(addr+1) << 8)
-end
-
-local function ram_s16(addr)
-  local v = ram_u16(addr)
-  if v & 0x8000 == 0 then
-    return v
-  else
-    return 0x10000 - v
-  end
 end
 
 local function ReadIcon(id)
@@ -1072,7 +1028,7 @@ function a2d.GetSelectedIcons()
   local selected_icon_count_addr = DESKTOP_SYMBOLS['selected_icon_count'] | 0x010000
   local selected_icon_list_addr = DESKTOP_SYMBOLS['selected_icon_list'] | 0x010000
 
-  local selected_icon_count = apple2.ReadRAMDevice(selected_icon_count_addr)
+  local selected_icon_count = ram_u8(selected_icon_count_addr)
 
   local icons = {}
 

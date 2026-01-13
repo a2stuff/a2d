@@ -57,15 +57,10 @@ test.Step(
     a2d.Quit()
     apple2.WaitForBitsy()
 
-    local DEVCNT = 0xBF31
-    local DEVLST = 0xBF32
-    local count = apple2.ReadRAMDevice(DEVCNT) + 1
-    test.ExpectEquals(count, 14, "should have 14 devices")
+    local list = apple2.GetProDOSDeviceList()
+    test.ExpectEquals(#list, 14, "should have 14 devices")
 
-    for i = 0, count-1 do
-      local unit = apple2.ReadRAMDevice(DEVLST + i)
-      local slot = (unit & 0x70) >> 4
-      local drive = ((unit & 0x80) >> 7) + 1
-      test.ExpectNotEquals(slot, 0, "should not have slot 0 device")
+    for i,device in ipairs(list) do
+      test.ExpectNotEquals(device.slot, 0, "should not have slot 0 device")
     end
 end)
