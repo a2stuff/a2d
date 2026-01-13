@@ -52,9 +52,10 @@ local function get_device(pattern)
   error("Failed to find device " .. pattern)
 end
 
-
 local scan_for_mouse = false
-if machine.system.name:match("^apple2e") or machine.system.name:match("^tk3000") then
+if machine.system.name:match("^apple2e")
+  or machine.system.name:match("^tk3000")
+  or machine.system.name:match("^prav8c") then
   -- Apple IIe
   -- * mouse card required (if mouse is used)
   -- * many possible aux memory devices

@@ -39,8 +39,10 @@ function a2d.InitSystem()
 
   if not system.name:match("^apple2gs") then
     -- Monitor type
-    if system.name:match("^apple2e") or system.name:match("^tk3000") then
-      -- Apple IIe or TK3000
+    if system.name:match("^apple2e")
+      or system.name:match("^tk3000")
+      or system.name:match("^prav8c") then
+      -- Apple IIe or TK3000//e or Pravetz 8C
       apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
     elseif system.name:match("^apple2c") then
       -- Apple IIc
@@ -68,7 +70,9 @@ function a2d.InitSystem()
     -- "CPU type": "Standard", "7MHz ZipGS", "8MHz ZipGS", "12MHz ZipGS", "16MHz ZipGS"
     apple2.SetSystemConfig(":a2_config", "CPU type", 0xFF, 1 | (3 << 1))
 
-  elseif system.name:match("^apple2e") or system.name:match("^tk3000") then
+  elseif system.name:match("^apple2e")
+    or system.name:match("^tk3000")
+    or system.name:match("^prav8c") then
     -- bit 4 = "CPU type": 0="Standard", 1="4MHz Zip Chip"
     apple2.SetSystemConfig(":a2_config", "CPU type", 1 << 4, 1 << 4)
     -- bit 5 = "Bootup speed": 0="Standard", 1="4MHz"
