@@ -56,6 +56,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Reduce cursor flickering while list view rows are drawn.
 * Don't repaint scrollbars before window when resizing.
 * Eliminate scrollbar repaint after window opens.
+* Fix "Unexpected error" seen when copying certain directories.
 
 ### Selector
 

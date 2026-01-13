@@ -348,7 +348,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
         beq     retry           ; always
 .else
         .refto retry
-fail:   jmp     OpHandleErrorCode
+        jmp     OpHandleErrorCode
 .endif
     END_IF
 
@@ -358,15 +358,18 @@ fail:   jmp     OpHandleErrorCode
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
-.if ::kCopyInteractive
       IF CS
+        cmp     #ERR_END_OF_FILE
+        beq     eof
+
+.if ::kCopyInteractive
         jsr     OpCheckRetry
         beq     retry2          ; always
-      END_IF
 .else
         .refto retry2
-        bcs     fail
+        jmp     OpHandleErrorCode
 .endif
+      END_IF
     END_IF
 
         RETURN  A=#0
