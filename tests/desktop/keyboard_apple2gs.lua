@@ -2,7 +2,7 @@
 
 MODEL="apple2gsr1"
 MODELARGS="-sl7 cffa2 -ramsize 8M"
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
+DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]

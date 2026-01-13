@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
-DISKARGS="-hard1 $HARDIMG -hard2 res/disk_a.2mg"
+DISKARGS="-hard1 $HARDIMG -hard2 disk_a.2mg"
 
 ======================================== ENDCONFIG ]]
 

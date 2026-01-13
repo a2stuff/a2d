@@ -2,7 +2,7 @@
 
 MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl1 cffa2 -sl6 '' -sl7 cffa2"
-DISKARGS="-hard1 $HARDIMG -hard3 res/disk_a.2mg"
+DISKARGS="-hard1 $HARDIMG -hard3 disk_a.2mg"
 WAITFORDESKTOP="false"
 
 ================================================== ENDCONFIG ]]

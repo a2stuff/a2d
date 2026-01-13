@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
+DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 

@@ -2,7 +2,7 @@
 
 MODEL="apple2gs"
 MODELARGS="-sl7 cffa2 -ramsize 8M"
-DISKARGS="-hard1 $HARDIMG -hard2 'res/NoiseTracker 3.2mg'"
+DISKARGS="-hard1 $HARDIMG -hard2 'NoiseTracker 3.2mg'"
 RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]

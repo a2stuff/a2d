@@ -16,7 +16,7 @@ test.Step(
   "swap images",
   function()
 
-    s7d1:load("/Users/josh/dev/a2d/res/tests.hdv")
+    s7d1:load("/Users/josh/dev/a2d/tests.hdv")
     a2d.CheckAllDrives()
     test.Snap("swapped hard1")
 

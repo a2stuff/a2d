@@ -47,16 +47,15 @@ Tests can define custom MAME configurations. The contents of an optional config 
   * A slot can be emptied with empty single-quoted string, e.g. `-sl6 ''`
   * Note that MAME's defaults for each model are different. See the [MAMEDEV Page](https://wiki.mamedev.org/index.php/Driver:Apple_II#The_default_configurations) for specifics.
 * `DISKARGS` - disk configuration, e.g. `"-hard1 a2d.hdv"`
-  * NOTE: This is parsed as space-delimited pairs and the second argument is copied to a temp directory so that the original disk images are not modified
+  * NOTE: This is parsed as space-delimited pairs and the second argument is copied from `tests/images` to a temp directory so that the original disk images are not modified
+  * These environment variables can be used.
+    * `HARDIMG` has the path to the 800K package disk
+    * `FLOP1IMG` has the path to the 140K package disk #1 (desktop)
+    * `FLOP2IMG` has the path to the 140K package disk #2 (accessories)
 * `RESOLUTION` - defaults to `"560x384"`; for IIgs should be set to `"704x462"`
 * `WAITFORDESKTOP` - defaults to `true`; set it to `false` for the rare tests that shouldn't wait for DeskTop to be ready before starting the script
 * `CHECKAUXMEMORY` - defaults to `true`; set it to `false` for the rare tests that run on an Apple IIe without an 80 column card
 
-These environment variables can be used:
-
-* `HARDIMG` has the path to the 800K package disk
-* `FLOP1IMG` has the path to the 140K package disk #1 (desktop)
-* `FLOP2IMG` has the path to the 140K package disk #2 (accessories)
 
 Example:
 

@@ -8,12 +8,12 @@ MODEL="apple2ee"
   -sl5:scsi:scsibus:6 harddisk              \
   "
 DISKARGS="\
-  -hard1 res/disk_d.2mg \
-  -hard2 res/disk_c.2mg \
-  -hard3 res/disk_b.2mg \
-  -hard4 res/disk_a.2mg \
+  -hard1 disk_d.2mg \
+  -hard2 disk_c.2mg \
+  -hard3 disk_b.2mg \
+  -hard4 disk_a.2mg \
   -hard5 $HARDIMG \
-  -hard6 res/tests.hdv \
+  -hard6 tests.hdv \
   "
 
 ================================================== ENDCONFIG ]]

@@ -1,7 +1,7 @@
 --[[ BEGINCONFIG ========================================
 
 MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
-DISKARGS="-hard1 $HARDIMG -flop1 res/directory_eof.dsk"
+DISKARGS="-hard1 $HARDIMG -flop1 directory_eof.dsk"
 
 ======================================== ENDCONFIG ]]
 

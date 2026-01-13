@@ -4,7 +4,7 @@ Most tests have now been automated. This document captures tests that must be ru
 
 > Status: Work in Progress
 
-The `/TESTS` volume can be found as `res/tests.hdv` in the repo. Test cases should start with a fresh copy of this volume, as some cases will modify the volume.
+The `/TESTS` volume can be found as `tests/images/tests.hdv` in the repo. Test cases should start with a fresh copy of this volume, as some cases will modify the volume.
 
 When steps say to a path e.g. `/TESTS/FOLDER/SUBFOLDER`, open the volume then each subsequent folder, leaving intermediate windows open.
 

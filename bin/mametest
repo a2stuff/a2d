@@ -94,11 +94,11 @@ rm -rf "$NVRAMDIR"/*
 # --------------------------------------------------
 # Configuration
 
-HARDIMG="out/A2DeskTop-${version}_800k.2mg"
-FLOP1IMG="out/A2DeskTop-${version}_140k_disk1.po"
-FLOP2IMG="out/A2DeskTop-${version}_140k_disk2.po"
+HARDIMG="../../out/A2DeskTop-${version}_800k.2mg"
+FLOP1IMG="../../out/A2DeskTop-${version}_140k_disk1.po"
+FLOP2IMG="../../out/A2DeskTop-${version}_140k_disk2.po"
 
-if [ ! -f "$HARDIMG" ]; then
+if [ ! -f "tests/images/$HARDIMG" ]; then
   make && make package
 fi
 
@@ -120,13 +120,13 @@ fi
 NEWDISKARGS=""
 while read -r arg disk; do
   target="$TMPDIR/disks/${arg#?}"
-  cp "$disk" "$target"
+  cp "tests/images/$disk" "$target"
   NEWDISKARGS="$NEWDISKARGS $arg $target"
 done < <(echo $DISKARGS | xargs -n 2)
 DISKARGS="$NEWDISKARGS"
 
 export UNFORMATTED_IMG="$TMPDIR/disks/unformatted.2mg"
-cp "res/unformatted.2mg" "$UNFORMATTED_IMG"
+cp "tests/images/unformatted.2mg" "$UNFORMATTED_IMG"
 
 # --------------------------------------------------
 # VEDrive

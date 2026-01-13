@@ -2,7 +2,7 @@
 
 MODEL="apple2p"
 MODELARGS="-sl2 mouse"
-DISKARGS="-flop1 res/ProDOS_2_4_3.po -flop2 $FLOP1IMG"
+DISKARGS="-flop1 ProDOS_2_4_3.po -flop2 $FLOP1IMG"
 WAITFORDESKTOP="false"
 
 ======================================== ENDCONFIG ]]

@@ -8,10 +8,10 @@ MODELARGS="\
   -sl6 diskiing \
   -sl7 cffa2"
  DISKARGS="\
-  -flop1 res/disk_c.2mg -flop2 res/disk_d.2mg \
-  -flop3 res/disk_a.2mg -flop4 res/disk_b.2mg \
-  -flop5 res/prodos_floppy1.dsk -flop6 res/prodos_floppy2.dsk \
-  -hard1 $HARDIMG -hard2 res/tests.hdv"
+  -flop1 disk_c.2mg -flop2 disk_d.2mg \
+  -flop3 disk_a.2mg -flop4 disk_b.2mg \
+  -flop5 prodos_floppy1.dsk -flop6 prodos_floppy2.dsk \
+  -hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 

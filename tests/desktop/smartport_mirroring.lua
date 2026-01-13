@@ -16,20 +16,20 @@ MODEL="apple2ee"
   -sl4:scsi:scsibus:3 harddisk              \
   "
 DISKARGS="\
-  -hard10 res/disk_a.2mg \
-  -hard9  res/disk_b.2mg \
-  -hard8  res/disk_c.2mg \
-  -hard7  res/disk_d.2mg \
-  -hard6  res/disk_e.2mg \
-  -hard5  res/disk_f.2mg \
+  -hard10 disk_a.2mg \
+  -hard9  disk_b.2mg \
+  -hard8  disk_c.2mg \
+  -hard7  disk_d.2mg \
+  -hard6  disk_e.2mg \
+  -hard5  disk_f.2mg \
   \
-  -hard4  res/disk_g.2mg \
-  -hard3  res/disk_h.2mg \
-  -hard2  res/disk_i.2mg \
-  -hard1  res/disk_j.2mg \
+  -hard4  disk_g.2mg \
+  -hard3  disk_h.2mg \
+  -hard2  disk_i.2mg \
+  -hard1  disk_j.2mg \
   \
   -flop1 $HARDIMG \
-  -flop2 res/empty_800k.2mg \
+  -flop2 empty_800k.2mg \
   "
 
 ================================================== ENDCONFIG ]]

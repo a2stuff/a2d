@@ -2,7 +2,7 @@
 
 MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux rw3"
-DISKARGS="-hard1 $HARDIMG -hard2 res/tests.hdv"
+DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 

@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-DISKARGS="-hard1 $HARDIMG -flop1 res/cpm_floppy.dsk"
+DISKARGS="-hard1 $HARDIMG -flop1 cpm_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 

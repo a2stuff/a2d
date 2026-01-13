@@ -2,7 +2,7 @@
 
 MODEL="apple2gsr1"
 MODELARGS="-sl7 cffa2 -ramsize 8M"
-DISKARGS="-hard1 $HARDIMG -flop3 res/disk_a.2mg"
+DISKARGS="-hard1 $HARDIMG -flop3 disk_a.2mg"
 RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
