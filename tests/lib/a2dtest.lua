@@ -139,6 +139,25 @@ end
 -- MGTK-based helpers
 --------------------------------------------------
 
+-- TODO: Promote these into apple2
+local function ram_u8(addr)
+  return apple2.ReadRAMDevice(addr)
+end
+
+local function ram_u16(addr)
+  return ram_u8(addr) | (ram_u8(addr+1) << 8)
+end
+
+local function ram_s16(addr)
+  local v = ram_u16(addr)
+  if v & 0x8000 == 0 then
+    return v
+  else
+    return 0x10000 - v
+  end
+end
+
+
 local bank_offset = 0x10000
 
 function a2dtest.SetBankOffsetForDeskTopModule()

@@ -24,7 +24,7 @@ local apple2 = require("apple2")
 --     ... use ptr here ...
 --   end)
 -- Use opt_callback for memory access other than params
-function MGTKCall(call, params, opt_callback)
+local function MGTKCall(call, params, opt_callback)
 
   -- Give MGTK the unlock sequence
 
@@ -131,13 +131,13 @@ mgtk.scroll = {
 ------------------------------------------------------------
 
 -- Helpers for reading 8 and 16-bit values from out params
-function u8(params, offset)
+local function u8(params, offset)
   return params[offset+1]
 end
-function u16(params, offset)
+local function u16(params, offset)
   return u8(params, offset) | (u8(params, offset+1) << 8)
 end
-function s16(params, offset)
+local function s16(params, offset)
   local v = u16(params, offset)
   if v & 0x8000 ~= 0 then
     return v - 0x10000
@@ -239,15 +239,15 @@ end
 -- Higher Level Helpers
 ------------------------------------------------------------
 
-function ram_u8(addr)
+local function ram_u8(addr)
   return apple2.ReadRAMDevice(addr)
 end
 
-function ram_u16(addr)
+local function ram_u16(addr)
   return ram_u8(addr) | (ram_u8(addr+1) << 8)
 end
 
-function ram_s16(addr)
+local function ram_s16(addr)
   local v = ram_u16(addr)
   if v & 0x8000 == 0 then
     return v

@@ -178,7 +178,7 @@ else
   error("Unknown model: " .. machine.system.name)
 end
 
-function EnsureMouse()
+local function EnsureMouse()
   if scan_for_mouse then
     local mousedev = get_device("^:sl.:mouse$").tag
     mouse = {
@@ -856,7 +856,7 @@ function apple2.SetDHRByte(row, col, value)
   apple2.WriteRAMDevice(addr + 0x10000 * (1-bank), value)
 end
 
-function IterateTextScreen(char_cb, row_cb)
+local function IterateTextScreen(char_cb, row_cb)
   local is80 = apple2.ReadSSW("RD80VID") > 127
   local isAlt = apple2.ReadSSW("RDALTCHAR") > 127
   for row = 0,23 do
