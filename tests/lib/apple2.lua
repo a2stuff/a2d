@@ -54,7 +54,7 @@ end
 
 
 local scan_for_mouse = false
-if machine.system.name:match("^apple2e") then
+if machine.system.name:match("^apple2e") or machine.system.name:match("^tk3000") then
   -- Apple IIe
   -- * mouse card required (if mouse is used)
   -- * many possible aux memory devices
