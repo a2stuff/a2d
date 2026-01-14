@@ -26,6 +26,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Enter new name
+    a2d.ClearTextField()
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
 

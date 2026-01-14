@@ -3427,6 +3427,15 @@ RefreshView := RefreshViewImpl::entry3
         jsr     GetSelectedUnitNum
         sta     unit_num
 
+        jsr     GetSingleSelectedIcon
+    IF NOT ZERO
+        jsr     GetIconName
+        stax    $06
+        CALL    CopyPtr1ToBuf, AX=#text_input_buf
+    ELSE
+        copy8   #0, text_input_buf
+    END_IF
+
 exec:
         CALL    LoadDynamicRoutine, A=#kDynamicRoutineFormatErase
         RTS_IF NS
@@ -3446,7 +3455,8 @@ exec:
 
 unit:   sta     unit_num
         copy8   #FormatEraseAction::format, action
-        bne     exec            ; always
+        copy8   #0, text_input_buf
+        beq     exec            ; always
 
 .endproc ; CmdFormatEraseDiskImpl
 CmdFormatDisk := CmdFormatEraseDiskImpl::format
@@ -14102,8 +14112,6 @@ params:  .res    3
 
 .proc OpenPromptDialog
         sta     prompt_button_flags
-
-        copy8   #0, text_input_buf
 
         copy8   #BTK::kButtonStateNormal, ok_button::state
 

@@ -496,8 +496,12 @@ end
 function a2d.FormatVolume(name, opt_new_name)
   a2d.SelectPath("/"..name)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK)
-  apple2.Type(opt_new_name or name)
+  if opt_new_name then
+    a2d.ClearTextField()
+    apple2.Type(opt_new_name)
+  end
   a2d.DialogOK()
+  -- TODO: WaitForAlert here (layering violation!)
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
   emu.wait(5) -- I/O
@@ -507,8 +511,10 @@ function a2d.EraseVolume(name, opt_new_name, options)
   options = default_options(options)
   a2d.SelectPath("/"..name, options)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
-  a2d.ClearTextField()
-  apple2.Type(opt_new_name or name)
+  if opt_new_name then
+    a2d.ClearTextField()
+    apple2.Type(opt_new_name)
+  end
   a2d.DialogOK()
   -- TODO: WaitForAlert here (layering violation!)
   a2d.WaitForRepaint()

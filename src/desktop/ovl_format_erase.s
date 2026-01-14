@@ -54,8 +54,8 @@ Exec:
         stx     unit_num
 
         ;; --------------------------------------------------
-        ;; Prompt for device
-.scope
+        ;; Open dialog, draw title
+
         CLEAR_BIT7_FLAG has_input_field_flag
         CALL    main::OpenPromptDialog, A=#kPromptButtonsOKCancel
         jsr     main::SetPortForPromptDialog
@@ -67,16 +67,18 @@ Exec:
     END_IF
         jsr     main::DrawDialogTitle
 
-        lda     unit_num
-        bne     skip_select
+        ;; --------------------------------------------------
+        ;; Prompt for device
 
+        lda     unit_num
+    IF ZERO
         MGTK_CALL MGTK::MoveTo, vol_picker_select_pos
         bit     erase_flag
-    IF NS
+      IF NS
         MGTK_CALL MGTK::DrawString, aux::str_select_erase
-    ELSE
+      ELSE
         MGTK_CALL MGTK::DrawString, aux::str_select_format
-    END_IF
+      END_IF
 
         jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::MoveTo, vol_picker_line1_start
@@ -92,16 +94,14 @@ Exec:
         OPTK_CALL OPTK::Draw, vol_picker_params
         jsr     main::UpdateOKButton
 
-    DO
+      DO
         jsr     main::PromptInputLoop
-    WHILE NS                    ; not done
+      WHILE NS                  ; not done
         jne     cancel          ; cancel
 
         jsr     GetSelectedUnitNum
         sta     unit_num
-.endscope
-
-skip_select:
+    END_IF
 
         ;; --------------------------------------------------
         ;; Prompt for name
@@ -114,7 +114,6 @@ skip_select:
         jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
         SET_BIT7_FLAG has_input_field_flag
-        copy8   #0, text_input_buf
         CLEAR_BIT7_FLAG has_device_picker_flag
 
         CALL    main::DrawDialogLabel, Y=#2, AX=#aux::str_location
@@ -126,7 +125,7 @@ skip_select:
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
     WHILE A <> unit_num
-        ;; NOTE: Assertion violation if not found
+        ;; Assert: unit is in `DEVLST`
 
         txa
         jsr     DrawDeviceNameForIndex

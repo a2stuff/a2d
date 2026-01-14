@@ -54,7 +54,7 @@ end
   Show the dialog. Snapshots verifying long device names don't mispaint.
 ]]
 FormatEraseTest(
-  "Long names",
+  "Long device names",
   function(invoke)
     invoke(false)
     test.Snap("long names on device selection")

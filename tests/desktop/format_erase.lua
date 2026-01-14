@@ -45,7 +45,7 @@ FormatEraseTest(
     apple2.DownArrowKey() -- S1D1
     a2d.DialogOK()
 
-    -- name
+    -- name prompt
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
 
@@ -77,8 +77,13 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectPath("/RAM1")
     invoke(true)
+
+    -- name prompt
+    a2d.ClearTextField()
     apple2.Type("UNIQUE.NAME")
     a2d.DialogOK()
+
+    -- confirmation
     a2dtest.WaitForAlert()
     test.Snap("verify prompt confirms overwrite, not a duplicate name")
     a2d.DialogCancel()
@@ -94,8 +99,13 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectPath("/RAM1")
     invoke(true)
+
+    -- name prompt
+    a2d.ClearTextField()
     apple2.Type("A2.DESKTOP")
     a2d.DialogOK()
+
+    -- confirmation
     a2dtest.WaitForAlert()
     test.Snap("verify prompt says the name is in use")
     a2d.DialogCancel()
@@ -112,8 +122,13 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectPath("/RAM1")
     invoke(true)
+
+    -- name prompt
+    a2d.ClearTextField()
     apple2.Type("RAM1")
     a2d.DialogOK()
+
+    -- confirmation
     a2dtest.WaitForAlert()
     test.Snap("verify prompt confirms overwrite, not a duplicate name")
     a2d.DialogCancel()
@@ -134,11 +149,16 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectPath("/RAM1")
     invoke(true)
+
+    -- name prompt
+    a2d.ClearTextField()
     apple2.Type("WHOLE.NAME.USED")
     for i = 1,7 do
       apple2.LeftArrowKey()
     end
     a2d.DialogOK()
+
+    -- confirmation
     a2dtest.WaitForAlert()
     a2d.DialogOK()
     emu.wait(5) -- slow
@@ -191,6 +211,7 @@ FormatEraseTest(
     invoke(true)
 
     -- name
+    a2d.ClearTextField()
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
 
@@ -314,8 +335,12 @@ FormatEraseTest(
     invoke(true)
     test.Snap("verify prompted for new name")
 
+    -- name prompt
+    a2d.ClearTextField()
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
+
+    -- confirmation
     a2dtest.WaitForAlert()
     test.Snap("verify prompt names selected volume")
 
@@ -377,7 +402,7 @@ end)
 
 --[[
   Launch DeskTop. Select a volume icon. Run the command. Verify that
-  the OK button is disabled. Enter text. Verify that the device
+  the OK button is enabled. Enter text. Verify that the device
   location is shown, and that the OK button is enabled. Delete all of
   the text. Verify that the OK button becomes disabled. Enter text.
   Verify that the OK button becomes enabled.
@@ -390,12 +415,10 @@ FormatEraseTest(
 
     -- name
     test.Snap("verify device location shown")
-    test.Snap("verify OK button disabled")
-    apple2.Type("NEW.NAME")
     test.Snap("verify OK button enabled")
     a2d.ClearTextField()
     test.Snap("verify OK button disabled")
-    apple2.Type("ANOTHER.NAME")
+    apple2.Type("NEW.NAME")
     test.Snap("verify OK button enabled")
 
     a2d.DialogCancel()
