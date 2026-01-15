@@ -222,7 +222,6 @@ test.Step(
 
     a2d.OpenPath("/A2.DESKTOP")
     a2d.ClearSelection()
-    test.Snap("before")
     a2dtest.ExpectNothingChanged(function()
         a2d.CopyDisk()
         a2d.OAShortcut("Q")

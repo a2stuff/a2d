@@ -296,6 +296,7 @@ end
 
 function a2dtest.WaitForAlert(options)
   util.WaitFor("alert", a2dtest.IsAlertShowing, options)
+  emu.wait(0.5) -- let the alert finish drawing
 end
 
 --------------------------------------------------

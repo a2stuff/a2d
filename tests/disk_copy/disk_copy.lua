@@ -17,7 +17,7 @@ test.Step(
     local listbox_x, listbox_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(listbox_x+130, listbox_y+35)
+        m.MoveToApproximately(listbox_x+130, listbox_y+25)
         m.DoubleClick()
         test.Snap("verify OK button flashes")
     end)

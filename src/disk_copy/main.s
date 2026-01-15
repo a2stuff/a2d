@@ -41,6 +41,9 @@ on_line_buffer2 .res    256     ; enough for all devices
 ;;; default memory bitmap.
 volume_bitmap   := $4000
 
+;;; Length of `volume_bitmap` in blocks
+volume_bitmap_blocks:   .byte   0
+
 ;;; ============================================================
 
 .proc MLIRelayImpl
@@ -125,7 +128,7 @@ params:  .res    3
         ldx     auxlc::dest_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     unit_number
-        jsr     auxlc::IsDiskII
+        jsr     IsDiskII
     IF NE
         ;; Get driver address
         CALL    DeviceDriverAddress, A=unit_number
@@ -199,25 +202,25 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
 ;;; Reads the volume bitmap (blocks 6 through ...)
 
 .proc ReadVolumeBitmap
-        ;; Number of blocks to copy, divided by 8
-        block_count_div8 := $08 ; word
 
-        lda     auxlc::source_drive_index
-        asl     a
-        tax
-        copy16  auxlc::block_count_table,x, block_count_div8
-        lsr16   block_count_div8    ; /= 8
-        lsr16   block_count_div8
-        lsr16   block_count_div8
+        ;; Need volume bitmap size in blocks:
+        ;; bitmap size (blocks) = source blocks (bits) / 512 bytes/block / 8 bits/byte
+        ;; ... rounded up
 
-        ;; Did we round down?
-        lda     auxlc::block_count_table,x
-        and     #$07
-    IF NE
-        inc16   block_count_div8
-    END_IF
+        lda     auxlc::source_block_count
+        sec                     ; math is easier if we use *last* instead of *count*
+        sbc     #1              ; throw away low byte result, just need C set
+        lda     auxlc::source_block_count+1
+        sbc     #0
+        lsr                     ; /= 512 bytes/block
+        lsr                     ; /= 8 bits/byte
+        lsr
+        lsr
+        clc                     ; round up
+        adc     #1
+        sta     volume_bitmap_blocks
 
-        copy16  block_count_div8, auxlc::block_count_div8
+        ;; Quick Copy or Disk Copy?
 
         bit     auxlc::source_disk_format
         ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
@@ -234,29 +237,34 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         ptr := $06
 
         ;; Zero out the volume bitmap
-        add16   #volume_bitmap, auxlc::block_count_div8, ptr
-        ldy     #0
+        copy16  #volume_bitmap, ptr
+        lda     volume_bitmap_blocks
+        asl                     ; *= 2
+        tax                     ; # pages
+
+        lda     #0
+        tay
     DO
-        dec16   ptr
-        tya
+      DO
         sta     (ptr),y
-        ecmp16  ptr, #volume_bitmap
-    WHILE NE
+        iny
+      WHILE NOT ZERO
+        inc     ptr+1
+        dex
+    WHILE NOT ZERO
 
         ;; Now mark block-pages used in memory bitmap
-        page := $07          ; high byte of `volume_bitmap` from above
-        count := $06         ; no longer needed
+        page  := $06
+        count := $07
 
-        sty     count
+        copy8   #.hibyte(volume_bitmap), page
+        copy8   volume_bitmap_blocks, count
     DO
         CALL    MarkUsedInMemoryBitmap, A=page
         inc     page
         inc     page
-        inc     count
-        inc     count
-
-        lda     auxlc::block_count_div8+1
-    WHILE A >= count
+        dec     count
+    WHILE NOT ZERO
         rts
 .endscope
 
@@ -264,11 +272,13 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         ;; Quick Copy - load volume bitmap from disk
         ;; so only used blocks are copied
 .proc QuickCopy
-        copy16  #6, block_params::block_num
         ldx     auxlc::source_drive_index
-        lda     auxlc::drive_unitnum_table,x
-        sta     block_params::unit_num
+        copy8   auxlc::drive_unitnum_table,x, block_params::unit_num
+        copy16  #kVolumeBitmapBlock, block_params::block_num
         copy16  #volume_bitmap, block_params::data_buffer
+
+        blocks := $06
+        copy8   volume_bitmap_blocks, blocks
 
         ;; Each volume bitmap block holds $200*8 bits, so keep reading
         ;; blocks until we've accounted for all blocks on the volume.
@@ -279,13 +289,11 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         brk                     ; rude!
       END_IF
 
-        sub16   block_count_div8, #$200, block_count_div8
-        RTS_IF NEG
-
-        add16   block_params::data_buffer, #$200, block_params::data_buffer
-
         inc     block_params::block_num
-    WHILE NOT_ZERO              ; always
+        add16   block_params::data_buffer, #$200, block_params::data_buffer
+        dec     blocks
+    WHILE NOT ZERO
+        rts
 .endproc ; QuickCopy
 .endproc ; ReadVolumeBitmap
 
@@ -325,83 +333,78 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
 
 ;;; ============================================================
 
+;;; Read or write as many blocks as will fit into memory
+
 ;;; Input: C = write flag (0=reading, 1=writing)
+;;; Output:
+;;;     If reading: A=$01 on failure, otherwise success
+;;;     If writing: N=1 on complete, Z=0 on failure, otherwise not done
 .proc CopyBlocks
         ror     write_flag
 
     IF NEG
-        copy16  auxlc::start_block_div8, auxlc::block_num_div8
-        copy8   auxlc::start_block_shift, auxlc::block_num_shift
+        ;; writing
+        copy16  auxlc::start_block_num, auxlc::block_num ; previously stashed
         ldx     auxlc::dest_drive_index
     ELSE
-        copy16  auxlc::block_num_div8, auxlc::start_block_div8
-        copy8   auxlc::block_num_shift, auxlc::start_block_shift
+        ;; reading
+        copy16  auxlc::block_num, auxlc::start_block_num ; stash for writing
         ldx     auxlc::source_drive_index
     END_IF
         lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
 
+        ;; Initialize memory pointers
         lda     #7              ; 7 - (n % 8)
         sta     auxlc::block_index_shift
         lda     #0
         sta     auxlc::block_index_div8
-        sta     flag1
-        sta     flag2
 
-        beq     check           ; always
-
-loop:
-        ;; Update displayed counts
-        bit     write_flag
-    IF NC
-        jsr     auxlc::IncAndDrawBlocksRead
-    ELSE
-        jsr     auxlc::IncAndDrawBlocksWritten
-    END_IF
-        jsr     auxlc::DrawProgressBar
-
-check:
+        ;; Loop over blocks until we hit memory limit or are done
+    DO
         ;; Check for keypress
         lda     KBD
-    IF A = #(CHAR_ESCAPE | $80)
+      IF A = #(CHAR_ESCAPE | $80)
         bit     KBDSTRB
-        jmp     error
-    END_IF
+        RETURN  A=#1
+      END_IF
 
-        bit     flag1
-        bmi     success
-        bit     flag2
-        bmi     continue
+        ;; Is this block in use?
+        CALL    IsUsedInVolumeBitmap, AX=auxlc::block_num
+      IF CC
 
+        ;; Do we have more memory blocks?
         jsr     AdvanceToNextBlockIndex
-    IF CS
-      IF ZERO
-        cpx     #$00
-        beq     success
-      END_IF
-        ldy     #$80
-        sty     flag1
-    END_IF
-
+       IF CS
+        ;; Out of memory blocks, so we're done for now.
+        RETURN  A=#0
+       END_IF
         stax    mem_block_addr
-        jsr     AdvanceToNextBlock
-        bcc     _ReadOrWriteBlock
-      IF ZERO
-        cpx     #$00
-        beq     continue
-      END_IF
-        ldy     #$80
-        sty     flag2
-        bne     _ReadOrWriteBlock
 
-continue:
+        ;; We have space, so read it/write it.
+        CALL    _ReadOrWriteBlock, AX=auxlc::block_num
+
+        ;; Update displayed counts
+        bit     write_flag
+       IF NC
+        jsr     auxlc::IncAndDrawBlocksRead
+       ELSE
+        jsr     auxlc::IncAndDrawBlocksWritten
+       END_IF
+        jsr     auxlc::DrawProgressBar
+
+      END_IF
+
+        ;; Next block
+        inc16   auxlc::block_num
+        cmp16   auxlc::block_num, auxlc::source_block_count
+    WHILE LT
+
+        ;; That was last block so we're done
         RETURN  A=#$80
 
-success:
-        RETURN  A=#0
-
-error:  RETURN  A=#1
-
+;;; Input: A,X = block number, `write_flag`, `mem_block_addr` and `block_index_div8` set
+;;; Output: returns on success, pops stack and returns error to caller's caller otherwise
 .proc _ReadOrWriteBlock
         stax    block_params::block_num
 
@@ -423,12 +426,12 @@ error:  RETURN  A=#1
     IF NC
         jsr     ReadBlockToMain
         bmi     error
-        jmp     loop
+        rts
     END_IF
 
         jsr     WriteBlockFromMain
         bmi     error
-        jmp     loop
+        rts
 
         ;; --------------------------------------------------
 
@@ -447,12 +450,12 @@ need_move:
     IF NC
         jsr     ReadBlockToLCBank1
         bmi     error
-        jmp     loop
+        rts
     END_IF
 
         jsr     WriteBlockFromLCBank1
         bmi     error
-        jmp     loop
+        rts
 
         ;; --------------------------------------------------
         ;; read/write block to/from aux
@@ -462,12 +465,12 @@ use_auxmem:
     IF NC
         jsr     auxlc::ReadBlockToAuxmem
         bmi     error
-        jmp     loop
+        rts
     END_IF
 
         jsr     auxlc::WriteBlockFromAuxmem
         bmi     error
-        jmp     loop
+        rts
 
         ;; --------------------------------------------------
         ;; read/write block to/from aux lcbank2
@@ -477,16 +480,18 @@ use_lcbank2:
     IF NC
         jsr     ReadBlockToLCBank2
         bmi     error
-        jmp     loop
+        rts
     END_IF
 
         jsr     WriteBlockFromLCBank2
         bmi     error
-        jmp     loop
-.endproc ; _ReadOrWriteBlock
+        rts
 
-flag1:  .byte   0               ; ???
-flag2:  .byte   0               ; ???
+error:
+        pla
+        pla
+        RETURN  A=#1
+.endproc ; _ReadOrWriteBlock
 
 write_flag:                     ; high bit set if writing
         .byte   0
@@ -496,132 +501,96 @@ mem_block_addr:
 .endproc ; CopyBlocks
 
 ;;; ============================================================
-;;; Advance `block_num_div8` and `block_num_shift` to next used
-;;; block per volume bitmap.
-;;; Inputs: `block_num_div8` and `block_num_shift`
-;;; Output: C=0 and A,X=block number if one exists
-;;;         C=1 and A,X=$0000 if last block reached
-
-.proc AdvanceToNextBlock
-repeat: jsr     LookupInVolumeBitmap ; A,X=block number, Y=free?
-        cpy     #0
-        bne     free
-        pha
-        jsr     _Next
-        pla
-        rts
-
-free:   jsr     _Next
-        bcc     repeat          ; repeat unless last block
-        lda     #0
-        tax
-        rts
-
-.proc _Next
-        dec     auxlc::block_num_shift
-        bmi     :+
-
-not_last:
-        RETURN  C=0
-
-:       lda     #7              ; 7 - (n % 8)
-        sta     auxlc::block_num_shift
-        inc16   auxlc::block_num_div8
-        ecmp16  auxlc::block_num_div8, auxlc::block_count_div8
-        bne     not_last
-
-        RETURN  C=1
-.endproc ; _Next
-.endproc ; AdvanceToNextBlock
-
-;;; ============================================================
 ;;; Count active blocks in volume bitmap
 ;;; Output: A,X = block count
 
 .proc CountActiveBlocksInVolumeBitmap
-        ptr := $06
-        count := $08
+        block := $08
+        count := $0A
 
         copy16  #0, count
+        copy16  #0, block
 
-        add16   #volume_bitmap, auxlc::block_count_div8, ptr
-
-        ldy     #0
-    DO
-        dec16   ptr
-        lda     (ptr),y
-
-        ;; Count 0 bits in byte
-        eor     #$FF
-        ldx     #AS_BYTE(-1)
-incr:   inx
-bloop:  asl
-        bcs     incr
-        bne     bloop
-        txa
-
-        clc
-        adc     count
-        sta     count
-        lda     #0
-        adc     count+1
-        sta     count+1
-
-        ecmp16  ptr, #volume_bitmap
-    WHILE NE
-
-        ldax    count
-        ;; edge case for 32MB volumes
-        ;; TODO: Does ProDOS-8 allow other non-multiple-of-8 sizes?
-    IF A = #0
-      IF X = #0
-        ldax    #$FFFF
-      END_IF
+loop:
+        CALL    IsUsedInVolumeBitmap, AX=block
+    IF CC
+        inc16   count
     END_IF
 
-        rts
-
+        inc16   block
+        cmp16   block, auxlc::source_block_count
+    IF GE
         RETURN  AX=count
+    END_IF
+
+        jmp     loop
 .endproc ; CountActiveBlocksInVolumeBitmap
 
 ;;; ============================================================
-;;; Look up block in volume bitmap
-;;; Input: Uses `block_num_div8` and `block_num_shift`
-;;; Output: A,X = block number, Y = masked bit from bitmap
 
-.proc LookupInVolumeBitmap
+;;; Input: A,X = block number
+;;; Output: C=0 if used, C=1 if free
+;;; Scrambles A,X,Y,$06/$07
+
+.proc IsUsedInVolumeBitmap
         ptr := $06
 
-        ;; Find byte in volume bitmap
-        add16   #volume_bitmap, auxlc::block_num_div8, ptr
+        jsr     GetVolumeBitmapOffsetAndMask
+        addax   #volume_bitmap, ptr
 
-        ;; Find bit in volume bitmap
+        tya
         ldy     #0
-        lda     (ptr),y
-        ldx     auxlc::block_num_shift
-        and     bit_shift_table,x
-        tay                     ; Y = masked bit
+        and     (ptr),y
 
-        ;; Now compute block number
-        hi := $06
-        lda     auxlc::block_num_div8+1
-        sta     hi
-        lda     auxlc::block_num_div8
-        asl     a               ; *=8
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        ldx     auxlc::block_num_shift
-        ora     table,x
-        RETURN  X=hi
+    IF ZERO
+        clc
+        rts
+    END_IF
 
-table:  .byte   7,6,5,4,3,2,1,0
-.endproc ; LookupInVolumeBitmap
+        sec
+        rts
+.endproc ; IsUsedInVolumeBitmap
 
 ;;; ============================================================
 
+;;; Input: A,X = block number
+;;; Output: A,X = offset into volume bitmap, Y = mask
+;;; Scrambles $06
+
+.proc GetVolumeBitmapOffsetAndMask
+        hi := $06
+
+        ;; Compute Y = shift
+        pha
+        and     #7
+        tay
+        lda     bit_mask_table,y
+        tay
+        pla
+
+        ;; Compute offset (block number / 8)
+        stx     hi
+        lsr     hi              ; /= 8
+        ror
+        lsr     hi
+        ror
+        lsr     hi
+        ror
+        ldx     hi
+
+        rts
+
+.endproc ; GetVolumeBitmapOffsetAndMask
+
+bit_mask_table:
+        .byte   1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0
+
+;;; ============================================================
+
+;;; This adjusts `auxlc::block_index_shift` and
+;;; `auxlc::block_index_div8` to point at the next free block in
+;;; memory.
+;;; Output: C=0 if free memory block found, C=1 if blocks exhausted.
 .proc AdvanceToNextBlockIndex
         jsr     ComputeMemoryPageSignature
     IF Y <> #0
@@ -706,26 +675,24 @@ bit_shift_table:
 
 ;;; ============================================================
 
+;;; Called once a copy is complete. Frees the pages used for the
+;;; volume bitmap as free in memory.
 .proc FreeVolBitmapPages
-        page_num := $06         ; not a pointer, for once!
+        page  := $06
+        count := $07
 
-        lda     #>volume_bitmap
-        sta     page_num
-        lda     #0
-        sta     count
+        copy8   #.hibyte(volume_bitmap), page
+        copy8   volume_bitmap_blocks, count
     DO
-        CALL    _MarkFreeInMemoryBitmap, A=page_num
-        inc     page_num
-        inc     page_num
-        inc     count
-        inc     count
-
-        lda     auxlc::block_count_div8+1
-        count := *+1
-        cmp     #SELF_MODIFIED_BYTE
-    WHILE GE
+        CALL    _MarkFreeInMemoryBitmap, A=page
+        inc     page
+        inc     page
+        dec     count
+    WHILE NOT ZERO
         rts
 
+;;; Input: A = high byte of first page of memory block (e.g. $40 for block at $4000...$401F)
+;;; Scrambles: A,X,Y
 .proc _MarkFreeInMemoryBitmap
         jsr     GetBitmapOffsetMask
         ora     memory_bitmap,y
@@ -736,6 +703,8 @@ bit_shift_table:
 
 ;;; ============================================================
 
+;;; Input: A = high byte of first page of memory block (e.g. $40 for block at $4000...$401F)
+;;; Scrambles: A,X,Y
 .proc MarkUsedInMemoryBitmap
         jsr     GetBitmapOffsetMask
         eor     #$FF
@@ -749,7 +718,7 @@ bit_shift_table:
 ;;; Sets A to mask bit
 ;;; e.g. $76 ==> Y = $07
 ;;;              A = %00010000
-
+;;; Scrambles: X
 .proc GetBitmapOffsetMask
         pha
         lsr     a               ; /=16
@@ -762,12 +731,9 @@ bit_shift_table:
         and     #$0F
         lsr     a               ; /=2 (1 bit for 2 pages)
         tax
-        lda     table,x
+        lda     bit_mask_table,x
 
         rts
-
-table:
-        .byte   1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0
 .endproc ; GetBitmapOffsetMask
 
 ;;; ============================================================
@@ -1080,6 +1046,7 @@ done:   rts
 
 ;;; ============================================================
 
+        .include "../lib/is_diskii.s"
         .include "../lib/smartport.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/readwrite_settings.s"

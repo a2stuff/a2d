@@ -248,16 +248,13 @@ progress_pattern:
 str_unknown:
         PASCAL_STRING res_string_unknown
 
-bg_black:
-        .byte   0
-bg_white:
-        .byte   $7F
+;;; ============================================================
+;;; Device selection state
 
 kListRows = 8                   ; number of visible rows
 
 selection_mode_flag:
         .byte   0               ; bit7 clear = source; set = destination
-
 
 kListEntrySlotOffset    = 8
 kListEntryDriveOffset   = 40
@@ -288,27 +285,29 @@ str_s:  PASCAL_STRING 0
 unit_num:       .byte   0
 ejectable_flag: .byte   0       ; bit7
 
+;;; ============================================================
+;;; Copy state
+
 ;;; Memory index of block, for memory bitmap lookups
 block_index_div8:               ; block index, divided by 8
         .byte   0
 block_index_shift:              ; 7-(block index mod 8), for bitmap lookups
         .byte   0
 
-;;; Actual block number, for volume bitmap lookups
-block_num_div8:                 ; block number, divided by 8
+;;; Size of source volume (either exact from ProDOS or from device info)
+source_block_count:             ; total block count of device
         .word   0
-block_num_shift:                ; 7-(block number mod 8), for bitmap lookups
-        .byte   0
 
-;;; Remember the block_num_div8/shift for the start of a CopyBlocks read,
-;;; for the writing pass.
-start_block_div8:
+;;; Current block number, during copies.
+block_num:                      ; block number
         .word   0
-start_block_shift:
-        .byte   0
 
-block_count_div8:              ; calculated when reading volume bitmap
+;;; Stashed block number from the start of a `CopyBlocks` read,
+;;; used for the subsequent writing pass.
+start_block_num:
         .word   0
+
+;;; ============================================================
 
 .params win_frame_rect_params
 id:     .byte   kListBoxWindowId
@@ -317,8 +316,6 @@ rect:   .tag    MGTK::Rect
 
 device_name_buf:
         .res 16, 0
-
-listbox_enabled_flag:  .byte   0 ; bit7
 
 kSourceDiskFormatProDOS = %00000000 ; bit7 clear
 kSourceDiskFormatDOS33  = %10000000 ; bit6 clear
@@ -435,7 +432,6 @@ init:
 InitDialog:
         jsr     SetCursorPointer ; after startup or after copy
 
-        CLEAR_BIT7_FLAG listbox_enabled_flag
         copy8   #$FF, current_drive_selection
         copy8   #BTK::kButtonStateDisabled, dialog_ok_button::state
 
@@ -465,7 +461,6 @@ InitDialog:
         ;; Drive select listbox
 
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
-        SET_BIT7_FLAG listbox_enabled_flag
 
         jsr     SetCursorWatch  ; before enumerating devices
         jsr     EnumerateDevices
@@ -502,7 +497,6 @@ InitDialog:
         ;; Have a destination selection
         tax
         copy8   destination_index_table,x, dest_drive_index
-        CLEAR_BIT7_FLAG listbox_enabled_flag
 
         jsr     SetPortAndEraseTip
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -646,7 +640,7 @@ maybe_format:
 
 try_format:
         ldx     dest_drive_index
-        CALL    IsDiskII, A=drive_unitnum_table,x
+        CALL    main::IsDiskII, A=drive_unitnum_table,x
         beq     format
 
         ldx     dest_drive_index
@@ -683,11 +677,32 @@ do_copy:
 
         CALL    MaybePromptDiskSwap, X=#kAlertMsgInsertSource
 
+        ;; Get actual block count. If source is ProDOS, use volume
+        ;; header. Otherwise infer from device details.
+        bit     source_disk_format
+        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
+    IF NC
+        ;; ProDOS - use volume header
+        ldx     source_drive_index
+        copy8   drive_unitnum_table,x, main::block_params::unit_num
+        copy16  #kVolumeDirKeyBlock, main::block_params::block_num
+        copy16  #default_block_buffer, main::block_params::data_buffer
+        jsr     main::ReadBlock
+        jcs     copy_failure    ; TODO: Retry?
+        ldax    default_block_buffer + VolumeDirectoryHeader::total_blocks
+    ELSE
+        ;; Use device-supplied count
+        lda     source_drive_index
+        asl     a
+        tay
+        ldax    block_count_table,y
+    END_IF
+        stax    source_block_count
+
         jsr     main::ReadVolumeBitmap
 
         ;; Current block
-        copy16  #0, block_num_div8
-        copy8   #7, block_num_shift ; 7 - (n % 8)
+        copy16  #0, block_num
 
         ;; Blocks to copy
         jsr     main::CountActiveBlocksInVolumeBitmap
@@ -835,8 +850,6 @@ menu_offset_table:
 ;;; ============================================================
 
 .proc HandleKey
-        bit     listbox_enabled_flag
-    IF NS
         lda     event_params::key
       IF A IN #CHAR_UP, #CHAR_DOWN
         sta     lb_params::key
@@ -845,7 +858,6 @@ menu_offset_table:
         jsr     UpdateOKButton
         RETURN  A=#$FF
       END_IF
-    END_IF
 
         lda     event_params::modifiers
     IF ZERO
@@ -1372,7 +1384,7 @@ fallback:
        IF A = #ERR_DEVICE_NOT_CONNECTED
         ;; Device Not Connected - skip, unless it's a Disk II device
         dey                     ; Y = 0
-        CALL    IsDiskII, A=(on_line_ptr),y ; A = unmasked unit number
+        CALL    main::IsDiskII, A=(on_line_ptr),y ; A = unmasked unit number
         bne     next_device
 
         lda     #ERR_DEVICE_NOT_CONNECTED
@@ -1534,7 +1546,7 @@ next_device:
 
         pha
         tax                     ; X is device index
-        CALL    IsDiskII, A=drive_unitnum_table,x
+        CALL    main::IsDiskII, A=drive_unitnum_table,x
     IF EQ
         ;; Disk II - always 280 blocks
         pla
@@ -1555,15 +1567,6 @@ next_device:
         pha
         tax
         CALL    main::GetDeviceBlocksUsingDriver, A=drive_unitnum_table,x, XY=addr ; result in X,Y
-    END_IF
-
-        ;; MAME/CFFA2 will return $0000 for 33,554,432 byte image;
-        ;; detect this and use $FFFF instead.
-    IF X = #0
-      IF Y = #0
-        dex
-        dey
-      END_IF
     END_IF
 
         ;; X,Y = block count
@@ -2218,7 +2221,6 @@ Alert := alert_dialog::Alert
         RETURN  A=loop_counter
 .endproc ; SystemTask
 
-        .include "../lib/is_diskii.s"
         .include "../lib/doubleclick.s"
         .include "../lib/uppercase.s"
 

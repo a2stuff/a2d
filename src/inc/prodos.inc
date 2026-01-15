@@ -44,6 +44,7 @@ SELECTOR_ORG    := $1000        ; QUIT handler execution load address
 BLOCK_SIZE      = $200
 
 kVolumeDirKeyBlock = 2
+kVolumeBitmapBlock = 6          ; first block of volume bitmap
 
 ;;; ============================================================
 ;;; Unit Numbers

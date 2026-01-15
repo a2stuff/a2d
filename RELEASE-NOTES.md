@@ -69,6 +69,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix copying all blocks on 32MB volumes.
 * Erase tip once copy is complete.
 * Reduce cursor flickering during copy.
+* Fix copying all blocks on volumes with unusual sizes.
 
 ### Desk Accessories
 
