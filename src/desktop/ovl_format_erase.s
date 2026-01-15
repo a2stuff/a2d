@@ -128,6 +128,7 @@ Exec:
         ;; Assert: unit is in `DEVLST`
 
         txa
+        ;; BUG: Don't ellipsify long names here.
         jsr     DrawDeviceNameForIndex
 
         CALL    main::DrawDialogLabel, Y=#4, AX=#aux::str_new_volume

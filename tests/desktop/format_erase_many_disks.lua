@@ -79,7 +79,7 @@ FormatEraseTest(
   "Right arrow key",
   function(invoke)
     invoke(false)
-    for i=1,14 do
+    for i=1,#apple2.GetProDOSDeviceList() do
       apple2.RightArrowKey()
       test.Snap("verify selection moves right then down")
     end
@@ -94,7 +94,7 @@ FormatEraseTest(
   "Left arrow key",
   function(invoke)
     invoke(false)
-    for i=1,14 do
+    for i=1,#apple2.GetProDOSDeviceList() do
       apple2.LeftArrowKey()
       test.Snap("verify selection moves left then up")
     end
@@ -105,7 +105,7 @@ FormatEraseTest(
   "Down arrow key",
   function(invoke)
     invoke(false)
-    for i=1,14 do
+    for i=1,#apple2.GetProDOSDeviceList() do
       apple2.DownArrowKey()
       test.Snap("verify selection moves down then right")
     end
@@ -116,7 +116,7 @@ FormatEraseTest(
   "Up arrow key",
   function(invoke)
     invoke(false)
-    for i=1,14 do
+    for i=1,#apple2.GetProDOSDeviceList() do
       apple2.UpArrowKey()
       test.Snap("verify selection moves up then left")
     end

@@ -81,8 +81,7 @@ test.Step(
     test.Snap("Special > Format Disk... - Prompt for drive")
 
     -- select RAMFactor
-    apple2.DownArrowKey() -- S7D1
-    apple2.DownArrowKey() -- S1D1
+    a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
     test.Snap("Special > Format Disk... - Drive selected")
 
     -- accept selection
@@ -113,8 +112,7 @@ test.Step(
     test.Snap("Special > Erase Disk... - Prompt for drive")
 
     -- select RAMFactor
-    apple2.DownArrowKey() -- S7D1
-    apple2.DownArrowKey() -- S1D1
+    a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
     test.Snap("Special > Erase Disk... - Drive selected")
 
     -- accept selection

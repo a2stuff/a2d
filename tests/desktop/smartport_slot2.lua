@@ -21,9 +21,7 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-    apple2.DownArrowKey() -- to S7,D1
-    apple2.DownArrowKey() -- to S2,D1
-    a2d.DialogOK()
+    a2d.FormatEraseSelectSlotDrive(2, 1)
     apple2.Type("A") -- same name
     a2d.DialogOK()
     a2dtest.WaitForAlert() -- confirmation

@@ -41,9 +41,7 @@ FormatEraseTest(
     invoke(false)
 
     -- device selection
-    apple2.DownArrowKey() -- S7D1
-    apple2.DownArrowKey() -- S1D1
-    a2d.DialogOK()
+    a2d.FormatEraseSelectSlotDrive(1, 1)
 
     -- name prompt
     apple2.Type("NEW.NAME")
@@ -180,11 +178,7 @@ FormatEraseTest(
     invoke(false)
 
     -- device selection
-    apple2.DownArrowKey() -- S7D1
-    apple2.DownArrowKey() -- S1D1
-    apple2.DownArrowKey() -- S6D1
-    apple2.DownArrowKey() -- S6D2
-    a2d.DialogOK()
+    a2d.FormatEraseSelectSlotDrive(6, 2)
 
     -- name
     apple2.Type("DUMMY.NAME")
@@ -240,9 +234,7 @@ FormatEraseTest(
     invoke(false)
 
     -- device selection
-    apple2.DownArrowKey() -- S7D1
-    apple2.DownArrowKey() -- S1D1
-    a2d.DialogOK()
+    a2d.FormatEraseSelectSlotDrive(1, 1)
 
     -- name
     apple2.Type("NEW.NAME")

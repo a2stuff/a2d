@@ -51,7 +51,7 @@ test.Variants(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-    test.Snap("verify hard drives in S7,D1/2, S5D1/2 and S4,D1/2 (mirrored)")
+    test.Snap("verify hard drives in S7,D1/2, S5D1/2 and S2,D1/2 (mirrored)")
     a2d.DialogCancel()
 
     for i, name in ipairs({"A", "B", "C", "D"}) do
@@ -59,7 +59,7 @@ test.Variants(
       a2d.CloseAllWindows()
       a2d.ClearSelection()
       a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-      for i = 1, i+2 do -- skip over S7,D1/2
+      for j = 1, i+2 do -- skip over S7,D1/2
         apple2.DownArrowKey()
       end
       a2d.DialogOK()

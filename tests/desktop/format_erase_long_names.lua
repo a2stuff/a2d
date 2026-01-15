@@ -58,7 +58,7 @@ FormatEraseTest(
   function(invoke)
     invoke(false)
     test.Snap("long names on device selection")
-    for i = 1, 13 do
+    for i = 1, #apple2.GetProDOSDeviceList() do
       apple2.DownArrowKey()
     end
     test.Snap("long names with selection device selection")

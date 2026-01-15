@@ -603,6 +603,26 @@ function a2d.CheckAllDrives(options)
   end
 end
 
+function a2d.FormatEraseSelectSlotDrive(slot, drive, options)
+  options = default_options(options)
+  -- List is presented in reverse order
+  local list = apple2.GetProDOSDeviceList()
+  local found = false
+  for index = #list, 1, -1 do
+    apple2.DownArrowKey()
+    if list[index].slot == slot and list[index].drive == drive then
+      found = true
+      break
+    end
+  end
+  if not found then
+    error(string.format("Failed to select S%d,D%d", slot, drive))
+  end
+  if not options.no_ok then
+    a2d.DialogOK()
+  end
+end
+
 --------------------------------------------------
 -- Configuration
 --------------------------------------------------
