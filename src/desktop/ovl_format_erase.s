@@ -128,8 +128,7 @@ Exec:
         ;; Assert: unit is in `DEVLST`
 
         txa
-        ;; BUG: Don't ellipsify long names here.
-        jsr     DrawDeviceNameForIndex
+        CALL    DrawDeviceNameForIndex, C=0 ; plain
 
         CALL    main::DrawDialogLabel, Y=#4, AX=#aux::str_new_volume
 
@@ -348,7 +347,7 @@ no:     RETURN  A=#$80
         index := *+1
         sbc     #SELF_MODIFIED_BYTE
 
-        jmp     DrawDeviceNameForIndex
+        TAIL_CALL DrawDeviceNameForIndex, C=1 ; ellipsify
 .endproc ; DrawEntryCallback
 
 .proc SelChangeCallback
@@ -357,10 +356,12 @@ no:     RETURN  A=#$80
 
 ;;; ============================================================
 
-;;; Input: A = index in `DEVLST`
+;;; Input: A = index in `DEVLST`, C=1 to ellipsify long names
 .proc DrawDeviceNameForIndex
         buf := text_buffer2
         ptr := $06
+
+        php                     ; save C
 
         ;; Look up device name in table
         asl     a
@@ -368,14 +369,17 @@ no:     RETURN  A=#$80
         copy16  device_name_table,y, ptr
         CALL    main::CopyPtr1ToBuf, AX=#buf
 
+        plp                     ; C=1 to ellipsify
+    IF CS
+
+        ;; Check the length; shrink until it fits
 PARAM_BLOCK string_width_params, $06
 str     .addr
 width   .word
 END_PARAM_BLOCK
 
-        ;; Check the length; shrink until it fits
         copy16  #buf, string_width_params::str
-    DO
+      DO
         MGTK_CALL MGTK::StringWidth, string_width_params
         cmp16   string_width_params::width, #kVolPickerItemWidth
         BREAK_IF LT
@@ -384,12 +388,13 @@ END_PARAM_BLOCK
         ldy     buf
         lda     #'.'
         ldx     #3
-      DO
+       DO
         sta     buf,y
         dey
         dex
-      WHILE NOT ZERO
-    WHILE NOT POS               ; always
+       WHILE NOT ZERO
+      WHILE NOT POS               ; always
+    END_IF
 
         ;; Draw it
         MGTK_CALL MGTK::DrawString, buf

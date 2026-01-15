@@ -57,12 +57,13 @@ FormatEraseTest(
   "Long device names",
   function(invoke)
     invoke(false)
-    test.Snap("long names on device selection")
+    test.Snap("verify long names ellipsified if needed")
     for i = 1, #apple2.GetProDOSDeviceList() do
       apple2.DownArrowKey()
     end
-    test.Snap("long names with selection device selection")
+    test.Snap("verify selection rect covers name, doesn't overlap border")
     a2d.DialogOK()
-    test.Snap("long names erased after device selection")
+    test.Snap("verify long names erased after device selection")
+    test.Snap("verify location line shows full name without ellipsis")
     a2d.DialogCancel()
 end)
