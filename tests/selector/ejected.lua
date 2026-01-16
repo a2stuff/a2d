@@ -124,3 +124,46 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)
+
+--[[
+  Set up a shortcut to copy on use. Run Selector. Invoke the shortcut.
+  While it is copying, eject the disk. Verify an alert is shown and
+  the copy fails.
+
+  DISABLED because it flakily hangs in the device driver depending on
+  exact timing of the eject.
+]]
+if false then test.Step(
+  "Shortcut copied at use - eject during the copy",
+  function()
+    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
+    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
+    a2d.ToggleOptionCopyToRAMCard() -- enable
+    a2d.Reboot()
+    a2d.WaitForDesktopReady({timeout=240})
+
+    -- Run normally, let it copy to RAMCard
+    apple2.Type("1")
+    a2d.DialogOK({no_wait=true})
+
+    -- BUG: Timing sensitive - may hang in device driver.
+    emu.wait(1.25)
+    local drive = s6d1
+    local image = drive.filename
+    drive:unload()
+
+    a2dtest.WaitForAlert()
+    test.Snap("alert?")
+    a2d.DialogOK()
+
+    drive:load(image)
+
+    -- cleanup
+    apple2.Type("D")
+    a2d.WaitForDesktopReady()
+    a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    emu.wait(5) -- floppies are slow
+    a2d.EraseVolume("RAM4")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end) end
