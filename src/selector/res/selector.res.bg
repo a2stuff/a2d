@@ -11,7 +11,7 @@
 .define res_char_button_desktop_shortcut 'D'
 .define res_string_label_download "kopirane w RAMCARD..."
 .define res_string_label_copying "kopirane:"
-.define res_string_error_not_enough_room "nqma dostaty~no mqsto w RAM kartata za kopirane na prilovenieto."
-.define res_string_error_copy_incomplete "wyznikna gre{ka po wreme na izteglqneto. kopiraneto ne e zawyr{eno."
+.define res_string_error_not_enough_room "nqma dostaty~no mqsto za kopirane na programata."
+.define res_string_error_copy_incomplete "wyznikna gre{ka pri kopiraneto na programata."
 .define res_string_label_files_to_copy "fajlowe za kopirane: "
 .define res_string_label_files_remaining "ostawa}i fajlowe: "

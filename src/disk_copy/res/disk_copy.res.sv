@@ -39,7 +39,7 @@
 .define res_string_prompt_erase_slot_drive_pattern "[r du s{ker att du vill radera disken i kortplats # enhet #?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 51
 .define res_const_prompt_erase_slot_drive_pattern_offset2 59
-.define res_string_error_dest_protected "M}lskivan {r skrivskyddad!"
+.define res_string_error_dest_protected "Disken {r skrivskyddad."
 .define res_string_error_format_error "Fel under formatering."
 .define res_string_label_status_copy_success "Kopian lyckades."
 .define res_string_label_status_copy_fail "Kopian blev inte f{rdig."

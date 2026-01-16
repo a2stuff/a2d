@@ -39,7 +39,7 @@
 .define res_string_prompt_erase_slot_drive_pattern "Sind Sie sicher, dass Sie die Diskette in Steckplatz # Laufwerk # l|schen m|chten?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 54
 .define res_const_prompt_erase_slot_drive_pattern_offset2 65
-.define res_string_error_dest_protected "Die Zieldiskette ist schreibgesch}tzt!"
+.define res_string_error_dest_protected "Die Festplatte ist schreibgesch}tzt."
 .define res_string_error_format_error "Fehler beim Formatieren."
 .define res_string_label_status_copy_success "Kopie erfolgreich."
 .define res_string_label_status_copy_fail "Kopie nicht abgschlossen."

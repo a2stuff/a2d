@@ -11,7 +11,7 @@
 .define res_char_button_desktop_shortcut 'D'
 .define res_string_label_download "Copiando para RAMDisk..."
 .define res_string_label_copying "Copiar:"
-.define res_string_error_not_enough_room "N[o h@ espa]o suficiente no RAMDisk para copiar o aplicativo."
-.define res_string_error_copy_incomplete "Ocorreu um erro durante o download. A c~pia n[o foi conclu{da."
+.define res_string_error_not_enough_room "N[o h@ espa]o suficiente para copiar o programa."
+.define res_string_error_copy_incomplete "Ocorreu um erro ao copiar o programa."
 .define res_string_label_files_to_copy "Arquivos para copiar: "
 .define res_string_label_files_remaining "Arquivos restantes: "

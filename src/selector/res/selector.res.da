@@ -11,7 +11,7 @@
 .define res_char_button_desktop_shortcut 'S'
 .define res_string_label_download "Kopierer til RAMCard..."
 .define res_string_label_copying "Kopiering:"
-.define res_string_error_not_enough_room "Ikke nok plads i RAMCard til at kopiere applikationen."
-.define res_string_error_copy_incomplete "Der opstod en fejl under download. Kopien blev ikke f{rdiggjort."
+.define res_string_error_not_enough_room "Ikke nok plads til at kopiere programmet."
+.define res_string_error_copy_incomplete "Der opstod en fejl under kopieringen af programmet."
 .define res_string_label_files_to_copy "Filer der skal kopieres: "
 .define res_string_label_files_remaining "Filer tilbage: "

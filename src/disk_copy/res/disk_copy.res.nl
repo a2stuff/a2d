@@ -39,7 +39,7 @@
 .define res_string_prompt_erase_slot_drive_pattern "Weet je zeker dat je wilt u de schijf in slot # station # wissen?"
 .define res_const_prompt_erase_slot_drive_pattern_offset1 47
 .define res_const_prompt_erase_slot_drive_pattern_offset2 57
-.define res_string_error_dest_protected "De doelschijf is tegen schrijven beveiligd!"
+.define res_string_error_dest_protected "De schijf is tegen schrijven beveiligd."
 .define res_string_error_format_error "Fout tijdens het formatteren."
 .define res_string_label_status_copy_success "Het kopi\x10ren is gelukt."
 .define res_string_label_status_copy_fail "De kopie is niet voltooid."
