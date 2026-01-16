@@ -707,6 +707,7 @@ function a2d.WaitForDesktopShowing(options, level)
 end
 
 function a2d.WaitForDesktopReady(options)
+  emu.wait(1) -- Don't check too soon and see old module
   a2d.WaitForDesktopShowing(options, 1)
   emu.wait(5) -- TODO: Something better here
   -- TODO: Some sort of assertion here

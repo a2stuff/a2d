@@ -129,12 +129,10 @@ end)
   Set up a shortcut to copy on use. Run Selector. Invoke the shortcut.
   While it is copying, eject the disk. Verify an alert is shown and
   the copy fails.
-
-  DISABLED because it flakily hangs in the device driver depending on
-  exact timing of the eject.
 ]]
-if false then test.Step(
+test.DISABLED_Step(
   "Shortcut copied at use - eject during the copy",
+  "hangs in the device firmware if unloaded when reading",
   function()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2d.ToggleOptionShowShortcutsOnStartup() -- enable
@@ -166,4 +164,4 @@ if false then test.Step(
     a2d.EraseVolume("RAM4")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
-end) end
+end)

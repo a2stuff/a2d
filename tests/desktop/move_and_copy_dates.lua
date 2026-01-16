@@ -25,6 +25,7 @@ test.Step(
     a2d.SelectPath("/WITH.FILES")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
+    print("letting time advance 1 minute...")
     emu.wait(120) -- let minutes advance
 
     a2d.SelectPath("/RAM1/FOLDER")
@@ -36,8 +37,7 @@ test.Step(
     test.Snap("verify creation date unchanged, modification date updated")
     a2d.DialogOK()
 
-    -- TODO: Potentially flaky?
-
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -61,6 +61,7 @@ test.Step(
     test.Snap("verify creation and modification dates match original")
     a2d.DialogOK()
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -96,6 +97,6 @@ test.Step(
     test.Snap("verify creation and modification dates match original")
     a2d.DialogOK()
 
-
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)

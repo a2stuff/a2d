@@ -174,8 +174,9 @@ end)
   (with alert sounds), and that the error text does not overlap the
   progress bar.
 ]]
-test.Step(
+test.DISABLED_Step(
   "errors if source disk ejected",
+  "hangs in the device firmware if unloaded when reading",
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
@@ -209,11 +210,8 @@ test.Step(
     emu.wait(5)
     test.Snap("verify block errors reading")
 
-    -- BUG: Not seeing errors - just hangs? No repro in Virtual ][
-
     -- cleanup
     apple2.EscapeKey()
-    -- NOTE: Doesn't timeout as we never process the Escape keypress!
     a2dtest.WaitForAlert()
 
     a2d.DialogOK()

@@ -125,7 +125,16 @@ end
 
 function test.Failure(message)
   io.stderr:write(message .. "\n")
-  os.exit(1)
+ os.exit(1)
+end
+
+-- For disabling a test while maintaining count/skip behavior
+function test.DISABLED_Step(title, reason, func)
+  test.Step(
+    title,
+    function()
+      io.stderr:write(string.format("DISABLED: %s\n", reason))
+  end)
 end
 
 --------------------------------------------------
