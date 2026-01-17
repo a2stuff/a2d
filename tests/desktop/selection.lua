@@ -458,7 +458,6 @@ ModifierTest(
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w - 5, y + h - 5)
-        test.Snap("clicking?")
         m.Click()
     end)
     emu.wait(1)

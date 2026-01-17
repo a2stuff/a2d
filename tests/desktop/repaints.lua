@@ -299,7 +299,6 @@ test.Step(
     a2d.CycleWindows()
     local drag_x, drag_y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(drag_x, drag_y, x, y+5)
-    test.Snap("overlap?")
 
     a2d.RenameSelection("NEW.NAME")
     test.Snap("verify no mispaint")

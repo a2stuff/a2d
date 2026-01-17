@@ -752,7 +752,6 @@ test.Step(
     a2d.CloseAllWindows()
     emu.wait(1)
     a2d.SelectAll()
-    test.Snap("selection?")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "Trash", "trash should be first")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.InMouseKeysMode(function(m)

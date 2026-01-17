@@ -57,6 +57,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Don't repaint scrollbars before window when resizing.
 * Eliminate scrollbar repaint after window opens.
 * Fix "Unexpected error" seen when copying certain directories.
+* Allow Shift+Arrow keys to extend icon selection (IIgs/Platinum IIe)
 
 ### Selector
 

@@ -114,7 +114,6 @@ test.Step(
     local rect2 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.CycleWindows()
-    test.Snap("overlap?")
 
     test.ExpectGreaterThan(rect1[3] - rect2[1], 0, "windows should just overlap")
     test.ExpectLessThan(rect1[3] - rect2[1], 10, "windows should just overlap")

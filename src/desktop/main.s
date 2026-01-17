@@ -3704,6 +3704,9 @@ alpha:  jsr     ShiftDown
 
         sta     delta
         jsr     GetKeyboardSelectableIconsSorted
+
+        CLEAR_BIT7_FLAG extend_selection_flag
+
         jmp     common
 
         ;; ----------------------------------------
@@ -3713,7 +3716,20 @@ alpha:  jsr     ShiftDown
 
         sta     delta
         jsr     GetKeyboardSelectableIcons
+
+        jsr     ShiftDown
+        sta     extend_selection_flag
+
         FALL_THROUGH_TO common
+
+        ;; TODO: If shift is down and there is a selection then:
+        ;; * current = last selected
+        ;; * while true
+        ;;   * current = current + delta
+        ;;   * if current does not exist, break
+        ;;   * if current is selected, continue
+        ;;   * otherwise, select current
+
 
 ;;; --------------------------------------------------
 ;;; Figure out current selected index, based on selection.
@@ -3730,7 +3746,8 @@ common:
         beq     fallback
 
         ;; Try to find actual selection in our list
-        lda     selected_icon_list ; Only consider first, otherwise N^2
+        ldx     selected_icon_count
+        lda     selected_icon_list-1,x ; Only consider last, otherwise N^2
         ldx     buffer             ; count
         dex                        ; index
     DO
@@ -3760,9 +3777,24 @@ pick_next_prev:
         FALL_THROUGH_TO select_index
 
 select_index:
+        bit     extend_selection_flag
+    IF NS
+        stx     cur_index
+        CALL    IsIconSelected, A=buffer+1,x
+      IF ZS
+        cur_index := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        jmp     pick_next_prev
+      END_IF
+        ldx     cur_index
+        TAIL_CALL AddIconToSelectionAndEnsureVisible, A=buffer+1,x
+    END_IF
+
         TAIL_CALL SelectIconAndEnsureVisible, A=buffer+1,x
 
 ret:    rts
+
+extend_selection_flag:  .byte   0 ; bit7
 
 .endproc ; KeyboardHighlightImpl
 KeyboardHighlightPrev := KeyboardHighlightImpl::prev
@@ -3809,19 +3841,35 @@ END_PARAM_BLOCK
 ;;; --------------------------------------------------
 ;;; Identify a starting icon
 
+        jsr     ShiftDown
+        sta     shift_flag
+
         jsr     CacheFocusedWindowIconList
 
-        lda     selected_icon_count
+        ldx     selected_icon_count
         jeq     fallback
-        cmp     cached_window_icon_count
-        jeq     fallback
+        cpx     cached_window_icon_count
+    IF EQ
+        ;; All icons in window are selected; use fallback if not
+        ;; extending selection w/ Shift
+        bit     shift_flag
+        RTS_IF NS
+        jmp     fallback
+    END_IF
 
-        copy8   selected_icon_list, icon_param ; use first
+        ;; Use last in list
+        lda     selected_icon_list-1,x
+        sta     start_icon
+        sta     icon_param
 
 ;;; --------------------------------------------------
 ;;; Get bounds
 
+        ;; NOTE: Intentionally uses bitmap rect as this seems
+        ;; to match intuitive expectations better.
         ITK_CALL IconTK::GetBitmapRect, icon_param ; inits `tmp_rect`
+
+        ;; TODO: What about small icon views?
 
 ;;; --------------------------------------------------
 ;;; Extend rect, based on dir
@@ -3844,9 +3892,8 @@ END_PARAM_BLOCK
         adc     tmp_rect,y
         sta     tmp_rect,y
         txa
-        iny
-        adc     tmp_rect,y
-        sta     tmp_rect,y
+        adc     tmp_rect+1,y
+        sta     tmp_rect+1,y
 
 ;;; --------------------------------------------------
 ;;; Iterate over icons, consider any in rect
@@ -3860,10 +3907,23 @@ END_PARAM_BLOCK
         BREAK_IF X = cached_window_icon_count
 
         lda     cached_window_icon_list,x
+
+        ;; Filter out the starter icon. This is necessary as our
+        ;; search rect is based on the starter icon's bitmap, but we
+        ;; compare against the full bounds so we would match against
+        ;; the label, e.g. Shift+Down in large icon view, Shift+Right
+        ;; in small icon view.
+        cmp     start_icon
+        beq     next_icon
+
         sta     cur_icon
         sta     icon_param
         jsr     IsIconSelected
-        beq     next_icon
+    IF ZS
+        ;; Already selected. If we're not extending, skip it.
+        bit     shift_flag
+        bpl     next_icon
+    END_IF
 
         ITK_CALL IconTK::IconInRect, icon_param ; tests against `tmp_rect`
         beq     next_icon
@@ -3934,10 +3994,19 @@ fallback:
     IF CC
         lda     cached_window_icon_list,y
     END_IF
-
-select:
         jmp     SelectIconAndEnsureVisible
 
+select:
+        jsr     ShiftDown
+    IF NS
+        TAIL_CALL AddIconToSelectionAndEnsureVisible, A=best_icon
+    END_IF
+        TAIL_CALL SelectIconAndEnsureVisible, A=best_icon
+
+shift_flag:
+        .byte   0
+start_icon:
+        .byte   0
 .endproc ; KeyboardHighlightSpatialImpl
 KeyboardHighlightLeft  := KeyboardHighlightSpatialImpl::left
 KeyboardHighlightRight := KeyboardHighlightSpatialImpl::right
@@ -4190,11 +4259,11 @@ ret:    rts
         ;; No-op if already single selected icon
         ldy     selected_icon_count
         dey
-        bne     continue
+    IF ZERO
         cmp     selected_icon_list
-        beq     ret
+        RTS_IF EQ
+    END_IF
 
-continue:
         pha
         jsr     ClearSelection
         pla
@@ -4204,25 +4273,39 @@ continue:
         jsr     ActivateWindow  ; no-op if already active, or 0
         pla
 
-        sta     icon_param
+        FALL_THROUGH_TO AddIconToSelectionAndEnsureVisible
+.endproc ; SelectIconAndEnsureVisible
+
+;;; ============================================================
+
+;;; If icon is already selected (1) it is moved to the end of the
+;;; selection list (so it can function as the "key" for future
+;;; selection operations) and (2) redrawn so it is "on top".
+
+;;; Input: A = icon id
+.proc AddIconToSelectionAndEnsureVisible
+        CALL    IsIconSelected  ; sets `icon_param`
+    IF ZS
+        CALL    RemoveFromSelectionList, A=icon_param
+    END_IF
+
         ITK_CALL IconTK::HighlightIcon, icon_param
 
         ;; Find icon's window, and set selection
         CALL    GetIconWindow, A=icon_param
         sta     selected_window_id
-        copy8   #1, selected_icon_count
-        copy8   icon_param, selected_icon_list
+        CALL    AddToSelectionList, A=icon_param
 
         ;; If windowed, ensure it is visible
-        lda     selected_window_id
+        ldy     selected_window_id
     IF NOT_ZERO
-        CALL    ScrollIconIntoView, A=selected_icon_list
+        CALL    ScrollIconIntoView, A=icon_param
     END_IF
 
-        ITK_CALL IconTK::DrawIcon, selected_icon_list
+        ITK_CALL IconTK::DrawIcon, icon_param
 
-ret:    rts
-.endproc ; SelectIconAndEnsureVisible
+        rts
+.endproc ; AddIconToSelectionAndEnsureVisible
 
 ;;; ============================================================
 
@@ -14397,7 +14480,7 @@ plural: RETURN  C=0
 ;;; ============================================================
 ;;; Determine if an icon is in the current selection.
 ;;; Inputs: A=icon number
-;;; Outputs: Z=1 if found
+;;; Outputs: Z=1 if found; sets `icon_param`
 
 .proc IsIconSelected
         sta     icon_param

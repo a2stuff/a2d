@@ -151,7 +151,6 @@ test.DISABLED_Step(
     drive:unload()
 
     a2dtest.WaitForAlert()
-    test.Snap("alert?")
     a2d.DialogOK()
 
     drive:load(image)

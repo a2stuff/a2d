@@ -1055,3 +1055,89 @@ test.Step(
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "single file should be selected")
 end)
+
+--[[
+  Icon view. OA+Click select several icons. Right Arrow key. Verify
+  new selection is based on last selected icon.
+]]
+test.Step(
+  "Icon view - select from last selected",
+  function()
+    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
+    emu.wait(5) -- full windows can take a bit
+
+    --  A  B  C  D  E
+    --  F  G  H  I  J
+    --  K  L  M  N  O
+    --  P  Q  R  S  T
+    --  U  V  W  X  Y
+    --  Z
+
+    a2d.Select("B")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("D")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("E")
+    local x3, y3 = a2dtest.GetSelectedIconCoords()
+    a2d.Select("C")
+    local x4, y4 = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x1, y1)
+        m.Click()
+        apple2.PressOA()
+        m.MoveToApproximately(x2, y2)
+        m.Click()
+        m.MoveToApproximately(x3, y3)
+        m.Click()
+        m.MoveToApproximately(x4, y4)
+        m.Click()
+        apple2.ReleaseOA()
+    end)
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 4, "should start with 3 selected")
+
+    apple2.DownArrowKey()
+    emu.wait(1)
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "should collapse to 1 selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "H", "icon next to last should be selected")
+end)
+
+--[[
+  List view. OA+Click select several icons. Right Arrow key. Verify
+  new selection is based on last selected icon.
+]]
+test.Step(
+  "List view - select from last selected",
+  function()
+    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
+    emu.wait(5) -- full windows can take a bit
+    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+
+    a2d.Select("C")
+    local x1, y1 = a2dtest.GetSelectedIconCoords()
+
+    a2d.Select("G")
+    local x2, y2 = a2dtest.GetSelectedIconCoords()
+
+    a2d.Select("E")
+    local x3, y3 = a2dtest.GetSelectedIconCoords()
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x1, y1)
+        m.Click()
+        apple2.PressOA()
+        m.MoveToApproximately(x2, y2)
+        m.Click()
+        m.MoveToApproximately(x3, y3)
+        m.Click()
+        apple2.ReleaseOA()
+    end)
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 3, "should start with 3 selected")
+
+    apple2.UpArrowKey()
+    emu.wait(1)
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "should collapse to 1 selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "D", "icon next to last should be selected")
+end)
