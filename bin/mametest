@@ -83,9 +83,9 @@ fi
 BASEDIR="$(pwd)"
 SCRIPTDIR="$(dirname "$SCRIPT")"
 TMPDIR=/tmp/mametest
-mkdir -p "$TMPDIR"/disks
 
-CFGDIR="$BASEDIR/tests/cfg"
+DISKSDIR="$TMPDIR"/disks
+mkdir -p "$DISKSDIR"
 
 NVRAMDIR="$TMPDIR"/nvram
 mkdir -p "$NVRAMDIR"
@@ -119,13 +119,13 @@ fi
 
 NEWDISKARGS=""
 while read -r arg disk; do
-  target="$TMPDIR/disks/${arg#?}"
+  target="$DISKSDIR/${arg#?}"
   cp "tests/images/$disk" "$target"
   NEWDISKARGS="$NEWDISKARGS $arg $target"
 done < <(echo $DISKARGS | xargs -n 2)
 DISKARGS="$NEWDISKARGS"
 
-export UNFORMATTED_IMG="$TMPDIR/disks/unformatted.2mg"
+export UNFORMATTED_IMG="$DISKSDIR/unformatted.2mg"
 cp "tests/images/unformatted.2mg" "$UNFORMATTED_IMG"
 
 # --------------------------------------------------
@@ -137,13 +137,13 @@ VESERVER="../ProDOS-Utils/veserver.py"
 VESERVERARGS=""
 if [ -n "$VEDISK1" ]; then
   ext="${VEDISK1##*.}"
-  target="$TMPDIR/disks/vdisk1.${ext}"
+  target="$DISKSDIR/vdisk1.${ext}"
   cp "$VEDISK1" "$target"
   VESERVERARGS="$VESERVERARGS --disk1=$target"
 fi
 if [ -n "$VEDISK2" ]; then
   ext="${VEDISK2##*.}"
-  target="$TMPDIR/disks/vdisk2.${ext}"
+  target="$DISKSDIR/vdisk2.${ext}"
   cp "$VEDISK2" "$target"
   VESERVERARGS="$VESERVERARGS --disk2=$target"
 fi
@@ -173,6 +173,14 @@ export DESKTOP_SYMBOLS
 SNAPDIR="$TMPDIR"/snaps
 mkdir -p "$SNAPDIR/$MODEL"
 rm -rf "$SNAPDIR/$MODEL/"*
+
+# --------------------------------------------------
+# Prepare configs dir
+
+CFGDIR="$TMPDIR"/cfg
+mkdir -p "$CFGDIR"
+
+cp "${BASEDIR}/tests/cfg/${MODEL}.cfg" "$CFGDIR"
 
 # --------------------------------------------------
 # Run MAME
