@@ -62,6 +62,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Selector
 
 * Fix potential hang after 30 restarts.
+* Reduce cursor flickering when copying programs to RAMCard.
 
 ### Disk Copy
 

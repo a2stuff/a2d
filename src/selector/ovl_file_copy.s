@@ -447,6 +447,7 @@ remainder:      .word   0                 ; (out)
         CALL    app::GetWindowPort, A=#winfo::kWindowId
 
         CALL    IntToString, AX=file_count
+        MGTK_CALL MGTK::ShieldCursor, rect_frame
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         MGTK_CALL MGTK::MoveTo, pos_copying
         MGTK_CALL MGTK::DrawString, str_copying
@@ -464,6 +465,7 @@ remainder:      .word   0                 ; (out)
         add16   progress_muldiv_params::result, progress_meter::x1, progress_meter::x2
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_meter
+        MGTK_CALL MGTK::UnshieldCursor
 
         rts
 
@@ -478,10 +480,12 @@ display_path:
         CALL    app::GetWindowPort, A=#winfo::kWindowId
 
         CALL    IntToString, AX=file_count
+        MGTK_CALL MGTK::ShieldCursor, rect_frame
         MGTK_CALL MGTK::MoveTo, pos_copying
         MGTK_CALL MGTK::DrawString, str_files_to_copy
         MGTK_CALL MGTK::DrawString, str_from_int
         MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::UnshieldCursor
         rts
 .endproc ; UpdateEnumerationProgress
 
