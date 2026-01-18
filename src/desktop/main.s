@@ -5620,7 +5620,7 @@ event_loop:
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag select)
         END_IF
        ELSE
-        MGTK_CALL MGTK::CheckEvents
+        jsr     CheckEvents
        END_IF
 
         pla                     ; A = index
@@ -6420,7 +6420,7 @@ rloop:  cpx     cached_window_icon_count
         jsr     GetIconRecordNum
         jsr     DrawListViewRow
 
-        MGTK_CALL MGTK::CheckEvents
+        jsr     CheckEvents
 
         pla                     ; A = index
         tax                     ; X = index
@@ -6508,7 +6508,7 @@ done:
         IF NOT ZERO
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
         ELSE
-        MGTK_CALL MGTK::CheckEvents
+        jsr     CheckEvents
         END_IF
 
         pla                     ; A = index
@@ -6794,12 +6794,13 @@ new_window_flag:        .byte   0
         jsr     PushPointers
         jsr     SetCursorWatch ; before loading directory
 
+        jsr     GetVolUsedFreeViaPath ; uses `src_path_buf`
+
         jsr     _DoOpen
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         jsr     _DoRead
-        jsr     GetVolUsedFreeViaPath ; uses `src_path_buf`
 
         ldx     #0
     DO
@@ -6928,6 +6929,9 @@ next:   inc     index_in_block
         bit     LCBANK1
         bit     LCBANK1
         add16_8 record_ptr, #.sizeof(FileRecord)
+
+        jsr     CheckEvents
+
         jmp     do_entry
 
 finish: copy16  record_ptr, filerecords_free_start
@@ -7996,6 +8000,8 @@ END_PARAM_BLOCK
         addax   records_base_ptr, record_ptr
         pla                     ; A = record_num-1
         jsr     _AllocAndPopulateFileIcon
+
+        jsr     CheckEvents
 
         pla                     ; A = index
         tax                     ; X = index
@@ -9396,6 +9402,7 @@ table:
 
     DO
         MGTK_CALL MGTK::WaitVBL
+        jsr     CheckEvents
 
         ;; If N in 0..11, draw N
         lda     step            ; draw the Nth
@@ -9430,6 +9437,7 @@ table:
 
     DO
         MGTK_CALL MGTK::WaitVBL
+        jsr     CheckEvents
 
         ;; If N in 0..11, draw N
         lda     step
@@ -14122,7 +14130,7 @@ mli_relay_checkevents_flag:     ; bit7
         ;; so the mouse stays responsive.
         bit     mli_relay_checkevents_flag
     IF NS
-        MGTK_CALL MGTK::CheckEvents
+        jsr     CheckEvents
     END_IF
 
         ;; Adjust return address on stack, compute
@@ -14179,6 +14187,13 @@ params:  .res    3
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
 .endproc ; SetCursorIBeam
+
+;;; ============================================================
+
+.proc CheckEvents
+        MGTK_CALL MGTK::CheckEvents
+        rts
+.endproc ; CheckEvents
 
 ;;; ============================================================
 
