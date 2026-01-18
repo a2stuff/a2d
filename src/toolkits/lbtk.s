@@ -597,7 +597,9 @@ new_selection   .byte
         copy16  #kScreenWidth, tmp_rect+MGTK::Rect::x2
 
         MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::ShieldCursor, tmp_rect
         MGTK_CALL MGTK::PaintRect, tmp_rect
+        MGTK_CALL MGTK::UnshieldCursor
 ret:    rts
 .endproc ; _HighlightIndex
 
@@ -758,11 +760,15 @@ update:
 .proc _Draw
         jsr     _SetPort
 
-        add16   winfo_ptr, #MGTK::Winfo::port+MGTK::GrafPort::maprect, rect_addr
+        ldax    winfo_ptr
+        addax8  #MGTK::Winfo::port+MGTK::GrafPort::maprect
+        stax    rect_addr
+        stax    shield_addr
 
-        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::ShieldCursor, SELF_MODIFIED, shield_addr
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr
+        MGTK_CALL MGTK::SetPenMode, penXOR
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     finish
@@ -795,7 +801,7 @@ update:
         dec     rows
     WHILE NOT_ZERO
 
-finish: MGTK_CALL MGTK::ShowCursor
+finish: MGTK_CALL MGTK::UnshieldCursor
         rts
 
 rows:   .byte   0
