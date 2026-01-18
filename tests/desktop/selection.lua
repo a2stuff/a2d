@@ -9,10 +9,10 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 a2d.ConfigureRepaintTime(0.25)
 
 a2d.AddShortcut("/A2.DESKTOP")
-function OpenVolumeWindow() a2d.OAShortcut("1") end
+function OpenVolumeWindow() a2d.OAShortcut("1") emu.wait(1) end
 
 a2d.AddShortcut("/A2.DESKTOP/EXTRAS")
-function OpenFolderWindow() a2d.OAShortcut("2") end
+function OpenFolderWindow() a2d.OAShortcut("2") emu.wait(1) end
 
 --[[
   Launch DeskTop. Open a window. Select a file icon. Drag a selection
@@ -518,8 +518,9 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.ButtonDown()
         emu.wait(1)
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "icon should be selected")
-        test.Snap("verify window inactive")
+        local icons = a2d.GetSelectedIcons()
+        test.ExpectEquals(#icons, 1, "icon should be selected")
+        test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
         m.ButtonUp()
         emu.wait(2)
     end)
@@ -547,8 +548,11 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.ButtonDown()
         emu.wait(1)
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "icon should be selected")
-        test.Snap("verify window inactive")
+
+        local icons = a2d.GetSelectedIcons()
+        test.ExpectEquals(#icons, 1, "icon should be selected")
+        test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
+
         m.MoveByApproximately(20, 10)
         m.ButtonUp()
         emu.wait(1)
@@ -581,8 +585,11 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.ButtonDown()
         emu.wait(1)
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "icon should be selected")
-        test.Snap("verify window inactive")
+
+        local icons = a2d.GetSelectedIcons()
+        test.ExpectEquals(#icons, 1, "icon should be selected")
+        test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
+
         m.MoveToApproximately(vol_x, vol_y)
         m.ButtonUp()
         emu.wait(5)
@@ -627,8 +634,11 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.ButtonDown()
         emu.wait(1)
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "icon should be selected")
-        test.Snap("verify window inactive")
+
+        local icons = a2d.GetSelectedIcons()
+        test.ExpectEquals(#icons, 1, "icon should be selected")
+        test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
+
         m.MoveToApproximately(vol_x, vol_y)
         m.ButtonUp()
         emu.wait(5)
@@ -685,11 +695,16 @@ ModifierTest(
         Press()
         m.ButtonDown()
         emu.wait(1)
-        test.Snap("verify both icons selected, window still inactive")
+
+        local icons = a2d.GetSelectedIcons()
+        test.ExpectEquals(#icons, 2, "icons should be selected")
+        local window_id = icons[1].window
+        test.ExpectNotEquals(a2dtest.GetFrontWindowID(), window_id, "window should be inactive")
+
         Release()
         m.ButtonUp()
         emu.wait(1)
-        test.Snap("verify window active")
+        test.ExpectEquals(a2dtest.GetFrontWindowID(), window_id, "window should be active")
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "both icons should be selected")
 
@@ -700,11 +715,19 @@ ModifierTest(
         m.MoveToApproximately(volume_x, volume_y)
         m.Click()
         -- Hold modifier and click selected icon in now inactive window
+
+        local icons = a2d.GetSelectedIcons()
+        test.ExpectEquals(#icons, 1, "icon should be selected")
+        test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
+
         m.MoveToApproximately(file_x, file_y)
         Press()
         m.ButtonDown()
         emu.wait(1)
-        test.Snap("verify icon deselected, and window activated")
+
+        test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "icons should be deselected")
+        test.ExpectEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be active")
+
         Release()
         m.ButtonUp()
         emu.wait(1)
@@ -714,6 +737,7 @@ ModifierTest(
     -- Select an icon
     a2d.Select("INTBASIC.SYSTEM")
 
+    local icons_before
     a2d.InMouseKeysMode(function(m)
         -- Activate other window by clicking in title bar
         m.MoveToApproximately(volume_x, volume_y)
@@ -723,15 +747,25 @@ ModifierTest(
         Press()
         m.ButtonDown()
         emu.wait(1)
-        test.Snap("verify both icons selected, window still inactive")
+
+        icons_before = a2d.GetSelectedIcons()
+        test.ExpectEquals(#icons_before, 2, "both icons should be selected")
+        test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons_before[1].window, "window should be inactive")
+
         Release()
         m.MoveByApproximately(20, 20)
         m.ButtonUp()
         emu.wait(1)
-        test.Snap("verify window active")
+
+        test.ExpectEquals(a2dtest.GetFrontWindowID(), icons_before[1].window, "window should be active")
     end)
-    test.Snap("verify icons moved")
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "both icons should be selected")
+    local icons_after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#icons_before, #icons_after, "same number of icons should be selected")
+    test.ExpectEquals(icons_before[1].id, icons_after[1].id, "same icons should be selected")
+    test.ExpectEquals(icons_before[2].id, icons_after[2].id, "same icons should be selected")
+    test.ExpectNotEquals(icons_before[1].x, icons_after[1].x, "icons should be moved")
+    test.ExpectNotEquals(icons_before[2].x, icons_after[2].x, "icons should be moved")
 end)
 
 --[[
