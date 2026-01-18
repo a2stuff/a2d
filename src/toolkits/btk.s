@@ -189,6 +189,7 @@ ret:
 .proc UpdateImpl
         MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
+        CALL    _ShieldCursor
         MGTK_CALL MGTK::FrameRect, rect
         beq     btk::HiliteImpl::skip_port ; always
 .endproc ; UpdateImpl
@@ -223,7 +224,9 @@ ret:
         MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::InflateRect, shrink_rect
+        CALL    _ShieldCursor
         MGTK_CALL MGTK::PaintRect, rect
+        CALL    _UnshieldCursor
         MGTK_CALL MGTK::InflateRect, grow_rect
         ;; returns MGTK success (A=0/Z=1/N=0)
         rts
@@ -233,6 +236,8 @@ ret:
 
 .proc HiliteImpl
         jsr     _SetPort
+        CALL    _ShieldCursor
+
 skip_port:
 
         pos := $0B
@@ -240,8 +245,7 @@ skip_port:
         ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
         sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
 
-        CALL    ReadSetting, X=#DeskTopSettings::options
-        and     #DeskTopSettings::kOptionsShowShortcuts
+        jsr     _GetShowShortcutsSetting
     IF NOT_ZERO
         ;; Draw the string (left aligned)
         add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
@@ -281,8 +285,20 @@ skip_port:
         MGTK_CALL MGTK::PaintRect, rect
     END_IF
 
-        rts
+        FALL_THROUGH_TO _UnshieldCursor
 .endproc ; HiliteImpl
+
+;;; ============================================================
+
+.proc _UnshieldCursor
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
+.endproc ; _UnshieldCursor
+
+.proc _ShieldCursor
+        MGTK_CALL MGTK::ShieldCursor, rect
+        rts
+.endproc ; _ShieldCursor
 
 ;;; ============================================================
 
@@ -403,7 +419,22 @@ exit:   lda     down_flag       ; was depressed?
         rts
 .endproc ; TrackImpl
 
+;;; ============================================================
+
+;;; Output: Z=0 if shortcuts should be drawn, Z=1 if not
+.proc _GetShowShortcutsSetting
+        CALL    ReadSetting, X=#DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsShowShortcuts
+        rts
+.endproc ; _GetShowShortcutsSetting
+
+;;; ============================================================
+;;; Everything from here is only built if `BTK_SHORT` is not defined.
+;;; This allows clients to omit support for radio buttons and
+;;; checkboxes.
+
 .ifndef BTK_SHORT
+
 ;;; ============================================================
 
 notpencopy:     .byte   MGTK::notpencopy
@@ -449,27 +480,15 @@ unchecked_rb_bitmap:
         add16_8 rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, rect+MGTK::Rect::y2
 
-        lda     a_label
-        ora     a_label+1
-    IF NOT_ZERO
-        ;; Draw the label
-        pos := $B
-        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
-        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight - 1, pos+MGTK::Point::ycoord
-        MGTK_CALL MGTK::MoveTo, pos
-        jsr     _DrawLabel
-
-        ;; And measure it for hit testing
-        jsr     _MeasureLabel
-        addax   rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kRadioButtonHeight
-    END_IF
-
-        jsr     _MaybeDrawAndMeasureShortcut
+        CALL    _MaybeMeasureLabel, A=#kSystemFontHeight - BTK::kRadioButtonHeight
+        jsr     _MaybeMeasureShortcut
         jsr     _WriteRectBackToButtonRecord
 
-        jmp     _DrawRadioBitmap
+        jsr     _ShieldCursor
+        jsr     _DrawRadioBitmap
+        CALL    _MaybeDrawLabel, A=#kSystemFontHeight - 1
+        jsr     _MaybeDrawShortcut
+        jmp     _UnshieldCursor
 .endproc ; RadioDrawImpl
 
 ;;; ============================================================
@@ -489,9 +508,10 @@ unchecked_rb_bitmap:
     END_IF
         stax    rb_params::mapbits
 
+        jsr     _ShieldCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, rb_params
-        rts
+        jmp     _UnshieldCursor
 .endproc ; _DrawRadioBitmap
 
 ;;; ============================================================
@@ -536,27 +556,15 @@ unchecked_cb_bitmap:
         add16_8 rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
 
-        lda     a_label
-        ora     a_label+1
-    IF NOT_ZERO
-        ;; Draw the label
-        pos := $B
-        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kCheckboxWidth, pos+MGTK::Point::xcoord
-        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight, pos+MGTK::Point::ycoord
-        MGTK_CALL MGTK::MoveTo, pos
-        jsr     _DrawLabel
-
-        ;; And measure it for hit testing
-        jsr     _MeasureLabel
-        addax   rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kCheckboxHeight
-    END_IF
-
-        jsr     _MaybeDrawAndMeasureShortcut
+        CALL    _MaybeMeasureLabel, A=#kSystemFontHeight - BTK::kCheckboxHeight
+        jsr     _MaybeMeasureShortcut
         jsr     _WriteRectBackToButtonRecord
 
-        jmp     _DrawCheckboxBitmap
+        jsr     _ShieldCursor
+        jsr     _DrawCheckboxBitmap
+        CALL    _MaybeDrawLabel, A=#kSystemFontHeight
+        jsr     _MaybeDrawShortcut
+        jmp     _UnshieldCursor
 .endproc ; CheckboxDrawImpl
 
 ;;; ============================================================
@@ -576,31 +584,87 @@ unchecked_cb_bitmap:
     END_IF
         stax    cb_params::mapbits
 
+        jsr     _ShieldCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, cb_params
-        rts
+        jmp     _UnshieldCursor
 .endproc ; _DrawCheckboxBitmap
 
 ;;; ============================================================
 
-;;; If option is enabled, and if `a_shortcut` is not null,
-;;; draw it and add the width to `rect`.
-.proc _MaybeDrawAndMeasureShortcut
-        CALL    ReadSetting, X=#DeskTopSettings::options
-        and     #DeskTopSettings::kOptionsShowShortcuts
+;;; Input: A = delta from bottom of bitmap to text baseline; i.e. `kSystemFontHeight` - bitmap height
+;;; Scrambles: $F
+.proc _MaybeMeasureLabel
+        delta := $F
+        sta     delta
+
+        lda     a_label
+        ora     a_label+1
     IF NOT_ZERO
+        ;; Measure label
+        jsr     _MeasureLabel
+        addax   rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 rect+MGTK::Rect::y2, delta
+    END_IF
+        rts
+
+.endproc ; _MaybeMeasureLabel
+
+;;; ============================================================
+
+;;; Input: A = delta from top of rect to text baseline; `kSystemFontHeight` + 0 or 1
+;;; Scrambles: $B-$F
+.proc _MaybeDrawLabel
+        delta := $F
+        sta     delta
+
+        lda     a_label
+        ora     a_label+1
+    IF NOT_ZERO
+        ;; Draw the label
+        pos := $B
+        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, delta, pos+MGTK::Point::ycoord
+        MGTK_CALL MGTK::MoveTo, pos
+        jsr     _DrawLabel
+    END_IF
+        rts
+.endproc ; _MaybeDrawLabel
+
+;;; ============================================================
+
+;;; Output: Z=0 if this has a shortcut and it should be shown
+.proc _ShouldDrawShortcut
+        jsr     _GetShowShortcutsSetting
+   IF NOT ZERO
         lda     a_shortcut
         ora     a_shortcut+1
-      IF NOT_ZERO
-        jsr     _DrawShortcut
+   END_IF
+        rts
+.endproc ; _ShouldDrawShortcut
 
+;;; ============================================================
+
+;;; If option is enabled, and if `a_shortcut` is not null, measure it
+;;; and add the width to `rect`.
+.proc _MaybeMeasureShortcut
+        jsr     _ShouldDrawShortcut
+    IF NOT_ZERO
         jsr     _MeasureShortcut
         addax   rect+MGTK::Rect::x2
-      END_IF
     END_IF
-
         rts
-.endproc ; _MaybeDrawAndMeasureShortcut
+.endproc ; _MaybeMeasureShortcut
+
+;;; If option is enabled, and if `a_shortcut` is not null, draw it.
+.proc _MaybeDrawShortcut
+        jsr     _ShouldDrawShortcut
+    IF NOT_ZERO
+        jsr     _DrawShortcut
+    END_IF
+        rts
+.endproc ; _MaybeDrawShortcut
 
 ;;; Copies `rect` back into `a_record`
 .proc _WriteRectBackToButtonRecord
