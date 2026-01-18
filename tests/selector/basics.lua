@@ -5,7 +5,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 ProDOS_2_4_3.po"
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(0.25)
-a2dtest.SetBankOffsetForSelectorModule()
+a2dtest.ConfigureForSelector()
 
 --[[
   Load Shortcuts. Put a disk in Slot 6, Drive 1. Startup > Slot 6.

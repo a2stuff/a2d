@@ -13,6 +13,8 @@ local c = coroutine.create(function()
     mgtk = require("mgtk")
     a2d.InitSystem() -- async; outside require
 
+    a2dtest.ConfigureForDeskTop()
+
     -- ACE 2200 is hard-coded to autostart at Slot 6
     if manager.machine.system.name:match("^ace2200") then
       apple2.ControlReset()

@@ -12,7 +12,7 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
-    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
     a2d.OAShortcut("M")
     for i=1,5 do
@@ -21,10 +21,10 @@ test.Step(
     end
     apple2.EscapeKey()
 
-    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local ax, ay, aw, ah = a2dtest.GetFrontWindowContentRect()
 
-    test.ExpectEquals(before[1], after[1], "should not have moved")
-    test.ExpectEquals(before[2], after[2], "should not have moved")
+    test.ExpectEquals(bx, ax, "should not have moved")
+    test.ExpectEquals(by, ay, "should not have moved")
 end)
 
 --[[
@@ -38,7 +38,7 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
-    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
     a2d.OAShortcut("M")
     for i=1,5 do
@@ -48,10 +48,10 @@ test.Step(
     apple2.ReturnKey()
     a2d.WaitForRepaint()
 
-    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local ax, ay, aw, ah = a2dtest.GetFrontWindowContentRect()
 
-    test.ExpectLessThan(before[1], after[1], "should have moved right and down")
-    test.ExpectLessThan(before[2], after[2], "should have moved right and down")
+    test.ExpectLessThan(bx, ax, "should have moved right and down")
+    test.ExpectLessThan(by, ay, "should have moved right and down")
 end)
 
 --[[
@@ -65,7 +65,7 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
-    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
     a2d.OAShortcut("G")
     for i=1,5 do
@@ -74,10 +74,10 @@ test.Step(
     end
     apple2.EscapeKey()
 
-    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local ax, ay, aw, ah = a2dtest.GetFrontWindowContentRect()
 
-    test.ExpectEquals(before[3], after[3], "should not have grown")
-    test.ExpectEquals(before[4], after[4], "should not have grown")
+    test.ExpectEquals(bw, aw, "should not have grown")
+    test.ExpectEquals(bh, ah, "should not have grown")
 end)
 
 --[[
@@ -91,7 +91,7 @@ test.Step(
     a2d.OpenPath("A2.DESKTOP")
     a2d.WaitForRepaint()
 
-    local before = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
     a2d.OAShortcut("G")
     for i=1,5 do
@@ -101,8 +101,8 @@ test.Step(
     apple2.ReturnKey()
     a2d.WaitForRepaint()
 
-    local after = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local ax, ay, aw, ah = a2dtest.GetFrontWindowContentRect()
 
-    test.ExpectLessThan(before[3], after[3], "should have grown")
-    test.ExpectLessThan(before[4], after[4], "should have grown")
+    test.ExpectLessThan(bw, aw, "should have grown")
+    test.ExpectLessThan(bh, ah, "should have grown")
 end)

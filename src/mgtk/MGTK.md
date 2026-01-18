@@ -1356,28 +1356,3 @@ _DA specific:_
 
 * Following a window move, resize or close, call `JUMP_TABLE_CLEAR_UPDATES` to allow DeskTop to handle update events. This will not redraw the DA window, however.
 
-# Automation
-
-MGTK exposes an automation interface, intended for use by automated tests. It works as follows:
-
-* Wait for the keyboard strobe to be cleared. (`KBD` high bit off)
-* Depress both Open Apple (`BUTN0`) and Solid Apple (`BUTN1`)
-* Submit a keypress of ASCII `NUL` (Ctrl+Shift+2 on the Apple II keyboard)
-* Wait for the keyboard strobe to be cleared.
-* Release both Open Apple (`BUTN0`) and Solid Apple (`BUTN1`)
-* Save copies of any bytes that will be modified by the following.
-* Store any "in" call parameters into memory. (`$0003` is a good location)
-* Set memory address `$0000` to the MGTK call number, and `$0001`/`$0002` to the address of parameter data.
-* Submit any keypress.
-* Wait for the keyboard strobe to be cleared.
-* Read the call result from address `$00`.
-* Load any "out" call parameters from memory.
-* Restore any bytes from copies saved above.
-* Submit any keypress.
-* Wait for the keyboard strobe to be cleared.
-
-Note that addresses assume the banking that this MGTK instance is running with. DeskTop normally runs with the Aux ZP active and MGTK-visible resoures like window titles in Aux or Aux LC memory. The Selector module has an MGTK instance in main memory and runs with the Main ZP active except for the alert code which resizes in the Aux LC bank.
-
-Automation can use this interface to query for open windows and inspect their properties.
-
-> Automation calls are *not* supported while Mouse Keys are active. Adding this is possible, but the unlock sequence would interfere with the simulated mouse button.

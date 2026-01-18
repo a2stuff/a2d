@@ -518,7 +518,7 @@ FilePickerTest(
   function()
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.Reboot()
-    a2dtest.SetBankOffsetForSelectorModule()
+    a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
     a2d.OAShortcut("R")
@@ -527,7 +527,7 @@ FilePickerTest(
     a2d.DialogCancel()
 
     apple2.Type("D")
-    a2dtest.SetBankOffsetForDeskTopModule()
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
     a2d.ToggleOptionShowShortcutsOnStartup()
   end

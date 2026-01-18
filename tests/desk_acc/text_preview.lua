@@ -6,7 +6,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(2)
-a2d.RemoveClockDriverAndReboot() -- avoid clock-based repaints
 
 --[[
   Verify that Escape key exits.
@@ -53,9 +52,8 @@ test.Step(
     a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
     test.Snap("verify Proportional label baseline aligns with window title")
 
-    local rect = mgtk.GetWinFrameRect(mgtk.FrontWindow())
-    local x = rect[1] + rect[3] - 70
-    local y = rect[2] + 4
+    local wx, wy, ww, wh = a2dtest.GetFrontWindowContentRect()
+    local x, y = wx + ww - 60, wy - 8
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)

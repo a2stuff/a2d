@@ -161,11 +161,17 @@ fi
 # Symbols
 
 DESKTOP_SYMBOLS=""
-for sym in selected_icon_count selected_icon_list icon_entries; do
+for sym in selected_icon_count selected_icon_list icon_entries current_window; do
   addr="$(egrep $sym: out/desktop.list | cut -d' ' -f1)"
   DESKTOP_SYMBOLS="${DESKTOP_SYMBOLS} ${sym}=${addr}"
 done
 export DESKTOP_SYMBOLS
+SELECTOR_SYMBOLS=""
+for sym in current_window; do
+  addr="$(egrep $sym: out/selector.list | cut -d' ' -f1)"
+  SELECTOR_SYMBOLS="${SELECTOR_SYMBOLS} ${sym}=${addr}"
+done
+export SELECTOR_SYMBOLS
 
 # --------------------------------------------------
 # Prepare snapshots dir

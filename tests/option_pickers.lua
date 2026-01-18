@@ -56,8 +56,7 @@ test.Step(
     a2d.ToggleOptionShowShortcutsOnStartup() -- enable
     a2d.Reboot()
     a2d.WaitForDesktopReady()
-
-    a2dtest.SetBankOffsetForSelectorModule()
+    a2dtest.ConfigureForSelector()
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + 100, dialog_y + 30) -- over shortcut

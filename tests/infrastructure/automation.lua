@@ -1,10 +1,8 @@
 a2d.ConfigureRepaintTime(1)
 
 test.Step(
-  "Automation hook",
+  "MGTK",
   function()
-    local bank_offset = 0x10000
-
 
     -- Addr must include bank offset
     function PrintWinfo(addr)
@@ -23,16 +21,12 @@ test.Step(
 
       local id = u8(0)
       print(string.format("id: %d", id))
-      print(string.format("title: %q", mgtk.GetWindowName(id, bank_offset)))
+      print(string.format("title: %q", mgtk.GetWindowName(id)))
 
-      local crect = mgtk.GetWindowContentRect(id, bank_offset)
+      local crect = mgtk.GetWindowContentRect(id)
       print(string.format("geometry: %d,%d - %dx%d", crect[1], crect[2], crect[3], crect[4]))
 
       local nextptr = u16(56)
-
-      local rect = mgtk.GetWinFrameRect(id)
-      print(string.format("frame: %d,%d - %dx%d",
-                          rect[1], rect[2], rect[3], rect[4]))
 
       if nextptr ~= 0 then
         print("")
@@ -59,24 +53,13 @@ test.Step(
       return string.format("(not found: %d)", value)
     end
 
-    function ProbeCenter()
-      local win, area = mgtk.FindWindow(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2)
-      print("window at center? " .. win .. "  area: " .. NameFromEnum(mgtk.area, area))
-      if win ~= 0 then
-        local ctl, part = mgtk.FindControlEx(apple2.SCREEN_WIDTH/2,apple2.SCREEN_HEIGHT/2,win)
-        print("ctl: " .. NameFromEnum(mgtk.ctl,ctl) .. "  part: " .. NameFromEnum(mgtk.part,part))
-      end
-    end
-
     DumpWindows()
-    ProbeCenter()
 
     print("-----------------------")
 
     a2d.OpenPath("/A2.DESKTOP")
 
     DumpWindows()
-    ProbeCenter()
 
 
     print("-----------------------")
@@ -84,7 +67,6 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS", {leave_parent=true})
 
     DumpWindows()
-    ProbeCenter()
 
 end)
 

@@ -143,4 +143,7 @@ Tests specific to various components of the application.
       * `local s5d2 = manager.machine.images[":fdc:3:35dd"]`
   * ... and so on. Since this depends so heavily on the configuration which varies between tests, no abstraction is (currently) provided for this. The convention is to provide this mapping at the top of the test file for tests that do interact with the virtual drives.
 
+# Miscellaneous
 
+* If you exit MAME unexpectedly (e.g. Ctrl+C while a test is running), macOS likes to show a crash report window. You can run this in the terminal to suppress that: `defaults write com.apple.CrashReporter DialogType Server`.
+  * TODO: Find a more localized fix.

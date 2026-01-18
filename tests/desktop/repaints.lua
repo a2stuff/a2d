@@ -213,9 +213,8 @@ test.Step(
         m.Click()
     end)
 
-    local rect = mgtk.GetWinFrameRect(mgtk.FrontWindow())
-    a2d.Drag(rect[1] - 20, rect[2] - 10,
-             rect[3] + 20, rect[4] + 10)
+    a2d.Drag(x - 20, y - 30,
+             x + w + 40, y + h + 20)
     a2d.InMouseKeysMode(function(m) m.Home() end)
 
     test.Snap("verify no mispaint")
@@ -234,9 +233,9 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.MoveWindowBy(40, 30)
 
-    local rect = mgtk.GetWinFrameRect(mgtk.FrontWindow())
-    a2d.Drag(rect[1] - 20, rect[2] - 10,
-             rect[3] + 20, rect[4] + 10)
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.Drag(x - 20, y - 30,
+             x + w + 40, y + h + 20)
     a2d.InMouseKeysMode(function(m) m.Home() end)
 
     test.Snap("verify no mispaint")
@@ -273,9 +272,9 @@ test.Step(
         m.Click()
     end)
 
-    local rect = mgtk.GetWinFrameRect(mgtk.FrontWindow())
-    a2d.Drag(rect[1] - 20, rect[2] - 10,
-             rect[3] + 20, rect[4] + 10)
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.Drag(x - 20, y - 30,
+             x + w + 40, y + h + 20)
     a2d.InMouseKeysMode(function(m) m.Home() end)
     test.Snap("verify no mispaint")
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "nothing should be selected")
@@ -906,6 +905,7 @@ test.Step(
   function()
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    emu.wait(1)
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)

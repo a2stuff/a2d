@@ -403,7 +403,7 @@ ListBoxTest(
   {},
   function()
     a2d.CopyDisk()
-    a2dtest.SetBankOffsetForDiskCopyModule()
+    a2dtest.ConfigureForDiskCopy()
     emu.wait(10)
   end,
   function()
@@ -415,7 +415,7 @@ ListBoxTest(
   function()
     -- double_click_func
     a2d.OAShortcut("Q")
-    a2dtest.SetBankOffsetForDeskTopModule()
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
   end
 )

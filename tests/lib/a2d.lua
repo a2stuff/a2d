@@ -1011,8 +1011,6 @@ end
 -- Icons
 --------------------------------------------------
 
--- TODO: Build some sort of proper API
-
 local DESKTOP_SYMBOLS = {}
 for pair in emu.subst_env("$DESKTOP_SYMBOLS"):gmatch("([^ ]+)") do
   local k,v = pair:match("^(.+)=(.+)$")

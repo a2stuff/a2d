@@ -13,6 +13,11 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 floppy_with_files.dsk"
 
 a2d.ConfigureRepaintTime(0.25)
 
+function GetWinFrameRect(window_id)
+  local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+  return { x - 1, y - 13, x + w + 21, y + h + 11 }
+end
+
 --[[
   Position two windows so that the right edges are exactly aligned,
   and the windows vertically overlap by several pixels. Activate the
@@ -28,13 +33,13 @@ test.Step(
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 0)
     emu.wait(5)
-    local rect1 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.OpenPath("/RAM5", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 55)
     emu.wait(5)
-    local rect2 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     test.ExpectEquals(rect1[3], rect2[3], "right edges should align")
     test.ExpectGreaterThan(rect1[4], rect2[2], "windows should overlap vertically")
@@ -67,13 +72,13 @@ test.Step(
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 0)
     emu.wait(5)
-    local rect1 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.OpenPath("/RAM5", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 55)
     emu.wait(5)
-    local rect2 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     test.ExpectEquals(rect1[1], rect2[1], "left edges should align")
     test.ExpectGreaterThan(rect1[4], rect2[2], "windows should overlap vertically")
@@ -105,13 +110,13 @@ test.Step(
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(200, 0)
     emu.wait(5)
-    local rect1 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.OpenPath("/RAM5", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(380, 60)
     emu.wait(5)
-    local rect2 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.CycleWindows()
 
@@ -150,20 +155,20 @@ test.Step(
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(510, 0)
     emu.wait(5)
-    local rect1 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.OpenPath("/TESTS", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(500, 00)
     emu.wait(5)
-    local rect2 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.OpenPath("/WITH.FILES", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.GrowWindowBy(0, 60)
     a2d.MoveWindowBy(500, 0)
     emu.wait(5)
-    local rect3 = mgtk.GetWinFrameRect(mgtk.FrontWindow())
+    local rect3 = GetWinFrameRect(mgtk.FrontWindow())
 
     while a2dtest.GetFrontWindowTitle():upper() ~= "A2.DESKTOP" do
       a2d.CycleWindows()

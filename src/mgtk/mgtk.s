@@ -5478,10 +5478,6 @@ irq_entry:
         sta     input::key
         bit     KBDSTRB         ; clear strobe
 
-        ;; Check if automation hook
-        jsr     CheckAutomationHook
-        bcc     end
-
         ;; Check if "MouseKeys" mode should be activated
         jsr     CheckActivateMouseKeys
         bcc     end
@@ -9906,37 +9902,6 @@ scale_y:
     END_IF
         rts
 .endproc ; GetKey
-
-
-.proc CheckAutomationHook
-        ;; Check for OA+SA+Ctrl+Shift+2
-        lda     input::modifiers
-        cmp     #3
-        bne     ignore
-        lda     input::key
-        cmp     #0              ; Ctrl-@
-        bne     ignore
-
-        jsr     wait_for_key
-
-        COPY_BYTES 3, $00, params
-
-        jsr     SaveParamsAndStack ; restored by call below
-        jsr     MGTKEntry
-params: .res    3
-        sta     $00
-        jsr     RestoreParamsAndStack
-
-        FALL_THROUGH_TO wait_for_key
-wait_for_key:
-:       lda     KBD
-        bpl     :-
-        sta     KBDSTRB
-        RETURN C=0
-
-ignore:
-        RETURN C=1
-.endproc ; CheckAutomationHook
 
 
 ;;; Assert: `kbd_mouse_state` is not `kKeyboardMouseStateInactive`
