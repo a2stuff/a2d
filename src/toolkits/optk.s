@@ -449,7 +449,9 @@ new_selection   .byte
 
         MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::ShieldCursor, rect
         MGTK_CALL MGTK::PaintRect, rect
+        MGTK_CALL MGTK::UnshieldCursor
 
 ret:    rts
 .endproc ; _HighlightIndex
