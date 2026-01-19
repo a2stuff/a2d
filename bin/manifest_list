@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# Write out the files listed in the manifest. Used for generating a
+# list of dependencies for "make package", etc.
+
+set -e
+cd "$(dirname "$0")/.."
+source "bin/util.sh"
+
+add_file () {
+  local src_file="$2"
+  echo "$src_file"
+}
+
+manifest="$(bin/manifest $@)"
+eval "$manifest"

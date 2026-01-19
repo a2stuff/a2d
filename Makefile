@@ -2,34 +2,60 @@
 # This is theoretically bad, but in practice it's fine.
 export TERM = xterm-256color
 
+OUTDIR = out
+BINDIR = bin
+
+# --------------------------------------------------
+# Build targets
+# --------------------------------------------------
+
+# Subdirectory targets
 targets := desktop disk_copy selector launcher desk_acc extras
 
 .PHONY: all $(targets) mount install package shk vercheck
 
+# Default target
 all: vercheck $(targets)
 
-# Build all targets
+# Unconditionally built; recursive make takes care of their
+# dependencies
 $(targets):
 	@tput setaf 3 && echo "Building: $@" && tput sgr0
 	@$(MAKE) -C src/$@ \
 	  && (tput setaf 2 && echo "make $@ good" && tput sgr0) \
           || (tput blink && tput setaf 1 && echo "MAKE $@ BAD" && tput sgr0 && false)
 
-# Optional target: populate mount/ as a mountable directory for Virtual ][
-mount:
-	bin/mount
+# --------------------------------------------------
+# Package/Install targets
+# --------------------------------------------------
 
-# Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
-install:
-	bin/install
+# Populate mount/ as a mountable directory for Virtual ][
+mount: $(targets) $(OUTDIR)/mount.sentinel
+	@(tput setaf 2 && echo "make $@ good" && tput sgr0)
 
-# Optional target: run package script. Requires Cadius.
-package:
-	bin/package
+# Install to an existing disk image.
+# Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
+install: $(targets) $(OUTDIR)/install.sentinel
+	@(tput setaf 2 && echo "make $@ good" && tput sgr0)
 
-# Optional target: make ShrinkIt archive. Requires NuLib2.
-shk:
-	bin/shk
+# Build disk images for distribution.
+# Requires Cadius.
+package: $(targets) $(OUTDIR)/package.sentinel
+	@(tput setaf 2 && echo "make $@ good" && tput sgr0)
+
+# Build ShrinkIt archive for distribution.
+# Requires NuLib2.
+shk: $(targets) $(OUTDIR)/shk.sentinel
+	@(tput setaf 2 && echo "make $@ good" && tput sgr0)
+
+MANIFEST = $(shell bin/manifest_list)
+$(OUTDIR)/%.sentinel: $(MANIFEST) $(OUTDIR)/buildinfo.inc
+	@bin/$*
+	@touch $(OUTDIR)/$*.sentinel
+
+# --------------------------------------------------
+# Miscellaneous
+# --------------------------------------------------
 
 # Clean all temporary/target files
 clean:
@@ -37,8 +63,15 @@ clean:
 	  tput setaf 2 && echo "cleaning $$dir" && tput sgr0; \
 	  $(MAKE) -C src/$$dir clean; \
 	done
+	rm -f $(OUTDIR)/*.sentinel
 
 # Ensure minimum cc65 version
 vercheck:
 	@bin/check_ver.pl ca65 v2.19
 	@bin/check_ver.pl ld65 v2.19
+
+# Build Date
+$(OUTDIR)/buildinfo.inc: FORCE
+	@$(BINDIR)/make_buildinfo_inc
+
+FORCE:

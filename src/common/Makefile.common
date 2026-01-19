@@ -4,7 +4,7 @@
 CAFLAGS = --target apple2 --list-bytes 0 --warnings-as-errors --expand-macros
 LDFLAGS = --config ../common/asm.cfg --warnings-as-errors
 
-# Each directory builds into an 'out' sibling dir:
+# Build into a top level "out" directory.
 OUTDIR = ../../out
 
 BINDIR = ../../bin

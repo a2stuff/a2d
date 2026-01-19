@@ -99,7 +99,7 @@ FLOP1IMG="../../out/A2DeskTop-${version}_140k_disk1.po"
 FLOP2IMG="../../out/A2DeskTop-${version}_140k_disk2.po"
 
 if [ ! -f "tests/images/$HARDIMG" ]; then
-  make && make package
+  make package
 fi
 
 MODEL="apple2ee"

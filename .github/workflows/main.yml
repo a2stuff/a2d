@@ -23,25 +23,25 @@ jobs:
       - uses: a2stuff/build-install-cadius-action@v1
 
       - name: build a2d - en
-        run: bin/setlang en && make && make package
+        run: bin/setlang en && make package
       - name: build a2d - fr
-        run: bin/setlang fr && make && make package
+        run: bin/setlang fr && make package
       - name: build a2d - it
-        run: bin/setlang it && make && make package
+        run: bin/setlang it && make package
       - name: build a2d - es
-        run: bin/setlang es && make && make package
+        run: bin/setlang es && make package
       - name: build a2d - pt
-        run: bin/setlang pt && make && make package
+        run: bin/setlang pt && make package
       - name: build a2d - de
-        run: bin/setlang de && make && make package
+        run: bin/setlang de && make package
       - name: build a2d - sv
-        run: bin/setlang sv && make && make package
+        run: bin/setlang sv && make package
       - name: build a2d - da
-        run: bin/setlang da && make && make package
+        run: bin/setlang da && make package
       - name: build a2d - nl
-        run: bin/setlang nl && make && make package
+        run: bin/setlang nl && make package
       - name: build a2d - bg
-        run: bin/setlang bg && make && make package
+        run: bin/setlang bg && make package
 
       - name: deploy new version
         if: startsWith(github.ref, 'refs/tags/')
