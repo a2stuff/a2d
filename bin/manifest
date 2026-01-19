@@ -22,25 +22,28 @@ cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 # ============================================================
-# Utility functions
+# Localized DA filenames
 
-get_da_loc_name() {
-    local name="$1"
-    local res="res_filename_${name//./_}"
-    local filename="src/desk_acc/res/filenames.res.${lang}"
-    if [[ -n "$no_loc_da_names" ]]; then
-      filename="src/desk_acc/res/filenames.res.en"
-    fi
-    local match=$(egrep -i "^\.define ${res} " "${filename}" | cut -d' ' -f3 | tr -d '"')
-    echo "${match:-$name}"
-}
+# Define `res_filename_blah` variables for localization lookups
+da_filename_res_file="src/desk_acc/res/filenames.res.${lang}"
+if [[ -n "$no_loc_da_names" ]]; then
+  da_filename_res_file="src/desk_acc/res/filenames.res.en"
+fi
+# Convert `.define res_filename_foo "Foo"` into `res_filename_foo="Foo"` and eval it
+eval $(cat ${da_filename_res_file} | sed -e 's/\.define //' -e 's/ "/="/' )
+
+# ============================================================
+# Utility functions
 
 get_da_loc_path() {
     local path="$1"
     if [[ -z "$no_loc_da_names" && "$path" == */* ]]; then
-        head=$(expr "$path" : '\(.*\)/')
-        tail=$(expr "$path" : '.*/\(.*\)')
-        tail=$(get_da_loc_name "$tail" || echo "$tail")
+        head=$(dirname "$path")
+        tail=$(basename "$path")
+
+        res="res_filename_${tail//./_}"
+        tail="${!res:-$tail}"
+
         echo "$head/$tail"
     else
         echo "$path"
@@ -109,13 +112,29 @@ emit add_file $disposition "res/package/CHIP8.SYSTEM" "Extras" "CHIP8.system" FF
 
 # Add Desk Accessories
 for line in $(cat src/desk_acc/TARGETS | bin/targets.pl); do
-    IFS=',' read -ra array <<< "$line"
-    file="${array[0]}"
-    loc=$(get_da_loc_name "$file")
-    path="${array[1]}"
-    ploc=$(get_da_loc_path "$path")
-    disposition="${array[2]}"
-    emit add_file $disposition "out/$file.da" "$ploc" "$loc" F10642
+  IFS=',' read -ra array <<< "$line"
+  file="${array[0]}"
+  path="${array[1]}"
+
+  # Localize the filename
+  res="res_filename_${file//./_}"
+  loc="${!res:-$name}"
+
+  # Localize the last segment of path
+  if [[ -z "$no_loc_da_names" && "$path" == */* ]]; then
+    head="${path%/*}"
+    tail="${path##*/}"
+    tail="$(echo "$tail" | tr '[:upper:]' '[:lower:]')"
+    res="res_filename_${tail//./_}"
+    tail="${!res:-$tail}"
+
+    ploc="$head/$tail"
+  else
+    ploc="$path"
+  fi
+
+  disposition="${array[2]}"
+  emit add_file $disposition "out/$file.da" "$ploc" "$loc" F10642
 done
 
 # --------------------------------------------------
