@@ -229,6 +229,7 @@ grafport_win:       .tag    MGTK::GrafPort
 
 .proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
 
         MGTK_CALL MGTK::OpenWindow, winfo_listbox
@@ -240,6 +241,7 @@ grafport_win:       .tag    MGTK::GrafPort
         sta     lb_params::new_selection
         LBTK_CALL LBTK::SetSelection, lb_params
 
+        MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
 .endproc ; Init

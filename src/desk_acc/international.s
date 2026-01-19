@@ -178,8 +178,10 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
 init_window:
         MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::HideCursor
         copy8   #Field::FIRST, selected_field
         jsr     DrawWindow
+        MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
 

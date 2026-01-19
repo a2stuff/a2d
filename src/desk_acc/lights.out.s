@@ -417,6 +417,7 @@ ret:    rts
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         RTS_IF NOT_ZERO         ; obscured
         MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::HideCursor
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
@@ -438,6 +439,7 @@ ret:    rts
         dex
     WHILE POS
 
+        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc ; DrawWindow
 

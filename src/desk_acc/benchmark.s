@@ -173,6 +173,7 @@ pattern_plaid:
 
 .proc RunDA
         MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::HideCursor
 
         MGTK_CALL MGTK::SetPort, winfo::port
 
@@ -212,6 +213,8 @@ pattern_plaid:
         BTK_CALL BTK::RadioDraw, radio_50hz_button
 
         BTK_CALL BTK::Draw, ok_button
+
+        MGTK_CALL MGTK::ShowCursor
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -382,9 +385,11 @@ done:   jmp     InputLoop
         add16   meter_left::x2, #1, meter_right::x1
 
         MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::ShieldCursor, meter_frame
         MGTK_CALL MGTK::PaintRect, meter_left
         MGTK_CALL MGTK::SetPattern, pattern_right
         MGTK_CALL MGTK::PaintRect, meter_right
+        MGTK_CALL MGTK::UnshieldCursor
 
         rts
 .endproc ; UpdateMeter

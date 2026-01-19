@@ -354,8 +354,10 @@ init_window:
     END_IF
 
         MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::HideCursor
         copy8   #0, selected_field
         jsr     DrawWindow
+        MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
 

@@ -173,6 +173,8 @@ auxtype:        .word   SELF_MODIFIED
     END_IF
 
         MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::HideCursor
+
         LETK_CALL LETK::Init, type_le_params
         LETK_CALL LETK::Init, auxtype_le_params
 
@@ -180,6 +182,7 @@ auxtype:        .word   SELF_MODIFIED
         MGTK_CALL MGTK::FlushEvents
 
         LETK_CALL LETK::Activate, type_le_params
+        MGTK_CALL MGTK::ShowCursor
 
         FALL_THROUGH_TO InputLoop
 .endproc ; RunDA
