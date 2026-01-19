@@ -6,7 +6,7 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
+a2d.ConfigureRepaintTime(1)
 
 --[[
   Open a volume with double-click.

@@ -8,6 +8,7 @@ local a2d = {}
 
 local util = require("util")
 local apple2 = require("apple2")
+local mgtk = require("mgtk")
 
 local function default_options(o)
   local options = {}
@@ -302,7 +303,7 @@ function a2d.Select(name, options)
 
   a2d.ClearSelection()
   apple2.Type(name)
-  emu.wait(0.25) -- TODO: spin here?
+  a2d.WaitForRepaint() -- TODO: spin here?
   CheckSelectionName(name, options)
 end
 
@@ -313,7 +314,7 @@ function a2d.SelectAndOpen(name, options)
   a2d.Select(name, options)
   if options.close_current then
     a2d.OpenSelectionAndCloseCurrent()
-    a2d.WaitForRepaint()
+    emu.wait(1)
   else
     a2d.OpenSelection()
   end
@@ -334,7 +335,8 @@ end
 
 function a2d.CloseAllWindows()
   a2d.OASAShortcut("W")
-  a2d.WaitForRepaint()
+  util.WaitFor("all windows to close",
+               function() return mgtk.FrontWindow() == 0 end)
 end
 
 -- additional option: {leave_parent=true}
@@ -922,73 +924,122 @@ end
 
 -- Open Selection
 -- Page Down
-function a2d.OADown()
+function a2d.OADown(options)
+  options = default_options(options)
   apple2.PressOA()
   apple2.DownArrowKey()
   apple2.ReleaseOA()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Page Down (alias)
-function a2d.SADown()
+function a2d.SADown(options)
+  options = default_options(options)
   apple2.PressSA()
   apple2.DownArrowKey()
   apple2.ReleaseSA()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Open Enclosing Folder
 -- Page Up
-function a2d.OAUp()
+function a2d.OAUp(options)
+  options = default_options(options)
   apple2.PressOA()
   apple2.UpArrowKey()
   apple2.ReleaseOA()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Page Up (alias)
-function a2d.SAUp()
+function a2d.SAUp(options)
+  options = default_options(options)
   apple2.PressSA()
   apple2.UpArrowKey()
   apple2.ReleaseSA()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Move to Start
-function a2d.OALeft()
+function a2d.OALeft(options)
+  options = default_options(options)
   apple2.PressOA()
   apple2.LeftArrowKey()
   apple2.ReleaseOA()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Move to End
-function a2d.OARight()
+function a2d.OARight(options)
+  options = default_options(options)
   apple2.PressOA()
   apple2.RightArrowKey()
   apple2.ReleaseOA()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Open Selection then Close Current
 -- Scroll to End
-function a2d.OASADown()
+function a2d.OASADown(options)
+  options = default_options(options)
   apple2.PressOA()
   apple2.PressSA()
   apple2.DownArrowKey()
   apple2.ReleaseSA()
   apple2.ReleaseOA()
+
+  if not options.no_wait then
+    -- Double wait since it's a more complex action
+    a2d.WaitForRepaint()
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Open Enclosing then Close Current
 -- Scroll to Start
-function a2d.OASAUp()
+function a2d.OASAUp(options)
+  options = default_options(options)
   apple2.PressOA()
   apple2.PressSA()
   apple2.UpArrowKey()
   apple2.ReleaseSA()
   apple2.ReleaseOA()
+
+  if not options.no_wait then
+    -- Double wait since it's a more complex action
+    a2d.WaitForRepaint()
+    a2d.WaitForRepaint()
+  end
 end
 
 -- Shortcut: File > Delete
-function a2d.OADelete()
+function a2d.OADelete(options)
+  options = default_options(options)
   apple2.PressOA()
   apple2.DeleteKey()
   apple2.ReleaseOA()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
 --------------------------------------------------

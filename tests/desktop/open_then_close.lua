@@ -7,7 +7,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk"
 
 local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 
-a2d.ConfigureRepaintTime(0.25)
+a2d.ConfigureRepaintTime(1)
 
 --[[
   Launch DeskTop. Open a window. Hold Solid-Apple and double-click a
@@ -28,6 +28,7 @@ test.Step(
         m.DoubleClick()
         apple2.ReleaseSA()
     end)
+    a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
@@ -51,6 +52,7 @@ test.Step(
         m.Click()
         apple2.ReleaseSA()
     end)
+    a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
@@ -74,6 +76,7 @@ test.Step(
         m.Click()
         apple2.ReleaseOA()
     end)
+    a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
