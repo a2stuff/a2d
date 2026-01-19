@@ -1124,15 +1124,16 @@ entries_per_block:
 
         copy8   #0, num_file_names
 
-loop:   ldy     #0
+    REPEAT
+        ldy     #0
         lda     (ptr),y         ; A = unit_num | name_len
         and     #NAME_LENGTH_MASK
-    IF ZERO
+      IF ZERO
         iny                     ; 0 signals error or complete
         lda     (ptr),y
         bne     next            ; error, so skip
-        beq     finish          ; always
-    END_IF
+        BREAK_IF ZERO           ; always
+      END_IF
 
         CALL    AdjustOnLineEntryCase, AX=ptr
 
@@ -1147,9 +1148,8 @@ loop:   ldy     #0
         inc     num_file_names
 
 next:   add16_8 ptr, #16        ; advance to next
-        jmp     loop
+    FOREVER
 
-finish:
         jsr     _SortFileNames
         jsr     _SetCursorPointer
 

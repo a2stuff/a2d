@@ -835,29 +835,29 @@ is_drag:
         ;; --------------------------------------------------
 
         jsr     _XDrawOutline
-
-peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
+    REPEAT
+        MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::drag
         jne     not_drag
 
         ;; Escape key?
         lda     KBD             ; MGTK doesn't process keys during drag
-    IF A = #CHAR_ESCAPE | $80
+      IF A = #CHAR_ESCAPE | $80
         bit     KBDSTRB         ; consume the keypress
         copy8   #MGTK::EventKind::key_down, peekevent_params::kind
         jmp     not_drag
-    END_IF
+      END_IF
 
         ;; Coords changed?
         ldx     #.sizeof(MGTK::Point)-1
-    DO
+      DO
         lda     findwindow_params,x
         cmp     last_coords,x
         bne     moved
         dex
-    WHILE POS
-        bmi     peek            ; always
+      WHILE POS
+        CONTINUE_IF NEG         ; always
 
         ;; --------------------------------------------------
         ;; Mouse moved - check for (un)highlighting, and
@@ -876,10 +876,10 @@ moved:
         ;; No longer over the highlighted icon - unhighlight it
         pha
         lda     highlight_icon_id
-    IF NOT_ZERO
+      IF NOT_ZERO
         jsr     _UnhighlightIcon
         copy8   #0, highlight_icon_id
-    END_IF
+      END_IF
 
         ;; Is the new icon valid?
         pla
@@ -889,25 +889,25 @@ moved:
 update_poly:
         ;; Update poly coordinates
         ldx     #2              ; loop over dimensions
-    DO
+      DO
         sub16   findwindow_params,x, last_coords,x, poly_coords,x
         dex                     ; next dimension
         dex
-    WHILE POS
+      WHILE POS
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, last_coords
 
         copy16  polybuf_addr, poly_ptr
 ploop:  ldy     #2              ; offset in poly to first vertex
-    DO
+      DO
         add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         iny
         add16in (poly_ptr),y, poly_dy, (poly_ptr),y
         iny
-    WHILE Y <> #kIconPolySize
+      WHILE Y <> #kIconPolySize
 
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     (poly_ptr),y
-    IF NOT_ZERO
+      IF NOT_ZERO
         lda     poly_ptr
         clc
         adc     #kIconPolySize
@@ -915,9 +915,9 @@ ploop:  ldy     #2              ; offset in poly to first vertex
         bcc     ploop
         inc     poly_ptr+1
         bcs     ploop           ; always
-    END_IF
+      END_IF
         jsr     _XDrawOutline
-        jmp     peek
+    FOREVER
 
         ;; --------------------------------------------------
         ;; End of the drag - figure out how to finish up

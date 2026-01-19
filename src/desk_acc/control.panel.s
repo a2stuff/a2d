@@ -747,26 +747,27 @@ shortcut_table_addr_hi:
 @store: sta     flag
 
         ;; Toggle pattern bit
-loop:   ldx     screentowindow_params::windowx
+    REPEAT
+        ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
         lda     pattern,y
         bit     flag
-    IF NS
+      IF NS
         ora     mask1,x         ; set bit
-    ELSE
+      ELSE
         and     mask2,x         ; clear bit
-    END_IF
+      END_IF
         cmp     pattern,y       ; did it change?
-    IF NE
+      IF NE
         sta     pattern,y
 
         CALL    DrawBit, X=screentowindow_params::windowx, Y=screentowindow_params::windowy, A=flag
 
         jsr     DrawPreview
-    END_IF
+      END_IF
 
         ;; Repeat until mouse-up
-    DO
+      DO
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
@@ -783,11 +784,11 @@ loop:   ldx     screentowindow_params::windowx
         ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
         BREAK_IF X <> lastx
-    WHILE Y = lasty
+      WHILE Y = lasty
 
 moved:  stx     lastx
         sty     lasty
-        jmp     loop
+    FOREVER
 
 mask1:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
 mask2:  .byte   AS_BYTE(~(1<<0)), AS_BYTE(~(1<<1)), AS_BYTE(~(1<<2)), AS_BYTE(~(1<<3)), AS_BYTE(~(1<<4)), AS_BYTE(~(1<<5)), AS_BYTE(~(1<<6)), AS_BYTE(~(1<<7))

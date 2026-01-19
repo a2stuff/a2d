@@ -718,7 +718,7 @@ do_copy:
         jsr     IncAndDrawBlocksWritten
         jsr     DrawEscToStopCopyHint
 
-copy_loop:
+    REPEAT
         jsr     DrawStatusReading
         CALL    main::CopyBlocks, C=0 ; reading
         cmp     #$01
@@ -732,7 +732,7 @@ copy_loop:
         bne     copy_failure
 
         CALL    MaybePromptDiskSwap, X=#kAlertMsgInsertSource
-        jmp     copy_loop
+    FOREVER
 
 copy_success:
         jsr     main::FreeVolBitmapPages

@@ -10,14 +10,15 @@
         ptr := $6
         stax    ptr
 
-loop:   jsr     measure
-        bcc     draw            ; already short enough
+    REPEAT
+        jsr     measure
+        BREAK_IF LT             ; already short enough
 
         jsr     ellipsify
-        jmp     loop
+    FOREVER
 
         ;; Draw
-draw:   MGTK_CALL MGTK::DrawText, txt
+        MGTK_CALL MGTK::DrawText, txt
         rts
 
         ;; Measure

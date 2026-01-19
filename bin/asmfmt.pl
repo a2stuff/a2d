@@ -129,13 +129,13 @@ while (<STDIN>) {
 
       $_ = $opcode . ' ' . $arguments;
 
-    } elsif (m/^(\b(?:IF(?:_\w+)?|ELSE_IF(?:_\w+)?|ELSE|END_IF|DO|REPEAT|WHILE(?:_\w+)?|UNTIL(?:_\w+)?)\b)\s*(.*)$/) {
+    } elsif (m/^(\b(?:IF(?:_\w+)?|ELSE_IF(?:_\w+)?|ELSE|END_IF|DO|REPEAT|FOREVER|WHILE(?:_\w+)?|UNTIL(?:_\w+)?)\b)\s*(.*)$/) {
 
       # conditional macros - dynamic indent
       my ($opcode, $arguments) = ($1 // '', $2 // '');
       $tabstop = 0;
 
-      if ($opcode =~ m/^(ELSE_IF(?:_\w+)?|ELSE|END_IF|WHILE(?:_\w+)?|UNTIL(?:_\w+)?)$/) {
+      if ($opcode =~ m/^(ELSE_IF(?:_\w+)?|ELSE|END_IF|FOREVER|WHILE(?:_\w+)?|UNTIL(?:_\w+)?)$/) {
         dedent();
       }
 

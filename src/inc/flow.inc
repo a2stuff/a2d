@@ -16,6 +16,7 @@
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
 ;;; * DO / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
 ;;;   * or REPEAT / UNTIL cond if you prefer
+;;;   * DO / FOREVER (or REPEAT / FOREVER) for unconditional JMP
 ;;; * RTS_IF cond
 ;;;
 ;;; Conditions take the form of flag tests or register comparisons.
@@ -691,6 +692,26 @@ stay:
         continue := __flow_loop_ident__ {"do_while"}
 
         _FLOW_PARSE_AND_GEN_BIF continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+
+        __flow_loop_ident__ {"break"} := *
+        .refto __flow_loop_ident__ {"break"}
+
+        __DEC_IDENT__ __flow_loop_depth__
+
+  _FLOW_END_STATEMENT
+.endmacro
+
+.macro FOREVER
+  _FLOW_STATEMENT "FOREVER"
+
+        ;; Note that "do_while" is still used for minting identifiers
+        ;; so that DO and REPEAT remain synonyms and helpers can be
+        ;; shared between WHILE and UNTIL.
+
+        .local continue
+        continue := __flow_loop_ident__ {"do_while"}
+
+        jmp     continue
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}

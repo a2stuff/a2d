@@ -511,19 +511,18 @@ mem_block_addr:
         copy16  #0, count
         copy16  #0, block
 
-loop:
+    REPEAT
         CALL    IsUsedInVolumeBitmap, AX=block
-    IF CC
+      IF CC
         inc16   count
-    END_IF
+      END_IF
 
         inc16   block
         cmp16   block, auxlc::source_block_count
-    IF GE
+      IF GE
         RETURN  AX=count
-    END_IF
-
-        jmp     loop
+      END_IF
+    FOREVER
 .endproc ; CountActiveBlocksInVolumeBitmap
 
 ;;; ============================================================

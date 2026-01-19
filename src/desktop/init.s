@@ -349,7 +349,7 @@ done:
 
         copy8   #0, index
         jsr     _ReadSelectorList
-        bne     done
+    IF ZS
 
         lda     selector_list_data_buf + kSelectorListNumPrimaryRunListOffset
         clc
@@ -357,9 +357,9 @@ done:
         sta     num_selector_list_items
 
         copy8   selector_list_data_buf, count
-loop:   lda     index
-        cmp     count
-        beq     done
+      REPEAT
+        lda     index
+        BREAK_IF A = count
 
         ;; Copy entry name into place
         jsr     main::ATimes16
@@ -381,9 +381,9 @@ loop:   lda     index
 
         inc     index
         inc     selector_menu
-        jmp     loop
+      FOREVER
+    END_IF
 
-done:
         ;; No separator if it is last
         lda     selector_menu
     IF A = #kSelectorMenuFixedItems
@@ -1002,25 +1002,26 @@ unit_num:
 
         copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr
 
-loop:   ldy     #0
+    REPEAT
+        ldy     #0
         lda     (data_ptr),y
-        beq     exit
+        BREAK_IF ZERO
 
         tay
-    DO
+      DO
         copy8   (data_ptr),y, INVOKER_PREFIX,y
         dey
-    WHILE POS
+      WHILE POS
 
         jsr     PushPointers
 
         ;; Is there a matching volume icon? (If not, skip)
         ldx     #1              ; past leading '/'
-    DO
+      DO
         lda     INVOKER_PREFIX+1,x
         BREAK_IF A = #'/'       ; look for next '/'
         inx
-    WHILE X <> INVOKER_PREFIX
+      WHILE X <> INVOKER_PREFIX
 
         dex
         stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length
@@ -1035,20 +1036,20 @@ loop:   ldy     #0
         ;; Copy loc to `new_window_viewloc`
         ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
-    DO
+      DO
         copy8   (data_ptr),y, new_window_viewloc,x
         dey
         dex
-    WHILE POS
+      WHILE POS
 
         ;; Copy bounds to `new_window_maprect`
         ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
-    DO
+      DO
         copy8   (data_ptr),y, new_window_maprect,x
         dey
         dex
-    WHILE POS
+      WHILE POS
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag
@@ -1061,7 +1062,7 @@ loop:   ldy     #0
 next:   jsr     PopPointers
 
         add16_8 data_ptr, #.sizeof(DeskTopFileItem)
-        jmp     loop
+    FOREVER
 
 exit:   jmp     main::CacheDesktopIconList
 

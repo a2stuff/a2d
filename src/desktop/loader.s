@@ -107,7 +107,8 @@ start:
 
         copy8   #0, segment_num
 
-loop:   jsr     UpdateProgress
+    REPEAT
+        jsr     UpdateProgress
 segment_num := * + 1
         ldx     #0
         cpx     #kNumSegments
@@ -115,9 +116,9 @@ segment_num := * + 1
 
         ;; Close
         MLI_CALL CLOSE, close_params
-    IF CS
+      IF CS
         brk                     ; crash
-    END_IF
+      END_IF
         jmp     kSegmentInitializerAddress
 
 continue:
@@ -125,23 +126,23 @@ continue:
         copy8   segment_offset_table_high,x, set_mark_params::position+1
         copy8   segment_offset_table_bank,x, set_mark_params::position+2
         MLI_CALL SET_MARK, set_mark_params
-    IF CS
+      IF CS
         brk                     ; crash
-    END_IF
+      END_IF
 
         copylohi segment_addr_table_low,x, segment_addr_table_high,x, read_params::data_buffer
         copylohi segment_size_table_low,x, segment_size_table_high,x, read_params::request_count
         MLI_CALL READ, read_params
-    IF CS
+      IF CS
         brk                     ; crash
-    END_IF
+      END_IF
 
         ldx     segment_num
         inc     segment_num
         lda     segment_type_table,x
-        beq     loop            ; type 0 = main, so done
+        CONTINUE_IF ZERO        ; type 0 = main, so done
         cmp     #2              ; carry set if banked, clear if aux
-    IF GE
+      IF GE
         ;; Handle bank-switched memory segment
         ;; Disable interrupts, since we may overwrite IRQ vector
         php
@@ -163,7 +164,7 @@ continue:
         lda     #$80
         sta     $0100           ; Main stack pointer, in Aux ZP
         sta     $0101           ; Aux stack pointer, in Aux ZP
-    END_IF
+      END_IF
 
         src := $6
         dst := $8
@@ -178,24 +179,24 @@ continue:
         sty     src+1
 
         ldy     segment_size_table_high,x ; Y = number of pages
-        lda     segment_size_table_low,x  ; fractional?
-    IF NOT_ZERO
+        lda     segment_size_table_low,x ; fractional?
+      IF NOT_ZERO
         iny                     ; if so, round up
-    END_IF
+      END_IF
 
         tya
         tax                     ; X = number of pages to copy
         sta     RAMWRTON
         jsr     CopySegment
         sta     RAMWRTOFF
-    IF CS                       ; carry set if banked
+      IF CS                     ; carry set if banked
         COPY_BYTES kIntVectorsSize, vector_buf, VECTORS
         sta     ALTZPOFF
         bit     ROMIN2
         plp
-    END_IF
+      END_IF
 
-        jmp     loop
+    FOREVER
 
 vector_buf:
         .res    ::kIntVectorsSize, 0

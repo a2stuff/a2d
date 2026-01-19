@@ -649,7 +649,7 @@ end:    rts
         ;; --------------------------------------------------
         ;; Loop over lines
 
-do_line:
+    REPEAT
         ;; Reset state / flags
         add16_8 line_pos::base, #kLineSpacing
         copy16  #kWrapWidth, remaining_width
@@ -658,12 +658,12 @@ do_line:
 
         copy8   #0, visible_flag
         cmp16   current_line, first_visible_line
-    IF GE
-        cmp16   last_visible_line, current_line
       IF GE
+        cmp16   last_visible_line, current_line
+       IF GE
         inc     visible_flag
+       END_IF
       END_IF
-    END_IF
 
         ;; Position cursor, update remaining width
 moveto: MGTK_CALL MGTK::MoveTo, line_pos
@@ -684,14 +684,14 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
         ;; End of line
 
         bit     record_offsets_flag
-    IF NS
+      IF NS
         ;; Doing a full pass. Determine current file offset.
         sub16   ptr, #default_buffer, cur_offset
         add16   cur_offset, buf_mark, cur_offset
 
         ;; Maybe record it
         dec     offset_counter
-      IF ZERO
+       IF ZERO
         ldy     #0
         copy16in cur_offset, (offset_ptr),y
         add16_8 offset_ptr, #2
@@ -699,20 +699,20 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
 
         ;; Keep mouse cursor somewhat responsive
         MGTK_CALL MGTK::CheckEvents
-      END_IF
+       END_IF
 
         ;; EOF? If so, stop!
         cmp16   cur_offset, get_eof_params::eof
         bcs     done
-    ELSE
+      ELSE
         ;; Just rendering what's visible. Are we done?
         ecmp16  current_line, last_visible_line
         beq     done
-    END_IF
+      END_IF
 
         ;; Nope - continue on next line
         inc16   current_line
-        jmp     do_line
+    FOREVER
 
         ;; --------------------------------------------------
 

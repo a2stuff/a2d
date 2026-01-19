@@ -39,15 +39,14 @@ penXOR:         .byte   MGTK::penXOR
 
 .proc InputLoop
         ;; No yielding as we don't want the clock to refresh.
-loop:   MGTK_CALL MGTK::GetEvent, event_params
+    REPEAT
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     exit
-        cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     exit
-        jmp     loop
+        BREAK_IF A = #MGTK::EventKind::button_down ; was clicked?
+        BREAK_IF A = #MGTK::EventKind::key_down  ; any key?
+    FOREVER
 
-exit:   jmp     Invert
+        jmp     Invert
 .endproc ; InputLoop
 
 ;;; ============================================================

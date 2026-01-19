@@ -1275,7 +1275,8 @@ end:    rts
         ptr := $06
 
         copy16  #btn_c, ptr
-loop:   ldy     #0
+    REPEAT
+        ldy     #0
         lda     (ptr),y
         beq     DrawTitleBar    ; done!
 
@@ -1302,9 +1303,9 @@ loop:   ldy     #0
         clc
         adc     #.sizeof(btn_c)
         sta     ptr
-        bcc     loop
+        CONTINUE_IF CC
         inc     ptr+1
-        jmp     loop
+    FOREVER
 .endproc ; DrawContent
 
 ;;; ============================================================

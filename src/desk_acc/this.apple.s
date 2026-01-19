@@ -2269,7 +2269,7 @@ start:
         copy8   #1, status_params::unit_num
         copy8   #3, status_params::status_code ; Return Device Information Block (DIB)
 
-device_loop:
+    REPEAT
         ;; Make the call
         jsr     SmartPortCall
         bcs     next
@@ -2277,13 +2277,13 @@ device_loop:
         ;; Trim trailing whitespace (seen in CFFA)
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
-    IF NOT_ZERO
-      DO
+      IF NOT_ZERO
+       DO
         lda     dib_buffer+SPDIB::Device_Name-1,y
         BREAK_IF A <> #' '
         dey
-      WHILE NOT_ZERO
-    END_IF
+       WHILE NOT_ZERO
+      END_IF
         sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
 
@@ -2291,25 +2291,25 @@ device_loop:
         ;; Case-adjust
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
-    IF NOT_ZERO
-        dey
       IF NOT_ZERO
+        dey
+       IF NOT_ZERO
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
-       DO
+        DO
         CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
-        IF EQ
-        CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
          IF EQ
+        CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
+          IF EQ
         lda     dib_buffer+SPDIB::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
+          END_IF
          END_IF
-        END_IF
         dey
-       WHILE NOT_ZERO
+        WHILE NOT_ZERO
+       END_IF
       END_IF
-    END_IF
 .endscope
 .endif
 
@@ -2317,25 +2317,25 @@ device_loop:
 
         ;; Empty?
         lda     dib_buffer+SPDIB::ID_String_Length
-    IF ZERO
+      IF ZERO
         .assert .strlen(res_string_unknown) < kMaxSPDeviceNameLength, error, "string length"
         COPY_STRING str_unknown, str_current
-    END_IF
+      END_IF
 
         ;; Same as last?
         jsr     CompareWithLast
-    IF EQ
+      IF EQ
         inc     duplicate_count
         bne     next            ; always
-    END_IF
+      END_IF
         jsr     MaybeDrawDuplicateSuffix
         COPY_STRING str_current, str_last
 
         ;; Need a comma?
         bit     empty_flag
-    IF NC
+      IF NC
         CALL    DrawStringFromMain, AX=#str_list_separator
-    END_IF
+      END_IF
         CLEAR_BIT7_FLAG empty_flag ; saw a unit!
 
         ;; Draw the device name
@@ -2343,10 +2343,9 @@ device_loop:
 
         ;; Next!
 next:   lda     status_params::unit_num
-        cmp     num_devices
-        beq     finish
+        BREAK_IF A = num_devices
         inc     status_params::unit_num
-        jmp     device_loop
+    FOREVER
 
 finish:
         jsr     MaybeDrawDuplicateSuffix

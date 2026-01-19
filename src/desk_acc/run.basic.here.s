@@ -155,29 +155,28 @@ quit:   MLI_CALL QUIT, quit_params
         inc     bs_path
         ldx     bs_path
         copy8   #'/', bs_path,x
-loop:
+
+    REPEAT
         ;; Append BASIC.SYSTEM to path and check for file.
         ldx     bs_path
         ldy     #0
-    DO
+      DO
         inx
         iny
         copy8   str_basic_system,y, bs_path,x
-    WHILE Y <> str_basic_system
+      WHILE Y <> str_basic_system
         stx     bs_path
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        bcs     not_found
-        rts                     ; zero is success
+        RTS_IF CC               ; zero is success
 
         ;; Pop off a path segment and try again.
-not_found:
         ldx     path_length
-    DO
+      DO
         lda     bs_path,x
         cmp     #'/'
         beq     found_slash
         dex
-    WHILE NOT_ZERO
+      WHILE NOT_ZERO
 
 no_bs:  RETURN  A=#$FF          ; non-zero is failure
 
@@ -187,7 +186,7 @@ found_slash:
         stx     bs_path
         dex
         stx     path_length
-        jmp     loop
+    FOREVER
 
         ;; length of directory path e.g. "/VOL/DIR/"
 path_length:

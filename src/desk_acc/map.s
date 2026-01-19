@@ -392,7 +392,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         copy16  #location_table, ptr
         copy8   #0, index
 
-loop:
+    REPEAT
         ;; Compare lengths
         ldy     #0
         lda     (ptr),y
@@ -400,32 +400,31 @@ loop:
         bne     next
 
         tay
-    DO
+      DO
         lda     buf_search,y
         jsr     ToUpperCase
         cmp     (ptr),y
         bne     next
         dey
-    WHILE NOT_ZERO
+      WHILE NOT_ZERO
 
         ;; Match!
         ldy     #0
         lda     (ptr),y
         tay
-        iny                  ; past end of string
-        ldx     #0           ; copy next 4 bytes into `lat` and `long`
-    DO
+        iny                     ; past end of string
+        ldx     #0              ; copy next 4 bytes into `lat` and `long`
+      DO
         copy8   (ptr),y, lat,x
         iny
         inx
-    WHILE X <> #4
+      WHILE X <> #4
         jmp     done
 
         ;; Advance pointer to next record
 next:   inc     index
         lda     index
-        cmp     #kNumLocations
-        beq     fail
+        BREAK_IF A = #kNumLocations
 
         ldy     #0              ; string length
         lda     (ptr),y
@@ -437,7 +436,7 @@ next:   inc     index
         bcc     :+
         inc     ptr+1
 :
-        jmp     loop
+    FOREVER
 
 
 

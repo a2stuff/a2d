@@ -95,6 +95,15 @@
         nop
     UNTIL NOT NC
 
+;;; FOREVER
+    DO
+        nop
+    FOREVER
+
+    REPEAT
+        nop
+    FOREVER
+
 ;;; BREAK
     DO
         nop
@@ -103,6 +112,13 @@
         nop
     WHILE CS
 
+    DO
+        nop
+        BREAK_IF NC
+        BREAK_IF NOT NC
+        nop
+    FOREVER
+
 ;;; CONTINUE
     DO
         nop
@@ -110,6 +126,13 @@
         CONTINUE_IF NOT NC
         nop
     WHILE CS
+
+    DO
+        nop
+        CONTINUE_IF NC
+        CONTINUE_IF NOT NC
+        nop
+    FOREVER
 
 ;;; RTS
         RTS_IF NC

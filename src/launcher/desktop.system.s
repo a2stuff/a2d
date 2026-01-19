@@ -1098,20 +1098,17 @@ saved_stack:
         stx     saved_stack
 
         ;; Process "primary list" entries (first 8)
-.scope
         copy8   #0, entry_num
-entry_loop:
+    REPEAT
         lda     entry_num
-        cmp     selector_buffer + kSelectorListNumPrimaryRunListOffset
-        beq     done_entries
+        BREAK_IF A = selector_buffer + kSelectorListNumPrimaryRunListOffset
         jsr     ComputeLabelAddr
         stax    ptr
 
         ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
         lda     (ptr),y
         ASSERT_EQUALS ::kSelectorEntryCopyOnBoot, 0
-        bne     next_entry
-
+      IF ZERO
         CALL    ComputePathAddr, A=entry_num
 
         jsr     PrepareEntryPaths
@@ -1122,20 +1119,16 @@ entry_loop:
         ldx     entry_num
         copy8   #$FF, ENTRY_COPIED_FLAGS,x
         bit     ROMIN2
+      END_IF
 
-next_entry:
         inc     entry_num
-        jmp     entry_loop
-done_entries:
-.endscope
+    FOREVER
 
         ;; Process "secondary run list" entries (final 16)
-.scope
         copy8   #0, entry_num
-entry_loop:
+    REPEAT
         lda     entry_num
-        cmp     selector_buffer + kSelectorListNumSecondaryRunListOffset
-        beq     done_entries
+        BREAK_IF A = selector_buffer + kSelectorListNumSecondaryRunListOffset
         clc
         adc     #8
         jsr     ComputeLabelAddr
@@ -1144,7 +1137,7 @@ entry_loop:
         ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
         lda     (ptr),y
         ASSERT_EQUALS ::kSelectorEntryCopyOnBoot, 0
-        bne     next_entry
+      IF ZERO
         lda     entry_num
         clc
         adc     #8
@@ -1158,11 +1151,9 @@ entry_loop:
         ldx     entry_num
         copy8   #$FF, ENTRY_COPIED_FLAGS+8,x
         bit     ROMIN2
-next_entry:
+      END_IF
         inc     entry_num
-        jmp     entry_loop
-done_entries:
-.endscope
+    FOREVER
 
 bail:
         jmp     InvokeSelectorOrDesktop

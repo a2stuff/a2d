@@ -22,13 +22,14 @@ loop:   lda     #0
         sta     digit
 
         ;; Keep subtracting/incrementing until zero is hit
-sloop:  cmp16   value, powers,x
-        bcc     break
+    REPEAT
+        cmp16   value, powers,x
+        BREAK_IF CC
         inc     digit
         sub16   value, powers,x, value
-        jmp     sloop
+    FOREVER
 
-break:  lda     digit
+        lda     digit
         bne     not_pad
         bit     nonzero_flag
         bpl     next

@@ -2705,12 +2705,12 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 ;;; ============================================================
 
 .proc CmdCloseAll
-repeat:
+    REPEAT
         lda     active_window_id ; current window
         RTS_IF ZERO              ; nope, done!
 
         jsr     CloseActiveWindow ; close it...
-        jmp     repeat            ; and try again
+    FOREVER                       ; and try again
 .endproc ; CmdCloseAll
 
 ;;; ============================================================
@@ -2797,18 +2797,17 @@ start:
         COPY_STRING str_new_folder, stashed_name
 
         ;; Repeat to find a free name
-retry:
+   REPEAT
         CALL    GetWindowPath, A=active_window_id
         jsr     CopyToSrcPath
         CALL    AppendFilenameToSrcPath, AX=#stashed_name
         jsr     GetSrcFileInfo
         bcc     spin
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     create
-        bne     error
+        BREAK_IF A = #ERR_FILE_NOT_FOUND
+        bne     error           ; always
 
 spin:   jsr     SpinName
-        jmp     retry
+    FOREVER
 
         ;; --------------------------------------------------
         ;; Try creating the folder
@@ -3638,13 +3637,14 @@ CmdRenameWithDefaultNameGiven := CmdRename::ep2 ; A,X = name
         CALL    AppendFilenameToSrcPath, AX=#stashed_name
 
         ;; Repeat to find a free name
-spin:   jsr     GetSelectionWindow
+    REPEAT
+        jsr     GetSelectionWindow
         jsr     GetWindowPath
         jsr     CopyToDstPath
         jsr     SpinName
         CALL    AppendFilenameToDstPath, AX=#stashed_name
         jsr     GetDstFileInfo
-        bcc     spin
+    UNTIL CS
         cmp     #ERR_FILE_NOT_FOUND
         bne     error
 
@@ -5234,20 +5234,19 @@ arbitrary_target:
     WHILE POS
 
         ;; Repeat to find a free name
-retry:  CALL    CopyToDstPath, AX=#operation_dst_path
+    REPEAT
+        CALL    CopyToDstPath, AX=#operation_dst_path
         CALL    AppendFilenameToDstPath, AX=#stashed_name
         jsr     GetDstFileInfo
-    IF CS
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     create
+      IF CS
+        BREAK_IF A=#ERR_FILE_NOT_FOUND
         bne     err
-    END_IF
+      END_IF
         jsr     SpinName
-        jmp     retry
+    FOREVER
 
         ;; --------------------------------------------------
         ;; Create and write link file
-create:
         MLI_CALL CREATE, create_params
         bcs     err
 
@@ -6410,7 +6409,8 @@ err:    RETURN  C=1
 
         ;; Draw each list view row
         ldx     #0              ; X = index
-rloop:  cpx     cached_window_icon_count
+      REPEAT
+        cpx     cached_window_icon_count
         beq     done
         txa                     ; A = index
         pha
@@ -6425,7 +6425,7 @@ rloop:  cpx     cached_window_icon_count
         pla                     ; A = index
         tax                     ; X = index
         inx
-        jmp     rloop
+      FOREVER
     END_IF
 
         ;; --------------------------------------------------
@@ -7340,12 +7340,13 @@ assign_height:
         jsr     PushPointers
         copy16  #icontype_table, ptr
 
-loop:   ldy     #ICTRecord::mask ; $00 if done
+    REPEAT
+        ldy     #ICTRecord::mask ; $00 if done
         lda     (ptr),y
-    IF A = #kICTSentinel
+      IF A = #kICTSentinel
         jsr     PopPointers
         RETURN  A=#IconType::generic
-    END_IF
+      END_IF
 
         ;; Check type (with mask)
         and     file_type       ; A = type & mask
@@ -7361,7 +7362,7 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
 
         ;; Does Aux Type matter, and if so does it match?
         bit     flags
-    IF NS                       ; bit 7 = compare aux
+      IF NS                     ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
         ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
         lda     aux_type
@@ -7371,11 +7372,11 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         lda     aux_type+1
         cmp     (ptr),y
         bne     next
-    END_IF
+      END_IF
 
         ;; Does Block Count matter, and if so does it match?
         bit     flags
-    IF VS                       ; bit 6 = compare blocks
+      IF VS                     ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
         lda     blocks_used
         cmp     (ptr),y
@@ -7384,12 +7385,12 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         lda     blocks_used+1
         cmp     (ptr),y
         bne     next
-    END_IF
+      END_IF
 
         ;; Filename suffix?
         lda     flags
         and     #ICT_FLAGS_SUFFIX
-    IF NOT_ZERO
+      IF NOT_ZERO
         ;; Set up pointers to suffix and filename
         ptr_suffix      := $08
         ldy     #ICTRecord::aux_suf
@@ -7400,7 +7401,7 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         copy8   (ptr_filename),y, filename_pos
 
         ;; Case-insensitive compare each character
-      DO
+       DO
         filename_pos := *+1
         ldy     #SELF_MODIFIED_BYTE
         lda     (ptr_filename),y
@@ -7415,8 +7416,8 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         BREAK_IF ZERO           ; if we ran out of suffix, it's a match
         dec     filename_pos
         beq     next            ; but if we ran out of filename, it's not
-      WHILE NOT_ZERO            ; otherwise, keep going
-    END_IF
+       WHILE NOT_ZERO           ; otherwise, keep going
+      END_IF
 
         ;; Have a match
         ldy     #ICTRecord::icontype
@@ -7426,7 +7427,7 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
 
         ;; Next entry
 next:   add16_8 ptr, #.sizeof(ICTRecord)
-        jmp     loop
+    FOREVER
 .endproc ; DetermineIconType
 
 ;;; ============================================================
@@ -11968,7 +11969,7 @@ ShowErrorAlertDst := ShowErrorAlertImpl::dst
         sta     icon_index
         sta     result_flag
 
-loop:
+    REPEAT
         icon_index := *+1
         ldx     #SELF_MODIFIED_BYTE
         cpx     selected_icon_count
@@ -11982,41 +11983,41 @@ loop:
         ;; Get the file / volume info from ProDOS
 
         jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
-    IF NE
+      IF NE
         jsr     ShowAlert
         jmp     next
-    END_IF
+      END_IF
         CALL    CopyToSrcPath, AX=#operation_src_path
 
         ;; Try to get file/volume info
 common: jsr     GetSrcFileInfo
-    IF CS
+      IF CS
         jsr     ShowAlert
         cmp     #kAlertResultTryAgain
         beq     common
         jmp     next
-    END_IF
+      END_IF
 
         ;; Special cases for volumes
         lda     selected_window_id
-    IF ZERO
+      IF ZERO
         ;; Volume - determine write-protect state
         CLEAR_BIT7_FLAG write_protected_flag
         ldx     icon_index
         CALL    IconToDeviceIndex, A=selected_icon_list,x
-      IF ZERO
+       IF ZERO
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
         sta     getinfo_block_params::unit_num
         MLI_CALL READ_BLOCK, getinfo_block_params
-       IF CC
+        IF CC
         MLI_CALL WRITE_BLOCK, getinfo_block_params
-        IF A = #ERR_WRITE_PROTECTED
+         IF A = #ERR_WRITE_PROTECTED
         SET_BIT7_FLAG write_protected_flag
+         END_IF
         END_IF
        END_IF
       END_IF
-    END_IF
 
         ;; --------------------------------------------------
         ;; Open and populate dialog
@@ -12027,20 +12028,20 @@ common: jsr     GetSrcFileInfo
         ;; Descendant size/file count
 
         lda     src_file_info_params::storage_type
-    IF A IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
+      IF A IN #ST_VOLUME_DIRECTORY, #ST_LINKED_DIRECTORY
         jsr     SetCursorWatch  ; before directory enumeration
         jsr     _GetDirSize
         jsr     SetCursorPointer ; after directory enumeration
         jsr     GetSrcFileInfo  ; needed for toggling lock
-    END_IF
+      END_IF
         ;; --------------------------------------------------
         ;; Run the dialog, until OK or Cancel
 
         jsr     _DialogRun
-        bne     done
+        BREAK_IF ZC
 
 next:   inc     icon_index
-        jmp     loop
+    FOREVER
 
 done:   copy8   #0, operation_dst_path
         RETURN  A=result_flag
@@ -12592,8 +12593,9 @@ DoRename        := DoRenameImpl::start
 ;;; ============================================================
 
 .proc _DialogRun
-loop:   jsr     _InputLoop
-        bmi     loop            ; continue?
+    REPEAT
+        jsr     _InputLoop
+        CONTINUE_IF NS          ; continue?
         bne     _DialogClose    ; canceled!
 
         lda     text_input_buf  ; treat empty as cancel
@@ -12605,10 +12607,10 @@ loop:   jsr     _InputLoop
         lda     path_buf0       ; full path okay?
         clc
         adc     text_input_buf
-    IF A >= #::kMaxPathLength   ; not +1 because we'll add '/'
+        BREAK_IF A < #::kMaxPathLength   ; not +1 because we'll add '/'
+
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_alert_name_too_long
-        jmp     loop
-    END_IF
+    FOREVER
 
         ldxy    #text_input_buf
         RETURN  A=#0

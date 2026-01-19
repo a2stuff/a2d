@@ -768,7 +768,8 @@ ret:    rts
         ptr := $06
 
         copy16  #first_button, ptr
-loop:   ldy     #0
+    REPEAT
+        ldy     #0
         lda     (ptr),y
         beq     ret
 
@@ -790,7 +791,7 @@ ignore: pla
         RETURN  A=#0
 
 next:   add16_8 ptr, #.sizeof(btn_c)
-        jmp     loop
+    FOREVER
 .endproc ; MapClickToFunction
 
 ;;; ============================================================
@@ -802,7 +803,8 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         ptr := $06
 
         copy16  #first_button, ptr
-loop:   ldy     #0
+    REPEAT
+        ldy     #0
         lda     (ptr),y
         beq     ret
 
@@ -824,9 +826,8 @@ loop:   ldy     #0
 ret:    rts
 
 next:   add16_8 ptr, #.sizeof(btn_c)
-        jmp     loop
+    FOREVER
 .endproc ; MapKeyToFunction
-
 
 ;;; ============================================================
 ;;; Inputs: A = Function enum member
@@ -1499,9 +1500,10 @@ end:    rts
         ptr := $06
 
         copy16  #first_button, ptr
-loop:   ldy     #0
+    REPEAT
+        ldy     #0
         lda     (ptr),y
-        beq     finish
+        BREAK_IF ZERO
 
         add16_8 ptr, #(btn_c::viewloc - btn_c), bitmap_addr
         add16_8 ptr, #(btn_c::pos - btn_c), text_addr
@@ -1512,9 +1514,9 @@ loop:   ldy     #0
         MGTK_CALL MGTK::DrawString, 0, label
 
         add16_8 ptr, #.sizeof(btn_c)
-        jmp     loop
+    FOREVER
 
-finish: jsr     DisplayBuffer2
+        jsr     DisplayBuffer2
 
         MGTK_CALL MGTK::ShowCursor
 

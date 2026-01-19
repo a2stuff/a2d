@@ -719,24 +719,26 @@ secondary_run_list:
         sec
         sbc     #ptr1+1
         cmp     num_secondary_run_list_entries
-        bne     loop
-        dec     selector_list + kSelectorListNumSecondaryRunListOffset
-        dec     num_secondary_run_list_entries
-        jmp     WriteFile
-
-loop:   lda     index
-        sec
-        sbc     #ptr2
-    IF A = num_secondary_run_list_entries
+    IF ZERO
         dec     selector_list + kSelectorListNumSecondaryRunListOffset
         dec     num_secondary_run_list_entries
         jmp     WriteFile
     END_IF
 
+    REPEAT
+        lda     index
+        sec
+        sbc     #ptr2
+      IF A = num_secondary_run_list_entries
+        dec     selector_list + kSelectorListNumSecondaryRunListOffset
+        dec     num_secondary_run_list_entries
+        jmp     WriteFile
+      END_IF
+
         CALL    MoveEntryDown, A=index
 
         inc     index
-        jmp     loop
+    FOREVER
 .endscope
 
 index:  .byte   0
@@ -791,7 +793,8 @@ index:  .byte   0
         lda     selector_list + kSelectorListNumPrimaryRunListOffset
         sta     index
 
-loop:   dec     index
+    REPEAT
+        dec     index
         bmi     finish
 
         ;; Name
@@ -812,8 +815,7 @@ loop:   dec     index
         CALL    GetResourcePathAddr, A=index
         stax    ptr_res
         jsr     _CopyString
-
-        jmp     loop
+    FOREVER
 
 finish:
         ;; Menu size
