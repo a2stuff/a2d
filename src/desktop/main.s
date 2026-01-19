@@ -2483,10 +2483,6 @@ main_length:    .word   0
 .proc CmdOpen
         ptr := $06
 
-        selected_icon_count_copy := $1F80
-        selected_icon_list_copy := $1F81
-        .assert selected_icon_list_copy + kMaxIconCount <= $2000, error, "overlap"
-
         ;; --------------------------------------------------
         ;; Entry point from menu
 
@@ -2536,18 +2532,10 @@ from_double_click:
 common:
         CLEAR_BIT7_FLAG dir_flag
 
-        ;; Make a copy of selection
-        ldx     selected_icon_count
-        stx     selected_icon_count_copy
-    DO
-        copy8   selected_icon_list-1,x, selected_icon_list_copy-1,x
-        dex
-    WHILE NOT_ZERO
-
         ;; Iterate selected icons
         ldx     #0
     DO
-        cpx     selected_icon_count_copy
+        cpx     selected_icon_count
         bne     next
 
         ;; Finish up...
@@ -2563,7 +2551,7 @@ common:
 
 next:   txa
         pha                     ; A = index
-        lda     selected_icon_list_copy,x
+        lda     selected_icon_list,x
 
         ;; Trash?
         cmp     trash_icon_num
@@ -2597,7 +2585,7 @@ maybe_open_file:
         pla                     ; A = icon id
         tax                     ; X = icon id
 
-        lda     selected_icon_count_copy
+        lda     selected_icon_count
         cmp     #2              ; multiple files open?
         bcs     next_icon       ; don't try to invoke
 
