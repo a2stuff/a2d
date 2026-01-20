@@ -303,6 +303,12 @@ NAME_LENGTH_MASK        = $0F
 ;;; ProDOS Driver Protocol
 ;;; ============================================================
 
+;;; While described in the ProDOS 8 Technical Reference Manual, that
+;;; document targets device implementers. For more complete
+;;; documentation about calling into drivers, see "Beneath Apple
+;;; ProDOS", section "Calling a Storage Device Driver") pp. 6-6
+;;; through 6-11, Don Worth and Pieter Lechner, 1985.
+
 ;;; Addresses for command parameters
 DRIVER_COMMAND          := $42
 DRIVER_UNIT_NUMBER      := $43

@@ -1115,34 +1115,38 @@ last_disk_in_devices_table:
         pha
         tya                     ; A = unit_number
 
-        jsr     FindSmartportDispatchAddress
-    IF CC                       ; is SmartPort
-        stax    dispatch
-        sty     status_params::unit_num
+        sta     ALTZPOFF        ; Main ZP/LCBANKs
 
-        ;; Execute SmartPort call
+        and     #UNIT_NUM_MASK  ; %DSSS0000
+        sta     DRIVER_UNIT_NUMBER
+        lsr                     ; %0DSSS000
+        lsr                     ; %00DSSS00
+        lsr                     ; %000DSSS0
+        tax
+        copy16  DEVADR,x, dispatch
+
+        copy8   #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
+        copy16  #0, DRIVER_BUFFER
+        copy16  #0, DRIVER_BLOCK_NUMBER
         dispatch := *+1
         jsr     SELF_MODIFIED
-        .byte   SPCall::Status
-        .addr   status_params
 
-        lda     status_buffer
-        and     #$10            ; general status byte, $10 = disk in drive
-      IF NOT_ZERO
-        ldy     #$FF            ; is SmartPort and disk in drive
-        bne     finish          ; always
-      END_IF
+        sta     ALTZPON         ; Aux ZP/LCBANKs
+
+        ;; Assume no disk in drive
+        ldy     #$00
+
+        ;; ProDOS's SmartPort driver maps ~$10 to $2F (Device Offline)
+        ;; Some drivers report $27 (I/O Error)
+    IF NOT A IN #ERR_DEVICE_OFFLINE, #ERR_IO_ERROR
+        ;; Disk in drive
+        ldy     #$FF
     END_IF
 
-        ldy     #0              ; not SmartPort or no disk in drive
-
-finish: pla
+        pla
         tax                     ; restore X
         tya                     ; A = result
         rts
-
-        ;; params for call
-        DEFINE_SP_STATUS_PARAMS status_params, 1, status_buffer, SPStatusRequest::DeviceStatus
 .endproc ; CheckDiskInDevice
 
 ;;; Inputs: A = unmasked unit number

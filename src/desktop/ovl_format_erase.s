@@ -484,8 +484,7 @@ path:
         tax
         lda     DEVADR,x        ; low byte of driver address
         pha
-        inx
-        lda     DEVADR,x        ; high byte of driver address
+        lda     DEVADR+1,x      ; high byte of driver address
         tax
         pla
         rts
