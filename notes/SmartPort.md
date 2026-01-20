@@ -41,10 +41,12 @@ Some approaches have been suggested but rejected (pending further data):
 
 Other ideas that haven't been ruled out but require collaboration w/ the ProDOS maintainers:
 * Add a new [ProDOS-8 MLI API](https://prodos8.com/docs/techref/calls-to-the-mli/#4.3) call to map a unit to SP dispatch/unit
+* Add 2 new [ProDOS-8 MLI API](https://prodos8.com/docs/techref/calls-to-the-mli/#4.3) calls to do a Status request for DIB and Status request for Eject.
 * Add support to the [ProDOS-8 Driver API](https://prodos8.com/docs/techref/adding-routines-to-prodos/#6.3)  for:
-  * `SPCall::Status`+DIB - _need parameter to request this???_
-  * `SPCall::Control`+eject - _need parameter to request this???_
+  * `SPCall::Status`+DIB - _need parameter to request this_
+  * `SPCall::Control`+eject - _need new command + parameter to request this_
   * ... and a way to probe for support
+* A blend of the above, e.g. new MLI call to request DIB; if that is supported, then CONTROL can be issued to driver.
 * Any other more maintainable way to get from the driver address in `DEVADR` to the mapping tables
   * e.g. "if driver starts with `CLV` then..."
 
@@ -53,7 +55,7 @@ Other thoughts:
 * Instead of reverse-engineering the mapping, can we make the existing ProDOS driver do it for us?
   * i.e. call into [`remap_sp`](https://github.com/A2osX/A2osX/blob/14e31234426a6f62c761c90192857c5c346718c2/ProDOS.203/ProDOS.S.XDOS.F.txt#L524) by using the `DEVADR` entry for that Slot/Drive, and issue a driver `STATUS` call (which directly maps to `SPCall::Status`) with different parameters to request a DIB, or pass 4 which is `SPCall::Control`.
   * From code inspection, looks like...
-    * `SPCall::Status`/`SPStatusRequest::DIB` - no, code is forced t0
+    * `SPCall::Status`/`SPStatusRequest::DIB` - no, code is forced to 0
     * `SPCall::Control`/`SPControlRequest::Eject` - looks like it might work? Pass `CONTROL`=4 (not currently a valid driver command) and specify 4 as block number, and it might get smuggled through okay?
       * But unless we know the drive is ejectable, this is not safe to issue.
 * Idea: at runtime, search within the ProDOS driver for the logic:
