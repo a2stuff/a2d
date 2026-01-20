@@ -109,7 +109,7 @@ RESOLUTION="560x384"
 WAITFORDESKTOP="true"
 CHECKAUXMEMORY="true"
 
-CONFIG="$(cat "$SCRIPT" | sed -n '/BEGINCONFIG/,/ENDCONFIG/p' | egrep -v 'BEGINCONFIG|ENDCONFIG' || true)"
+CONFIG="$(cat "$SCRIPT" | sed -n '/BEGINCONFIG/,/ENDCONFIG/p' | grep -E -v 'BEGINCONFIG|ENDCONFIG' || true)"
 if [ -n "$CONFIG" ]; then
   eval "$CONFIG"
 fi
@@ -162,13 +162,13 @@ fi
 
 DESKTOP_SYMBOLS=""
 for sym in selected_icon_count selected_icon_list icon_entries current_window; do
-  addr="$(egrep $sym: out/desktop.list | cut -d' ' -f1)"
+  addr="$(grep -E $sym: out/desktop.list | cut -d' ' -f1)"
   DESKTOP_SYMBOLS="${DESKTOP_SYMBOLS} ${sym}=${addr}"
 done
 export DESKTOP_SYMBOLS
 SELECTOR_SYMBOLS=""
 for sym in current_window; do
-  addr="$(egrep $sym: out/selector.list | cut -d' ' -f1)"
+  addr="$(grep -E $sym: out/selector.list | cut -d' ' -f1)"
   SELECTOR_SYMBOLS="${SELECTOR_SYMBOLS} ${sym}=${addr}"
 done
 export SELECTOR_SYMBOLS
@@ -243,7 +243,7 @@ output=$(
     $MAMEFLAGS \
     $SCRIPTARGS" \
        2> >(IFS='' ; while read line; do echo "${COLOR_RED}${line}${COLOR_RESET}" >&1; done) | \
-    egrep --line-buffered -v "Secure coding is automatically enabled" | \
+    grep -E --line-buffered -v "Secure coding is automatically enabled" | \
     tee /dev/fd/5
       )
 popd > /dev/null

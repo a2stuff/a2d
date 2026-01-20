@@ -33,7 +33,7 @@ roll () {
     echo "considering ${tfile} from ${spath}..."
   fi
   if ! diff -q "$spath/$sfile" "$tpath/$tfile" > /dev/null; then
-    last=$(git log --oneline | egrep roll | egrep -o "${tfile} to \w+" | head -1 | cut -d' ' -f3)
+    last=$(git log --oneline | grep -E roll | grep -E -o "${tfile} to \w+" | head -1 | cut -d' ' -f3)
     curr=$(cd "$spath" && git rev-parse --short HEAD)
     echo "roll ${tfile} to ${curr}"
     if [ -z "$DRY_RUN" ]; then

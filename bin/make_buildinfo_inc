@@ -13,8 +13,8 @@ yy="$(git log -1 --format="%ad" --date=format:%y)"
 mm="$(git log -1 --format="%ad" --date=format:%m)"
 dd="$(git log -1 --format="%ad" --date=format:%d)"
 
-month="$(egrep "\bres_string_month_name_$((10#$mm))\b" "$resfile" | cut -d'"' -f2)"
-order="$(egrep "\bres_const_date_order\b" "$resfile" | cut -d' ' -f3)"
+month="$(grep -E "\bres_string_month_name_$((10#$mm))\b" "$resfile" | cut -d'"' -f2)"
+order="$(grep -E "\bres_const_date_order\b" "$resfile" | cut -d' ' -f3)"
 if [ "$order" = "0" ]; then
     date="$month $dd, $yyyy"
 else
