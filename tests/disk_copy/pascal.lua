@@ -1,8 +1,27 @@
 --[[ BEGINCONFIG ========================================
 
-DISKARGS="-hard1 $HARDIMG -flop1 pascal_floppy.dsk -flop2 prodos_floppy1.dsk"
+MODELARGS="-sl2 mouse -sl5 superdrive -sl7 cffa2"
+DISKARGS="-hard1 $HARDIMG -flop1 pascal_800k.woz -flop2 empty_800k.2mg -flop3 pascal_floppy.dsk -flop4 prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
+
+--[[
+  Source drive list:
+  * S7,D1 - A2.DeskTop  (ProDOS 800K)
+  * S5,D1 - 1PASCAL:    (Pascal 800K)
+  * S5,D2 - EMPTY       (ProDOS 800K)
+  * S6,D1 - TK:         (Pascal 140K)
+  * S6,D2 - Floppy1     (ProDOS 140K)
+
+  800K destination drive list:
+  * S7,D1 - A2.DeskTop  (ProDOS 800K)
+  * S5,D1 - 1PASCAL:    (Pascal 800K)
+  * S5,D2 - EMPTY       (ProDOS 800K)
+
+  140K destination drive list:
+  * S6,D1 - TK:         (Pascal 140K)
+  * S6,D2 - Floppy1     (ProDOS 140K)
+]]
 
 a2d.ConfigureRepaintTime(0.25)
 
@@ -16,7 +35,7 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Snap("verify Pascal disk name in list is uppercase")
+    test.Snap("verify Pascal disk names in list are uppercase")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -30,19 +49,24 @@ end)
   does not have adjusted case (e.g. "TGP:" not "Tgp:"), and that the
   line above reads "Pascal disk copy".
 ]]
-test.Step(
-  "Pascal disk names in source label",
-  function()
+test.Variants(
+  {
+    {"Pascal disk names in source label - 140K", 4, 2},
+    {"Pascal disk names in source label - 800K", 2, 3},
+  },
+  function(idx, name, source_index, dest_index)
     a2d.CopyDisk()
 
     -- source
-    apple2.DownArrowKey() -- S7,D1
-    apple2.DownArrowKey() -- S6,D1
+    for i = 1, source_index do
+      apple2.DownArrowKey()
+    end
     a2d.DialogOK()
 
     -- destination
-    apple2.DownArrowKey() -- S6,D1
-    apple2.DownArrowKey() -- S6,D2
+    for i = 1, dest_index do
+      apple2.DownArrowKey()
+    end
     a2d.DialogOK()
 
     -- insert source
@@ -67,19 +91,24 @@ end)
   ...?" dialog that the name does not have adjusted case (e.g. "TGP:"
   not "Tgp:"), and the name is quoted.
 ]]
-test.Step(
-  "Pascal disk names in overwrite prompt",
-  function()
+test.Variants(
+  {
+    {"Pascal disk names in overwrite prompt - 140K", 5, 1},
+    {"Pascal disk names in overwrite prompt - 800K", 3, 2},
+  },
+  function(idx, name, source_index, dest_index)
     a2d.CopyDisk()
 
     -- source
-    apple2.DownArrowKey() -- S7,D1
-    apple2.DownArrowKey() -- S6,D1
-    apple2.DownArrowKey() -- S6,D2
+    for i = 1, source_index do
+      apple2.DownArrowKey()
+    end
     a2d.DialogOK()
 
     -- destination
-    apple2.DownArrowKey() -- S6,D1
+    for i = 1, dest_index do
+      apple2.DownArrowKey()
+    end
     a2d.DialogOK()
 
     -- insert source
