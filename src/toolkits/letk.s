@@ -232,27 +232,31 @@ ret:    rts
 .endproc ; IdleImpl
 
 .proc _XDrawCaret
-PARAM_BLOCK point, letk::tmp_space
-xcoord  .word
-ycoord  .word
+PARAM_BLOCK caret_rect, letk::tmp_space
+x1  .word
+y1  .word
+x2  .word
+y2  .word
 END_PARAM_BLOCK
 
         jsr     _SetPort        ; aborts rest of this proc if obscured
 
         jsr     _CalcCaretPos
-        stax    point::xcoord
-        dec16   point::xcoord          ; between characters
-        copy16  pos + MGTK::Point::ycoord, point::ycoord
+        subax8  #1
+        stax    caret_rect::x1
+        stax    caret_rect::x2
+        ldax    pos + MGTK::Point::ycoord
+        stax    caret_rect::y2
+        subax8  #kSystemFontHeight
+        stax    caret_rect::y1
 
-        MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::Line, caret_move
+        MGTK_CALL MGTK::ShieldCursor, caret_rect
+        MGTK_CALL MGTK::PaintRect, caret_rect
+        MGTK_CALL MGTK::UnshieldCursor
 
         rts
 .endproc ; _XDrawCaret
-
-        ;; Delta from text baseline to top of text, for drawing caret
-        DEFINE_POINT caret_move, 0, AS_WORD(-kSystemFontHeight)
 
 .proc _HideCaret
         ldy     #LETK::LineEditRecord::caret_flag
