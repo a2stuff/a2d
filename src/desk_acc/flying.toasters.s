@@ -115,8 +115,11 @@ exit:
 
         ;; For each toaster...
         copy8   #kToasterCount-1, index
-        ;; Stash current toaster's values
     DO
+        ;; Pace the animation
+        MGTK_CALL MGTK::WaitVBL
+
+        ;; Stash current toaster's values
         ldx     index
         copy8   frame_table,x, frame
         txa

@@ -187,6 +187,9 @@ maybe_init:
 ;;; Animate
 
 .proc Animate
+        ;; Pace the animation
+        MGTK_CALL MGTK::WaitVBL
+
         MGTK_CALL MGTK::MoveTo, text_pos
 
         lda     text_params::length

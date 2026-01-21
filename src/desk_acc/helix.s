@@ -136,6 +136,9 @@ exit:
 ;;; Animate
 
 .proc Animate
+        ;; Pace the animation
+        MGTK_CALL MGTK::WaitVBL
+
         MGTK_CALL MGTK::SetPort, grafport
 
         pt1  := $06
