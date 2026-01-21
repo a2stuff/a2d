@@ -23,7 +23,7 @@ command_data    .res    kMaxCommandDataSize
 generic_ptr     .addr
 
 icon_ptr        .addr           ; Set by `SetIconPtr`, used everywhere
-res_ptr         .addr           ; Set by `GetIconResource`
+res_ptr         .addr           ; Set by `CalcIconRects`
 
 poly_coords     .tag    MGTK::Point ; used in `DragHighlighted`
 last_coords     .tag    MGTK::Point ; used in `DragHighlighted`
@@ -1445,7 +1445,7 @@ END_PARAM_BLOCK
         ;; Pointer to IconEntry
         CALL    SetIconPtr, A=params::icon
 
-        jsr     CalcIconBoundingRect
+        jsr     CalcIconBoundingRect ; sets `res_ptr`, needed below
 
         ;; Stash some flags
         ldy     #IconEntry::state
@@ -1459,7 +1459,6 @@ END_PARAM_BLOCK
         sta     clip_window_id
 
         ;; copy icon definition bits
-        jsr     GetIconResource ; sets `res_ptr` based on `icon_ptr`
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point) - 1
     DO
         lda     (res_ptr),y
@@ -1610,28 +1609,6 @@ win_flags:                      ; copy of IconEntry::win_flags
 
 ;;; ============================================================
 
-;;; Inputs: `icon_ptr` = `IconEntry`
-;;; Output: `res_ptr` = `IconResource`
-.proc GetIconResource
-        ldy     #IconEntry::type
-        lda     (icon_ptr),y         ; A = type
-        asl                          ; *= 2
-        tay                          ; Y = table offset
-
-        ;; Re-use `res_ptr` temporarily
-        copy16  typemap_addr, res_ptr
-
-        lda     (res_ptr),y
-        tax
-        iny
-        lda     (res_ptr),y
-        sta     res_ptr+1
-        stx     res_ptr
-        rts
-.endproc ; GetIconResource
-
-;;; ============================================================
-
 ;;; Input: `icon_ptr` points at icon
 ;;; Output: Populates `bitmap_rect` and `label_rect` and `text_buffer`
 ;;; Sets `res_ptr`
@@ -1639,7 +1616,18 @@ win_flags:                      ; copy of IconEntry::win_flags
         ;; Copy, pad, and measure name
         jsr     PrepareName
 
-        jsr     GetIconResource ; sets `res_ptr` based on `icon_ptr`
+        ;; Set `res_ptr` based on `icon_ptr`
+        ldy     #IconEntry::type
+        lda     (icon_ptr),y         ; A = type
+        asl                          ; *= 2
+        tay                          ; Y = table offset
+        copy16  typemap_addr, res_ptr ; re-use `res_ptr` temporarily
+        lda     (res_ptr),y
+        tax
+        iny
+        lda     (res_ptr),y
+        sta     res_ptr+1
+        stx     res_ptr
 
         ;; Bitmap top/left - copy from icon entry
         ldy     #IconEntry::iconx+3
@@ -2160,7 +2148,6 @@ reserved:       .byte   0
 
 ;;; ============================================================
 
-;;; Sets `res_ptr`
 ;;; Assert: `CalcIconBoundingRect` has been called
 .proc SetPortForVolIcon
         ;; Will need to clip to screen bounds
@@ -2171,7 +2158,6 @@ reserved:       .byte   0
 
 ;;; ============================================================
 
-;;; Sets `res_ptr`
 ;;; Assert: `CalcIconBoundingRect` has been called
 .proc SetPortForWinIcon
         ;; Get window clip rect (in screen space)
