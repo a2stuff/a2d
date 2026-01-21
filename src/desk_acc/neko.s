@@ -256,29 +256,31 @@ reserved:       .byte   0
 ;;; Inputs: Y = frame
 
 .proc DrawFrame
-        sty     frame
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        ldx     frame
-        copy8   frame_addr_table_lo,x, LZSA_SRC_LO
-        copy8   frame_addr_table_hi,x, LZSA_SRC_LO+1
+        copy8   frame_addr_table_lo,y, LZSA_SRC_LO
+        copy8   frame_addr_table_hi,y, LZSA_SRC_LO+1
         copy16  #FRAMEBUFFER, LZSA_DST_LO
         jsr     decompress_lzsa2_fast
         jsr     FrameDouble
-        MGTK_CALL MGTK::PaintBits, frame_params
 
         ;; Stash rect of this frame so we can optionally erase it next time
         COPY_STRUCT frame_params::viewloc, erase_rect::topleft
         add16_8 frame_params::viewloc::xcoord, #kNekoWidth-1, erase_rect::x2
         add16_8 frame_params::viewloc::ycoord, #kNekoHeight-1, erase_rect::y2
 
-        rts
+        ;; And conveniently it's what we can use to minimize cursor flash
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::ShieldCursor, erase_rect
+        MGTK_CALL MGTK::PaintBits, frame_params
+        MGTK_CALL MGTK::UnshieldCursor
 
-frame:  .byte   0
+        rts
 .endproc ; DrawFrame
 
 .proc EraseFrame
         MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::ShieldCursor, erase_rect
         MGTK_CALL MGTK::PaintRect, erase_rect
+        MGTK_CALL MGTK::UnshieldCursor
         rts
 .endproc ; EraseFrame
 
