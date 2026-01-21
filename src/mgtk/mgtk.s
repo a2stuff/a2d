@@ -6088,13 +6088,16 @@ filler: ldx     menu_item_index
 .proc FillAndFrameRect
         stax    fill_params
         stax    draw_params
+        stax    shield_params
         lda     #MGTK::pencopy
         jsr     SetFillMode
+
+        MGTK_CALL MGTK::ShieldCursor, 0, shield_params
         MGTK_CALL MGTK::PaintRect, 0, fill_params
         lda     #MGTK::notpencopy
         jsr     SetFillMode
         MGTK_CALL MGTK::FrameRect, 0, draw_params
-        rts
+        jmp     UnshieldCursorImpl
 .endproc ; FillAndFrameRect
 
 
@@ -7481,10 +7484,16 @@ end:    rts
         EXIT_CALL MGTK::Error::window_not_found
 .endproc ; WindowByIdOrExit
 
+.proc PaintWinRect
+        MGTK_CALL MGTK::ShieldCursor, winrect
+        MGTK_CALL MGTK::PaintRect, winrect
+        jmp     UnshieldCursorImpl
+.endproc ; PaintWinRect
 
 .proc FrameWinRect
+        MGTK_CALL MGTK::ShieldCursor, winrect
         MGTK_CALL MGTK::FrameRect, winrect
-        rts
+        jmp     UnshieldCursorImpl
 .endproc ; FrameWinRect
 
 .proc InWinRect
@@ -8457,7 +8466,7 @@ in_close_box:  .byte   0
 toggle: sta     in_close_box
 
         jsr     SetFillModeXOR
-        MGTK_CALL MGTK::PaintRect, winrect
+        jsr     PaintWinRect
 
 loop:   jsr     GetAndReturnEvent
 
@@ -9027,22 +9036,23 @@ toggle: eor     params::activate
         RTS_IF A = (window),y   ; no-op if no change
         sta     (window),y
 
-        jsr     HideCursorAndSaveParams ; restored by call below
-        lda     params::activate
-        jsr     DrawOrEraseScrollbar
-        jmp     ShowCursorAndRestoreParams
+        jsr     SaveParamsAndStack
+        CALL    DrawOrEraseScrollbar, A=params::activate
+        jmp     RestoreParamsAndStack
 .endproc ; ActivateCtlImpl
 
-
+;;; Z=1 to erase, Z=0 to draw
 .proc DrawOrEraseScrollbar
-        bne     do_draw
-
+    IF ZERO
+        ;; erase
         jsr     GetScrollbarScrollArea
         jsr     SetStandardPort
-        MGTK_CALL MGTK::PaintRect, winrect
-        rts
+        jmp     PaintWinRect
+    END_IF
 
-do_draw:
+        ;; ----------------------------------------
+        ;; track
+
         bit     which_control
         bmi     vert_scrollbar
         bit     current_winfo::hscroll
@@ -9057,8 +9067,11 @@ has_scroll:
         jsr     GetScrollbarScrollArea
 
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
-        MGTK_CALL MGTK::PaintRect, winrect
+        jsr     PaintWinRect
         MGTK_CALL MGTK::SetPattern, standard_port::pattern
+
+        ;; ----------------------------------------
+        ;; thumb
 
         bit     which_control
         bmi     vert_thumb
@@ -9703,11 +9716,11 @@ check_win:
         RTS_IF A = (window),y   ; no-op if no change
         sta     (window),y
 
-        jsr     HideCursorAndSaveParams ; restored by call below
+        jsr     SaveParamsAndStack ; restored by call below
         jsr     SetStandardPort
         ;; TODO: Clarify dependency on `SetStandardPort`'s return value
         jsr     DrawOrEraseScrollbar
-        jmp     ShowCursorAndRestoreParams
+        jmp     RestoreParamsAndStack
 .endproc ; UpdateThumbImpl
 
 ;;; ============================================================
