@@ -80,6 +80,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Show Aux slot separately from Slot 3; include aux-specific memory count
 * DOS 3.3 Import: Fix keyboard shortcut handling.
 * Sounds: Time "Silent" menu bar flash using VBL.
+* Screen Savers: improve animation for Flying Toasters, Hexix, Message and Melt.
 
 ### Misc
 

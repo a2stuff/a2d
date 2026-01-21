@@ -27,6 +27,8 @@ event_params:   .tag MGTK::Event
 ;;; DA Init
 
 .proc Init
+        jsr     InitRand
+
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -36,27 +38,6 @@ event_params:   .tag MGTK::Event
 ;;; Main Input Loop
 
 .proc InputLoop
-        dec     delta
-    IF ZERO
-        copy8   #7, delta
-    END_IF
-
-        dec     deltac
-    IF ZERO
-        copy8   #27, deltac
-    END_IF
-
-        kNumCols = 40
-        lda     col
-        sec
-        sbc     deltac
-    IF NEG
-        clc
-        adc     #kNumCols
-    END_IF
-        sta     col
-
-
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
@@ -64,6 +45,10 @@ event_params:   .tag MGTK::Event
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     exit
 
+        MGTK_CALL MGTK::WaitVBL
+        jsr     Animate
+        jsr     Animate
+        jsr     Animate
         jsr     Animate
         jmp     InputLoop
 
@@ -80,18 +65,56 @@ exit:
 ;;; ============================================================
 ;;; Animate
 
-col:    .byte   20
-delta:  .byte   3
-deltac: .byte   31
+kDeltaMask = 7
+delta:  .byte   0
 
 .proc Animate
 
+        ;; ----------------------------------------
+        ;; Pick a vertical delta for the column in [1,7]
+    DO
+        jsr     Random
+        and     #kDeltaMask
+    WHILE ZERO
+        sta     delta
+
+        ;; ----------------------------------------
+        ;; Pick a column
+
+        ;; Purely random selection would pick a number in [0,39],
+        ;; but that's boring.
+        ;;
+        ;; A nice bell curve can be produced by adding two numbers in
+        ;; [0,39] and dividing by two. But the extreme edges have very
+        ;; low probability so it doesn't look pleasant either.
+        ;;
+        ;; This adds two random numbers in [0,63] to get a bell curve,
+        ;; then divides by two so we're back in [0,63], and then
+        ;; subtracts to center on [0,39], and throws out anything out
+        ;; of range. The result is a pleasing dip towards the middle
+        ;; of the screen, but the edges aren't too slow to melt.
+
         kNumCols = 40
+    DO
+        tmp := $06
+        jsr     Random
+        and     #63
+        sta     tmp
+        jsr     Random
+        and     #63
+        clc
+        adc     tmp
+        lsr
+        sec
+        sbc     #(64 - kNumCols) / 2
+        CONTINUE_IF NEG
+    WHILE A >= #kNumCols
+        tay                     ; Y = column
+
+        ;; ----------------------------------------
 
         src_ptr := $06
         dst_ptr := $08
-
-        ldy     col
 
         ldx     #kScreenHeight - 1
         stx     row
@@ -136,6 +159,7 @@ row:    .byte   0
 
 .endproc ; Animate
 
+        .include "../lib/prng.s"
         .include "../inc/hires_table.inc"
 
 ;;; ============================================================
