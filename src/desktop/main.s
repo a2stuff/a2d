@@ -467,7 +467,7 @@ offset_table:
         lda     MACHID
         and     #kMachIDHasClock
       IF NOT_ZERO
-        cmp16   event_params::xcoord, #460 ; TODO: Hard coded?
+        cmp16   event_params::xcoord, rect_clock::x1
        IF GE
         TAIL_CALL LaunchPassedPathOnSystemDisk, AX=#str_date_and_time
        END_IF

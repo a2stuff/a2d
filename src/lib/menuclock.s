@@ -10,6 +10,7 @@
 ;;;    `dow_strings` table
 ;;;    `str_time` to populate
 ;;;    `str_4_spaces`
+;;;    `rect_clock` (lower right is start of RTL drawing)
 
 .scope menuclock_impl
         ENTRY_POINTS_FOR_BIT7_FLAG force_update, normal, force_flag
@@ -54,7 +55,8 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         MGTK_CALL MGTK::InitPort, clock_grafport
         MGTK_CALL MGTK::SetPort, clock_grafport
 
-        MGTK_CALL MGTK::MoveTo, pos_clock
+        MGTK_CALL MGTK::ShieldCursor, rect_clock
+        MGTK_CALL MGTK::MoveTo, rect_clock::bottomright
 
         ;; Components are drawn right-to-left.
 
@@ -93,6 +95,8 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
 
         ;; --------------------------------------------------
         ;; Restore the previous GrafPort
+
+        MGTK_CALL MGTK::UnshieldCursor
 
         copy16  getport_params::portptr, @addr
         MGTK_CALL MGTK::SetPort, 0, @addr

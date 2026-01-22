@@ -291,7 +291,7 @@ invoked_during_boot_flag: ; bit7 set during keyboard checks during boot
 ;;; ============================================================
 ;;; Clock Resources
 
-        DEFINE_POINT pos_clock, kScreenWidth - 11, 10
+        DEFINE_RECT rect_clock, 460, 0, kScreenWidth - 11, 10
 
 str_time:
         PASCAL_STRING "00:00 XM"
