@@ -1191,6 +1191,8 @@ next:   add16_8 ptr, #16        ; advance to next
         ;; Disk Name
 
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::pencopy
+
+        MGTK_CALL MGTK::ShieldCursor, file_dialog_res::disk_name_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 
         jsr     _IsRootPath
@@ -1214,10 +1216,12 @@ next:   add16_8 ptr, #16        ; advance to next
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         CALL    _DrawStringCentered, AX=#file_dialog_res::filename_buf
     END_IF
+        MGTK_CALL MGTK::UnshieldCursor
 
         ;; --------------------------------------------------
         ;; Dir Name
 
+        MGTK_CALL MGTK::ShieldCursor, file_dialog_res::disk_name_rect
         MGTK_CALL MGTK::PaintRect, file_dialog_res::dir_name_rect
         copy16  #path_buf, $06
 
@@ -1250,6 +1254,7 @@ next:   add16_8 ptr, #16        ; advance to next
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
         CALL    _DrawStringCentered, AX=#file_dialog_res::filename_buf
     END_IF
+        MGTK_CALL MGTK::UnshieldCursor
 
         rts
 .endproc ; _UpdateDiskAndDirNames
