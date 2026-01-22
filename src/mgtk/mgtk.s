@@ -139,7 +139,7 @@ adjust_stack:                   ; Adjust stack to account for params
         tya                     ; hide cursor
         pha
 
-        bit     disable_autohide_flag ; unless globally overridden!
+        bit     cursor_shield_count ; unless globally overridden!
     IF NC
         lda     params_addr
         pha
@@ -10886,7 +10886,10 @@ finish:
 ;;; 8 bytes of params, copied to $92
 
 .proc ShieldCursorImpl
-        SET_BIT7_FLAG disable_autohide_flag
+        dec     cursor_shield_count
+
+        bit     cursor_flag
+        RTS_IF NS
 
         jsr     ClipRect
         RTS_IF CC
@@ -10987,9 +10990,15 @@ ret:    rts
 .endproc ; ShieldCursorImpl
 
 .proc UnshieldCursorImpl
-        CLEAR_BIT7_FLAG disable_autohide_flag
+        ret := ShieldCursorImpl::ret
+
+        ;; No-op unless we're unwound all the way
+        inc     cursor_shield_count
+        bne     ret
+
+        ;; read and clear the flag
         asl     cursor_shielded_flag
-        bcc     ShieldCursorImpl::ret
+        bcc     ret
         jmp     ShowCursorImpl
 .endproc ; UnshieldCursorImpl
 
@@ -10997,9 +11006,10 @@ ret:    rts
 cursor_shielded_flag:
         .byte   0
 
-;;; bit7 set between `ShieldCursor` and `UnshieldCursor` regardless of
-;;; whether or not the cursor was hidden.
-disable_autohide_flag:
+;;; Count of `ShieldCursor` calls, undone by `UnshieldCursor`; if
+;;; non-zero then cursor should not be auto-hidden around draws.
+;;; NOTE: negative, so can be tested with `BIT`
+cursor_shield_count:
         .byte   0
 
 ;;; ============================================================

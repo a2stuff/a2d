@@ -705,11 +705,11 @@ Parameters:
 (input is address of MapInfo record)
 ```
 
-If the cursor would overlap with the offset/rectangle described by the passed `MapInfo`, offset by the current `GrafPort`, the cursor is hidden. A `MapInfo` is used for convenience as this call is often used in conjunction with `PaintBits` when performing an animation.
+If the cursor would overlap with the offset/rectangle described by the passed `Rect`, offset by the current `GrafPort`, the cursor is hidden.
 
-Calls to `ShieldCursor` must not be nested, and must be balanced by a corresponding `UnshieldCursor` call. Nesting `ShieldCursor`/`UnshieldCursor` within `HideCursor`/`ShowCursor` or vice versa is supported, however.
+Calls to `ShieldCursor` must be balanced by a corresponding `UnshieldCursor` call. Between the `ShieldCursor` and `UnshieldCursor` calls, drawing calls do not auto-hide the cursor. This can be used to reduce the flickering of the cursor during drawing.
 
-Between the `ShieldCursor` and `UnshieldCursor` calls, drawing calls do not auto-hide the cursor.
+Calls to `ShieldCursor` can be nested; each call will hide the cursor if needed, and the cursor will only be shown once the final corresponding `UnshieldCursor` call is made. Nesting `ShieldCursor`/`UnshieldCursor` within `HideCursor`/`ShowCursor` or vice versa is supported as well.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
