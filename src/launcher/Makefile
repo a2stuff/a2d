@@ -4,12 +4,13 @@ include ../common/Makefile.common
 
 TARGETS = $(OUTDIR)/desktop.system.SYS
 
-.PHONY: clean all
+.PHONY: all
 all: $(OUTDIR) $(TARGETS)
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
 
+.PHONY: clean
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list

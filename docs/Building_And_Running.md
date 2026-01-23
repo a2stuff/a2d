@@ -19,7 +19,9 @@ cd a2d
 make
 ```
 
-This will build all targets, including DeskTop itself, desk accessories, and preview accessories, and the optional Shortcuts app.
+This will build all targets, including DeskTop itself, the Disk Copy and Shortcuts modules, desk accessories, and a handful of other files.
+
+If you have a newish version of GNU Make then you can perform parallel builds e.g. `gmake -j8`. GNU Make 3.81 (the version that comes with Xcode utilities on macOS) has a bug which will hang when building. Fixes welcome!
 
 ## Getting DeskTop Onto Your Apple II
 

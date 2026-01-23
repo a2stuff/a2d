@@ -28,7 +28,8 @@ fi
 OUTDIR="out"
 
 # Generate tmp file
-cat > $OUTDIR/buildinfo.inc.tmp  <<EOF
+TMPFILE="$(mktemp)"
+cat > "$TMPFILE"  <<EOF
 .define kBuildDate "$date"
 kBuildYYYY = $yyyy
 kBuildYY   = $yy
@@ -38,9 +39,10 @@ kBuildDD   = $dd
 EOF
 
 # Only generate real file if it doesn't exist or changed
-if [ -r $OUTDIR/buildinfo.inc ]; then
-  cmp --silent $OUTDIR/buildinfo.inc.tmp $OUTDIR/buildinfo.inc || \
-    mv -f $OUTDIR/buildinfo.inc.tmp $OUTDIR/buildinfo.inc
+if [ -r "$OUTDIR/buildinfo.inc" ]; then
+  cmp --silent "$TMPFILE" "$OUTDIR/buildinfo.inc" || \
+    mv -f "$TMPFILE" "$OUTDIR/buildinfo.inc"
 else
-  mv -f $OUTDIR/buildinfo.inc.tmp $OUTDIR/buildinfo.inc
+  mv -f "$TMPFILE" "$OUTDIR/buildinfo.inc"
 fi
+rm -f "$TMPFILE"

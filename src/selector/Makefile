@@ -1,6 +1,6 @@
 TOOLKITS = btk lbtk optk
 HEADERS = $(COMMON_HEADERS) \
-	$(SYS_FONTS) \
+	$(SYS_FONT) \
 	../mgtk/mgtk.inc \
 	$(foreach TK,$(TOOLKITS),../toolkits/$(TK).inc)
 
@@ -8,12 +8,13 @@ include ../common/Makefile.common
 
 TARGETS = $(OUTDIR)/selector.built
 
-.PHONY: clean all
+.PHONY: all
 all: $(OUTDIR) $(TARGETS)
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
 
+.PHONY: clean
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list

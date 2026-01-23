@@ -1,6 +1,6 @@
 TOOLKITS = letk btk lbtk
 HEADERS = $(COMMON_HEADERS) \
-	$(MONO_FONTS) \
+	$(MONO_FONT) \
 	$(wildcard neko_frames/*.bin) \
 	../desktop/desktop.inc \
         ../mgtk/mgtk.inc \
@@ -8,16 +8,17 @@ HEADERS = $(COMMON_HEADERS) \
 
 include ../common/Makefile.common
 
-DAS = $(shell cat TARGETS | ../../bin/targets.pl targets)
+DAS := $(shell cat TARGETS | ../../bin/targets.pl targets)
 
 TARGETS = $(patsubst %,$(OUTDIR)/%.da,$(DAS))
 
-.PHONY: clean all
+.PHONY: all
 all: $(OUTDIR) $(TARGETS)
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
 
+.PHONY: clean
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
