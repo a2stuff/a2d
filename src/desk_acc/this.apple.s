@@ -2272,7 +2272,7 @@ start:
     REPEAT
         ;; Make the call
         jsr     SmartPortCall
-        bcs     next
+        jcs     next
 
         ;; Trim trailing whitespace (seen in CFFA)
 .scope
@@ -2292,6 +2292,20 @@ start:
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
       IF NOT_ZERO
+
+        ;; Any characters lowercase? If so, don't adjust.
+       DO
+        CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y
+        IF ZS
+        lda     dib_buffer+SPDIB::Device_Name,y
+         IF A >= #'a'           ; guarded by `kBuildSupportsLowercase`
+        bcs     done_adjust_case ; is lower case
+         END_IF
+        END_IF
+        dey
+       WHILE POS
+
+        ldy     dib_buffer+SPDIB::ID_String_Length
         dey
        IF NOT_ZERO
         ;; Look at prior and current character; if both are alpha,
@@ -2309,7 +2323,9 @@ start:
         dey
         WHILE NOT_ZERO
        END_IF
+
       END_IF
+done_adjust_case:
 .endscope
 .endif
 

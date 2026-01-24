@@ -58,6 +58,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Eliminate scrollbar repaint after window opens.
 * Fix "Unexpected error" seen when copying certain directories.
 * Allow Shift+Arrow keys to extend icon selection (IIgs/Platinum IIe)
+* Don't case-adjust SmartPort device names that are already mixed-case.
 
 ### Selector
 
@@ -78,6 +79,7 @@ Project Page: https://github.com/a2stuff/a2d
 * About This Apple II
   * Add accessories to IIgs bitmap.
   * Show Aux slot separately from Slot 3; include aux-specific memory count
+  * Don't case-adjust SmartPort device names that are already mixed-case.
 * DOS 3.3 Import: Fix keyboard shortcut handling.
 * Sounds: Time "Silent" menu bar flash using VBL.
 * Screen Savers: improve animation for Flying Toasters, Hexix, Message and Melt.
