@@ -314,7 +314,6 @@ function a2d.SelectAndOpen(name, options)
   a2d.Select(name, options)
   if options.close_current then
     a2d.OpenSelectionAndCloseCurrent()
-    emu.wait(1)
   else
     a2d.OpenSelection()
   end
@@ -354,8 +353,18 @@ function a2d.OpenPath(path, options)
   else
     a2d.CloseAllWindows()
   end
+  local segments = {}
   for segment in path:gmatch("([^/]+)") do
+    table.insert(segments, segment)
+  end
+  for index,segment in ipairs(segments) do
     a2d.SelectAndOpen(segment, options)
+    if index ~= #segments then
+      emu.wait(1)
+    end
+  end
+  if not options.no_wait then
+    emu.wait(1)
   end
 end
 

@@ -308,7 +308,7 @@ function ListBoxTest(
 
         repopulate_active_func()
 
-        test.Snap("verify scrollbar did not repaint()")
+        test.Snap("verify scrollbar did not repaint")
         -- BUG: They do seem to be repainting!
 
         cleanup_func()

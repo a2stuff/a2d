@@ -488,7 +488,7 @@ function LineEditTest(name, limits, activation_func, rect_func, cleanup_func)
 
 
         apple2.ControlKey("X")
-        apple2.Type("THIS.IS.STRING")
+        apple2.Type("TEST.STRING")
 
         -- Click to left of string
         MoveToAndClick(
@@ -503,7 +503,7 @@ function LineEditTest(name, limits, activation_func, rect_func, cleanup_func)
 
         -- Click to right of string
         MoveToAndClick(
-          x + w - 20, y + h/2,
+          x + w - 10, y + h/2,
           "verify cursor right of string")
 
         -- Click to right of caret, within string
@@ -568,6 +568,7 @@ LineEditTest(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    emu.wait(5)
   end,
   function()
     local id = a2dtest.GetNextWindowID(mgtk.FrontWindow())
@@ -587,6 +588,7 @@ LineEditTest(
   },
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    emu.wait(5)
   end,
   function()
     local id = a2dtest.GetNextWindowID(mgtk.FrontWindow())
