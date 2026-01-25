@@ -6259,8 +6259,9 @@ loop:   lda     curmenu::x_min,x
         bpl     loop
 
         jsr     SetFillModeXOR
+        MGTK_CALL MGTK::ShieldCursor, hilite_menu_rect
         MGTK_CALL MGTK::PaintRect, hilite_menu_rect
-        rts
+        jmp     UnshieldCursorImpl
 .endproc ; HiliteMenu
 
 ;;; ============================================================
