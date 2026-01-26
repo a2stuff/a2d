@@ -266,6 +266,13 @@ END_PARAM_BLOCK
 .endproc ; _HideCaret
 _ShowCaret := _HideCaret
 
+.proc _ShowCaretForced
+        ldy     #LETK::LineEditRecord::caret_flag
+        lda     #$80
+        sta     (a_record),y
+        jmp     _XDrawCaret
+.endproc ; _ShowCaretForced
+
 ;;; ============================================================
 
 .params getwinport_params
@@ -420,7 +427,7 @@ set:    pha
         pla
         ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
-        jsr     _ShowCaret
+        jsr     _ShowCaretForced
 
 ret:    rts
 
@@ -507,7 +514,7 @@ modifiers .byte
         MGTK_CALL MGTK::ObscureCursor
         jsr     _HideCaret
         jsr     :+
-        jmp     _ShowCaret
+        jmp     _ShowCaretForced
 
 :       lda     params::key
 
