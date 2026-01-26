@@ -15,21 +15,42 @@
 ;;; ============================================================
 
 ep_init:
+        ;; Save stack
         tsx
         stx     saved_stack
 
-        copy8   #kSelectionRequiredNoDirs, selection_requirement_flags
-        jsr     Init
-        CALL    OpenWindow, AX=#app::str_run_a_program
+        ;; Init the dialog, set title
+        CALL    Init, A=#kSelectionRequiredNoDirs, X=#kShowAllFiles
+        copy16  #app::str_run_a_program, file_dialog_res::winfo::title
+
+        ;; Open the dialog
+        CALL    OpenWindow, AX=#file_dialog_res::winfo
+
+        ;; Set the path
         jsr     InitPathWithDefaultDevice
         jsr     UpdateListFromPath
-        jmp     EventLoop
+
+        FALL_THROUGH_TO EventLoop
 
 ;;; ============================================================
 
 
 ep_loop:
+
+.proc EventLoop
+        jsr     SystemTask
+        jsr     GetNextEvent
+
+    IF A = #MGTK::EventKind::key_down
+        jsr     file_dialog::HandleKey
+    ELSE_IF A = #MGTK::EventKind::button_down
+        jsr     file_dialog::HandleClick
+    ELSE_IF A <> #MGTK::EventKind::no_event
+        jsr     file_dialog::ResetTypeDown
+    END_IF
+
         jmp     EventLoop
+.endproc ; EventLoop
 
 ;;; ============================================================
 

@@ -23,6 +23,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
         BTKEntry := BTKRelayImpl
+        LETKEntry := LETKRelayImpl
 
 .proc Run
         ;; A = (obsolete, was dialog type)
@@ -34,81 +35,189 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         and     #$7F
         sta     copy_when
 
+        ;; Save stack
         tsx
         stx     saved_stack
 
-        jsr     file_dialog::Init
-        SET_BIT7_FLAG file_dialog::extra_controls_flag
-        copy8   #file_dialog::kSelectionRequiredDirsOK, file_dialog::selection_requirement_flags
+        ;; Init the dialog, set title
+        CALL    file_dialog::Init, A=#file_dialog::kSelectionRequiredDirsOK, X=#file_dialog::kShowAllFiles
+        ldax    #label_edit
+        bit     is_add_flag
+    IF NS
+        ldax    #label_add
+    END_IF
+        stax    shortcut_dialog_res::winfo_extended::title
 
+        ;; Dynamic callbacks
+        COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
+
+        ;; Open the dialog
+        CALL    file_dialog::OpenWindow, AX=#shortcut_dialog_res::winfo_extended
+
+        ;; Draw custom controls
         lda     #BTK::kButtonStateNormal
         sta     primary_run_list_button::state
         sta     secondary_run_list_button::state
         sta     at_first_boot_button::state
         sta     at_first_use_button::state
         sta     never_button::state
-
-        ldax    #label_edit
-        bit     is_add_flag
-    IF NS
-        ldax    #label_add
-    END_IF
-        jsr     file_dialog::OpenWindow
         jsr     DrawControls
-
-        COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 
         lda     which_run_list
         CALL    UpdateRunListButton, C=1
         lda     copy_when
         CALL    DrawCopyWhenButton, C=1
 
-        copy16  #HandleClick, file_dialog::click_handler_hook
-        copy16  #HandleKey, file_dialog::key_handler_hook
-        copy8   #kSelectorMaxNameLength, file_dialog_res::line_edit::max_length
+        LETK_CALL LETK::Init, shortcut_dialog_res::le_params
+        LETK_CALL LETK::Activate, shortcut_dialog_res::le_params
+        copy8   #kSelectorMaxNameLength, shortcut_dialog_res::line_edit::max_length
+
+        ;; Set the path
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0
     IF ZERO
         jsr     file_dialog::InitPathWithDefaultDevice
     ELSE
-        COPY_STRING path_buf0, file_dialog::path_buf
-
+        sta     len
         ;; Strip to parent directory
-        jsr     file_dialog::StripPathBufSegment
+        CALL    main::RemovePathSegment, AX=#path_buf0
 
         ;; And populate `buffer` with filename
-        ldx     file_dialog::path_buf
+        ldx     path_buf0
         inx
         ldy     #0
       DO
         inx
         iny
         copy8   path_buf0,x, buffer,y
-      WHILE X <> path_buf0
+      WHILE X <> len
         sty     buffer
+
+        CALL    file_dialog::InitPath, AX=#path_buf0
     END_IF
+
         CALL    file_dialog::UpdateListFromPathAndSelectFile, AX=#buffer
-        jmp     file_dialog::EventLoop
+        jmp     EventLoop
 
 buffer: .res 16, 0
-
+len:    .byte   0
 .endproc ; Run
 
 ;;; ============================================================
 
-.proc DrawControls
-        MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
-        CALL    file_dialog::DrawLineEditLabel, AX=#enter_the_name_to_appear_label
+.proc EventLoop
+    DO
+        LETK_CALL LETK::Idle, shortcut_dialog_res::le_params
+        jsr     SystemTask
+        jsr     GetNextEvent
+    WHILE A = #MGTK::EventKind::no_event
 
+    IF A = #MGTK::EventKind::key_down
+
+        lda     event_params::key
+        ldx     event_params::modifiers
+        sta     shortcut_dialog_res::le_params::key
+        stx     shortcut_dialog_res::le_params::modifiers
+
+      IF ZERO
+        ;; No modifier
+
+        ;; Line edit key?
+       IF A BETWEEN #' ', #CHAR_DELETE
+        LETK_CALL LETK::Key, shortcut_dialog_res::le_params
+        jmp     consume
+       ELSE_IF A IN #CHAR_LEFT, #CHAR_RIGHT, #CHAR_CTRL_F, #CHAR_CLEAR
+        LETK_CALL LETK::Key, shortcut_dialog_res::le_params
+        jmp     consume
+       END_IF
+
+      ELSE
+        ;; Modifier - ours or we let the dialog handle it
+
+        jsr     file_dialog::CheckTypeDown
+        beq     EventLoop
+        lda     event_params::key
+
+        ;; Line edit key?
+       IF A IN #CHAR_LEFT, #CHAR_RIGHT
+        LETK_CALL LETK::Key, shortcut_dialog_res::le_params
+        jmp     consume
+       END_IF
+
+        ;; Radio button shortcut?
+       IF A BETWEEN #res_char_shortcut_apple_1, #res_char_shortcut_apple_5
+        jsr     HandleKey
+        jmp     consume
+       END_IF
+
+      END_IF
+
+        jsr     file_dialog::HandleKey
+        jmp     EventLoop
+    END_IF
+
+    IF A = #MGTK::EventKind::button_down
+
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params+MGTK::FindWindowParams::window_id
+      IF A = #file_dialog_res::kFilePickerDlgWindowID
+        sta     screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        jsr     HandleClick
+        bmi     consume
+      END_IF
+
+        jsr     file_dialog::HandleClick
+        jmp     EventLoop
+    END_IF
+
+    IF A = #kEventKindMouseMoved
+        ;; Update mouse cursor if over/off text box
+        copy8   #file_dialog_res::kFilePickerDlgWindowID, screentowindow_params+MGTK::ScreenToWindowParams::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params+MGTK::ScreenToWindowParams::window
+        MGTK_CALL MGTK::InRect, shortcut_dialog_res::line_edit_rect
+        ASSERT_EQUALS MGTK::inrect_outside, 0
+       IF NOT ZERO
+        jsr     main::SetCursorIBeam
+       ELSE
+        jsr     main::SetCursorPointer
+       END_IF
+
+        FALL_THROUGH_TO consume
+    END_IF
+
+consume:
+        jsr     file_dialog::ResetTypeDown
+        jmp     EventLoop
+
+.endproc ; EventLoop
+
+;;; ============================================================
+
+.proc DrawControls
+        MGTK_CALL MGTK::SetPort, file_dialog_res::grafport
+
+        ;; Name field
+        MGTK_CALL MGTK::MoveTo, shortcut_dialog_res::line_edit_label_pos
+        MGTK_CALL MGTK::DrawString, enter_the_name_to_appear_label
+        MGTK_CALL MGTK::FrameRect, shortcut_dialog_res::line_edit_rect
+
+        ;; Vertical separator
+        MGTK_CALL MGTK::MoveTo, shortcut_dialog_res::dialog_sep_start
+        MGTK_CALL MGTK::LineTo, shortcut_dialog_res::dialog_sep_end
+
+        ;; Radio buttons
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         MGTK_CALL MGTK::DrawString, add_a_new_entry_to_label_str
 
-        MGTK_CALL MGTK::MoveTo, down_load_label_pos
-        MGTK_CALL MGTK::DrawString, down_load_label_str
-
         BTK_CALL BTK::RadioDraw, primary_run_list_button
         BTK_CALL BTK::RadioDraw, secondary_run_list_button
+
+        MGTK_CALL MGTK::MoveTo, down_load_label_pos
+        MGTK_CALL MGTK::DrawString, down_load_label_str
 
         BTK_CALL BTK::RadioDraw, at_first_boot_button
         BTK_CALL BTK::RadioDraw, at_first_use_button
@@ -199,6 +308,7 @@ alert:  jmp     ShowAlert
 
 .proc HandleCancel
         jsr     file_dialog::CloseWindow
+        jsr     main::SetCursorPointer
         ldx     saved_stack
         txs
         RETURN  A=#$FF
@@ -215,7 +325,10 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 ;;; ============================================================
 
+;;; Output: A=$FF/N=1/Z=0 if consumed, A=$00/N=0/Z=1 otherwise
 .proc HandleClick
+        ;; Radio buttons
+
         MGTK_CALL MGTK::InRect, primary_run_list_button::rect
         bne     ClickPrimaryRunListCtrl
 
@@ -230,6 +343,14 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
         MGTK_CALL MGTK::InRect, never_button::rect
         bne     ClickNeverCtrl
+
+        ;; Text Edit
+        MGTK_CALL MGTK::InRect, shortcut_dialog_res::line_edit_rect
+    IF NOT_ZERO
+        COPY_STRUCT MGTK::Point, screentowindow_params+MGTK::ScreenToWindowParams::window, shortcut_dialog_res::le_params::coords
+        LETK_CALL LETK::Click, shortcut_dialog_res::le_params
+        RETURN  A=#$FF
+    END_IF
 
         RETURN  A=#0
 .endproc ; HandleClick
@@ -331,11 +452,8 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 ;;; ============================================================
 
+;;; Input: A=`event_params::key`
 .proc HandleKey
-        lda     event_params::modifiers
-        RTS_IF ZERO
-
-        lda     event_params::key
         cmp     #res_char_shortcut_apple_1
         jeq     ClickPrimaryRunListCtrl
 

@@ -6,20 +6,44 @@
 ;;; * lib/doubleclick.s
 ;;; * lib/event_params.s
 ;;; * lib/file_dialog_res.s
-;;; * lib/get_next_event.s
 ;;;
-;;; Requires these macros to be functional:
+;;; Requires these macros to be functional (via corresponding `XYZEntry`)
 ;;; * `MLI_CALL`
 ;;; * `MGTK_CALL`
 ;;; * `BTK_CALL`
 ;;; * `LBTK_CALL`
 ;;;
-;;; Requires the following proc definitions:
-;;; * `SystemTask`
+;;; Usage:
+;;; * Save the stack pointer
+;;; * Call `Init` with A=`kSelection*`, X=`kShow*`
+;;; * Assign dialog title to Winfo's `title`
+;;; * Modify flags:
+;;;   * `selection_requirement_flags`
+;;;   * `only_show_dirs_flag`
+;;; * Call `OpenWindow` with AX = Winfo
+;;; * Call `InitPathWithDefaultDevice` or `InitPath` with AX = path
+;;; * Call `UpdateListFromPath`
+;;;   * If `FD_EXTRAS` defined, can call `UpdateListFromPathAndSelectFile` instead
 ;;;
-;;; If `FD_EXTENDED` is defined:
-;;; * name field at bottom and extra clickable controls on right are supported
-;;; * `LETK_CALL` is required
+;;; Client must implement an event loop:
+;;;   * Call `GetNextEvent`
+;;;   * on `EventKind::key_down` call `HandleKey`
+;;;   * on `EventKind::button_down` call `HandleClick`
+;;;   * otherwise, if not `EventKind::no_event` call `ResetTypeDown`
+;;; If custom controls are used, then `ResetTypeDown` should be called
+;;; if one consumes an event. Call `CheckTypeDown` directly with key in
+;;; A if doing modified type-down; returns Z=1 if consumed.
+;;;
+;;; Client must implement `HandleOK` in scope; when called:
+;;;   * Call `GetPath` with AX = path buffer
+;;;   * Validate; return if not valid
+;;;     * While validating, state in `STATE_START`...`STATE_END` must be preserved.
+;;;   * Call `CloseWindow`
+;;;   * Restore the stack
+;;;
+;;; Client must implement `HandleCancel` in scope; when called:
+;;;   * Call `CloseWindow`
+;;;   * Restore the stack
 
 ;;; ============================================================
 ;;; Memory map
@@ -111,84 +135,22 @@ selection_requirement_flags:
 
 ;;; ============================================================
 
+;;; Input: A=`selection_requirement_flags`, X=`only_show_dirs_flag`
+
 .proc Init
+        sta     selection_requirement_flags
+        stx     only_show_dirs_flag
+
         jsr     _SetCursorPointer
-
-        lda     #0
-        sta     type_down_buf
-        sta     only_show_dirs_flag
-.ifdef FD_EXTENDED
-        sta     extra_controls_flag
-.endif
-
+        jsr     ResetTypeDown
         copy8   #$FF, selected_index
 
-        ;; Client must call `UpdateListFromPath` which will initialize
-        ;; the dynamic button states.
+        ;; Client must call `UpdateListFromPath` or
+        ;; `UpdateListFromPathAndSelectFile` which will initialize the
+        ;; dynamic button states.
 
         rts
 .endproc ; Init
-
-;;; ============================================================
-;;; Flags set by invoker to alter behavior
-
-.ifdef FD_EXTENDED
-;;; bit7 set when `click_handler_hook` should be called and name input present.
-extra_controls_flag:
-        .byte   0
-
-;;; These vectors get patched by overlays that add controls.
-click_handler_hook:
-        .addr   NoOp
-key_handler_hook:
-        .addr   NoOp
-.endif
-
-;;; ============================================================
-
-.proc EventLoop
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-    IF NS
-        LETK_CALL LETK::Idle, file_dialog_res::le_params
-    END_IF
-.endif
-        jsr     SystemTask
-        jsr     GetNextEvent
-
-    IF A = #MGTK::EventKind::key_down
-        jsr     _HandleKeyEvent
-        jmp     EventLoop
-    END_IF
-
-    IF A = #MGTK::EventKind::button_down
-        ldx     #0              ; Clear type-down
-        stx     type_down_buf
-        jsr     _HandleButtonDown
-        jmp     EventLoop
-    END_IF
-
-    IF A = #kEventKindMouseMoved
-        ldx     #0              ; Clear type-down
-        stx     type_down_buf
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-      IF NS
-        jsr     _MoveToWindowCoords
-        MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
-        ASSERT_EQUALS MGTK::inrect_outside, 0
-       IF NOT ZERO
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-       ELSE
-        jsr     _SetCursorPointer
-       END_IF
-        ;; Fall through to JMP
-      END_IF
-.endif
-    END_IF
-
-        jmp     EventLoop
-.endproc ; EventLoop
 
 ;;; ============================================================
 
@@ -202,7 +164,9 @@ key_handler_hook:
 
 ;;; ============================================================
 
-.proc _HandleButtonDown
+.proc HandleClick
+        jsr     ResetTypeDown
+
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params+MGTK::FindWindowParams::which_area
     IF A <> #MGTK::Area::content
@@ -283,26 +247,8 @@ ret:    rts
     END_IF
 
 
-        ;; --------------------------------------------------
-        ;; Extra controls
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-    IF NS
-        ;; Text Edit
-        MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
-      IF NOT_ZERO
-        COPY_STRUCT MGTK::Point, screentowindow_params+MGTK::ScreenToWindowParams::window, file_dialog_res::le_params::coords
-        LETK_CALL LETK::Click, file_dialog_res::le_params
         rts
-      END_IF
-
-        ;; Additional controls
-        jmp     (click_handler_hook)
-    END_IF
-.endif
-
-        rts
-.endproc ; _HandleButtonDown
+.endproc ; HandleClick
 
 ;;; ============================================================
 ;;; Refresh the list view from the current path
@@ -317,7 +263,7 @@ ret:    rts
 .endproc ; UpdateListFromPath
 
 ;;; As above, but select filename passed in A,X
-.ifdef FD_EXTENDED
+.ifdef FD_EXTRAS
 .proc UpdateListFromPathAndSelectFile
         phax
 
@@ -331,6 +277,49 @@ ret:    rts
         LBTK_CALL LBTK::Init, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
 .endproc ; UpdateListFromPathAndSelectFile
+
+;;; ============================================================
+;;; Find index to filename in file_list_index.
+;;; Input: A,X = ptr to filename
+;;; Output: A = index, or $FF if not found
+
+.proc _FindFilenameIndex
+        name_ptr := $08
+        curr_ptr := $06
+
+        stax    name_ptr
+
+        ;; Compare against each filename
+        lda     #0
+        sta     index
+        copy16  #file_names, curr_ptr
+loop:
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        cmp     num_file_names
+        beq     failed
+
+        ;; Check length
+        jsr     _CompareStrings
+        beq     found
+
+        ;; No match - next!
+        inc     index
+        add16_8 curr_ptr, #16
+        jmp     loop
+
+failed: RETURN  A=#$FF
+
+        ;; Now find index
+found:  ldx     num_file_names
+    DO
+        dex
+        lda     file_list_index,x
+        and     #$7F
+    WHILE A <> index
+        txa
+        rts
+.endproc ; _FindFilenameIndex
 .endif
 
 ;;; ============================================================
@@ -364,7 +353,7 @@ ret:    rts
 
         bit     selected_index
     IF NC
-        jsr     StripPathBufSegment
+        jsr     _StripPathBufSegment
     END_IF
 
         rts
@@ -478,7 +467,7 @@ ret:    rts
         jsr     _IsCloseAllowed
     IF CC
         ;; Remove last segment
-        jsr     StripPathBufSegment
+        jsr     _StripPathBufSegment
 
         lda     path_buf
       IF ZERO
@@ -494,53 +483,34 @@ ret:    rts
 ;;; ============================================================
 ;;; Key handler
 
-.proc _HandleKeyEvent
+.proc HandleKey
         lda     event_params+MGTK::Event::key
         ldx     event_params+MGTK::Event::modifiers
         sta     file_dialog_res::lb_params::key
         stx     file_dialog_res::lb_params::modifiers
 
     IF A IN #CHAR_UP, #CHAR_DOWN
-        copy8   #0, type_down_buf
+        jsr     ResetTypeDown
         LBTK_CALL LBTK::Key, file_dialog_res::lb_params
         rts
     END_IF
 
     IF X <> #0
         ;; With modifiers
-        jsr     _CheckTypeDown
+        jsr     CheckTypeDown
         jeq     exit
 
-        copy8   #0, type_down_buf
+        jsr     ResetTypeDown
         ldx     event_params+MGTK::Event::modifiers
         lda     event_params+MGTK::Event::key
-
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-      IF NS
-        ;; Hook for clients
-       IF A BETWEEN #'0', #'9'
-        jmp     (key_handler_hook)
-       END_IF
-      END_IF
-.endif
-
     ELSE
         ;; --------------------------------------------------
         ;; No modifiers
 
-.ifndef FD_EXTENDED
-        jsr     _CheckTypeDown
+        jsr     CheckTypeDown
         jeq     exit
-.else
-        bit     extra_controls_flag
-      IF NC
-        jsr     _CheckTypeDown
-        beq     exit
-      END_IF
-.endif
 
-        copy8   #0, type_down_buf
+        jsr     ResetTypeDown
         lda     event_params+MGTK::Event::key
 
       IF A = #CHAR_RETURN
@@ -575,22 +545,20 @@ ret:    rts
 
     END_IF
 
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-      IF NS
-        ;; Edit control
-        copy8   event_params+MGTK::Event::key, file_dialog_res::le_params::key
-        copy8   event_params+MGTK::Event::modifiers, file_dialog_res::le_params::modifiers
-        LETK_CALL LETK::Key, file_dialog_res::le_params
-      END_IF
-.endif
-
-
 exit:   rts
+.endproc ; HandleKey
 
 ;;; ============================================================
 
-.proc _CheckTypeDown
+.proc ResetTypeDown
+        copy8   #0, type_down_buf
+        rts
+.endproc ; ResetTypeDown
+
+;;; ============================================================
+
+;;; Output: Z=1 if consumed, Z=0 otherwise
+.proc CheckTypeDown
         CALL    _ToUpperCase, A=event_params+MGTK::Event::key
         cmp     #'A'
         bcc     :+
@@ -671,9 +639,7 @@ found:  RETURN  A=index
 
 .endproc ; _FindMatch
 
-.endproc ; _CheckTypeDown
-
-.endproc ; _HandleKeyEvent
+.endproc ; CheckTypeDown
 
 ;;; ============================================================
 
@@ -757,61 +723,51 @@ found:  RETURN  A=index
 ;;; ============================================================
 
 .proc OpenWindow
+        ;; Pointers we'll need later
+        stax    winfo_ptr
 
-        ;; Save title string param
-        phax
+        ptr := $06
+        stax    ptr
+        ldy     #MGTK::Winfo::title
+        lda     (ptr),y
+        pha
+        iny
+        lda     (ptr),y
+        pha
 
-.ifdef FD_EXTENDED
-        ;; Set correct sizes for the windows (dialog and listbox) based on options.
-        ldx     #.sizeof(MGTK::Point)-1
-    DO
-        bit     extra_controls_flag
-      IF NS
-        copy8   file_dialog_res::extra_viewloc,x, file_dialog_res::winfo::viewloc,x
-        copy8   file_dialog_res::extra_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
-        copy8   file_dialog_res::extra_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
-      ELSE
-        copy8   file_dialog_res::normal_viewloc,x, file_dialog_res::winfo::viewloc,x
-        copy8   file_dialog_res::normal_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
-        copy8   file_dialog_res::normal_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
-      END_IF
-        dex
-    WHILE POS
-.endif
+        ;; List box position
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::viewloc
+        add16in (ptr),y, #file_dialog_res::kListBoxLeft, file_dialog_res::winfo_listbox::port+MGTK::GrafPort::viewloc+MGTK::Point::xcoord
+        iny
+        add16in (ptr),y, #file_dialog_res::kListBoxTop, file_dialog_res::winfo_listbox::port+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
 
-        MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
+        ;; Frame rect size
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::bottomright
+        sub16in (ptr),y, #kBorderDX*2-1, file_dialog_res::dialog_frame_rect::x2
+        iny
+        sub16in (ptr),y, #kBorderDY*2-1, file_dialog_res::dialog_frame_rect::y2
 
-        MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
+        ;; Open and decorate the window
+
+        MGTK_CALL MGTK::OpenWindow, SELF_MODIFIED, winfo_ptr
+
+        MGTK_CALL MGTK::GetWinPort, file_dialog_res::fd_getwinport_params
+        MGTK_CALL MGTK::SetPort, file_dialog_res::grafport
+
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
-
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
-.ifndef FD_EXTENDED
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
-.else
-        bit     extra_controls_flag
-    IF NS
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_ex_frame_rect
-    ELSE
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
-    END_IF
-.endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
 
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-    IF NS
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::line_edit_rect
-    END_IF
-.endif
-
         ;; Draw title
-        copy16  file_dialog_res::winfo::maprect::x2, file_dialog_res::pos_title::xcoord
+        copy16  file_dialog_res::grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2, file_dialog_res::pos_title::xcoord
         lsr16   file_dialog_res::pos_title::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
 
-        plax
+        plax                    ; AX=title of passed Winfo
         jsr     _DrawStringCentered
 
+        ;; Buttons
         jsr     _IsOKAllowed
         ror
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
@@ -833,23 +789,13 @@ found:  RETURN  A=index
         sta     file_dialog_res::close_button::state
         BTK_CALL BTK::Draw, file_dialog_res::close_button
 
-        MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
+        ;; Separator between button groups
+        MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
         MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
 
-.ifdef FD_EXTENDED
-        bit     extra_controls_flag
-    IF NS
-        MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::pattern
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
-        MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
-
-        LETK_CALL LETK::Init, file_dialog_res::le_params
-        LETK_CALL LETK::Activate, file_dialog_res::le_params
-    END_IF
-.endif
-
+        ;; List box
         lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
         sta     file_dialog_res::winfo_listbox::vscroll
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
@@ -861,10 +807,7 @@ found:  RETURN  A=index
 
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
-        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-.ifdef FD_EXTENDED
-        jsr     _SetCursorPointer
-.endif
+        MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo ; Valid even if another winfo used
         rts
 .endproc ; CloseWindow
 
@@ -888,17 +831,6 @@ found:  RETURN  A=index
 
 ;;; ============================================================
 
-.ifdef FD_EXTENDED
-.proc DrawLineEditLabel
-        stax    @addr
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::line_edit_label_pos
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawLineEditLabel
-.endif
-
-;;; ============================================================
-
 .proc InitPathWithDefaultDevice
         copy8   DEVCNT, device_num
 
@@ -919,10 +851,16 @@ retry:  ldx     #SELF_MODIFIED_BYTE
         jmp     retry
 
 found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
-        lda     #0
-        sta     path_buf
+        jsr     _SetRootPath
         TAIL_CALL _AppendToPathBuf, AX=#on_line_buffer
 .endproc ; InitPathWithDefaultDevice
+
+;;; Input: AX = path
+.proc InitPath
+        ldy     #0
+        sty     path_buf
+        beq     _AppendToPathBuf ; always
+.endproc ; InitPath
 
 ;;; ============================================================
 ;;; Assert: `selected_index` is valid (not -1)
@@ -946,7 +884,7 @@ found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
         stax    ptr
 
         ldx     path_buf
-    IF X <> #1
+    IF X >= #2                  ; 0 = use full path, 1 = is root
         lda     #'/'
         sta     path_buf+1,x
         inc     path_buf
@@ -982,7 +920,7 @@ found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
 
 ;;; ============================================================
 
-.proc StripPathBufSegment
+.proc _StripPathBufSegment
     DO
         ldx     path_buf
         BREAK_IF ZERO
@@ -990,7 +928,7 @@ found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
         lda     path_buf,x
     WHILE A <> #'/'
         rts
-.endproc ; StripPathBufSegment
+.endproc ; _StripPathBufSegment
 
 ;;; ============================================================
 
@@ -1181,7 +1119,7 @@ next:   add16_8 ptr, #16        ; advance to next
 ;;; ============================================================
 
 .proc _UpdateDiskAndDirNames
-        MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
+        MGTK_CALL MGTK::SetPort, file_dialog_res::grafport
 
         copy8   #kGlyphDiskLeft, file_dialog_res::filename_buf+1
         copy8   #kGlyphDiskRight, file_dialog_res::filename_buf+2
@@ -1323,11 +1261,17 @@ next:   add16_8 ptr, #16        ; advance to next
         and     #$7F
         jmp     _GetNthFilename
 .endproc ; _CalcPtr
+.endproc ; _SortFileNames
+
+;;; ============================================================
 
 ;;; Inputs: $06, $08 are pts to strings
 ;;; Compare strings at $06 (1) and $08 (2).
 ;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
 .proc _CompareStrings
+        ptr1 := $06
+        ptr2 := $08
+
         ldy     #0
         copy8   (ptr1),y, len1
         copy8   (ptr2),y, len2
@@ -1359,67 +1303,6 @@ gt:     lda     #$FF            ; Z=0
         sec
 ret:    rts
 .endproc ; _CompareStrings
-
-.endproc ; _SortFileNames
-
-;;; ============================================================
-;;; Find index to filename in file_list_index.
-;;; Input: A,X = ptr to filename
-;;; Output: A = index, or $FF if not found
-
-.ifdef FD_EXTENDED
-.proc _FindFilenameIndex
-        name_ptr := $08
-        curr_ptr := $06
-
-        stax    name_ptr
-
-        ;; Compare against each filename
-        lda     #0
-        sta     index
-        copy16  #file_names, curr_ptr
-loop:
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     num_file_names
-        beq     failed
-
-        ;; Check length
-        jsr     _SortFileNames::_CompareStrings
-        beq     found
-
-        ;; No match - next!
-        inc     index
-        add16_8 curr_ptr, #16
-        jmp     loop
-
-failed: RETURN  A=#$FF
-
-        ;; Now find index
-found:  ldx     num_file_names
-    DO
-        dex
-        lda     file_list_index,x
-        and     #$7F
-    WHILE A <> index
-        txa
-        rts
-.endproc ; _FindFilenameIndex
-.endif
-
-;;; ============================================================
-
-.ifdef FD_EXTENDED
-
-;;; Dynamically altered table of handlers.
-
-kJumpTableSize = 6
-jump_table:
-HandleOK:       jmp     0
-HandleCancel:   jmp     0
-        ASSERT_EQUALS * - jump_table, kJumpTableSize
-
-.endif ; FD_EXTENDED
 
 ;;; ============================================================
 ;;; List Box
@@ -1491,25 +1374,38 @@ selected_index := file_dialog_res::listbox_rec::selected_index
 
 .endscope ; file_dialog_impl
 
+;;; --------------------------------------------------
 ;;; "Exports"
-CloseWindow := file_dialog_impl::CloseWindow
-EventLoop := file_dialog_impl::EventLoop
-GetPath := file_dialog_impl::GetPath
-InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
-OpenWindow := file_dialog_impl::OpenWindow
-Init := file_dialog_impl::Init
-UpdateListFromPath := file_dialog_impl::UpdateListFromPath
-StripPathBufSegment := file_dialog_impl::StripPathBufSegment
+;;; --------------------------------------------------
 
-only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
-selection_requirement_flags := file_dialog_impl::selection_requirement_flags
+;;; Lifecycle
+Init := file_dialog_impl::Init
+OpenWindow := file_dialog_impl::OpenWindow
+CloseWindow := file_dialog_impl::CloseWindow
+InitPath := file_dialog_impl::InitPath
+InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
+UpdateListFromPath := file_dialog_impl::UpdateListFromPath
+.ifdef FD_EXTRAS
+UpdateListFromPathAndSelectFile := file_dialog_impl::UpdateListFromPathAndSelectFile
+.endif
+
+GetPath := file_dialog_impl::GetPath
+
+;;; Event Handlers
+HandleKey := file_dialog_impl::HandleKey
+HandleClick := file_dialog_impl::HandleClick
+CheckTypeDown := file_dialog_impl::CheckTypeDown
+ResetTypeDown := file_dialog_impl::ResetTypeDown
+
+;;; Configuration
 kSelectionOptional           = %00000000 ; unused
 kSelectionOptionalUnlessRoot = %01000000
 kSelectionRequiredNoDirs     = %10000000
 kSelectionRequiredDirsOK     = %11000000
+kShowAllFiles                = %00000000
+kShowOnlyDirectories         = %10000000
 
-path_buf := file_dialog_impl::path_buf
-
+;;; State
 STATE_START := file_dialog_impl::state_start
 STATE_END   := file_dialog_impl::state_end
 
@@ -1517,13 +1413,3 @@ STATE_END   := file_dialog_impl::state_end
 ::file_dialog_impl__DrawListEntryProc := file_dialog_impl::DrawListEntryProc
 ::file_dialog_impl__OnListSelectionChange := file_dialog_impl::OnListSelectionChange
 
-.ifdef FD_EXTENDED
-DrawLineEditLabel := file_dialog_impl::DrawLineEditLabel
-UpdateListFromPathAndSelectFile := file_dialog_impl::UpdateListFromPathAndSelectFile
-
-click_handler_hook := file_dialog_impl::click_handler_hook
-key_handler_hook := file_dialog_impl::key_handler_hook
-extra_controls_flag := file_dialog_impl::extra_controls_flag
-jump_table := file_dialog_impl::jump_table
-kJumpTableSize := file_dialog_impl::kJumpTableSize
-.endif

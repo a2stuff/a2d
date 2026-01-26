@@ -483,11 +483,72 @@ block_count:                    ; totaled during enumeration
 ;;; ============================================================
 
         FONT := DEFAULT_FONT
-        FD_EXTENDED = 1
+        FD_LBTK_RELAYS = 1
         .include "../lib/file_dialog_res.s"
 
 ;;; ============================================================
 ;;; Resources for Add/Edit a Shortcut dialog
+
+;;; Customized File Picker with extra controls to the right and below
+
+.scope shortcut_dialog_res
+
+kFilePickerDlgExWidth   = file_dialog_res::kFilePickerDlgWidth + 177
+kFilePickerDlgExHeight  = file_dialog_res::kFilePickerDlgHeight + 24
+kFilePickerDlgExLeft    = (kScreenWidth - kFilePickerDlgExWidth) / 2
+kFilePickerDlgExTop     = (kScreenHeight - kFilePickerDlgExHeight) / 2
+
+.params winfo_extended
+window_id:      .byte   file_dialog_res::kFilePickerDlgWindowID
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontheight:  .word   50
+maxcontwidth:   .word   500
+maxcontheight:  .word   140
+port:
+        DEFINE_POINT viewloc, kFilePickerDlgExLeft, kFilePickerDlgExTop
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kFilePickerDlgExWidth, kFilePickerDlgExHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+        REF_WINFO_MEMBERS
+.endparams
+
+;;; Dividing line
+        DEFINE_POINT dialog_sep_start, 315, file_dialog_res::kControlsTop
+        DEFINE_POINT dialog_sep_end,   315, 99
+
+;;; Line Edit - Filename (etc)
+        kLineEditX = file_dialog_res::kControlsLeft
+        kLineEditWidth = 435
+        kLineEditY = 114
+        kLineEditHeight = kTextBoxHeight
+
+        DEFINE_POINT line_edit_label_pos, kLineEditX, kLineEditY-2
+        DEFINE_RECT_SZ line_edit_rect, kLineEditX, kLineEditY, kLineEditWidth, kLineEditHeight
+
+        DEFINE_LINE_EDIT line_edit, file_dialog_res::kFilePickerDlgWindowID, text_input_buf, kLineEditX, kLineEditY, kLineEditWidth, kMaxFilenameLength
+        DEFINE_LINE_EDIT_PARAMS le_params, line_edit
+
+.endscope ; shortcut_dialog_res
 
 enter_the_name_to_appear_label:
         PASCAL_STRING res_string_selector_label_enter_name
@@ -506,6 +567,7 @@ kRadioButtonLeft  = 332
         DEFINE_BUTTON at_first_boot_button,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, 71
         DEFINE_BUTTON at_first_use_button,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, 81
         DEFINE_BUTTON never_button,              kFDWinId, res_string_selector_label_never, res_string_shortcut_apple_5, kRadioButtonLeft, 91
+
 
 ;;; ============================================================
 

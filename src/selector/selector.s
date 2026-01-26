@@ -55,7 +55,7 @@ basic_system_not_found  = $FF
 
         ;; Dynamically loaded overlays
         DEFSEG OverlayFileDialog, OVERLAY_ADDR, $0B00
-        DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0B00
+        DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0A00
 
 ;;; ============================================================
 ;;; Selector module

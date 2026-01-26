@@ -10231,37 +10231,6 @@ eof:    RETURN  A=#$FF
 .endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
-;;; Remove segment from path at A,X
-;;; Input: A,X = path to modify
-;;; Output: A = length
-;;; Trashes $06
-
-.proc RemovePathSegment
-        path_ptr := $06
-        stax    path_ptr
-
-        ldy     #0
-        lda     (path_ptr),y    ; length
-    IF NOT_ZERO
-        tay
-      DO
-        lda     (path_ptr),y
-        cmp     #'/'
-        beq     :+
-        dey
-      WHILE NOT_ZERO
-        iny
-:
-        dey
-        tya
-        ldy     #0
-        sta     (path_ptr),y
-    END_IF
-
-        rts
-.endproc ; RemovePathSegment
-
-;;; ============================================================
 ;;; Generic Helpers
 ;;; ============================================================
 
@@ -12346,7 +12315,6 @@ ret:    RETURN  A=#$FF
         DoCopyFile := operations::DoCopyFile
 
         DoGetInfo := operations::get_info::DoGetInfo
-        RemovePathSegment := operations::RemovePathSegment
 
 ;;; ============================================================
 
@@ -13390,6 +13358,38 @@ retry:  MLI_CALL OPEN, open_params
 .endproc ; LoadDynamicRoutineImpl
 LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
 RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
+
+;;; ============================================================
+;;; Remove segment from path at A,X
+;;; Input: A,X = path to modify
+;;; Output: A = length
+;;; Trashes $06
+
+        PROC_USED_IN_OVERLAY
+.proc RemovePathSegment
+        path_ptr := $06
+        stax    path_ptr
+
+        ldy     #0
+        lda     (path_ptr),y    ; length
+    IF NOT_ZERO
+        tay
+      DO
+        lda     (path_ptr),y
+        cmp     #'/'
+        beq     :+
+        dey
+      WHILE NOT_ZERO
+        iny
+:
+        dey
+        tya
+        ldy     #0
+        sta     (path_ptr),y
+    END_IF
+
+        rts
+.endproc ; RemovePathSegment
 
 ;;; ============================================================
 

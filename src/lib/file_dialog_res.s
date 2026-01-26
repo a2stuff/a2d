@@ -5,15 +5,24 @@
 ;;; the resources.
 ;;; ============================================================
 
+;;; Define `FD_LBTK_RELAYS` if LBTK is running from Aux and
+;;; so callbacks will require aux>main relays.
+
 .scope file_dialog_res
 
 ;;; Must be visible to MGTK
 filename_buf:
         .res    18, 0           ; filename + length + slash (or + folder glyphs for others)
 
-
+;;; Dialog title
         DEFINE_POINT pos_title, 0, 14
 
+;;; Dialog frame
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME dialog_frame_rect, kFilePickerDlgWidth, kFilePickerDlgHeight
+
+;;; Multi-glyph symbols used to prefix volumes, folders and files
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
 str_file:
@@ -26,20 +35,10 @@ str_vol:
         kButtonGap = 3
         kSep = kButtonGap-1 + 1 + kButtonGap-1
 
+        kButtonsLeft = 195
+        kMaxNameWidth = 140
 
-pensize_normal: .byte   1, 1
-pensize_frame:  .byte   kBorderDX, kBorderDY
-        DEFINE_RECT_FRAME dialog_frame_rect, kFilePickerDlgWidth, kFilePickerDlgHeight
-
-        DEFINE_POINT item_pos, 0, 0
-
-.ifdef FD_EXTENDED
-        DEFINE_RECT_FRAME dialog_ex_frame_rect, kFilePickerDlgExWidth, kFilePickerDlgExHeight
-.endif
-
-kButtonsLeft = 195
-kMaxNameWidth = 140
-
+;;; Labels for current directory and current volume
         kDirLabelCenterX = kControlsLeft + kListBoxWidth/2
         DEFINE_POINT dir_label_pos, kDirLabelCenterX, 16 + kSystemFontHeight
         DEFINE_RECT_SZ dir_name_rect, kDirLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
@@ -47,6 +46,7 @@ kMaxNameWidth = 140
         DEFINE_POINT disk_label_pos, kDiskLabelCenterX, 16 + kSystemFontHeight
         DEFINE_RECT_SZ disk_name_rect, kDiskLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
 
+;;; Buttons
         DEFINE_BUTTON drives_button, kFilePickerDlgWindowID, res_string_button_drives, res_string_shortcut_drives,        kButtonsLeft, kControlsTop + 0 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON open_button, kFilePickerDlgWindowID,   res_string_button_open,   res_string_shortcut_open,          kButtonsLeft, kControlsTop + 1 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON close_button, kFilePickerDlgWindowID,  res_string_button_close,  res_string_shortcut_close,         kButtonsLeft, kControlsTop + 2 * (kButtonHeight + kButtonGap)
@@ -55,40 +55,29 @@ kMaxNameWidth = 140
         DEFINE_BUTTON ok_button, kFilePickerDlgWindowID,     res_string_button_ok,     kGlyphReturn,                      kButtonsLeft, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
         UNSUPPRESS_SHADOW_WARNING
 
-.ifdef FD_EXTENDED
-;;; Dividing line
-        DEFINE_POINT dialog_sep_start, 315, kControlsTop
-        DEFINE_POINT dialog_sep_end,   315, 99
-.endif
-
+;;; Separator between Drives / Open / Close and OK / Cancel
         kButtonSepY = kControlsTop + 3*kButtonHeight + 3*kButtonGap + 1
         DEFINE_POINT button_sep_start, kButtonsLeft, kButtonSepY
         DEFINE_POINT button_sep_end,   kButtonsLeft + kButtonWidth, kButtonSepY
 
-penXOR:         .byte   MGTK::penXOR
 pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
 checkerboard_pattern:
         .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA
 
-kFilePickerDlgWindowID  = $3E
+;;; ============================================================
 
-;;; Simple, no customizations supported
-kFilePickerDlgWidth     = 323
-kFilePickerDlgHeight    = 108
-kFilePickerDlgLeft      = (kScreenWidth - kFilePickerDlgWidth) / 2
-kFilePickerDlgTop       = (kScreenHeight - kFilePickerDlgHeight) / 2
+;;; Dialog Window
 
-;;; Advanced; can have name and custom controls
-.ifdef FD_EXTENDED
-kFilePickerDlgExWidth   = 500
-kFilePickerDlgExHeight  = 132
-kFilePickerDlgExLeft    = (kScreenWidth - kFilePickerDlgExWidth) / 2
-kFilePickerDlgExTop     = (kScreenHeight - kFilePickerDlgExHeight) / 2
-.endif
+;;; A different Winfo can be passed to `OpenWindow` but it must
+;;; use `kFilePickerDlgWindowID`.
+        kFilePickerDlgWindowID  = $3E
 
-;;; File Picker Dialog
+        kFilePickerDlgWidth     = 323
+        kFilePickerDlgHeight    = 108
+        kFilePickerDlgLeft      = (kScreenWidth - kFilePickerDlgWidth) / 2
+        kFilePickerDlgTop       = (kScreenHeight - kFilePickerDlgHeight) / 2
 
 .params winfo
 window_id:      .byte   kFilePickerDlgWindowID
@@ -124,29 +113,38 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
-;;; Listbox within File Picker Dialog
+grafport:       .tag    MGTK::GrafPort
 
-kEntryListCtlWindowID = $3F
+.params fd_getwinport_params
+window_id:      .byte   kFilePickerDlgWindowID
+port:           .addr   grafport
+.endparams
+
+;;; ============================================================
+
+;;; List Box definition
+
+        kEntryListCtlWindowID = $3F
 
         kListRows       = 7
-        kListBoxLeft    = kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
-        kListBoxTop     = kFilePickerDlgTop + kControlsTop + 1
+        kListBoxLeft    = kControlsLeft + 1 ; +1 for external border
+        kListBoxTop     = kControlsTop + 1
         kListBoxWidth   = 125
         kListBoxHeight  = kListItemHeight * kListRows - 1
-.ifdef FD_EXTENDED
-        kExListBoxLeft  = kFilePickerDlgExLeft + kControlsLeft + 1 ; +1 for external border
-        kExListBoxTop   = kFilePickerDlgExTop + 28
-.endif
 
         DEFINE_LIST_BOX_WINFO winfo_listbox, \
                 kEntryListCtlWindowID, \
-                kListBoxLeft, \
-                kListBoxTop, \
+                SELF_MODIFIED, \
+                SELF_MODIFIED, \
                 kListBoxWidth, \
                 kListBoxHeight, \
                 FONT
 
-.ifdef FD_EXTENDED
+;;; If LBTK resides in Aux then relays are needed. This is
+;;; specific to DeskTop/Disk Copy.
+
+.ifdef FD_LBTK_RELAYS
+
 ;;; Needed in DeskTop (LBTK in Aux, File Dialog in Main)
 .proc DrawEntryProc
         jsr     BankInMain
@@ -158,9 +156,12 @@ kEntryListCtlWindowID = $3F
         jsr     ::file_dialog_impl__OnListSelectionChange
         jmp     BankInAux
 .endproc ; OnSelChange
+
 .else
+
 DrawEntryProc := ::file_dialog_impl__DrawListEntryProc
 OnSelChange   := ::file_dialog_impl__OnListSelectionChange
+
 .endif
 
         DEFINE_LIST_BOX listbox_rec, file_dialog_res::winfo_listbox, \
@@ -168,32 +169,11 @@ OnSelChange   := ::file_dialog_impl__OnListSelectionChange
                 DrawEntryProc, OnSelChange, NoOp
         DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
+        ;; Used by `DrawEntryProc`
+        DEFINE_POINT item_pos, 0, 0
+
 NoOp:   rts
 
-.ifdef FD_EXTENDED
-        DEFINE_POINT extra_viewloc, kFilePickerDlgExLeft, kFilePickerDlgExTop
-        DEFINE_POINT extra_size, kFilePickerDlgExWidth, kFilePickerDlgExHeight
-        DEFINE_POINT extra_listloc, kExListBoxLeft, kExListBoxTop
-
-        DEFINE_POINT normal_viewloc, kFilePickerDlgLeft, kFilePickerDlgTop
-        DEFINE_POINT normal_size, kFilePickerDlgWidth, kFilePickerDlgHeight
-        DEFINE_POINT normal_listloc, kListBoxLeft, kListBoxTop
-.endif
-
 ;;; ============================================================
-
-.ifdef FD_EXTENDED
-;;; Line Edit - Filename (etc)
-        kLineEditX = kControlsLeft
-        kLineEditWidth = 435
-        kLineEditY = 114
-        kLineEditHeight = kTextBoxHeight
-
-        DEFINE_POINT line_edit_label_pos, kLineEditX, kLineEditY-2
-        DEFINE_RECT_SZ line_edit_rect, kLineEditX, kLineEditY, kLineEditWidth, kLineEditHeight
-
-        DEFINE_LINE_EDIT line_edit, kFilePickerDlgWindowID, text_input_buf, kLineEditX, kLineEditY, kLineEditWidth, kMaxFilenameLength
-        DEFINE_LINE_EDIT_PARAMS le_params, line_edit
-.endif ; FD_EXTENDED
 
 .endscope ; file_dialog_res
