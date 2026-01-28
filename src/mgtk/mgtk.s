@@ -5686,14 +5686,14 @@ active_menu:
         DEFINE_RECT menu_bar_rect, AS_WORD(-1), AS_WORD(-1), kScreenWidth, $C
 
         ;; Modified by `StartDeskTopImpl` and `HiliteMenu`
-        DEFINE_RECT hilite_menu_rect, 0, 0, 0, 11
+        DEFINE_RECT hilite_menu_rect, 0, 0, 0, 0
 
 savebehind_buffer:
         .word   0
 
-        DEFINE_RECT menu_hittest_rect, 0, 12, 0, 0
+        DEFINE_RECT menu_hittest_rect, 0, 0, 0, 0
 
-        DEFINE_RECT menu_fill_rect, 0, 12, 0, 0
+        DEFINE_RECT menu_fill_rect, 0, 0, 0, 0
 
 menu_item_y_table:
         .res    MGTK::max_menu_items+1 ; last entry represents height of menu
@@ -5717,19 +5717,6 @@ shortcut_text:
 mark_text:
         .byte   1              ; length
         .byte   $1D
-
-menu_bar_rect_addr:
-        .addr   menu_bar_rect
-
-menu_hittest_rect_addr:
-        .addr   menu_hittest_rect
-
-mark_text_addr:
-        .addr   mark_text
-
-shortcut_text_addr:
-        .addr   shortcut_text
-
 
         menu_index        := $A7
         menu_count        := $A8
@@ -5950,8 +5937,7 @@ draw_menu_impl:
         jsr     HideCursorAndSaveParams ; restored by call below
         jsr     SetStandardPort
 
-        ldax    menu_bar_rect_addr
-        jsr     FillAndFrameRect
+        CALL    FillAndFrameRect, AX=#menu_bar_rect
 
         ldax    #12
         ldy     sysfont_height
@@ -6962,7 +6948,7 @@ draw_menu_bar:
 
         sta     find_menu_id
         jsr     FindMenuById
-        jsr     HideCursorImpl
+        jsr     HideCursorImpl  ; before save/restore
         jsr     HiliteMenu
 
         plp
@@ -6970,11 +6956,11 @@ draw_menu_bar:
 
         jsr     SetUpMenuSavebehind
         jsr     DoSavebehind
+        jsr     ShowCursorImpl  ; after save
 
         jsr     SetStandardPort
 
-        ldax    menu_hittest_rect_addr
-        jsr     FillAndFrameRect
+        CALL    FillAndFrameRect, AX=#menu_hittest_rect
         inc16   menu_fill_rect+MGTK::Rect::x1
         dec16   menu_fill_rect+MGTK::Rect::x2
 
@@ -6982,6 +6968,20 @@ draw_menu_bar:
 
         ldx     #0
 loop:   jsr     GetMenuItem
+
+        ;; Make `menu_fill_rect` bound the item. This is used for
+        ;; * Shielding the cursor
+        ;; * Dimming the item (if needed)
+        ;; * Drawing item as a filler (if needed)
+        ldx     menu_item_index
+        ldy     menu_item_y_table,x
+        iny
+        sty     menu_fill_rect+MGTK::Rect::y1
+        lda     menu_item_y_table+1,x
+        sta     menu_fill_rect+MGTK::Rect::y2
+
+        MGTK_CALL MGTK::ShieldCursor, menu_fill_rect
+
         bit     curmenuitem::options
         bvc     :+
 
@@ -7003,9 +7003,8 @@ loop:   jsr     GetMenuItem
         beq     :+
         lda     curmenuitem::mark_char
         sta     mark_text+1
-
-:       ldax    mark_text_addr
-        jsr     DrawText
+:
+        CALL    DrawText, AX=#mark_text
         jsr     GetMenuAndMenuItem
 
 no_mark:
@@ -7053,10 +7052,9 @@ oa_sa:  cmp     #MGTK::MenuOpt::open_apple | MGTK::MenuOpt::solid_apple
 sst:    sta     shortcut_text+2
 
 offset: lda     offset_shortcut
-        jsr     MovetoFromright
+        jsr     MoveToFromRight
 
-        ldax    shortcut_text_addr
-        jsr     DrawText
+        CALL    DrawText, AX=#shortcut_text
         jsr     GetMenuAndMenuItem
 
 no_shortcut:
@@ -7064,13 +7062,15 @@ no_shortcut:
         ora     curmenuitem::options
         bpl     next
 
-        jsr     DimMenuitem
+        jsr     DimMenuItem
 
-next:   ldx     menu_item_index
+next:
+        jsr     UnshieldCursorImpl
+        ldx     menu_item_index
         inx
         cpx     menu_item_count
         jne     loop
-        jmp     ShowCursorImpl
+        rts
 .endproc ; HideOrDrawMenuBarImpl
 HideMenu := HideOrDrawMenuBarImpl::hide_menu
 DrawMenuBar := HideOrDrawMenuBarImpl::draw_menu_bar
@@ -7084,55 +7084,41 @@ DrawMenuBar := HideOrDrawMenuBarImpl::draw_menu_bar
         jmp     SetPenloc
 .endproc ; MovetoMenuitem
 
-
-.proc DimMenuitem
-        ldx     menu_item_index
-        ldy     menu_item_y_table,x
-        iny
-        sty     menu_item_rect+MGTK::Rect::y1
-        lda     menu_item_y_table+1,x
-        sta     menu_item_rect+MGTK::Rect::y2
-
+.proc DimMenuItem
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
         lda     #MGTK::penOR
 ep2:    jsr     SetFillMode
 
-        add16   curmenuinfo::x_min, #1, menu_item_rect+MGTK::Rect::x1
-        sub16   curmenuinfo::x_max, #1, menu_item_rect+MGTK::Rect::x2
-
-        MGTK_CALL MGTK::PaintRect, menu_item_rect
+        MGTK_CALL MGTK::PaintRect, menu_fill_rect
         MGTK_CALL MGTK::SetPattern, standard_port::pattern
 
         jmp     SetFillModeXOR
-.endproc ; DimMenuitem
+.endproc ; DimMenuItem
 
 .proc DrawFiller
-        ldx     menu_item_index
         ldy     sysfont_height
         iny                     ; /= 2, but round up
         tya
         lsr
         clc
-        adc     menu_item_y_table,x
-        sta     menu_item_rect+MGTK::Rect::y1
-        sta     menu_item_rect+MGTK::Rect::y2
+        adc     menu_fill_rect+MGTK::Rect::y1
+        sta     menu_fill_rect+MGTK::Rect::y1
+        sta     menu_fill_rect+MGTK::Rect::y2
 
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
         lda     #MGTK::pencopy
-        beq     DimMenuitem::ep2 ; always
+        beq     DimMenuItem::ep2 ; always
 .endproc ; DrawFiller
 
-        DEFINE_RECT menu_item_rect, 0, 0, 0, 0
-
         ;; Move to the given distance from the right side of the menu.
-.proc MovetoFromright
+.proc MoveToFromRight
         sta     $82
         ldax    curmenuinfo::x_max
         subax8  $82
         jmp     SetPenloc::set_x
-.endproc ; MovetoFromright
+.endproc ; MoveToFromRight
 
 .proc UnhiliteCurMenuItem
         jsr     HiliteMenuItem
@@ -7150,8 +7136,9 @@ hmrts:  rts
         sty     menu_fill_rect+MGTK::Rect::y2
 
         jsr     SetFillModeXOR
+        MGTK_CALL MGTK::ShieldCursor, menu_fill_rect
         MGTK_CALL MGTK::PaintRect, menu_fill_rect
-        rts
+        jmp     UnshieldCursorImpl
 .endproc ; HiliteMenuItem
 
 ;;; ============================================================
@@ -7338,21 +7325,6 @@ resize_box_bitmap:
         PIXELS  "#...................#"
         PIXELS  "#####################"
 
-up_scroll_addr:
-        .addr   up_scroll_params
-
-down_scroll_addr:
-        .addr   down_scroll_params
-
-left_scroll_addr:
-        .addr   left_scroll_params
-
-right_scroll_addr:
-        .addr   right_scroll_params
-
-resize_box_addr:
-        .addr   resize_box_params
-
 current_window:
         .word   0
 
@@ -7367,8 +7339,7 @@ target_window_id:
 
         ;; The root window is not a real window, but a structure whose
         ;; nextwinfo field lines up with current_window.
-root_window_addr:
-        .addr   current_window - MGTK::Winfo::nextwinfo
+root_window := current_window - MGTK::Winfo::nextwinfo
 
 
         which_control        := $8C
@@ -7412,9 +7383,8 @@ y2         .word
         END_PARAM_BLOCK
 
 
-        ;; Start window enumeration at top ???
 .proc TopWindow
-        copy16  root_window_addr, previous_window
+        copy16  #root_window, previous_window
         ldax    current_window
         bne     set_found_window
 end:    rts
@@ -7898,11 +7868,8 @@ no_titlebar:
 no_hscroll:
         styx    down_scroll_params::ycoord
 
-        ldax    down_scroll_addr
-        jsr     DrawIcon
-
-        ldax    up_scroll_addr
-        jsr     DrawIcon
+        CALL    DrawIcon, AX=#down_scroll_params
+        CALL    DrawIcon, AX=#up_scroll_params
 
 no_vscroll:
         bit     current_winfo::hscroll
@@ -7933,11 +7900,8 @@ no_vscroll:
 no_vscroll2:
         styx    right_scroll_params
 
-        ldax    right_scroll_addr
-        jsr     DrawIcon
-
-        ldax    left_scroll_addr
-        jsr     DrawIcon
+        CALL    DrawIcon, AX=#right_scroll_params
+        CALL    DrawIcon, AX=#left_scroll_params
 
 no_hscrollbar:
         lda     #MGTK::pencopy
@@ -7983,8 +7947,7 @@ draw_resize:
 
         lda     #MGTK::notpencopy
         jsr     SetFillMode
-        ldax    resize_box_addr
-        jmp     DrawIcon
+        TAIL_CALL DrawIcon, AX=#resize_box_params
 ret:    rts
 .endproc ; DrawWinframe
 
@@ -8250,8 +8213,7 @@ update_port:
         jsr     SetDesktopPort
         MGTK_CALL MGTK::SetPortBits, set_port_params
         copy16  active_port, previous_port
-        ldax    update_port_addr
-        jsr     assign_and_prepare_port
+        CALL    assign_and_prepare_port, AX=#update_port
         asl     preserve_zp_flag ; since `RestoreParamsAndStack` is not called
         rts
 
@@ -8282,8 +8244,7 @@ win:    jsr     WindowByIdOrExit
 
         jsr     PrepareWinport
         php
-        ldax    update_port_addr
-        jsr     assign_and_prepare_port
+        CALL    assign_and_prepare_port, AX=#update_port
 
         asl     preserve_zp_flag ; since `RestoreParamsAndStack` is not called
         plp
@@ -8300,9 +8261,6 @@ err_obscured:
 ;;; EndUpdate
 
 ;;; 1 byte of params, copied to $82
-
-update_port_addr:
-        .addr   update_port
 
 .proc EndUpdateImpl
         jsr     ShowCursorImpl

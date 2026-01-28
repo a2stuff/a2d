@@ -13,11 +13,13 @@ Project Page: https://github.com/a2stuff/a2d
 * Adjust movement scaling in MouseKeys mode.
 * Change MouseKeys mode to make dragging easier and support modifiers:
   * Space clicks the mouse button
-  * Comma presses and holds the mouse button
-  * Period releases the mouse button
+  * Comma (,) presses and holds the mouse button
+  * Period (.) releases the mouse button
   * Solid Apple is now just a modifier as normal
 * Improve appearance of watch cursor.
 * Ensure text caret is visible after key/click.
+* Reduce cursor flickering while menus are drawn.
+* Reduce cursor flickering while list view rows are drawn.
 
 ### Launcher
 
@@ -54,7 +56,6 @@ Project Page: https://github.com/a2stuff/a2d
 * Animate Apple > About This Apple II window open/closed.
 * Animate Date & Time DA window open/closed when menu clock is clicked.
 * Reduce cursor flickering when copying / deleting files.
-* Reduce cursor flickering while list view rows are drawn.
 * Don't repaint scrollbars before window when resizing.
 * Eliminate scrollbar repaint after window opens.
 * Fix "Unexpected error" seen when copying certain directories.
