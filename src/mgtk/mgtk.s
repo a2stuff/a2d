@@ -372,7 +372,7 @@ jump_table:
         .addr   BitBltImpl          ; $4D BitBlt
         .addr   GetDeskPatImpl      ; $4E GetDeskPat
         .addr   SetDeskPatImpl      ; $4F SetDeskPat
-        .addr   DrawMenuImpl        ; $50 DrawMenuBar
+        .addr   DrawMenuBarImpl     ; $50 DrawMenuBar
         .addr   GetWinFrameRectImpl ; $51 GetWinFrameRect
         .addr   RedrawDeskTopImpl   ; $52 RedrawDeskTop
         .addr   FindControlExImpl   ; $53 FindControlEx
@@ -5928,7 +5928,7 @@ need_savebehind:
 
         copy16  params_addr, active_menu
 
-draw_menu_impl:
+draw_menu:
         lda     #0
         sta     savebehind_usage
         sta     savebehind_usage+1
@@ -6059,7 +6059,7 @@ filler: ldx     menu_item_index
 
         rts
 .endproc ; SetMenuImpl
-        DrawMenuImpl := SetMenuImpl::draw_menu_impl
+        DrawMenuBarImpl := SetMenuImpl::draw_menu
 
 .proc GetMenuAndMenuItem
         ldx     menu_index
@@ -6460,9 +6460,6 @@ event_loop:
         lda     cur_hilited_menu_item
         sta     sel_menu_item_index
 
-        ;; BUG: hit 'A' when menu showing, redraws
-        ;; `menu_index` changes
-
         ;; Process the key
         lda     GetAndReturnEvent::event::modifiers
         sta     menu_key_modifiers
@@ -6578,7 +6575,7 @@ imb_change:
         pla
         sta     cur_open_menu_id
 
-        jsr     DrawMenuBar
+        jsr     ShowMenu
         jmp     event_loop
 
         ;; --------------------------------------------------
@@ -6931,13 +6928,13 @@ row:    ldy     savebehind_mapwidth
         bmi     SavebehindNextLine ; always
 .endproc ; RestoreSavebehind
 
-.proc HideOrDrawMenuBarImpl
+.proc HideOrShowMenuImpl
 dmrts:  rts
 
 hide_menu:
         clc
         .byte   OPC_BCS         ; mask next byte
-draw_menu_bar:
+show_menu:
         sec
 
         lda     cur_open_menu_id
@@ -7069,9 +7066,9 @@ next:
         cpx     menu_item_count
         jne     loop
         rts
-.endproc ; HideOrDrawMenuBarImpl
-HideMenu := HideOrDrawMenuBarImpl::hide_menu
-DrawMenuBar := HideOrDrawMenuBarImpl::draw_menu_bar
+.endproc ; HideOrShowMenuImpl
+HideMenu := HideOrShowMenuImpl::hide_menu
+ShowMenu := HideOrShowMenuImpl::show_menu
 
 .proc MovetoMenuitem
         ldx     menu_item_index
