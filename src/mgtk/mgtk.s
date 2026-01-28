@@ -6897,15 +6897,16 @@ row:    ldy     savebehind_mapwidth
 :       rts
 .endproc ; SavebehindNextLine
 
-.proc RestoreScreenRectImpl
-        jsr     SetUpRectSavebehind
-        jmp     RestoreSavebehind
-.endproc ; RestoreScreenRectImpl
-
 .proc RestoreMenuSavebehind
         jsr     SetUpMenuSavebehind
-        FALL_THROUGH_TO RestoreSavebehind
+        jsr     RestoreSavebehind
+        jmp     ShowCursorImpl
 .endproc ; RestoreMenuSavebehind
+
+.proc RestoreScreenRectImpl
+        jsr     SetUpRectSavebehind
+        FALL_THROUGH_TO RestoreSavebehind
+.endproc ; RestoreScreenRectImpl
 
 .proc RestoreSavebehind
 loop:   jsr     SavebehindGetVidaddr
@@ -6919,7 +6920,7 @@ loop:   jsr     SavebehindGetVidaddr
         cpx     savebehind_bottom
         bcc     loop            ; TODO: `BLE` ?
         beq     loop
-        jmp     ShowCursorImpl
+        rts
 
 row:    ldy     savebehind_mapwidth
     DO
@@ -6930,11 +6931,8 @@ row:    ldy     savebehind_mapwidth
         bmi     SavebehindNextLine ; always
 .endproc ; RestoreSavebehind
 
-
-dmrts:  rts
-
-
 .proc HideOrDrawMenuBarImpl
+dmrts:  rts
 
 hide_menu:
         clc
