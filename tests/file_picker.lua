@@ -142,11 +142,14 @@ function FilePickerTest(
       activation_func()
 
       NavigateTo("/RAM4")
-
-      apple2.PressOA()
-      apple2.Type("ALFA")
-      apple2.ReleaseOA()
-      test.Snap("verify nothing happened")
+      emu.wait(5)
+      apple2.LeftArrowKey() -- force caret visible
+      a2dtest.ExpectNothingChanged(function()
+          apple2.PressOA()
+          apple2.Type("ALFA")
+          apple2.ReleaseOA()
+          apple2.LeftArrowKey() -- force caret visible
+      end)
 
       cleanup_func()
   end)
@@ -385,18 +388,21 @@ function FilePickerTest(
       NavigateTo("/A2.DESKTOP/EXTRAS")
       test.Snap("verify Close button is not dimmed")
       test.Snap("verify Open button is dimmed")
-      apple2.ControlKey("O") -- Open
-      test.Snap("verify nothing happened")
+      a2dtest.ExpectNothingChanged(function()
+          apple2.ControlKey("O") -- Open
+      end)
       test.Snap("verify no selection")
 
       apple2.ControlKey("D") -- Drives
       emu.wait(2)
       test.Snap("verify Close button is dimmed")
-      apple2.ControlKey("C") -- Close
-      test.Snap("verify nothing happened")
+      a2dtest.ExpectNothingChanged(function()
+          apple2.ControlKey("C") -- Close
+      end)
       test.Snap("verify OK button is dimmed")
-      apple2.ReturnKey() -- OK
-      test.Snap("verify nothing happened")
+      a2dtest.ExpectNothingChanged(function()
+          apple2.ReturnKey() -- OK
+      end)
 
       apple2.DownArrowKey()
       a2d.WaitForRepaint()
