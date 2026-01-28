@@ -21,7 +21,6 @@ all: vercheck $(targets)
 # dependencies
 .PHONY: $(targets)
 $(targets):
-	@echo "$$(tput setaf 3)Building: $@$$(tput sgr0)"
 	@$(MAKE) -C src/$@ \
 	  && echo "$$(tput setaf 2)make $@ good$$(tput sgr0)" \
 	  || (echo "$$(tput blink && tput setaf 1)MAKE $@ BAD$$(tput sgr0)" && false)
