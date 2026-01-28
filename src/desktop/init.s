@@ -276,7 +276,6 @@ done:
         ;; --------------------------------------------------
 
         jsr     main::SetCursorWatch ; before the rest of initialization
-        MGTK_CALL MGTK::ShowCursor
 
         ;; fall through
 .endscope

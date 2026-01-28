@@ -663,7 +663,9 @@ No parameters.
 ### Cursor Manager - set, show, hide
 
 #### SetCursor ($24)
-Set cursor definition
+Set cursor definition.
+
+This forces the cursor visible, resetting any outstanding `HideCursor` calls.
 
 Parameters:
 ```
@@ -680,7 +682,7 @@ Return cursor to visibility.
 No parameters.
 
 #### HideCursor ($26)
-Cursor hidden until `ShowCursor` call
+Cursor hidden until `ShowCursor` call.
 
 No parameters.
 

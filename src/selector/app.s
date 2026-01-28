@@ -521,7 +521,6 @@ set_startup_menu_items:
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
         jsr     ShowClock
-        MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
 
         lda     startdesktop_params::slot_num
