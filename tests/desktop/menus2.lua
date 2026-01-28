@@ -1,4 +1,4 @@
-local apple_menu_x, apple_menu_y = 15, 5
+local apple_menu_x, apple_menu_y = 10, 5
 local file_menu_x, file_menu_y = 30, 5
 local file_open_y = 30
 local file_separator_y = 60
@@ -197,6 +197,7 @@ test.Step(
     a2d.WaitForRepaint()
     test.Snap("verify menu closed")
 
+
     -- Navigate but don't invoke anything
     apple2.EscapeKey()
     a2d.WaitForRepaint()
@@ -230,7 +231,7 @@ test.Step(
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
     apple2.ReturnKey()
-    a2d.WaitForRepaint()
+    emu.wait(5)
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     a2d.CloseAllWindows()
 end)
@@ -277,7 +278,7 @@ test.Step(
     apple2.UpArrowKey()
     a2d.WaitForRepaint()
     apple2.ReturnKey()
-    a2d.WaitForRepaint()
+    emu.wait(5)
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     a2d.CloseAllWindows()
 end)
@@ -413,7 +414,7 @@ test.Step(
     apple2.Type("_") -- no-op
 
     apple2.ReturnKey() -- invoke
-    a2d.WaitForRepaint()
+    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     a2d.CloseAllWindows()
