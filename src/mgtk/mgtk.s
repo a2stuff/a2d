@@ -168,7 +168,7 @@ kScreenHeight   = 192
       DO
         lda     (params_addr),y
         store_addr := *+1
-        sta     $FF,y
+        sta     SELF_MODIFIED_BYTE,y
         dey
       WHILE POS
     END_IF
@@ -4597,7 +4597,7 @@ restore_switch_dey := RestoreCursorBackground::switch_dey
         inc     cursor_count
         bmi     done
         beq     :+
-        dec     cursor_count
+        dec     cursor_count    ; TODO: Is this necessary?
 :
         bit     cursor_flag
     IF NC
@@ -6952,8 +6952,8 @@ show_menu:
 
         sta     find_menu_id
         jsr     FindMenuById
-        jsr     HideCursorImpl  ; before save/restore
         jsr     HiliteMenu
+        jsr     HideCursorImpl  ; before save/restore
 
         plp
         bcc     RestoreMenuSavebehind ; calls `ShowCursorImpl`
