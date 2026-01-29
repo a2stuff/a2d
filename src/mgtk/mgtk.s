@@ -5978,7 +5978,8 @@ draw_menu:
         lda     curmenuitem::options
         and     #3              ; OA+SA
         ora     curmenuitem::shortcut1
-       IF ZERO
+        .assert MGTK::no_shortcut & $80 = $80, error, "bad constant"
+       IF NS
         lda     no_shortcut_width
         bne     got_shortcut_adjust
        END_IF
@@ -7028,7 +7029,8 @@ no_mark:
         bne     oa_sa
 
         lda     curmenuitem::shortcut1
-        beq     no_shortcut
+        .assert MGTK::no_shortcut & $80 = $80, error, "bad constant"
+        bmi     no_shortcut
 
         ;; Special case: if both the same, use glyph at that code point
         cmp     curmenuitem::shortcut2
