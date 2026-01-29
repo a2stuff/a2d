@@ -574,6 +574,10 @@ function a2d.AddShortcut(path, options)
   a2d.WaitForRepaint() -- extra, for I/O
 end
 
+function a2d.GetFilePickerCurrentPath()
+  return apple2.GetPascalString(0x1620)
+end
+
 function a2d.CopySelectionTo(path, is_volume, options)
   options = default_options(options)
 
@@ -593,6 +597,12 @@ function a2d.CopySelectionTo(path, is_volume, options)
     apple2.ControlKey("O") -- Open
     a2d.WaitForRepaint()
   end
+
+  local current_path = a2d.GetFilePickerCurrentPath()
+  if current_path:lower() ~= path:lower() then
+    error(string.format("Failed to navigate to %q, at %q instead", path, current_path))
+  end
+
   a2d.DialogOK(options)
 
   if not options.no_wait then

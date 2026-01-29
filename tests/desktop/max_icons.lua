@@ -32,6 +32,7 @@ test.Step(
   "icon limit can be hit before window limit",
   function()
     a2d.OAShortcut("1") -- Open HUNDRED.FILES
+    emu.wait(5)
     a2d.OpenPath("/TESTS", {keep_windows=true})
     a2dtest.WaitForAlert()
     test.Snap("verify alert has no Cancel button")
@@ -51,6 +52,7 @@ function MaxIconsTest(name, func)
       test.ExpectEquals(count, 10, "should have 9 volumes + Trash")
 
       a2d.OAShortcut("1") -- Open HUNDRED.FILES
+      emu.wait(5)
       a2d.GrowWindowBy(0, -50)
       a2d.SelectAll()
       emu.wait(5)
@@ -106,6 +108,7 @@ MaxIconsTest(
     a2d.OAShortcut("N") -- File > CreateFolder
     a2dtest.WaitForAlert()
     a2d.DialogOK()
+    emu.wait(5)
     test.Snap("verify repaint is correct")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "window should have closed")
 end)
@@ -125,7 +128,7 @@ MaxIconsTest(
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "HUNDRED.FILES", "window should be active")
     apple2.DownArrowKey() -- select first
-    a2d.CopySelectionTo("/RAM1")
+    a2d.CopySelectionTo("/RAM1", nil, {no_wait=true})
     a2dtest.WaitForAlert()
     a2d.DialogOK()
     test.Snap("verify repaint is correct")

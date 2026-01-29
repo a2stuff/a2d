@@ -39,6 +39,12 @@ function FilePickerTest(
       apple2.ControlKey("O") -- Open
       a2d.WaitForRepaint()
     end
+
+    local current_path = a2d.GetFilePickerCurrentPath()
+    if current_path:lower() ~= path:lower() then
+      error(string.format("Failed to navigate to %q, at %q instead", path, current_path))
+    end
+
   end
 
   --------------------------------------------------
@@ -388,20 +394,26 @@ function FilePickerTest(
       NavigateTo("/A2.DESKTOP/EXTRAS")
       test.Snap("verify Close button is not dimmed")
       test.Snap("verify Open button is dimmed")
+      apple2.LeftArrowKey() -- force caret visible
       a2dtest.ExpectNothingChanged(function()
           apple2.ControlKey("O") -- Open
+          apple2.LeftArrowKey() -- force caret visible
       end)
       test.Snap("verify no selection")
 
       apple2.ControlKey("D") -- Drives
       emu.wait(2)
       test.Snap("verify Close button is dimmed")
+      apple2.LeftArrowKey() -- force caret visible
       a2dtest.ExpectNothingChanged(function()
           apple2.ControlKey("C") -- Close
+          apple2.LeftArrowKey() -- force caret visible
       end)
       test.Snap("verify OK button is dimmed")
+      apple2.LeftArrowKey() -- force caret visible
       a2dtest.ExpectNothingChanged(function()
           apple2.ReturnKey() -- OK
+          apple2.LeftArrowKey() -- force caret visible
       end)
 
       apple2.DownArrowKey()
