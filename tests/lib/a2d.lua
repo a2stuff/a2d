@@ -1119,6 +1119,26 @@ local function ReadIcon(id)
   return icon
 end
 
+-- Based on enum in src/desktop/internals.inc
+a2d.IconTypes = {
+  -- volumes
+  trash = 0,
+  floppy140 = 1,
+  ramdisk = 2,
+  profile = 3,
+  floppy800 = 4,
+  fileshare = 5,
+  cdrom = 6,
+
+  -- files
+  generic = 7,
+  text = 8,
+  binary = 9,
+  graphics = 10,
+  -- ...
+  link = 27,
+}
+
 function a2d.GetSelectedIcons()
   local selected_icon_count_addr = DESKTOP_SYMBOLS['selected_icon_count'] | 0x010000
   local selected_icon_list_addr = DESKTOP_SYMBOLS['selected_icon_list'] | 0x010000

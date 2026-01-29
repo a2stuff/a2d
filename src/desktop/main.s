@@ -713,6 +713,13 @@ check_drag:
         jmp     _CheckRenameClick
     END_IF
 
+        ;; Snapshot modifiers before doing any real work
+        pha
+        lda     BUTN1
+        and     BUTN0
+        sta     double_modifier_flag
+        pla
+
         ;; ----------------------------------------
 
     IF A = #IconTK::kDragResultMove
@@ -749,8 +756,7 @@ check_drag:
         RTS_IF ZERO
 
         ;; Double modifier?
-        lda     BUTN0
-        and     BUTN1
+        bit     double_modifier_flag
       IF NS
         jsr     SetOperationDstPathFromDragDropResult
         RTS_IF CS               ; failure, e.g. path too long
@@ -791,8 +797,7 @@ check_drag:
         RTS_IF CS               ; failure, e.g. path too long
 
         ;; Double modifier?
-        lda     BUTN0
-        and     BUTN1
+        bit     double_modifier_flag
     IF NS
         jsr     GetSingleSelectedIcon
         RTS_IF ZERO
@@ -802,6 +807,9 @@ check_drag:
         ;; Copy/Move
         jsr     DoCopyOrMoveSelection
         jmp     _PerformPostDropUpdates
+
+double_modifier_flag:           ; bit7
+        .byte   0
 .endproc ; _IconClick
 
 ;;; ------------------------------------------------------------

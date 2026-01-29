@@ -1166,10 +1166,16 @@ ActiveInactiveTest(
     return a2dtest.GetSelectedIconCoords()
   end,
   function(x, y)
-    test.Snap("note icon position")
+    local before = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, 1, "one icon should be selected")
+
     a2d.Drag(x, y, x + 20, y + 10)
     emu.wait(1)
-    test.Snap("verify icon was moved")
+
+    local after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, #after, "same icons should be selected")
+    test.ExpectEquals(before[1].name, after[1].name, "same icon should be selected")
+    test.ExpectNotEquals(before[1].x, after[1].x, "icon should have moved")
 end)
 
 --[[
@@ -1183,10 +1189,17 @@ ActiveInactiveTest(
     return a2dtest.GetSelectedIconCoords()
   end,
   function(x, y)
-    test.Snap("note icon positions")
+    local before = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, 2, "two icons should be selected")
+
     a2d.Drag(x, y, x + 20, y + 10)
     emu.wait(1)
-    test.Snap("verify icons were moved")
+    local after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, #after, "same icons should be selected")
+    test.ExpectEquals(before[1].name, after[1].name, "same icon should be selected")
+    test.ExpectEquals(before[2].name, after[2].name, "same icon should be selected")
+    test.ExpectNotEquals(before[1].x, after[1].x, "icon should have moved")
+    test.ExpectNotEquals(before[2].x, after[2].x, "icon should have moved")
 end)
 
 --[[
@@ -1199,10 +1212,16 @@ ActiveInactiveTest(
     return a2dtest.GetSelectedIconCoords()
   end,
   function(x, y)
-    test.Snap("note icon position")
+    local before = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, 1, "one icon should be selected")
+
     a2d.Drag(x, y, x + 20, y + 10, {sa_drop=true})
     emu.wait(5)
-    test.Snap("verify icon was duplicated")
+
+    local after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#after, 1, "one icon should be selected")
+    test.ExpectNotEquals(before[1].name, after[1].name, "different icon should be selected")
+
     apple2.ReturnKey()
     emu.wait(1)
 end)
@@ -1218,10 +1237,18 @@ ActiveInactiveTest(
     return a2dtest.GetSelectedIconCoords()
   end,
   function(x, y)
-    test.Snap("note icon positions")
+    local before = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, 2, "two icons should be selected")
+
     a2d.Drag(x, y, x + 20, y + 10, {sa_drop=true})
     emu.wait(1)
-    test.Snap("verify nothing changed (except activation)")
+
+    local after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, #after, "same icons should be selected")
+    test.ExpectEquals(before[1].name, after[1].name, "same icon should be selected")
+    test.ExpectEquals(before[2].name, after[2].name, "same icon should be selected")
+    test.ExpectEquals(before[1].x, after[1].x, "icon should not have moved")
+    test.ExpectEquals(before[2].x, after[2].x, "icon should not have moved")
 end)
 
 --[[
@@ -1234,12 +1261,16 @@ ActiveInactiveTest(
     return a2dtest.GetSelectedIconCoords()
   end,
   function(x, y)
-    test.Snap("note icon position")
+    local before = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, 1, "one icon should be selected")
+
     a2d.Drag(x, y, x + 20, y + 10, {oa_drop=true, sa_drop=true})
     emu.wait(5)
 
-    test.Snap("verify an alias was created")
-    -- BUG: Failing in inactive window - a duplicate is created
+    local after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#after, 1, "one icon should be selected")
+    test.ExpectNotEquals(before[1].name, after[1].name, "different icon should be selected")
+    test.ExpectEquals(after[1].type, a2d.IconTypes.link, "new icon should be alias")
 
     apple2.ReturnKey()
     emu.wait(1)
@@ -1256,10 +1287,18 @@ ActiveInactiveTest(
     return a2dtest.GetSelectedIconCoords()
   end,
   function(x, y)
-    test.Snap("note icon positions")
+    local before = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, 2, "two icons should be selected")
+
     a2d.Drag(x, y, x + 20, y + 10, {oa_drop=true, sa_drop=true})
     emu.wait(1)
-    test.Snap("verify nothing changed (except activation)")
+
+    local after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#before, #after, "same icons should be selected")
+    test.ExpectEquals(before[1].name, after[1].name, "same icon should be selected")
+    test.ExpectEquals(before[2].name, after[2].name, "same icon should be selected")
+    test.ExpectEquals(before[1].x, after[1].x, "icon should not have moved")
+    test.ExpectEquals(before[2].x, after[2].x, "icon should not have moved")
 end)
 
 --[[
