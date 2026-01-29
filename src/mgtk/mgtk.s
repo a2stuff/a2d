@@ -145,7 +145,8 @@ kScreenHeight   = 192
         pha
         lda     params_addr+1
         pha
-        jsr     HideCursor
+        dec     autohide_cursor_flag ; set flag
+        jsr     HideCursorImpl
         pla
         sta     params_addr+1
         pla
@@ -180,7 +181,11 @@ kScreenHeight   = 192
 cleanup:
         bit     desktop_initialized_flag
     IF NS
-        jsr     ShowCursor
+        bit     autohide_cursor_flag
+      IF NS
+        inc     autohide_cursor_flag ; clear flag
+        jsr     ShowCursorImpl
+      END_IF
     END_IF
 
         bit     preserve_zp_flag
@@ -195,6 +200,9 @@ exit_with_0:
         lda     #0
 
 rts1:   rts
+
+autohide_cursor_flag:
+        .byte   0
 .endproc ; Dispatch
 
 ;;; ============================================================
@@ -236,25 +244,6 @@ rts2:   rts
         bpl     :-
         rts
 .endproc ; ApplyPortToActivePort
-
-;;; ============================================================
-;;; Drawing calls show/hide cursor before/after
-;;; A flag is used to simplify the dispatch logic.
-
-autohide_cursor_flag:
-        .byte   0
-
-.proc HideCursor
-        dec     autohide_cursor_flag
-        jmp     HideCursorImpl
-.endproc ; HideCursor
-
-.proc ShowCursor
-        bit     autohide_cursor_flag
-        bpl     rts2
-        inc     autohide_cursor_flag
-        jmp     ShowCursorImpl
-.endproc ; ShowCursor
 
 ;;; ============================================================
 ;;; Jump table for MGTK entry point calls
