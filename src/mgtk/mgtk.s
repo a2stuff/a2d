@@ -4163,10 +4163,7 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
         stx     cursor_count
         inx                     ; X = 0
         stx     cursor_flag
-        lda     #<pointer_cursor
-        sta     params_addr
-        lda     #>pointer_cursor
-        sta     params_addr+1
+        copy16  #pointer_cursor, params_addr
         FALL_THROUGH_TO SetCursorImpl
 .endproc ; SetPointerCursor
 
@@ -4784,12 +4781,12 @@ done:   rts
         bit     mouse_hooked_flag
         bmi     hooked
         pha
-        ldx     mouse_firmware_hi
+        ldx     mouse_firmware_hi ; set `proc_ptr` to $Cn00
         stx     proc_ptr+1
         lda     #$00
         sta     proc_ptr
         lda     (proc_ptr),y
-        sta     proc_ptr
+        sta     proc_ptr        ; set `proc_ptr` to $CnXX
         pla
         ldy     mouse_operand
         jmp     (proc_ptr)
@@ -5669,13 +5666,26 @@ handle_keys     .byte
 
 ;;; Menu drawing metrics
 
-offset_checkmark:   .byte   2
-offset_text:        .byte   9
-offset_shortcut:    .byte   16
-shortcut_x_adj:     .byte   9
-non_shortcut_x_adj: .byte   30
-sysfont_height:     .byte   0
+kSWFont = 7
+kDWFont = 14
 
+kMenuMetricPad               = 2
+kMenuMetricSpace             = 7
+kMenuMetricOffsetCheckmark   = kMenuMetricPad
+kMenuMetricOffsetTextSW      = kSWFont + kMenuMetricPad
+kMenuMetricOffsetTextDW      = kDWFont + kMenuMetricPad
+kMenuMetricOffsetShortcutSW  = (kSWFont * 2) + kMenuMetricPad
+kMenuMetricOffsetShortcutDW  = (kDWFont * 2) + kMenuMetricPad
+kMenuMetricShortcutWidthSW   = (kSWFont * 2) + kMenuMetricOffsetTextSW + kMenuMetricSpace
+kMenuMetricShortcutWidthDW   = (kDWFont * 2) + kMenuMetricOffsetTextDW + kMenuMetricSpace
+
+;;; Updated in `InitMenuImpl`; assumes single-width font
+offset_checkmark:   .byte   kMenuMetricOffsetCheckmark   ; delta from left to mark
+offset_text:        .byte   kMenuMetricOffsetTextSW      ; delta from left to text
+offset_shortcut:    .byte   kMenuMetricOffsetShortcutSW  ; delta from right to shortcut
+no_shortcut_width:  .byte   kMenuMetricOffsetTextSW      ; extra width needed w/ shortcut
+shortcut_width:     .byte   kMenuMetricShortcutWidthSW   ; extra width needed w/o shortcut
+sysfont_height:     .byte   0
 
 active_menu:
         .addr   0
@@ -5951,6 +5961,7 @@ draw_menu:
         stax    curmenu::x_min
         stax    curmenuinfo::x_min
 
+        ;; Compute width of menu
         ldx     #0
         stx     max_width
         stx     max_width+1
@@ -5968,12 +5979,12 @@ draw_menu:
         and     #3              ; OA+SA
         ora     curmenuitem::shortcut1
        IF ZERO
-        lda     shortcut_x_adj
-        bne     has_shortcut
+        lda     no_shortcut_width
+        bne     got_shortcut_adjust
        END_IF
+        lda     shortcut_width
+got_shortcut_adjust:
 
-        lda     non_shortcut_x_adj
-has_shortcut:
         clc
         adc     temp
         sta     temp
@@ -6419,8 +6430,7 @@ menu_item  .byte
         bit     kbd_mouse_state
         jpl     in_menu_bar     ; use mouse coords for menu
 
-        lda     #kKeyboardMouseStateInactive
-        sta     kbd_mouse_state
+        copy8   #kKeyboardMouseStateInactive, kbd_mouse_state
         ldx     #0
         jsr     GetMenu         ; X = index
         lda     curmenu::menu_id
@@ -6495,8 +6505,7 @@ event_loop:
         ;; Did `sel_menu_index` change?
         ldx     sel_menu_index
       IF X <> last_menu_index
-        lda     #0
-        sta     cur_hilited_menu_item
+        copy8   #0, cur_hilited_menu_item
         jsr     GetMenu         ; X = index
         lda     curmenu::menu_id
         jmp     imb_change
@@ -7115,8 +7124,8 @@ ep2:    jsr     SetFillMode
 
 .proc UnhiliteCurMenuItem
         jsr     HiliteMenuItem
-        lda     #0
-        sta     cur_hilited_menu_item
+        copy8   #0, cur_hilited_menu_item
+        FALL_THROUGH_TO hmrts
 .endproc ; UnhiliteCurMenuItem
 hmrts:  rts
 
@@ -7150,27 +7159,36 @@ control_char    .byte
         COPY_BYTES 4, params, menu_glyphs
 
         copy16  standard_port::textfont, params
-        lda     #2
+
+        lda     #kMenuMetricOffsetCheckmark
         sta     offset_checkmark
-        ldx     #16
-        ldy     #0
+
+        ldx     #kMenuMetricOffsetTextDW
+        ldy     #MGTK::Font::fonttype
         lda     (params),y
         asl
-        ldy     #30
-        bcs     :+                    ; branch if double-width font
+        ldy     #kMenuMetricOffsetShortcutDW
 
-        lda     #9
+    IF CC
+        ;; Single width
+        lda     #kMenuMetricOffsetTextSW
         sta     offset_text
-        sta     shortcut_x_adj
-        stx     offset_shortcut
-        sty     non_shortcut_x_adj
-        rts
+        sta     no_shortcut_width
 
-:       stx     offset_text
-        stx     shortcut_x_adj
+        ASSERT_EQUALS mgtk::kMenuMetricOffsetTextDW, mgtk::kMenuMetricOffsetShortcutSW
+        stx     offset_shortcut
+
+        ASSERT_EQUALS mgtk::kMenuMetricOffsetShortcutDW, mgtk::kMenuMetricShortcutWidthSW
+        sty     shortcut_width
+        rts
+    END_IF
+
+        ;; Double width
+        stx     offset_text
+        stx     no_shortcut_width
         sty     offset_shortcut
-        lda     #51
-        sta     non_shortcut_x_adj
+        lda     #kMenuMetricShortcutWidthDW
+        sta     shortcut_width
         rts
 .endproc ; InitMenuImpl
 
