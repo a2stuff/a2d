@@ -87,15 +87,16 @@ kScreenHeight   = 192
         sta     SET80STORE
 
         bit     preserve_zp_flag ; save ZP?
-        bpl     adjust_stack
-
+    IF NS
         ;; Save $80...$FF, swap in what MGTK needs at $F4...$FF
         COPY_BYTES $80, $80, zp_saved
         COPY_BYTES $C, active_saved, active_port
         jsr     ApplyActivePortToPort
+    END_IF
 
-adjust_stack:                   ; Adjust stack to account for params
-        pla                     ; and stash address at params_addr.
+        ;; Adjust stack to account for params and stash address at
+        ;; params_addr.
+        pla
         sta     params_addr
         clc
         adc     #<3
@@ -111,7 +112,7 @@ adjust_stack:                   ; Adjust stack to account for params
         ldy     #1              ; Command index
         lda     (params_addr),y
         asl     a
-        tax
+        tax                     ; X = command index * 2
         copy16  jump_table,x, jump_addr
                                 ; not copylohi because parm table
                                 ; is cleaner as words not bytes
@@ -130,17 +131,16 @@ adjust_stack:                   ; Adjust stack to account for params
         ;; * rest of second byte is # bytes to copy
 
         ldy     param_lengths+1,x ; Check "hide cursor" flag
-        bpl     done_hiding
-
+    IF NS
         bit     desktop_initialized_flag
-        bpl     done_hiding
+      IF NS
         txa                     ; if high bit was set, stash
         pha                     ; registers and params_addr and then
         tya                     ; hide cursor
         pha
 
         bit     cursor_shield_count ; unless globally overridden!
-    IF NC
+       IF NC
         lda     params_addr
         pha
         lda     params_addr+1
@@ -150,26 +150,31 @@ adjust_stack:                   ; Adjust stack to account for params
         sta     params_addr+1
         pla
         sta     params_addr
-    END_IF
+       END_IF
 
         pla
         and     #$7F            ; clear high bit in length count
-        tay
+        tay                     ; Y = length
         pla
-        tax
+        tax                     ; X = command index * 2
+      END_IF
+    END_IF
 
-done_hiding:
+        ;; Copy params (X = index * 2, Y = length)
         lda     param_lengths,x ; ZP offset for params
-        beq     jump            ; nothing to copy
-        sta     store+1
+    IF NOT ZERO
+        sta     store_addr
         dey
-:       lda     (params_addr),y
-store:  sta     $FF,y           ; self modified
+      DO
+        lda     (params_addr),y
+        store_addr := *+1
+        sta     $FF,y
         dey
-        bpl     :-
+      WHILE POS
+    END_IF
 
         jump_addr := *+1
-jump:   jsr     $FFFF           ; the actual call
+        jsr     $FFFF           ; the actual call
 
         ;; Exposed for routines to call directly
 cleanup:
@@ -234,20 +239,20 @@ rts2:   rts
 
 ;;; ============================================================
 ;;; Drawing calls show/hide cursor before/after
-;;; A recursion count is kept to allow re-entrancy.
+;;; A flag is used to simplify the dispatch logic.
 
-hide_cursor_count:
+autohide_cursor_flag:
         .byte   0
 
 .proc HideCursor
-        dec     hide_cursor_count
+        dec     autohide_cursor_flag
         jmp     HideCursorImpl
 .endproc ; HideCursor
 
 .proc ShowCursor
-        bit     hide_cursor_count
+        bit     autohide_cursor_flag
         bpl     rts2
-        inc     hide_cursor_count
+        inc     autohide_cursor_flag
         jmp     ShowCursorImpl
 .endproc ; ShowCursor
 
@@ -4586,15 +4591,19 @@ restore_switch_dey := RestoreCursorBackground::switch_dey
 .proc ShowCursorImpl
         php
         sei
+        ;; If count is already 0, do nothing. (Unbalanced calls!)
         lda     cursor_count
         beq     done
         inc     cursor_count
         bmi     done
         beq     :+
         dec     cursor_count
-:       bit     cursor_flag
-        bmi     done
+:
+        bit     cursor_flag
+    IF NC
         jsr     DrawCursor
+    END_IF
+
 done:
         plp
         rts
