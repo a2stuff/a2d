@@ -18,7 +18,7 @@ test.Step(
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.LeftArrowKey() -- change pattern
-    apple2.ControlKey("D") -- set pattern
+    apple2.ControlKey("D") -- Set Desktop Pattern
     a2d.OAShortcut("1") -- check RGB Color
     a2d.CloseWindow()
     test.Expect(apple2.IsColor(), "desktop should be in color")

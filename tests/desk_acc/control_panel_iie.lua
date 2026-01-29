@@ -22,7 +22,7 @@ test.Step(
 
     for i=1, 14 do
       apple2.LeftArrowKey() -- change pattern
-      apple2.ControlKey("D") -- set pattern
+      apple2.ControlKey("D") -- Set Desktop Pattern
       a2d.WaitForRepaint()
       test.Snap("verify preview color matches desktop color")
 

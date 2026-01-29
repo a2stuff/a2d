@@ -25,7 +25,7 @@ test.Step(
 
     -- test
     a2d.OAShortcut("R")
-    apple2.ControlKey("D")
+    apple2.ControlKey("D") -- Drives
     emu.wait(5)
     test.Snap("verify A2.DESKTOP is first")
     a2d.DialogCancel()
@@ -56,7 +56,7 @@ test.Step(
 
     -- test
     a2d.OAShortcut("R")
-    apple2.ControlKey("D")
+    apple2.ControlKey("D") -- Drives
     emu.wait(5)
     test.Snap("verify A2.DESKTOP is first")
     a2d.DialogCancel()

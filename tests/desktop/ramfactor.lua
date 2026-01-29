@@ -59,13 +59,13 @@ RAMCardTest(
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.LeftArrowKey()
-    apple2.ControlKey("D")
+    apple2.ControlKey("D") -- Set Desktop Pattern
     a2d.WaitForRepaint()
     a2d.CloseWindow()
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.RightArrowKey()
-    apple2.ControlKey("D")
+    apple2.ControlKey("D") -- Set Desktop Pattern
     a2d.WaitForRepaint()
     a2d.CloseWindow()
 

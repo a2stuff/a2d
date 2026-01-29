@@ -54,11 +54,7 @@ function RenameTest(name, proc)
        function() -- setup
          -- Copy to /RAM1
          a2d.SelectPath("/A2.DESKTOP")
-         a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO - 4)
-         apple2.ControlKey("D") -- Drives
-         emu.wait(10) -- empty floppies
-         apple2.Type("RAM1")
-         a2d.DialogOK() -- confirm copy
+         a2d.CopySelectionTo("/RAM1", true)
          emu.wait(80) -- copy is slow
          -- Switch to copy
          a2d.OpenPath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
@@ -138,6 +134,7 @@ RenameTest(
   function(dtpath)
     -- Apple Menu > Calculator
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
+    emu.wait(2)
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should have run")
     a2d.CloseWindow()
 end)
@@ -150,6 +147,7 @@ RenameTest(
   function(dtpath)
     -- Apple Menu > Control Panels
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    emu.wait(2)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels should have run")
     a2d.CloseWindow()
 

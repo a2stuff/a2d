@@ -5,7 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 ProDOS_2_4_3.po"
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(0.25)
-a2dtest.ConfigureForSelector()
 
 --[[
   Load Shortcuts. Put a disk in Slot 6, Drive 1. Startup > Slot 6.
@@ -201,7 +200,7 @@ test.Step(
 
     a2d.OAShortcut("R")
     emu.wait(5)
-    apple2.ControlKey("D")
+    apple2.ControlKey("D") -- Drives
     emu.wait(5)
     test.Snap("verify boot volume is first")
     a2d.DialogCancel()
@@ -278,6 +277,7 @@ test.Step(
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.Reboot()
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForSelector()
 
     test.Snap("verify OK button is disabled")
 
@@ -302,6 +302,7 @@ test.Step(
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
     a2d.WaitForDesktopReady()
@@ -350,10 +351,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.OAShortcut("R")
-    apple2.ControlKey("D") -- Drives
-    apple2.Type("A2.DESKTOP")
-    apple2.ControlKey("O") -- Open
-    apple2.Type("EXTRAS")
+    a2d.NavigateFilePickerTo("/A2.DESKTOP/EXTRAS")
     test.Snap("verify OK button disabled")
 
     a2d.DialogCancel()
@@ -377,13 +375,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.OAShortcut("R")
-    apple2.ControlKey("D") -- Drives
-    apple2.Type("TESTS")
-    apple2.ControlKey("O") -- Open
-    apple2.Type("ALIASES")
-    apple2.ControlKey("O") -- Open
-    apple2.Type("BASIC.ALIAS")
-
+    a2d.NavigateFilePickerTo("/TESTS/ALIASES", "BASIC.ALIAS")
     a2d.DialogOK()
     apple2.WaitForBasicSystem()
     apple2.TypeLine("BYE")
@@ -409,13 +401,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.OAShortcut("R")
-    apple2.ControlKey("D") -- Drives
-    apple2.Type("TESTS")
-    apple2.ControlKey("O") -- Open
-    apple2.Type("ALIASES")
-    apple2.ControlKey("O") -- Open
-    apple2.Type("DELETED.ALIAS")
-
+    a2d.NavigateFilePickerTo("/TESTS/ALIASES", "DELETED.ALIAS")
     a2d.DialogOK()
     a2dtest.WaitForAlert()
     a2d.DialogOK() -- dismiss alert

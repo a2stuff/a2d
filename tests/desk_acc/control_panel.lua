@@ -29,14 +29,14 @@ test.Step(
         m.MoveByApproximately(0, 10)
         m.ButtonUp()
     end)
-    apple2.ControlKey("D")
+    apple2.ControlKey("D") -- Set Desktop Pattern
     a2d.WaitForRepaint()
     a2d.CloseWindow()
 
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.RightArrowKey()
     test.Snap("verify default checkerboard is shown in preview")
-    apple2.ControlKey("D")
+    apple2.ControlKey("D") -- Set Desktop Pattern
     a2d.WaitForRepaint()
     a2d.CloseWindow()
 end)

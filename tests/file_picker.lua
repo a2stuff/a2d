@@ -29,24 +29,6 @@ function FilePickerTest(
     activation_func,
     cleanup_func)
 
-  function NavigateTo(path)
-    apple2.ControlKey("D") -- Drives
-    emu.wait(2)
-    for segment in path:gmatch("([^/]+)") do
-      apple2.PressOA()
-      apple2.Type(segment)
-      apple2.ReleaseOA()
-      apple2.ControlKey("O") -- Open
-      a2d.WaitForRepaint()
-    end
-
-    local current_path = a2d.GetFilePickerCurrentPath()
-    if current_path:lower() ~= path:lower() then
-      error(string.format("Failed to navigate to %q, at %q instead", path, current_path))
-    end
-
-  end
-
   --------------------------------------------------
   -- Typing
   --------------------------------------------------
@@ -66,7 +48,7 @@ function FilePickerTest(
     function()
       activation_func()
 
-      NavigateTo("/TESTS/TYPING.SELECT/ORDER.DIRS")
+      a2d.NavigateFilePickerTo("/TESTS/TYPING.SELECT/ORDER.DIRS")
 
       apple2.PressOA()
       apple2.Type("A")
@@ -118,7 +100,7 @@ function FilePickerTest(
     function()
       activation_func()
 
-      NavigateTo("/TESTS/TYPING.SELECT/ORDER.DIRS")
+      a2d.NavigateFilePickerTo("/TESTS/TYPING.SELECT/ORDER.DIRS")
 
       apple2.PressOA()
       apple2.Type("B")
@@ -147,7 +129,7 @@ function FilePickerTest(
     function()
       activation_func()
 
-      NavigateTo("/RAM4")
+      a2d.NavigateFilePickerTo("/RAM4")
       emu.wait(5)
       apple2.LeftArrowKey() -- force caret visible
       a2dtest.ExpectNothingChanged(function()
@@ -177,7 +159,7 @@ function FilePickerTest(
       function()
         activation_func()
 
-        NavigateTo("/TESTS/PROPERTIES/GS.OS.NAMES")
+        a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/GS.OS.NAMES")
 
         test.Snap("verify filenames have correct cases")
 
@@ -220,11 +202,11 @@ function FilePickerTest(
     function()
       activation_func()
 
-      NavigateTo("/TESTS/PROPERTIES/SEVEN")
+      a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/SEVEN")
       local _, vopt = a2dtest.GetFrontWindowScrollOptions()
       test.Expect((vopt & mgtk.scroll.option_active) == 0, "scrollbar should be inactive")
 
-      NavigateTo("/TESTS/PROPERTIES/EIGHT")
+      a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/EIGHT")
       local _, vopt = a2dtest.GetFrontWindowScrollOptions()
       test.Expect((vopt & mgtk.scroll.option_active) ~= 0, "scrollbar should be active")
 
@@ -244,7 +226,7 @@ function FilePickerTest(
       function()
         activation_func()
 
-        NavigateTo("/TESTS/SORTING")
+        a2d.NavigateFilePickerTo("/TESTS/SORTING")
         test.Snap("verify that A sorts before A.B")
 
         cleanup_func()
@@ -265,14 +247,14 @@ function FilePickerTest(
         a2d.ToggleOptionShowInvisible() -- enable
 
         activation_func()
-        NavigateTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
+        a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
         test.Snap("verify INVISIBLE is in list")
         cleanup_func()
 
         a2d.ToggleOptionShowInvisible() -- disable
 
         activation_func()
-        NavigateTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
+        a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
         test.Snap("verify INVISIBLE is not in list")
         cleanup_func()
     end)
@@ -295,20 +277,20 @@ function FilePickerTest(
     function()
       activation_func()
 
-      apple2.ControlKey("D")
+      apple2.ControlKey("D") -- Drives
       emu.wait(2)
       test.Snap("verify drives are in alphabetical order")
 
       local image = s6d2.filename
       s6d2:unload()
 
-      apple2.ControlKey("D")
+      apple2.ControlKey("D") -- Drives
       emu.wait(2)
       test.Snap("verify A is no longer present")
 
       s6d2:load(image)
 
-      apple2.ControlKey("D")
+      apple2.ControlKey("D") -- Drives
       emu.wait(2)
       test.Snap("verify A is back")
 
@@ -370,7 +352,7 @@ function FilePickerTest(
     function()
       activation_func()
 
-      NavigateTo("/A2.DESKTOP")
+      a2d.NavigateFilePickerTo("/A2.DESKTOP")
       test.Snap("verify Open button is dimmed")
 
       apple2.PressOA()
@@ -388,10 +370,10 @@ function FilePickerTest(
         test.Snap("verify Open button is dimmed")
       end
 
-      NavigateTo("/A2.DESKTOP")
+      a2d.NavigateFilePickerTo("/A2.DESKTOP")
       test.Snap("verify Close button is not dimmed")
 
-      NavigateTo("/A2.DESKTOP/EXTRAS")
+      a2d.NavigateFilePickerTo("/A2.DESKTOP/EXTRAS")
       test.Snap("verify Close button is not dimmed")
       test.Snap("verify Open button is dimmed")
       apple2.LeftArrowKey() -- force caret visible
@@ -424,7 +406,7 @@ function FilePickerTest(
         test.Snap("verify OK button is dimmed")
       end
 
-      NavigateTo("/A2.DESKTOP")
+      a2d.NavigateFilePickerTo("/A2.DESKTOP")
       if options.no_sel_ok then
         test.Snap("verify OK button is not dimmed")
       else
@@ -440,7 +422,7 @@ function FilePickerTest(
         test.Snap("verify OK button is dimmed")
       end
 
-      NavigateTo("/RAM1")
+      a2d.NavigateFilePickerTo("/RAM1")
       if options.no_sel_ok then
         test.Snap("verify OK button is not dimmed")
       else
@@ -472,7 +454,7 @@ function FilePickerTest(
     function()
       activation_func()
 
-      NavigateTo("/TESTS/PROPERTIES/SEVEN")
+      a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/SEVEN")
       local x, y, w, h = a2dtest.GetFrontWindowContentRect()
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(x + w / 2, y + 5)
@@ -483,7 +465,7 @@ function FilePickerTest(
       emu.wait(5)
       test.Snap("verify in F1")
 
-      NavigateTo("/TESTS/PROPERTIES/SEVEN")
+      a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/SEVEN")
       local x, y, w, h = a2dtest.GetFrontWindowContentRect()
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(x + w / 2, y + 5)
@@ -628,9 +610,9 @@ test.Step(
     apple2.PressOA()
     apple2.Type("A2.DESKTOP")
     apple2.ReleaseOA()
-    apple2.ControlKey("O") -- open
+    apple2.ControlKey("O") -- Open
     emu.wait(5)
-    apple2.ControlKey("D") -- drives
+    apple2.ControlKey("D") -- Drives
     emu.wait(5)
     test.Snap("verify showing drives list and dir/disk names empty")
 

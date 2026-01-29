@@ -24,12 +24,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.OAShortcut("R") -- Run a Program...
-    apple2.ControlKey("D") -- Drives
-    apple2.Type("A2.DESKTOP")
-    apple2.ControlKey("O") -- Open
-    apple2.Type("EXTRAS")
-    apple2.ControlKey("O") -- Open
-    apple2.Type("BASIC.SYSTEM")
+    a2d.NavigateFilePickerTo("/A2.DESKTOP/EXTRAS", "BASIC.SYSTEM")
     a2d.DialogOK()
 
     apple2.WaitForBasicSystem()
