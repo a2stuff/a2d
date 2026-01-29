@@ -20,6 +20,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ensure text caret is visible after key/click.
 * Reduce cursor flickering while menus are drawn.
 * Reduce cursor flickering while list view rows are drawn.
+* Improve appearance of menu items with check marks.
 
 ### Launcher
 

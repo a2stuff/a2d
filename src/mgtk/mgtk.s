@@ -5666,26 +5666,51 @@ handle_keys     .byte
 
 ;;; Menu drawing metrics
 
+;;; Minimum sizing for an item with a shortcut:
+;;; |       _   __                               __     |
+;;; |   _  //  /  \  _ __  ___  _ _        _/_  /  \    |
+;;; |   \\//  | () || '_ \/ -_)| ' \      (   (| () |   |
+;;; |    \/    \__/ | .__/\___||_||_|      \__/ \__/    |
+;;; |<---A--->      |_|                                 |
+;;; |   mark  text...................     shortcut...   |
+;;; |pad    p2                       space           pad|
+
+;;; Minimum sizing for an item without a shortcut:
+;;; |          ___       _     _          |
+;;; |         | _ ) ___ | | __| |         |
+;;; |         | _ \/ _ \| |/ _  |         |
+;;; |         |___/\___/|_|\____|         |
+;;; |<---A--->                   <---A--->|
+;;; |         text...............         |
+
+kMenuMetricPad               = 4 ; left edge<->mark, shortcut<->right edge
+kMenuMetricP2                = 2 ; mark<->text
+kMenuMetricSpace             = 14 ; text<->shortcut (minimum)
+
 kSWFont = 7
 kDWFont = 14
-
-kMenuMetricPad               = 2
-kMenuMetricSpace             = 7
 kMenuMetricOffsetCheckmark   = kMenuMetricPad
-kMenuMetricOffsetTextSW      = kSWFont + kMenuMetricPad
-kMenuMetricOffsetTextDW      = kDWFont + kMenuMetricPad
+kMenuMetricOffsetTextSW      = kMenuMetricPad + kSWFont + kMenuMetricP2
+kMenuMetricOffsetTextDW      = kMenuMetricPad + kDWFont + kMenuMetricP2
 kMenuMetricOffsetShortcutSW  = (kSWFont * 2) + kMenuMetricPad
 kMenuMetricOffsetShortcutDW  = (kDWFont * 2) + kMenuMetricPad
-kMenuMetricShortcutWidthSW   = (kSWFont * 2) + kMenuMetricOffsetTextSW + kMenuMetricSpace
-kMenuMetricShortcutWidthDW   = (kDWFont * 2) + kMenuMetricOffsetTextDW + kMenuMetricSpace
+kMenuMetricShortcutWidthSW   = kMenuMetricOffsetShortcutSW + kMenuMetricSpace
+kMenuMetricShortcutWidthDW   = kMenuMetricOffsetShortcutDW + kMenuMetricSpace
 
 ;;; Updated in `InitMenuImpl`; assumes single-width font
 offset_checkmark:   .byte   kMenuMetricOffsetCheckmark   ; delta from left to mark
 offset_text:        .byte   kMenuMetricOffsetTextSW      ; delta from left to text
 offset_shortcut:    .byte   kMenuMetricOffsetShortcutSW  ; delta from right to shortcut
-no_shortcut_width:  .byte   kMenuMetricOffsetTextSW      ; extra width needed w/ shortcut
-shortcut_width:     .byte   kMenuMetricShortcutWidthSW   ; extra width needed w/o shortcut
+shortcut_width:     .byte   kMenuMetricShortcutWidthSW   ; extra width needed w/ shortcut
 sysfont_height:     .byte   0
+
+;;; With no mark and no shortcut, the padding between the menu item
+;;; text and the left/right menu edges is kept symmetrical. Since
+;;; marks can be added dynamically the left padding is sized to
+;;; accomodate this, and the right padding is therefore the same.
+no_shortcut_width := offset_text
+
+
 
 active_menu:
         .addr   0
@@ -7162,35 +7187,28 @@ control_char    .byte
 
         copy16  standard_port::textfont, params
 
-        lda     #kMenuMetricOffsetCheckmark
-        sta     offset_checkmark
-
-        ldx     #kMenuMetricOffsetTextDW
+        ;; Set C=1 if double width
         ldy     #MGTK::Font::fonttype
         lda     (params),y
         asl
-        ldy     #kMenuMetricOffsetShortcutDW
 
-    IF CC
         ;; Single width
-        lda     #kMenuMetricOffsetTextSW
-        sta     offset_text
-        sta     no_shortcut_width
+        ldx     #kMenuMetricOffsetTextSW
+        ldy     #kMenuMetricOffsetShortcutSW
+        lda     #kMenuMetricShortcutWidthSW
 
-        ASSERT_EQUALS mgtk::kMenuMetricOffsetTextDW, mgtk::kMenuMetricOffsetShortcutSW
-        stx     offset_shortcut
-
-        ASSERT_EQUALS mgtk::kMenuMetricOffsetShortcutDW, mgtk::kMenuMetricShortcutWidthSW
-        sty     shortcut_width
-        rts
+    IF CS
+        ;; Double width
+        ldx     #kMenuMetricOffsetTextDW
+        ldy     #kMenuMetricOffsetShortcutDW
+        lda     #kMenuMetricShortcutWidthDW
     END_IF
 
-        ;; Double width
+        ;; `offset_checkmark` statically assigned `kMenuMetricOffsetCheckmark`
         stx     offset_text
-        stx     no_shortcut_width
         sty     offset_shortcut
-        lda     #kMenuMetricShortcutWidthDW
         sta     shortcut_width
+
         rts
 .endproc ; InitMenuImpl
 
