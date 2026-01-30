@@ -74,11 +74,10 @@ end)
   Load DeskTop. Open a window for a volume in a Disk II drive. Remove
   the disk from the Disk II drive. Hold Solid-Apple and drag a file to
   another volume to move it. When prompted to insert the disk, click
-  Cancel. Verify that when the window closes the disk icon is no
-  longer dimmed.
+  Cancel. Verify that when the window closes selection remains.
 ]]
 test.Step(
-  "Drag with disk ejected",
+  "Drag with disk ejected - before enumeration",
   function()
     local drive = s6d1
     local src = drive.filename
@@ -90,15 +89,56 @@ test.Step(
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     drive:unload()
-    a2d.Drag(src_x, src_y, dst_x, dst_y)
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
 
     a2dtest.WaitForAlert()
     a2d.DialogCancel()
 
     emu.wait(5)
 
-    test.Snap("verify that floppy icon is not dimmed")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "LOREM.IPSUM", "clicked icon should be selected")
 
+    -- cleanup
+    drive:load(src)
+end)
+
+
+--[[
+  Load DeskTop. Open a window for a volume in a Disk II drive. Remove
+  the disk from the Disk II drive. Hold Solid-Apple and drag a file to
+  another volume to move it. After enumeration, when prompted to
+  insert the disk, click Cancel. Verify that when the window closes
+  the disk icon is no longer dimmed.
+]]
+test.Step(
+  "Drag with disk ejected - after enumeration",
+  function()
+    local drive = s6d1
+    local src = drive.filename
+
+    a2d.SelectPath("/RAM1")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
+    drive:unload()
+
+    a2dtest.WaitForAlert() -- Insert the disk
+    a2d.DialogCancel()
+    a2d.WaitForRepaint()
+
+    a2dtest.WaitForAlert() -- The volume cannot be found
+    a2d.DialogOK()
+    emu.wait(5)
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
+    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+
+    -- cleanup
     drive:load(src)
 end)
 

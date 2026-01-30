@@ -10247,7 +10247,7 @@ eof:    RETURN  A=#$FF
 ;;;
 ;;; Input: A=`storage_type`
 ;;; Output: C=0 if supported type, C=1 if unsupported but user picks OK.
-;;; Exception: If user selects Cancel, `CloseFilesCancelDialogWithFailedResult` is invoked.
+;;; Exception: If user selects Cancel, `CloseFilesCancelDialogWithAppropriateResult` is invoked.
 ;;; Assert: Type is not `ST_VOLUME_DIRECTORY` or `ST_LINKED_DIRECTORY`
 .proc ValidateStorageType
     IF A >= #ST_TREE_FILE+1     ; only seedling/sapling/tree supported
@@ -10287,7 +10287,7 @@ continue:
         beq     fail
         rts
 
-fail:   jmp     CloseFilesCancelDialogWithFailedResult
+fail:   jmp     CloseFilesCancelDialogWithAppropriateResult
 .endproc ; ShowAlertBasedOnFileCount
 
 ;;; ============================================================
@@ -11690,7 +11690,7 @@ src_path_slash_index:
 .proc CheckRetry
         CALL    ShowAlertOption, X=#AlertButtonOptions::TryAgainCancel
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        bne     CloseFilesCancelDialogWithFailedResult
+        bne     CloseFilesCancelDialogWithAppropriateResult
         rts
 .endproc ; CheckRetry
 
@@ -11702,14 +11702,21 @@ src_path_slash_index:
     IF A = #MGTK::EventKind::key_down
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     cancel
+        beq     CloseFilesCancelDialogWithAppropriateResult
     END_IF
         rts
+.endproc ; CheckCancel
 
-cancel: bit     do_op_flag
+
+;;; ============================================================
+;;; Selects `kOperationCanceled` if during enumeration phase,
+;;; or `kOperationFailed` if the operation is underway.
+
+.proc CloseFilesCancelDialogWithAppropriateResult
+        bit     do_op_flag
         bpl     CloseFilesCancelDialogWithCanceledResult
         FALL_THROUGH_TO CloseFilesCancelDialogWithFailedResult
-.endproc ; CheckCancel
+.endproc ; CloseFilesCancelDialogWithAppropriateResult
 
 ;;; ============================================================
 ;;; Closes dialog, closes all open files, and restores stack.
@@ -11888,7 +11895,7 @@ retry:  CALL    GetFileInfo, AX=src_ptr
         MLI_CALL ON_LINE, on_line_all_drives_params
         rts
 
-close:  jmp     CloseFilesCancelDialogWithFailedResult
+close:  jmp     CloseFilesCancelDialogWithAppropriateResult
 
 dst_flag:       .byte   0       ; bit7
 

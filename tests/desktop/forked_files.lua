@@ -185,8 +185,8 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert()
     a2d.DialogOK()
-    test.Snap("verify destination window updated")
     emu.wait(5)
+    test.Snap("verify RAM1 window updated")
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -215,8 +215,8 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert()
     a2d.DialogOK()
-    test.Snap("verify destination window updated")
     emu.wait(5)
+    test.Snap("verify RAM1 window updated")
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -259,8 +259,8 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert()
     a2d.DialogOK()
-    test.Snap("verify destination window activated and updated")
     emu.wait(5)
+    test.Snap("verify RAM1 window activated and updated")
 
     -- cleanup
     a2d.EraseVolume("RAM1")

@@ -222,11 +222,11 @@ end)
 --[[
   Load DeskTop. Open a window for a volume in a Disk II drive. Remove
   the disk from the Disk II drive. Drag a file to the trash. When
-  prompted to insert the disk, click Cancel. Verify that when the
-  window closes the disk icon is no longer dimmed.
+  prompted to insert the disk, click Cancel. Verify that selection
+  is unchanged.
 ]]
 test.Step(
-  "Ejected disk",
+  "Ejected disk - before enumeration",
   function()
     a2d.SelectPath("/Trash")
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
@@ -242,6 +242,39 @@ test.Step(
     -- Drag to trash
     a2d.Drag(icon_x, icon_y, trash_x, trash_y)
     a2dtest.WaitForAlert()
+    a2d.DialogCancel() -- insert disk
+    a2d.WaitForRepaint()
+
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "LOREM.IPSUM", "clicked icon should be selected")
+
+    s6d1:load(current)
+end)
+--[[
+  Load DeskTop. Open a window for a volume in a Disk II drive. Drag a
+  file to the trash. Remove the disk from the Disk II drive. Click OK
+  to confirm the deletion. When prompted to insert the disk, click
+  Cancel. Verify that when the window closes the disk icon is no
+  longer dimmed.
+]]
+test.Step(
+  "Ejected disk - after enumeration",
+  function()
+    a2d.SelectPath("/Trash")
+    local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
+
+    -- Open window
+    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
+
+    -- Drag to trash
+    a2d.Drag(icon_x, icon_y, trash_x, trash_y)
+    a2dtest.WaitForAlert()
+
+    -- Eject disk
+    local current = s6d1.filename
+    s6d1:unload()
+
     a2d.DialogOK() -- confirm
     a2d.WaitForRepaint()
 
