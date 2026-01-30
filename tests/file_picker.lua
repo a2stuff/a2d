@@ -279,6 +279,7 @@ function FilePickerTest(
 
       apple2.ControlKey("D") -- Drives
       emu.wait(2)
+      test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "should be at root")
       test.Snap("verify drives are in alphabetical order")
 
       local image = s6d2.filename
@@ -286,12 +287,14 @@ function FilePickerTest(
 
       apple2.ControlKey("D") -- Drives
       emu.wait(2)
+      test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "should be at root")
       test.Snap("verify A is no longer present")
 
       s6d2:load(image)
 
       apple2.ControlKey("D") -- Drives
       emu.wait(2)
+      test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "should be at root")
       test.Snap("verify A is back")
 
       cleanup_func()
@@ -376,27 +379,23 @@ function FilePickerTest(
       a2d.NavigateFilePickerTo("/A2.DESKTOP/EXTRAS")
       test.Snap("verify Close button is not dimmed")
       test.Snap("verify Open button is dimmed")
-      apple2.LeftArrowKey() -- force caret visible
-      a2dtest.ExpectNothingChanged(function()
-          apple2.ControlKey("O") -- Open
-          apple2.LeftArrowKey() -- force caret visible
-      end)
+      apple2.ControlKey("O") -- Open
+      emu.wait(2)
+      test.ExpectEqualsIgnoreCase(a2d.GetFilePickerCurrentPath(), "/A2.DESKTOP/EXTRAS", "nothing should have changed")
       test.Snap("verify no selection")
 
       apple2.ControlKey("D") -- Drives
       emu.wait(2)
+      test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "should be at root")
       test.Snap("verify Close button is dimmed")
-      apple2.LeftArrowKey() -- force caret visible
-      a2dtest.ExpectNothingChanged(function()
-          apple2.ControlKey("C") -- Close
-          apple2.LeftArrowKey() -- force caret visible
-      end)
+      apple2.ControlKey("C") -- Close
+      emu.wait(2)
+      test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "nothing should have changed")
       test.Snap("verify OK button is dimmed")
-      apple2.LeftArrowKey() -- force caret visible
-      a2dtest.ExpectNothingChanged(function()
-          apple2.ReturnKey() -- OK
-          apple2.LeftArrowKey() -- force caret visible
-      end)
+      local window_id = mgtk.FrontWindow()
+      apple2.ReturnKey() -- OK
+      emu.wait(2)
+      test.ExpectEquals(mgtk.FrontWindow(), window_id, "nothing should have changed")
 
       apple2.DownArrowKey()
       a2d.WaitForRepaint()
@@ -612,8 +611,10 @@ test.Step(
     apple2.ReleaseOA()
     apple2.ControlKey("O") -- Open
     emu.wait(5)
+    test.ExpectEqualsIgnoreCase(a2d.GetFilePickerCurrentPath(), "/A2.DESKTOP", "should be in disk")
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
+    test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "should be at root")
     test.Snap("verify showing drives list and dir/disk names empty")
 
     -- cleanup
@@ -624,10 +625,36 @@ test.Step(
     emu.wait(5)
 end)
 
+--[[
+  In a File Picker without a line edit control, non-modified keys work
+  as type down selection. Use DeskTop's File > Copy To.
+]]
+test.Step(
+  "Verify non-modified keys work as type-down selection",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    emu.wait(2)
+    apple2.ControlKey("D") -- Drives
+    emu.wait(2)
+    local path = "/TESTS/SORTING"
+    local opt_file = "A"
+
+    for segment in path:gmatch("([^/]+)") do
+      apple2.Type(segment)
+      apple2.ControlKey("O") -- Open
+      a2d.WaitForRepaint()
+    end
+    local current_path = a2d.GetFilePickerCurrentPath()
+    if current_path:lower() ~= path:lower() then
+      error(string.format("Failed to navigate to %q, at %q instead", path, current_path))
+    end
+end)
 
 --[[
 * Launch DeskTop. Special > Format Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy To.... Verify that the file list is populated.
 ]]
+-- TODO: Implement this!
 
 -- This is all covered in tests/line_edit.lua
 --[[

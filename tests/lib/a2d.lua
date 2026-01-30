@@ -578,11 +578,7 @@ function a2d.GetFilePickerCurrentPath()
   return apple2.GetPascalString(0x1620)
 end
 
-function a2d.GetFilePickerCurrentSelectionName()
-  return apple2.GetPascalString(0x1620)
-end
-
-function a2d.NavigateFilePickerTo(path, opt_file)
+function a2d.NavigateFilePickerTo(path, opt_file, options)
   apple2.ControlKey("D") -- Drives
   emu.wait(2)
   for segment in path:gmatch("([^/]+)") do
