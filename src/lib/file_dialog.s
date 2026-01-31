@@ -591,7 +591,7 @@ file_char:
       IF A <> selected_index
         sta     file_dialog_res::lb_params::new_selection
         LBTK_CALL LBTK::SetSelection, file_dialog_res::lb_params
-        jmp     _UpdateDynamicButtons
+        jsr     _UpdateDynamicButtons
       END_IF
     END_IF
 
@@ -606,10 +606,8 @@ file_char:
         copy8   #0, index
     DO
         index := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        lda     file_list_index,x
-        and     #$7F
-        jsr     _GetNthFilename
+        lda     #SELF_MODIFIED_BYTE
+        jsr     _GetFilenameForIndex
         stax    $06
 
         ldy     #0
@@ -640,6 +638,17 @@ found:  RETURN  A=index
 .endproc ; _FindMatch
 
 .endproc ; CheckTypeDown
+
+;;; ============================================================
+
+;;; Input: A = index (must be valid, not -1)
+;;; Output: A,X = filename
+.proc _GetFilenameForIndex
+        tax
+        lda     file_list_index,x
+        and     #$7F
+        FALL_THROUGH_TO _GetNthFilename
+.endproc ; _GetFilenameForIndex
 
 ;;; ============================================================
 
@@ -866,11 +875,8 @@ found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
 ;;; Assert: `selected_index` is valid (not -1)
 
 .proc _AppendSelectedFilename
-        ldx     selected_index
-        lda     file_list_index,x
-        and     #$7F
-
-        jsr     _GetNthFilename
+        lda     selected_index
+        jsr     _GetFilenameForIndex
         FALL_THROUGH_TO _AppendToPathBuf
 .endproc ; _AppendSelectedFilename
 
@@ -1225,7 +1231,7 @@ next:   add16_8 ptr, #16        ; advance to next
     DO
         outer := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     _CalcPtr
+        jsr     _GetFilenameForIndex
         stax    ptr2
 
         lda     #0
@@ -1233,7 +1239,7 @@ next:   add16_8 ptr, #16        ; advance to next
       DO
         inner := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     _CalcPtr
+        jsr     _GetFilenameForIndex
         stax    ptr1
 
         jsr     _CompareStrings
@@ -1243,7 +1249,7 @@ next:   add16_8 ptr, #16        ; advance to next
         ldy     outer
         swap8   file_list_index,x, file_list_index,y
 
-        CALL    _CalcPtr, A=outer
+        CALL    _GetFilenameForIndex, A=outer
         stax    ptr2
        END_IF
 
@@ -1255,12 +1261,6 @@ next:   add16_8 ptr, #16        ; advance to next
     WHILE NOT_ZERO
         rts
 
-.proc _CalcPtr
-        tax
-        lda     file_list_index,x
-        and     #$7F
-        jmp     _GetNthFilename
-.endproc ; _CalcPtr
 .endproc ; _SortFileNames
 
 ;;; ============================================================
@@ -1311,11 +1311,7 @@ ret:    rts
 ASSERT_EQUALS .sizeof(file_dialog_res::listbox_rec), .sizeof(LBTK::ListBoxRecord)
 num_file_names := file_dialog_res::listbox_rec::num_items
 selected_index := file_dialog_res::listbox_rec::selected_index
-
-.proc OnListSelectionChange
-        jsr     _UpdateDynamicButtons
-        rts
-.endproc ; OnListSelectionChange
+OnListSelectionChange := _UpdateDynamicButtons
 
 ;;; ============================================================
 
