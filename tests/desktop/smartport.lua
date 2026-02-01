@@ -2,6 +2,7 @@
 
 MODEL="apple2ee"
   MODELARGS="-sl2 mouse -sl5 scsi -sl6 '' -sl7 cffa2 \
+  -sl5:scsi:scsibus:1 ''                    \
   -sl5:scsi:scsibus:3 harddisk              \
   -sl5:scsi:scsibus:4 harddisk              \
   -sl5:scsi:scsibus:5 harddisk              \
@@ -17,8 +18,6 @@ DISKARGS="\
   "
 
 ================================================== ENDCONFIG ]]
-
--- TODO: Figure out a way to remove CD-ROM device from SCSI chain
 
 a2d.ConfigureRepaintTime(0.25)
 

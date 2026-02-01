@@ -1,32 +1,33 @@
 --[[ BEGINCONFIG ==================================================
 
-MODEL="apple2ee"
-  MODELARGS="-sl2 mouse -sl4 scsi -sl5 scsi -sl6 '' -sl7 superdrive \
-  \
+MODELARGS="-sl2 mouse -sl6 '' -sl7 superdrive \
+  -sl5 scsi \
   -sl5:scsi:scsibus:6 harddisk              \
   -sl5:scsi:scsibus:5 harddisk              \
   -sl5:scsi:scsibus:4 harddisk              \
   -sl5:scsi:scsibus:3 harddisk              \
   -sl5:scsi:scsibus:2 harddisk              \
+  -sl5:scsi:scsibus:1 harddisk              \
   -sl5:scsi:scsibus:0 harddisk              \
-  \
+  -sl4 scsi \
   -sl4:scsi:scsibus:6 harddisk              \
   -sl4:scsi:scsibus:5 harddisk              \
   -sl4:scsi:scsibus:4 harddisk              \
   -sl4:scsi:scsibus:3 harddisk              \
   "
 DISKARGS="\
-  -hard10 disk_a.2mg \
-  -hard9  disk_b.2mg \
-  -hard8  disk_c.2mg \
-  -hard7  disk_d.2mg \
-  -hard6  disk_e.2mg \
-  -hard5  disk_f.2mg \
+  -hard11 disk_a.2mg \
+  -hard10 disk_b.2mg \
+  -hard9  disk_c.2mg \
+  -hard8  disk_d.2mg \
+  -hard7  disk_e.2mg \
+  -hard6  disk_f.2mg \
+  -hard5  disk_g.2mg \
   \
-  -hard4  disk_g.2mg \
-  -hard3  disk_h.2mg \
-  -hard2  disk_i.2mg \
-  -hard1  disk_j.2mg \
+  -hard4  disk_h.2mg \
+  -hard3  disk_i.2mg \
+  -hard2  disk_j.2mg \
+  -hard1  disk_k.2mg \
   \
   -flop1 $HARDIMG \
   -flop2 empty_800k.2mg \
@@ -56,7 +57,7 @@ local devices = {
   s4d2 = manager.machine.images[":sl4:scsi:scsibus:5:harddisk:image"], -- non-mirrored
 
   s1d1 = manager.machine.images[":sl5:scsi:scsibus:2:harddisk:image"], -- mirrored
-  s1d2 = manager.machine.images[":sl5:scsi:scsibus:1:cdrom:image"], -- mirrored
+  s1d2 = manager.machine.images[":sl5:scsi:scsibus:1:harddisk:image"], -- mirrored
 
   s6d1 = manager.machine.images[":sl5:scsi:scsibus:0:harddisk:image"], -- mirrored
   s6d2 = manager.machine.images[":sl4:scsi:scsibus:4:harddisk:image"], -- mirrored
@@ -65,11 +66,12 @@ local devices = {
 }
 
 local alpha_order = {
-  {slot=5, drive=1}, {slot=5, drive=2},
-  {slot=2, drive=1}, {slot=2, drive=2},
-  {slot=1, drive=1}, {slot=6, drive=1},
-  {slot=4, drive=1}, {slot=4, drive=2},
-  {slot=6, drive=2}, {slot=3, drive=1}
+  {slot=5, drive=1}, {slot=5, drive=2}, -- S5 non-mirrored
+  {slot=2, drive=1}, {slot=2, drive=2}, -- S5 mirrored
+  {slot=1, drive=1}, {slot=1, drive=2}, -- S5 mirrored
+  {slot=6, drive=1},                    -- S5 mirrored
+  {slot=4, drive=1}, {slot=4, drive=2}, -- S4 non-mirrored
+  {slot=6, drive=2}, {slot=3, drive=1}, -- S4 mirrored
 }
 
 local empty = devices.s7d2.filename
@@ -88,9 +90,8 @@ test.Step(
     local devlst = apple2.GetProDOSDeviceList()
 
     for _, entry in ipairs(devlst) do
-      if entry.slot == 7 or (entry.slot == 1 and entry.drive == 2) then
-        -- Skip A2.DESKTOP (S7D1) and empty (S7D2)a
-        -- Skip CD-ROM (S2D1)
+      if entry.slot == 7 then
+        -- Skip A2.DESKTOP (S7D1) and empty (S7D2)
         goto continue
       end
       local drive = devices[string.format("s%dd%d", entry.slot, entry.drive)]

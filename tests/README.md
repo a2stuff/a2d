@@ -136,6 +136,7 @@ Tests specific to various components of the application.
       * `local s5d2 = manager.machine.images[":sl5:superdrive:fdc:1:35hd"]`
     * For a SCSI controller in Slot 7:
       * `local s7d1 = manager.machine.images[":sl7:scsi:scsibus:6:harddisk:image"]`
+      * Additional SCSI devices require more command line configuration
     * For an Apple IIgs or Apple IIc+
       * `local s6d1 = manager.machine.images[":fdc:0:525"]`
       * `local s6d2 = manager.machine.images[":fdc:1:525"]`
