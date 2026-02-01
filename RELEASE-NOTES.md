@@ -87,6 +87,7 @@ Project Page: https://github.com/a2stuff/a2d
 * DOS 3.3 Import: Fix keyboard shortcut handling.
 * Sounds: Time "Silent" menu bar flash using VBL.
 * Screen Savers: improve animation for Flying Toasters, Hexix, Message and Melt.
+* Calculator & Sci.Calc: fix clicking button edges and button spacing.
 
 ### Misc
 

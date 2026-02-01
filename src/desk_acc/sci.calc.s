@@ -62,31 +62,33 @@ setzp_params_preserve:          ; convenience over performance
 
         kCalcButtonWidth = 17
         kCalcButtonHeight = 9
+        kCalcButtonHSpacing = kCalcButtonWidth + 12
+        kCalcButtonVSpacing = kCalcButtonHeight + 6
 
         kColALeft = 13
         kColBLeft = 58
 
         kCol1Left = 13 + kBasicOffset
-        kCol1Right = kCol1Left+kCalcButtonWidth ; 30
-        kCol2Left = 42 + kBasicOffset
-        kCol2Right = kCol2Left+kCalcButtonWidth ; 59
-        kCol3Left = 70 + kBasicOffset
-        kCol3Right = kCol3Left+kCalcButtonWidth ; 87
-        kCol4Left = 98 + kBasicOffset
-        kCol4Right = kCol4Left+kCalcButtonWidth ; 115
+        kCol1Right = kCol1Left+kCalcButtonWidth
+        kCol2Left = kCol1Left + kCalcButtonHSpacing
+        kCol2Right = kCol2Left+kCalcButtonWidth
+        kCol3Left = kCol2Left + kCalcButtonHSpacing
+        kCol3Right = kCol3Left+kCalcButtonWidth
+        kCol4Left = kCol3Left + kCalcButtonHSpacing
+        kCol4Right = kCol4Left+kCalcButtonWidth
 
         kRow0Top = 22 - 16
 
         kRow1Top = 22
-        kRow1Bot = kRow1Top+kCalcButtonHeight ; 31
-        kRow2Top = 38
-        kRow2Bot = kRow2Top+kCalcButtonHeight ; 47
-        kRow3Top = 53
-        kRow3Bot = kRow3Top+kCalcButtonHeight ; 62
-        kRow4Top = 68
-        kRow4Bot = kRow4Top+kCalcButtonHeight ; 77
-        kRow5Top = 83
-        kRow5Bot = kRow5Top+kCalcButtonHeight ; 92
+        kRow1Bot = kRow1Top+kCalcButtonHeight
+        kRow2Top = kRow1Top + kCalcButtonVSpacing
+        kRow2Bot = kRow2Top+kCalcButtonHeight
+        kRow3Top = kRow2Top + kCalcButtonVSpacing
+        kRow3Bot = kRow3Top+kCalcButtonHeight
+        kRow4Top = kRow3Top + kCalcButtonVSpacing
+        kRow4Bot = kRow4Top+kCalcButtonHeight
+        kRow5Top = kRow4Top + kCalcButtonVSpacing
+        kRow5Bot = kRow5Top+kCalcButtonHeight
 
         kBorderLeftTop = 1          ; border width pixels (left/top)
         kBorderBottomRight = 2          ; (bottom/right)
@@ -766,6 +768,7 @@ ret:    rts
         copy8   #MGTK::EventKind::button_down, event_params::kind ; Needed in `DepressButton`
 
         ptr := $06
+        rect_ptr := $08
 
         copy16  #first_button, ptr
     REPEAT
@@ -773,8 +776,16 @@ ret:    rts
         lda     (ptr),y
         beq     ret
 
-        add16_8 ptr, #(btn_c::port - btn_c), rect
-        MGTK_CALL MGTK::InRect, 0, rect
+        ;; Button's "port" is the inner inversion rect; test against
+        ;; 1px beyond that, to match BTK. Make a copy and inflate it.
+        add16_8 ptr, #(btn_c::port - btn_c), rect_ptr
+        ldy     #.sizeof(MGTK::Rect)-1
+      DO
+        copy8   (rect_ptr),y, inrect_rect,y
+        dey
+      WHILE POS
+        MGTK_CALL MGTK::InflateRect, grow_rect
+        MGTK_CALL MGTK::InRect, inrect_rect
         beq     next
 
         ;; Return the function...
@@ -782,7 +793,7 @@ ret:    rts
         lda     (ptr),y
         pha
         ;; ...but first flash the button
-        CALL    DepressButton, AX=rect
+        CALL    DepressButton, AX=rect_ptr
         beq     ignore
         pla
 ret:    rts
@@ -792,6 +803,12 @@ ignore: pla
 
 next:   add16_8 ptr, #.sizeof(btn_c)
     FOREVER
+
+        DEFINE_RECT inrect_rect, 0,0,0,0
+.params grow_rect
+        .addr   inrect_rect
+        .word   1, 1
+.endparams
 .endproc ; MapClickToFunction
 
 ;;; ============================================================
@@ -1341,7 +1358,17 @@ kRegSize = 6
 ;;; Input: A,X = button rectangle; `event_params` must be valid
 .proc DepressButton
         stax    invert_addr
-        stax    inrect_params
+
+        ;; The passed rect is the inner inversion rect; test against
+        ;; 1px beyond that, to match BTK. Make a copy and inflate it.
+        ptr := $06
+        stax    ptr
+        ldy     #.sizeof(MGTK::Rect)-1
+    DO
+        copy8   (ptr),y, inrect_rect,y
+        dey
+    WHILE POS
+        MGTK_CALL MGTK::InflateRect, grow_rect
 
         ;; --------------------------------------------------
         ;; Keyboard?
@@ -1380,7 +1407,7 @@ check_button:
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, 0, inrect_params
+        MGTK_CALL MGTK::InRect, inrect_rect
         bne     inside
 
         lda     button_state    ; outside, not down
@@ -1412,6 +1439,12 @@ invert_rect:
         MGTK_CALL MGTK::SetPenMode, penmode_xor
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, invert_addr
         rts
+
+        DEFINE_RECT inrect_rect, 0,0,0,0
+.params grow_rect
+        .addr   inrect_rect
+        .word   1, 1
+.endparams
 .endproc ; DepressButton
 
 ;;; ============================================================

@@ -54,6 +54,11 @@ The following tests have not (yet) been automated because the Escape key conflic
 * Configure a IIe system with a 16MB RAMFactor card (e.g. GR8RAM from https://garrettsworkshop.com/) with a single 16MB partition. Apple > About This Apple II. Verify that the calculated memory size is accurate, i.e. it is not off by 64k.
 > This can not be (currently) tested in MAME.
 
+### Calculator & Sci.Calc
+
+* Slow any acceleration. Position the cursor over the 1px border of various buttons, all 4 edges. Press the mouse button. Verify the button inverts. Drag in and outside the button. Verify that the button is inverted on the 1px border and within, not inverted inside. Verify that the button does not flash but stays inverted until the button is released. Note that the 1px shadow on the right and bottom is not considered part of the button.
+> This can not be (currently) tested in MAME.
+
 ### Puzzle
 
 * Launch DeskTop. Apple Menu > Puzzle. Scramble then solve the puzzle. After the victory sound plays, click on the puzzle again. Verify that the puzzle scrambles and that it can be solved again.

@@ -59,26 +59,28 @@ setzp_params_preserve:          ; convenience over performance
 
         kCalcButtonWidth = 17
         kCalcButtonHeight = 9
+        kCalcButtonHSpacing = kCalcButtonWidth + 12
+        kCalcButtonVSpacing = kCalcButtonHeight + 6
 
         kCol1Left = 13
-        kCol1Right = kCol1Left+kCalcButtonWidth ; 30
-        kCol2Left = 42
-        kCol2Right = kCol2Left+kCalcButtonWidth ; 59
-        kCol3Left = 70
-        kCol3Right = kCol3Left+kCalcButtonWidth ; 87
-        kCol4Left = 98
-        kCol4Right = kCol4Left+kCalcButtonWidth ; 115
+        kCol1Right = kCol1Left+kCalcButtonWidth
+        kCol2Left = kCol1Left + kCalcButtonHSpacing
+        kCol2Right = kCol2Left+kCalcButtonWidth
+        kCol3Left = kCol2Left + kCalcButtonHSpacing
+        kCol3Right = kCol3Left+kCalcButtonWidth
+        kCol4Left = kCol3Left + kCalcButtonHSpacing
+        kCol4Right = kCol4Left+kCalcButtonWidth
 
         kRow1Top = 22
-        kRow1Bot = kRow1Top+kCalcButtonHeight ; 31
-        kRow2Top = 38
-        kRow2Bot = kRow2Top+kCalcButtonHeight ; 47
-        kRow3Top = 53
-        kRow3Bot = kRow3Top+kCalcButtonHeight ; 62
-        kRow4Top = 68
-        kRow4Bot = kRow4Top+kCalcButtonHeight ; 77
-        kRow5Top = 83
-        kRow5Bot = kRow5Top+kCalcButtonHeight ; 92
+        kRow1Bot = kRow1Top+kCalcButtonHeight
+        kRow2Top = kRow1Top + kCalcButtonVSpacing
+        kRow2Bot = kRow2Top+kCalcButtonHeight
+        kRow3Top = kRow2Top + kCalcButtonVSpacing
+        kRow3Bot = kRow3Top+kCalcButtonHeight
+        kRow4Top = kRow3Top + kCalcButtonVSpacing
+        kRow4Bot = kRow4Top+kCalcButtonHeight
+        kRow5Top = kRow4Top + kCalcButtonVSpacing
+        kRow5Bot = kRow5Top+kCalcButtonHeight
 
         kBorderLeftTop = 1          ; border width pixels (left/top)
         kBorderBottomRight = 2          ; (bottom/right)
@@ -635,15 +637,15 @@ rts1:  rts                     ; used by next proc
         FALL_THROUGH_TO FindButtonRow
 
 .proc FindButtonRow
-        cmp     #kRow1Top+kBorderLeftTop - 1 ; row 1 ? (- 1 is bug in original?)
+        cmp     #kRow1Top-kBorderLeftTop            ; row 1?
         bcc     miss
-    IF A < #kRow1Bot+kBorderBottomRight + 1 ; (+ 1 is bug in original?)
+    IF A < #kRow1Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
         RETURN  A=row1_lookup,x
     END_IF
 
-        cmp     #kRow2Top-kBorderLeftTop             ; row 2?
+        cmp     #kRow2Top-kBorderLeftTop            ; row 2?
         bcc     miss
     IF A < #kRow2Bot+kBorderBottomRight
         jsr     FindButtonCol
@@ -651,7 +653,7 @@ rts1:  rts                     ; used by next proc
         RETURN  A=row2_lookup,x
     END_IF
 
-        cmp     #kRow3Top-kBorderLeftTop             ; row 3?
+        cmp     #kRow3Top-kBorderLeftTop            ; row 3?
         bcc     miss
     IF A < #kRow3Bot+kBorderBottomRight
         jsr     FindButtonCol
@@ -659,7 +661,7 @@ rts1:  rts                     ; used by next proc
         RETURN  A=row3_lookup,x
     END_IF
 
-        cmp     #kRow4Top-kBorderLeftTop             ; row 4?
+        cmp     #kRow4Top-kBorderLeftTop            ; row 4?
         bcc     miss
     IF A < #kRow4Bot+kBorderBottomRight
         jsr     FindButtonCol
@@ -671,7 +673,7 @@ rts1:  rts                     ; used by next proc
         lda     screentowindow_params::windowx
         cmp     #kCol4Left-kBorderLeftTop
         bcc     miss
-        cmp     #kCol4Right+kBorderBottomRight-1         ; is -1 bug in original?
+        cmp     #kCol4Right+kBorderBottomRight-1         ; TODO: is -1 bug in original?
         bcs     miss
         RETURN  A=#'+', C=1
     END_IF
@@ -727,7 +729,7 @@ miss:   RETURN  C=0
 
         cpx     #kCol4Left-kBorderLeftTop            ; col 4?
         bcc     miss
-    IF X < #kCol4Right+kBorderBottomRight - 1 ; bug in original?
+    IF X < #kCol4Right+kBorderBottomRight
         RETURN  X=#4, C=1
     END_IF
 
@@ -744,7 +746,7 @@ miss:   RETURN  C=0
 
 .proc ProcessKey
     IF A = #'C'                 ; Clear?
-        CALL    DepressButton, XY=#btn_c::port, A=#'c'
+        CALL    DepressButton, XY=#btn_c::port
         lda     #0
         ROM_CALL FLOAT
         ldxy    #farg
@@ -760,7 +762,7 @@ miss:   RETURN  C=0
     END_IF
 
     IF A = #'E'                 ; Exponential?
-        CALL    DepressButton, XY=#btn_e::port, A=#'e'
+        CALL    DepressButton, XY=#btn_e::port
         ldy     calc_e
         bne     rts1
         ldy     calc_l
@@ -1112,9 +1114,20 @@ end:    jsr     DisplayBuffer1
         rts
 .endproc ; MaybeAddLeadingZero
 
+;;; ============================================================
+
+;;; Input: X,Y = button rectangle; `event_params` must be valid
 .proc DepressButton
         stxy    invert_addr
-        stxy    inrect_params
+
+        ptr := $06
+        stxy    ptr
+        ldy     #.sizeof(MGTK::Rect)-1
+    DO
+        copy8   (ptr),y, inrect_rect,y
+        dey
+    WHILE POS
+        MGTK_CALL MGTK::InflateRect, grow_rect
 
         ;; --------------------------------------------------
         ;; Keyboard?
@@ -1157,7 +1170,7 @@ check_button:
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, 0, inrect_params
+        MGTK_CALL MGTK::InRect, inrect_rect
         bne     inside
 
         lda     button_state    ; outside, not down
@@ -1187,6 +1200,12 @@ invert_rect:
         MGTK_CALL MGTK::SetPenMode, penmode_xor
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, invert_addr
         rts
+
+        DEFINE_RECT inrect_rect, 0,0,0,0
+.params grow_rect
+        .addr   inrect_rect
+        .word   1, 1
+.endparams
 .endproc ; DepressButton
 
 ;;; ============================================================
