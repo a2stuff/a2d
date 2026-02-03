@@ -67,6 +67,16 @@ test.Step(
 end)
 
 test.Step(
+  "Maze",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MAZE")
+    emu.wait(20)
+    test.Snap("Maze")
+    apple2.EscapeKey()
+    a2d.WaitForRepaint()
+end)
+
+test.Step(
   "Melt",
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MELT")

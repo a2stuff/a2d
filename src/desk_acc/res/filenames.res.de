@@ -24,6 +24,7 @@
 .define res_filename_map "Karte"
 .define res_filename_melt "Zergehen"
 .define res_filename_matrix "Matrix"
+.define res_filename_maze "Labyrinth"
 .define res_filename_invert "Invers"
 .define res_filename_random "Zufallsprinzip"
 .define res_filename_rods_pattern "Rods.Pattern"

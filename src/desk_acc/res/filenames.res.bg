@@ -24,6 +24,7 @@
 .define res_filename_map "MAP"
 .define res_filename_melt "MELT"
 .define res_filename_matrix "MATRIX"
+.define res_filename_maze "MAZE"
 .define res_filename_invert "INVERT"
 .define res_filename_random "RANDOM"
 .define res_filename_rods_pattern "RODS.PATTERN"

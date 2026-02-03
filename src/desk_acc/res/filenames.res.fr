@@ -24,6 +24,7 @@
 .define res_filename_map "Plan"
 .define res_filename_melt "Fondre"
 .define res_filename_matrix "Matrix"
+.define res_filename_maze "Labyrinthe"
 .define res_filename_invert "Inverse"
 .define res_filename_random "Hasard"
 .define res_filename_rods_pattern "Rods.Pattern"

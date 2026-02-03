@@ -61,6 +61,8 @@
 
 * [Flying Toasters](flying.toasters.s)
   * Visual distractions.
+* [Maze](maze.s)
+  * Visual distractions.
 * [Melt](melt.s)
   * Visual distractions.
 * [Invert](invert.s)

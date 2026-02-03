@@ -24,6 +24,7 @@
 .define res_filename_map "Karta"
 .define res_filename_melt "Smalta"
 .define res_filename_matrix "Matrix"
+.define res_filename_maze "Labyrint"
 .define res_filename_invert "Negativ"
 .define res_filename_random "Slumpmassigt"
 .define res_filename_rods_pattern "Rods.Pattern"

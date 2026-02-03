@@ -89,6 +89,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Sounds: Time "Silent" menu bar flash using VBL.
 * Screen Savers: improve animation for Flying Toasters, Hexix, Message and Melt.
 * Calculator & Sci.Calc: fix clicking button edges and button spacing.
+* New Screen Saver: Maze
 
 ### Misc
 
