@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "Mostrar atajos de teclado en cuadros de di@logo"
 .define res_string_label_case "Preservar letras mai|sculas e min|sculas nos nomes"
 .define res_string_label_invisible "Mostrar arquivos invis{veis"
+.define res_string_label_check525 "Verifique as unidades de 5,25\x22 na inicializa][o"

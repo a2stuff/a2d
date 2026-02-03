@@ -63,6 +63,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Allow Shift+Arrow keys to extend icon selection (IIgs/Platinum IIe)
 * Don't case-adjust SmartPort device names that are already mixed-case.
 * Eliminate unnecessary window refreshes after canceled move/delete.
+* Add option to skip checking 5.25" drives on startup.
 
 ### Selector
 

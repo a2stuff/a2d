@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "Toon sneltoetsen in dialoogvensters"
 .define res_string_label_case "Behoud hoofdletters en kleine letters in namen"
 .define res_string_label_invisible "Toon onzichtbare bestanden"
+.define res_string_label_check525 "Controleer 5,25\x22-schijven bij het opstarten"

@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "Mostrar atajos en los di\x10logos"
 .define res_string_label_case "Conservar may\x14sculas y min\x14sculas en los nombres"
 .define res_string_label_invisible "Mostrar archivos invisibles"
+.define res_string_label_check525 "Comprobar unidades de 5,25\x22 al inicio"

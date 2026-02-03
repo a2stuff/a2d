@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "Tastaturk}rzel in Dialogen anzeigen"
 .define res_string_label_case "Behalten Sie Gro~- und Kleinschreibung in Namen bei"
 .define res_string_label_invisible "Unsichtbare Dateien anzeigen"
+.define res_string_label_check525 "]berpr}fen Sie beim Start die 5,25\x22-Laufwerke"

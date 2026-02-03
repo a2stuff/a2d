@@ -633,6 +633,10 @@ end:
 .scope
         copy8   #0, main::pending_alert
 
+        CALL    ReadSetting, X=#DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsSkipCheck525
+        sta     skip_check_diskii_flag
+
         ;; Enumerate DEVLST in reverse order (most important volumes first)
         copy8   DEVCNT, device_index
     DO
@@ -641,7 +645,17 @@ end:
         lda     DEVLST,y
         pha                     ; A = unmasked unit number
 
-        jsr     main::CreateVolumeIcon ; A = unmasked unit number, Y = device index
+        ;; Skip polling Disk II drives?
+        skip_check_diskii_flag := *+1
+        ldx     #SELF_MODIFIED_BYTE
+      IF NOT ZERO
+        jsr     main::IsDiskII  ; A = (optionally unmasked) unit number
+        beq     next
+      END_IF
+
+        pla                     ; A = unmasked unit number
+        pha                     ; A = unmasked unit number
+        CALL    main::CreateVolumeIcon, Y=device_index ; A = unmasked unit number
 
       IF ZERO
         ;; Success! Draw it.
@@ -663,6 +677,7 @@ end:
         copy8   #kErrDuplicateVolName, main::pending_alert
       END_IF
 
+next:
         pla
         dec     device_index
     WHILE POS

@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "Vis tastaturgenveje i dialoger"
 .define res_string_label_case "Bevar store og sm} bogstaver i navne"
 .define res_string_label_invisible "Vis usynlige filer"
+.define res_string_label_check525 "Tjek 5,25\x22 drev ved opstart"

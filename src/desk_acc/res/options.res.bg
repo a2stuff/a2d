@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "pokavi klawi{ni kombinacii w dialozite"
 .define res_string_label_case "zapazi glawni i malki bukwi w imenata"
 .define res_string_label_invisible "pokavi skriti fajlowe"
+.define res_string_label_check525 "prowerete 5.25\x22 diskowe pri start"

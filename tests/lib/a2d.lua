@@ -688,6 +688,12 @@ function a2d.ToggleOptionShowInvisible()
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
+function a2d.ToggleOptionSkipChecking525Drives()
+  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OAShortcut("6") -- Toggle "Check 5.25" drives on startup"
+  a2d.CloseWindow()
+  a2d.CloseAllWindows()
+end
 
 function a2d.Quit()
   a2d.OAShortcut("Q")

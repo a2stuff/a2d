@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "Show keyboard shortcuts in dialogs"
 .define res_string_label_case "Preserve uppercase and lowercase in names"
 .define res_string_label_invisible "Show invisible files"
+.define res_string_label_check525 "Check 5.25\x22 drives on startup"

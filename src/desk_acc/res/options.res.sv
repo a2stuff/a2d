@@ -4,3 +4,4 @@
 .define res_string_label_shortcuts "Visa kortkommandon i dialogrutor"
 .define res_string_label_case "Bevara versaler och gemener i namn"
 .define res_string_label_invisible "Visa osynliga filer"
+.define res_string_label_check525 "Kontrollera 5,25-tumsdiskar vid start"
