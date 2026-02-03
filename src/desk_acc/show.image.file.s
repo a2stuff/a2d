@@ -310,10 +310,8 @@ fail:   rts
         ldx     get_file_info_params::aux_type+1
 
         ;; auxtype $8066 - LZ4FH packed image
-    IF X = #$80
-      IF A = #$66
+    IF X = #$80 AND A = #$66
         jmp     ShowLZ4FHFile
-      END_IF
     END_IF
 
         ;; auxtype $4000 / $4001 are packed hires/double-hires

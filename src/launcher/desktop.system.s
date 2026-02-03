@@ -688,10 +688,8 @@ test_unit_num:
         ;; Create desktop directory, e.g. "/RAM/DESKTOP"
 
         MLI_CALL CREATE, create_dt_dir_params
-    IF CS
-      IF A <> #ERR_DUPLICATE_FILENAME
+    IF CS AND A <> #ERR_DUPLICATE_FILENAME
         jsr     DidNotCopy
-      END_IF
     END_IF
 
         ;; --------------------------------------------------

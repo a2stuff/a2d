@@ -687,10 +687,8 @@ rts1:  rts                     ; used by next proc
     END_IF
 
         lda     screentowindow_params::windowx ; special case for wide 0 button
-    IF A >= #kCol1Left-kBorderLeftTop
-      IF A < #kCol2Right+kBorderBottomRight
+    IF A >= #kCol1Left-kBorderLeftTop AND A < #kCol2Right+kBorderBottomRight
         RETURN  A=#'0', C=1
-      END_IF
     END_IF
 
 miss:   RETURN  C=0

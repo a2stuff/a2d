@@ -822,16 +822,12 @@ prev_selected_icon:
 ;;; be set to the result of `GetSingleSelectedIcon`.
 .proc _CheckRenameClick
         jsr     GetSingleSelectedIcon
-    IF NOT_ZERO
-      IF A = prev_selected_icon
-       IF A <> trash_icon_num
+    IF NOT_ZERO AND A = prev_selected_icon AND A <> trash_icon_num
         sta     icon_param
         ITK_CALL IconTK::GetRenameRect, icon_param
         MGTK_CALL MGTK::MoveTo, event_params::coords
         MGTK_CALL MGTK::InRect, tmp_rect
         jne     CmdRename
-       END_IF
-      END_IF
     END_IF
         rts
 .endproc ; _CheckRenameClick
@@ -6481,8 +6477,7 @@ done:
 
 .proc RedrawSelectedIcons
         lda     selected_window_id
-    IF NOT_ZERO                 ; Desktop
-      IF A = active_window_id
+    IF NOT_ZERO AND A = active_window_id
         ;; --------------------------------------------------
         ;; Fast path. Since selection is in the top-most window,
         ;; drawing can be done using `IconTK::DrawIconRaw` in a
@@ -6519,7 +6514,6 @@ done:
         jsr     CachedIconsWindowToScreen
         jsr     PopPointers     ; do not tail-call optimize!
         rts
-      END_IF
     END_IF
 
         ;; --------------------------------------------------
@@ -8896,23 +8890,19 @@ start:
 
         ;; Special case for VEDRIVE
         jsr     DeviceDriverAddress
-        cmp     #<kVEDRIVEDriverAddress
-        bne     :+
-        cpx     #>kVEDRIVEDriverAddress
-        bne     :+
+    IF A = #<kVEDRIVEDriverAddress AND X = #>kVEDRIVEDriverAddress
 vdrive: RETURN  AX=#str_device_type_vdrive, Y=#IconType::fileshare
-:
+    END_IF
+
         ;; Special case for VSDRIVE
-        cmp     #<kVSDRIVEDriverAddress
-        bne     :+
-        cpx     #>kVSDRIVEDriverAddress
-        bne     :+
+    IF A = #<kVSDRIVEDriverAddress AND X = #>kVSDRIVEDriverAddress
         sta     ALTZPOFF        ; peek at Main/LCBANK1
         lda     VSDRIVE_SIGNATURE_BYTE
         sta     ALTZPON         ; back to Aux/LCBANK1
         cmp     #kVSDRIVESignatureValue
         beq     vdrive
-:
+    END_IF
+
         ;; Is Disk II? A dedicated test that takes advantage of the
         ;; fact that Disk II devices are never remapped.
         CALL    IsDiskII, A=block_params::unit_num
@@ -10621,11 +10611,9 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
 
         copy16  #0, dst_file_info_params::blocks_used
 retry:  jsr     GetDstFileInfo
-    IF CS
-      IF A <> #ERR_FILE_NOT_FOUND
+    IF CS AND A <> #ERR_FILE_NOT_FOUND
         jsr     ShowErrorAlertDst
         beq     retry           ; always
-      END_IF
     END_IF
 
         ;; --------------------------------------------------
@@ -14411,15 +14399,12 @@ ret:    rts
 ;;; Input: A,X = number
 ;;; Output: C=0 if plural, C=1 if singular; A,X unchanged
 .proc IsPlural
-        cpx     #0              ; >= 256?
-        bne     plural          ; yes, so plural
-        cmp     #1              ; == 1?
-        bne     plural          ; no, so plural
-
+    IF X = #0 AND A = #1
         ;; singular
         RETURN  C=1
-
-plural: RETURN  C=0
+    END_IF
+        ;; plural
+        RETURN  C=0
 .endproc ; IsPlural
 
 ;;; ============================================================

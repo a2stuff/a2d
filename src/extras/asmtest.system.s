@@ -538,12 +538,176 @@ table := *
 ;;; Cheap Local Label Compatibility
 ;;; --------------------------------------------------
 
-        DO
+    DO
 @cheap:
         BREAK_IF CS
         CONTINUE_IF CS
         beq     @cheap
-        WHILE A < #123
+    WHILE A < #123
+
+;;; --------------------------------------------------
+;;; Nesting
+;;; --------------------------------------------------
+
+    DO
+        nop
+      IF A >= #5
+        nop
+      END_IF
+        nop
+    WHILE A < #33
+
+;;; --------------------------------------------------
+;;; Conjunctions
+;;; --------------------------------------------------
+
+    IF CS AND A = #5
+        nop
+    END_IF
+
+    IF NOT CS AND A = #5
+        nop
+    END_IF
+
+    IF CS AND NOT A = #5
+        nop
+    END_IF
+
+    IF NOT CS AND NOT A = #5
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE CS AND A = #5
+
+    DO
+        nop
+    WHILE NOT CS AND A = #5
+
+    DO
+        nop
+    WHILE CS AND NOT A = #5
+
+    DO
+        nop
+    WHILE NOT CS AND NOT A = #5
+
+;;; --------------------------------------------------
+;;; Conjunction and IN operator
+;;; --------------------------------------------------
+
+    IF A IN #1, #2, #3 AND CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE A IN #1, #2, #3 AND CS
+
+    IF NOT A IN #1, #2, #3 AND CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE NOT A IN #1, #2, #3 AND CS
+
+;;; --------------------------------------------------
+;;; Conjunction and BETWEEN operator
+;;; --------------------------------------------------
+
+    IF A BETWEEN #1, #9 AND CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE A BETWEEN #1, #9 AND CS
+
+    IF NOT A BETWEEN #1, #9 AND CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE NOT A BETWEEN #1, #9 AND CS
+
+;;; --------------------------------------------------
+;;; Disjunctions
+;;; --------------------------------------------------
+
+    IF CS OR A = #5
+        nop
+    END_IF
+
+    IF NOT CS OR A = #5
+        nop
+    END_IF
+
+    IF CS OR  NOT A = #5
+        nop
+    END_IF
+
+    IF NOT CS OR NOT A = #5
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE CS OR A = #5
+
+    DO
+        nop
+    WHILE NOT CS OR A = #5
+
+    DO
+        nop
+    WHILE CS OR  NOT A = #5
+
+    DO
+        nop
+    WHILE NOT CS OR NOT A = #5
+
+;;; --------------------------------------------------
+;;; Disjunction and IN operator
+;;; --------------------------------------------------
+
+    IF A IN #1, #2, #3 OR CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE A IN #1, #2, #3 OR CS
+
+    IF NOT A IN #1, #2, #3 OR CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE NOT A IN #1, #2, #3 OR CS
+
+;;; --------------------------------------------------
+;;; Disjunction and BETWEEN operator
+;;; --------------------------------------------------
+
+    IF A BETWEEN #1, #9 OR CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE A BETWEEN #1, #9 OR CS
+
+    IF NOT A BETWEEN #1, #9 OR CS
+        nop
+    END_IF
+
+    DO
+        nop
+    WHILE NOT A BETWEEN #1, #9 OR CS
 
 ;;; ============================================================
 ;;; Flow Control Macros - Functions
@@ -677,16 +841,21 @@ kSet = 1
 
 .if 0
         RTS_IF                     ; RTS_IF: Empty expression
-        RTS_IF CS X                ; RTS_IF: Unexpected tokens after flag test 'CS'
-        RTS_IF CS,CC               ; RTS_IF: Unexpected arguments after flag test 'CS'
+        RTS_IF CS X                ; RTS_IF: Unexpected token: 'X'
+        RTS_IF CS,CC               ; RTS_IF: Unexpected token: ','
         RTS_IF A > #123            ; RTS_IF: Greater-than operator ('>') not supported
         RTS_IF A <= #123           ; RTS_IF: Less-than-or-equal operator ('<=') not supported
         RTS_IF A = 1               ; RTS_IF: Numeric literal in '=' comparison; did you mean '#1'?
         RTS_IF A >= table,A        ; RTS_IF: Unexpected non-index register after comparison '>='
         RTS_IF A >= table,X,Y      ; RTS_IF: Unexpected arguments after comparison '>='
+        RTS_IF A BETWEEN           ; RTS_IF: Expected argument(s) after 'BETWEEN'
+        RTS_IF A BETWEEN 0         ; RTS_IF: Numeric literal in 'BETWEEN' comparison; did you mean '#0'
+        RTS_IF A BETWEEN a         ; RTS_IF: Expected two arguments for 'BETWEEN'
+        RTS_IF A BETWEEN a,b,c     ; RTS_IF: Expected two arguments for 'BETWEEN'
         RTS_IF A BETWEEN '0', #'9' ; RTS_IF: Expected immediate 1st argument for 'BETWEEN'
-        RTS_IF A BETWEEN #'0'      ; RTS_IF: Expected 2nd argument for 'BETWEEN'
         RTS_IF A BETWEEN #'0', '9' ; RTS_IF: Expected immediate 2nd argument for 'BETWEEN'
+        RTS_IF A IN                ; RTS_IF: Expected argument(s) after 'IN'
+        RTS_IF A IN #0 #1          ; Expected 'end-of-line' but found '#'
 
         CALL    target, FOO=        ; CALL: Expected 'reg=...'
         CALL    target, A           ; CALL: Expected 'A=...'

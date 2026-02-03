@@ -587,12 +587,10 @@ file_char:
         sta     type_down_buf,x
 
         jsr     _FindMatch
-    IF NC
-      IF A <> selected_index
+    IF NC AND A <> selected_index
         sta     file_dialog_res::lb_params::new_selection
         LBTK_CALL LBTK::SetSelection, file_dialog_res::lb_params
         jsr     _UpdateDynamicButtons
-      END_IF
     END_IF
 
         RETURN  A=#0

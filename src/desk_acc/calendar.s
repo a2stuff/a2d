@@ -557,11 +557,9 @@ notpenXOR:      .byte   MGTK::notpenXOR
         sbc     tmp
         clc
         adc     first_dow
-    IF POS
-      IF A >= #2
+    IF POS AND A >= #2
         ;; C=1
         sbc     #7
-      END_IF
     END_IF
         sta     date
 

@@ -719,12 +719,10 @@ return_flag:
         MGTK_CALL MGTK::FrameRect, tmp_rect
 
         lda     char
-       IF A >= #' '
-        IF A < #CHAR_DELETE
+       IF A >= #' ' AND A < #CHAR_DELETE
         MGTK_CALL MGTK::MoveTo, tmp_rect
         MGTK_CALL MGTK::Move, label_relpos
         MGTK_CALL MGTK::DrawText, drawtext_params_char
-        END_IF
        END_IF
       END_IF
 

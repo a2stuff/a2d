@@ -6730,7 +6730,7 @@ zero:   lda     #0
 
         inc     sel_menu_index
         ldx     sel_menu_index
-      IF X GE menu_count
+      IF X >= menu_count
         sta     sel_menu_index
       END_IF
 

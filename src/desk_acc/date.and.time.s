@@ -823,10 +823,8 @@ str_pm: PASCAL_STRING "PM"
 
         jsr     NumberToASCII
         bit     clock_24hours
-    IF NC
-      IF A = #'0'
+    IF NC AND A = #'0'
         lda     #' '
-      END_IF
     END_IF
         sta     hour_string+1
         stx     hour_string+2
