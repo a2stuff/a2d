@@ -35,21 +35,6 @@ eval $(cat ${da_filename_res_file} | sed -e 's/\.define //' -e 's/ "/="/' )
 # ============================================================
 # Utility functions
 
-get_da_loc_path() {
-    local path="$1"
-    if [[ -z "$no_loc_da_names" && "$path" == */* ]]; then
-        head=$(dirname "$path")
-        tail=$(basename "$path")
-
-        res="res_filename_${tail//./_}"
-        tail="${!res:-$tail}"
-
-        echo "$head/$tail"
-    else
-        echo "$path"
-    fi
-}
-
 emit() {
     command="$1"; shift
     echo -n "$command "
@@ -117,7 +102,8 @@ for line in $(cat src/desk_acc/TARGETS | bin/targets.pl); do
   path="${array[1]}"
 
   # Localize the filename
-  res="res_filename_${file//./_}"
+  name="${file//./_}"
+  res="res_filename_${name}"
   loc="${!res:-$name}"
 
   # Localize the last segment of path
