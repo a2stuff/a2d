@@ -23,4 +23,11 @@ function util.WaitFor(message, func, options, level)
   error(string.format("Timeout (%ds) waiting for %s", timeout, message), level + 2)
 end
 
+function util.SlurpFile(pathname)
+  local f = assert(io.open(pathname, "rb"))
+  local bytes = f:read("*all")
+  assert(f:close())
+  return bytes
+end
+
 return util

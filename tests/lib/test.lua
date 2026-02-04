@@ -211,6 +211,17 @@ function test.ExpectError(pattern, func, message, options, level)
   test.Expect(string.match(err, pattern), message .. ", error was: " .. err, options, inc(level))
 end
 
+function test.ExpectBinaryEquals(a, b, message, options, level)
+  if a == b then
+    return
+  end
+  test.Expect(#a == #b, message .. string.format(" - sizes differ %d vs. %d", #a, #b), options, inc(level))
+  for i = 1, #a do
+    local ba, bb = a:sub(i,i):byte(), b.sub(i,i):byte()
+    test.Expect(ba == bb, message .. string.format(" - bytes differ at index %d - 0x%02X vs. 0x%02X", i, ba, bb))
+  end
+end
+
 --------------------------------------------------
 
 return test

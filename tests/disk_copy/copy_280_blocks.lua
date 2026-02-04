@@ -1,11 +1,14 @@
 --[[ BEGINCONFIG ========================================
 
 MODELARGS="-sl2 mouse -sl6 cffa2 -sl7 cffa2"
-DISKARGS="-hard3 $HARDIMG -hard1 sizes/image_280_blocks.hdv -hard2 sizes/image_280_blocks.hdv"
+DISKARGS="-hard3 $HARDIMG -hard1 sizes/image_280_blocks.hdv -hard2 sizes/image_280_blocks_random.hdv"
 
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(0.25)
+
+local s6d1 = manager.machine.images[":sl6:cffa2:cffa2_ata:0:hdd:image"]
+local s6d2 = manager.machine.images[":sl6:cffa2:cffa2_ata:1:hdd:image"]
 
 --[[
   Disk Copy with 280 blocks. Verify block count is correct.
@@ -16,8 +19,9 @@ test.Variants(
     {"Disk Copy 280 blocks", "disk"},
   },
   function(idx, name, what)
-    a2dtest.WaitForAlert() -- duplicate volume
-    a2d.DialogOK()
+    if a2dtest.IsAlertShowing() then  -- duplicate volume
+      a2d.DialogOK()
+    end
 
     a2d.CopyDisk()
 
@@ -54,6 +58,12 @@ test.Variants(
       test.Snap("verify total block counts are 280")
     end
     a2d.DialogOK()
+
+    if what == "full" then
+      local src = util.SlurpFile(s6d1.filename)
+      local dst = util.SlurpFile(s6d2.filename)
+      test.ExpectBinaryEquals(src, dst, "disk images should be identical after disk copy")
+    end
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
