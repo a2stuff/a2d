@@ -301,7 +301,9 @@ end
 function a2d.Select(name, options)
   options = default_options(options)
 
-  a2d.ClearSelection()
+  if not options.no_clear_selection then
+    a2d.ClearSelection()
+  end
   apple2.Type(name)
   a2d.WaitForRepaint() -- TODO: spin here?
   CheckSelectionName(name, options)
@@ -349,7 +351,8 @@ function a2d.OpenPath(path, options)
   end
 
   if options.keep_windows then
-    a2d.FocusDesktop()
+    a2d.ClearSelectionAndFocusDesktop()
+    options.no_clear_selection = true
   else
     a2d.CloseAllWindows()
   end
@@ -378,7 +381,8 @@ function a2d.SelectPath(path, options)
   if base ~= "" then
     a2d.OpenPath(base, options)
   elseif options.keep_windows then
-    a2d.FocusDesktop()
+    a2d.ClearSelectionAndFocusDesktop()
+    options.no_clear_selection = true
   else
     a2d.CloseAllWindows()
   end
@@ -392,16 +396,11 @@ function a2d.ClearSelection()
   a2d.WaitForRepaint()
 end
 
-function a2d.FocusDesktop()
+function a2d.ClearSelectionAndFocusDesktop()
   apple2.PressOA()
-  apple2.ControlKey("D") -- OA+D - Focus desktop
-  apple2.ReleaseOA()
-  a2d.WaitForRepaint()
-end
-
-function a2d.FocusActiveWindow()
-  apple2.PressOA()
-  apple2.ControlKey("W") -- OA+W - Focus window
+  apple2.PressSA()
+  apple2.EscapeKey()
+  apple2.ReleaseSA()
   apple2.ReleaseOA()
   a2d.WaitForRepaint()
 end

@@ -266,6 +266,8 @@ modifiers:
         jeq     CmdOpenParentThenCloseCurrent
         cmp     #kShortcutCloseWindow
         jeq     CmdCloseAll
+        cmp     #CHAR_ESCAPE
+        jeq     CmdFocusDesktop
         cmp     #CHAR_CTRL_F
         jeq     CmdFlipScreen
         rts
@@ -278,11 +280,7 @@ modifiers:
         jeq     CmdOpenFromKeyboard
         cmp     #CHAR_UP        ; Apple-Up (Open Parent)
         jeq     CmdOpenParent
-        cmp     #CHAR_ESCAPE    ; Apple-Esc (Clear Selection)
-        jeq     ClearSelection
-        cmp     #CHAR_CTRL_D
-        jeq     CmdFocusDesktop
-        cmp     #CHAR_CTRL_W
+        cmp     #CHAR_ESCAPE    ; Apple-Esc (Clear Selection+Focus Window)
         jeq     CmdFocusWindow
 
         ldx     active_window_id
@@ -4399,6 +4397,9 @@ window:
         SKIP_NEXT_2_BYTE_INSTRUCTION
 desktop:
         lda     #0
+        pha
+        jsr     ClearSelection
+        pla
         sta     focused_window_id
         rts
 .endproc ; CmdFocusDesktopOrWindowImpl

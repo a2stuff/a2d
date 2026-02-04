@@ -1516,7 +1516,6 @@ test.Variants(
     emu.wait(1)
     a2d.SelectPath("/TESTS", {keep_windows=true})
     a2d.RenameSelection("TESTSXXXXXXXXXX")
-    a2d.FocusActiveWindow()
     if which == "folder" then
       a2d.Select("ABCDEF123")
     else

@@ -45,8 +45,7 @@ test.Step(
     test.ExpectGreaterThan(rect1[4], rect2[2], "windows should overlap vertically")
     a2d.CycleWindows()
 
-    a2d.FocusDesktop()
-    a2d.Select("WITH.FILES")
+    a2d.SelectPath("/WITH.FILES", {keep_windows=true})
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, rect1[3]+5, rect1[4]-5)
     a2d.InMouseKeysMode(function(m) m.Home() end)
@@ -84,8 +83,7 @@ test.Step(
     test.ExpectGreaterThan(rect1[4], rect2[2], "windows should overlap vertically")
     a2d.CycleWindows()
 
-    a2d.FocusDesktop()
-    a2d.Select("WITH.FILES")
+    a2d.SelectPath("/WITH.FILES", {keep_windows=true})
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, rect1[1]-5, rect1[4]-5)
     a2d.InMouseKeysMode(function(m) m.Home() end)
@@ -125,8 +123,7 @@ test.Step(
     test.ExpectGreaterThan(rect1[4] - rect2[2], 0, "windows should just overlap")
     test.ExpectLessThan(rect1[4] - rect2[2], 10, "windows should just overlap")
 
-    a2d.FocusDesktop()
-    a2d.Select("WITH.FILES")
+    a2d.SelectPath("/WITH.FILES", {keep_windows=true})
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x-10, y+10, rect2[1]-5, rect1[4]+5)
     a2d.InMouseKeysMode(function(m) m.Home() end)

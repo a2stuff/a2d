@@ -150,7 +150,7 @@ test.Step(
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.OpenPath("/RAM1")
     a2d.MoveWindowBy(300, 0)
-    a2d.FocusDesktop()
+    a2d.ClearSelectionAndFocusDesktop()
     a2d.SelectAll()
     test.Snap("verify icons clipped by window")
     a2d.Drag(x, y, x+10, y)

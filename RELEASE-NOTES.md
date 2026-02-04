@@ -40,14 +40,13 @@ Project Page: https://github.com/a2stuff/a2d
 * Reduce cursor flickering while icons are drawn.
 * Eliminate cursor flickering when clicking on the desktop or windows.
 * Time window open/close animations using VBL.
-* Add Apple+Escape as shortcut to clear selection.
+* Add Apple+Escape as shortcut to clear selection and focus window.
+* Add OA+SA+Escape as shortcut to clear selection and focus desktop.
 * Prevent volume icon flicker on startup with empty Disk II drives.
 * Don't show About dialog when Ctrl+Shift+2 is pressed.
 * Fix hang after 60 restarts.
 * Fix error shown after non-empty directory fails to delete.
 * Fix hang after non-menu shortcut if window fails to open.
-* Add Apple+Control+D as shortcut to focus desktop.
-* Add Apple+Control+W as shortcut to focus window.
 * Fix behavior after File > Duplicate failed due to space or storage type.
 * Set empty window maprect so that when restored with new file scrollbars are inactive.
 * Fix volume icon flicker after Check All Drives for removable disks.
