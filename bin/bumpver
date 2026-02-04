@@ -8,6 +8,7 @@
 # Assumes:
 # * config.inc has previous major/minor/suffix
 
+set -x
 set -e
 cd "$(dirname "$0")/.."
 
