@@ -52,6 +52,12 @@ local function get_device(pattern)
   error("Failed to find device " .. pattern)
 end
 
+-- System class is one of: "apple2", "apple2e", "apple2c", "apple2gs"
+local system_class = manager.machine.system.parent
+if system_class == 0 then
+  system_class = manager.machine.system.name
+end
+
 local scan_for_mouse = false
 if machine.system.name:match("^apple2e")
   or machine.system.name:match("^tk3000")
@@ -751,6 +757,11 @@ function apple2.WriteMemory(addr, value)
   return mem:write_u8(addr, value)
 end
 
+--[[
+  TODO: Note which of these are supported on which platform; maybe
+  assert the correct machine class is in use, to avoid false
+  positives.
+]]
 local ssw = {
   KBD          = 0xC000,        -- (R) keyboard
   CLR80STORE   = 0xC000,        -- (W) restore normal PAGE2 control
@@ -888,8 +899,8 @@ function apple2.SetDHRByte(row, col, value)
 end
 
 local function IterateTextScreen(char_cb, row_cb)
-  local is80 = apple2.ReadSSW("RD80VID") > 127
-  local isAlt = apple2.ReadSSW("RDALTCHAR") > 127
+  local is80 = system_class ~= "apple2" and apple2.ReadSSW("RD80VID") > 127
+  local isAlt = system_class ~= "apple2" and apple2.ReadSSW("RDALTCHAR") > 127
   for row = 0,23 do
     local base = 0x400 + (row - math.floor(row/8) * 8) * 0x80 + 40 * math.floor(row/8)
     for col = 0,39 do
