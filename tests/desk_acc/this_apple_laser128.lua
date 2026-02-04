@@ -6,7 +6,7 @@ DISKARGS="-flop1 $FLOP1IMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
+a2d.ConfigureRepaintTime(3) -- slow floppies
 
 --[[
   Run on Laser 128 with memory expansion. Launch DeskTop. Copy a file

@@ -191,6 +191,7 @@ RAMCardTest(
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    emu.wait(1)
     local dst_window_x, dst_window_y, dst_window_w, dst_window_h
       = a2dtest.GetFrontWindowContentRect()
     local dst_x = dst_window_x + dst_window_w/2

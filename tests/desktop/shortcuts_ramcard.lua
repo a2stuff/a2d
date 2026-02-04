@@ -120,7 +120,7 @@ test.Step(
 
     a2d.OpenPath("/RAM1/EXTRAS")
     a2d.SelectAll()
-    test.ExpectLessThan(#a2d.GetSelectedIcons(), count, "not all files should have been copied")
+    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have been copied")
     a2d.CloseAllWindows()
 
     a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")

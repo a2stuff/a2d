@@ -1,5 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
+MODELARGS="-sl2 mouse -sl7 scsi"
 DISKARGS="-hard1 $HARDIMG -flop1 dos33_floppy.dsk"
 
 ======================================== ENDCONFIG ]]

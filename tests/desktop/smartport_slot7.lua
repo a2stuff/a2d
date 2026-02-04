@@ -26,7 +26,7 @@ test.Step(
     apple2.TypeLine("PR#1")
     a2d.WaitForDesktopReady()
 
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "A")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A")
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)

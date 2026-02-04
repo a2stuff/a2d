@@ -17,7 +17,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "SmartPort controller in slot 4",
   function()
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "A")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A")
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)

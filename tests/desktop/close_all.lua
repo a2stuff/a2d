@@ -40,6 +40,7 @@ test.Variants(
     a2d.ClearSelection()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     a2d.OASAShortcut(key)
+    emu.wait(1)
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 

@@ -533,6 +533,7 @@ test.Variants(
         m.DoubleClick()
     end)
     a2d.CycleWindows()
+    emu.wait(1)
 
     -- Select an icon in one window
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "PROPERTIES", "folder window should be on top")

@@ -27,6 +27,7 @@ test.Step(
 
     drive:load(current)
     a2d.CloseAllWindows()
+    emu.wait(5) -- let drive polling happen
 end)
 
 --[[
@@ -49,6 +50,7 @@ test.Step(
 
     drive:load(current)
     a2d.CloseAllWindows()
+    emu.wait(5) -- let drive polling happen
 end)
 
 --[[

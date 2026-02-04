@@ -10,13 +10,6 @@ a2d.SelectPath("/A2.DESKTOP")
 local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
 a2d.ClearSelection()
 
-function PutSelectionOnDesktop()
-  a2d.InMouseKeysMode(function(m)
-      m.MoveToApproximately(vol_icon_x, vol_icon_y)
-      m.Click()
-  end)
-end
-
 test.Step(
   "No selection, no windows",
   function()
@@ -77,8 +70,7 @@ test.Step(
   "Trash selected, open window",
   function()
     a2d.OpenPath("/A2.DESKTOP")
-    PutSelectionOnDesktop()
-    a2d.Select("Trash")
+    a2d.SelectPath("/Trash", {keep_windows=true})
     a2d.OpenMenu(a2d.FILE_MENU)
     test.Snap("verify ✅New Folder, ❌Open, ✅Close, ✅Close All, ❌Get Info, ❌Rename, ❌Duplicate, ❌Copy To, ❌Delete, ✅Quit")
     apple2.EscapeKey()
@@ -116,8 +108,7 @@ test.Step(
   "Volume selected, open window",
   function()
     a2d.OpenPath("/A2.DESKTOP")
-    PutSelectionOnDesktop()
-    a2d.Select("A2.DESKTOP")
+    a2d.SelectPath("/A2.DESKTOP", {keep_windows=true})
     a2d.OpenMenu(a2d.FILE_MENU)
     test.Snap("verify ✅New Folder, ✅Open, ✅Close, ✅Close All, ✅Get Info, ✅Rename, ❌Duplicate, ✅Copy To, ❌Delete, ✅Quit")
     apple2.EscapeKey()
@@ -193,7 +184,7 @@ test.Step(
   "Volumes and Trash selected, open window",
   function()
     a2d.OpenPath("/A2.DESKTOP")
-    PutSelectionOnDesktop()
+    a2d.ClearSelectionAndFocusDesktop()
     a2d.SelectAll()
     a2d.OpenMenu(a2d.FILE_MENU)
     test.Snap("verify ✅New Folder, ✅Open, ✅Close, ✅Close All, ✅Get Info, ❌Rename, ❌Duplicate, ✅Copy To, ❌Delete, ✅Quit")

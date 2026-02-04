@@ -1,10 +1,11 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2ee"
-MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi"
+MODELARGS="-sl2 mouse -sl7 scsi"
 DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
+
+-- SCSI card required for CD Remote DA (default is CD-ROM at ID1)
 
 a2d.ConfigureRepaintTime(1)
 

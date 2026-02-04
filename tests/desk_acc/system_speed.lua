@@ -3,24 +3,21 @@ a2d.ConfigureRepaintTime(1)
 --[[
   Run System Speed DA. Click Normal then click OK. Verify DeskTop does
   not lock up.
-]]
-test.Step(
-  "Normal + OK doesn't crash",
-  function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    apple2.Type("N") -- Normal Speed
-    a2d.DialogOK()
-    a2d.CloseAllWindows()
-    a2dtest.ExpectNotHanging()
-end)
 
---[[
   Run System Speed DA. Click Fast then click OK. Verify DeskTop does
   not lock up.
 ]]
 test.Step(
-  "Fast + OK doesn't crash",
+  "Normal + OK / Fast + OK doesn't crash",
   function()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
+    apple2.Type("N") -- Normal Speed
+    a2d.DialogOK()
+    emu.wait(1) -- slow now
+    a2d.CloseAllWindows()
+    emu.wait(1) -- slow now
+    a2dtest.ExpectNotHanging()
+
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("F") -- Fast Speed
     a2d.DialogOK()

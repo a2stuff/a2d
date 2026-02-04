@@ -197,14 +197,15 @@ test.Step(
     apple2.PressSA()
     for i = 1, 70 do
       apple2.DownArrowKey()
+      emu.wait(0.25)
     end
     apple2.ReleaseSA()
-    a2d.WaitForRepaint()
+    emu.wait(1)
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(up_x, up_y + 70)
         a2dtest.ExpectNoRepaint(function()
             m.ButtonDown()
-            emu.wait(10/60)
+            emu.wait(1)
             test.Snap("verify thumb highlighted")
             m.ButtonUp()
             a2d.WaitForRepaint()
