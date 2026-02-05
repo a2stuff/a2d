@@ -18,7 +18,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x+75, dialog_y+30) -- over shortcut
         m.DoubleClick()
-        test.Snap("verify OK button flashes")
+        test.Expect(a2dtest.OCRScreen({invert=true}):find("OK"), "OK button should flash")
         a2d.WaitForRepaint()
     end)
     a2d.CloseAllWindows()
@@ -39,7 +39,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x+70, dialog_y+40) -- over volume
         m.DoubleClick()
-        test.Snap("verify OK button flashes")
+        test.Expect(a2dtest.OCRScreen({invert=true}):find("OK"), "OK button should flash")
         a2d.WaitForRepaint()
         a2d.DialogCancel()
     end)
@@ -61,7 +61,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + 100, dialog_y + 30) -- over shortcut
         m.DoubleClick()
-        test.Snap("verify OK button flashes")
+        test.Expect(a2dtest.OCRScreen({invert=true}):find("OK"), "OK button should flash")
         a2d.WaitForRepaint()
     end)
 end)

@@ -121,7 +121,7 @@ test.Step(
 
     a2d.Drag(a_x, a_y, trash_x, trash_y)
     a2dtest.WaitForAlert()
-    test.Snap("verify count is 2 files")
+    test.Expect(a2dtest.OCRScreen():find("delete 2 files?"), "count should be 2 files")
     a2d.DialogOK({no_wait=true})
     a2dtest.MultiSnap(30, "count stops at 0")
 
@@ -197,26 +197,28 @@ test.Step(
     a2d.DialogOK()
 
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt for B")
+    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y/Z/B"), "prompt should be for B")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt for Z")
+    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y/Z"), "prompt should be for Z")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt for Y")
+    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y"), "prompt should be for Y")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt for X")
+    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X"), "prompt should be for X")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
-    test.Snap("verify all deleted")
+    emu.wait(5)
+    a2d.SelectAll()
+    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "all files should be deleted")
 end)
 
 --[[

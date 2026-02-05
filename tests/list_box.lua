@@ -68,14 +68,17 @@ function ListBoxTest(
       if not options.starts_with_selection then
         apple2.UpArrowKey()
         a2d.WaitForRepaint()
-        test.Snap("verify last item selected")
+        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.last),
+                    "last item should be selected")
         apple2.UpArrowKey()
         a2d.WaitForRepaint()
-        test.Snap("verify next-to-last item selected")
+        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.second_last),
+                    "next-to-last item should be selected")
       else
         apple2.UpArrowKey()
         a2d.WaitForRepaint()
-        test.Snap("verify first item still selected")
+        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.first),
+                    "first item should still be selected")
       end
       cleanup_func()
 
@@ -84,11 +87,13 @@ function ListBoxTest(
       if not options.starts_with_selection then
         apple2.DownArrowKey()
         a2d.WaitForRepaint()
-        test.Snap("verify first item selected")
+        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.first),
+                    "first item should be selected")
       end
       apple2.DownArrowKey()
       a2d.WaitForRepaint()
-      test.Snap("verify second item selected")
+      test.Expect(a2dtest.OCRScreen({invert=true}):find(options.second),
+                  "second item should be selected")
       cleanup_func()
 
       if (vopt & mgtk.scroll.option_active) ~= 0 then
@@ -201,7 +206,7 @@ function ListBoxTest(
             emu.wait(10)
             m.ButtonUp()
         end)
-        test.Snap("verify scrolled to bottom")
+        test.Expect(a2dtest.OCRScreen():find(options.last), "should be scrolled to bottom")
 
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + 5)
@@ -209,7 +214,7 @@ function ListBoxTest(
             emu.wait(10)
             m.ButtonUp()
         end)
-        test.Snap("verify scrolled to top")
+        test.Expect(a2dtest.OCRScreen({invert=options.starts_with_selection}):find(options.first), "should be scrolled to top")
 
       else
         -- scroll bar inactive
@@ -218,13 +223,13 @@ function ListBoxTest(
             m.MoveToApproximately(x + w + 5, y + h - 5)
             m.Click()
         end)
-        test.Snap("verify nothing happened")
+        test.Expect(a2dtest.OCRScreen({invert=options.starts_with_selection}):find(options.first), "should still be scrolled to top")
 
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + 5)
             m.Click()
         end)
-        test.Snap("verify nothing happened")
+        test.Expect(a2dtest.OCRScreen({invert=options.starts_with_selection}):find(options.first), "should still be scrolled to top")
 
       end
 
@@ -338,7 +343,8 @@ function ListBoxTest(
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w / 2, y + 5)
             m.DoubleClick()
-            test.Snap("verify action button flashes")
+            test.Expect(a2dtest.OCRScreen({invert=true}):find(options.action),
+                        "action button should flash")
         end)
 
         double_click_func()
@@ -349,7 +355,14 @@ end
 
 ListBoxTest(
   "File Picker - many items",
-  {},
+  {
+    first = "Apple.Menu",
+    second = "Clock.system",
+    last = "Sample.Media",
+    second_last = "Read.Me",
+
+    action = "Open",
+  },
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
@@ -377,7 +390,14 @@ ListBoxTest(
 
 ListBoxTest(
   "File Picker - few items",
-  {},
+  {
+    first = "A2.DeskTop",
+    second = "Ram1",
+    last = "Ram5",
+    second_last = "Ram4",
+
+    action = "Open",
+  },
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
@@ -400,7 +420,14 @@ ListBoxTest(
 
 ListBoxTest(
   "Disk Copy",
-  {},
+  {
+    first = "A2.DeskTop",
+    second = "Ram5",
+    last = "Unknown",
+    second_last = "DOS 3.3",
+
+    action = "OK",
+  },
   function()
     a2d.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
@@ -423,7 +450,13 @@ ListBoxTest(
 ListBoxTest(
   "Sounds DA",
   {
-    starts_with_selection = true
+    starts_with_selection = true,
+
+    first = "ProDOS Buzz",
+    second = "IIgs Bonk",
+    last = "Obnoxious Gleep",
+
+    action = "OK",
   },
   function()
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
@@ -435,7 +468,12 @@ ListBoxTest(
 
 ListBoxTest(
   "Find Files DA - many items",
-  {},
+  {
+    first = "ProDOS",
+    second = "Clock.system",
+    last = "Message",
+    second_last = "Melt",
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
@@ -464,7 +502,12 @@ ListBoxTest(
 
 ListBoxTest(
   "Find Files DA - few items",
-  {},
+  {
+    first = "Calculator",
+    second = "Calendar",
+    last = "Catalyst",
+    second_last = "Calendar",
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
@@ -483,7 +526,14 @@ ListBoxTest(
 
 ListBoxTest(
   "DOS 3.3 Import DA - Drives",
-  {},
+  {
+    first = "Slot 6  Drive 1",
+    second = "Slot 6  Drive 1",
+    last = "Slot 6  Drive 1",
+    second_last = "Slot 6  Drive 1",
+
+    action = "OK",
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     emu.wait(5)
@@ -502,7 +552,14 @@ ListBoxTest(
 
 ListBoxTest(
   "DOS 3.3 Import DA - Catalog",
-  {},
+  {
+    first = "HELLO",
+    second = "ANIMALS",
+    second_last = "BEAR.TXT",
+    last = "BEAR", -- spaces to distinguish
+
+    action = "Import",
+  },
   function()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     emu.wait(5)

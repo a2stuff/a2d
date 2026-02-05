@@ -22,18 +22,18 @@ test.Step(
   "Drive selection - OK button - Shortcut",
   function()
     a2d.SelectAndOpen("DOS33.IMPORT")
-    test.Snap("verify OK button is disabled ")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled ")
 
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     apple2.DownArrowKey() -- select drive
-    test.Snap("verify OK button is enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled ")
 
     apple2.ReturnKey()
-    test.Snap("verify OK button flashes")
+    test.Expect(a2dtest.OCRScreen({invert=true}):find("OK"), "OK button should flash")
 
     emu.wait(10) -- floppy catalog
-    test.Snap("verify catalog screen is shown")
+    test.Expect(a2dtest.OCRScreen():find("Disk Volume 254"), "catalog screen should be shown")
     a2d.CloseWindow()
 end)
 
@@ -52,7 +52,7 @@ test.Step(
         m.Click()
     end)
     emu.wait(10) -- floppy catalog
-    test.Snap("verify catalog screen is shown")
+    test.Expect(a2dtest.OCRScreen():find("Disk Volume 254"), "catalog screen should be shown")
     a2d.CloseWindow()
 end)
 
@@ -66,10 +66,11 @@ test.Step(
     apple2.DownArrowKey() -- select drive
 
     a2d.SelectAndOpen("DOS33.IMPORT")
+    local count = a2dtest.GetWindowCount()
     apple2.EscapeKey()
-    test.Snap("verify Cancel button flashes")
-    a2d.WaitForRepaint()
-    test.Snap("verify dialog closes")
+    test.Expect(a2dtest.OCRScreen({invert=true}):find("Cancel"), "Cancel button should flash")
+    emu.wait(5)
+    test.ExpectNotEquals(a2dtest.GetWindowCount(), count, "dialog should have closed")
 end)
 
 --[[
@@ -81,13 +82,15 @@ test.Step(
     apple2.DownArrowKey() -- select drive
 
     a2d.SelectAndOpen("DOS33.IMPORT")
+    local count = a2dtest.GetWindowCount()
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x+155, dialog_y+70)
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Snap("verify dialog closes")
+    emu.wait(5)
+    test.ExpectNotEquals(a2dtest.GetWindowCount(), count, "dialog should have closed")
 end)
 
 --[[
@@ -104,7 +107,7 @@ test.Step(
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
     apple2.DownArrowKey() -- select file
     apple2.ReturnKey()
-    test.Snap("verify Import button flashes")
+    test.Expect(a2dtest.OCRScreen({invert=true}):find("Import"), "Import button should flash")
     emu.wait(10) -- floppy read
     a2d.CloseWindow()
 end)
@@ -120,9 +123,10 @@ test.Step(
     apple2.DownArrowKey() -- select drive
     apple2.ReturnKey()
     emu.wait(10) -- floppy catalog
+    local count = a2dtest.GetWindowCount()
     apple2.EscapeKey()
-    test.Snap("verify Close button flashes")
+    test.Expect(a2dtest.OCRScreen({invert=true}):find("Close"), "Close button should flash")
     a2d.WaitForRepaint()
-    test.Snap("verify dialog closes")
+    test.ExpectNotEquals(a2dtest.GetWindowCount(), count, "dialog should have closed")
 end)
 

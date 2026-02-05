@@ -83,7 +83,8 @@ FormatEraseTest(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt confirms overwrite, not a duplicate name")
+    test.Expect(a2dtest.OCRScreen():find("Are you sure you want to erase.*%?"),
+                "prompt should confirm overwrite, not a duplicate name")
     a2d.DialogCancel()
 end)
 
@@ -105,7 +106,8 @@ FormatEraseTest(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt says the name is in use")
+    test.Expect(a2dtest.OCRScreen():find("That name already exists%. Please use another name%."),
+                "prompt should say the name is in use")
     a2d.DialogCancel()
     a2d.DialogCancel()
 end)
@@ -128,7 +130,8 @@ FormatEraseTest(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt confirms overwrite, not a duplicate name")
+    test.Expect(a2dtest.OCRScreen():find("Are you sure you want to erase.*%?"),
+                "prompt should confirm overwrite, not a duplicate name")
     a2d.DialogCancel()
 end)
 
@@ -272,7 +275,8 @@ FormatEraseTest(
   "No selection",
   function(invoke)
     invoke(false)
-    test.Snap("verify prompted for device")
+    test.Expect(a2dtest.OCRScreen():find("Select the location of the disk"),
+                "should be prompted for device")
     a2d.DialogCancel()
 end)
 
@@ -285,7 +289,8 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     invoke(false)
-    test.Snap("verify prompted for device")
+    test.Expect(a2dtest.OCRScreen():find("Select the location of the disk"),
+                "should be prompted for device")
     a2d.DialogCancel()
 end)
 
@@ -298,7 +303,8 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectPath("/Trash")
     invoke(false)
-    test.Snap("verify prompted for device")
+    test.Expect(a2dtest.OCRScreen():find("Select the location of the disk"),
+                "should be prompted for device")
     a2d.DialogCancel()
 end)
 
@@ -311,7 +317,8 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectAll()
     invoke(true)
-    test.Snap("verify prompted for device")
+    test.Expect(a2dtest.OCRScreen():find("Select the location of the disk"),
+                "should be prompted for device")
     a2d.DialogCancel()
 end)
 
@@ -325,7 +332,8 @@ FormatEraseTest(
   function(invoke)
     a2d.SelectPath("/A2.DESKTOP")
     invoke(true)
-    test.Snap("verify prompted for new name")
+    test.Expect(a2dtest.OCRScreen():find("New volume name:"),
+                "should be prompted for new name")
 
     -- name prompt
     a2d.ClearTextField()
@@ -334,7 +342,8 @@ FormatEraseTest(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt names selected volume")
+    test.Expect(a2dtest.OCRScreen():upper():find("\"A2.DESKTOP\""),
+                "prompt should name selected volume")
 
     a2d.DialogCancel()
 end)
@@ -363,31 +372,31 @@ FormatEraseTest(
     invoke(false)
 
     -- device selection
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + 20, dialog_y + 40)
         m.Click()
     end)
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + 200, dialog_y + 40)
         m.Click()
     end)
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     apple2.DownArrowKey()
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
     a2d.DialogOK()
 
     -- name
-    test.Snap("verify device location shown")
-    test.Snap("verify OK button disabled")
+    test.Expect(a2dtest.OCRScreen():find("Location:"), "device location should be shown")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     apple2.Type("NEW.NAME")
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
     a2d.ClearTextField()
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     apple2.Type("ANOTHER.NAME")
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     a2d.DialogCancel()
 end)
@@ -406,12 +415,12 @@ FormatEraseTest(
     invoke(true)
 
     -- name
-    test.Snap("verify device location shown")
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("Location:"), "device location should be shown")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
     a2d.ClearTextField()
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     apple2.Type("NEW.NAME")
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     a2d.DialogCancel()
 end)

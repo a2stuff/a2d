@@ -16,7 +16,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.OAShortcut("I")
-    test.Snap("verify size is in K")
+    test.Expect(a2dtest.OCRScreen():find("Size: +.*%dK"), "size should be in K")
     a2d.DialogOK()
 end)
 
@@ -29,7 +29,9 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/VIEW/BY.NAME/EMPTY")
     a2d.OAShortcut("I")
-    test.Snap("verify size is _K for 1 item")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Size: +.*%dK"), "size should be in K")
+    test.Expect(ocr:find("Size: +.* for 1 item"), "size should be for 1 item")
     a2d.DialogOK()
 end)
 
@@ -42,7 +44,9 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/VIEW/BY.NAME/ONE.FILE")
     a2d.OAShortcut("I")
-    test.Snap("verify size is _K for 2 items")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Size: +.*%dK"), "size should be in K")
+    test.Expect(ocr:find("Size: +.* for 2 items"), "size should be for 2 items")
     a2d.DialogOK()
 end)
 
@@ -56,7 +60,9 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/VIEW/BY.NAME/A1.B1.A.B")
     a2d.OAShortcut("I")
-    test.Snap("verify size is _K for 5 items")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Size: +.*%dK"), "size should be in K")
+    test.Expect(ocr:find("Size: +.* for 5 items"), "size should be for 5 items")
     a2d.DialogOK()
 end)
 
@@ -73,8 +79,8 @@ test.Step(
   function()
     a2d.SelectPath("/RAM1")
     a2d.OAShortcut("I")
-    test.Snap("verify size is _K for 0 items / _K")
-    test.Snap("verify size used is small (a few K)")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Size used/total: +%dK for 0 items / .*K"), "size should be _K for 0 items / %d+K")
     a2d.DialogOK()
 end)
 
@@ -88,7 +94,8 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.SelectPath("/RAM1")
     a2d.OAShortcut("I")
-    test.Snap("verify size is _K for 1 item / _K")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Size used/total: +.*K for 1 item / .*K"), "size should be _K for 1 item / %d+K")
     a2d.DialogOK()
     a2d.EraseVolume("RAM1")
 end)
@@ -103,7 +110,8 @@ test.Step(
     a2d.CopyPath("/TESTS/VIEW/BY.NAME/A1.B1.A.B", "/RAM1")
     a2d.SelectPath("/RAM1")
     a2d.OAShortcut("I")
-    test.Snap("verify size is _K for 5 items / _K")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Size used/total: +.*K for 5 items / .*K"), "size should be _K for 5 items / %d+K")
     a2d.DialogOK()
     a2d.EraseVolume("RAM1")
 end)
@@ -117,7 +125,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/FILE.TYPES/IIGS.50")
     a2d.OAShortcut("I")
-    test.Snap("verify date after 1999 shows correctly")
+    test.Expect(a2dtest.OCRScreen():find("Created: .* 20%d%d "), "date after 1999 should show correctly")
     a2d.DialogOK()
 end)
 
@@ -131,7 +139,7 @@ test.Step(
     a2d.SelectPath("/TESTS")
     a2d.OAShortcut("I")
     emu.wait(30) -- slow
-    test.Snap("verify total size is 32,768K, not 0K")
+    test.Expect(a2dtest.OCRScreen():find("Size used/total: .* 32,768K"), "total size should be 32,768K, not 0K")
     a2d.DialogOK()
 end)
 
@@ -177,7 +185,9 @@ test.Step(
     a2d.SelectPath("/TESTS/RAMCARD/SHORTCUT/HAS.256.FILES")
     a2d.OAShortcut("I")
     emu.wait(5) -- slow
-    test.Snap("verify count is greater than 255")
+    local ocr = a2dtest.OCRScreen()
+    local _, _, count = ocr:find("Size: .* for (%d+) items")
+    test.ExpectGreaterThan(tonumber(count), 255, "count should be greater than 255")
     a2d.DialogOK()
 end)
 
@@ -190,7 +200,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/PROPERTIES/KNOWN.SIZE")
     a2d.OAShortcut("I")
-    test.Snap("verify size is 17K for 2 items")
+    test.Expect(a2dtest.OCRScreen():find("Size: +17K for 2 items"), "size should be 17K for 2 items")
     a2d.DialogOK()
 end)
 
@@ -206,7 +216,9 @@ test.Step(
     a2d.OAShortcut("I", {no_wait=true})
     emu.wait(1)
     apple2.EscapeKey()
-    test.Snap("verify count is canceled (less than 100 items)")
+    local ocr = a2dtest.OCRScreen()
+    local _, _, count = ocr:find("Size used/total: .* for (%d+) items")
+    test.ExpectLessThan(tonumber(count), 100, "count should be canceled (less than 100 items)")
     a2d.DialogOK()
 end)
 
