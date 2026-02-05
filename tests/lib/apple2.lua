@@ -888,9 +888,11 @@ local function GetDHRByteAddress(row, col)
   return bank, 0x2000 + (aa * 0x28) + (bbb * 0x80) + (ccc * 0x400) + col
 end
 
-function apple2.GetDHRByte(row, col)
+function apple2.GetDHRByte(row, col, ram)
+  ram = ram or apple2.GetRAMDeviceProxy()
+
   local bank, addr = GetDHRByteAddress(row, col)
-  return apple2.ReadRAMDevice(addr + 0x10000 * (1-bank)) & 0x7F
+  return ram.read_u8(addr + 0x10000 * (1-bank)) & 0x7F
 end
 
 function apple2.SetDHRByte(row, col, value)
@@ -984,10 +986,12 @@ function apple2.GrabInverseText()
 end
 
 function apple2.SnapshotDHR()
+  local ram = apple2.GetRAMDeviceProxy()
+
   local bytes = {}
   for row = 0,apple2.SCREEN_HEIGHT-1 do
     for col = 0,apple2.SCREEN_COLUMNS-1 do
-      bytes[row*apple2.SCREEN_COLUMNS+col] = apple2.GetDHRByte(row, col)
+      bytes[row*apple2.SCREEN_COLUMNS+col] = apple2.GetDHRByte(row, col, ram)
     end
   end
   return bytes

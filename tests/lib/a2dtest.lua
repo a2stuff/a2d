@@ -356,4 +356,105 @@ end
 
 --------------------------------------------------
 
+--[[
+  Scans the screen for font glyphs and return a string reprentation of
+  what was found. The representation is a single string with multiple
+  "\n"-delimited lines. Characters that were identified on the same
+  row of the screen will appear on a single line. Leading and trailing
+  spaces on a line are removed, and blank lines are removed.
+
+  False positives are expected (e.g. vertical bars, underscores, etc)
+  but false negatives should not occur, apart from homoglyphs, which
+  are filtered out by the table generator, and overlapping/clipping.
+
+  Call with {invert=true} to look for white-on-black text e.g. a
+  selected menu item, list box item, flashing button, etc.
+
+  NOTE: The function is relatively slow, taking 1/4 second on an
+  example machine.
+]]
+local ocr_table = require("ocr_table")
+
+function a2dtest.OCRScreen(options)
+  if options == nil then options = {} end
+
+  -- Grab screen pixels
+  local dhr = apple2.SnapshotDHR()
+
+  local font_height = ocr_table.height
+  local font_width = ocr_table.width
+  local mask = (1 << font_height) - 1
+
+  local str = ""
+
+  -- Walk over entire screen
+  for row = 0, apple2.SCREEN_HEIGHT-font_height-1 do
+    -- Process a stripe `font_height` pixels tall, convert to numbers
+    local numbers = {}
+    for i = 0, apple2.SCREEN_WIDTH-1 do
+      numbers[i] = 0
+    end
+    for col = 0, apple2.SCREEN_COLUMNS-1 do
+      for bit = 0, 6 do
+        local n = 0
+        for r = 0, font_height-1 do
+          local byte = dhr[(row + r) * apple2.SCREEN_COLUMNS + col]
+          local b = ((byte >> bit) & 1) ~ 1
+          n = (n << 1) | b
+        end
+        numbers[col * 7 + bit] = n
+      end
+    end
+
+    -- Iterate over stripe
+    local line = ""
+    local x = 0
+    while x < apple2.SCREEN_WIDTH-1 do
+      -- Try each character width, longest to shortest
+      for w = font_width, 1, -1 do
+        if x + w >= apple2.SCREEN_WIDTH then
+          goto continue
+        end
+        -- Compute hash keys (normal and inverted)
+        local key1, key2 = "", ""
+        for c = x, x+w-1 do
+          if not options.invert then
+            key1 = key1 .. utf8.char(numbers[c])
+          else
+            key2 = key2 .. utf8.char(numbers[c] ~ mask)
+          end
+        end
+        local hit = ocr_table[key1] or ocr_table[key2]
+        if hit then
+          line = line .. hit
+          x = x + w - 1
+          break
+        end
+        ::continue::
+      end
+      x = x + 1
+    end
+
+    --[[
+      NOTE: With current system font, 0 and O are not homoglyphs, so
+      this is not necessary.
+
+      -- Contextually recognize zero (0) vs. capital 'O'
+      -- line = line:gsub("(%d)O", "%10"):gsub("O(%d)", "0%1")
+      -- line = line:gsub("([%l%u])0", "%1O"):gsub("0([%l%u])", "O%1")
+    ]]
+
+    -- Remove leading/trailing spaces
+    line = line:gsub("^ +", ""):gsub(" +$", "")
+    -- Collapse multiple spaces
+    line = line:gsub("  +", "  ")
+
+    str = str .. line .. "\n"
+  end
+
+  return str:gsub("\n+", "\n")
+end
+
+--------------------------------------------------
+
 return a2dtest
