@@ -28,7 +28,8 @@ test.Step(
     a2d.DialogOK()
 
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt shows slot 7, drive 2")
+    test.Expect(a2dtest.OCRScreen():find("slot.*7.*drive.*2%?"),
+                "prompt should show slot 7, drive 2")
     a2d.DialogOK()
 
     util.WaitFor(

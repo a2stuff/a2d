@@ -27,7 +27,8 @@ test.Step(
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
-    test.Snap("verify A2.DESKTOP is first")
+    test.Expect(a2dtest.OCRScreen():find("A2%.DeskTop .*\n.*Ram1 "),
+                "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
     -- cleanup
@@ -58,7 +59,8 @@ test.Step(
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
-    test.Snap("verify A2.DESKTOP is first")
+    test.Expect(a2dtest.OCRScreen():find("A2%.DeskTop .*\n.*Ram1 "),
+                "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
     -- cleanup
@@ -129,9 +131,11 @@ test.Step(
     apple2.Type("1")
     a2d.DialogOK()
     a2dtest.WaitForAlert()
-    test.Snap("verify shortcuts list renders correctly")
+    test.Expect(a2dtest.OCRScreen():find(" Shortcuts .* 1 .* Monarch "),
+                "shortcuts list should render correctly")
     a2d.DialogOK()
-    test.Snap("verify shortcuts list renders correctly")
+    test.Expect(a2dtest.OCRScreen():find(" Shortcuts .* 1 .* Monarch "),
+                "shortcuts list should render correctly")
 
     -- cleanup
     apple2.Type("D")

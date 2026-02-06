@@ -29,7 +29,8 @@ test.Variants(
 
     -- Confirmation prompt
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt names Pascal disk 'TK:'")
+    test.Expect(a2dtest.OCRScreen():find("erase \"TK:\""),
+                "prompt should name Pascal disk in uppercase")
 
     a2d.DialogCancel()
 end)

@@ -36,6 +36,7 @@ test.Step(
     test.Expect(#a2d.GetSelectedIcons(), 1, "file should have moved")
     a2d.SelectPath("/RAM1/FOLDER/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -64,6 +65,7 @@ test.Step(
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "file should have moved")
     a2d.SelectPath("/RAM1/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -91,6 +93,7 @@ test.Step(
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should have moved")
     a2d.SelectPath("/RAM1/FOLDER/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -124,6 +127,7 @@ test.Step(
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "file should have copied")
     a2d.SelectPath("/RAM1/FOLDER/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -153,6 +157,7 @@ test.Step(
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should have copied")
     a2d.SelectPath("/RAM1/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -179,6 +184,7 @@ test.Step(
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "file should have copied")
     a2d.SelectPath("/RAM1/FOLDER/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -201,6 +207,7 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.SelectPath("/RAM1/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -222,6 +229,7 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.SelectPath("/RAM1/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -280,12 +288,13 @@ test.Variants(
     emu.wait(0.25)
 
     if action == "move" then
-      test.Snap("verify dialog shows 'Moving: 2 files'")
+      test.Expect(a2dtest.OCRScreen():find("Moving: 2 files"), "correct count should be shown")
     else
-      test.Snap("verify dialog shows 'Copying: 4 files'")
+      test.Expect(a2dtest.OCRScreen():find("Copying: 4 files"), "correct count should be shown")
     end
 
     emu.wait(2)
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -313,7 +322,7 @@ test.Step(
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(0.25)
-    test.Snap("verify Copying 3 files")
+    test.Expect(a2dtest.OCRScreen():find("Copying: 3 files"), "correct count should be shown")
     emu.wait(5)
 
     a2d.SelectPath("/RAM1/READ.ME")
@@ -323,6 +332,7 @@ test.Step(
     a2d.SelectPath("/RAM5/FOLDER")
     a2d.SelectPath("/RAM5/FOLDER/DESKTOP.SYSTEM")
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
     a2d.EraseVolume("/RAM5")
 end)
@@ -348,7 +358,8 @@ test.Step(
 
     a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(0.25)
-    test.Snap("verify Copying 4 files") -- vol becomes folder, makes it +1
+    test.Expect(a2dtest.OCRScreen():find("Copying: 4 files"), "correct count should be shown")
+    -- vol becomes folder, makes it +1
     emu.wait(5)
 
     a2d.SelectPath("/RAM1/READ.ME")
@@ -362,6 +373,7 @@ test.Step(
     a2d.SelectPath("/RAM5/RAM1/FOLDER")
     a2d.SelectPath("/RAM5/RAM1/FOLDER/DESKTOP.SYSTEM")
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
     a2d.EraseVolume("/RAM5")
 end)
@@ -384,6 +396,7 @@ test.Step(
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.MultiSnap(60, "verify copy count ends at 0")
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
     a2d.EraseVolume("/RAM5")
 end)
@@ -407,6 +420,7 @@ test.Step(
     a2d.Drag(src_x, src_y,dst_x, dst_y, {sa_drop=true})
     a2dtest.MultiSnap(60, "verify move count ends at 0")
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
     a2d.EraseVolume("/RAM5")
 end)
@@ -453,6 +467,7 @@ test.Step(
     apple2.Type("Y")
     a2dtest.MultiSnap(60, "verify count ends at 0")
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
     a2d.EraseVolume("/RAM5")
 end)
@@ -469,6 +484,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
 end)
 
@@ -494,6 +510,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
 end)
 
@@ -529,6 +546,7 @@ test.Step(
     a2d.OpenPath("/RAM1/F")
     test.Expect(#a2d.GetSelectedIcons(), 0, "no files should be moved")
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
 end)
 
@@ -554,6 +572,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
 end)
 
@@ -590,6 +609,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
 end)
 
@@ -615,6 +635,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
 end)
 
@@ -649,6 +670,7 @@ test.Step(
     a2d.SelectAll()
     test.Expect(#a2d.GetSelectedIcons(), 1, "no files should be moved")
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
 end)
 
@@ -678,6 +700,7 @@ test.Step(
     a2d.OpenPath("/RAM5/NAME") -- copy exists
     a2d.SelectPath("/RAM1/NAME") -- original exists
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
     a2d.EraseVolume("/RAM5")
 end)
@@ -710,6 +733,7 @@ test.Step(
     a2d.SelectPath("/RAM5/NAME/READ.ME") -- copy exists
     a2d.SelectPath("/RAM1/NAME/READ.ME") -- original exists
 
+    -- cleanup
     a2d.EraseVolume("/RAM1")
     a2d.EraseVolume("/RAM5")
 end)
@@ -734,6 +758,7 @@ test.Step(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -775,12 +800,23 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/EXTRAS/READ.ME")
     a2d.DeletePath("/A2.DESKTOP/EXTRAS/READ.ME")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
 --[[For the following cases, open `/TESTS` and `/TESTS/FOLDER`:]]
 
 -- NOTE: Using RAM1 instead of TESTS for easier reset
+
+function GetNumbers(ocr, index)
+  for items, used, free in ocr:gmatch(
+    " (%d+,?%d*) Items? +(%d+[.,]?%d*)K in disk +(%d+[.,]?%d*)K") do
+    if index == 1 then
+      return assert(items), assert(used), assert(free)
+    end
+    index = index - 1
+  end
+end
 
 --[[
   Drag a file icon from another volume onto the `TESTS` icon. Verify
@@ -815,7 +851,7 @@ test.Variants(
     end
 
     a2d.OpenPath("/RAM1/FOLDER")
-    a2d.MoveWindowBy(200, 100)
+    a2d.MoveWindowBy(200, 120)
     local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.OpenPath("/RAM1", {keep_windows=true})
@@ -828,7 +864,10 @@ test.Variants(
     a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
     a2d.GrowWindowBy(-100, -100)
     a2d.Select("READ.ME")
-    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    local ocr = a2dtest.OCRScreen()
+    local ram1_items, ram1_used, ram1_free = GetNumbers(ocr, 2)
+    local folder_items, folder_used, folder_free = GetNumbers(ocr, 3)
 
     if target ~= nil then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
@@ -839,14 +878,28 @@ test.Variants(
     emu.wait(1)
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
-    test.Snap("verify RAM1 used/free numbers updated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 2)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 3)
+    test.Expect(new_ram1_used ~= ram1_used and
+                new_ram1_free ~= ram1_free, "RAM1 numbers should have updated")
+    test.Expect(new_folder_used == folder_used and
+                new_folder_free == folder_free, "FOLDER numbers should be the same")
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(click_x, click_y)
         m.Click()
+        m.MoveByApproximately(0, -20)
     end)
-    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
-    test.Snap("verify FOLDER used/free numbers updated")
 
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 2)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 3)
+    test.Expect(new_folder_used ~= folder_used and
+                new_folder_free ~= folder_free, "FOLDER numbers should have updated")
+
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -873,7 +926,7 @@ test.Variants(
     a2d.CreateFolder("/RAM1/FOLDER")
 
     a2d.OpenPath("/RAM1/FOLDER")
-    a2d.MoveWindowBy(200, 100)
+    a2d.MoveWindowBy(200, 120)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
@@ -884,7 +937,10 @@ test.Variants(
     a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
     a2d.GrowWindowBy(-100, -100)
     a2d.Select("READ.ME")
-    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    local ocr = a2dtest.OCRScreen()
+    local ram1_items, ram1_used, ram1_free = GetNumbers(ocr, 2)
+    local folder_items, folder_used, folder_free = GetNumbers(ocr, 3)
 
     if drag then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
@@ -895,13 +951,26 @@ test.Variants(
     emu.wait(1)
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
-    test.Snap("verify FOLDER used/free numbers updated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 2)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 3)
+    test.Expect(new_ram1_used == ram1_used and
+                new_ram1_free == ram1_free, "RAM1 numbers should be the same")
+    test.Expect(new_folder_used ~= folder_used and
+                new_folder_free ~= folder_free, "FOLDER numbers should have updated")
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(click_x, click_y)
         m.Click()
+        m.MoveByApproximately(0, -20)
     end)
+
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
-    test.Snap("verify RAM1 used/free numbers updated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 2)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 3)
+    test.Expect(new_ram1_used ~= ram1_used and
+                new_ram1_free ~= ram1_free, "RAM1 numbers should have updated")
 
     a2d.EraseVolume("RAM1")
 end)
@@ -930,14 +999,17 @@ test.Variants(
 
     a2d.CreateFolder("/RAM1/FOLDER")
     a2d.OpenPath("/RAM1/FOLDER")
-    a2d.MoveWindowBy(200, 100)
+    a2d.MoveWindowBy(200, 120)
     local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.OpenPath("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
 
     a2d.Select("READ.ME")
-    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    local ocr = a2dtest.OCRScreen()
+    local ram1_items, ram1_used, ram1_free = GetNumbers(ocr, 1)
+    local folder_items, folder_used, folder_free = GetNumbers(ocr, 2)
 
     if drag then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
@@ -950,14 +1022,28 @@ test.Variants(
     emu.wait(1)
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
-    test.Snap("verify RAM1 used/free numbers updated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_ram1_used ~= ram1_used and
+                new_ram1_free ~= ram1_free, "RAM1 numbers should have updated")
+    test.Expect(new_folder_used == folder_used and
+                new_folder_free == folder_free, "FOLDER numbers should be the same")
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(click_x, click_y)
         m.Click()
+        m.MoveByApproximately(0, -20)
     end)
-    test.Snap("verify FOLDER used/free numbers updated")
-    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
 
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_folder_used ~= folder_used and
+                new_folder_free ~= folder_free, "FOLDER numbers should have updated")
+
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -985,7 +1071,7 @@ test.Variants(
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1/FOLDER")
 
     a2d.OpenPath("/RAM1/FOLDER")
-    a2d.MoveWindowBy(200, 100)
+    a2d.MoveWindowBy(200, 120)
 
     a2d.OpenPath("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
@@ -993,7 +1079,10 @@ test.Variants(
 
     a2d.CycleWindows()
     a2d.Select("READ.ME")
-    test.Snap("note RAM1 used/free numbers")
+
+    local ocr = a2dtest.OCRScreen()
+    local ram1_items, ram1_used, ram1_free = GetNumbers(ocr, 1)
+    local folder_items, folder_used, folder_free = GetNumbers(ocr, 2)
 
     if drag then
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
@@ -1006,14 +1095,28 @@ test.Variants(
     emu.wait(1)
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
-    test.Snap("verify FOLDER used/free numbers updated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_folder_used ~= folder_used and
+                new_folder_free ~= folder_free, "FOLDER numbers should have updated")
+    test.Expect(new_ram1_used == ram1_used and
+                new_ram1_free == ram1_free, "RAM1 numbers should be the same")
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(click_x, click_y)
         m.Click()
+        m.MoveByApproximately(0, -20)
     end)
-    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
-    test.Snap("verify RAM1 used/free numbers updated")
 
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_ram1_used ~= ram1_used and
+                new_ram1_free ~= ram1_free, "RAM1 numbers should have updated")
+
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -1030,7 +1133,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1/FOLDER")
 
     a2d.OpenPath("/RAM1/FOLDER")
-    a2d.MoveWindowBy(200, 100)
+    a2d.MoveWindowBy(200, 120)
 
     a2d.OpenPath("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
@@ -1038,20 +1141,37 @@ test.Step(
 
     a2d.CycleWindows()
     a2d.Select("READ.ME")
-    test.Snap("note RAM1 and FOLDER used/free numbers")
+
+    local ocr = a2dtest.OCRScreen()
+    local ram1_items, ram1_used, ram1_free = GetNumbers(ocr, 1)
+    local folder_items, folder_used, folder_free = GetNumbers(ocr, 2)
 
     a2d.DuplicateSelection("DUPE")
     emu.wait(1)
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
-    test.Snap("verify FOLDER used/free numbers updated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_folder_used ~= folder_used and
+                new_folder_free ~= folder_free, "FOLDER numbers should have updated")
+    test.Expect(new_ram1_used == ram1_used and
+                new_ram1_free == ram1_free, "RAM1 numbers should be the same")
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(click_x, click_y)
         m.Click()
+        m.MoveByApproximately(0, -20)
     end)
-    test.Snap("verify RAM1 used/free numbers updated")
-    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
 
+    test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_ram1_used ~= ram1_used and
+                new_ram1_free ~= ram1_free, "RAM1 numbers should have updated")
+
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -1079,7 +1199,7 @@ test.Variants(
 
     local dst_x, dst_y
     a2d.OpenPath("/RAM1/FOLDER")
-    a2d.MoveWindowBy(200, 100)
+    a2d.MoveWindowBy(200, 120)
     if target == "window" then
       local x, y, w, h = a2dtest.GetFrontWindowContentRect()
       dst_x, dst_y = x + w / 2, y + h / 2
@@ -1097,24 +1217,41 @@ test.Variants(
     a2d.Select("READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    test.Snap("note RAM1 and FOLDER used/free numbers")
+    local ocr = a2dtest.OCRScreen()
+    local ram1_items, ram1_used, ram1_free = GetNumbers(ocr, 2)
+    local folder_items, folder_used, folder_free = GetNumbers(ocr, 3)
 
     a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(1)
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "target should be activated")
-    test.Snap("verify FOLDER used/free numbers updated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_folder_used ~= folder_used and
+                new_folder_free ~= folder_free, "FOLDER numbers should have updated")
+    test.Expect(new_ram1_used == ram1_used and
+                new_ram1_free == ram1_free, "RAM1 numbers should be the same")
+
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should be copied")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(click_x, click_y)
         m.Click()
+        m.MoveByApproximately(0, -20)
     end)
-    test.Snap("verify RAM1 used/free numbers updated")
+
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
+    local ocr = a2dtest.OCRScreen()
+    local new_ram1_items, new_ram1_used, new_ram1_free = GetNumbers(ocr, 1)
+    local new_folder_items, new_folder_used, new_folder_free = GetNumbers(ocr, 2)
+    test.Expect(new_ram1_used ~= ram1_used and
+                new_ram1_free ~= ram1_free, "RAM1 numbers should have updated")
+
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "file should be copied")
 
+    -- cleanup
     a2d.EraseVolume("RAM1")
 end)
 
@@ -1152,6 +1289,7 @@ function ActiveInactiveTest(name, func1, func2)
         test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "target should be activated")
       end
 
+      -- cleanup
       a2d.EraseVolume("RAM1")
   end)
 end

@@ -7,6 +7,13 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 floppy_with_files.2mg"
 
 a2d.ConfigureRepaintTime(1)
 
+function GetCreatedModifiedDates()
+  local ocr = a2dtest.OCRScreen()
+  local _, _, created_date = ocr:find("Created: +([^\n]*)  ")
+  local _, _, modified_date = ocr:find("Modified: +([^\n]*)  ")
+  return assert(created_date), assert(modified_date)
+end
+
 --[[
   Launch DeskTop. Drag a volume icon onto a folder icon (with
   sufficient capacity). Verify that no alert is shown, and that the
@@ -19,7 +26,7 @@ test.Step(
     a2d.CreateFolder("/RAM1/FOLDER")
     a2d.SelectPath("/RAM1/FOLDER")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("note creation and modification")
+    local created_date, modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
 
     a2d.SelectPath("/WITH.FILES")
@@ -35,7 +42,11 @@ test.Step(
 
     a2d.SelectPath("/RAM1/FOLDER")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("verify creation date unchanged, modification date updated")
+
+    local new_created_date, new_modified_date = GetCreatedModifiedDates()
+    test.ExpectEquals(new_created_date, created_date, "creation date should be unchanged")
+    test.ExpectNotEquals(new_modified_date, modified_date, "modification date should be updated")
+
     a2d.DialogOK()
 
     -- cleanup
@@ -53,13 +64,17 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/COPYING/DATES/C.92.M.93")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("note creation and modification dates")
+    local created_date, modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
 
     a2d.CopyPath("/TESTS/COPYING/DATES", "/RAM1")
     a2d.SelectPath("/RAM1/DATES/C.92.M.93")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("verify creation and modification dates match original")
+
+    local new_created_date, new_modified_date = GetCreatedModifiedDates()
+    test.ExpectEquals(new_created_date, created_date, "creation date should match original")
+    test.ExpectEquals(new_modified_date, modified_date, "modification date should match original")
+
     a2d.DialogOK()
 
     -- cleanup
@@ -78,24 +93,28 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/COPYING/DATES")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("note creation and modification dates")
+    local folder_created_date, folder_modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
 
     a2d.SelectPath("/TESTS/COPYING/DATES/C.16.M.16")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("note creation and modification dates")
+    local file_created_date, file_modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
 
     a2d.CopyPath("/TESTS/COPYING/DATES", "/RAM1")
 
     a2d.SelectPath("/RAM1/DATES")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("verify creation and modification dates match original")
+    local new_created_date, new_modified_date = GetCreatedModifiedDates()
+    test.ExpectEquals(new_created_date, folder_created_date, "creation date should match original")
+    test.ExpectEquals(new_modified_date, folder_modified_date, "modification date should match original")
     a2d.DialogOK()
 
     a2d.SelectPath("/RAM1/DATES/C.16.M.16")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
-    test.Snap("verify creation and modification dates match original")
+    local new_created_date, new_modified_date = GetCreatedModifiedDates()
+    test.ExpectEquals(new_created_date, file_created_date, "creation date should match original")
+    test.ExpectEquals(new_modified_date, file_modified_date, "modification date should match original")
     a2d.DialogOK()
 
     -- cleanup

@@ -27,7 +27,7 @@ test.Step(
     -- copy volume
     a2d.CopyPath("/A2.DESKTOP", "/RAM1")
     a2dtest.WaitForAlert()
-    test.Snap("verify progress dialog references specific file")
+    test.Expect(a2dtest.OCRScreen():find("Extras/BASIC%.system"), "progress dialog should reference specific file")
     a2d.DialogCancel()
 
     -- cleanup
@@ -88,7 +88,7 @@ test.Step(
 
     a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1")
     a2dtest.WaitForAlert()
-    test.Snap("verify alert is about file size")
+    test.Expect(a2dtest.OCRScreen():find("file is too large"), "alert should be about file size")
     a2d.DialogOK()
 
     -- cleanup
@@ -117,7 +117,7 @@ test.Step(
     a2d.SelectAll()
     a2d.CopySelectionTo("/RAM1")
     a2dtest.WaitForAlert()
-    test.Snap("verify error is about file size")
+    test.Expect(a2dtest.OCRScreen():find("file is too large"), "alert should be about file size")
     a2d.DialogOK()
 
     -- cleanup
@@ -144,7 +144,7 @@ test.Step(
 
     a2d.CopyPath("/TESTS/COPYING/SIZES", "/RAM1")
     a2dtest.WaitForAlert()
-    test.Snap("verify error is about file size")
+    test.Expect(a2dtest.OCRScreen():find("file is too large"), "alert should be about file size")
     a2d.DialogOK()
 
     a2d.OpenPath("/RAM1/SIZES")

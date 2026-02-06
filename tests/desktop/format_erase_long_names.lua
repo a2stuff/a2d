@@ -64,6 +64,8 @@ FormatEraseTest(
     test.Snap("verify selection rect covers name, doesn't overlap border")
     a2d.DialogOK()
     test.Snap("verify long names erased after device selection")
-    test.Snap("verify location line shows full name without ellipsis")
+
+    test.Expect(a2dtest.OCRScreen():upper():find("SONYCD%-ROMCDU%-80"),
+                "location line should show full name without ellipsis")
     a2d.DialogCancel()
 end)

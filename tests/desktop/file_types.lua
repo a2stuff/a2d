@@ -227,7 +227,7 @@ test.Step(
   function()
     a2d.CreateFolder("/RAM1/FOLDER")
     a2d.RenamePath("/RAM1/FOLDER", "FOLDER.A2FC")
-    test.Snap("Verify folder with .A2FC is still a folder")
+    test.Snap("verify folder with .A2FC is still a folder")
 
     a2d.EraseVolume("RAM1")
 end)

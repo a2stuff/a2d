@@ -29,7 +29,8 @@ test.Variants(
 
     -- Confirmation prompt
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt just mentions slot 6, drive 1")
+    test.Expect(a2dtest.OCRScreen():find("erase .*slot.*6.*drive.*1"),
+                "prompt should just mention slot 6, drive 1")
 
     a2d.DialogCancel()
 end)
