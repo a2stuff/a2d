@@ -7,15 +7,22 @@ DISKARGS="-hard1 $HARDIMG"
 
 a2d.ConfigureRepaintTime(0.25)
 
+local s6d1 = manager.machine.images[":sl6:cffa2:cffa2_ata:0:hdd:image"]
+local s6d2 = manager.machine.images[":sl6:cffa2:cffa2_ata:1:hdd:image"]
+
 --[[
   Copy /RAM1 to /RAM2. Verify success message at end.
 ]]
 test.Variants(
   {
-    "Slinky - Quick Copy",
-    "Slinky - Disk Copy",
+    {"Slinky - Quick Copy", "quick"},
+    {"Slinky - Disk Copy", "disk"},
   },
-  function(idx, name)
+  function(idx, name, what)
+    if a2dtest.IsAlertShowing() then  -- duplicate volume
+      a2d.DialogOK()
+    end
+
     a2d.CopyDisk()
 
     a2d.InvokeMenuItem(3, idx) -- Quick Copy or Disk Cop
@@ -42,9 +49,17 @@ test.Variants(
     a2d.DialogOK()
 
     -- copying...
-    a2dtest.WaitForAlert({timeout=240})
-    test.Expect(a2dtest.OCRScreen():find("The copy was successful"),
-                "verify success message copying S1D1 to S2D1")
+    a2dtest.WaitForAlert({timeout=7200})
+    test.Expect(a2dtest.OCRScreen():find("The copy was successful"), "copy should succeed")
+    local transfer, read, written = a2dtest.DiskCopyGetBlockCounts()
+    local total = 2048
+    test.ExpectEquals(read, transfer, "blocks read should match transfer count")
+    test.ExpectEquals(written, transfer, "blocks written should match transfer count")
+    if what == "quick" then
+      test.ExpectLessThan(transfer, total, "block counts should be less than total blocks")
+    else
+      test.ExpectEquals(transfer, total, "block counts should be total blocks")
+    end
     a2d.DialogOK()
 
     -- cleanup

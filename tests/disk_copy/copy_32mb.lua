@@ -12,6 +12,9 @@ DISKARGS="-flop1 $HARDIMG -hard1 tests.hdv -hard2 empty_32mb.hdv"
 
 a2d.ConfigureRepaintTime(0.25)
 
+local s5d1 = manager.machine.images[":sl5:cffa2:cffa2_ata:0:hdd:image"]
+local s5d2 = manager.machine.images[":sl5:cffa2:cffa2_ata:1:hdd:image"]
+
 --[[
   Launch DeskTop. Special > Copy Disk.... Copy a 32MB disk image using
   Quick Copy (the default mode). Verify that the screen is not
@@ -29,6 +32,10 @@ test.Variants(
     {"Disk Copy 32MB", "disk"},
   },
   function(idx, name, what)
+    if a2dtest.IsAlertShowing() then  -- duplicate volume
+      a2d.DialogOK()
+    end
+
     a2d.CopyDisk()
 
     a2d.InvokeMenuItem(3, idx) -- Options > Quick Copy or Disk Copy
@@ -57,16 +64,28 @@ test.Variants(
     a2d.DialogOK()
 
     -- complete
-    a2dtest.WaitForAlert({timeout=7200})
-    if what == "disk" then
-      test.Snap("verify total block counts are 65,535")
+    a2dtest.WaitForAlert({timeout=10800})
+    test.Expect(a2dtest.OCRScreen():find("The copy was successful"), "copy should succeed")
+    local transfer, read, written = a2dtest.DiskCopyGetBlockCounts()
+    local total = 65535
+    test.ExpectEquals(read, transfer, "blocks read should match transfer count")
+    test.ExpectEquals(written, transfer, "blocks written should match transfer count")
+    if what == "quick" then
+      test.ExpectLessThan(transfer, total, "block counts should be less than total blocks")
+    else
+      test.ExpectEquals(transfer, total, "block counts should be total blocks")
     end
     a2d.DialogOK()
+
+    if what == "full" then
+      local src = util.SlurpFile(s5d1.filename)
+      local dst = util.SlurpFile(s5d2.filename)
+      test.ExpectBinaryEquals(src, dst, "disk images should be identical after disk copy")
+    end
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.WaitForAlert() -- duplicate volume
+    a2d.DialogOK()
 end)
-
-
-

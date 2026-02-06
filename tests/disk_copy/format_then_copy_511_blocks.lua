@@ -16,6 +16,10 @@ test.Variants(
     {"Format then Disk Copy 511 blocks", "disk"},
   },
   function(idx, name, what)
+    if a2dtest.IsAlertShowing() then  -- duplicate volume
+      a2d.DialogOK()
+    end
+
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
@@ -79,7 +83,6 @@ test.Variants(
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
-
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert() -- duplicate volume
     a2d.DialogOK()
 end)

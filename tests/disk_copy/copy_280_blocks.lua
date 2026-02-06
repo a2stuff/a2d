@@ -51,11 +51,16 @@ test.Variants(
     a2d.DialogOK()
 
     -- complete
-    a2dtest.WaitForAlert({timeout=7200})
+    a2dtest.WaitForAlert({timeout=10800})
+    test.Expect(a2dtest.OCRScreen():find("The copy was successful"), "copy should succeed")
+    local transfer, read, written = a2dtest.DiskCopyGetBlockCounts()
+    local total = 280
+    test.ExpectEquals(read, transfer, "blocks read should match transfer count")
+    test.ExpectEquals(written, transfer, "blocks written should match transfer count")
     if what == "quick" then
-      test.Snap("verify block counts are equal")
+      test.ExpectLessThan(transfer, total, "block counts should be less than total blocks")
     else
-      test.Snap("verify total block counts are 280")
+      test.ExpectEquals(transfer, total, "block counts should be total blocks")
     end
     a2d.DialogOK()
 
@@ -68,4 +73,6 @@ test.Variants(
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.WaitForAlert() -- duplicate volume
+    a2d.DialogOK()
 end)

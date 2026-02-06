@@ -32,6 +32,10 @@ test.Variants(
     {"copying disk with early unused blocks - Disk Copy", "disk"},
   },
   function(idx, name, what)
+    if a2dtest.IsAlertShowing() then  -- duplicate volume
+      a2d.DialogOK()
+    end
+
     local image1 = s6d1.filename
     local image2 = s6d2.filename
 
@@ -56,30 +60,29 @@ test.Variants(
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
-    -- confirm overwrite
+    -- confirmation
     a2dtest.WaitForAlert()
     a2d.DialogOK()
 
-    -- copying...
-    a2dtest.WaitForAlert({timeout=600})
-    local ocr = a2dtest.OCRScreen()
-    function extract(pattern)
-      local _, _, group = ocr:find(pattern)
-      local n, _ = group:gsub(",", "")
-      return tonumber(n)
-    end
-    local transfer = extract("Blocks to transfer: (%S+)")
-    local read = extract("Blocks Read: (%S+)")
-    local written = extract("Blocks Written: (%S+)")
-
+    -- complete
+    a2dtest.WaitForAlert({timeout=7200})
+    test.Expect(a2dtest.OCRScreen():find("The copy was successful"), "copy should succeed")
+    local transfer, read, written = a2dtest.DiskCopyGetBlockCounts()
+    local total = 1600
+    test.ExpectEquals(read, transfer, "blocks read should match transfer count")
+    test.ExpectEquals(written, transfer, "blocks written should match transfer count")
     if what == "quick" then
-      test.ExpectLessThan(transfer, 1600, "transfer blocks should be less than 1600")
+      test.ExpectLessThan(transfer, total, "block counts should be less than total blocks")
     else
-      test.ExpectEquals(transfer, 1600, "transfer blocks should be 1600")
+      test.ExpectEquals(transfer, total, "block counts should be total blocks")
     end
-    test.ExpectEquals(read, transfer, "blocks read match transfer count")
-    test.ExpectEquals(written, transfer, "blocks written match transfer count")
     a2d.DialogOK()
+
+    if what == "full" then
+      local src = util.SlurpFile(s6d1.filename)
+      local dst = util.SlurpFile(s6d2.filename)
+      test.ExpectBinaryEquals(src, dst, "disk images should be identical after disk copy")
+    end
 
     -- re-insert the disks, since we eject them after the copy
     s6d1:load(image1)
@@ -88,4 +91,6 @@ test.Variants(
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.WaitForAlert() -- duplicate volumes
+    a2d.DialogOK()
 end)

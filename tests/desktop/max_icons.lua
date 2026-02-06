@@ -35,7 +35,7 @@ test.Step(
     emu.wait(5)
     a2d.OpenPath("/TESTS", {keep_windows=true})
     a2dtest.WaitForAlert()
-    test.Snap("verify alert has no Cancel button")
+    test.Expect(not a2dtest.OCRScreen():find("Cancel"), "alert should have no Cancel button")
     a2d.DialogOK()
     a2d.CloseAllWindows()
 end)

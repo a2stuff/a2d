@@ -458,4 +458,19 @@ end
 
 --------------------------------------------------
 
+function a2dtest.DiskCopyGetBlockCounts()
+  local ocr = a2dtest.OCRScreen()
+  function extract(pattern)
+    local _, _, group = ocr:find(pattern)
+    local n = assert(group:gsub(",", ""))
+    return tonumber(n)
+  end
+  local transfer = extract("Blocks to transfer: (%d+[.,]?%d*)")
+  local read = extract("Blocks Read: (%d+[.,]?%d*)")
+  local written = extract("Blocks Written: (%d+[.,]?%d*)")
+  return transfer, read, written
+end
+
+--------------------------------------------------
+
 return a2dtest
