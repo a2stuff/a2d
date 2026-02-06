@@ -353,7 +353,7 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 
 
         DEFINE_LABEL select_quit, .sprintf(res_string_label_select_quit, res_string_dc_menu_item_quit, res_string_dc_menu_bar_item_file, ::kGlyphOpenApple, res_char_dc_menu_item_quit_shortcut), kDialogWidth/2, kTipTextY
-        DEFINE_RECT rect_erase_tip, kEraseLeft, kTipTextY-(kSystemFontHeight+2), kEraseRight, kTipTextY
+        DEFINE_RECT rect_erase_tip, kEraseLeft, kTipTextY-kSystemFontHeight, kEraseRight, kTipTextY
 
         DEFINE_LABEL escape_stop_copy, res_string_escape_stop_copy, kDialogWidth/2, kTipTextY
         DEFINE_LABEL error_writing, res_string_error_writing, kOverviewTextX, 102
