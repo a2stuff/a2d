@@ -18,5 +18,6 @@ test.Step(
     apple2.SetSystemConfig(":a2_config", "CPU type", 1 << 4, 1 << 4)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Snap("verify only 128K of memory detected")
+    test.Expect(a2dtest.OCRScreen():find("Memory: 128K"),
+                "only 128K of memory should be detected")
 end)

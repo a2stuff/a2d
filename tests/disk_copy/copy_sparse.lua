@@ -62,12 +62,23 @@ test.Variants(
 
     -- copying...
     a2dtest.WaitForAlert({timeout=600})
-    if what == "quick" then
-      test.Snap("verify transfer blocks is less than 1600")
-    else
-      test.Snap("verify transfer blocks is 1600")
+    local ocr = a2dtest.OCRScreen()
+    function extract(pattern)
+      local _, _, group = ocr:find(pattern)
+      local n, _ = group:gsub(",", "")
+      return tonumber(n)
     end
-    test.Snap("verify blocks read/written match transfer count")
+    local transfer = extract("Blocks to transfer: (%S+)")
+    local read = extract("Blocks Read: (%S+)")
+    local written = extract("Blocks Written: (%S+)")
+
+    if what == "quick" then
+      test.ExpectLessThan(transfer, 1600, "transfer blocks should be less than 1600")
+    else
+      test.ExpectEquals(transfer, 1600, "transfer blocks should be 1600")
+    end
+    test.ExpectEquals(read, transfer, "blocks read match transfer count")
+    test.ExpectEquals(written, transfer, "blocks written match transfer count")
     a2d.DialogOK()
 
     -- re-insert the disks, since we eject them after the copy

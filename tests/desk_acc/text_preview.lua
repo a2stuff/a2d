@@ -14,9 +14,10 @@ test.Step(
   "Escape exits text preview",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
+    local window_id = a2dtest.GetFrontWindowID()
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    test.Snap("verify preview exited")
+    test.ExpectNotEquals(a2dtest.GetFrontWindowID(), window_id, "preview should have exited")
 end)
 
 --[[
@@ -29,11 +30,11 @@ test.Step(
 
     apple2.SpaceKey() -- toggle modes
     a2d.WaitForRepaint()
-    test.Snap("verify Fixed mode")
+    test.Expect(a2dtest.OCRScreen():find("Fixed"), "should be in Fixed mode")
 
     apple2.SpaceKey() -- toggle modes
     a2d.WaitForRepaint()
-    test.Snap("verify Proportional mode")
+    test.Expect(a2dtest.OCRScreen():find("Proportional"), "should be in Proportional mode")
 
     a2d.CloseWindow()
 end)
@@ -50,10 +51,11 @@ test.Step(
   "Click toggles modes",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
-    test.Snap("verify Proportional label baseline aligns with window title")
+    test.Expect(a2dtest.OCRScreen():find("TOGGLE%.ME .* Proportional"),
+                "Proportional label baseline should align with window title")
 
     local wx, wy, ww, wh = a2dtest.GetFrontWindowContentRect()
-    local x, y = wx + ww - 60, wy - 8
+    local x, y = wx + ww + 12, wy - 8
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -64,8 +66,8 @@ test.Step(
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Snap("verify Fixed mode")
-    test.Snap("verify Fixed label baseline aligns with window title")
+    test.Expect(a2dtest.OCRScreen():find("TOGGLE%.ME .* Fixed"),
+                "Fixed label baseline should align with window title")
 
     a2d.InMouseKeysMode(function(m)
         m.Click()
@@ -138,16 +140,22 @@ test.Step(
     local dhr = a2dtest.SnapshotDHRWithoutClock()
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled down by one line")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("THIS IS LINE 2") and
+                ocr:find("THIS IS LINE 16"), "should have scrolled down by one line")
 
     apple2.UpArrowKey()
     a2d.WaitForRepaint()
-    a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one line")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("THIS IS LINE 1") and
+                ocr:find("THIS IS LINE 15"), "should have scrolled back up by one line")
 
     -- Page Down/Up using OA
     a2d.OADown()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled down by one page")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("THIS IS LINE 15") and
+                ocr:find("THIS IS LINE 29"), "should have scrolled down by one page")
     local dhr2 = a2dtest.SnapshotDHRWithoutClock()
 
     a2d.OAUp()
@@ -166,7 +174,8 @@ test.Step(
     -- Home/End using OA+SA
     a2d.OASADown()
     a2d.WaitForRepaint()
-    test.Snap("verify scrolled to end")
+    test.Expect(a2dtest.OCRScreen():find("THIS IS LINE 2000"),
+                "should have scrolled to end")
 
     a2d.OASAUp()
     a2d.WaitForRepaint()

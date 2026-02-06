@@ -26,7 +26,8 @@ test.Step(
 
     a2d.CopyDisk()
 
-    test.Snap("verify S3,D1 RAM disk is in list")
+    test.Expect(a2dtest.OCRScreen():find("3 +1 +Ram"),
+                "S3,D1 RAM disk should be in list")
 
     -- cleanup
     a2d.OAShortcut("Q") -- quit
@@ -54,7 +55,8 @@ test.Step(
 
     a2d.CopyDisk()
 
-    test.Snap("verify S3,D1 RAM disk is in list")
+    test.Expect(a2dtest.OCRScreen():find("3 +1 +Ram"),
+                "S3,D1 RAM disk should be in list")
 
     -- cleanup
     a2d.OAShortcut("Q") -- quit

@@ -360,8 +360,8 @@ end
   Scans the screen for font glyphs and return a string reprentation of
   what was found. The representation is a single string with multiple
   "\n"-delimited lines. Characters that were identified on the same
-  row of the screen will appear on a single line. Leading and trailing
-  spaces on a line are removed, and blank lines are removed.
+  row of the screen will appear on a single line. Runs of spaces are
+  collapsed, and blank lines are removed.
 
   False positives are expected (e.g. vertical bars, underscores, etc)
   but false negatives should not occur, apart from homoglyphs, which
@@ -444,15 +444,16 @@ function a2dtest.OCRScreen(options)
       -- line = line:gsub("([%l%u])0", "%1O"):gsub("0([%l%u])", "O%1")
     ]]
 
-    -- Remove leading/trailing spaces
-    line = line:gsub("^ +", ""):gsub(" +$", "")
     -- Collapse multiple spaces
     line = line:gsub("  +", "  ")
 
-    str = str .. line .. "\n"
+    -- Ignore blank lines
+    if not line:find("^ *$") then
+      str = str .. line .. "\n"
+    end
   end
 
-  return str:gsub("\n+", "\n")
+  return str
 end
 
 --------------------------------------------------

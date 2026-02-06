@@ -45,7 +45,7 @@ test.Step(
     a2d.DialogOK()
 
     emu.wait(5)
-    test.Snap("verify the OK button is disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "the OK button should be disabled")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -89,12 +89,19 @@ test.Step(
 
     -- copying...
     a2dtest.WaitForAlert({timeout=480})
-    test.Snap("verify block counts have thousands separators")
-    test.Snap("verify tip is erased")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Blocks to transfer: %d+,%d+"),
+                "the transfer block count should have thousands separator")
+    test.Expect(ocr:find("Blocks Read: %d+,%d+"),
+                "the read block count should have thousands separator")
+    test.Expect(ocr:find("Blocks Written: %d+,%d+"),
+                "the written block count should have thousands separator")
+    test.Expect(not ocr:find("Press Esc to stop copying"),
+                "the tip should be erased")
     a2d.DialogOK()
 
     emu.wait(5)
-    test.Snap("verify the OK button is disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "the OK button should be disabled")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit

@@ -13,7 +13,11 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.CopyDisk()
-    test.Snap("verify drive list is correct (S7D1, S6D1, S6D2)")
+    test.Expect(a2dtest.OCRScreen():find(
+                  ".* 7  1  A2%.DeskTop .*\n" ..
+                  ".* 6  1  Unknown .*\n" ..
+                  ".* 6  2  Unknown .*\n"),
+                "drive list should be correct (S7D1, S6D1, S6D2)")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -31,7 +35,8 @@ test.Step(
 
     apple2.EscapeKey()
     a2d.WaitForRepaint()
-    test.Snap("verify menu showing")
+    test.Expect(a2dtest.OCRScreen():find("Apple II DeskTop.*\n.*Copyright"),
+                "menu should be showing")
 
     -- cleanup
     apple2.EscapeKey()
@@ -76,7 +81,9 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Snap("verify no selection, OK button is dimmed")
+    test.Expect(not a2dtest.OCRScreen({invert=true}):find("A2.DeskTop"),
+                "drive should not be selected")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be dimmed")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     -- cleanup
@@ -94,7 +101,9 @@ test.Step(
   function()
     a2d.CopyDisk("/A2.DESKTOP")
 
-    test.Snap("verify selection, OK button is not dimmed")
+    test.Expect(a2dtest.OCRScreen({invert=true}):find("A2.DeskTop"),
+                "drive should be selected")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should not be dimmed")
 
     a2dtest.ExpectRepaintFraction(
       0.1, 1.0,
@@ -128,7 +137,8 @@ test.Step(
     apple2.EscapeKey()
     emu.wait(1)
 
-    test.Snap("verify still selecting source")
+    test.Expect(a2dtest.OCRScreen():find("Select source disk"),
+                "should still be selecting source")
 
     -- cleanup
     a2d.OAShortcut("Q")
@@ -157,7 +167,8 @@ test.Step(
     end)
     a2d.WaitForRepaint()
 
-    test.Snap("verify now selecting destination (S7D1)")
+    test.Expect(a2dtest.OCRScreen():find("Select destination disk"),
+                "should now be selecting selecting destination (S7D1)")
 
     -- cleanup
     a2d.OAShortcut("Q")
@@ -187,7 +198,8 @@ test.Step(
     end)
     a2d.WaitForRepaint()
 
-    test.Snap("verify now selecting destination (S7D1)")
+    test.Expect(a2dtest.OCRScreen():find("Select destination disk"),
+                "should now be selecting selecting destination (S7D1)")
 
     -- cleanup
     a2d.OAShortcut("Q")
@@ -261,7 +273,7 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     ----------------------------------------
@@ -271,7 +283,7 @@ test.Step(
     -- select using keyboard
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
@@ -281,7 +293,7 @@ test.Step(
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     -- click on item
@@ -290,7 +302,7 @@ test.Step(
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     a2d.DialogOK()
 
@@ -301,7 +313,7 @@ test.Step(
     -- select using keyboard
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
@@ -311,7 +323,7 @@ test.Step(
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     -- click on item
@@ -320,7 +332,7 @@ test.Step(
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -344,30 +356,30 @@ test.Step(
     -- select source
     apple2.UpArrowKey()
     a2d.WaitForRepaint()
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     -- Read Drives
     apple2.Type("R")
     emu.wait(5)
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     -- select source and click OK
     apple2.UpArrowKey()
     a2d.WaitForRepaint()
     a2d.DialogOK()
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     -- select destination
     apple2.UpArrowKey()
     a2d.WaitForRepaint()
-    test.Snap("verify OK button enabled")
+    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
 
     -- Read Drives
     apple2.Type("R")
     emu.wait(5)
-    test.Snap("verify OK button disabled")
+    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
 
     -- cleanup

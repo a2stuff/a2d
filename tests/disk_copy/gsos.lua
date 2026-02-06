@@ -17,7 +17,8 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Snap("verify GS/OS disk names in list have assigned case")
+    test.Expect(a2dtest.OCRScreen():find("GS%.OS%.mixed"),
+                "GS/OS disk names in list should have assigned case")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -52,8 +53,11 @@ test.Step(
 
     -- insert destination
     a2dtest.WaitForAlert()
-    test.Snap("verify status line says 'ProDOS disk copy'")
-    test.Snap("verify volume name after Source label has assigned case")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("ProDOS disk copy"),
+                "status line should say 'ProDOS disk copy'")
+    test.Expect(ocr:find("Source .* GS%.OS%.mixed"),
+                "volume name after Source label should have assigned case")
 
     -- cleanup
     a2d.DialogCancel()
@@ -92,7 +96,9 @@ test.Step(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt gives GS/OS name, quoted with assigned case")
+    test.Expect(a2dtest.OCRScreen():find(
+                  "Are you sure you want to erase \"GS%.OS%.mixed\"%?"),
+                "prompt should give GS/OS name, quoted with assigned case")
 
     -- cleanup
     a2d.DialogCancel()

@@ -13,5 +13,6 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Snap("verify Slot 3: Uthernet II detected")
+    test.Expect(a2dtest.OCRScreen():find("Slot 3: .* Uthernet II"),
+                "Slot 3: Uthernet II should be detected")
 end)

@@ -17,5 +17,6 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Snap("accessory should be present in image")
+    test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "About This Apple II",
+                      "accessory should be present in image")
 end)

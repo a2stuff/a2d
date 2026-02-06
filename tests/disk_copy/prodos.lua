@@ -16,7 +16,8 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Snap("verify ProDOS disk names in list are adjusted case")
+    test.Expect(a2dtest.OCRScreen():find("Floppy1"),
+                "ProDOS disk names in list should have adjusted case")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -51,8 +52,11 @@ test.Step(
 
     -- insert destination
     a2dtest.WaitForAlert()
-    test.Snap("verify status line says 'ProDOS disk copy'")
-    test.Snap("verify volume name after Source label is case-adjusted")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("ProDOS disk copy"),
+                "status line should say 'ProDOS disk copy'")
+    test.Expect(ocr:find("Source .* Floppy1"),
+                "volume name after Source label should be case-adjusted")
 
     -- cleanup
     a2d.DialogCancel()
@@ -91,7 +95,9 @@ test.Step(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt gives ProDOS volume name, quoted with adjusted case")
+    test.Expect(a2dtest.OCRScreen():find(
+                  "Are you sure you want to erase \"Floppy1\"%?"),
+                "prompt should give ProDOS volume name, quoted with adjusted case")
 
     -- cleanup
     a2d.DialogCancel()

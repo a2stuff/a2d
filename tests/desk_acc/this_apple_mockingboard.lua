@@ -11,5 +11,7 @@ test.Step(
     apple2.SetSystemConfig(":a2_config", "CPU type", 1 << 4, 1 << 4)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Snap("verify that Mockingboard (and ZIP CHIP) is detected")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Mockingboard"), "a Mockingboard should be detected")
+    test.Expect(ocr:upper():find("ZIP CHIP"), "a ZIP CHIP should be detected")
 end)

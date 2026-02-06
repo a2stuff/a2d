@@ -188,6 +188,7 @@ end)
 test.Step(
   "12-hour field behavior",
   function()
+    apple2.SetProDOSTime(0, 0)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
@@ -196,14 +197,24 @@ test.Step(
     apple2.TabKey() -- to hour
     apple2.TabKey() -- to min
     apple2.TabKey() -- to period
-    test.Snap("verify period field enabled")
+    local ocr = a2dtest.OCRScreen({invert=true})
+    test.Expect(ocr:find("AM") or ocr:find("PM"), "period field should be enabled")
+
     apple2.UpArrowKey()
-    test.Snap("verify period field modifiable")
+    emu.wait(1)
+    local ocr2 = a2dtest.OCRScreen({invert=true})
+    test.Expect(
+      (ocr:find("AM") and ocr2:find("PM")) or
+      (ocr:find("PM") and ocr2:find("PM")),
+      "period field should be modifiable")
+
     apple2.LeftArrowKey() -- to min
     apple2.LeftArrowKey() -- to hour
     for i = 1, 24 do
       apple2.UpArrowKey()
-      test.Snap("verify 12 hour cycle")
+      local expect = ((i - 1) % 12) + 1
+      test.Expect(a2dtest.OCRScreen({invert=true}):find(tonumber(expect)),
+                  "should be 12 hour cycle")
     end
     a2d.DialogOK()
 end)
@@ -219,6 +230,7 @@ end)
 test.Step(
   "24-hour field behavior",
   function()
+    apple2.SetProDOSTime(0, 0)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 12-hour
@@ -227,13 +239,17 @@ test.Step(
     apple2.TabKey() -- to hour
     apple2.TabKey() -- to min
     apple2.TabKey() -- to back to day
-    test.Snap("verify period field disabled")
+
+    local ocr = a2dtest.OCRScreen({invert=true})
+    test.Expect(not ocr:find("AM") and not ocr:find("PM"), "period field should be disabled")
+
     apple2.TabKey() -- to month
     apple2.TabKey() -- to year
     apple2.TabKey() -- to hour
     for i = 1, 24 do
       apple2.UpArrowKey()
-      test.Snap("verify 24 hour cycle")
+      test.Expect(a2dtest.OCRScreen({invert=true}):find(string.format("%02d", i % 24)),
+                  "should be 24 hour cycle")
     end
     a2d.DialogOK()
 end)

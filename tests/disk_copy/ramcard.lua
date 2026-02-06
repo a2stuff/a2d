@@ -21,7 +21,8 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.CopyDisk()
-    test.Snap("verify Disk Copy started")
+    test.Expect(a2dtest.OCRScreen():find("Select source disk"),
+                "Disk Copy should be started")
 
     -- cleanup
     a2d.OAShortcut("Q")

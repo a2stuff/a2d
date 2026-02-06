@@ -16,7 +16,8 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Snap("verify DOS 3.3 disk in list is uppercase")
+    test.Expect(a2dtest.OCRScreen():find("DOS 3%.3"),
+                "DOS 3.3 disk in list should be uppercase")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -50,8 +51,11 @@ test.Step(
 
     -- insert destination
     a2dtest.WaitForAlert()
-    test.Snap("verify status line says 'DOS 3.3 disk copy'")
-    test.Snap("verify no volume name after Source label")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("DOS 3%.3 disk copy"),
+                "status line should say 'DOS 3.3 disk copy'")
+    test.Expect(ocr:find("Source .* Slot 6 +Drive 1 +\n"),
+                "should be no volume name after Source label")
 
     -- cleanup
     a2d.DialogCancel()
@@ -90,7 +94,9 @@ test.Step(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt references DOS 3.3 disk in S6,D1 with no name and no quote")
+    test.Expect(a2dtest.OCRScreen():find(
+                  "Are you sure you want to erase the DOS 3.3 disk in slot"),
+                "prompt should reference DOS 3.3 disk in S6,D1 with no name and no quote")
 
     -- cleanup
     a2d.DialogCancel()

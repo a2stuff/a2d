@@ -57,7 +57,8 @@ test.Step(
 
     a2d.DialogOK()
     a2d.WaitForDesktopReady()
-    test.Snap("verify Disk Copy started")
+    test.Expect(a2dtest.OCRScreen():find("Select source disk"),
+                "Disk Copy should be started")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -86,7 +87,8 @@ test.Step(
 
     a2d.CopyDisk()
 
-    test.Snap("verify S5D2 shows 'Unknown' in source list")
+    test.Expect(a2dtest.OCRScreen():find("5 +2 +Unknown"),
+                "S5D2 should show 'Unknown' in source list")
 
     -- select source
     apple2.UpArrowKey() -- S5D2
@@ -94,21 +96,24 @@ test.Step(
     apple2.ReturnKey()
     emu.wait(5)
 
-    test.Snap("verify S5D2 is not in destination list")
+    test.Expect(not a2dtest.OCRScreen():find("5 +2 +Unknown"),
+                "S5D2 should not be in destination list")
 
     s5d2:load(image)
 
     apple2.Type("R")
     emu.wait(5)
 
-    test.Snap("verify S5D2 shows a disk in source list")
+    test.Expect(a2dtest.OCRScreen():find("5 +2 +EMPTY"),
+                "S5D2 should show a disk in source list")
 
     apple2.UpArrowKey() -- S5D2
     apple2.UpArrowKey() -- S5D1
     apple2.ReturnKey()
     emu.wait(5)
 
-    test.Snap("verify S5D2 is in destination list")
+    test.Expect(a2dtest.OCRScreen():find("5 +2 +EMPTY"),
+                "S5D2 should show a disk in destination list")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -153,13 +158,15 @@ test.Step(
     s5d2:unload()
 
     emu.wait(5)
-    test.Snap("verify block errors writing")
+    test.Expect(a2dtest.OCRScreen():find("Error when writing block"),
+                "block errors should be seen writing")
 
     -- cleanup
     apple2.EscapeKey() -- abort the copy
     a2dtest.WaitForAlert()
 
-    test.Snap("verify tip is erased")
+    test.Expect(not a2dtest.OCRScreen():find("Press Esc to stop copying"),
+                "tip should be erased")
     a2d.DialogOK()
     s5d2:load(image)
 

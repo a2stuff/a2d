@@ -103,7 +103,7 @@ test.Step(
     end)
     emu.wait(5) -- slow repaint
 
-    test.Snap("verify display is 123.456")
+    test.Expect(a2dtest.OCRScreen():find(" 123%.456 "), "result should be 123.456")
     a2d.CloseWindow()
 end)
 
@@ -134,12 +134,12 @@ test.Variants(
 
     apple2.Type("1/2=")
     a2d.WaitForRepaint()
-    test.Snap("verify display is 0.5")
+    test.Expect(a2dtest.OCRScreen():find(" 0%.5 "), "display should be 0.5")
     apple2.EscapeKey()
 
     apple2.Type("0-.5=")
     a2d.WaitForRepaint()
-    test.Snap("verify display is -0.5")
+    test.Expect(a2dtest.OCRScreen():find(" %-0%.5 "), "display should be -0.5")
     apple2.EscapeKey()
 
     a2d.CloseWindow()
@@ -168,7 +168,7 @@ test.Variants(
 
     apple2.Type("12.34")
     a2d.WaitForRepaint()
-    test.Snap("verify display is 12.34 (period)")
+    test.Expect(a2dtest.OCRScreen():find(" 12%.34 "), "display should be 12.34 (period)")
     apple2.EscapeKey()
 
     a2d.CloseWindow()
@@ -191,12 +191,12 @@ test.Variants(
 
     apple2.Type("12,34")
     a2d.WaitForRepaint()
-    test.Snap("verify display is 12,34 (comma)")
+    test.Expect(a2dtest.OCRScreen():find(" 12,34 "), "display should be 12,34 (comma)")
     apple2.EscapeKey()
 
     apple2.Type("12.34")
     a2d.WaitForRepaint()
-    test.Snap("verify display is 12,34 (comma)")
+    test.Expect(a2dtest.OCRScreen():find(" 12,34 "), "display should be 12,34 (comma)")
     apple2.EscapeKey()
 
     a2d.CloseWindow()
@@ -250,42 +250,42 @@ test.Step(
 
     apple2.Type("1+2") Sin() apple2.Type("=")
     a2d.WaitForRepaint()
-    test.Snap("verify result is 1.034...")
+    test.Expect(a2dtest.OCRScreen():find(" 1%.034%d+"), "result should be 1.034...")
     apple2.EscapeKey()
 
     apple2.Type("1") Sin() apple2.Type("+2=")
     a2d.WaitForRepaint()
-    test.Snap("verify result is 2.017...")
+    test.Expect(a2dtest.OCRScreen():find(" 2%.017%d+ "), "result should be 2.017...")
     apple2.EscapeKey()
 
     apple2.Type("45") Sin()
     a2d.WaitForRepaint()
-    test.Snap("verify result is 0.707...")
+    test.Expect(a2dtest.OCRScreen():find(" 0%.707%d+ "), "result should be 0.707...")
     apple2.EscapeKey()
 
     apple2.Type("45") Neg() Sin()
     a2d.WaitForRepaint()
-    test.Snap("verify result is -0.707...")
+    test.Expect(a2dtest.OCRScreen():find(" %-0%.707%d+ "), "result should be -0.707...")
     apple2.EscapeKey()
 
     apple2.Type("180") Cos()
     a2d.WaitForRepaint()
-    test.Snap("verify result is -1")
+    test.Expect(a2dtest.OCRScreen():find(" %-1 "), "result should be -1")
     apple2.EscapeKey()
 
     apple2.Type("45") Sin() ASin()
     a2d.WaitForRepaint()
-    test.Snap("verify result is approximately 45")
+    test.Expect(a2dtest.OCRScreen():find(" 45%.?%d* "), "result should be approximately 45")
     apple2.EscapeKey()
 
     apple2.Type("45") Cos() ACos()
     a2d.WaitForRepaint()
-    test.Snap("verify result is approximately 45")
+    test.Expect(a2dtest.OCRScreen():find(" 45%.?%d* "), "result should be approximately 45")
     apple2.EscapeKey()
 
     apple2.Type("89") Tan() ATan()
     a2d.WaitForRepaint()
-    test.Snap("verify result is approximately 89")
+    test.Expect(a2dtest.OCRScreen():find(" 89%.?%d* "), "result should be approximately 89")
     apple2.EscapeKey()
 
     a2d.CloseWindow()

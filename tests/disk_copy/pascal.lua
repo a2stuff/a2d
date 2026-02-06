@@ -35,7 +35,9 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Snap("verify Pascal disk names in list are uppercase")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("1PASCAL:"), "Pascal disk names in list should be in uppercase")
+    test.Expect(ocr:find("TK:"), "Pascal disk names in list should be in uppercase")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -51,10 +53,10 @@ end)
 ]]
 test.Variants(
   {
-    {"Pascal disk names in source label - 140K", 4, 2},
-    {"Pascal disk names in source label - 800K", 2, 3},
+    {"Pascal disk names in source label - 140K", 4, 2, "TK:"},
+    {"Pascal disk names in source label - 800K", 2, 3, "1PASCAL:"},
   },
-  function(idx, name, source_index, dest_index)
+  function(idx, name, source_index, dest_index, disk_name)
     a2d.CopyDisk()
 
     -- source
@@ -75,8 +77,9 @@ test.Variants(
 
     -- insert destination
     a2dtest.WaitForAlert()
-    test.Snap("verify status line says 'Pascal disk copy'")
-    test.Snap("verify volume name after Source label is in uppercase")
+    local ocr = a2dtest.OCRScreen()
+    test.Expect(ocr:find("Pascal disk copy"), "status line should say 'Pascal disk copy'")
+    test.Expect(ocr:find("Source .* " .. disk_name), "volume name after Source label should be uppercase")
 
     -- cleanup
     a2d.DialogCancel()
@@ -93,10 +96,10 @@ end)
 ]]
 test.Variants(
   {
-    {"Pascal disk names in overwrite prompt - 140K", 5, 1},
-    {"Pascal disk names in overwrite prompt - 800K", 3, 2},
+    {"Pascal disk names in overwrite prompt - 140K", 5, 1, "TK:"},
+    {"Pascal disk names in overwrite prompt - 800K", 3, 2, "1PASCAL:"},
   },
-  function(idx, name, source_index, dest_index)
+  function(idx, name, source_index, dest_index, disk_name)
     a2d.CopyDisk()
 
     -- source
@@ -121,7 +124,9 @@ test.Variants(
 
     -- confirmation
     a2dtest.WaitForAlert()
-    test.Snap("verify prompt gives Pascal disk name, quoted and uppercase")
+    test.Expect(a2dtest.OCRScreen():find(
+                  "Are you sure you want to erase \""..disk_name.. "\"%?"),
+                "prompt should give Pascal disk name, quoted and uppercase")
 
     -- cleanup
     a2d.DialogCancel()

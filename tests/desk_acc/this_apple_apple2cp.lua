@@ -17,5 +17,6 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Snap("verify a ZIP CHIP is not reported")
+    test.Expect(not a2dtest.OCRScreen():upper():find("ZIP CHIP"),
+                "a ZIP CHIP should not be not reported")
 end)

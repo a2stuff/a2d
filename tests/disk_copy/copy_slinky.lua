@@ -43,7 +43,8 @@ test.Variants(
 
     -- copying...
     a2dtest.WaitForAlert({timeout=240})
-    test.Snap("verify success message copying S1D1 to S2D1")
+    test.Expect(a2dtest.OCRScreen():find("The copy was successful"),
+                "verify success message copying S1D1 to S2D1")
     a2d.DialogOK()
 
     -- cleanup
