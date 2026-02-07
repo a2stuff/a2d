@@ -63,6 +63,16 @@ end
 -- Arrow Keys
 ------------------------------------------------------------
 
+function coords()
+  local found_x, found_y
+  a2dtest.OCRIterate(function(run, x, y)
+      if run:upper():find("SEAGATE") then
+        found_x, found_y = x, y
+      end
+  end, {invert=true})
+  return found_x, found_y
+end
+
 --[[
   Launch DeskTop. Run the command. Ensure left/right arrows move
   selection correctly.
@@ -71,9 +81,15 @@ FormatEraseTest(
   "Right arrow key",
   function(invoke)
     invoke(false)
-    for i=1,#apple2.GetProDOSDeviceList() do
+
+    local last_x, last_y
+    for i=1, #apple2.GetProDOSDeviceList() do
       apple2.RightArrowKey()
-      test.Snap("verify selection moves right then down")
+      local x, y = coords()
+      if i >= 2 then
+        test.Expect(x > last_x or y > last_y, "selection should move right then down")
+      end
+      last_x, last_y = x, y
     end
     a2d.DialogCancel()
 end)
@@ -86,9 +102,15 @@ FormatEraseTest(
   "Left arrow key",
   function(invoke)
     invoke(false)
+
+    local last_x, last_y
     for i=1,#apple2.GetProDOSDeviceList() do
       apple2.LeftArrowKey()
-      test.Snap("verify selection moves left then up")
+      local x, y = coords()
+      if i >= 2 then
+        test.Expect(x < last_x or y < last_y, "selection should move left then up")
+      end
+      last_x, last_y = x, y
     end
     a2d.DialogCancel()
 end)
@@ -97,9 +119,14 @@ FormatEraseTest(
   "Down arrow key",
   function(invoke)
     invoke(false)
+    local last_x, last_y
     for i=1,#apple2.GetProDOSDeviceList() do
       apple2.DownArrowKey()
-      test.Snap("verify selection moves down then right")
+      local x, y = coords()
+      if i >= 2 then
+        test.Expect(y > last_y or x > last_x, "selection should move down then right")
+      end
+      last_x, last_y = x, y
     end
     a2d.DialogCancel()
 end)
@@ -108,9 +135,14 @@ FormatEraseTest(
   "Up arrow key",
   function(invoke)
     invoke(false)
+    local last_x, last_y
     for i=1,#apple2.GetProDOSDeviceList() do
       apple2.UpArrowKey()
-      test.Snap("verify selection moves up then left")
+      local x, y = coords()
+      if i >= 2 then
+        test.Expect(y < last_y or x < last_x, "selection should move up then left")
+      end
+      last_x, last_y = x, y
     end
     a2d.DialogCancel()
 end)
@@ -127,7 +159,13 @@ FormatEraseTest(
   "All 13 devices show",
   function(invoke)
     invoke(false)
-    test.Snap("verify all 13 devices shown")
+
+    local ocr = a2dtest.OCRScreen()
+    local count = 0
+    for _ in ocr:upper():gmatch("SEAGATE") do
+      count = count + 1
+    end
+    test.ExpectEquals(count, 13, "all 13 devices should be shown")
     a2d.DialogCancel()
 end)
 

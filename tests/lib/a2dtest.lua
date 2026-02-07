@@ -375,7 +375,8 @@ end
 ]]
 local ocr_table = require("ocr_table")
 
-function a2dtest.OCRScreen(options)
+-- callback is invoked with (run, x, y)
+function a2dtest.OCRIterate(callback, options)
   if options == nil then options = {} end
 
   -- Grab screen pixels
@@ -385,10 +386,8 @@ function a2dtest.OCRScreen(options)
   local font_width = ocr_table.width
   local mask = (1 << font_height) - 1
 
-  local str = ""
-
   -- Walk over entire screen
-  for row = 0, apple2.SCREEN_HEIGHT-font_height-1 do
+  for y = 0, apple2.SCREEN_HEIGHT-font_height-1 do
     -- Process a stripe `font_height` pixels tall, convert to numbers
     local numbers = {}
     for i = 0, apple2.SCREEN_WIDTH-1 do
@@ -398,7 +397,7 @@ function a2dtest.OCRScreen(options)
       for bit = 0, 6 do
         local n = 0
         for r = 0, font_height-1 do
-          local byte = dhr[(row + r) * apple2.SCREEN_COLUMNS + col]
+          local byte = dhr[(y + r) * apple2.SCREEN_COLUMNS + col]
           local b = ((byte >> bit) & 1) ~ 1
           n = (n << 1) | b
         end
@@ -407,13 +406,12 @@ function a2dtest.OCRScreen(options)
     end
 
     -- Iterate over stripe
-    local line = ""
-    local x = 0
+    local x, run, run_x = 0, "", 0
     while x < apple2.SCREEN_WIDTH-1 do
       -- Try each character width, longest to shortest
       for w = font_width, 1, -1 do
         if x + w >= apple2.SCREEN_WIDTH then
-          goto continue
+          goto try_shorter
         end
         -- Compute hash keys (normal and inverted)
         local key1, key2 = "", ""
@@ -424,26 +422,41 @@ function a2dtest.OCRScreen(options)
             key2 = key2 .. utf8.char(numbers[c] ~ mask)
           end
         end
-        local hit = ocr_table[key1] or ocr_table[key2]
-        if hit then
-          line = line .. hit
-          x = x + w - 1
-          break
+        -- Match?
+        local char = ocr_table[key1] or ocr_table[key2]
+        if char then
+          run = run .. char
+          x = x + w
+          goto got_a_hit
         end
-        ::continue::
+        ::try_shorter::
+      end
+
+      -- miss; if end of run, emit
+      if run ~= "" then
+        callback(run, run_x, y)
+        run = ""
       end
       x = x + 1
+      run_x = x
+
+      ::got_a_hit::
     end
 
-    --[[
-      NOTE: With current system font, 0 and O are not homoglyphs, so
-      this is not necessary.
+    if run ~= "" then
+      callback(run, run_x, y)
+    end
+  end
+end
 
-      -- Contextually recognize zero (0) vs. capital 'O'
-      -- line = line:gsub("(%d)O", "%10"):gsub("O(%d)", "0%1")
-      -- line = line:gsub("([%l%u])0", "%1O"):gsub("0([%l%u])", "O%1")
-    ]]
+function a2dtest.OCRScreen(options)
+  if options == nil then options = {} end
 
+  local str = ""
+  local line = ""
+  local last_y = nil
+
+  function finish_line()
     -- Collapse multiple spaces
     line = line:gsub("  +", "  ")
 
@@ -451,7 +464,29 @@ function a2dtest.OCRScreen(options)
     if not line:find("^ *$") then
       str = str .. line .. "\n"
     end
+
+    line = ""
   end
+
+  a2dtest.OCRIterate(function(run, x, y)
+      --[[
+        NOTE: With current system font, 0 and O are not homoglyphs, so
+        this is not necessary.
+
+        -- Contextually recognize zero (0) vs. capital 'O'
+        -- run = run:gsub("(%d)O", "%10"):gsub("O(%d)", "0%1")
+        -- run = run:gsub("([%l%u])0", "%1O"):gsub("0([%l%u])", "O%1")
+      ]]
+
+      if y ~= last_y then
+        finish_line()
+        last_y = y
+      end
+
+      line = line .. run
+  end, options)
+  finish_line()
+
 
   return str
 end
