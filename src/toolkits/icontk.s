@@ -1332,7 +1332,7 @@ END_PARAM_BLOCK
     WHILE POS
 
         rts
-.endproc ; GetIconBoundsImpl
+.endproc ; CopyBoundingRectIntoOutParams
 
 ;;; ============================================================
 ;;; GetRenameRect

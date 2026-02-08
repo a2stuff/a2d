@@ -37,16 +37,24 @@
 ;;; Init sequence - machine identification, etc
 ;;;
 ;;; * Hook reset vector
-;;; * Clear hires screen
+;;; * Clear double hi-res screen
 ;;; * Detect machine type
-;;; * Preserve DEVLST, remove /RAM
-;;; * Initialize MGTK, with saved settings
-;;; * Load selector list, populate Selector menu
-;;; * Enumerate desk accessories, populate Apple menu
-;;; * Compute label widths
-;;; * Create desktop icons, populate device name table
-;;; * Populate startup menu
+;;; * DEVLST adjustments
+;;;   * Make backup of DEVLST
+;;;   * Move startup volume first in DEVLST
+;;;   * Disconnect /RAM
+;;; * Initialize toolkits:
+;;;   * MGTK
+;;;   * IconTK
+;;; * Create desktop icons
+;;;   * Trash
+;;;   * Volumes
+;;; * Populate device name table
 ;;; * Identify removable disks, for later polling
+;;; * Populate dynamic menus
+;;;   * Shortcuts menu
+;;;   * Apple menu
+;;;   * Startup menu
 ;;; * Configure MGTK
 ;;; * Restore saved windows
 
@@ -151,21 +159,25 @@ start:
 end:
         sta     periodic_task_delay
 
-        ;; Fall through
+        FALL_THROUGH_TO RecordShiftKeyState
+
 .endscope ; machine_type
 
 ;;; ============================================================
 ;;; Snapshot state of PB2 (shift key mod)
 
-.scope pb2_state
+.proc RecordShiftKeyState
         copy8   BUTN2, pb2_initial_state
-        ;; fall through
-.endscope ; pb2_state
+
+        FALL_THROUGH_TO PreserveDEVLST
+
+.endproc ; RecordShiftKeyState
 
 ;;; ============================================================
 ;;; Back up DEVLST
 
-.scope
+.proc PreserveDEVLST
+
         ;; Make a copy of the original device list
         .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
         ldx     DEVCNT          ; number of devices
@@ -174,13 +186,15 @@ end:
         copy8   DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
         dex
     WHILE POS
-        ;; fall through
-.endscope
+        FALL_THROUGH_TO MoveStartupVolumeFirst
+
+.endproc ; PreserveDEVLST
 
 ;;; ============================================================
 ;;; Make startup volume first in list
 
-.scope
+.proc MoveStartupVolumeFirst
+
         ;; Find the startup volume's unit number
         copy8   DEVNUM, target
         jsr     main::GetCopiedToRAMCardFlag
@@ -218,16 +232,25 @@ found:  ldy     DEVLST,x
         sta     DEVLST,x
 
 done:
-.endscope
+        FALL_THROUGH_TO RemoveRAMFromDEVLST
+
+.endproc ; MoveStartupVolumeFirst
 
 ;;; ============================================================
 
+.proc RemoveRAMFromDEVLST
+
         jsr     DisconnectRAM
+
+        FALL_THROUGH_TO InitMGTK
+
+.endproc ; RemoveRAMFromDEVLST
 
 ;;; ============================================================
 ;;; Initialize MGTK
 
-.scope
+.proc InitMGTK
+
         ;; Copy pattern from settings to somewhere MGTK can see
         tmp_pattern := $00
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
@@ -277,17 +300,20 @@ done:
 
         jsr     main::SetCursorWatch ; before the rest of initialization
 
-        ;; fall through
-.endscope
+
+        FALL_THROUGH_TO InitIconTK
+
+.endproc ; InitMGTK
 
 ;;; ============================================================
 ;;; Initialize IconTK
 
-.scope
+.proc InitIconTK
+
         ITK_CALL IconTK::InitToolKit, itkinit_params
 
         FALL_THROUGH_TO CreateTrashIcon
-.endscope
+.endproc ; InitIconTK
 
 ;;; ============================================================
 
@@ -328,15 +354,285 @@ done:
 
         ITK_CALL IconTK::DrawIcon, icon_param
 
-        FALL_THROUGH_TO LoadSelectorList
+        FALL_THROUGH_TO PopulateVolumeIcons
 .endproc ; CreateTrashIcon
 
 ;;; ============================================================
+;;; Populate volume icons
 
+.proc PopulateVolumeIcons
+        copy8   #0, main::pending_alert
+
+        CALL    ReadSetting, X=#DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsSkipCheck525
+        sta     skip_check_diskii_flag
+
+        ;; Enumerate DEVLST in reverse order (most important volumes first)
+        copy8   DEVCNT, device_index
+    DO
+        device_index := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        lda     DEVLST,y
+        pha                     ; A = unmasked unit number
+
+        ;; Skip polling Disk II drives?
+        skip_check_diskii_flag := *+1
+        ldx     #SELF_MODIFIED_BYTE
+      IF NOT ZERO
+        jsr     main::IsDiskII  ; A = (optionally unmasked) unit number
+        beq     next
+      END_IF
+
+        pla                     ; A = unmasked unit number
+        pha                     ; A = unmasked unit number
+        CALL    main::CreateVolumeIcon, Y=device_index ; A = unmasked unit number
+
+      IF ZERO
+        ;; Success! Draw it.
+        ldx     cached_window_icon_count
+        copy8   cached_window_icon_list-1,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param
+      ELSE_IF A = #ERR_DEVICE_NOT_CONNECTED
+        ;; If device is not connected, remove it from DEVLST
+        ;; unless it's a Disk II.
+        pla                     ; A = unmasked unit number
+        pha                     ; A = unmasked unit number
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
+        jsr     main::IsDiskII
+       IF ZC
+        CALL    _RemoveDevice, X=device_index
+       END_IF
+      ELSE_IF A = #ERR_DUPLICATE_VOLUME
+        ;; If duplicate, show a special error.
+        copy8   #kErrDuplicateVolName, main::pending_alert
+      END_IF
+
+next:
+        pla
+        dec     device_index
+    WHILE POS
+
+        copy8   #0, cached_window_id
+        jsr     main::StoreCachedWindowIconList
+
+        jmp     end_of_scope
+
+;;; Remove device num in X from devices list
+.proc _RemoveDevice
+        dex
+    DO
+        inx
+        copy8   DEVLST+1,x, DEVLST,x
+        copy8   main::device_to_icon_map+1,x, main::device_to_icon_map,x
+        cpx     DEVCNT
+    WHILE NOT_ZERO
+        dec     DEVCNT
+
+        ;; ProDOS requires an ON_LINE call after a device is
+        ;; disconnected in order to clean up the VCB entry. However,
+        ;; we only remove devices here if the device already failed an
+        ;; ON_LINE call with `ERR_DEVICE_NOT_CONNECTED` so it should
+        ;; not be necessary.
+
+        rts
+.endproc ; _RemoveDevice
+
+        end_of_scope := *
+        FALL_THROUGH_TO PopulateDeviceNames
+.endproc ; PopulateVolumeIcons
+
+;;; ============================================================
+;;; This section populates `device_name_table` - it determines which
+;;; device type string to use, and fills in slot and drive as
+;;; appropriate. Used in the Format/Erase disk dialog.
+
+.proc PopulateDeviceNames
+        ;; Enumerate DEVLST in reverse order (most important volumes first)
+        ldy     DEVCNT
+    DO
+        tya                     ; Y = index
+        pha                     ; A = index
+
+        lda     DEVLST,y
+        pha                     ; A = unmasked unit number
+
+        devname_ptr := $06
+
+        jsr     main::GetDeviceType ; A = unmasked unit number
+        stax    devname_ptr         ; A,X = device name (may be empty)
+        ;; Empty?
+        ldy     #0
+        lda     (devname_ptr),y
+      IF ZERO
+        copy16  #str_volume_type_unknown, devname_ptr
+      END_IF
+
+        ;; arg0 = slot
+        pla                     ; A = unmasked unit number
+        tay
+        and     #%01110000      ; A = 0SSS0000
+        lsr                     ; A = 00SSS000
+        lsr                     ; A = 000SSS00
+        lsr                     ; A = 0000SSS0
+        lsr                     ; A = 00000SSS
+        pha                     ; arg0 lo
+        lda     #0
+        pha                     ; arg0 hi
+
+        ;; arg1 = drive
+        tya
+        asl                     ; drive bit into C
+        lda     #0
+        adc     #1              ; arg1 lo
+        pha
+        lda     #0
+        pha                     ; arg1 hi
+
+        ;; arg2 = name
+        push16  devname_ptr     ; arg2
+
+        FORMAT_MESSAGE 3, aux::str_sd_name_format
+
+        ;; Copy name into table
+        pla                     ; A = index
+        pha
+
+        asl     a
+        tax
+        copy16  device_name_table,x, devname_ptr
+
+        ldy     text_input_buf
+      DO
+        copy8   text_input_buf,y, (devname_ptr),y
+        dey
+      WHILE POS
+
+        pla                     ; A = index
+        tay                     ; Y = index
+        dey
+    WHILE POS
+
+        FALL_THROUGH_TO InitializeDisksInDevicesTables
+
+.endproc ; PopulateDeviceNames
+
+;;; ============================================================
+;;; Enumerate DEVLST and find removable devices; build a list of
+;;; these, and check to see which have disks in them. The list
+;;; will be polled periodically to detect changes and refresh.
+;;; List is built in DEVLST order since processing is in
+;;; `CheckDisksInDevices` (etc) is done in reverse order.
+;;;
+;;; Some hardware (machine/slot) combinations are filtered out
+;;; due to known-buggy firmware.
+
+.proc InitializeDisksInDevicesTables
+        slot_ptr := $0A
+
+        lda     #0
+        sta     count
+        sta     index
+
+    DO
+        ldy     index
+        lda     DEVLST,y
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `DeviceDriverAddress` handles it.
+        sta     unit_num
+        jsr     main::DeviceDriverAddress
+        bvs     append          ; remapped SmartPort, it's usable
+        bne     next            ; if RAM-based driver (not $CnXX), skip
+        stx     slot_ptr+1      ; just need high byte ($Cn)
+        copy8   #0, slot_ptr    ; make $Cn00
+        ldy     #$FF            ; Firmware ID byte
+        lda     (slot_ptr),y    ; $CnFF: $00=Disk II, $FF=13-sector, else=block
+        beq     next
+        dey
+        lda     (slot_ptr),y    ; $CnFE: Status Byte
+        bmi     append          ; bit 7 - Medium is removable
+
+next:   inc     index
+        lda     DEVCNT          ; continue while index <= DEVCNT
+    WHILE A >= index
+
+        lda     count
+        sta     main::removable_device_table
+        sta     main::disk_in_device_table
+        jsr     main::CheckDisksInDevices
+
+        ;; Make copy of table
+        ldx     main::disk_in_device_table
+    IF NOT_ZERO
+      DO
+        copy8   main::disk_in_device_table,x, main::last_disk_in_devices_table,x
+        dex
+      WHILE POS
+    END_IF
+
+        jmp     end_of_scope
+
+        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, SPStatusRequest::DIB
+
+dib_buffer := ::IO_BUFFER
+
+        ;; Maybe add device to the removable device table
+append:
+        ;; Do SmartPort STATUS call to filter out 5.25 devices
+        CALL    main::FindSmartportDispatchAddress, A=unit_num
+        bcs     next            ; can't determine address - skip it!
+        stax    dispatch
+        sty     status_params::unit_num
+
+        ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
+        ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
+        and     #DeskTopSettings::kSysCapIsIIcPlus
+    IF NOT_ZERO
+        lda     dispatch+1
+        and     #%00001111      ; mask off slot
+        cmp     #$05            ; is it slot 5?
+        beq     next            ; if so, ignore
+    END_IF
+
+        ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
+        ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
+        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
+        and     #DeskTopSettings::kSysCapIsLaser128
+    IF NOT_ZERO
+        lda     dispatch+1      ; $Cs
+        and     #%00001111      ; mask off slot
+        cmp     #$07            ; is it slot 7?
+        beq     next            ; if so, skip it!
+    END_IF
+
+        dispatch := *+1
+        jsr     SELF_MODIFIED
+        .byte   SPCall::Status
+        .addr   status_params
+        bcs     next            ; call failed - skip it!
+        lda     dib_buffer+SPDIB::Device_Type_Code
+        cmp     #SPDeviceType::Disk525
+        beq     next            ; is 5.25 - skip it!
+
+        ;; Append the device
+        inc     count
+        ldx     count
+        copy8   unit_num, main::removable_device_table,x
+        bne     next            ; always
+
+index:  .byte   0
+count:  .byte   0
+unit_num:
+        .byte   0
+
+        end_of_scope := *
+        FALL_THROUGH_TO PopulateShortcutsMenu
+.endproc ; InitializeDisksInDevicesTables
+
+;;; ============================================================
 
 ;;; See docs/Selector_List_Format.md for file format
 
-.proc LoadSelectorList
+.proc PopulateShortcutsMenu
         ptr1 := $6
         ptr2 := $8
 
@@ -449,12 +745,15 @@ not_found:
 
         end_of_scope := *
 
-.endproc ; LoadSelectorList
+        FALL_THROUGH_TO PopulateAppleMenu
+
+.endproc ; PopulateShortcutsMenu
 
 ;;; ============================================================
 ;;; Enumerate Desk Accessories
 
-.scope
+.proc PopulateAppleMenu
+
         MGTK_CALL MGTK::CheckEvents
 
         read_dir_buffer := data_buf
@@ -625,166 +924,9 @@ end:
         dec     apple_menu
     END_IF
 
-.endscope
-
-;;; ============================================================
-;;; Populate volume icons
-
-.scope
-        copy8   #0, main::pending_alert
-
-        CALL    ReadSetting, X=#DeskTopSettings::options
-        and     #DeskTopSettings::kOptionsSkipCheck525
-        sta     skip_check_diskii_flag
-
-        ;; Enumerate DEVLST in reverse order (most important volumes first)
-        copy8   DEVCNT, device_index
-    DO
-        device_index := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        lda     DEVLST,y
-        pha                     ; A = unmasked unit number
-
-        ;; Skip polling Disk II drives?
-        skip_check_diskii_flag := *+1
-        ldx     #SELF_MODIFIED_BYTE
-      IF NOT ZERO
-        jsr     main::IsDiskII  ; A = (optionally unmasked) unit number
-        beq     next
-      END_IF
-
-        pla                     ; A = unmasked unit number
-        pha                     ; A = unmasked unit number
-        CALL    main::CreateVolumeIcon, Y=device_index ; A = unmasked unit number
-
-      IF ZERO
-        ;; Success! Draw it.
-        ldx     cached_window_icon_count
-        copy8   cached_window_icon_list-1,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-      ELSE_IF A = #ERR_DEVICE_NOT_CONNECTED
-        ;; If device is not connected, remove it from DEVLST
-        ;; unless it's a Disk II.
-        pla                     ; A = unmasked unit number
-        pha                     ; A = unmasked unit number
-        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
-        jsr     main::IsDiskII
-       IF ZC
-        CALL    _RemoveDevice, X=device_index
-       END_IF
-      ELSE_IF A = #ERR_DUPLICATE_VOLUME
-        ;; If duplicate, show a special error.
-        copy8   #kErrDuplicateVolName, main::pending_alert
-      END_IF
-
-next:
-        pla
-        dec     device_index
-    WHILE POS
-
-        copy8   #0, cached_window_id
-        jsr     main::StoreCachedWindowIconList
-
-        jmp     end_of_scope
-
-;;; Remove device num in X from devices list
-.proc _RemoveDevice
-        dex
-    DO
-        inx
-        copy8   DEVLST+1,x, DEVLST,x
-        copy8   main::device_to_icon_map+1,x, main::device_to_icon_map,x
-        cpx     DEVCNT
-    WHILE NOT_ZERO
-        dec     DEVCNT
-
-        ;; ProDOS requires an ON_LINE call after a device is
-        ;; disconnected in order to clean up the VCB entry. However,
-        ;; we only remove devices here if the device already failed an
-        ;; ON_LINE call with `ERR_DEVICE_NOT_CONNECTED` so it should
-        ;; not be necessary.
-
-        rts
-.endproc ; _RemoveDevice
-
-        end_of_scope := *
-        FALL_THROUGH_TO PopulateDeviceNames
-.endscope
-
-;;; ============================================================
-;;; This section populates `device_name_table` - it determines which
-;;; device type string to use, and fills in slot and drive as
-;;; appropriate. Used in the Format/Erase disk dialog.
-
-.proc PopulateDeviceNames
-        ;; Enumerate DEVLST in reverse order (most important volumes first)
-        ldy     DEVCNT
-    DO
-        tya                     ; Y = index
-        pha                     ; A = index
-
-        lda     DEVLST,y
-        pha                     ; A = unmasked unit number
-
-        devname_ptr := $06
-
-        jsr     main::GetDeviceType ; A = unmasked unit number
-        stax    devname_ptr         ; A,X = device name (may be empty)
-        ;; Empty?
-        ldy     #0
-        lda     (devname_ptr),y
-      IF ZERO
-        copy16  #str_volume_type_unknown, devname_ptr
-      END_IF
-
-        ;; arg0 = slot
-        pla                     ; A = unmasked unit number
-        tay
-        and     #%01110000      ; A = 0SSS0000
-        lsr                     ; A = 00SSS000
-        lsr                     ; A = 000SSS00
-        lsr                     ; A = 0000SSS0
-        lsr                     ; A = 00000SSS
-        pha                     ; arg0 lo
-        lda     #0
-        pha                     ; arg0 hi
-
-        ;; arg1 = drive
-        tya
-        asl                     ; drive bit into C
-        lda     #0
-        adc     #1              ; arg1 lo
-        pha
-        lda     #0
-        pha                     ; arg1 hi
-
-        ;; arg2 = name
-        push16  devname_ptr     ; arg2
-
-        FORMAT_MESSAGE 3, aux::str_sd_name_format
-
-        ;; Copy name into table
-        pla                     ; A = index
-        pha
-
-        asl     a
-        tax
-        copy16  device_name_table,x, devname_ptr
-
-        ldy     text_input_buf
-      DO
-        copy8   text_input_buf,y, (devname_ptr),y
-        dey
-      WHILE POS
-
-        pla                     ; A = index
-        tay                     ; Y = index
-        dey
-    WHILE POS
-
         FALL_THROUGH_TO PopulateStartupMenu
 
-.endproc ; PopulateDeviceNames
+.endproc ; PopulateAppleMenu
 
 ;;; ============================================================
 
@@ -855,120 +997,8 @@ slot_string_table:
         ASSERT_ADDRESS_TABLE_SIZE slot_string_table, ::kMenuSizeStartup
 
         end_of_scope := *
-        FALL_THROUGH_TO InitializeDisksInDevicesTables
-.endproc ; PopulateStartupMenu
-
-;;; ============================================================
-;;; Enumerate DEVLST and find removable devices; build a list of
-;;; these, and check to see which have disks in them. The list
-;;; will be polled periodically to detect changes and refresh.
-;;; List is built in DEVLST order since processing is in
-;;; `CheckDisksInDevices` (etc) is done in reverse order.
-;;;
-;;; Some hardware (machine/slot) combinations are filtered out
-;;; due to known-buggy firmware.
-
-.proc InitializeDisksInDevicesTables
-        slot_ptr := $0A
-
-        lda     #0
-        sta     count
-        sta     index
-
-    DO
-        ldy     index
-        lda     DEVLST,y
-        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `DeviceDriverAddress` handles it.
-        sta     unit_num
-        jsr     main::DeviceDriverAddress
-        bvs     append          ; remapped SmartPort, it's usable
-        bne     next            ; if RAM-based driver (not $CnXX), skip
-        stx     slot_ptr+1      ; just need high byte ($Cn)
-        copy8   #0, slot_ptr    ; make $Cn00
-        ldy     #$FF            ; Firmware ID byte
-        lda     (slot_ptr),y    ; $CnFF: $00=Disk II, $FF=13-sector, else=block
-        beq     next
-        dey
-        lda     (slot_ptr),y    ; $CnFE: Status Byte
-        bmi     append          ; bit 7 - Medium is removable
-
-next:   inc     index
-        lda     DEVCNT          ; continue while index <= DEVCNT
-    WHILE A >= index
-
-        lda     count
-        sta     main::removable_device_table
-        sta     main::disk_in_device_table
-        jsr     main::CheckDisksInDevices
-
-        ;; Make copy of table
-        ldx     main::disk_in_device_table
-    IF NOT_ZERO
-      DO
-        copy8   main::disk_in_device_table,x, main::last_disk_in_devices_table,x
-        dex
-      WHILE POS
-    END_IF
-
-        jmp     end_of_scope
-
-        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, SPStatusRequest::DIB
-
-dib_buffer := ::IO_BUFFER
-
-        ;; Maybe add device to the removable device table
-append:
-        ;; Do SmartPort STATUS call to filter out 5.25 devices
-        CALL    main::FindSmartportDispatchAddress, A=unit_num
-        bcs     next            ; can't determine address - skip it!
-        stax    dispatch
-        sty     status_params::unit_num
-
-        ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
-        ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
-        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
-        and     #DeskTopSettings::kSysCapIsIIcPlus
-    IF NOT_ZERO
-        lda     dispatch+1
-        and     #%00001111      ; mask off slot
-        cmp     #$05            ; is it slot 5?
-        beq     next            ; if so, ignore
-    END_IF
-
-        ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
-        ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
-        CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
-        and     #DeskTopSettings::kSysCapIsLaser128
-    IF NOT_ZERO
-        lda     dispatch+1      ; $Cs
-        and     #%00001111      ; mask off slot
-        cmp     #$07            ; is it slot 7?
-        beq     next            ; if so, skip it!
-    END_IF
-
-        dispatch := *+1
-        jsr     SELF_MODIFIED
-        .byte   SPCall::Status
-        .addr   status_params
-        bcs     next            ; call failed - skip it!
-        lda     dib_buffer+SPDIB::Device_Type_Code
-        cmp     #SPDeviceType::Disk525
-        beq     next            ; is 5.25 - skip it!
-
-        ;; Append the device
-        inc     count
-        ldx     count
-        copy8   unit_num, main::removable_device_table,x
-        bne     next            ; always
-
-index:  .byte   0
-count:  .byte   0
-unit_num:
-        .byte   0
-
-        end_of_scope := *
         FALL_THROUGH_TO FinalSetup
-.endproc ; InitializeDisksInDevicesTables
+.endproc ; PopulateStartupMenu
 
 ;;; ============================================================
 

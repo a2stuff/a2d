@@ -745,7 +745,7 @@ bitmap_table:
         .byte   %1110111,%1101110,%1011101,%0111011
         .byte   %1111111,%1111111,%1111111,%1111111
 
-.endproc ; ShowDLRFile
+.endproc ; ShowLRFileImpl
 ShowLRFile := ShowLRFileImpl::single
 ShowDLRFile := ShowLRFileImpl::double
 

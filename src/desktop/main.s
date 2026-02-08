@@ -11162,11 +11162,11 @@ finish:
         rts
 
 .if ::kCopyInteractive
-.endproc ; _OpenDstImpl
+.endproc ; _OpenDst
 _OpenDst := _OpenDstImpl::no_fail
 _OpenDstOrFail := _OpenDstImpl::fail_ok
 .else
-.endproc ; _OpenDst
+.endproc ; _OpenDstImpl
 .endif
 
 ;;; --------------------------------------------------

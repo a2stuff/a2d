@@ -423,7 +423,7 @@ new_selection   .byte
         sta     (a_record),y
         sta     oprc_selected_index ; keep copy in sync
         FALL_THROUGH_TO _HighlightIndex
-.endproc ; SetSelectionImpl
+.endproc ; _SetSelection
 
 ;;; ============================================================
 ;;; Toggle the highlight on an entry in the list

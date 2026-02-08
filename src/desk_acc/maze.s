@@ -114,7 +114,7 @@ counter:        .word   0
         MGTK_CALL MGTK::PaintRect, grafport + MGTK::GrafPort::maprect
         MGTK_CALL MGTK::SetPenMode, pencopy
         rts
-.endproc
+.endproc ; ClearScreen
 
 ;;; ============================================================
 
@@ -157,7 +157,7 @@ reserved:       .byte   0
         jsr     VisitCell
 
         FALL_THROUGH_TO DoMaze
-.endproc
+.endproc ; InitMaze
 
 .proc DoMaze
 backtrack:
@@ -482,7 +482,7 @@ col:    .byte   0
         jsr     DrawDown
         iny
         rts
-.endproc ; CarveDown
+.endproc ; CarveUp
 
 ;;; ============================================================
 
@@ -544,7 +544,7 @@ col:    .byte   0
         MGTK_CALL MGTK::PaintBits, paintbits_params
         PLXY
         rts
-.endproc ; DrawDown
+.endproc ; DrawUp
 
 ;;; ============================================================
 

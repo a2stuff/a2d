@@ -6148,7 +6148,7 @@ filler: ldx     menu_item_index
 .proc FindMenuById
         lda     #find_mode_by_id
         FALL_THROUGH_TO FindMenu
-.endproc
+.endproc ; FindMenuById
 
 .proc FindMenu
         sta     find_mode
@@ -11093,7 +11093,7 @@ iic_proc:
     END_IF
         rts
 
-.endproc
+.endproc ; WaitVBLImpl
 vbl_proc_addr := WaitVBLImpl::proc_addr
 vbl_iie_proc := WaitVBLImpl::iie_proc
 vbl_iigs_proc := WaitVBLImpl::iigs_proc

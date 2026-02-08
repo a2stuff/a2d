@@ -184,7 +184,7 @@ getptr: jmp     SELF_MODIFIED
         SwapProc := *+1
 swap:   jmp     SELF_MODIFIED
 
-.endproc
+.endproc ; Quicksort
 Quicksort_GetPtrProc := Quicksort::GetPtrProc
 Quicksort_CompareProc := Quicksort::CompareProc
 Quicksort_SwapProc := Quicksort::SwapProc
