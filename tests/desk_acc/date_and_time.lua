@@ -129,10 +129,11 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+    test.Expect(not a2dtest.OCRScreen():find("Today"), "dates should not say Today")
     a2d.SelectAndOpen("DATE.AND.TIME")
     test.Snap("verify dialog date matches packaged file dates")
     a2dtest.ExpectFullRepaint(a2d.DialogOK)
-    test.Snap("verify dates now Today")
+    test.Expect(a2dtest.OCRScreen():find("Today"), "dates should now say Today")
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2dtest.ExpectMinimalRepaint(a2d.DialogOK)
     a2d.Reboot()
@@ -473,7 +474,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.GrowWindowBy(250, 0)
     a2d.MoveWindowBy(0, 100)
-    test.Snap("verify date is shown in full")
+    test.Expect(a2dtest.OCRScreen():find("September 13, 1999"), "date should be shown in full")
 
     -- Use Date & Time to set date
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
@@ -486,5 +487,5 @@ test.Step(
     end)
     apple2.UpArrowKey()
     a2dtest.ExpectFullRepaint(a2d.DialogOK)
-    test.Snap("verify bottom date shows Today")
+    test.Expect(a2dtest.OCRScreen():find("Today"), "bottom date should show Today")
 end)

@@ -251,14 +251,14 @@ function FilePickerTest(
 
         activation_func()
         a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
-        test.Snap("verify INVISIBLE is in list")
+        test.Expect(a2dtest.OCRScreen():upper():find("INVISIBLE"), "INVISIBLE should be in list")
         cleanup_func()
 
         a2d.ToggleOptionShowInvisible() -- disable
 
         activation_func()
         a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
-        test.Snap("verify INVISIBLE is not in list")
+        test.Expect(not a2dtest.OCRScreen():upper():find("INVISIBLE"), "INVISIBLE should not be in list")
         cleanup_func()
     end)
   end
