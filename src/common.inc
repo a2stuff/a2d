@@ -328,27 +328,27 @@ INVOKER_BITSY_COMPAT    := $3C1 ; bit7 = set $280 like Bitsy does
 ;;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
 ;;; (called out as MT:X in the table below)
 ;;;
-;;; $00 = spacer       !           $10 = TM left      *
-;;; $01 = folder left  ! (MT:X)    $11 = TM right     *
-;;; $02 = folder right ! (MT:Y)    $12 = pound        *
-;;; $03 = file left    !           $13 = pi           *
-;;; $04 = file right   !           $14 = divide       *
-;;; $05 = disk left    !           $15 = rarrow       ! (MT:U)
-;;; $06 = disk right   !           $16 = degree       !
-;;; $07 = lock         !           $17 = open circ
-;;; $08 = larrow       ! (MT:H)    $18 = close          (MT:])
-;;; $09 = left box                 $19 = gray odd       (MT:W)
-;;; $0A = darrow       ! (MT:J)    $1A = gray even      (MT:V)
-;;; $0B = uarrow       ! (MT:K)    $1B = solid circ
-;;; $0C = right box                $1C = inv check      (MT:E)
-;;; $0D = return       ! (MT:M)    $1D = check        ! (MT:D)
-;;; $0E = (C)                      $1E = solid apple  ! (MT:@)
-;;; $0F = (R)                      $1F = open apple   ! (MT:A)
+;;; $00 = spacer       !             $10 = TM left      *
+;;; $01 = folder left  !   (MT:X)    $11 = TM right     *
+;;; $02 = folder right !   (MT:Y)    $12 = pound        *
+;;; $03 = file left    !             $13 = pi           * π
+;;; $04 = file right   !             $14 = divide       * ÷
+;;; $05 = disk left    !             $15 = rarrow       ! → (MT:U)
+;;; $06 = disk right   !             $16 = degree       ! °
+;;; $07 = lock         !             $17 = open diamond   ◇
+;;; $08 = larrow       ! ← (MT:H)    $18 = close            (MT:])
+;;; $09 = left box                   $19 = gray odd         (MT:W)
+;;; $0A = darrow       ! ↓ (MT:J)    $1A = gray even        (MT:V)
+;;; $0B = uarrow       ! ↑ (MT:K)    $1B = solid diamond  ◆
+;;; $0C = right box                  $1C = inv check        (MT:E)
+;;; $0D = return       ! ⏎ (MT:M)    $1D = check        !   (MT:D)
+;;; $0E = (C)            ©           $1E = solid apple  !   (MT:@)
+;;; $0F = (R)            ®           $1F = open apple   !   (MT:A)
 ;;;
 ;;; ! = Used in this application; glyphs must be present in font.
 ;;; Any other code points can be repurposed.
 ;;; * = Used to provide additional characters in some languages
-;;; (notably Spanish) where Apple's character sets are lacking.
+;;; (notably Spanish) where the 7-bit character sets are lacking.
 
 kGlyphSpacer            = $00
 kGlyphFolderLeft        = $01

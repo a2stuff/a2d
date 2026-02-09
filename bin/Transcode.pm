@@ -72,6 +72,13 @@ sub transcode($$$) {
     die "$0: Unknown lang: $lang\n";
   }
 
+  # See src/common.inc for how code points 0x00-0x1F are used. Note
+  # that 0x12 and 0x13 are basically π and ÷ but since those are not
+  # in all encodings (and are unused) they are left out of this
+  # mapping.
+  if ($decode) { tr/\x08\x0A\x0B\x0D\x0E\x0F\x15\x16\x17\x1B/←↓↑⏎©®→°◇◆/; }
+  else         { tr/←↓↑⏎©®→°◇◆/\x08\x0A\x0B\x0D\x0E\x0F\x15\x16\x18\x1B/; }
+
   return $_;
 }
 

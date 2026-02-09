@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 test $# -eq 1 || (echo "Usage: $0 LANG"; exit 1)
 lang=$1
-decoded_a=$(echo 'a' | bin/transcode.pl decode $lang)
+decoded_a=$(echo -n 'a' | bin/transcode.pl decode $lang)
 supports_lowercase=$(if [ "$decoded_a" == "a" ]; then echo 1; else echo 0; fi);
 
 git checkout src/config.inc

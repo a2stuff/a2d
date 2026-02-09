@@ -41,7 +41,7 @@ $(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../common/asm.cfg
 
 # Fonts
 .SECONDEXPANSION:
-$(OUTDIR)/%.font: ../../res/fonts/$$(basename $$*).unicode.txt
+$(OUTDIR)/%.font: ../../res/fonts/$$(basename $$*).unicode.txt $(BINDIR)/Transcode.pm
 	$(BINDIR)/build_font_from_unicode_txt.pl $(subst .,,$(suffix $*)) < ../../res/fonts/$(basename $*).unicode.txt > $@
 .PRECIOUS: $(OUTDIR)/%.font
 

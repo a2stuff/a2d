@@ -74,7 +74,7 @@ fini_progress () {
 # Extract metadata for the build
 
 lang=$(grep 'define kBuildLang' src/config.inc | cut -d'"' -f2)
-decoded_a=$(echo 'a' | bin/transcode.pl decode $lang)
+decoded_a=$(echo -n 'a' | bin/transcode.pl decode $lang)
 supports_lowercase=$(if [ "$decoded_a" == "a" ]; then echo 1; else echo 0; fi);
 
 vmajor=$(grep 'kDeskTopVersionMajor =' src/config.inc | sed -e 's/.* = //')
