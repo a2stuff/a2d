@@ -127,6 +127,7 @@ test.Step(
     a2d.OAShortcut("3") -- at boot
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    emu.wait(5)
     test.Snap("verify 'at boot' not checked")
     a2d.DialogCancel()
 end)
@@ -143,6 +144,7 @@ test.Step(
     a2d.OAShortcut("4") -- at first use
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    emu.wait(5)
     test.Snap("verify 'at first use' not checked")
     a2d.DialogCancel()
 end)
@@ -159,6 +161,7 @@ test.Step(
     a2d.OAShortcut("2") -- list only
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    emu.wait(2)
     test.Snap("verify 'list only' not checked")
     a2d.DialogCancel()
 end)
@@ -339,8 +342,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("1") -- menu and list
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("list is full"), "alert should be about list being full")
+    a2dtest.WaitForAlert("list is full")
     a2d.DialogOK()
     a2d.DialogCancel()
 
@@ -366,8 +368,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("2") -- list only
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("list is full"), "alert should be about list being full")
+    a2dtest.WaitForAlert("list is full")
     a2d.DialogOK()
     a2d.DialogCancel()
 
@@ -398,8 +399,7 @@ test.Step(
 
     a2d.OAShortcut("1") -- menu and list
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("list is full"), "alert should be about list being full")
+    a2dtest.WaitForAlert("list is full")
     a2d.DialogOK()
     a2d.DialogCancel()
 
@@ -661,9 +661,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/DUPE")
     a2d.DeletePath("/A2.DESKTOP/DUPE")
     a2d.OAShortcut("1")
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("file cannot be found"),
-                "alert should be about file not found")
+    a2dtest.WaitForAlert("file cannot be found")
     a2d.DialogOK()
 
     -- cleanup

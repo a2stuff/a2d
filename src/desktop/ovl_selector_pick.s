@@ -21,7 +21,7 @@ selector_list := SELECTOR_FILE_BUF
 
 Exec:
         sta     selector_action
-        ldx     #$FF
+        ldx     #$FF            ; `INC` to clear high bit
         stx     clean_flag      ; set "clean"
         cmp     #SelectorAction::add
         beq     DoAdd
@@ -30,24 +30,27 @@ Exec:
 ;;; ============================================================
 
 .proc Exit
-        pha
+        pha                     ; A = result
         lda     clean_flag
-        bpl     check_about_saving ; dirty, check about saving
-
-finish: pla
-ret:    rts
-
-check_about_saving:
+    IF NC
+        ;; Update total count of entries (used for menu item states)
         lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
         adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
-        jsr     main::GetCopiedToRAMCardFlag
-        cmp     #$80
-        bne     finish
 
+        ;; Write out file
+        jsr     WriteFile
+      IF NC
+        ;; ... and if successful, see if we need to update system disk
+        jsr     main::GetCopiedToRAMCardFlag
+       IF NS
         jsr     WriteFileToOriginalPrefix
-        pla
+       END_IF
+      END_IF
+    END_IF
+
+        pla                     ; A = result
         rts
 .endproc ; Exit
 
@@ -79,7 +82,7 @@ DoAdd:  ldx     #kRunListPrimary
         tax
         pla
         bne     Exit
-        inc     clean_flag      ; mark as "dirty"
+
         stx     which_run_list
         sty     copy_when
 
@@ -92,8 +95,8 @@ DoAdd:  ldx     #kRunListPrimary
 :
         sta     copy_when
         jsr     ReadFile
-    IF NEG
-        jmp     Exit::ret
+    IF NS
+        jmp     Exit
     END_IF
 
         copy16  selector_list, num_primary_run_list_entries
@@ -106,10 +109,7 @@ DoAdd:  ldx     #kRunListPrimary
         lda     num_primary_run_list_entries
         inc     selector_list + kSelectorListNumPrimaryRunListOffset
         jsr     AssignEntryData
-        jsr     WriteFile
-      IF NEG
-        jmp     Exit::ret
-      END_IF
+        inc     clean_flag      ; mark as "dirty"
         jmp     Exit
     END_IF
 
@@ -121,17 +121,13 @@ DoAdd:  ldx     #kRunListPrimary
         adc     #kSelectorListNumPrimaryRunListEntries
         jsr     AssignSecondaryRunListEntryData
         inc     selector_list + kSelectorListNumSecondaryRunListOffset
-        jsr     WriteFile
-      IF NEG
-        jmp     Exit::ret
-      END_IF
+        inc     clean_flag      ; mark as "dirty"
         jmp     Exit
     END_IF
 
 ShowFullAlert:
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_warning_selector_list_full
-        dec     clean_flag      ; reset to "clean"
-        jmp     Exit::ret
+        jmp     Exit
 
 which_run_list:
         .byte   0
@@ -185,17 +181,19 @@ dialog_loop:
 ;;; ============================================================
 
 .proc DoDelete
+        jsr     CloseWindow
+        jsr     main::ClearUpdates ; picker dialog close
+
         CALL    RemoveEntry, A=shortcut_picker_record::selected_index
-    IF ZS                       ; Z set on success
         inc     clean_flag      ; mark as "dirty"
-    END_IF
-        jmp     DoCancel
+        jmp     Exit
 .endproc ; DoDelete
 
 ;;; ============================================================
 
 .proc DoEdit
         jsr     CloseWindow
+        ;; NOTE: `ClearUpdates` corrupts memory!
 
         CALL    GetFileEntryAddr, A=shortcut_picker_record::selected_index
         stax    $06
@@ -246,7 +244,6 @@ dialog_loop:
         pla
         RTS_IF NOT_ZERO
 
-        inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
 
         ;; Map to `kCopyOnBoot` to `kSelectorEntryCopyOnBoot` etc
@@ -254,7 +251,7 @@ dialog_loop:
         sta     copy_when
         jsr     ReadFile
     IF NS
-        jmp     CloseWindow
+        jmp     Exit
     END_IF
 
         lda     shortcut_picker_record::selected_index
@@ -270,9 +267,6 @@ dialog_loop:
       END_IF
 
         CALL    RemoveEntry, A=shortcut_picker_record::selected_index
-      IF ZC
-        jmp     CloseWindow
-      END_IF
 
         ;; Compute new index
         ldx     num_primary_run_list_entries
@@ -291,9 +285,6 @@ dialog_loop:
       END_IF
 
         CALL    RemoveEntry, A=shortcut_picker_record::selected_index
-      IF ZC
-        jmp     CloseWindow
-      END_IF
 
         ;; Compute new index
         ldx     num_secondary_run_list_entries
@@ -310,11 +301,7 @@ reuse_same_index:
     END_IF
 
         CALL    AssignEntryData, Y=copy_when
-        jsr     WriteFile
-    IF ZC
-        jmp     CloseWindow
-    END_IF
-
+        inc     clean_flag      ; mark as "dirty"
         jmp     Exit
 
 flags:  .byte   0
@@ -331,7 +318,8 @@ copy_when_conversion_table:
 
 .proc DoRun
         jsr     CloseWindow
-        jsr     main::ClearUpdates       ; Run dialog OK
+        jsr     main::ClearUpdates ; picker dialog close
+
         RETURN  A=shortcut_picker_record::selected_index
 .endproc ; DoRun
 
@@ -346,7 +334,7 @@ copy_when_conversion_table:
     END_IF
 
         jsr     CloseWindow
-        jsr     main::ClearUpdates
+        jsr     main::ClearUpdates ; picker dialog close
 
         TAIL_CALL Exit, A=#$FF
 .endproc ; DoCancel
@@ -355,6 +343,7 @@ copy_when_conversion_table:
 
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, winfo_entry_picker
+
         rts
 .endproc ; CloseWindow
 
@@ -369,7 +358,7 @@ selector_action:
         .byte   0
 
 clean_flag:                     ; high bit set if "clean", cleared if "dirty"
-        .byte   0               ; and should save to original prefix
+        .byte   0               ; and should write out file
 
 ;;; ============================================================
 
@@ -575,7 +564,7 @@ handle_button:
         BREAK_IF X = num_secondary_run_list_entries
         txa
         clc
-        adc     #8
+        adc     #kSelectorListNumPrimaryRunListEntries
         sta     entries_flag_table+8,x
         inx
     WHILE NOT_ZERO
@@ -595,7 +584,7 @@ entries_flag_table:
 ;;;         `main::stashed_name` is name, `path_buf0` is path
 
 .proc AssignEntryData
-        cmp     #8
+        cmp     #kSelectorListNumPrimaryRunListEntries
         bcs     AssignSecondaryRunListEntryData
 
         sta     index
@@ -677,8 +666,8 @@ index:  .byte   0
 
 ;;; ============================================================
 ;;; Removes the specified entry, shifting later entries down as
-;;; needed. Writes the file when done. Handles both the file
-;;; buffer and resource data (used for menus, etc.)
+;;; needed. Handles both the file buffer and resource data (used for
+;;; menus, etc.)
 ;;; Inputs: Entry in A
 
 .proc RemoveEntry
@@ -686,8 +675,8 @@ index:  .byte   0
         ptr2 := $08
 
         sta     index
-        cmp     #8
-        jcs     secondary_run_list
+        cmp     #kSelectorListNumPrimaryRunListEntries
+        bcs     secondary_run_list
 
         ;; Primary run list
 .scope
@@ -699,8 +688,7 @@ index:  .byte   0
 finish:
         dec     selector_list + kSelectorListNumPrimaryRunListOffset
         dec     num_primary_run_list_entries
-        jsr     UpdateMenuResources
-        jmp     WriteFile
+        TAIL_CALL UpdateMenuResources
 
 loop:   lda     index
         cmp     num_primary_run_list_entries
@@ -717,22 +705,21 @@ loop:   lda     index
 secondary_run_list:
 .scope
         sec
-        sbc     #ptr1+1
-        cmp     num_secondary_run_list_entries
-    IF ZERO
+        sbc     #kSelectorListNumPrimaryRunListEntries - 1
+    IF A = num_secondary_run_list_entries
         dec     selector_list + kSelectorListNumSecondaryRunListOffset
         dec     num_secondary_run_list_entries
-        jmp     WriteFile
+        rts
     END_IF
 
     REPEAT
         lda     index
         sec
-        sbc     #ptr2
+        sbc     #kSelectorListNumPrimaryRunListEntries
       IF A = num_secondary_run_list_entries
         dec     selector_list + kSelectorListNumSecondaryRunListOffset
         dec     num_secondary_run_list_entries
-        jmp     WriteFile
+        rts
       END_IF
 
         CALL    MoveEntryDown, A=index
