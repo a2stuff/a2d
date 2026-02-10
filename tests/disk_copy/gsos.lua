@@ -48,11 +48,11 @@ test.Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("ProDOS disk copy"),
                 "status line should say 'ProDOS disk copy'")
@@ -87,18 +87,15 @@ test.Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find(
-                  "Are you sure you want to erase \"GS%.OS%.mixed\"%?"),
-                "prompt should give GS/OS name, quoted with assigned case")
+    a2dtest.WaitForAlert({match="Are you sure you want to erase \"GS%.OS%.mixed\"%?"})
 
     -- cleanup
     a2d.DialogCancel()

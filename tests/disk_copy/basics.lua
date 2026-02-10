@@ -217,7 +217,7 @@ test.Step(
     a2d.RenamePath("/A2.DESKTOP/MODULES/DISK.COPY", "TEMP")
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="insert the system disk"})
     a2d.DialogCancel()
     a2d.RenamePath("/A2.DESKTOP/MODULES/TEMP", "DISK.COPY")
 end)

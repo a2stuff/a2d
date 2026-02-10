@@ -26,7 +26,7 @@ test.Step(
 
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="insert the system disk"})
     a2d.DialogCancel()
 
     -- cleanup
@@ -50,7 +50,7 @@ test.Step(
 
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="insert the system disk"})
 
     s6d1:load(image)
     emu.wait(5)
@@ -142,15 +142,15 @@ test.Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     a2d.DialogOK()
 
     -- confirm overwrite
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     emu.wait(5)
@@ -163,7 +163,7 @@ test.Step(
 
     -- cleanup
     apple2.EscapeKey() -- abort the copy
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="not completed"})
 
     test.Expect(not a2dtest.OCRScreen():find("Press Esc to stop copying"),
                 "tip should be erased")
@@ -199,15 +199,15 @@ test.DISABLED_Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     a2d.DialogOK()
 
     -- confirm overwrite
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     emu.wait(5)
@@ -219,7 +219,7 @@ test.DISABLED_Step(
 
     -- cleanup
     apple2.EscapeKey()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="not completed"})
 
     a2d.DialogOK()
     s5d1:load(image)

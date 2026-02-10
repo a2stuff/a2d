@@ -109,7 +109,7 @@ test.Step(
         m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="binary file"})
     a2d.DialogCancel()
 
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
@@ -118,7 +118,7 @@ test.Step(
         m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="binary file"})
     a2d.DialogOK({no_wait=true})
     a2dtest.MultiSnap(40, "verify launches with dialog OK")
     emu.wait(2) -- finish launching

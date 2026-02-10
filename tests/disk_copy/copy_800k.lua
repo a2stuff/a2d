@@ -27,21 +27,21 @@ test.Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     a2d.DialogOK()
 
     -- confirm overwrite
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- copying...
     emu.wait(20)
     apple2.EscapeKey() -- cancel
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="not completed"})
     a2d.DialogOK()
 
     emu.wait(5)
@@ -76,19 +76,19 @@ test.Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     a2d.DialogOK()
 
     -- confirm overwrite
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- copying...
-    a2dtest.WaitForAlert({timeout=480})
+    a2dtest.WaitForAlert({timeout=480, match="successful"})
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("Blocks to transfer: %d+,%d+"),
                 "the transfer block count should have thousands separator")

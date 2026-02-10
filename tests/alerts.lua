@@ -18,7 +18,7 @@ test.Step(
     a2d.RenamePath("/A2.DESKTOP/READ.ME", "README")
     a2dtest.ExpectNothingChanged(function()
         a2d.OAShortcut("1")
-        a2dtest.WaitForAlert()
+        a2dtest.WaitForAlert({match="file cannot be found"})
         apple2.EscapeKey()
         a2d.WaitForRepaint()
     end)
@@ -43,7 +43,7 @@ test.Step(
     a2dtest.ExpectNothingChanged(function()
         apple2.Type("1")
         a2d.DialogOK()
-        a2dtest.WaitForAlert()
+        a2dtest.WaitForAlert({match="Unable to run the program"})
         apple2.EscapeKey()
         a2d.WaitForRepaint()
     end)
@@ -76,7 +76,7 @@ test.Step(
     a2d.DialogOK() -- confirm inserting destination
     a2d.DialogOK() -- confirm overwrite
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="copy was successful"})
     apple2.EscapeKey()
     a2d.WaitForRepaint()
     a2dtest.ExpectAlertNotShowing()

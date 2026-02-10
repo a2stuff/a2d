@@ -28,7 +28,7 @@ test.Variants(
     a2d.ClearTextField()
     apple2.Type("NEW.NAME" .. idx)
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     --[[
@@ -55,19 +55,19 @@ test.Variants(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- complete
-    a2dtest.WaitForAlert({timeout=7200})
+    a2dtest.WaitForAlert({timeout=7200, match="successful"})
     if what == "quick" then
       test.Snap("verify block counts are equal")
     else
@@ -83,6 +83,6 @@ test.Variants(
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
-    a2dtest.WaitForAlert() -- duplicate volume
+    a2dtest.WaitForAlert({match="2 volumes with the same name"})
     a2d.DialogOK()
 end)

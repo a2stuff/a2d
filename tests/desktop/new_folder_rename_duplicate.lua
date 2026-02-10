@@ -510,7 +510,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("NAMEISTOOLARGE")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="name is too long"})
     a2d.DialogOK()
     a2d.ClearTextField()
     apple2.Type("NAMEISOK")
@@ -523,7 +523,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("NAMEISTOOLARGE")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="name is too long"})
     a2d.DialogOK()
     a2d.ClearTextField()
     apple2.Type("NAMEISOK")
@@ -536,7 +536,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("NAMEISTOOLARGE")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="name is too long"})
     a2d.DialogOK()
     a2d.ClearTextField()
     apple2.Type("NAME2ISOK")
@@ -597,7 +597,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("TESTS")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert() -- error
+    a2dtest.WaitForAlert({match="name already exists"})
     a2d.DialogOK() -- dismiss
     apple2.EscapeKey() -- cancel
     emu.wait(1)
@@ -617,7 +617,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("TESTS")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert() -- error
+    a2dtest.WaitForAlert({match="name already exists"}) -- error
     a2d.DialogOK() -- dismiss
 
     apple2.Type("2")
@@ -643,7 +643,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("PRODOS")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert() -- error
+    a2dtest.WaitForAlert({match="already exists"})
     a2d.DialogOK() -- dismiss
 
     apple2.Type("2")
@@ -803,7 +803,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("PRODOS")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="name already exists"})
     a2d.DialogOK() -- dismiss
 
     apple2.Type("2")
@@ -835,7 +835,7 @@ test.Step(
     a2d.ClearTextField()
     apple2.Type("NEW1")
     apple2.ReturnKey() -- try to commit
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="name already exists"})
     a2d.DialogOK() -- dismiss alert
     a2d.ClearTextField()
     apple2.Type("NEW2")
@@ -892,7 +892,7 @@ test.Step(
       "vertical scrollbar should be inactive or at top")
 
     a2d.OADelete() -- File > Delete
-    a2dtest.WaitForAlert() -- confirmation prompt
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK() -- confirm
     emu.wait(1)
 

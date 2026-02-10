@@ -64,11 +64,11 @@ test.Variants(
     a2d.CloseWindow()
 
     if idx > 3 then
-      a2dtest.WaitForAlert() -- prompt to save
+      a2dtest.WaitForAlert({match="save the changes"})
 
       if idx > 6 then
         a2d.DialogOK()
-        a2dtest.WaitForAlert() -- prompt to insert system disk
+        a2dtest.WaitForAlert({match="insert the system disk"})
       end
 
       drive:load(current)

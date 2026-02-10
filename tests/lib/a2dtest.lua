@@ -305,6 +305,10 @@ end
 function a2dtest.WaitForAlert(options)
   util.WaitFor("alert", a2dtest.IsAlertShowing, options)
   emu.wait(0.5) -- let the alert finish drawing
+  if options and options.match then
+    test.Expect(a2dtest.OCRScreen():find(options.match),
+                "alert should match " .. options.match, {snap=true}, 1)
+  end
 end
 
 --------------------------------------------------

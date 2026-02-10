@@ -46,11 +46,11 @@ test.Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("DOS 3%.3 disk copy"),
                 "status line should say 'DOS 3.3 disk copy'")
@@ -85,15 +85,15 @@ test.Step(
     a2d.DialogOK()
 
     -- insert source
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the source disk"})
     a2d.DialogOK()
 
     -- insert destination
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the destination disk"})
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     test.Expect(a2dtest.OCRScreen():find(
                   "Are you sure you want to erase the DOS 3.3 disk in slot"),
                 "prompt should reference DOS 3.3 disk in S6,D1 with no name and no quote")
