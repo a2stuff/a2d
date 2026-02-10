@@ -342,7 +342,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("1") -- menu and list
     a2d.DialogOK()
-    a2dtest.WaitForAlert("list is full")
+    a2dtest.WaitForAlert({match="list is full"})
     a2d.DialogOK()
     a2d.DialogCancel()
 
@@ -368,7 +368,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("2") -- list only
     a2d.DialogOK()
-    a2dtest.WaitForAlert("list is full")
+    a2dtest.WaitForAlert({match="list is full"})
     a2d.DialogOK()
     a2d.DialogCancel()
 
@@ -399,7 +399,7 @@ test.Step(
 
     a2d.OAShortcut("1") -- menu and list
     a2d.DialogOK()
-    a2dtest.WaitForAlert("list is full")
+    a2dtest.WaitForAlert({match="list is full"})
     a2d.DialogOK()
     a2d.DialogCancel()
 
@@ -448,12 +448,12 @@ test.Step(
 
     a2d.OAShortcut("3")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="not valid"})
     a2d.DialogCancel()
 
     a2d.OAShortcut("4")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="not valid"})
     a2d.DialogCancel()
 
     a2d.OAShortcut("5")
@@ -661,8 +661,26 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/DUPE")
     a2d.DeletePath("/A2.DESKTOP/DUPE")
     a2d.OAShortcut("1")
-    a2dtest.WaitForAlert("file cannot be found")
+    a2dtest.WaitForAlert({match="file cannot be found"})
     a2d.DialogOK()
+
+    -- cleanup
+    a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end)
+
+--[[
+  Regression test - make sure volume shortcuts are created correctly.
+]]
+test.Step(
+  "volume shortcuts are created with correct paths",
+  function()
+    a2d.AddShortcut("/A2.DESKTOP")
+    a2d.OAShortcut("1")
+    emu.wait(1)
+    a2dtest.ExpectAlertNotShowing()
+    test.ExpectEquals(a2dtest.GetFrontWindowTitle():upper(), "A2.DESKTOP", "shortcut should have opened window")
 
     -- cleanup
     a2d.DeletePath("/A2.DESKTOP/LOCAL")

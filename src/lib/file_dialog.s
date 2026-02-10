@@ -469,11 +469,6 @@ found:  ldx     num_file_names
         ;; Remove last segment
         jsr     _StripPathBufSegment
 
-        lda     path_buf
-      IF ZERO
-        jsr     _SetRootPath
-      END_IF
-
         jsr     UpdateListFromPath
     END_IF
 
@@ -931,6 +926,12 @@ found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
         dec     path_buf
         lda     path_buf,x
     WHILE A <> #'/'
+
+        lda     path_buf
+    IF ZERO
+        jsr     _SetRootPath
+    END_IF
+
         rts
 .endproc ; _StripPathBufSegment
 

@@ -306,8 +306,8 @@ function a2dtest.WaitForAlert(options)
   util.WaitFor("alert", a2dtest.IsAlertShowing, options)
   emu.wait(0.5) -- let the alert finish drawing
   if options and options.match then
-    test.Expect(a2dtest.OCRScreen():find(options.match),
-                "alert should match " .. options.match, {snap=true}, 1)
+    local ocr = a2dtest.OCRScreen({x1=130, y1=75, x2=470, y2=100})
+    test.Expect(ocr:find(options.match), "alert should match " .. options.match, {snap=true}, 1)
   end
 end
 
@@ -390,8 +390,13 @@ function a2dtest.OCRIterate(callback, options)
   local font_width = ocr_table.width
   local mask = (1 << font_height) - 1
 
+  if options.x1 == nil then options.x1 = 0 end
+  if options.y1 == nil then options.y1 = 0 end
+  if options.x2 == nil then options.x2 = apple2.SCREEN_WIDTH-1 end
+  if options.y2 == nil then options.y2 = apple2.SCREEN_HEIGHT-1 end
+
   -- Walk over entire screen
-  for y = 0, apple2.SCREEN_HEIGHT-font_height-1 do
+  for y = options.y1, options.y2-font_height do
     -- Process a stripe `font_height` pixels tall, convert to numbers
     local numbers = {}
     for i = 0, apple2.SCREEN_WIDTH-1 do
@@ -410,11 +415,12 @@ function a2dtest.OCRIterate(callback, options)
     end
 
     -- Iterate over stripe
-    local x, run, run_x = 0, "", 0
-    while x < apple2.SCREEN_WIDTH-1 do
+    local x = options.x1
+    local run, run_x = "", x
+    while x < options.x2 do
       -- Try each character width, longest to shortest
       for w = font_width, 1, -1 do
-        if x + w >= apple2.SCREEN_WIDTH then
+        if x + w > options.x2 then
           goto try_shorter
         end
         -- Compute hash keys (normal and inverted)
@@ -447,7 +453,7 @@ function a2dtest.OCRIterate(callback, options)
       ::got_a_hit::
     end
 
-    if run ~= "" then
+    if not run:match("^ *+$") then
       callback(run, run_x, y)
     end
   end

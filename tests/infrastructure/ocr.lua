@@ -56,3 +56,26 @@ test.Step(
     test.Expect(recognized:find("Quit"), "Quit should not be dimmed")
     apple2.EscapeKey()
 end)
+
+test.Step(
+  "Bounds",
+  function()
+    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_GET_INFO)
+
+    if false then
+    local recognized = a2dtest.OCRScreen()
+    test.Expect(recognized:find("Special"), "screen should contain 'Special'")
+    test.Expect(recognized:find("Trash"), "screen should contain 'Trash'")
+    test.Expect(recognized:find("Type"), "screen should contain 'Type'")
+    test.Expect(recognized:find("Locked"), "screen should contain 'Locked'")
+    end
+
+    local recognized = a2dtest.OCRScreen({x1=100, y1=20, x2=460, y2=152})
+    test.Expect(not recognized:find("Special"), "bounds should not contain 'Special'")
+    test.Expect(not recognized:find("Trash"), "bounds should not contain 'Trash'")
+    test.Expect(recognized:find("Type"), "screen should contain 'Type'")
+    test.Expect(recognized:find("Locked"), "screen should contain 'Locked'")
+
+    a2d.DialogOK()
+end)
