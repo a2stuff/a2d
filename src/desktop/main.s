@@ -10877,7 +10877,7 @@ Start:  lda     DEVNUM
 :
         CALL    GetFileEntryBlock, AX=#src_path_buf
     IF CS
-        CALL    ShowErrorAlert, A=#ERR_PATH_NOT_FOUND
+        CALL    ShowErrorAlert
         beq     :-              ; always
     END_IF
         stax    src_block_params::block_num
@@ -10885,7 +10885,7 @@ Start:  lda     DEVNUM
 :
         CALL    GetFileEntryBlock, AX=#dst_path_buf
     IF CS
-        CALL    ShowErrorAlert, A=#ERR_PATH_NOT_FOUND
+        CALL    ShowErrorAlert
         beq     :-              ; always
     END_IF
         stax    dst_block_params::block_num
@@ -11858,21 +11858,21 @@ retry:  CALL    GetFileInfo, AX=src_ptr
 
 ;;; ============================================================
 ;;; Show Alert Dialog
-;;; A=error. If `ERR_VOL_NOT_FOUND` or `ERR_FILE_NOT_FOUND`, will show
+;;; A=error. If `ERR_VOL_NOT_FOUND` will show
 ;;; "please insert the disk: ..." using `operation_src_path` (or `operation_dst_path` if
 ;;; destination) to supply the disk name.
 ;;; Output: returns A=0/Z=1, otherwise aborts
 .proc ShowErrorAlertImpl
         ENTRY_POINTS_FOR_BIT7_FLAG dst, src, dst_flag
 
-    IF A NOT_IN #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
+    IF A <> #ERR_VOL_NOT_FOUND
         jsr     ShowAlert
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
         rts                     ; A=0/Z=1
     END_IF
 
-        ;; if err is "not found" prompt specifically for src/dst disk
+        ;; if err is "volume not found" prompt specifically for src/dst disk
         ldax    #operation_src_path
         bit     dst_flag
     IF NS
@@ -13967,7 +13967,7 @@ SaveWindows := save_restore_windows::Save
 ;;;   and `parent_entry_number` fields.
 ;;;
 ;;; Input: A,X = path
-;;; Output: C=0, A,X=block, Y=entry on success; C=1 on error
+;;; Output: C=0, A,X=block, Y=entry on success; C=1, A=code on error
 ;;;         If successful, $06 points at `FileEntry` in block buffer
 .proc GetFileEntryBlock
 
@@ -14095,11 +14095,18 @@ next_entry:
         clc
 
 close:  php
+        pha
         MLI_CALL CLOSE, close_params
+        pla
         plp
-exit:
+    IF CC
         ;; Only valid if C=0
-        RETURN  AX=current_block, Y=entry_num
+        ldax    current_block
+        ldy     entry_num
+    END_IF
+
+exit:
+        rts
 
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
         DEFINE_READWRITE_PARAMS read_params, block_buf, BLOCK_SIZE

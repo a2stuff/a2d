@@ -537,7 +537,7 @@ alert_options_table:
         .byte   AlertButtonOptions::OK             ; ERR_DEVICE_NOT_CONNECTED
         .byte   AlertButtonOptions::TryAgainCancel ; ERR_WRITE_PROTECTED
         .byte   AlertButtonOptions::OK             ; ERR_INVALID_PATHNAME
-        .byte   AlertButtonOptions::TryAgainCancel ; ERR_PATH_NOT_FOUND
+        .byte   AlertButtonOptions::OK             ; ERR_PATH_NOT_FOUND
         .byte   AlertButtonOptions::OK             ; ERR_VOL_NOT_FOUND
         .byte   AlertButtonOptions::OK             ; ERR_FILE_NOT_FOUND
         .byte   AlertButtonOptions::OK             ; ERR_DUPLICATE_FILENAME
