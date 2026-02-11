@@ -142,3 +142,39 @@ test.Step(
     drive:load(src)
 end)
 
+--[[
+  Open a window for a floppy disk. Drag a file to a folder on the same
+  disk. When alert shows, click Cancel. Verify that DeskTop doesn't
+  crash.
+]]
+test.Step(
+  "no crash on cancel after failed copy-or-move check",
+  function()
+    local drive = s6d1
+    local src = drive.filename
+
+    a2d.CreateFolder("/WITH.FILES/FOLDER")
+    emu.wait(1)
+
+    a2d.OpenPath("/WITH.FILES")
+    emu.wait(1)
+
+    a2d.Select("FOLDER")
+    local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.Select("LOREM.IPSUM")
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    drive:unload()
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
+
+    a2dtest.WaitForAlert()
+    a2d.DialogCancel()
+    emu.wait(1)
+
+    a2dtest.ExpectNotHanging()
+
+    -- cleanup
+    drive:load(src)
+    a2d.DeletePath("/WITH.FILES/FOLDER")
+end)

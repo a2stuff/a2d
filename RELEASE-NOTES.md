@@ -64,6 +64,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Eliminate unnecessary window refreshes after canceled move/delete.
 * Add option to skip checking 5.25" drives on startup.
 * Adjust order of startup operations to make icons appear faster.
+* Fix crash after canceling prompt when moving files on ejected disk.
 
 ### Selector
 
