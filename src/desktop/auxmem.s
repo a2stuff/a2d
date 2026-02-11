@@ -532,13 +532,20 @@ message_table_high:
         ASSERT_TABLE_SIZE message_table_high, kNumAlerts
 
 alert_options_table:
+        ;; NOTE: Options for ProDOS errors *must* be limited to OK
+        ;; (there was no choice) or Try Again / Cancel (i.e. maybe
+        ;; retry). If the options were OK / Cancel, then returning OK
+        ;; to the caller changes its meaning depending on the error,
+        ;; and the goal of this approach is to allow the caller to
+        ;; delegate the knowledge of which codes are retryable.
+
         .byte   AlertButtonOptions::OK             ; kErrUnknown
         .byte   AlertButtonOptions::OK             ; ERR_IO_ERROR
         .byte   AlertButtonOptions::OK             ; ERR_DEVICE_NOT_CONNECTED
         .byte   AlertButtonOptions::TryAgainCancel ; ERR_WRITE_PROTECTED
         .byte   AlertButtonOptions::OK             ; ERR_INVALID_PATHNAME
         .byte   AlertButtonOptions::OK             ; ERR_PATH_NOT_FOUND
-        .byte   AlertButtonOptions::OK             ; ERR_VOL_NOT_FOUND
+        .byte   AlertButtonOptions::TryAgainCancel ; ERR_VOL_NOT_FOUND
         .byte   AlertButtonOptions::OK             ; ERR_FILE_NOT_FOUND
         .byte   AlertButtonOptions::OK             ; ERR_DUPLICATE_FILENAME
         .byte   AlertButtonOptions::OK             ; ERR_OVERRUN_ERROR
@@ -547,7 +554,7 @@ alert_options_table:
         .byte   AlertButtonOptions::OK             ; ERR_NOT_PRODOS_VOLUME
         .byte   AlertButtonOptions::OK             ; ERR_DUPLICATE_VOLUME
 
-        .byte   AlertButtonOptions::OKCancel       ; kErrInsertSystemDisk
+        .byte   AlertButtonOptions::TryAgainCancel ; kErrInsertSystemDisk
         .byte   AlertButtonOptions::OKCancel       ; kErrSaveChanges
         .byte   AlertButtonOptions::OK             ; kErrDuplicateVolName
         .byte   AlertButtonOptions::OK             ; kErrBasicSysNotFound

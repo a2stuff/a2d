@@ -78,8 +78,6 @@ prefix_path:    .res    kPathBufferSize, 0
 ;;; ============================================================
 
         ;; Early errors - show alert and return to DeskTop
-fail:   jmp     JUMP_TABLE_SHOW_ALERT
-
 start:
         ;; Get active window's path
         jsr     GetWinPath
@@ -90,8 +88,7 @@ start:
         ;; Find BASIC.SYSTEM
         jsr     CheckBasicSystem
     IF NOT_ZERO
-        lda     #kErrBasicSysNotFound
-        bne     fail
+        TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#kErrBasicSysNotFound
     END_IF
 
          ;; Restore system state: devices, /RAM, ROM/ZP banks.

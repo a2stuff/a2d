@@ -65,6 +65,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Add option to skip checking 5.25" drives on startup.
 * Adjust order of startup operations to make icons appear faster.
 * Fix crash after canceling prompt when moving files on ejected disk.
+* Make retries on "volume not found" errors more consistent.
 
 ### Selector
 

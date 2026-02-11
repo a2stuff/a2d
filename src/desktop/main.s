@@ -1411,11 +1411,16 @@ rest:
 retry:  jsr     GetSrcFileInfo
     IF CS
         bit     sys_prompt_flag
-        jpl     ShowAlert       ; arbitrary ProDOS error
+      IF NC
+        jsr     ShowAlert       ; arbitrary ProDOS error
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
+        beq     retry
+        rts
+      END_IF
 
         CALL    ShowAlert, A=#kErrInsertSystemDisk
-        cmp     #kAlertResultOK
-        beq     retry           ; ok, so try again
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
+        beq     retry
         rts                     ; cancel, so fail
     END_IF
 
@@ -1678,6 +1683,7 @@ LaunchFileWithPath := LaunchFileWithPathImpl::normal_disk
 .proc ReadLinkFile
         read_buf := $800
 
+retry:
         MLI_CALL OPEN, open_params
         bcs     err
         lda     open_params::ref_num
@@ -1706,6 +1712,9 @@ LaunchFileWithPath := LaunchFileWithPathImpl::normal_disk
 
 bad:    lda     #kErrUnknown
 err:    jsr     ShowAlert       ; arbitrary ProDOS error or `kErrUnknown`
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
+        beq     retry
+
         RETURN  C=1
 
 check_header:
@@ -2232,8 +2241,8 @@ CmdDeskAcc      := CmdDeskAccImpl::start
 retry:  MLI_CALL OPEN, open_params
     IF CS
         CALL    ShowAlert, A=#kErrInsertSystemDisk
-        cmp     #kAlertResultOK
-        beq     retry           ; ok, so try again
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
+        beq     retry
         rts                     ; cancel, so fail
     END_IF
 
@@ -2731,8 +2740,8 @@ retry:
         MLI_CALL OPEN, open_params
     IF CS
         CALL    ShowAlert, A=#kErrInsertSystemDisk
-        cmp     #kAlertResultOK
-        beq     retry           ; ok, so try again
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
+        beq     retry
         jmp     SetCursorPointer ; after loading module (failure)
     END_IF
 
@@ -5111,7 +5120,7 @@ ret:    rts
         ;; --------------------------------------------------
 
 show_error:
-        jmp     ShowAlert
+        TAIL_CALL ShowAlertOption, X=#AlertButtonOptions::OK
 
         ;; --------------------------------------------------
 
@@ -5274,7 +5283,7 @@ arbitrary_target:
         jmp     TriggerRenameForFileIconWithStashedName
 
         ;; --------------------------------------------------
-err:    jmp     ShowAlert
+err:    TAIL_CALL ShowAlertOption, X=#AlertButtonOptions::OK
 
 .endproc ; CmdMakeLinkImpl
         CmdMakeLink := CmdMakeLinkImpl::target_selection
@@ -5300,8 +5309,8 @@ err:    jmp     ShowAlert
         CALL    FindIconForPath, AX=#src_path_buf
         jne     SelectIconAndEnsureVisible
 
-        lda     #ERR_VOL_NOT_FOUND
-alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_VOL_NOT_FOUND`
+        lda     #ERR_FILE_NOT_FOUND
+alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_FILE_NOT_FOUND`
 .endproc ; CmdShowLink
 
 ;;; ============================================================
@@ -6978,7 +6987,7 @@ file_entry_to_file_record_mapping_table:
         ;; Show error, unless this is during window restore.
         bit     suppress_error_on_open_flag
       IF NC
-        jsr     ShowAlert       ; arbitrary ProDOS error
+        CALL    ShowAlertOption, X=#AlertButtonOptions::OK
       END_IF
 
         TAIL_CALL _HandleFailure, C=1 ; check vol flag (yes)
@@ -11882,14 +11891,13 @@ retry:  CALL    GetFileInfo, AX=src_ptr
         push16  #filename_buf
         FORMAT_MESSAGE 1, aux::str_alert_insert_disk_format
 
-        CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#text_input_buf
-        ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        bne     cancel          ; not kAlertResultTryAgain = 0
-
+        CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#text_input_buf
+    IF A <> #kAlertResultCancel
         ;; Poll drives before trying again
         MLI_CALL ON_LINE, on_line_all_drives_params
         bne     cancel
         rts                     ; A=0/Z=1
+    END_IF
 
 cancel:
         TAIL_CALL CloseFilesCancelDialogWithAppropriateResult
@@ -11981,7 +11989,7 @@ ShowErrorAlertDst := ShowErrorAlertImpl::dst
 retry:  jsr     GetSrcFileInfo
       IF CS
         jsr     ShowAlert       ; arbitrary ProDOS error
-        cmp     #kAlertResultTryAgain
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry
         jmp     next
       END_IF
@@ -12424,18 +12432,20 @@ no_change:
         ;; Update case bits, in memory or on disk
         jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 
+retry:
         MLI_CALL RENAME, rename_params
     IF_CS
         ;; Failed, maybe retry
-        jsr     ShowAlert       ; Alert options depend on specific ProDOS error
+        jsr     ShowAlert       ; arbitrary ProDOS error
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        jeq     run_dialog      ; `kAlertResultTryAgain` = 0
+        beq     retry           ; `kAlertResultTryAgain` = 0
         jsr     _DialogClose
         jmp     fail
     END_IF
 
         ;; --------------------------------------------------
         ;; Completed - tear down the dialog...
+
         jsr     _DialogClose
 
         ;; Erase the icon, in case new name is shorter
@@ -13355,8 +13365,8 @@ retry:  MLI_CALL OPEN, open_params
         button_options := *+1
         ldx     #SELF_MODIFIED_BYTE
         jsr     ShowAlertOption
-        cmp     #kAlertResultOK
-        beq     retry
+        cmp     #kAlertResultCancel ; might be any of OK, Cancel, or Try Again!
+        bne     retry
         jsr     SetCursorPointer ; after loading overlay (failure)
         RETURN  A=#$FF          ; failed
     END_IF

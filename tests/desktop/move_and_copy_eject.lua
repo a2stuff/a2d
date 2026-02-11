@@ -43,12 +43,12 @@ test.Step(
     a2d.DialogOK()
 
     for i = 1, 3 do
-      a2dtest.WaitForAlert()
+      a2dtest.WaitForAlert({imatch="insert the disk: WITH%.FILES"})
       drive:unload()
       drive:load(src)
       a2d.DialogOK()
 
-      a2dtest.WaitForAlert()
+      a2dtest.WaitForAlert({imatch="insert the disk: FLOPPY2"})
       drive:unload()
       drive:load(dst)
       a2d.DialogOK()

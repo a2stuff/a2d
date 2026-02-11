@@ -1470,8 +1470,9 @@ error:
         ldx     #kErrInsertSystemDisk
         stx     message
 
-        cmp     #kAlertResultOK
-        beq     retry
+        ;; Responses are either OK/Cancel or Try Again/Cancel
+        cmp     #kAlertResultCancel
+        bne     retry
 
         sec                     ; failed
 ret:    rts

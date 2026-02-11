@@ -881,7 +881,8 @@ start:
         jsr     FetchControlBlock
         pla                     ; A = error code (0 = success)
     IF NOT_ZERO
-        jsr     JUMP_TABLE_SHOW_ALERT ; arbitrary ProDOS error
+        ;; A = arbitrary ProDOS error but we don't support retries so...
+        CALL    JUMP_TABLE_SHOW_ALERT, A=#ERR_IO_ERROR
     END_IF
 
         bit     dirty_flag

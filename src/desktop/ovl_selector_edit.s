@@ -303,7 +303,7 @@ invalid:
         ;; error is too obscure to bother with a dedicated message.
         lda     #ERR_INVALID_PATHNAME
 
-alert:  TAIL_CALL ShowAlert
+alert:  TAIL_CALL ShowAlertOption, X=#AlertButtonOptions::OK
 
 .endproc ; HandleOK
 

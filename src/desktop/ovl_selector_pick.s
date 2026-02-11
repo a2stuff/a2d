@@ -973,7 +973,7 @@ retry_create_and_open:
 
         ;; Second time - prompt to insert.
         CALL    ShowAlert, A=#kErrInsertSystemDisk
-        cmp     #kAlertResultOK
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry_create_and_open
 
 cancel: rts
@@ -1013,7 +1013,7 @@ retry:  MLI_CALL OPEN, open_curpfx_params
         cmp     #ERR_FILE_NOT_FOUND
         beq     not_found
         CALL    ShowAlert, A=#kErrInsertSystemDisk
-        cmp     #kAlertResultOK
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry
         RETURN  A=#$FF          ; failure
 
@@ -1061,7 +1061,7 @@ retry_create_and_open:
         MLI_CALL OPEN, open_curpfx_params
     IF CS
         CALL    ShowAlert, A=#kErrInsertSystemDisk
-        cmp     #kAlertResultOK
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry_create_and_open
         RETURN  A=#$FF
     END_IF

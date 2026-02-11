@@ -1019,7 +1019,7 @@ slot_string_table:
         lda     main::pending_alert
     IF NOT_ZERO
         tay
-        jsr     ShowAlert
+        CALL    ShowAlertOption, X=#AlertButtonOptions::OK
     END_IF
 
         ;; And start pumping events
