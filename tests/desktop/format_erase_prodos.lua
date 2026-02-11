@@ -29,9 +29,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("erase \"Floppy1\""),
-                "prompt should say ProDOS disk name with adjusted case")
+    a2dtest.WaitForAlert({match="erase \"Floppy1\""})
 
     a2d.DialogCancel()
 end)

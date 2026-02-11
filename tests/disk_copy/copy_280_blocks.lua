@@ -51,8 +51,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- complete
-    a2dtest.WaitForAlert({timeout=10800})
-    test.Expect(a2dtest.OCRScreen():find("The copy was successful"), "copy should succeed")
+    a2dtest.WaitForAlert({timeout=10800, match="The copy was successful"})
     local transfer, read, written = a2dtest.DiskCopyGetBlockCounts()
     local total = 280
     test.ExpectEquals(read, transfer, "blocks read should match transfer count")

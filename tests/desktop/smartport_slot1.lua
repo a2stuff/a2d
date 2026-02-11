@@ -24,7 +24,7 @@ test.Step(
     a2d.FormatEraseSelectSlotDrive(1, 1)
     apple2.Type("A") -- same name
     a2d.DialogOK()
-    a2dtest.WaitForAlert() -- confirmation
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
     emu.wait(5)
     a2d.OpenPath("/A")

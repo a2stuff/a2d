@@ -80,7 +80,7 @@ test.Step(
     a2d.WaitForRepaint()
 
     a2d.Drag(a_x, a_y, trash_x, trash_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
     a2dtest.ExpectAlertNotShowing()
 
@@ -120,8 +120,7 @@ test.Step(
     a2d.Drag(b_x, b_y, a_x, a_y)
 
     a2d.Drag(a_x, a_y, trash_x, trash_y)
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("delete 2 files?"), "count should be 2 files")
+    a2dtest.WaitForAlert({match="delete 2 files%?"})
     a2d.DialogOK({no_wait=true})
     a2dtest.MultiSnap(30, "count stops at 0")
 
@@ -149,7 +148,7 @@ test.Step(
 
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, trash_x, trash_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
     emu.wait(5)
 
@@ -175,7 +174,7 @@ test.Step(
     a2d.CycleWindows()
 
     a2d.OADelete()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
     emu.wait(5)
 
@@ -193,7 +192,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/DELETION/X")
     a2d.OADelete()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     a2dtest.WaitForAlert()
@@ -243,7 +242,7 @@ test.Step(
 
     -- Drag to trash
     a2d.Drag(icon_x, icon_y, trash_x, trash_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the disk"})
     a2d.DialogCancel() -- insert disk
     a2d.WaitForRepaint()
 
@@ -271,7 +270,7 @@ test.Step(
 
     -- Drag to trash
     a2d.Drag(icon_x, icon_y, trash_x, trash_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
 
     -- Eject disk
     local current = s6d1.filename
@@ -280,11 +279,11 @@ test.Step(
     a2d.DialogOK() -- confirm
     a2d.WaitForRepaint()
 
-    a2dtest.WaitForAlert()
-    a2d.DialogCancel() -- insert disk
+    a2dtest.WaitForAlert({match="Insert the disk"})
+    a2d.DialogCancel()
     a2d.WaitForRepaint()
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="The volume cannot be found"})
     a2d.DialogOK() -- failure
     emu.wait(5) -- slow I/O
 

@@ -93,10 +93,7 @@ test.Step(
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert({match="Are you sure"})
-    test.Expect(a2dtest.OCRScreen():find(
-                  "Are you sure you want to erase the DOS 3.3 disk in slot"),
-                "prompt should reference DOS 3.3 disk in S6,D1 with no name and no quote")
+    a2dtest.WaitForAlert({match="Are you sure you want to erase the DOS 3.3 disk in slot"})
 
     -- cleanup
     a2d.DialogCancel()

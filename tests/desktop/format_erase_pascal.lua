@@ -28,9 +28,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("erase \"TK:\""),
-                "prompt should name Pascal disk in uppercase")
+    a2dtest.WaitForAlert({match="erase \"TK:\""})
 
     a2d.DialogCancel()
 end)

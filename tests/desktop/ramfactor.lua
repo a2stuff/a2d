@@ -198,9 +198,7 @@ RAMCardTest(
     local dst_y = dst_window_y + dst_window_h + 5
 
     a2d.Drag(icon_x, icon_y, dst_x, dst_y)
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("item cannot be moved or copied into itself"),
-                "alert should be about copy into itself")
+    a2dtest.WaitForAlert({match="item cannot be moved or copied into itself"})
     a2d.DialogOK()
 end)
 

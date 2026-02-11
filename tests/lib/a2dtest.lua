@@ -305,8 +305,12 @@ end
 function a2dtest.WaitForAlert(options)
   util.WaitFor("alert", a2dtest.IsAlertShowing, options)
   emu.wait(0.5) -- let the alert finish drawing
-  if options and options.match then
+  if options and (options.match or options.imatch) then
     local ocr = a2dtest.OCRScreen({x1=130, y1=75, x2=470, y2=100})
+    if options.imatch then
+      ocr = ocr:upper()
+      options.match = options.imatch:upper()
+    end
     test.Expect(ocr:find(options.match), "alert should match " .. options.match, {snap=true}, 1)
   end
 end

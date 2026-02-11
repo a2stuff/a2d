@@ -82,9 +82,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("Are you sure you want to erase.*%?"),
-                "prompt should confirm overwrite, not a duplicate name")
+    a2dtest.WaitForAlert({match="Are you sure you want to erase.*%?"})
     a2d.DialogCancel()
 end)
 
@@ -105,9 +103,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("That name already exists%. Please use another name%."),
-                "prompt should say the name is in use")
+    a2dtest.WaitForAlert({match="That name already exists%. Please use another name%."})
     a2d.DialogCancel()
     a2d.DialogCancel()
 end)
@@ -129,9 +125,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("Are you sure you want to erase.*%?"),
-                "prompt should confirm overwrite, not a duplicate name")
+    a2dtest.WaitForAlert({match="Are you sure you want to erase.*%?"})
     a2d.DialogCancel()
 end)
 
@@ -341,9 +335,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():upper():find("\"A2.DESKTOP\""),
-                "prompt should name selected volume")
+    a2dtest.WaitForAlert({imatch='"A2.DESKTOP"'})
 
     a2d.DialogCancel()
 end)

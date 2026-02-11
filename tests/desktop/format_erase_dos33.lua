@@ -28,9 +28,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("erase .*DOS 3.3 disk.*slot.*6.*drive.*1"),
-                "prompt should say DOS 3.3 disk in slot 6, drive 1")
+    a2dtest.WaitForAlert({match="erase .*DOS 3.3 disk.*slot.*6.*drive.*1"})
 
     a2d.DialogCancel()
 end)

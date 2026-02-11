@@ -29,9 +29,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- Confirmation prompt
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("erase \"GS%.OS%.mixed\""),
-                "prompt should say GS/OS disk name with assigned case")
+    a2dtest.WaitForAlert({match="erase \"GS%.OS%.mixed\""})
 
     a2d.DialogCancel()
 end)

@@ -27,9 +27,7 @@ test.Step(
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
 
-    a2dtest.WaitForAlert()
-    test.Expect(a2dtest.OCRScreen():find("slot.*7.*drive.*2%?"),
-                "prompt should show slot 7, drive 2")
+    a2dtest.WaitForAlert({match="slot.*7.*drive.*2%?"})
     a2d.DialogOK()
 
     util.WaitFor(
