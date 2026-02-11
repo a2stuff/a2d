@@ -14024,7 +14024,7 @@ kEntriesPerBlock = $0D
         ;; --------------------------------------------------
         ;; Open directory, search blocks for filename
 
-        JUMP_TABLE_MLI_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         jcs     exit
 
         lda     open_params::ref_num
@@ -14035,7 +14035,7 @@ next_block:
         ;; This is the block we're about to read; save for later.
         copy16  block_buf+2, current_block
 
-        JUMP_TABLE_MLI_CALL READ, read_params
+        MLI_CALL READ, read_params
         bcs     close
         copy8   #AS_BYTE(-1), entry_num
         entry_ptr := $06
@@ -14089,7 +14089,7 @@ next_entry:
         clc
 
 close:  php
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         plp
 exit:
         ;; Only valid if C=0
