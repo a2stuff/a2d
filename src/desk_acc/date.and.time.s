@@ -1405,7 +1405,7 @@ close:  php                     ; preserve result
 error:
         message := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     JUMP_TABLE_SHOW_ALERT
+        jsr     JUMP_TABLE_SHOW_ALERT ; `kErrSaveChanges` or `kErrInsertSystemDisk`
 
         ;; Second time - prompt to insert.
         ldx     #kErrInsertSystemDisk

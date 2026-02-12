@@ -214,7 +214,7 @@ l12:    pha
         pla
     IF A = #ERR_WRITE_PROTECTED
 
-        jsr     ShowAlert
+        jsr     ShowAlert       ; `ERR_WRITE_PROTECTED`
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     finish          ; `kAlertResultCancel` = 1
         beq     retry           ; `kAlertResultTryAgain` = 0
@@ -265,7 +265,7 @@ retry:
 
     IF A = #ERR_WRITE_PROTECTED
 
-        jsr     ShowAlert
+        jsr     ShowAlert       ; `ERR_WRITE_PROTECTED`
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     finish          ; `kAlertResultCancel` = 1
         beq     retry           ; `kAlertResultTryAgain` = 0

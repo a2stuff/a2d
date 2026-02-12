@@ -299,8 +299,11 @@ ok:     jsr     file_dialog::CloseWindow
         RETURN  A=#0
 
 invalid:
+        ;; This is really "invalid options for this selection" but the
+        ;; error is too obscure to bother with a dedicated message.
         lda     #ERR_INVALID_PATHNAME
-alert:  jmp     ShowAlert
+
+alert:  TAIL_CALL ShowAlert
 
 .endproc ; HandleOK
 

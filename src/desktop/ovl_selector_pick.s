@@ -986,7 +986,7 @@ cancel: rts
 retry_write:
         MLI_CALL WRITE, write_params
     IF CS
-        jsr     ShowAlert
+        jsr     ShowAlert       ; arbitrary ProDOS error
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry_write     ; `kAlertResultTryAgain` = 0
     END_IF
@@ -1073,7 +1073,7 @@ retry_create_and_open:
 retry_write:
         MLI_CALL WRITE, write_params
     IF CS
-        jsr     ShowAlert
+        jsr     ShowAlert       ; arbitrary ProDOS error
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry_write     ; `kAlertResultTryAgain` = 0
     END_IF

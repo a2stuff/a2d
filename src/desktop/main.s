@@ -1411,7 +1411,7 @@ rest:
 retry:  jsr     GetSrcFileInfo
     IF CS
         bit     sys_prompt_flag
-        jpl     ShowAlert
+        jpl     ShowAlert       ; arbitrary ProDOS error
 
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         cmp     #kAlertResultOK
@@ -1486,7 +1486,7 @@ binary:
         jne     launch
         jsr     ModifierDown ; Otherwise, only launch if a button is down
         jmi     launch
-        CALL    ShowAlertParams,  Y=#AlertButtonOptions::OKCancel, AX=#aux::str_alert_confirm_running
+        CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#aux::str_alert_confirm_running
         RTS_IF A <> #kAlertResultOK
         jmp     launch
 
@@ -1705,7 +1705,7 @@ LaunchFileWithPath := LaunchFileWithPathImpl::normal_disk
     END_IF
 
 bad:    lda     #kErrUnknown
-err:    jsr     ShowAlert
+err:    jsr     ShowAlert       ; arbitrary ProDOS error or `kErrUnknown`
         RETURN  C=1
 
 check_header:
@@ -1854,7 +1854,7 @@ devlst_backup:
         lda     selected_icon_count
       IF NOT_ZERO
         CALL    GetIconPath, A=selected_icon_list ; `operation_src_path` set to path; A=0 on success
-        jne     ShowAlert       ; too long
+        jne     ShowAlert       ; `ERR_INVALID_PATHNAME`
 
         CALL    CopyToBuf0, AX=#operation_src_path
       END_IF
@@ -2204,7 +2204,7 @@ CmdDeskAcc      := CmdDeskAccImpl::start
         lda     selected_icon_list ; first selected icon
       IF A <> trash_icon_num    ; ignore trash
         jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
-        jne     ShowAlert       ; too long
+        jne     ShowAlert       ; `ERR_INVALID_PATHNAME`
         CALL    CopyToSrcPath, AX=#operation_src_path
       END_IF
     END_IF
@@ -2599,7 +2599,7 @@ maybe_open_file:
 
         txa                     ; A = icon id
         jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
-        jne     ShowAlert       ; too long
+        jne     ShowAlert       ; `ERR_INVALID_PATHNAME`
         CALL    CopyToSrcPath, AX=#operation_src_path
 
         jmp     LaunchFileWithPath
@@ -5192,7 +5192,7 @@ arbitrary_target:
         ;; Prep struct for writing
 
         CALL    GetIconPath, A=selected_icon_list ; `operation_src_path` set to path; A=0 on success
-        jne     ShowAlert       ; too long
+        jne     ShowAlert       ; `ERR_INVALID_PATHNAME`
 
         ldx     #kHeaderSize-1
     DO
@@ -5301,7 +5301,7 @@ err:    jmp     ShowAlert
         jne     SelectIconAndEnsureVisible
 
         lda     #ERR_VOL_NOT_FOUND
-alert:  jmp     ShowAlert
+alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_VOL_NOT_FOUND`
 .endproc ; CmdShowLink
 
 ;;; ============================================================
@@ -5962,7 +5962,7 @@ for_icon:
         ;; Compute the path, if it fits
         CALL    GetIconPath, A=icon_param ; `operation_src_path` set to path, A=0 on success
     IF NOT_ZERO
-        jsr     ShowAlert       ; A has error if `GetIconPath` fails
+        jsr     ShowAlert       ; `ERR_INVALID_PATHNAME`
         ldx     saved_stack
         txs
         rts
@@ -6978,7 +6978,7 @@ file_entry_to_file_record_mapping_table:
         ;; Show error, unless this is during window restore.
         bit     suppress_error_on_open_flag
       IF NC
-        jsr     ShowAlert
+        jsr     ShowAlert       ; arbitrary ProDOS error
       END_IF
 
         TAIL_CALL _HandleFailure, C=1 ; check vol flag (yes)
@@ -9557,7 +9557,7 @@ ret:    rts
 target_is_icon:
         jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
     IF NE
-        jsr     ShowAlert
+        jsr     ShowAlert       ; `ERR_INVALID_PATHNAME`
         RETURN  C=1             ; failure
     END_IF
 
@@ -9683,7 +9683,7 @@ iterate_selection:
         lda     selected_icon_list,x
       IF A <> trash_icon_num
         jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
-        jne     ShowErrorAlert  ; too long
+        jne     ShowErrorAlert  ; `ERR_INVALID_PATHNAME`
 
         ;; During selection iteration, allow Escape to cancel the operation.
         jsr     CheckCancel
@@ -10297,7 +10297,7 @@ fail:   jmp     CloseFilesCancelDialogWithAppropriateResult
         ;; Issue a `GET_FILE_INFO` on destination to set `DEVNUM`
 retry:  CALL    GetFileInfo, AX=#operation_dst_path
     IF CS
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 
@@ -10440,7 +10440,7 @@ operation_lifecycle_callbacks_for_copy:
         ;; Populate `src_file_info_params`
 retry:  jsr     GetSrcFileInfo
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
         copy8   DEVNUM, src_vol_devnum
@@ -10580,7 +10580,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
 .if ::kCopyInteractive
     IF NOT_ZERO
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 .else
@@ -10619,7 +10619,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         copy16  #0, dst_file_info_params::blocks_used
 retry:  jsr     GetDstFileInfo
     IF CS AND A <> #ERR_FILE_NOT_FOUND
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 
@@ -10670,7 +10670,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         rts                     ; silently leave file
        END_IF
 
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     retry           ; always
       END_IF
     END_IF
@@ -10738,7 +10738,7 @@ retry:
         MLI_CALL CREATE, create_params
     IF CS
       IF A <> #ERR_DUPLICATE_FILENAME
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error (except `ERR_DUPLICATE_FILENAME`)
         beq     retry           ; always
       END_IF
 
@@ -10746,7 +10746,7 @@ retry:
         ;; File exists
         jsr     GetDstFileInfo
       IF CS
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error
         beq     retry           ; always
       END_IF
 
@@ -10781,7 +10781,7 @@ retry2: MLI_CALL DESTROY, destroy_dst_params
         jsr     UnlockDstFile
         beq     retry2
        END_IF
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error (except `ERR_ACCESS_ERROR`)
         beq     retry2          ; always
       END_IF
 .endif
@@ -10877,7 +10877,7 @@ Start:  lda     DEVNUM
 :
         CALL    GetFileEntryBlock, AX=#src_path_buf
     IF CS
-        CALL    ShowErrorAlert
+        CALL    ShowErrorAlert  ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
         stax    src_block_params::block_num
@@ -10885,7 +10885,7 @@ Start:  lda     DEVNUM
 :
         CALL    GetFileEntryBlock, AX=#dst_path_buf
     IF CS
-        CALL    ShowErrorAlert
+        CALL    ShowErrorAlert  ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
         stax    dst_block_params::block_num
@@ -10956,7 +10956,7 @@ Start:  lda     DEVNUM
 
 :       MLI_CALL DESTROY, destroy_src_params
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
         rts
@@ -10966,13 +10966,13 @@ Start:  lda     DEVNUM
 .proc _ReadBlocks
 :       MLI_CALL READ_BLOCK, src_block_params
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
 
 :       MLI_CALL READ_BLOCK, dst_block_params
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
 
@@ -10984,13 +10984,13 @@ Start:  lda     DEVNUM
 .proc _WriteBlocks
 :       MLI_CALL WRITE_BLOCK, src_block_params
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
 
 :       MLI_CALL WRITE_BLOCK, dst_block_params
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
 
@@ -11036,7 +11036,7 @@ retry:  MLI_CALL READ, read_src_params
         cmp     #ERR_END_OF_FILE
         beq     close
 .if ::kCopyInteractive
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error (except `ERR_END_OF_FILE`)
         beq     retry           ; always
 .else
         .refto retry
@@ -11111,7 +11111,7 @@ src_dst_exclusive_flag:
 retry:  MLI_CALL OPEN, open_src_params
 .if ::kCopyInteractive
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 .else
@@ -11146,7 +11146,7 @@ retry:  MLI_CALL OPEN, open_dst_params
         cmp     #ERR_VOL_NOT_FOUND
         beq     finish
       END_IF
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error (except `ERR_VOL_NOT_FOUND`)
         beq     retry           ; always
     END_IF
 .else
@@ -11268,7 +11268,7 @@ retry:  MLI_CALL WRITE, write_dst_params
 .if ::kCopyInteractive
         .refto ret
     IF CS
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 .else
@@ -11361,7 +11361,7 @@ operation_lifecycle_callbacks_for_delete:
 
 retry:  jsr     GetSrcFileInfo
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 
@@ -11425,7 +11425,7 @@ unlock: jsr     UnlockSrcFile
 
 done:   rts
 
-error:  jsr     ShowErrorAlert
+error:  jsr     ShowErrorAlert  ; arbitrary ProDOS error (except `ERR_ACCESS_ERROR`)
         beq     retry           ; always
 .endproc ; DeleteFileCommon
 
@@ -11534,7 +11534,7 @@ operation_traversal_callbacks_for_enumeration:
         jsr     CopyPathsFromBufsToSrcAndDst
 retry:  jsr     GetSrcFileInfo
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 
@@ -11810,7 +11810,7 @@ match:  lda     flag
         ;; Same vol - but are block operations supported?
 retry:  CALL    GetFileInfo, AX=src_ptr
     IF CS
-        jsr     ShowErrorAlert
+        jsr     ShowErrorAlert  ; arbitrary ProDOS error
         beq     retry           ; always
     END_IF
 
@@ -11850,7 +11850,7 @@ retry:  CALL    GetFileInfo, AX=src_ptr
         copy8   #$A, dst_file_info_params::param_count ; GET_FILE_INFO
         pla
     IF CS
-        jsr     ShowErrorAlertDst
+        jsr     ShowErrorAlertDst ; arbitrary ProDOS error
         beq     :-              ; always
     END_IF
         rts
@@ -11866,9 +11866,9 @@ retry:  CALL    GetFileInfo, AX=src_ptr
         ENTRY_POINTS_FOR_BIT7_FLAG dst, src, dst_flag
 
     IF A <> #ERR_VOL_NOT_FOUND
-        jsr     ShowAlert
+        jsr     ShowAlert       ; arbitrary ProDOS error (except `ERR_VOL_NOT_FOUND`)
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        bne     close           ; not kAlertResultTryAgain = 0
+        bne     cancel          ; not kAlertResultTryAgain = 0
         rts                     ; A=0/Z=1
     END_IF
 
@@ -11884,14 +11884,15 @@ retry:  CALL    GetFileInfo, AX=src_ptr
 
         CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#text_input_buf
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        bne     close           ; not kAlertResultTryAgain = 0
+        bne     cancel          ; not kAlertResultTryAgain = 0
 
         ;; Poll drives before trying again
         MLI_CALL ON_LINE, on_line_all_drives_params
-        bne     close
+        bne     cancel
         rts                     ; A=0/Z=1
 
-close:  jmp     CloseFilesCancelDialogWithAppropriateResult
+cancel:
+        TAIL_CALL CloseFilesCancelDialogWithAppropriateResult
 
 dst_flag:       .byte   0       ; bit7
 
@@ -11971,17 +11972,17 @@ ShowErrorAlertDst := ShowErrorAlertImpl::dst
 
         jsr     GetIconPath     ; `operation_src_path` set to path; A=0 on success
       IF NE
-        jsr     ShowAlert
+        jsr     ShowAlert       ; `ERR_INVALID_PATHNAME`
         jmp     next
       END_IF
         CALL    CopyToSrcPath, AX=#operation_src_path
 
         ;; Try to get file/volume info
-common: jsr     GetSrcFileInfo
+retry:  jsr     GetSrcFileInfo
       IF CS
-        jsr     ShowAlert
+        jsr     ShowAlert       ; arbitrary ProDOS error
         cmp     #kAlertResultTryAgain
-        beq     common
+        beq     retry
         jmp     next
       END_IF
 
@@ -12357,7 +12358,7 @@ start:
         ;; Original path
         CALL    GetIconPath, A=selected_icon_list ; `operation_src_path` set to path; A=0 on success
     IF NE
-        jsr     ShowAlert
+        jsr     ShowAlert       ; `ERR_INVALID_PATHNAME`
         RETURN  A=result_flags
     END_IF
         CALL    CopyToSrcPath, AX=#operation_src_path
@@ -12374,7 +12375,8 @@ start:
         jsr     _DialogOpen
 
         ;; Run the dialog
-retry:  jsr     _DialogRun
+run_dialog:
+        jsr     _DialogRun
         beq     success
 
         ;; Failure
@@ -12414,7 +12416,7 @@ success:
         jsr     GetDstFileInfo
     IF CC
         CALL    ShowAlert, A=#ERR_DUPLICATE_FILENAME
-        jmp     retry
+        jmp     run_dialog
     END_IF
         ;; Try to rename
 
@@ -12423,17 +12425,18 @@ no_change:
         jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 
         MLI_CALL RENAME, rename_params
-        bcc     finish
+    IF_CS
         ;; Failed, maybe retry
         jsr     ShowAlert       ; Alert options depend on specific ProDOS error
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        jeq     retry           ; `kAlertResultTryAgain` = 0
+        jeq     run_dialog      ; `kAlertResultTryAgain` = 0
         jsr     _DialogClose
         jmp     fail
+    END_IF
 
         ;; --------------------------------------------------
         ;; Completed - tear down the dialog...
-finish: jsr     _DialogClose
+        jsr     _DialogClose
 
         ;; Erase the icon, in case new name is shorter
         copy8   selected_icon_list, icon_param
