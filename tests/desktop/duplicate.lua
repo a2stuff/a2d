@@ -24,7 +24,7 @@ test.Step(
 
     local id = mgtk.FrontWindow()
     a2d.OAShortcut("D")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="too large"})
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("OK"), "OK button should be showing")
     test.Expect(not ocr:find("Cancel"), "Cancel button should not be showing")
@@ -45,7 +45,7 @@ test.Step(
 
     local id = mgtk.FrontWindow()
     a2d.OAShortcut("D")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("OK"), "OK button should be showing")
     test.Expect(not ocr:find("Cancel"), "Cancel button should not be showing")

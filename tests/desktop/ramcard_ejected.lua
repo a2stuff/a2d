@@ -198,7 +198,7 @@ test.Step(
     drive:unload()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="insert the system disk"})
     drive:load(current)
     a2d.DialogCancel()
 

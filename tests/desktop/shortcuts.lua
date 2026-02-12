@@ -483,12 +483,12 @@ test.Step(
 
     a2d.OAShortcut("3")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="not valid"})
     a2d.DialogCancel()
 
     a2d.OAShortcut("4")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="not valid"})
     a2d.DialogCancel()
 
     a2d.OAShortcut("5")

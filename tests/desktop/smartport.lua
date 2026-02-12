@@ -50,7 +50,15 @@ test.Variants(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-    test.Snap("verify hard drives in S7,D1/2, S5D1/2 and S2,D1/2 (mirrored)")
+
+    local ocr = a2dtest.OCRScreen():upper()
+    test.Expect(ocr:find("S7,D1: COMPACT FLASH"), "S7,D1 HD should be present")
+    test.Expect(ocr:find("S7,D2: COMPACT FLASH"), "S7,D1 HD should be present")
+    test.Expect(ocr:find("S5,D1: SEAGATE"), "S5,D1 should be present")
+    test.Expect(ocr:find("S5,D2: SEAGATE"), "S5,D2 should be present")
+    test.Expect(ocr:find("S2,D1: SEAGATE"), "S2,D1 (mirrored) should be present")
+    test.Expect(ocr:find("S2,D2: SEAGATE"), "S2,D2 (mirrored) should be present")
+
     a2d.DialogCancel()
 
     for i, name in ipairs({"A", "B", "C", "D"}) do
@@ -64,7 +72,7 @@ test.Variants(
       a2d.DialogOK()
       apple2.Type(name) -- should match existing, so no alert
       a2d.DialogOK()
-      a2dtest.WaitForAlert() -- confirmation, not new name
+      a2dtest.WaitForAlert({match="Are you sure"})
       a2d.DialogOK()
       emu.wait(5)
       a2d.OpenPath("/"..name)

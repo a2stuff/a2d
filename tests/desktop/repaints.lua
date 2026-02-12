@@ -511,7 +511,7 @@ ObscuredWindowTest(
   end,
   function()
     a2d.OpenSelection()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
     emu.wait(5)
     test.Snap("verify TOO.MANY.FILES icon doesn't mispaint on desktop")
@@ -1079,7 +1079,7 @@ test.Step(
     emu.wait(5)
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="folder cannot be replaced"})
     a2d.DialogCancel()
     emu.wait(5)
 
@@ -1182,7 +1182,7 @@ test.Step(
     emu.wait(5)
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file already exists"})
     a2d.DialogCancel()
 
     test.Snap("verify icon in middle of screen repainted")
@@ -1214,7 +1214,7 @@ test.Step(
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
     emu.wait(5)
 

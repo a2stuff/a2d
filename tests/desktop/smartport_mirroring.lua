@@ -111,9 +111,7 @@ test.Step(
       a2d.DialogOK()
 
       -- Confirmation
-      a2dtest.WaitForAlert()
-      emu.wait(1)
-      test.Snap("verify name is \"EMPTY\"")
+      a2dtest.WaitForAlert({match="Are you sure.*\"EMPTY\""})
       a2d.DialogCancel()
       emu.wait(1)
 
@@ -143,9 +141,8 @@ test.Step(
       a2d.DialogOK()
 
       -- Confirmation
-      a2dtest.WaitForAlert()
-      emu.wait(1)
-      test.Snap(string.format("verify name is \"%c\"", string.byte("A")+index-1))
+      local disk = string.format("%c", string.byte("A")+index-1)
+      a2dtest.WaitForAlert({match="Are you sure.*\""..disk.."\""})
       a2d.DialogCancel()
       emu.wait(1)
     end

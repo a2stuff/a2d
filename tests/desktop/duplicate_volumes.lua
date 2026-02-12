@@ -13,7 +13,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "Duplicate volume names",
   function()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="2 volumes with the same name"})
     a2d.DialogOK()
     emu.wait(5)
     a2d.SelectAll()

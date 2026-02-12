@@ -23,11 +23,11 @@ test.Step(
     a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.FILES")
     a2d.SelectAll()
     a2d.CopySelectionTo("/RAM1")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("from: .*/Installer"), "filename 'Installer' should be visible")
     a2d.DialogOK({no_wait=true})
     a2dtest.MultiSnap(10, "verify watch cursor during remaining copy")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
 
     a2d.OpenPath("/RAM1")
@@ -50,7 +50,7 @@ test.Step(
     a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.FILES")
     a2d.SelectAll()
     a2d.CopySelectionTo("/RAM1")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("from: .*/Installer"), "filename 'Installer' should be visible")
     a2d.DialogCancel()
 
@@ -73,10 +73,10 @@ test.Step(
   "copy directory with GS/OS forked files - cancel second",
   function()
     a2d.CopyPath("/TESTS/PROPERTIES/GS.OS.FILES", "/RAM1")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("from: .*/Installer"), "filename 'Installer' should be visible")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("from: .*/Read.Me"), "filename 'Read.Me' should be visible")
     a2d.DialogCancel()
 
@@ -103,17 +103,17 @@ test.Step(
     -- initially cancel
     a2d.SelectAll()
     a2d.DeleteSelection()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/Installer"), "filename 'Installer' should be visible")
     a2d.DialogCancel()
 
     -- try again and continue this time
     a2d.SelectAll()
     a2d.DeleteSelection()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/Installer"), "filename 'Installer' should be visible")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/Read.Me"), "filename 'Read.Me' should be visible")
     a2d.DialogCancel()
 end)
@@ -130,14 +130,14 @@ test.Step(
   "delete directory with GS/OS forked files - continue",
   function()
     a2d.DeletePath("/TESTS/PROPERTIES/GS.OS.FILES")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/Installer"), "filename 'Installer' should be visible")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/Read.Me"), "filename 'Read.Me' should be visible")
     a2d.DialogOK()
 
-    a2dtest.WaitForAlert() -- error since directory not empty
+    a2dtest.WaitForAlert({match="unknown error occurred"}) -- error since directory not empty
     a2d.DialogOK()
 
     a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.FILES")
@@ -181,9 +181,9 @@ test.Step(
     a2d.Drag(
       src_x, src_y, -- GS.OS.FILES
       dst_x, dst_y) -- RAM1
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
     emu.wait(5)
     test.Snap("verify RAM1 window updated")
@@ -211,9 +211,9 @@ test.Step(
       src_x, src_y, -- GS.OS.MIXED
       dst_x, dst_y) -- RAM1
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
     emu.wait(5)
     test.Snap("verify RAM1 window updated")
@@ -255,9 +255,9 @@ test.Step(
 
     a2d.Select("GS.OS.FILES")
     a2d.CopySelectionTo("/RAM1")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
     emu.wait(5)
     test.Snap("verify RAM1 window activated and updated")
@@ -283,11 +283,11 @@ test.Step(
     a2d.Drag(icon_x, icon_y, trash_icon_x, trash_icon_y)
 
     -- confirm deletion
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- error
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2dtest.DHRDarkness()
     a2d.DialogCancel()
     emu.wait(5)
@@ -315,11 +315,11 @@ test.Step(
     a2d.Drag(icon_x, icon_y, trash_icon_x, trash_icon_y)
 
     -- confirm deletion
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- error
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2dtest.DHRDarkness()
     a2d.DialogOK()
     emu.wait(5)
@@ -343,7 +343,7 @@ test.Step(
     a2d.DeleteSelection()
 
     -- error
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unsupported file type"})
     a2dtest.DHRDarkness()
     a2d.DialogOK()
     emu.wait(5)

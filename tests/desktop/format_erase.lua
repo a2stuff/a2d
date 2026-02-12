@@ -48,7 +48,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation prompt
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- command
@@ -154,7 +154,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
     emu.wait(5) -- slow
 
@@ -182,11 +182,11 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation prompt
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- command
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="error"})
     a2d.DialogCancel()
 end)
 
@@ -207,7 +207,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- confirmation prompt
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- successful
@@ -239,7 +239,7 @@ FormatEraseTest(
     a2d.WaitForRepaint()
 
     -- confirmation prompt
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- successful

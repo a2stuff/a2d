@@ -34,7 +34,7 @@ test.Step(
     a2d.OAShortcut("1") -- Open HUNDRED.FILES
     emu.wait(5)
     a2d.OpenPath("/TESTS", {keep_windows=true})
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="window must be closed"})
     test.Expect(not a2dtest.OCRScreen():find("Cancel"), "alert should have no Cancel button")
     a2d.DialogOK()
     a2d.CloseAllWindows()
@@ -106,7 +106,7 @@ MaxIconsTest(
   "error on File > New Folder",
   function()
     a2d.OAShortcut("N") -- File > CreateFolder
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
     emu.wait(5)
     test.Snap("verify repaint is correct")
@@ -129,7 +129,7 @@ MaxIconsTest(
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "HUNDRED.FILES", "window should be active")
     apple2.DownArrowKey() -- select first
     a2d.CopySelectionTo("/RAM1", nil, {no_wait=true})
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
     test.Snap("verify repaint is correct")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "window should have closed")
@@ -156,7 +156,7 @@ MaxIconsTest(
     emu.wait(10)
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
     emu.wait(10)
     test.Snap("verify repaint is correct")
@@ -180,7 +180,7 @@ MaxIconsTest(
     a2d.SelectPath("/D", {keep_windows=true})
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
     emu.wait(10)
     test.Snap("verify repaint is correct")

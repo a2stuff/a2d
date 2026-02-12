@@ -406,7 +406,7 @@ test.Step(
     a2d.OAShortcut("R")
     a2d.NavigateFilePickerTo("/TESTS/ALIASES", "DELETED.ALIAS")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file cannot be found"})
     a2d.DialogOK() -- dismiss alert
     a2d.DialogCancel() -- close file picker
 
@@ -460,7 +460,7 @@ test.Step(
     apple2.Type("1")
     a2d.DialogOK()
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file cannot be found"})
     a2d.DialogOK() -- dismiss alert
 
     apple2.Type("D")
@@ -487,7 +487,7 @@ test.Step(
 
     apple2.Type("1")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="cannot be found"})
     a2d.DialogOK() -- dismiss alert
 
     apple2.Type("D")

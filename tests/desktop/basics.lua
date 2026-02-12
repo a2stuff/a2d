@@ -699,13 +699,13 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file cannot be opened"})
     a2d.DialogOK()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file cannot be opened"})
     test.Snap("verify alert renders with opaque background")
     a2d.DialogOK()
 
@@ -730,7 +730,7 @@ test.Step(
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(src_x, src_y, x+w/2, y+h/2)
     emu.wait(1)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     local dhr = apple2.SnapshotDHR()
@@ -1524,23 +1524,23 @@ test.Variants(
     local target_x, target_y = a2dtest.GetSelectedIconCoords()
 
     a2d.OAShortcut("O") -- File > Open
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     a2d.OAShortcut("I") -- File > Get Info
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     apple2.ReturnKey() -- File > Rename
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     a2d.CopySelectionTo("/RAM1") -- File > Copy To...
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     -- Drag file to folder
@@ -1548,7 +1548,7 @@ test.Variants(
       a2d.Select("LONGIMAGE")
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
       a2d.Drag(src_x, src_y, target_x, target_y)
-      a2dtest.WaitForAlert()
+      a2dtest.WaitForAlert({match="pathname is too long"})
       a2d.DialogOK()
     end
 
@@ -1556,14 +1556,14 @@ test.Variants(
     a2d.SelectPath("/RAM1", {keep_windows=true})
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(target_x, target_y, vol_x, vol_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     -- Drag folder to Trash
     a2d.SelectPath("/Trash", {keep_windows=true})
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(target_x, target_y, trash_x, trash_y)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
@@ -1593,7 +1593,7 @@ test.Step(
     end)
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, -1)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
 
     a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
@@ -1623,7 +1623,7 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
     a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
 end)

@@ -91,7 +91,7 @@ test.Step(
     drive:unload()
     a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the disk: WITH%.FILES"})
     a2d.DialogCancel()
 
     emu.wait(5)
@@ -126,11 +126,11 @@ test.Step(
     a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     drive:unload()
 
-    a2dtest.WaitForAlert() -- Insert the disk
+    a2dtest.WaitForAlert({match="Insert the disk: WITH%.FILES"})
     a2d.DialogCancel()
     a2d.WaitForRepaint()
 
-    a2dtest.WaitForAlert() -- The volume cannot be found
+    a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK()
     emu.wait(5)
 
@@ -168,7 +168,7 @@ test.Step(
     drive:unload()
     a2d.Drag(src_x, src_y, dst_x, dst_y)
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Insert the disk: WITH%.FILES"})
     a2d.DialogCancel()
     emu.wait(1)
 

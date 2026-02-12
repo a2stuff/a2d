@@ -139,7 +139,7 @@ test.Step(
     s6d1:load(pascal_image)
 
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_DRIVE)
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="disk could not be read"})
     a2d.DialogCancel()
     a2d.SelectAll()
     a2dtest.ExpectNotHanging()
@@ -184,7 +184,7 @@ test.Step(
     a2d.SelectPath("/FLOPPY1")
     s6d1:unload()
     a2d.OpenSelection()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK()
     emu.wait(5)
     test.Expect(not a2dtest.OCRScreen():upper():match("FLOPPY1"), "floppy icon should be gone")
@@ -345,7 +345,7 @@ test.Step(
   "inserting unformatted disk",
   function()
     s5d1:load(emu.subst_env("$UNFORMATTED_IMG"))
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="disk could not be read"})
     a2d.DialogOK()
     emu.wait(5)
     test.Expect(a2dtest.OCRScreen():find("S5,D1"), "S5,D1 should be specified")

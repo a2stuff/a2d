@@ -78,7 +78,7 @@ test.Step(
     drive:unload()
 
     a2d.CloseWindow()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="want to save"})
     a2d.DialogCancel()
 
     drive:load(current)

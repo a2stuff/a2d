@@ -26,7 +26,7 @@ test.Step(
     drive:unload()
 
     apple2.Type("D")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="insert the system disk"})
     apple2.EscapeKey()
     a2d.WaitForRepaint()
 

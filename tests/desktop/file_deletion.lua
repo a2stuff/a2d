@@ -195,22 +195,22 @@ test.Step(
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file is locked"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y/Z/B"), "prompt should be for B")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file is locked"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y/Z"), "prompt should be for Z")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file is locked"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y"), "prompt should be for Y")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="file is locked"})
     test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X"), "prompt should be for X")
     apple2.Type("Y")
     a2d.WaitForRepaint()
@@ -283,7 +283,7 @@ test.Step(
     a2d.DialogCancel()
     a2d.WaitForRepaint()
 
-    a2dtest.WaitForAlert({match="The volume cannot be found"})
+    a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK() -- failure
     emu.wait(5) -- slow I/O
 

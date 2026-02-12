@@ -130,7 +130,7 @@ test.Step(
 
     apple2.Type("1")
     a2d.DialogOK()
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="Unable to run the program"})
     test.Expect(a2dtest.OCRScreen():find(" Shortcuts .* 1 .* Monarch "),
                 "shortcuts list should render correctly")
     a2d.DialogOK()

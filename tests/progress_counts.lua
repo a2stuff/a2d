@@ -34,7 +34,7 @@ test.Step(
     a2d.AddShortcut("/A/DUMMY", {copy="use"})
     a2d.OAShortcut("1", {no_wait=true})
     a2dtest.MultiSnap(120, "shortcut copy progress bottoms out at 0")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="cannot be opened"})
     a2d.DialogOK()
 
     -- cleanup
@@ -72,7 +72,7 @@ test.Step(
     a2d.AddShortcut("/A/F/DUMMY", {copy="use"})
     a2d.OAShortcut("1", {no_wait=true})
     a2dtest.MultiSnap(120, "shortcut copy progress bottoms out at 0")
-    a2dtest.WaitForAlert()
+    a2dtest.WaitForAlert({match="cannot be opened"})
     a2d.DialogOK()
 
     -- cleanup
