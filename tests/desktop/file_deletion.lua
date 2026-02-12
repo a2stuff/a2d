@@ -284,7 +284,7 @@ test.Step(
     a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
-    a2d.DialogOK() -- failure
+    a2d.DialogOK() -- OK
     emu.wait(5) -- slow I/O
 
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")

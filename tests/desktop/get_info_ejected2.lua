@@ -21,7 +21,7 @@ test.Step(
 
     a2d.SelectPath("/WITH.FILES")
     drive:unload()
-    a2d.OAShortcut("I")
+    a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogCancel()
     a2dtest.ExpectNotHanging()
@@ -41,7 +41,7 @@ test.Step(
 
     a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
     drive:unload()
-    a2d.OAShortcut("I")
+    a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogCancel()
     a2dtest.ExpectNotHanging()
@@ -51,10 +51,10 @@ end)
 --[[
   Launch DeskTop. Select two files on a 5.25 disk. Remove the disk.
   File > Get Info. Verify that an alert is shown. Insert the disk
-  again. Click OK. Verify that details are shown for the second file.
+  again. Click Try Again. Verify that details are shown for the first file.
 ]]
 test.Step(
-  "Alert shown on File > Get Info for multiple files if disk ejected",
+  "Alert shown on File > Get Info for multiple files if disk ejected - try again",
   function()
     local drive = s6d1
     local current = drive.filename
@@ -62,11 +62,40 @@ test.Step(
     a2d.OpenPath("/WITH.FILES")
     a2d.SelectAll()
     drive:unload()
-    a2d.OAShortcut("I")
+    a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})
     drive:load(current)
-    a2d.DialogOK()
-    test.Snap("verify details shown for second file")
+    apple2.Type("A") -- Try Again
+    emu.wait(5)
+    test.Expect(a2dtest.OCRScreen():upper():find("LOREM%.IPSUM"),
+                "details should be shown for second file")
+    a2d.DialogCancel()
+    emu.wait(5)
+end)
+
+--[[
+  Launch DeskTop. Select two files on a 5.25 disk. Remove the disk.
+  File > Get Info. Verify that an alert is shown. Insert the disk
+  again. Click Cancel. Verify that details are shown for the second file.
+]]
+test.Step(
+  "Alert shown on File > Get Info for multiple files if disk ejected - cancel",
+  function()
+    local drive = s6d1
+    local current = drive.filename
+
+    a2d.OpenPath("/WITH.FILES")
+    a2d.SelectAll()
+    drive:unload()
+    a2d.OAShortcut("I") -- File > Get Info
+    a2dtest.WaitForAlert({match="volume cannot be found"})
+    drive:load(current)
+
+    -- Cancel attempt to show info on first file, proceed wth second
+    a2d.DialogCancel()
+    emu.wait(5)
+    test.Expect(a2dtest.OCRScreen():upper():find("SHAKESPEARE"),
+                "details should be shown for second file")
     a2d.DialogOK()
 end)
 

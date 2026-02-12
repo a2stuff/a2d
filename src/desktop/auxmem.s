@@ -445,16 +445,6 @@ str_alert_unreadable_format:
 
 ;;; ============================================================
 ;;; Show Alert Dialog
-;;; Call show_alert_dialog with prompt number A, options in X
-;;; Options:
-;;;    0 = use defaults for alert number; otherwise, look at top 2 bits
-;;;  %0....... e.g. $01 = OK
-;;;  %10...... e.g. $80 = Try Again, Cancel
-;;;  %11...... e.g. $C0 = OK, Cancel
-;;; Return value:
-;;;   0 = Try Again
-;;;   1 = Cancel
-;;;   2 = OK
 
 .proc AlertByIdImpl
 
@@ -579,21 +569,13 @@ start:
         ;; Look up message
         copylohi message_table_low,y, message_table_high,y, alert_params+AlertParams::text
 
-        ;; If options is 0, use table value; otherwise,
-        ;; mask off low bit and it's the action (N and V bits)
-
-        ;; %00000000 = Use default options
-        ;; %0....... e.g. $01 = OK
-        ;; %10...... e.g. $80 = Try Again, Cancel
-        ;; %11...... e.g. $C0 = OK, Cancel
-
-    IF X <> #0
-        txa
-        and     #$FE            ; ignore low bit, e.g. treat $01 as $00
-        sta     alert_params+AlertParams::buttons
-    ELSE
-        copy8   alert_options_table,y, alert_params+AlertParams::buttons
+        ;; If options is `kShowAlertUseDefaultOptionsForId`, use table
+        ;; value
+    IF X = #kShowAlertUseDefaultOptionsForId
+        ldx     alert_options_table,y
     END_IF
+        stx     alert_params+AlertParams::buttons
+
         copy8   #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
 
         ldax    #alert_params

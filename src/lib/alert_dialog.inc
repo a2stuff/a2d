@@ -10,8 +10,8 @@ ALERT_DIALOG_INC = 1
 ;;; $81 (%10xxxxx1) = Cancel + Yes + No + All
 ;;; $80 (%10xx0000) = Cancel + Try Again
 ;;; $00 (%0xxxxxxx) = OK
-;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
-;;; "use default options for that id", otherwise X & %00000001.
+;;; Note: Other values reserved for wrapper APIs to use, e.g. $01 for
+;;; "use default options for that id", etc.
 .enum AlertButtonOptions
         OKCancel       = $C0
         YesNoAllCancel = $81

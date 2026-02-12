@@ -66,6 +66,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Adjust order of startup operations to make icons appear faster.
 * Fix crash after canceling prompt when moving files on ejected disk.
 * Make retries on "volume not found" errors more consistent.
+* Fix buttons shown in alerts for errors after actions like New Folder, Duplicate, and Make Alias.
 
 ### Selector
 

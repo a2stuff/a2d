@@ -13336,14 +13336,12 @@ str_desktop:
         ;; Called with routine # in A
 
 load:   pha
-        copy8   #AlertButtonOptions::OKCancel, button_options
-        ASSERT_NOT_EQUALS AlertButtonOptions::OKCancel, 0
+        copy8   #AlertButtonOptions::TryAgainCancel, button_options
         bne     :+              ; always
 
 restore:
         pha
-        ;; Need to set low bit in this case to override the default.
-        copy8   #AlertButtonOptions::OK|%00000001, button_options
+        copy8   #AlertButtonOptions::OK, button_options
 
 :       jsr     SetCursorWatch ; before loading overlay
         pla
@@ -13361,10 +13359,9 @@ restore:
 
 retry:  MLI_CALL OPEN, open_params
     IF CS
-        lda     #kErrInsertSystemDisk
         button_options := *+1
         ldx     #SELF_MODIFIED_BYTE
-        jsr     ShowAlertOption
+        CALL    ShowAlertOption, A=#kErrInsertSystemDisk ; X = `AlertButtonOptions:*`
         cmp     #kAlertResultCancel ; might be any of OK, Cancel, or Try Again!
         bne     retry
         jsr     SetCursorPointer ; after loading overlay (failure)

@@ -185,7 +185,7 @@ test.Step(
     s6d1:unload()
     a2d.OpenSelection()
     a2dtest.WaitForAlert({match="volume cannot be found"})
-    a2d.DialogOK()
+    a2d.DialogOK() -- OK
     emu.wait(5)
     test.Expect(not a2dtest.OCRScreen():upper():match("FLOPPY1"), "floppy icon should be gone")
 end)

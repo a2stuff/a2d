@@ -30,7 +30,7 @@ test.Step(
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     drive:load(current)
-    apple2.Type("A") -- try again
+    apple2.Type("A") -- Try Again
     emu.wait(20) -- floppies are slow
     test.Snap("verify enumeration completed and no mispaints")
     a2d.DialogOK()

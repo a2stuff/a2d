@@ -183,11 +183,11 @@ op:     lda     SELF_MODIFIED
 
 ;;; A=alert number, with default options
 .proc ShowAlert
-        ldx     #$00
+        ldx     #kShowAlertUseDefaultOptionsForId
         FALL_THROUGH_TO ShowAlertOption
 .endproc ; ShowAlert
 
-;;; A=alert number, X=custom options
+;;; A=alert number, X=`AlertButtonOptions::*`
 .proc ShowAlertOption
         jsr     BankInAux
         jsr     aux::AlertById

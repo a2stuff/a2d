@@ -185,7 +185,7 @@ test.Step(
     a2d.SelectPath("/FLOPPY1")
     a2d.OASADown()
     a2dtest.WaitForAlert({match="volume cannot be found"})
-    a2d.DialogOK()
+    a2d.DialogOK() -- OK
     emu.wait(5) -- slow floppy
     a2dtest.ExpectNotHanging()
 

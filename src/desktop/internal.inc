@@ -146,6 +146,11 @@ kPromptButtonsOKCancel = $00
 kPromptButtonsOKOnly   = $80
 
 ;;; ============================================================
+;;; Alerts
+
+kShowAlertUseDefaultOptionsForId = $01
+
+;;; ============================================================
 ;;; Operations
 
 kOperationSucceeded     = 0
