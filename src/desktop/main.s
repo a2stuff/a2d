@@ -59,8 +59,19 @@ JT_GET_TICKS:           jmp     GetTickCount            ; *
 
         ASSERT_EQUALS ::JUMP_TABLE_LAST, *
 
+;;; Used to mark code that is "exported" for arbitrary use by any
+;;; overlays, so must be outside any of the memory overlay regions.
 .macro PROC_USED_IN_OVERLAY
         .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, .sprintf("Routine used by overlays in overlay zone (at $%04X)", *)
+.endmacro
+
+;;; Used to mark code that is used indirectly when overlays or
+;;; accessories call main::ClearUpdates to repaint directory windows.
+;;; Note that it only defends against a subset of memory regions so
+;;; only OverlayShortcutPick can safely use this.
+;;; TODO: Expand and re-organize.
+.macro PROC_USED_CLEARING_UPDATES
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .endmacro
 
 ;;; ============================================================
@@ -6379,7 +6390,7 @@ err:    RETURN  C=1
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc DrawWindowEntries
         ;; --------------------------------------------------
         ;; Icons
@@ -6445,7 +6456,7 @@ done:
 ;;; Output: A = icon's record index in its window
 ;;; Trashes $06
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc GetIconRecordNum
         jsr     GetIconEntry
         ptr := $06
@@ -6546,7 +6557,7 @@ done:
 
 ;;; ============================================================
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc CachedIconsXToYImpl
         ENTRY_POINTS_FOR_BIT7_FLAG s2w, w2s, s2w_flag
 
@@ -7457,7 +7468,7 @@ next:   add16_8 ptr, #.sizeof(ICTRecord)
 ;;; Output: $40...$4F holds copy of window's `MapInfo`
 ;;; Trashes $06
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 
 window_mapinfo_cache := $40
 
@@ -7481,7 +7492,7 @@ window_mapinfo_cache := $40
 ;;; ============================================================
 ;;; Draw header (items/K in disk/K available/lines) for `cached_window_id`
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc DrawWindowHeader
 
 ;;; Local variables on ZP
@@ -8256,7 +8267,7 @@ records_base_ptr:
 ;;; ============================================================
 ;;; A = entry number
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc DrawListViewRow
 
         ptr := $06
@@ -8368,7 +8379,7 @@ set_pos:
 ;;; Populate `text_buffer2` with "12,345K"
 ;;; Trashes: $06
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc ComposeSizeString
         value := $06
 
@@ -8426,7 +8437,7 @@ set_pos:
 
 ;;; ============================================================
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc ComposeDateString
         lda     datetime_for_conversion ; any bits set?
         ora     datetime_for_conversion+1
@@ -14548,7 +14559,7 @@ ret:    rts
 ;;; Inputs: A = window id
 ;;; Outputs: Z = 1 if found, and X = index in `window_id_to_filerecord_list_entries`
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc FindIndexInFileRecordListEntries
         ldx     window_id_to_filerecord_list_count
         dex
@@ -14562,7 +14573,7 @@ ret:    rts
 ;;; Input: A = window_id
 ;;; Output: A,X = address of FileRecord list (first entry is length)
 ;;; Assert: Window is found in list.
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc GetFileRecordListForWindow
         jsr     FindIndexInFileRecordListEntries
         txa
@@ -14587,7 +14598,7 @@ ret:    rts
 .endproc ; GetActiveWindowViewBy
 
 ;;; Assert: There is a cached window
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc GetCachedWindowViewBy
         ldx     cached_window_id
         RETURN  A=win_view_by_table-1,x
@@ -14686,7 +14697,7 @@ ret:    rts
 ;;; ============================================================
 
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 ;;; Input: A = window_id (0=desktop)
 .proc CacheWindowIconList
         sta     cached_window_id
@@ -14809,7 +14820,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 ;;; logic with 127 icons. A simpler fix may be possible, see commit
 ;;; 41ebde49 for another attempt, but that introduces other issues.
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 .proc CacheActiveWindowIconList
         TAIL_CALL CacheWindowIconList, A=active_window_id
 .endproc ; CacheActiveWindowIconList
@@ -15088,7 +15099,7 @@ desktop_icon_usage_table:
 
 ;;; ============================================================
 
-        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        PROC_USED_CLEARING_UPDATES
 ;;; FileRecord for list view
 list_view_filerecord:
         .tag FileRecord
