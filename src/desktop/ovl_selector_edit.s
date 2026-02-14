@@ -109,7 +109,7 @@ len:    .byte   0
 .proc EventLoop
     DO
         LETK_CALL LETK::Idle, shortcut_dialog_res::le_params
-        jsr     SystemTask
+        jsr     ::main::SystemTask
         jsr     GetNextEvent
     WHILE A = #MGTK::EventKind::no_event
 

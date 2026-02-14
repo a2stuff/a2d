@@ -59,19 +59,45 @@ JT_GET_TICKS:           jmp     GetTickCount            ; *
 
         ASSERT_EQUALS ::JUMP_TABLE_LAST, *
 
-;;; Used to mark code that is "exported" for arbitrary use by any
-;;; overlays, so must be outside any of the memory overlay regions.
+;;; Used to mark code that is used directly or indirectly by overlays
+;;; that load in the "upper" overlay memory ($5000...$9000), so must
+;;; be outside of that region. See `desktop.s` for overlay definitions.
+;;; Overlays in this range:
+;;; * `OverlayShortcutPick`
+;;; * `OverlayFileDialog`
+;;; * `OverlayFileCopy`
+;;; * `OverlayShortcutEdit`
+;;; Overlays outside this range:
+;;; * `OverlayFormatErase`
 .macro PROC_USED_IN_OVERLAY
         .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, .sprintf("Routine used by overlays in overlay zone (at $%04X)", *)
 .endmacro
 
-;;; Used to mark code that is used indirectly when overlays or
-;;; accessories call main::ClearUpdates to repaint directory windows.
-;;; Note that it only defends against a subset of memory regions so
-;;; only OverlayShortcutPick can safely use this.
-;;; TODO: Expand and re-organize.
+;;; Used to mark code that is used directly or indirectly when
+;;; overlays call into `main::ClearUpdates` to repaint directory
+;;; windows. This defends against only a smaller portion of the
+;;; "upper" overlay memory, namely ($5000...$6000), which is where the
+;;; Shortcut Picker Dialog is loaded. See `ovl_selector_pick.s` for
+;;; notes about usage. See `desktop.s` for overlay definitions.
+;;; Overlays in this range:
+;;; * `OverlayShortcutPick`
+;;; Overlays outside this range:
+;;; * `OverlayFileDialog`
+;;; * `OverlayFileCopy`
+;;; * `OverlayShortcutEdit`
+;;; * `OverlayFormatErase`
 .macro PROC_USED_CLEARING_UPDATES
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+.endmacro
+
+;;; Used to mark code that is used directly or indirectly by overlays
+;;; that load in the "lower" overlay memory ($800...$2000), so must
+;;; be outside of that region. See `desktop.s` for overlay definitions.
+;;; Overlays in this range:
+;;; * `OverlayFormatErase`
+.macro PROC_USED_IN_FORMAT_ERASE_OVERLAY
+        ;; Nothing is actually in this range so this is just for
+        ;; documentation purposes.
 .endmacro
 
 ;;; ============================================================
@@ -144,8 +170,8 @@ counter:
 ;;; (e.g. a window close followed by a nested loop or slow
 ;;; file operation).
 
-        PROC_USED_IN_OVERLAY
-
+        PROC_USED_CLEARING_UPDATES
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc ClearUpdates
     DO
         jsr     PeekEvent
@@ -179,6 +205,7 @@ ClearUpdatesSkipGet := ClearUpdates::skip_get
 ;;; Returns 0 if the periodic tasks were run.
 
         PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SystemTask
         inc24   tick_counter
 
@@ -206,6 +233,7 @@ tick_counter:
 
 ;;; ============================================================
 
+        PROC_USED_CLEARING_UPDATES
 ;;; Inputs: A = `window_id` from `update` event
 .proc UpdateWindow
         sta     getwinport_params::window_id
@@ -1034,6 +1062,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
         PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SafeSetPortFromWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1743,7 +1772,7 @@ check_header:
 ;;; Input: A,X = Address
 ;;; Trashes $06
 
-        PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc UpcaseString
         ptr := $06
 
@@ -2109,6 +2138,7 @@ entry_num:
 ;;; Inputs: Source string at $06, target buffer at A,X
 ;;; Output: String length in A
 
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
         PROC_USED_IN_OVERLAY
 .proc CopyPtr1ToBuf
         ptr1 := $06
@@ -2287,7 +2317,7 @@ main:   copy16  DAHeader::main_length, read_params::request_count
         ;; Restore state
         jsr     InitSetDesktopPort ; DA's port destroyed, set something real as current
         jsr     ShowClockForceUpdate
-        jsr     ClearUpdates
+        jsr     ClearUpdates    ; following DA close (just in case)
 
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -2393,7 +2423,7 @@ main_length:    .word   0
         pha                     ; A = dialog result
         CALL    RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
         jsr     PushPointers    ; $06 = dst
-        jsr     ClearUpdates    ; following picker dialog close
+        jsr     ClearUpdates    ; following File Dialog close
         jsr     PopPointers     ; $06 = dst
         pla                     ; A = dialog result
         RTS_IF NS
@@ -7468,9 +7498,9 @@ next:   add16_8 ptr, #.sizeof(ICTRecord)
 ;;; Output: $40...$4F holds copy of window's `MapInfo`
 ;;; Trashes $06
 
-        PROC_USED_CLEARING_UPDATES
-
 window_mapinfo_cache := $40
+
+        PROC_USED_CLEARING_UPDATES
 
 .proc CacheWindowMapInfo
         winfo_ptr := $06
@@ -7651,6 +7681,10 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
 ;;; Compute bounding box for icons within cached window
 ;;; Inputs: `cached_window_id` is set
 ;;; Outputs: `iconbb_rect` updated (unless cached window is empty)
+
+.ifdef DEBUG
+        PROC_USED_CLEARING_UPDATES
+.endif
 .proc ComputeIconsBBox
 
         lda     cached_window_icon_count
@@ -8246,6 +8280,8 @@ records_base_ptr:
 ;;; Input: A = window_od
 ;;; Output: A = entry count
 ;;; Trashes $06
+
+        PROC_USED_CLEARING_UPDATES
 .proc GetFileRecordCountForWindow
         ptr := $06
 
@@ -8598,6 +8634,7 @@ done:
 ;;; Inputs: A = icon number
 ;;; Output: A,X = IconEntry address
 
+        PROC_USED_CLEARING_UPDATES
 .proc GetIconEntry
         sta     get_icon_entry_params::id
         ITK_CALL IconTK::GetIconEntry, get_icon_entry_params
@@ -8609,6 +8646,7 @@ done:
 ;;; Inputs: A = window id
 ;;; Output: A,X = Winfo address
 
+        PROC_USED_CLEARING_UPDATES
 .proc GetWindowPtr
         asl     a
         tax
@@ -8809,6 +8847,7 @@ finish:
 ;;; Draw text right aligned, pascal string address in A,X
 ;;; String must be in aux or LC memory.
 
+        PROC_USED_CLEARING_UPDATES
 .proc DrawStringRight
         params := $06
         str := params
@@ -8839,6 +8878,8 @@ map_delta_y:    .word   0
         lda     active_window_id
         FALL_THROUGH_TO PrepWindowScreenMapping
 .endproc ; PrepActiveWindowScreenMapping
+
+        PROC_USED_CLEARING_UPDATES
 
 .proc PrepWindowScreenMapping
         .assert window_mapinfo_cache + .sizeof(MGTK::MapInfo) <= $50, error, "collision"
@@ -9519,6 +9560,9 @@ AnimateWindowOpen       := AnimateWindowImpl::open
 
 ;;; ============================================================
 
+.ifdef DEBUG
+        PROC_USED_CLEARING_UPDATES
+.endif
 .proc FrameTmpRect
         ;; Skip if degenerate, to avoid cursor flashes
         ldx     #2              ; loop over dimensions
@@ -13425,21 +13469,23 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 ;;; ============================================================
 
-        PROC_USED_IN_OVERLAY
 
 ;;; A,X = A * 16
+        PROC_USED_IN_OVERLAY
 .proc ATimes16
         ldx     #4
         bne     AShiftX       ; always
 .endproc ; ATimes16
 
 ;;; A,X = A * 32
+        PROC_USED_CLEARING_UPDATES
 .proc ATimes32
         ldx     #5
         bne     AShiftX       ; always
 .endproc ; ATimes32
 
 ;;; A,X = A * 64
+        PROC_USED_IN_OVERLAY
 .proc ATimes64
         ldx     #6
         FALL_THROUGH_TO AShiftX
@@ -13468,8 +13514,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 ;;; Output: A,X = case bits
 ;;; Trashes: $06/$08
 
-        PROC_USED_IN_OVERLAY
-
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc CalculateCaseBits
         ptr  := $06
         bits := $08
@@ -13496,8 +13541,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 ;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
 
-        PROC_USED_IN_OVERLAY
-
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc PromptInputLoop
         bit     has_input_field_flag
     IF NS
@@ -13661,6 +13705,8 @@ KeyHookRelay:
 
 .endproc ; PromptInputLoop
 
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
+
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
 PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY
@@ -13689,6 +13735,7 @@ yes:    RETURN  C=0
 
 ;;; Input: A=character, Y=caret_pos
 ;;; Output: C=0 if valid filename character, C=1 otherwise
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc IsFilenameChar
         cmp     #'.'
         beq     allow_if_not_first
@@ -14165,6 +14212,7 @@ exit:
 ;;; ============================================================
 
         PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 
 ;;; ============================================================
 
@@ -14219,18 +14267,21 @@ params:  .res    3
 
 ;;; Preserves A
         PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SetCursorWatch
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         rts
 .endproc ; SetCursorWatch
 
         PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc ; SetCursorPointer
 
         PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SetCursorIBeam
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
@@ -14238,6 +14289,8 @@ params:  .res    3
 
 ;;; ============================================================
 
+        PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc CheckEvents
         MGTK_CALL MGTK::CheckEvents
         rts
@@ -14245,6 +14298,7 @@ params:  .res    3
 
 ;;; ============================================================
 
+        PROC_USED_CLEARING_UPDATES
 .proc UnshieldCursor
         MGTK_CALL MGTK::UnshieldCursor
         rts
@@ -14254,8 +14308,7 @@ params:  .res    3
 
 ;;; Inputs: A = new `prompt_button_flags` value
 
-        PROC_USED_IN_OVERLAY
-
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc OpenPromptDialog
         sta     prompt_button_flags
 
@@ -14284,8 +14337,7 @@ params:  .res    3
 
 ;;; ============================================================
 
-        PROC_USED_IN_OVERLAY
-
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc ClosePromptDialog
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jsr     ClearUpdates     ; following CloseWindow
@@ -14294,8 +14346,7 @@ params:  .res    3
 
 ;;; ============================================================
 
-        PROC_USED_IN_OVERLAY
-
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SetPortForPromptDialog
         TAIL_CALL SafeSetPortFromWindowId, A=#winfo_prompt_dialog::kWindowId
 .endproc ; SetPortForPromptDialog
@@ -14312,7 +14363,7 @@ params:  .res    3
         DDL_RIGHT  = $30      ; Right aligned
         DDL_LRIGHT = $40      ; Right aligned relative to `kDialogLabelRightX`
 
-        PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc DrawDialogLabel
         stringwidth_params := $8
         stringptr := $8
@@ -14372,7 +14423,7 @@ calc_y:
 
 ;;; ============================================================
 
-        PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc UpdateOKButton
         bit     has_device_picker_flag
     IF NS
@@ -14403,7 +14454,7 @@ ret:    rts
 
 ;;; ============================================================
 
-        PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc DrawDialogTitle
         text_params     := $6
         text_addr       := text_params + 0
@@ -14424,7 +14475,7 @@ ret:    rts
 ;;; ============================================================
 
         PROC_USED_IN_OVERLAY
-
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc NoOp
         rts
 .endproc ; NoOp
@@ -14433,6 +14484,7 @@ ret:    rts
 
 ;;; Input: A,X = number
 ;;; Output: C=0 if plural, C=1 if singular; A,X unchanged
+        PROC_USED_CLEARING_UPDATES
 .proc IsPlural
     IF X = #0 AND A = #1
         ;; singular
@@ -14473,11 +14525,13 @@ ret:    rts
         RETURN  A=event_params::kind
 .endproc ; GetEvent
 
+        PROC_USED_CLEARING_UPDATES
 .proc PeekEvent
         MGTK_CALL MGTK::PeekEvent, event_params
         rts
 .endproc ; PeekEvent
 
+        PROC_USED_CLEARING_UPDATES
 .proc SetPenModeXOR
         MGTK_CALL MGTK::SetPenMode, penXOR
         rts
@@ -14488,11 +14542,14 @@ ret:    rts
         rts
 .endproc ; SetPenModeCopy
 
+        PROC_USED_CLEARING_UPDATES
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SetPenModeNotCopy
         MGTK_CALL MGTK::SetPenMode, notpencopy
         rts
 .endproc ; SetPenModeNotCopy
 
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc DrawDialogFrame
         stax    addr
         jsr     SetPenModeNotCopy
@@ -14628,7 +14685,6 @@ ret:    rts
 ;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
 ;;; Output: A=high bit/N flag set if either is down.
 
-        PROC_USED_IN_OVERLAY
 .proc ModifierDown
         lda     BUTN0
         ora     BUTN1
@@ -14660,7 +14716,6 @@ ret:    rts
 ;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
 
-        PROC_USED_IN_OVERLAY
 .proc ShiftDown
         CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
         and     #DeskTopSettings::kSysCapIsIIgs
@@ -14833,6 +14888,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 
 ;;; A,X = A,X * Y
 ;;; Uses $10..$19
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc Multiply_16_8_16
 PARAM_BLOCK muldiv_params, $10
 number          .word           ; (in)
@@ -14863,7 +14919,8 @@ END_PARAM_BLOCK
 ;;; Library Routines
 ;;; ============================================================
 
-        .assert * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routines used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
+        PROC_USED_IN_FORMAT_ERASE_OVERLAY
 
         RC_AUXMEM = 1
         RC_LCBANK = 1
@@ -15265,16 +15322,9 @@ str_date_and_time:
         ReadSetting := main::ReadSetting
         WriteSetting := main::WriteSetting
         GetNextEvent := main::GetNextEvent
-        SystemTask := main::SystemTask
-        Bell := main::Bell
-        Multiply_16_8_16 := main::Multiply_16_8_16
         DetectDoubleClick := main::DetectDoubleClick
         AdjustOnLineEntryCase := main::AdjustOnLineEntryCase
         AdjustFileEntryCase := main::AdjustFileEntryCase
-
-        IntToString := main::IntToString
-        IntToStringWithSeparators := main::IntToStringWithSeparators
-        ComposeSizeString := main::ComposeSizeString
 
 ;;; ============================================================
 

@@ -75,7 +75,7 @@ DoAdd:  ldx     #kRunListPrimary
         pha
         COPY_STRING text_input_buf, main::stashed_name
         CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
-        jsr     main::ClearUpdates ; Add File Dialog close
+        jsr     main::ClearUpdates ; File Dialog close (safe after restoration)
         pla
         tay
         pla
@@ -182,7 +182,7 @@ dialog_loop:
 
 .proc DoDelete
         jsr     CloseWindow
-        jsr     main::ClearUpdates ; picker dialog close
+        jsr     main::ClearUpdates ; Shortcut Picker dialog close
 
         CALL    RemoveEntry, A=shortcut_picker_record::selected_index
         inc     clean_flag      ; mark as "dirty"
@@ -193,7 +193,9 @@ dialog_loop:
 
 .proc DoEdit
         jsr     CloseWindow
-        ;; NOTE: `ClearUpdates` corrupts memory!
+        ;; NOTE: Can't `ClearUpdates` here as File Picker overlay has
+        ;; not been restored and `PROC_USED_CLEARING_UPDATES` doesn't
+        ;; cover that.
 
         CALL    GetFileEntryAddr, A=shortcut_picker_record::selected_index
         stax    $06
@@ -236,7 +238,7 @@ dialog_loop:
         pha
         COPY_STRING text_input_buf, main::stashed_name
         CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
-        jsr     main::ClearUpdates ; Edit File Dialog close
+        jsr     main::ClearUpdates ; File Dialog close (safe after restoration)
         pla
         tay
         pla
@@ -318,7 +320,7 @@ copy_when_conversion_table:
 
 .proc DoRun
         jsr     CloseWindow
-        jsr     main::ClearUpdates ; picker dialog close
+        jsr     main::ClearUpdates ; Shortcut Picker dialog close
 
         RETURN  A=shortcut_picker_record::selected_index
 .endproc ; DoRun
@@ -334,7 +336,7 @@ copy_when_conversion_table:
     END_IF
 
         jsr     CloseWindow
-        jsr     main::ClearUpdates ; picker dialog close
+        jsr     main::ClearUpdates ; Shortcut Picker dialog close
 
         TAIL_CALL Exit, A=#$FF
 .endproc ; DoCancel
@@ -415,7 +417,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 ;;; Otherwise: Cancel selected
 
 .proc EventLoop
-        jsr     SystemTask
+        jsr     ::main::SystemTask
         jsr     main::GetEvent
 
         cmp     #MGTK::EventKind::button_down

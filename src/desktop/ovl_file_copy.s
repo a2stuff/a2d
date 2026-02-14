@@ -31,7 +31,7 @@
 .endproc ; Run
 
 .proc EventLoop
-        jsr     SystemTask
+        jsr     ::main::SystemTask
         jsr     GetNextEvent
 
     IF A = #MGTK::EventKind::key_down

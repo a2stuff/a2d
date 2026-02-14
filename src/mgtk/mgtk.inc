@@ -861,7 +861,7 @@ xcoord: .word   AS_WORD(left)
 ycoord: .word   AS_WORD(top)
         .refto xcoord
         .refto ycoord
-.endscope
+.endscope ; ident
 .endmacro
 
 ;;; Menus (common cases; other options are possible)

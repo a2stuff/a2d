@@ -822,7 +822,7 @@ process_block:
         ;; Allow anything else
 
         ;; Compute slot in DA name table
-        CALL    Multiply_16_8_16, Y=desk_acc_num, AX=#kDAMenuItemSize
+        CALL    main::Multiply_16_8_16, Y=desk_acc_num, AX=#kDAMenuItemSize
         addax   #desk_acc_names, da_ptr
 
         ;; Copy name

@@ -218,7 +218,7 @@ op:     lda     SELF_MODIFIED
 
 .proc BellFromAux
         jsr     BankInMain
-        jsr     Bell
+        jsr     ::main::Bell
         jmp     BankInAux
 .endproc ; BellFromAux
 
@@ -228,7 +228,7 @@ op:     lda     SELF_MODIFIED
 
 .proc SystemTaskFromAux
         jsr     BankInMain
-        jsr     SystemTask
+        jsr     ::main::SystemTask
         jmp     BankInAux
 .endproc ; SystemTaskFromAux
 
@@ -463,18 +463,18 @@ op:     lda     SELF_MODIFIED
 
         ;; Now Y = type, A,X = argument
        IF Y = #'d'              ; decimal - decimal integer
-        jsr     IntToString
+        jsr     ::main::IntToString
         TAIL_CALL _AppendString, AX=#str_from_int
        END_IF
 
        IF Y = #'n'              ; number - decimal integer with separators
-        jsr     IntToStringWithSeparators
+        jsr     ::main::IntToStringWithSeparators
         TAIL_CALL _AppendString, AX=#str_from_int
        END_IF
 
        IF Y = #'k'              ; size - in K from blocks
         jsr     PushPointers
-        jsr     ComposeSizeString
+        jsr     ::main::ComposeSizeString
         jsr     PopPointers
         TAIL_CALL _AppendString, AX=#text_buffer2
        END_IF

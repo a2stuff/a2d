@@ -28,7 +28,7 @@ BitMap          = $38 ; +$38 Bit map of free sectors (4 bytes per track)
 BitMapTrack0    = $38 ; +$38...$3B for track 0
 BitMapTrack1    = $3C ; +$3C...$3F for track 1 ...
 BitMapTrack34   = $C0 ; +$C0...$C3 for track 34
-.endscope
+.endscope ; VTOC
 
 ;;; Catalog Sector Format
 NextCatSectorTrack      = $01 ; Track number of next catalog sector (usually $11)
@@ -52,7 +52,7 @@ NextTrack       = $01   ; Track number of next T/S List sector (or 0)
 NextSector      = $02   ; Sector number of next T/S List sector (or 0)
 FirstDataT      = $0C   ; Track of first data sector (or 0)
 FirstDataS      = $0D   ; Sector of first data sector
-.endscope
+.endscope ; TSList
 
 ;;; File types
 FileTypeText            = $00
@@ -64,4 +64,4 @@ FileTypeRelocatable     = $10
 FileTypeA               = $20
 FileTypeB               = $40
 
-.endscope
+.endscope ; dos33
