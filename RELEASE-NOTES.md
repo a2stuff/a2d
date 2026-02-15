@@ -67,6 +67,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix crash after canceling prompt when moving files on ejected disk.
 * Make retries on "volume not found" errors more consistent.
 * Fix buttons shown in alerts for errors after actions like New Folder, Duplicate, and Make Alias.
+* Reduce disk activity needed after showing file dialog.
 
 ### Selector
 

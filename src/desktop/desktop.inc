@@ -160,14 +160,13 @@ JT_ENTRY JUMP_TABLE_LAST
 ;;; ============================================================
 ;;; Overlay routines, for JUMP_TABLE_LOAD_OVL
 
-kDynamicRoutineFormatErase      = 0
-kDynamicRoutineShortcutPick     = 1
-kDynamicRoutineFileDialog       = 2
-kDynamicRoutineFileCopy         = 3
-kDynamicRoutineShortcutEdit     = 4
+kDynamicRoutineFormatErase      = 0 ; restoration not needed
+kDynamicRoutineShortcutPick     = 1 ; restoration required
+kDynamicRoutineFileDialog       = 2 ; restoration not needd
+kDynamicRoutineFileCopy         = 3 ; restoration not needd
+kDynamicRoutineShortcutEdit     = 4 ; restoration not needd
 kDynamicRoutineRestoreSP        = 5
-kDynamicRoutineRestoreFD        = 6
-kDynamicRoutineRestoreBuffer       = 7
+kDynamicRoutineRestoreBuffer    = 6
 
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors

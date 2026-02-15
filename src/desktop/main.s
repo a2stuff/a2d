@@ -1925,8 +1925,7 @@ devlst_backup:
         CALL    SelectorPickOverlay::Exec, A=menu_click_params::item_num
         sta     result
 
-        ;; Restore from overlays
-        ;; (restore from file dialog overlay handled in picker overlay)
+        ;; Restore from overlay(s)
         CALL    RestoreDynamicRoutine, A=#kDynamicRoutineRestoreSP ; restore from picker dialog
 
         bit     result
@@ -2421,7 +2420,6 @@ main_length:    .word   0
 
         jsr     ::FileCopyOverlay::Run
         pha                     ; A = dialog result
-        CALL    RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
         jsr     PushPointers    ; $06 = dst
         jsr     ClearUpdates    ; following File Dialog close
         jsr     PopPointers     ; $06 = dst
@@ -13338,14 +13336,15 @@ get_case_bits_per_option_and_adjust_string:
 ;;; minus flag set on failure.
 
 ;;; Routines are:
-;;;  0 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
-;;;  1 = shortcut picker          - A$9000,L$1000
-;;;  2 = common file dialog       - A$6000,L$1000
-;;;  3 = part of copy file        - A$7000,L$ 800
-;;;  4 = shortcut editor          - L$7000,L$ 800
-;;;  5 = restore shortcut picker  - A$5000,L$1000 (restore $5000...$5FFF)
-;;;  6 = restore file dialog      - A$6000,L$1400 (restore $6000...$73FF)
-;;;  7 = restore buffer           - A$5000,L$2800 (restore $5000...$77FF)
+;;;  0 = format/erase disk        - A$ 800,L$1000 call w/ A = 4 = format, A = 5 = erase
+;;;  1 = shortcut picker          - A$5000,L$0800
+;;;  2 = common file dialog       - A$B600,L$0900
+;;;  3 = file copy dialog         - A$B500,L$0100
+;;;  4 = shortcut editor          - L$5800,L$0400
+;;;  5 = restore shortcut (1/4)   - A$5000,L$1000 (restore $5000...$5FFF)
+;;;  6 = restore buffer           - A$5000,L$4000 (restore $5000...$9FFF)
+;;;
+;;; `desktop.s` has the definitions for segment locations/sizes
 ;;;
 ;;; Routines 1-5 need appropriate "restore routines" applied when complete.
 
@@ -13353,14 +13352,14 @@ get_case_bits_per_option_and_adjust_string:
 
 .proc LoadDynamicRoutineImpl
 
-kNumOverlays = 8
+kNumOverlays = 7
 
 pos_table:
         .dword  kOverlayFormatEraseOffset
         .dword  kOverlayShortcutPickOffset, kOverlayFileDialogOffset
         .dword  kOverlayFileCopyOffset
         .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestoreSPOffset
-        .dword  kOverlayDeskTopRestoreFDOffset, kOverlayDeskTopRestoreBufferOffset
+        .dword  kOverlayDeskTopRestoreBufferOffset
         ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
 
 len_table:
@@ -13368,7 +13367,7 @@ len_table:
         .word   kOverlayShortcutPickLength, kOverlayFileDialogLength
         .word   kOverlayFileCopyLength
         .word   kOverlayShortcutEditLength, kOverlayDeskTopRestoreSPLength
-        .word   kOverlayDeskTopRestoreFDLength, kOverlayDeskTopRestoreBufferLength
+        .word   kOverlayDeskTopRestoreBufferLength
         ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
 
 addr_table:
@@ -13376,7 +13375,7 @@ addr_table:
         .word   kOverlayShortcutPickAddress, kOverlayFileDialogAddress
         .word   kOverlayFileCopyAddress
         .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestoreSPAddress
-        .word   kOverlayDeskTopRestoreFDAddress, kOverlayDeskTopRestoreBufferAddress
+        .word   kOverlayDeskTopRestoreBufferAddress
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 
         DEFINE_OPEN_PARAMS open_params, str_desktop, IO_BUFFER

@@ -23,10 +23,10 @@ The file is broken down into multiple segments:
 | Initializer        | Main    | A$0800  | `init.s`              |
 | Invoker            | Main    | A$0290  | `../lib/invoker.s`    |
 | Format/Erase       | Main    | A$0800  | `ovl_format_erase.s`  |
-| Pick Shortcut      | Main    | A$5000  | `ovl_selector_pick.s` |
-| File Dialog        | Main    | A$6000  | `ovl_file_dialog.s`   |
-| File Copy          | Main    | A$7000  | `ovl_file_copy.s`     |
-| Edit Shortcut      | Main    | A$7000  | `ovl_selector_edit.s` |
+| Shortcut Picker    | Main    | A$5000  | `ovl_selector_pick.s` |
+| File Dialog        | Main    | A$B600  | `ovl_file_dialog.s`   |
+| File Copy          | Main    | A$B500  | `ovl_file_copy.s`     |
+| Shortcut Editor    | Main    | A$B200  | `ovl_selector_edit.s` |
 
 Lengths/offsets are defined in `desktop.s`. Segments are padded in the
 file to ensure they appear at block boundaries, enabling faster
@@ -105,6 +105,7 @@ When running, memory use includes:
  * $1C00-$1FFF is used as a 1k ProDOS I/O buffer.
  * $2000-$3FFF is the hires graphics page.
  * $4000-$BEFF (`main.s`) is the main app logic.
+ * Memory above ~$AE00 is free, and used for file copy buffers and overlays
 
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
 
@@ -147,30 +148,44 @@ name) but is used for operations such as alternate view types.
 Interactive commands including disk format/erase, file
 copy/delete, and Shortcuts add/edit/delete/run all dynamically load
 main memory code overlays. When complete, any original code above
-$4000 is reloaded (unless a full restart is required.)
+$4000 is reloaded if needed.
 
 Several of the overlays also use a common file selector dialog overlay
 `ovl_file_dialog.s` ($6000-$6FFF).
 
 #### Disk Format/Disk Erase
 
-Simple overlay: `ovl_format_erase.s`, loaded into Main A$0800-$1BFF.
-This re-uses much of DeskTop's dialog framework for prompts and progress.
+`ovl_format_erase.s` (Main A$0800-$17FF)
 
-#### Shortcuts - Delete Entry / Run Entry
+Dialog for device selection, name entry, and progress. And code for
+formatting Disk II devices.
 
-Simple overlay: `ovl_selector_pick.s` ($5000-$5FFF).
+#### File Dialog
 
-#### Shortcuts - Add Entry / Edit Entry
+`ovl_file_dialog.s` (Main $B600-$BEFF).
 
-Also uses `ovl_selector_pick.s` ($5000-$5FFF) but additionally uses overlay
-`ovl_selector_edit.s` ($7000-$77FF) and the file selector dialog `ovl_file_dialog.s`
-($6000-$6FFF).
+Standard file selector, supporting customization.
+
+#### Shortcut Picker - Add/Edit/Delete/Run a Shortcut
+
+`ovl_selector_pick.s` (Main $5000-$57FF)
+
+For Add/Edit uses the Shortcut Editor (`ovl_selector_edit.s` +
+`ovl_file_dialog.s` $B200-$BFFF).
+
+#### Shortcut Editor - Add/Edit a Shortcut
+
+`ovl_selector_edit.s` (Main $B200-$B5FF)
+
+File dialog driver/customization for editing shortcuts. Uses the File Dialog overlay.
 
 #### File Copy
 
-Overlay `ovl_file_copy.s` ($7000-$77FF), uses file selector dialog `ovl_file_dialog.s`
-($6000-$6FFF).
+`ovl_file_copy.s` (Main $B500-$B6FF)
+
+File dialog driver for selecting copy destination. Uses the File Dialog overlay.
+
+
 
 ## Memory Map
 
@@ -190,7 +205,7 @@ $C000 +-------------+       +-------------+       +-------------+
       |.ProDOS.GP...|       | DeskTop     |
 $BF00 +-------------+       | Utilities & |
       | Copy Buffer |       | Resources   |
-      |             |       |             |
+      | & Overlays  |       |             |
       |             |       | * ToolKits  |
 $__00 +-------------+       | * Alerts    |
       | DeskTop     |       |             |
@@ -204,11 +219,6 @@ $8800 |             |       +-------------+
       |             |       |             |
       |             |       |             |
       |             |       |             |
-$7800 |      +------+       |             |
-      |      | Ovl  |       |             |
-$7000 |      +------+       |             |
-      |      | Ovl  |       |             |
-      |      |      |       |             |
 $6000 |      +------+       |             |
       |      | Ovl  |       |             |
       |      |      |       |             |

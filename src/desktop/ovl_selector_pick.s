@@ -74,8 +74,7 @@ DoAdd:  ldx     #kRunListPrimary
         tya
         pha
         COPY_STRING text_input_buf, main::stashed_name
-        CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
-        jsr     main::ClearUpdates ; File Dialog close (safe after restoration)
+        jsr     main::ClearUpdates ; File Dialog close
         pla
         tay
         pla
@@ -237,8 +236,7 @@ dialog_loop:
         tya
         pha
         COPY_STRING text_input_buf, main::stashed_name
-        CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
-        jsr     main::ClearUpdates ; File Dialog close (safe after restoration)
+        jsr     main::ClearUpdates ; File Dialog close
         pla
         tay
         pla
@@ -330,11 +328,6 @@ copy_when_conversion_table:
 ;;; Also OK from Delete (since that closes immediately)
 
 .proc DoCancel
-        lda     selector_action
-    IF A = #SelectorAction::edit
-        CALL    main::RestoreDynamicRoutine, A=#kDynamicRoutineRestoreFD
-    END_IF
-
         jsr     CloseWindow
         jsr     main::ClearUpdates ; Shortcut Picker dialog close
 

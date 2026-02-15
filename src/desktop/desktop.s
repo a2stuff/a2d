@@ -40,23 +40,16 @@
         ;; Dynamically loaded overlays
         DEFSEG OverlayFormatErase,  $0800, $1000
         DEFSEG OverlayShortcutPick, $5000, $0800
-        DEFSEG OverlayFileDialog,   $6000, $0900
-        DEFSEG OverlayFileCopy,     $7000, $0100
-        DEFSEG OverlayShortcutEdit, $7000, $0400
+        DEFSEG OverlayFileDialog,   $B600, $0900
+        DEFSEG OverlayFileCopy,     $B500, $0100
+        DEFSEG OverlayShortcutEdit, $B200, $0400
 
 ;;; These pseudo-overlays restore DeskTop after overlays are used
 
-;;; Restore after OverlayShortcutPick has been used
+;;; Restore after OverlayShortcutPick or OverlayShortcutEdit has been used
 kOverlayDeskTopRestoreSPLength = kOverlayShortcutPickLength
 kOverlayDeskTopRestoreSPAddress = kOverlayShortcutPickAddress
 kOverlayDeskTopRestoreSPOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestoreSPAddress - kSegmentDeskTopMainAddress)
-
-;;; Restore after OverlayFileDialog and either OverlayFileCopy or OverlayShortcutEdit has been used
-kOverlayDeskTopRestoreFDLength = $1400
-kOverlayDeskTopRestoreFDAddress = kOverlayFileDialogAddress
-kOverlayDeskTopRestoreFDOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestoreFDAddress - kSegmentDeskTopMainAddress)
-.assert (kOverlayFileCopyAddress + kOverlayFileCopyLength) <= (kOverlayDeskTopRestoreFDAddress + kOverlayDeskTopRestoreFDLength), error, "restore coverage"
-.assert (kOverlayShortcutEditAddress + kOverlayShortcutEditLength) <= (kOverlayDeskTopRestoreFDAddress + kOverlayDeskTopRestoreFDLength), error, "restore coverage"
 
 ;;; Restore after buffer is used by Desk Accessories
 kOverlayDeskTopRestoreBufferLength = kOverlayBufferSize
