@@ -1,6 +1,6 @@
 --[[ BEGINCONFIG ========================================
 
-MODELARGS="-sl2 mouse -sl7 scsi"
+MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 scsi"
 DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]

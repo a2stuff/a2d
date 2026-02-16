@@ -36,6 +36,9 @@ test.Step(
 
     -- cleanup
     a2d.EraseVolume("RAM1")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(0, 0)
+    end)
 end)
 
 --[[

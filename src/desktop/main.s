@@ -9691,11 +9691,12 @@ FinishOperation:
         lda     selected_window_id
     IF NOT_ZERO                 ; dragging volume always copies
         ;; In case `CheckMoveOrCopy` fails, recovery path needs to be functional
-        copy16  #operations::DoNothing, operation_complete_callback
         tsx
         stx     saved_stack
+        copy16  #operations::DoNothing, operation_complete_callback
         CLEAR_BIT7_FLAG do_op_flag
 
+        lda     selected_window_id
         jsr     GetWindowPath
         jsr     CheckMoveOrCopy
     END_IF

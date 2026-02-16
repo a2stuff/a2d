@@ -26,7 +26,8 @@ test.Step(
 
     -- copy volume
     a2d.CopyPath("/A2.DESKTOP", "/RAM1")
-    a2dtest.WaitForAlert({match="Extras/BASIC%.system"})
+    a2dtest.WaitForAlert({match="file is too large"})
+    test.Expect(a2dtest.OCRScreen():upper():find("EXTRAS/BASIC%.SYSTEM"), "file name should be visible")
     a2d.DialogCancel()
 
     -- cleanup
