@@ -356,4 +356,23 @@ test.Step(
 
     hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
+    a2d.CloseWindow()
+end)
+
+--[[
+  Open `/TESTS/PREVIEW/TEXT/MORE.THAN.64K`. Verify the screen does not
+  get corrupted and the file load completes. Scroll to the bottom. Verify
+  that the last lines are around "L 9440" not "L 220".
+]]
+test.Step(
+  "File bigger than 64K",
+  function()
+    a2d.OpenPath("/TESTS/PREVIEW/TEXT/MORE.THAN.64K")
+    emu.wait(20)
+    a2d.OASADown()
+
+    local ocr = a2dtest.OCRScreen();
+    test.Expect(not ocr:find("L 283"), "file should not be truncated to about 200 lines")
+    test.Expect(ocr:find("L 9440"), "file should show about 9400 lines")
+    a2d.CloseWindow()
 end)

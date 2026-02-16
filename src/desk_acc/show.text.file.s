@@ -210,6 +210,14 @@ remainder:      .word   0       ; (out)
         sta     close_params::ref_num
         JSR_TO_MAIN GetFileEof
 
+        ;; > 64K? Treat as 64K
+        ;; TODO: Rework load/display logic to be 24-bit friendly
+        kMaxFileSize = $10000 - $200 ; don't wrap adding buffer size
+        ucmp24  get_eof_params::eof, #kMaxFileSize
+    IF GE
+        copy16  #kMaxFileSize, get_eof_params::eof
+    END_IF
+
         ;; create window
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPort, winfo::port
