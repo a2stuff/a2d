@@ -96,11 +96,12 @@ retry:
         bcc     ret             ; succeeded
 
 error:
+        ;; TODO: Consider doing this only on `ERR_VOL_NOT_FOUND`
         message := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     JUMP_TABLE_SHOW_ALERT ; `kErrSaveChanges` or `kErrInsertSystemDisk`
 
-        ;; Second time - prompt to insert.
+        ;; If we do this again, prompt to insert.
         ldx     #kErrInsertSystemDisk
         stx     message
 
@@ -110,9 +111,6 @@ error:
 
         sec                     ; failed
 ret:    rts
-
-second_try_flag:
-        .byte   0
 .endproc ; _DoWrite
 
 .endproc ; SaveSettings
