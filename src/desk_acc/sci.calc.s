@@ -373,14 +373,16 @@ tall_button_bitmap:             ; bitmap for '+' button
 
 saved_stack:
         .byte   $00             ; restored after error
-calc_p: .byte   $00             ; high bit set if pending op?
+calc_p: .byte   $00             ; input since last clear?
 calc_op:.byte   $00
 calc_d: .byte   $00             ; decimal separator if present, 0 otherwise
-calc_e: .byte   $00             ; exponential?
+calc_e: .byte   $00             ; exponent?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
 calc_f: .byte   $00             ; high bit set if last was function
 calc_l: .byte   $00             ; input length
+
+kMaxEntryLength = 10
 
 ;;; ============================================================
 ;;; Miscellaneous param blocks
@@ -774,16 +776,15 @@ ret:    rts
     REPEAT
         ldy     #0
         lda     (ptr),y
-        beq     ret
-
+      IF NOT ZERO
         ;; Button's "port" is the inner inversion rect; test against
         ;; 1px beyond that, to match BTK. Make a copy and inflate it.
         add16_8 ptr, #(btn_c::port - btn_c), rect_ptr
         ldy     #.sizeof(MGTK::Rect)-1
-      DO
+       DO
         copy8   (rect_ptr),y, inrect_rect,y
         dey
-      WHILE POS
+       WHILE POS
         MGTK_CALL MGTK::InflateRect, grow_rect
         MGTK_CALL MGTK::InRect, inrect_rect
         beq     next
@@ -796,7 +797,8 @@ ret:    rts
         CALL    DepressButton, AX=rect_ptr
         beq     ignore
         pla
-ret:    rts
+      END_IF
+        rts
 
 ignore: pla
         RETURN  A=#0
@@ -823,8 +825,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
     REPEAT
         ldy     #0
         lda     (ptr),y
-        beq     ret
-
+      IF NOT ZERO
         ldy     #(btn_c::key - btn_c)
         lda     (ptr),y
         key := *+1
@@ -839,8 +840,8 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         add16_8 ptr, #btn_c::port - btn_c
         CALL    DepressButton, AX=ptr
         pla
-
-ret:    rts
+      END_IF
+        rts
 
 next:   add16_8 ptr, #.sizeof(btn_c)
     FOREVER
@@ -866,19 +867,19 @@ next:   add16_8 ptr, #.sizeof(btn_c)
     END_IF
 
     IF A = #Function::exp
-        ldy     calc_e
-        bne     ret2
-        ldy     calc_l
+        ldy     calc_e          ; already exponent?
       IF ZERO
+        ldy     calc_l
+       IF ZERO                  ; if no entry, make it "1E"
         inc     calc_l
         lda     #'1'
         sta     text_buffer1 + kTextBufferSize
         sta     text_buffer2 + kTextBufferSize
-      END_IF
+       END_IF
         copy8   #'E', calc_e
-        jmp     Insert
-
-ret2:   rts
+        jmp     _Insert
+      END_IF
+        rts
     END_IF
 
     IF A = #Function::op_subtract
@@ -889,7 +890,7 @@ ret2:   rts
         SET_BIT7_FLAG calc_n
         pla
         pha
-        jmp     Insert
+        jmp     _Insert
        END_IF
       END_IF
 
@@ -897,27 +898,29 @@ ret2:   rts
     END_IF
 
     IF A = #Function::decimal
-        lda     calc_d
-        ora     calc_e
-        bne     ret3
-        lda     calc_l
+        lda     calc_d          ; already a decimal?
+        ora     calc_e          ; or exponent?
       IF ZERO
+        lda     calc_l
+       IF ZERO
         inc     calc_l
-      END_IF
+       END_IF
         copy8   intl_deci_sep, calc_d
-        jmp     Insert
-
-ret3:   rts
+        jmp     _Insert
+      END_IF
+        rts
     END_IF
 
         cmp     #Function::digit0
         bcc     DoOp
         cmp     #Function::digit9+1
         bcs     DoOp
+        FALL_THROUGH_TO _Insert
 
         .assert Function::digit0 = '0', error, "Enum values"
 
-Insert: SET_BIT7_FLAG calc_g
+.proc _Insert
+        SET_BIT7_FLAG calc_g
         ldy     calc_l
     IF ZERO
         pha
@@ -929,7 +932,7 @@ Insert: SET_BIT7_FLAG calc_g
     END_IF
 
         SET_BIT7_FLAG calc_p
-        cpy     #10
+        cpy     #kMaxEntryLength
         bcs     ret
         pha
         ldy     calc_l
@@ -953,6 +956,8 @@ empty:  inc     calc_l
         jmp     DisplayBuffer1
 
 ret:   rts
+.endproc ; _Insert
+
 .endproc ; ProcessFunction
 
 ;;; ============================================================
@@ -1062,6 +1067,7 @@ ret:   rts
 
     IF A = #Function::fn_exp
         ROM_CALL EXP
+        ;; TODO: This should be `PostFunc`
         jmp     PostOp
     END_IF
 
@@ -1110,31 +1116,16 @@ do_op:
 
     IF X = #Function::op_add
         ROM_CALL FADD           ; FAC = (Y,A) + FAC
-        jmp     PostOp
-    END_IF
-
-    IF X = #Function::op_subtract
+    ELSE_IF X = #Function::op_subtract
         ROM_CALL FSUB           ; FAC = (Y,A) - FAC
-        jmp     PostOp
-    END_IF
-
-    IF X = #Function::op_multiply
+    ELSE_IF X = #Function::op_multiply
         ROM_CALL FMULT          ; FAC = (Y,A) * FAC
-        jmp     PostOp
-    END_IF
-
-    IF X = #Function::op_divide
+    ELSE_IF X = #Function::op_divide
         ROM_CALL FDIV           ; FAC = (Y,A) / FAC
-        jmp     PostOp
-    END_IF
-
-    IF X = #Function::op_power
+    ELSE_IF X = #Function::op_power
         ROM_CALL LOAD_ARG       ; ARG = (Y,A)
         ROM_CALL FPWRT          ; FAC = ARG ^ FAC
-        jmp     PostOp
-    END_IF
-
-    IF X = #Function::equals
+    ELSE_IF X = #Function::equals
         ldy     calc_f
       IF ZERO
         ldy     calc_g
@@ -1192,13 +1183,17 @@ ep2:    jsr     PushFAC
     END_IF
 
         cpx     #0              ; pad out with spaces if needed
-        bmi     end
-pad:    lda     #' '
+    IF POS
+      DO
+        lda     #' '
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
-        bpl     pad
-end:    jsr     DisplayBuffer1
+      WHILE POS
+    END_IF
+
+        jsr     DisplayBuffer1
+
         FALL_THROUGH_TO ResetBuffer1AndState
 .endproc ; PostOp
 

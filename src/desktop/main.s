@@ -12488,7 +12488,7 @@ no_change:
 
 retry:
         MLI_CALL RENAME, rename_params
-    IF_CS
+    IF CS
         ;; Failed, maybe retry
         jsr     ShowAlert       ; arbitrary ProDOS error
         ASSERT_EQUALS ::kAlertResultTryAgain, 0

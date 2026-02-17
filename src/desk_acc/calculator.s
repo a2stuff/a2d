@@ -83,7 +83,7 @@ setzp_params_preserve:          ; convenience over performance
         kRow5Bot = kRow5Top+kCalcButtonHeight
 
         kBorderLeftTop = 1          ; border width pixels (left/top)
-        kBorderBottomRight = 2          ; (bottom/right)
+        kBorderBottomRight = 2      ; (bottom/right)
 
 .macro CALC_BUTTON identifier, labelchar, left, top
 .params identifier
@@ -244,13 +244,15 @@ tall_button_bitmap:             ; bitmap for '+' button
 
 saved_stack:
         .byte   $00             ; restored after error
-calc_p: .byte   $00             ; high bit set if pending op?
+calc_p: .byte   $00             ; input since last clear?
 calc_op:.byte   $00
 calc_d: .byte   $00             ; decimal separator if present, 0 otherwise
-calc_e: .byte   $00             ; exponential?
+calc_e: .byte   $00             ; exponent?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
 calc_l: .byte   $00             ; input length
+
+kMaxEntryLength = 10
 
 ;;; ============================================================
 ;;; Miscellaneous param blocks
@@ -465,7 +467,7 @@ intl_deci_sep:  .byte   0
         jsr     DrawContent
         jsr     ResetBuffersAndDisplay
 
-        lda     #'='            ; last kOperation
+        lda     #'='            ; last op
         sta     calc_op
 
         lda     #0              ; clear registers
@@ -489,19 +491,22 @@ intl_deci_sep:  .byte   0
         copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
         lda     #1
-        ROM_CALL FLOAT
+        ROM_CALL FLOAT          ; FAC = 0
         ldxy    #farg
-        ROM_CALL ROUND
-        lda     #0              ; set FAC to 0
-        ROM_CALL FLOAT
+        ROM_CALL ROUND          ; `farg` = FAC
+        lda     #0
+        ROM_CALL FLOAT          ; FAC = 0
+
+        ;; What is this for???
         ROM_CALL FADD
         ROM_CALL FOUT
         lda     #$07
         ROM_CALL FMULT
+
         lda     #$00
-        ROM_CALL FLOAT
+        ROM_CALL FLOAT          ; FAC = 0
         ldxy    #farg
-        ROM_CALL ROUND
+        ROM_CALL ROUND          ; `farg` = FAC
 
         tsx
         stx     saved_stack
@@ -629,7 +634,7 @@ rts1:  rts                     ; used by next proc
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         copy8   #MGTK::EventKind::button_down, event_params::kind ; Needed in `DepressButton`
 
-        lda     screentowindow_params::windowx+1        ; ensure high bits of coords are 0
+        lda     screentowindow_params::windowx+1 ; ensure high bits of coords are 0
         ora     screentowindow_params::windowy+1
         bne     rts1
         lda     screentowindow_params::windowy
@@ -637,7 +642,7 @@ rts1:  rts                     ; used by next proc
         FALL_THROUGH_TO FindButtonRow
 
 .proc FindButtonRow
-        cmp     #kRow1Top-kBorderLeftTop            ; row 1?
+        cmp     #kRow1Top-kBorderLeftTop ; row 1?
         bcc     miss
     IF A < #kRow1Bot+kBorderBottomRight
         jsr     FindButtonCol
@@ -645,7 +650,7 @@ rts1:  rts                     ; used by next proc
         RETURN  A=row1_lookup,x
     END_IF
 
-        cmp     #kRow2Top-kBorderLeftTop            ; row 2?
+        cmp     #kRow2Top-kBorderLeftTop ; row 2?
         bcc     miss
     IF A < #kRow2Bot+kBorderBottomRight
         jsr     FindButtonCol
@@ -653,7 +658,7 @@ rts1:  rts                     ; used by next proc
         RETURN  A=row2_lookup,x
     END_IF
 
-        cmp     #kRow3Top-kBorderLeftTop            ; row 3?
+        cmp     #kRow3Top-kBorderLeftTop ; row 3?
         bcc     miss
     IF A < #kRow3Bot+kBorderBottomRight
         jsr     FindButtonCol
@@ -661,7 +666,7 @@ rts1:  rts                     ; used by next proc
         RETURN  A=row3_lookup,x
     END_IF
 
-        cmp     #kRow4Top-kBorderLeftTop            ; row 4?
+        cmp     #kRow4Top-kBorderLeftTop ; row 4?
         bcc     miss
     IF A < #kRow4Bot+kBorderBottomRight
         jsr     FindButtonCol
@@ -673,12 +678,12 @@ rts1:  rts                     ; used by next proc
         lda     screentowindow_params::windowx
         cmp     #kCol4Left-kBorderLeftTop
         bcc     miss
-        cmp     #kCol4Right+kBorderBottomRight-1         ; TODO: is -1 bug in original?
+        cmp     #kCol4Right+kBorderBottomRight-1
         bcs     miss
         RETURN  A=#'+', C=1
     END_IF
 
-        cmp     #kRow5Bot+kBorderBottomRight             ; row 5?
+        cmp     #kRow5Bot+kBorderBottomRight ; row 5?
         bcs     miss
 
         jsr     FindButtonCol
@@ -707,25 +712,25 @@ miss:   RETURN  C=0
         ::decimal_lookup := *-2
 
 .proc FindButtonCol
-        cpx     #kCol1Left-kBorderLeftTop             ; col 1?
+        cpx     #kCol1Left-kBorderLeftTop ; col 1?
         bcc     miss
     IF X < #kCol1Right+kBorderBottomRight
         RETURN  X=#1, C=1
     END_IF
 
-        cpx     #kCol2Left-kBorderLeftTop             ; col 2?
+        cpx     #kCol2Left-kBorderLeftTop ; col 2?
         bcc     miss
     IF X < #kCol2Right+kBorderBottomRight
         RETURN  X=#2, C=1
     END_IF
 
-        cpx     #kCol3Left-kBorderLeftTop             ; col 3?
+        cpx     #kCol3Left-kBorderLeftTop ; col 3?
         bcc     miss
     IF X < #kCol3Right+kBorderBottomRight
         RETURN  X=#3, C=1
     END_IF
 
-        cpx     #kCol4Left-kBorderLeftTop            ; col 4?
+        cpx     #kCol4Left-kBorderLeftTop ; col 4?
         bcc     miss
     IF X < #kCol4Right+kBorderBottomRight
         RETURN  X=#4, C=1
@@ -746,9 +751,9 @@ miss:   RETURN  C=0
     IF A = #'C'                 ; Clear?
         CALL    DepressButton, XY=#btn_c::port
         lda     #0
-        ROM_CALL FLOAT
+        ROM_CALL FLOAT          ; FAC = 0
         ldxy    #farg
-        ROM_CALL ROUND
+        ROM_CALL ROUND          ; `farg` = FAC
         copy8   #'=', calc_op
         lda     #0
         sta     calc_p
@@ -759,21 +764,22 @@ miss:   RETURN  C=0
         jmp     ResetBuffersAndDisplay
     END_IF
 
-    IF A = #'E'                 ; Exponential?
+    IF A = #'E'                 ; Exponent?
         CALL    DepressButton, XY=#btn_e::port
-        ldy     calc_e
-        bne     rts1
-        ldy     calc_l
+        ldy     calc_e          ; already exponent?
       IF ZERO
+        ldy     calc_l
+       IF ZERO                  ; if no entry, make it "1E"
         inc     calc_l
         lda     #'1'
         sta     text_buffer1 + kTextBufferSize
         sta     text_buffer2 + kTextBufferSize
-      END_IF
+       END_IF
         copy8   #'E', calc_e
-        jmp     update
+        jmp     Insert
+      END_IF
 
-rts1:   rts
+        rts
     END_IF
 
     IF A = #'='                 ; Equals?
@@ -786,23 +792,19 @@ rts1:   rts
         TAIL_CALL DoOpClick, XY=#btn_mul::port
     END_IF
 
-        cmp     intl_deci_sep   ; Decimal?
-        beq     dsep
-
-    IF A = #'.'                 ; allow either
-dsep:
+    IF A = intl_deci_sep OR A = #'.'  ; Decimal?
         CALL    DepressButton, XY=#btn_dec::port
-        lda     calc_d
-        ora     calc_e
-        bne     rts2
-        lda     calc_l
+        lda     calc_d          ; already a decimal?
+        ora     calc_e          ; or exponent?
       IF ZERO
+        lda     calc_l
+       IF ZERO
         inc     calc_l
-      END_IF
+       END_IF
         copy8   intl_deci_sep, calc_d
-        jmp     update
-
-rts2:   rts
+        jmp     Insert
+      END_IF
+        rts
     END_IF
 
     IF A = #'+'                 ; Add?
@@ -820,7 +822,7 @@ rts2:   rts
         SET_BIT7_FLAG calc_n
         pla
         pha
-        jmp     do_digit_click
+        jmp     DoDigitClick
        END_IF
       END_IF
 
@@ -836,52 +838,52 @@ rts2:   rts
 
     IF A = #'0'                 ; Digit 0?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_0::port
+        TAIL_CALL DoDigitClick, XY=#btn_0::port
     END_IF
 
     IF A = #'1'                 ; Digit 1?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_1::port
+        TAIL_CALL DoDigitClick, XY=#btn_1::port
     END_IF
 
     IF A = #'2'                 ; Digit 2?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_2::port
+        TAIL_CALL DoDigitClick, XY=#btn_2::port
     END_IF
 
     IF A = #'3'                 ; Digit 3?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_3::port
+        TAIL_CALL DoDigitClick, XY=#btn_3::port
     END_IF
 
     IF A = #'4'                 ; Digit 4?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_4::port
+        TAIL_CALL DoDigitClick, XY=#btn_4::port
     END_IF
 
     IF A = #'5'                 ; Digit 5?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_5::port
+        TAIL_CALL DoDigitClick, XY=#btn_5::port
     END_IF
 
     IF A = #'6'                 ; Digit 6?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_6::port
+        TAIL_CALL DoDigitClick, XY=#btn_6::port
     END_IF
 
     IF A = #'7'                 ; Digit 7?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_7::port
+        TAIL_CALL DoDigitClick, XY=#btn_7::port
     END_IF
 
     IF A = #'8'                 ; Digit 8?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_8::port
+        TAIL_CALL DoDigitClick, XY=#btn_8::port
     END_IF
 
     IF A = #'9'                 ; Digit 9?
         pha
-        TAIL_CALL do_digit_click, XY=#btn_9::port
+        TAIL_CALL DoDigitClick, XY=#btn_9::port
     END_IF
 
     IF A = #CHAR_DELETE         ; Delete?
@@ -924,15 +926,22 @@ rts2:   rts
 end:    rts
 .endproc ; ProcessKey
 
-do_digit_click:
+;;; ============================================================
+
+.proc DoDigitClick
         jsr     DepressButton
     IF ZERO
         pla
         rts
     END_IF
-
         pla
-update: SET_BIT7_FLAG calc_g
+        FALL_THROUGH_TO Insert
+.endproc ; DoDigitClick
+
+;;; ============================================================
+
+.proc Insert
+        SET_BIT7_FLAG calc_g
         ldy     calc_l
     IF ZERO
         pha
@@ -944,8 +953,7 @@ update: SET_BIT7_FLAG calc_g
     END_IF
 
         SET_BIT7_FLAG calc_p
-        cpy     #10
-        bcs     rts3
+    IF Y < #kMaxEntryLength
         pha
         ldy     calc_l
         beq     empty
@@ -953,21 +961,24 @@ update: SET_BIT7_FLAG calc_g
         sec
         sbc     calc_l
         tax
-    DO
+      DO
         lda     text_buffer1,x
         sta     text_buffer1-1,x
         sta     text_buffer2-1,x
         inx
         dey
-    WHILE NOT_ZERO
+      WHILE NOT_ZERO
 
 empty:  inc     calc_l
         pla
         sta     text_buffer1 + kTextBufferSize
         sta     text_buffer2 + kTextBufferSize
         jmp     DisplayBuffer1
+    END_IF
+        rts
+.endproc ; Insert
 
-rts3:   rts
+;;; ============================================================
 
 .proc DoOpClick
         jsr     DepressButton
@@ -976,12 +987,15 @@ rts3:   rts
         rts
     END_IF
 
+        ;; ----------------------------------------
+        ;; If there was input, parse it
+
         lda     calc_op
     IF A = #'='
         lda     calc_g
         bne     reparse
         lda     #0
-        ROM_CALL FLOAT
+        ROM_CALL FLOAT          ; FAC = 0
         jmp     do_op
     END_IF
 
@@ -1004,48 +1018,38 @@ reparse:
     WHILE POS
         copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
-        ROM_CALL FIN
+        ROM_CALL FIN            ; FAC = parsed `FBUFFR`
+
+        ;; ----------------------------------------
+        ;; Do the operation
 
 do_op:  pla
         ldx     calc_op
         sta     calc_op
-        lda     #<farg
-        ldy     #>farg
+        lday    #farg
 
     IF X = #'+'
-        ROM_CALL FADD
-        jmp     PostOp
-    END_IF
-
-    IF X = #'-'
-        ROM_CALL FSUB
-        jmp     PostOp
-    END_IF
-
-    IF X = #'*'
-        ROM_CALL FMULT
-        jmp     PostOp
-    END_IF
-
-    IF X = #'/'
-        ROM_CALL FDIV
-        jmp     PostOp
-    END_IF
-
-    IF X = #'='
+        ROM_CALL FADD           ; FAC = `farg` + FAC
+    ELSE_IF X = #'-'
+        ROM_CALL FSUB           ; FAC = `farg` - FAC
+    ELSE_IF X = #'*'
+        ROM_CALL FMULT          ; FAC = `farg` * FAC
+    ELSE_IF X = #'/'
+        ROM_CALL FDIV           ; FAC = `farg` / FAC
+    ELSE_IF X = #'='
         ldy     calc_g
       IF ZERO
         jmp     ResetBuffer1AndState
       END_IF
     END_IF
 
-        FALL_THROUGH_TO PostOp
-.endproc ; DoOpClick
+        ldxy    #farg           ; after the FP op is done
+        ROM_CALL ROUND          ; `farg` = FAC
+        ROM_CALL FOUT           ; output as null-terminated string to `FBUFFR`
+        ;; NOTE: `FOUT` trashes the FAC
 
-.proc PostOp
-        ldxy    #farg           ; after the FP kOperation is done
-        ROM_CALL ROUND
-        ROM_CALL FOUT           ; output as null-terminated string to FBUFFR
+        ;; ----------------------------------------
+        ;; Update the display with result in `FBUFFR`
 
         ldy     #0              ; count the size
     DO
@@ -1080,15 +1084,19 @@ do_op:  pla
     END_IF
 
         cpx     #0              ; pad out with spaces if needed
-        bmi     end
-pad:    lda     #' '
+    IF POS
+      DO
+        lda     #' '
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
-        bpl     pad
-end:    jsr     DisplayBuffer1
+      WHILE POS
+    END_IF
+
+        jsr     DisplayBuffer1
+
         FALL_THROUGH_TO ResetBuffer1AndState
-.endproc ; PostOp
+.endproc ; DoOpClick
 
 .proc ResetBuffer1AndState
         jsr     ResetBuffer1
@@ -1237,22 +1245,22 @@ invert_rect:
 
 .proc DisplayBuffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     end
+    IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         CALL    PreDisplayBuffer, XY=#text_buffer1
         MGTK_CALL MGTK::DrawText, drawtext_params1
-end:    rts
+    END_IF
+        rts
 .endproc ; DisplayBuffer1
 
 .proc DisplayBuffer2
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     end
+    IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         CALL    PreDisplayBuffer, XY=#text_buffer2
         MGTK_CALL MGTK::DrawText, drawtext_params2
-end:    rts
+    END_IF
+        rts
 .endproc ; DisplayBuffer2
 
 .proc PreDisplayBuffer
@@ -1389,7 +1397,6 @@ END_PROC_AT
         sizeof_chrget_routine = .sizeof(chrget_routine)
 
 ;;; ============================================================
-
 
         .include "../lib/uppercase.s"
         .include "../lib/rom_call.s"
