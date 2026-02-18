@@ -251,6 +251,7 @@ calc_e: .byte   $00             ; exponent?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
 calc_l: .byte   $00             ; input length
+calc_r: .byte   $00             ; result? (i.e. last op was '=')
 
 kMaxEntryLength = 10
 
@@ -354,6 +355,7 @@ base:   .word   16
 .endparams
 
 farg:   .byte   $00,$00,$00,$00,$00,$00
+ftmp:   .byte   $00,$00,$00,$00,$00,$00
 
 .params title_bar_bitmap      ; Params for MGTK::PaintBits
         DEFINE_POINT viewloc, 115, AS_WORD -9
@@ -477,6 +479,7 @@ intl_deci_sep:  .byte   0
         sta     calc_n
         sta     calc_g
         sta     calc_l
+        sta     calc_r
 
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
     DO
@@ -746,6 +749,7 @@ miss:   RETURN  C=0
         sta     calc_d
         sta     calc_e
         sta     calc_n
+        sta     calc_r
         jmp     ResetBuffersAndDisplay
     END_IF
 
@@ -975,42 +979,47 @@ empty:  inc     calc_l
         ;; ----------------------------------------
         ;; If there was input, parse it
 
-        lda     calc_op
-    IF A = #'='
         lda     calc_g
-        bne     reparse
-        lda     #0
-        ROM_CALL FLOAT          ; FAC = 0
-        jmp     do_op
-    END_IF
-
-        lda     calc_g
-        bne     reparse
-        pla
-        sta     calc_op
-        jmp     ResetBuffer1AndState
-
-reparse:
+    IF NOT ZERO
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
-    DO
+      DO
         lda     text_buffer1,x
-      IF A = intl_deci_sep
+       IF A = intl_deci_sep
         lda     #'.'
-      END_IF
+       END_IF
         sta     FBUFFR,x
         dex
-    WHILE POS
+      WHILE POS
         copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN            ; FAC = parsed `FBUFFR`
+    END_IF
 
         ;; ----------------------------------------
         ;; Do the operation
 
-do_op:  pla
-        ldx     calc_op
-        sta     calc_op
+        ;; Save FAC for repeated ops, e.g. the "2" in "1 + 2 = ="
+        ldxy    #ftmp
+        ROM_CALL ROUND
+
+        ldx     calc_op         ; X = pending op
+        pla                     ; passed op
+    IF A = #'='
+        SET_BIT7_FLAG calc_r
+    ELSE
+        sta     calc_op         ; pending op for next time
+
+        ;; In a sequence like "2 * 3 = = + 1" this prevents the "+"
+        ;; from executing a pending op.
+        bit     calc_r          ; X = pending op
+      IF_NS
+        ldx     #'='
+      END_IF
+
+        CLEAR_BIT7_FLAG calc_r
+    END_IF
+
         lday    #farg
 
     IF X = #'+'
@@ -1032,6 +1041,10 @@ do_op:  pla
         ROM_CALL ROUND          ; `farg` = FAC
         ROM_CALL FOUT           ; output as null-terminated string to `FBUFFR`
         ;; NOTE: `FOUT` trashes the FAC
+
+        ;; Restore FAC for repeated op, e.g. "2" in "1 + 2 = ="
+        lday    #ftmp
+        ROM_CALL LOAD_FAC
 
         ;; ----------------------------------------
         ;; Update the display with result in `FBUFFR`

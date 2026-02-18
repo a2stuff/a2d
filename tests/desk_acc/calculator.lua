@@ -293,3 +293,33 @@ test.Step(
 
     a2d.CloseWindow()
 end)
+
+--[[
+  Exercise repeated ops, e.g. "1 + 2 = = ="
+]]
+test.Step(
+  "Calculator - repeated operations",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    a2d.WaitForRepaint()
+
+    ExpectExpression("2+3=", "5")
+    ExpectExpression("2+3==", "8")
+    ExpectExpression("2+3===", "11")
+
+    ExpectExpression("2*3=", "6")
+    ExpectExpression("2*3==", "18")
+    ExpectExpression("2*3===", "54")
+
+    ExpectExpression("64", "64")
+    ExpectExpression("64/", "64")
+    ExpectExpression("64/2", "2")
+    ExpectExpression("64/2=", "32")
+    ExpectExpression("64/2==", "16")
+    ExpectExpression("64/2==+", "16")
+    ExpectExpression("64/2==+1", "1")
+    ExpectExpression("64/2==+1=", "17")
+    ExpectExpression("64/2==+1==", "18")
+
+    a2d.CloseWindow()
+end)
