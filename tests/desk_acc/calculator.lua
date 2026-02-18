@@ -297,10 +297,13 @@ end)
 --[[
   Exercise repeated ops, e.g. "1 + 2 = = ="
 ]]
-test.Step(
-  "Calculator - repeated operations",
-  function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+test.Variants(
+  {
+    {"Calculator - repeated operations", "/A2.DESKTOP/APPLE.MENU/CALCULATOR"},
+    {"Sci.Calc - repeated operations", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
+  },
+  function(idx, name, path)
+    a2d.OpenPath(path)
     a2d.WaitForRepaint()
 
     ExpectExpression("2+3=", "5")

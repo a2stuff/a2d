@@ -379,8 +379,8 @@ calc_d: .byte   $00             ; decimal separator if present, 0 otherwise
 calc_e: .byte   $00             ; exponent?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
-calc_f: .byte   $00             ; high bit set if last was function
 calc_l: .byte   $00             ; input length
+calc_r: .byte   $00             ; result? (i.e. last op was '=')
 
 kMaxEntryLength = 10
 
@@ -484,6 +484,7 @@ base:   .word   16
 .endparams
 
 farg:   .byte   $00,$00,$00,$00,$00,$00
+ftmp:   .byte   $00,$00,$00,$00,$00,$00
 
 grafport:       .tag    MGTK::GrafPort
 
@@ -574,8 +575,8 @@ init:
         sta     calc_e
         sta     calc_n
         sta     calc_g
-        sta     calc_f
         sta     calc_l
+        sta     calc_r
 
 .proc CopyToB1
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
@@ -851,6 +852,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         sta     calc_d
         sta     calc_e
         sta     calc_n
+        sta     calc_r
         jmp     ResetBuffersAndDisplay
     END_IF
 
@@ -973,24 +975,27 @@ ret:   rts
     END_IF
         pla
 
+        ;; Save for the end
+        pha                     ; A = `Function::*`
+
         ;; --------------------------------------------------
         ;; Function? These modify the FAC in place
     IF A = #Function::fn_sin
         jsr     DegToRad
         ROM_CALL SIN
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_cos
         jsr     DegToRad
         ROM_CALL COS
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_tan
         jsr     DegToRad
         ROM_CALL TAN
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_asin
@@ -1008,7 +1013,7 @@ ret:   rts
         ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
         ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
         jsr     RadToDeg
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_acos
@@ -1029,77 +1034,63 @@ ret:   rts
         lday    #CON_HALF_PI    ;
         ROM_CALL FADD           ; FAC = -ATN(X/SQR(-X*X+1))+1.5708
         jsr     RadToDeg
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_atan
         ROM_CALL ATN
         jsr     RadToDeg
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_sqrt
         ROM_CALL SQR
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_neg
         ROM_CALL NEGOP
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_ln
         ROM_CALL LOG
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_exp
         ROM_CALL EXP
-        ;; TODO: This should be `PostFunc`
-        jmp     PostOp
+        jmp     post_op
     END_IF
 
     IF A = #Function::fn_inv
         lday    #CON_ONE
         ROM_CALL FDIV
-        jmp     PostFunc
+        jmp     post_op
     END_IF
 
         ;; --------------------------------------------------
+        ;; Infix Operators / Equals
 
+        ;; Save FAC for repeated ops, e.g. the "2" in "1 + 2 = ="
         pha
-
-        ;; Look at last operation
-        lda     calc_op
-
-    IF A = #Function::equals
-        lda     calc_g          ; last input was a digit insertion or func?
-        ora     calc_f
-        bne     do_op           ; reparsed above, proceed
-
-        lda     #0              ; otherwise, reset to 0
-        ROM_CALL FLOAT
-        jmp     do_op
-    END_IF
-
-        ;; Was last an input or function?
-        lda     calc_g
-        ora     calc_f
-    IF ZERO
-        ;; No, so last was an op, we're overriding it.
-        ;; e.g.: 2 * +
+        ldxy    #ftmp
+        ROM_CALL ROUND
         pla
+
+        ldx     calc_op         ; X = previous op
+
+    IF A <> #Function::equals
+        ;; In a sequence like "2 * 3 = = + 1" this prevents the "+"
+        ;; from executing a pending op.
+        bit     calc_r
+      IF NS
+        ldx     #Function::equals
+      END_IF
+
         sta     calc_op
-        jmp     ResetBuffer1AndState
     END_IF
 
-        ;; --------------------------------------------------
-        ;; Operators
-
-do_op:
-        pla                     ; A = current op
-        ldx     calc_op         ; X = previous op
-        sta     calc_op         ; save for later
         lday    #farg           ; A,Y = previous intermediate result
 
     IF X = #Function::op_add
@@ -1114,27 +1105,29 @@ do_op:
         ROM_CALL LOAD_ARG       ; ARG = (Y,A)
         ROM_CALL FPWRT          ; FAC = ARG ^ FAC
     ELSE_IF X = #Function::equals
-        ldy     calc_f
-      IF ZERO
+        ;; special...
+
+        bit     calc_r
+      IF NS
+
         ldy     calc_g
        IF ZERO
+        pla
+        sta     calc_op         ; redundant
         jmp     ResetBuffer1AndState
        END_IF
       END_IF
     END_IF
 
-        FALL_THROUGH_TO PostOp
-.endproc ; DoOp
-
-;;; ============================================================
-
-.proc PostOp
-        copy8   #0, calc_f
-
         ldxy    #farg           ; save intermediate result
         ROM_CALL ROUND          ; (Y,A) = ROUND(FAC)
 
-ep2:    jsr     PushFAC
+        ;; --------------------------------------------------
+        ;; Done with operation, result is in FAC
+
+post_op:
+
+        jsr     PushFAC
         ROM_CALL FOUT       ; output as null-terminated string to FBUFFR
         jsr     PopFAC
 
@@ -1182,8 +1175,20 @@ ep2:    jsr     PushFAC
 
         jsr     DisplayBuffer1
 
+        ;; --------------------------------------------------
+
+        pla                     ; A = `Function::*`
+    IF A = #Function::equals
+        ;; Restore FAC for repeated op, e.g. "2" in "1 + 2 = ="
+        lday    #ftmp
+        ROM_CALL LOAD_FAC
+        SET_BIT7_FLAG calc_r
+    ELSE
+        CLEAR_BIT7_FLAG calc_r
+    END_IF
+
         FALL_THROUGH_TO ResetBuffer1AndState
-.endproc ; PostOp
+.endproc ; DoOp
 
 .proc ResetBuffer1AndState
         jsr     ResetBuffer1
@@ -1193,7 +1198,6 @@ ep2:    jsr     PushFAC
         sta     calc_e
         sta     calc_n
         sta     calc_g
-        sta     calc_f
         rts
 .endproc ; ResetBuffer1AndState
 
@@ -1207,15 +1211,6 @@ ep2:    jsr     PushFAC
     END_IF
         rts
 .endproc ; MaybeAddLeadingZero
-
-;;; After a function (e.g. SIN, COS, etc) is done, we must leave
-;;; the FAC alone but we do need to update the display and set
-;;; a flag indicating we shouldn't override the pending op.
-.proc PostFunc
-        jsr     PostOp::ep2
-        SET_BIT7_FLAG calc_f
-        rts
-.endproc ; PostFunc
 
 ;;; ============================================================
 

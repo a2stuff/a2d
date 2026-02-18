@@ -1013,7 +1013,7 @@ empty:  inc     calc_l
         ;; In a sequence like "2 * 3 = = + 1" this prevents the "+"
         ;; from executing a pending op.
         bit     calc_r          ; X = pending op
-      IF_NS
+      IF NS
         ldx     #'='
       END_IF
 
