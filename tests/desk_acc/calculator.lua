@@ -1,5 +1,26 @@
 a2d.ConfigureRepaintTime(0.25)
 
+-- Does an OCR pass on the calculator display; works for both versions.
+function OCRDisplay()
+  local dw, dh = 124, 20
+  local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+  local ocr = a2dtest.OCRScreen({
+      x1 = x + w - dw, -- Assumes display is top-right
+      x2 = x + w,
+      y1 = y + 0,
+      y2 = y + dh
+  })
+  return ocr:gsub("%s", "")
+end
+
+function ExpectExpression(expr, result)
+  apple2.Type(expr)
+  a2d.WaitForRepaint()
+  local ocr = OCRDisplay()
+  test.ExpectEquals(ocr, result, string.format("result of %q", expr), {}, 1)
+  apple2.EscapeKey()
+end
+
 --[[
   Run Apple Menu > Calculator. Move the Calculator window. Verify that
   the mouse cursor is drawn correctly.
@@ -103,7 +124,7 @@ test.Step(
     end)
     emu.wait(5) -- slow repaint
 
-    test.Expect(a2dtest.OCRScreen():find(" 123%.456 "), "result should be 123.456")
+    test.Expect(OCRDisplay():find("123%.456"), "result should be 123.456")
     a2d.CloseWindow()
 end)
 
@@ -127,20 +148,11 @@ test.Variants(
     a2d.OpenPath(path)
     a2d.WaitForRepaint()
 
-    apple2.Type("1-2=")
-    a2d.WaitForRepaint()
-    apple2.EscapeKey()
+    ExpectExpression("1-2=", "-1")
     -- should not hang
 
-    apple2.Type("1/2=")
-    a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 0%.5 "), "display should be 0.5")
-    apple2.EscapeKey()
-
-    apple2.Type("0-.5=")
-    a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" %-0%.5 "), "display should be -0.5")
-    apple2.EscapeKey()
+    ExpectExpression("1/2=", "0.5")
+    ExpectExpression("0-.5=", "-0.5")
 
     a2d.CloseWindow()
 end)
@@ -166,9 +178,7 @@ test.Variants(
     a2d.OpenPath(path)
     a2d.WaitForRepaint()
 
-    apple2.Type("12.34")
-    a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 12%.34 "), "display should be 12.34 (period)")
+    ExpectExpression("12.34", "12.34")
     apple2.EscapeKey()
 
     a2d.CloseWindow()
@@ -189,15 +199,8 @@ test.Variants(
     a2d.OpenPath(path)
     a2d.WaitForRepaint()
 
-    apple2.Type("12,34")
-    a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 12,34 "), "display should be 12,34 (comma)")
-    apple2.EscapeKey()
-
-    apple2.Type("12.34")
-    a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 12,34 "), "display should be 12,34 (comma)")
-    apple2.EscapeKey()
+    ExpectExpression("12,34", "12,34")
+    ExpectExpression("12.34", "12,34")
 
     a2d.CloseWindow()
 
@@ -250,42 +253,42 @@ test.Step(
 
     apple2.Type("1+2") Sin() apple2.Type("=")
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 1%.034%d+"), "result should be 1.034...")
+    test.Expect(OCRDisplay():find("1%.034%d+"), "result should be 1.034...")
     apple2.EscapeKey()
 
     apple2.Type("1") Sin() apple2.Type("+2=")
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 2%.017%d+ "), "result should be 2.017...")
+    test.Expect(OCRDisplay():find("2%.017%d+"), "result should be 2.017...")
     apple2.EscapeKey()
 
     apple2.Type("45") Sin()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 0%.707%d+ "), "result should be 0.707...")
+    test.Expect(OCRDisplay():find("0%.707%d+"), "result should be 0.707...")
     apple2.EscapeKey()
 
     apple2.Type("45") Neg() Sin()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" %-0%.707%d+ "), "result should be -0.707...")
+    test.Expect(OCRDisplay():find("%-0%.707%d+"), "result should be -0.707...")
     apple2.EscapeKey()
 
     apple2.Type("180") Cos()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" %-1 "), "result should be -1")
+    test.ExpectEquals(OCRDisplay(), "-1", "result should be -1")
     apple2.EscapeKey()
 
     apple2.Type("45") Sin() ASin()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 45%.?%d* "), "result should be approximately 45")
+    test.Expect(OCRDisplay():find("45%.?%d*"), "result should be approximately 45")
     apple2.EscapeKey()
 
     apple2.Type("45") Cos() ACos()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 45%.?%d* "), "result should be approximately 45")
+    test.Expect(OCRDisplay():find("45%.?%d*"), "result should be approximately 45")
     apple2.EscapeKey()
 
     apple2.Type("89") Tan() ATan()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find(" 89%.?%d* "), "result should be approximately 89")
+    test.Expect(OCRDisplay():find("89%.?%d*"), "result should be approximately 89")
     apple2.EscapeKey()
 
     a2d.CloseWindow()

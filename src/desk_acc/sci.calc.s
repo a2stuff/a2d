@@ -591,20 +591,9 @@ init:
 
         copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
-        lda     #1
-        ROM_CALL FLOAT
+        ROM_CALL ZERO_FAC       ; FAC = 0
         ldxy    #farg
-        ROM_CALL ROUND
-        lda     #0              ; set FAC to 0
-        ROM_CALL FLOAT
-        ROM_CALL FADD
-        ROM_CALL FOUT
-        lda     #$07
-        ROM_CALL FMULT
-        lda     #$00
-        ROM_CALL FLOAT
-        ldxy    #farg
-        ROM_CALL ROUND
+        ROM_CALL ROUND          ; `farg` = FAC
 
         tsx
         stx     saved_stack
@@ -852,10 +841,9 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 
 .proc ProcessFunction
     IF A = #Function::clear
-        lda     #0
-        ROM_CALL FLOAT
+        ROM_CALL ZERO_FAC       ; FAC = 0
         ldxy    #farg
-        ROM_CALL ROUND
+        ROM_CALL ROUND          ; `farg` = FAC
         copy8   #Function::equals, calc_op
         lda     #0
         sta     calc_p

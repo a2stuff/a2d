@@ -490,21 +490,7 @@ intl_deci_sep:  .byte   0
 
         copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
-        lda     #1
-        ROM_CALL FLOAT          ; FAC = 0
-        ldxy    #farg
-        ROM_CALL ROUND          ; `farg` = FAC
-        lda     #0
-        ROM_CALL FLOAT          ; FAC = 0
-
-        ;; What is this for???
-        ROM_CALL FADD
-        ROM_CALL FOUT
-        lda     #$07
-        ROM_CALL FMULT
-
-        lda     #$00
-        ROM_CALL FLOAT          ; FAC = 0
+        ROM_CALL ZERO_FAC       ; FAC = 0
         ldxy    #farg
         ROM_CALL ROUND          ; `farg` = FAC
 
@@ -750,8 +736,7 @@ miss:   RETURN  C=0
 .proc ProcessKey
     IF A = #'C'                 ; Clear?
         CALL    DepressButton, XY=#btn_c::port
-        lda     #0
-        ROM_CALL FLOAT          ; FAC = 0
+        ROM_CALL ZERO_FAC       ; FAC = 0
         ldxy    #farg
         ROM_CALL ROUND          ; `farg` = FAC
         copy8   #'=', calc_op
