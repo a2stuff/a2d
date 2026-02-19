@@ -26,7 +26,7 @@ test.Step(
 
     a2d.CopyDisk()
 
-    test.Expect(a2dtest.OCRScreen():find("3 +1 +Ram"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "3 +1 +Ram",
                 "S3,D1 RAM disk should be in list")
 
     -- cleanup
@@ -55,7 +55,7 @@ test.Step(
 
     a2d.CopyDisk()
 
-    test.Expect(a2dtest.OCRScreen():find("3 +1 +Ram"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "3 +1 +Ram",
                 "S3,D1 RAM disk should be in list")
 
     -- cleanup

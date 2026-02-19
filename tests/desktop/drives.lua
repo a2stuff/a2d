@@ -179,7 +179,7 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 
-    test.Expect(a2dtest.OCRScreen():upper():match("FLOPPY1"), "floppy icon should be present")
+    test.ExpectIMatch(a2dtest.OCRScreen(), "FLOPPY1", "floppy icon should be present")
 
     a2d.SelectPath("/FLOPPY1")
     s6d1:unload()
@@ -187,7 +187,7 @@ test.Step(
     a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK() -- OK
     emu.wait(5)
-    test.Expect(not a2dtest.OCRScreen():upper():match("FLOPPY1"), "floppy icon should be gone")
+    test.ExpectNotIMatch(a2dtest.OCRScreen(), "FLOPPY1", "floppy icon should be gone")
 end)
 
 --[[
@@ -294,7 +294,7 @@ test.Step(
       return order
     end
 
-    test.Expect(GetDiskOrder(), "ABCD", "disks should appear in order A/B/C/D")
+    test.ExpectEquals(GetDiskOrder(), "ABCD", "disks should appear in order A/B/C/D")
     s5d1:unload()
     s5d2:unload()
     s4d1:unload()
@@ -348,7 +348,7 @@ test.Step(
     a2dtest.WaitForAlert({match="disk could not be read"})
     a2d.DialogOK()
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():find("S5,D1"), "S5,D1 should be specified")
+    test.ExpectMatch(a2dtest.OCRScreen(), "S5,D1", "S5,D1 should be specified")
     a2d.DialogCancel()
     s5d1:unload()
 end)

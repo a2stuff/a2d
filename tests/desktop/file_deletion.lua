@@ -196,22 +196,22 @@ test.Step(
     a2d.DialogOK()
 
     a2dtest.WaitForAlert({match="file is locked"})
-    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y/Z/B"), "prompt should be for B")
+    test.ExpectMatch(a2dtest.OCRScreen(), "File: .*/DELETION/X/Y/Z/B", "prompt should be for B")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert({match="file is locked"})
-    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y/Z"), "prompt should be for Z")
+    test.ExpectMatch(a2dtest.OCRScreen(), "File: .*/DELETION/X/Y/Z", "prompt should be for Z")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert({match="file is locked"})
-    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X/Y"), "prompt should be for Y")
+    test.ExpectMatch(a2dtest.OCRScreen(), "File: .*/DELETION/X/Y", "prompt should be for Y")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert({match="file is locked"})
-    test.Expect(a2dtest.OCRScreen():find("File: .*/DELETION/X"), "prompt should be for X")
+    test.ExpectMatch(a2dtest.OCRScreen(), "File: .*/DELETION/X", "prompt should be for X")
     apple2.Type("Y")
     a2d.WaitForRepaint()
 

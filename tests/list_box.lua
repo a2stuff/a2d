@@ -68,16 +68,16 @@ function ListBoxTest(
       if not options.starts_with_selection then
         apple2.UpArrowKey()
         a2d.WaitForRepaint()
-        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.last),
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.last,
                     "last item should be selected")
         apple2.UpArrowKey()
         a2d.WaitForRepaint()
-        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.second_last),
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.second_last,
                     "next-to-last item should be selected")
       else
         apple2.UpArrowKey()
         a2d.WaitForRepaint()
-        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.first),
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.first,
                     "first item should still be selected")
       end
       cleanup_func()
@@ -87,12 +87,12 @@ function ListBoxTest(
       if not options.starts_with_selection then
         apple2.DownArrowKey()
         a2d.WaitForRepaint()
-        test.Expect(a2dtest.OCRScreen({invert=true}):find(options.first),
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.first,
                     "first item should be selected")
       end
       apple2.DownArrowKey()
       a2d.WaitForRepaint()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find(options.second),
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.second,
                   "second item should be selected")
       cleanup_func()
 
@@ -206,7 +206,7 @@ function ListBoxTest(
             emu.wait(10)
             m.ButtonUp()
         end)
-        test.Expect(a2dtest.OCRScreen():find(options.last), "should be scrolled to bottom")
+        test.ExpectMatch(a2dtest.OCRScreen(), options.last, "should be scrolled to bottom")
 
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + 5)
@@ -214,7 +214,7 @@ function ListBoxTest(
             emu.wait(10)
             m.ButtonUp()
         end)
-        test.Expect(a2dtest.OCRScreen({invert=options.starts_with_selection}):find(options.first), "should be scrolled to top")
+        test.ExpectMatch(a2dtest.OCRScreen({invert=options.starts_with_selection}), options.first, "should be scrolled to top")
 
       else
         -- scroll bar inactive
@@ -223,13 +223,13 @@ function ListBoxTest(
             m.MoveToApproximately(x + w + 5, y + h - 5)
             m.Click()
         end)
-        test.Expect(a2dtest.OCRScreen({invert=options.starts_with_selection}):find(options.first), "should still be scrolled to top")
+        test.ExpectMatch(a2dtest.OCRScreen({invert=options.starts_with_selection}), options.first, "should still be scrolled to top")
 
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + 5)
             m.Click()
         end)
-        test.Expect(a2dtest.OCRScreen({invert=options.starts_with_selection}):find(options.first), "should still be scrolled to top")
+        test.ExpectMatch(a2dtest.OCRScreen({invert=options.starts_with_selection}), options.first, "should still be scrolled to top")
 
       end
 
@@ -343,7 +343,7 @@ function ListBoxTest(
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w / 2, y + 5)
             m.DoubleClick()
-            test.Expect(a2dtest.OCRScreen({invert=true}):find(options.action),
+            test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.action,
                         "action button should flash")
         end)
 

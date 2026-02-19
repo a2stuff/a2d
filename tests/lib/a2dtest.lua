@@ -311,7 +311,7 @@ function a2dtest.WaitForAlert(options)
       ocr = ocr:upper()
       options.match = options.imatch:upper()
     end
-    test.Expect(ocr:find(options.match), "alert should match " .. options.match, {snap=true}, 1)
+    test.ExpectMatch(ocr, options.match, "alert should match " .. options.match, {snap=true}, 1)
   end
 end
 

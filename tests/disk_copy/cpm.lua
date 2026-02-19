@@ -36,9 +36,9 @@ test.Step(
     a2dtest.WaitForAlert({match="Insert the destination disk"})
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:find("disk copy"),
+    test.ExpectNotMatch(ocr, "disk copy",
                 "should be no status line identifying disk type")
-    test.Expect(ocr:find("Source .* Slot 6 +Drive 1 +\n"),
+    test.ExpectMatch(ocr, "Source .* Slot 6 +Drive 1 +\n",
                 "should be no volume name after Source label")
 
     -- cleanup

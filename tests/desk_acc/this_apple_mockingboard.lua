@@ -12,6 +12,6 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Mockingboard"), "a Mockingboard should be detected")
-    test.Expect(ocr:upper():find("ZIP CHIP"), "a ZIP CHIP should be detected")
+    test.ExpectMatch(ocr, "Mockingboard", "a Mockingboard should be detected")
+    test.ExpectIMatch(ocr, "ZIP CHIP", "a ZIP CHIP should be detected")
 end)

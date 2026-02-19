@@ -21,7 +21,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.CopyDisk()
-    test.Expect(a2dtest.OCRScreen():find("Select source disk"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "Select source disk",
                 "Disk Copy should be started")
 
     -- cleanup

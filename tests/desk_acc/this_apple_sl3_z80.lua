@@ -13,6 +13,6 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():find("Slot 3: +Z%-80 SoftCard"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "Slot 3: +Z%-80 SoftCard",
                 "Slot 3: Z-80 SoftCard should be detected")
 end)

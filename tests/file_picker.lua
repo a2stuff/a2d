@@ -53,37 +53,37 @@ function FilePickerTest(
       apple2.PressOA()
       apple2.Type("A")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("ALFA"), "ALFA should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "ALFA", "ALFA should be selected")
       apple2.ControlKey("@") -- reset
 
       apple2.PressOA()
       apple2.Type("AB")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("ALFA"), "ALFA should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "ALFA", "ALFA should be selected")
       apple2.ControlKey("@") -- reset
 
       apple2.PressOA()
       apple2.Type("AL")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("ALFA"), "ALFA should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "ALFA", "ALFA should be selected")
       apple2.ControlKey("@") -- reset
 
       apple2.PressOA()
       apple2.Type("ALFAA")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("NOVEMBER"), "NOVEMBER should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "NOVEMBER", "NOVEMBER should be selected")
       apple2.ControlKey("@") -- reset
 
       apple2.PressOA()
       apple2.Type("B")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("NOVEMBER"), "NOVEMBER should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "NOVEMBER", "NOVEMBER should be selected")
       apple2.ControlKey("@") -- reset
 
       apple2.PressOA()
       apple2.Type("Z")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("WHISKEY"), "WHISKEY should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "WHISKEY", "WHISKEY should be selected")
       apple2.ControlKey("@") -- reset
 
       cleanup_func()
@@ -105,7 +105,7 @@ function FilePickerTest(
       apple2.PressOA()
       apple2.Type("B")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("NOVEMBER"), "NOVEMBER should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "NOVEMBER", "NOVEMBER should be selected")
 
       a2d.InMouseKeysMode(function(m)
           m.MoveByApproximately(10, 10)
@@ -115,7 +115,7 @@ function FilePickerTest(
       apple2.PressOA()
       apple2.Type("A")
       apple2.ReleaseOA()
-      test.Expect(a2dtest.OCRScreen({invert=true}):find("ALFA"), "ALFA should be elected")
+      test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "ALFA", "ALFA should be selected")
 
       cleanup_func()
   end)
@@ -162,26 +162,26 @@ function FilePickerTest(
         a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/GS.OS.NAMES")
 
         local ocr = a2dtest.OCRScreen()
-        test.Expect(ocr:find("mIxEd.CaSe"), "filenames should have correct cases")
-        test.Expect(ocr:find("lower"), "filenames should have correct cases")
-        test.Expect(ocr:find("UPPER"), "filenames should have correct cases")
+        test.ExpectMatch(ocr, "mIxEd.CaSe", "filenames should have correct cases")
+        test.ExpectMatch(ocr, "lower", "filenames should have correct cases")
+        test.ExpectMatch(ocr, "UPPER", "filenames should have correct cases")
 
         apple2.PressOA()
         apple2.Type("M")
         apple2.ReleaseOA()
-        test.Expect(a2dtest.OCRScreen({invert=true}):find("mIxEd.CaSe"), "'mIxEd.CaSe' should be selected")
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "mIxEd.CaSe", "'mIxEd.CaSe' should be selected")
         apple2.ControlKey("@") -- reset
 
         apple2.PressOA()
         apple2.Type("L")
         apple2.ReleaseOA()
-        test.Expect(a2dtest.OCRScreen({invert=true}):find("lower"), "'lower' should be selected")
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "lower", "'lower' should be selected")
         apple2.ControlKey("@") -- reset
 
         apple2.PressOA()
         apple2.Type("u")
         apple2.ReleaseOA()
-        test.Expect(a2dtest.OCRScreen({invert=true}):find("UPPER"), "'UPPER' should be selected")
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "UPPER", "'UPPER' should be selected")
         apple2.ControlKey("@") -- reset
 
         cleanup_func()
@@ -251,14 +251,14 @@ function FilePickerTest(
 
         activation_func()
         a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
-        test.Expect(a2dtest.OCRScreen():upper():find("INVISIBLE"), "INVISIBLE should be in list")
+        test.ExpectIMatch(a2dtest.OCRScreen(), "INVISIBLE", "INVISIBLE should be in list")
         cleanup_func()
 
         a2d.ToggleOptionShowInvisible() -- disable
 
         activation_func()
         a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
-        test.Expect(not a2dtest.OCRScreen():upper():find("INVISIBLE"), "INVISIBLE should not be in list")
+        test.ExpectNotIMatch(a2dtest.OCRScreen(), "INVISIBLE", "INVISIBLE should not be in list")
         cleanup_func()
     end)
   end
@@ -359,13 +359,13 @@ function FilePickerTest(
       activation_func()
 
       a2d.NavigateFilePickerTo("/A2.DESKTOP")
-      test.Expect(not a2dtest.OCRScreen():find("Open"), "Open button should be dimmed")
+      test.ExpectNotMatch(a2dtest.OCRScreen(), "Open", "Open button should be dimmed")
 
       apple2.PressOA()
       apple2.Type("EXTRAS")
       apple2.ReleaseOA()
       a2d.WaitForRepaint()
-      test.Expect(a2dtest.OCRScreen():find("Open"), "Open button should not be dimmed")
+      test.ExpectMatch(a2dtest.OCRScreen(), "Open", "Open button should not be dimmed")
 
       if not options.dirs_only then
         apple2.PressOA()
@@ -373,15 +373,15 @@ function FilePickerTest(
         apple2.Type("READ.ME")
         apple2.ReleaseOA()
         a2d.WaitForRepaint()
-        test.Expect(not a2dtest.OCRScreen():find("Open"), "Open button should be dimmed")
+        test.ExpectNotMatch(a2dtest.OCRScreen(), "Open", "Open button should be dimmed")
       end
 
       a2d.NavigateFilePickerTo("/A2.DESKTOP")
-      test.Expect(a2dtest.OCRScreen():find("Close"), "Close button should not be dimmed")
+      test.ExpectMatch(a2dtest.OCRScreen(), "Close", "Close button should not be dimmed")
 
       a2d.NavigateFilePickerTo("/A2.DESKTOP/EXTRAS")
-      test.Expect(a2dtest.OCRScreen():find("Close"), "Close button should not be dimmed")
-      test.Expect(not a2dtest.OCRScreen():find("Open"), "Open button should be dimmed")
+      test.ExpectMatch(a2dtest.OCRScreen(), "Close", "Close button should not be dimmed")
+      test.ExpectNotMatch(a2dtest.OCRScreen(), "Open", "Open button should be dimmed")
       apple2.ControlKey("O") -- Open
       emu.wait(2)
       test.ExpectEqualsIgnoreCase(a2d.GetFilePickerCurrentPath(), "/A2.DESKTOP/EXTRAS", "nothing should have changed")
@@ -390,11 +390,11 @@ function FilePickerTest(
       apple2.ControlKey("D") -- Drives
       emu.wait(2)
       test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "should be at root")
-      test.Expect(not a2dtest.OCRScreen():find("Close"), "Close button should be dimmed")
+      test.ExpectNotMatch(a2dtest.OCRScreen(), "Close", "Close button should be dimmed")
       apple2.ControlKey("C") -- Close
       emu.wait(2)
       test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "nothing should have changed")
-      test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be dimmed")
+      test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be dimmed")
       local window_id = mgtk.FrontWindow()
       apple2.ReturnKey() -- OK
       emu.wait(2)
@@ -403,32 +403,32 @@ function FilePickerTest(
       apple2.DownArrowKey()
       a2d.WaitForRepaint()
       if options.vol_ok then
-        test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should not be dimmed")
+        test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should not be dimmed")
       else
-        test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be dimmed")
+        test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be dimmed")
       end
 
       a2d.NavigateFilePickerTo("/A2.DESKTOP")
       if options.no_sel_ok then
-        test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should not be dimmed")
+        test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should not be dimmed")
       else
-        test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be dimmed")
+        test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be dimmed")
       end
       apple2.PressOA()
       apple2.Type("EXTRAS")
       apple2.ReleaseOA()
       a2d.WaitForRepaint()
       if options.folder_ok then
-        test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should not be dimmed")
+        test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should not be dimmed")
       else
-        test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be dimmed")
+        test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be dimmed")
       end
 
       a2d.NavigateFilePickerTo("/RAM1")
       if options.no_sel_ok then
-        test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should not be dimmed")
+        test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should not be dimmed")
       else
-        test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be dimmed")
+        test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be dimmed")
       end
 
       -- TODO: Test clicks on OK, Open, Close

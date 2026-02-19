@@ -51,13 +51,13 @@ test.Variants(
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
 
-    local ocr = a2dtest.OCRScreen():upper()
-    test.Expect(ocr:find("S7,D1: COMPACT FLASH"), "S7,D1 HD should be present")
-    test.Expect(ocr:find("S7,D2: COMPACT FLASH"), "S7,D1 HD should be present")
-    test.Expect(ocr:find("S5,D1: SEAGATE"), "S5,D1 should be present")
-    test.Expect(ocr:find("S5,D2: SEAGATE"), "S5,D2 should be present")
-    test.Expect(ocr:find("S2,D1: SEAGATE"), "S2,D1 (mirrored) should be present")
-    test.Expect(ocr:find("S2,D2: SEAGATE"), "S2,D2 (mirrored) should be present")
+    local ocr = a2dtest.OCRScreen()
+    test.ExpectIMatch(ocr, "S7,D1: Compact Flash", "S7,D1 HD should be present")
+    test.ExpectIMatch(ocr, "S7,D2: Compact Flash", "S7,D1 HD should be present")
+    test.ExpectIMatch(ocr, "S5,D1: Seagate", "S5,D1 should be present")
+    test.ExpectIMatch(ocr, "S5,D2: Seagate", "S5,D2 should be present")
+    test.ExpectIMatch(ocr, "S2,D1: Seagate", "S2,D1 (mirrored) should be present")
+    test.ExpectIMatch(ocr, "S2,D2: Seagate", "S2,D2 (mirrored) should be present")
 
     a2d.DialogCancel()
 

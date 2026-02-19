@@ -17,7 +17,7 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Expect(a2dtest.OCRScreen():find("GS%.OS%.mixed"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "GS%.OS%.mixed",
                 "GS/OS disk names in list should have assigned case")
 
     -- cleanup
@@ -54,9 +54,9 @@ test.Step(
     -- insert destination
     a2dtest.WaitForAlert({match="Insert the destination disk"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("ProDOS disk copy"),
+    test.ExpectMatch(ocr, "ProDOS disk copy",
                 "status line should say 'ProDOS disk copy'")
-    test.Expect(ocr:find("Source .* GS%.OS%.mixed"),
+    test.ExpectMatch(ocr, "Source .* GS%.OS%.mixed",
                 "volume name after Source label should have assigned case")
 
     -- cleanup

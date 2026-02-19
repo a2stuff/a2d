@@ -36,8 +36,8 @@ test.Step(
     a2d.CopyDisk()
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("1PASCAL:"), "Pascal disk names in list should be in uppercase")
-    test.Expect(ocr:find("TK:"), "Pascal disk names in list should be in uppercase")
+    test.ExpectMatch(ocr, "1PASCAL:", "Pascal disk names in list should be in uppercase")
+    test.ExpectMatch(ocr, "TK:", "Pascal disk names in list should be in uppercase")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -78,8 +78,8 @@ test.Variants(
     -- insert destination
     a2dtest.WaitForAlert({match="Insert the destination disk"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Pascal disk copy"), "status line should say 'Pascal disk copy'")
-    test.Expect(ocr:find("Source .* " .. disk_name), "volume name after Source label should be uppercase")
+    test.ExpectMatch(ocr, "Pascal disk copy", "status line should say 'Pascal disk copy'")
+    test.ExpectMatch(ocr, "Source .* " .. disk_name, "volume name after Source label should be uppercase")
 
     -- cleanup
     a2d.DialogCancel()

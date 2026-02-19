@@ -30,4 +30,14 @@ function util.SlurpFile(pathname)
   return bytes
 end
 
+function util.CaseInsensitivePattern(p)
+  return (p:gsub("(%%?)(.)", function(escape, char)
+    if escape == "" and char:match("%a") then
+      return "[" .. char:lower() .. char:upper() .. "]"
+    else
+      return escape .. char
+    end
+  end))
+end
+
 return util

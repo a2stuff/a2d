@@ -13,6 +13,6 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():find("Memory: 8,256"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "Memory: 8,256",
                 "RamWorks memory should be detected")
 end)

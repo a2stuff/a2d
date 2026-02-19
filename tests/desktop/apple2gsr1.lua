@@ -143,7 +143,7 @@ test.Step(
     end
     apple2.ReturnKey()
 
-    test.Expect(apple2.GrabInverseText():match("Minimum RAM Disk Size:"), "Minimum RAM Disk size should be focused")
+    test.ExpectMatch(apple2.GrabInverseText(), "Minimum RAM Disk Size:", "Minimum RAM Disk size should be focused")
     local TARGET_SIZE = 4096 -- K
     for i = 1, TARGET_SIZE/32 do
       apple2.RightArrowKey()

@@ -60,7 +60,7 @@ test.Step(
     a2d.OpenPath("/FLOPPY2/LOREM.IPSUM")
 
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():find("Lorem ipsum.*hac habitasse"), "file contents should be the same")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Lorem ipsum.*hac habitasse", "file contents should be the same")
 
     -- cleanup
     a2d.CloseWindow()

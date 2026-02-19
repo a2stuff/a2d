@@ -218,7 +218,7 @@ test.Step(
     a2d.OAShortcut("1")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX")
-    test.Expect(apple2.GrabTextScreen():match("/RAM1/EXTRAS"), "should be running from RAMCard")
+    test.ExpectMatch(apple2.GrabTextScreen(), "/RAM1/EXTRAS", "should be running from RAMCard")
 
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()

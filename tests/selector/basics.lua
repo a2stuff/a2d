@@ -143,7 +143,7 @@ test.Variants(
 
     func("R")
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():find("Run a Program..."), "'Run a Program...' dialog should appear")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Run a Program...", "'Run a Program...' dialog should appear")
     a2d.DialogCancel()
 
     apple2.Type("D")
@@ -202,7 +202,7 @@ test.Step(
     emu.wait(5)
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():upper():find("A2.DESKTOP.*\n.*PRODOS.*\n.*TESTS"),
+    test.ExpectIMatch(a2dtest.OCRScreen(), "A2.DESKTOP.*\n.*PRODOS.*\n.*TESTS",
                 "boot volume should be first")
     a2d.DialogCancel()
 
@@ -280,7 +280,7 @@ test.Step(
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForSelector()
 
-    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
 
     -- TODO: Expect this to fail - need banking support
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
@@ -289,17 +289,17 @@ test.Step(
         m.MoveToApproximately(dialog_x + 100, dialog_y + 25)
         m.Click()
         a2d.WaitForRepaint()
-        test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
+        test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
 
         m.MoveToApproximately(dialog_x + 400, dialog_y + 90)
         m.Click()
         a2d.WaitForRepaint()
-        test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
+        test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
     end)
 
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
+    test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
@@ -324,15 +324,15 @@ test.Step(
 
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find("OK"), "OK button should be enabled")
-    test.Expect(a2dtest.OCRScreen({invert=true}):find("Read.Me"), "item should be selected")
+    test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
+    test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "Read.Me", "item should be selected")
 
     a2d.OAShortcut("R")
     a2d.DialogCancel()
     emu.wait(1)
 
-    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
-    test.Expect(not a2dtest.OCRScreen({invert=true}):find("OK"), "selection should be cleared")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
+    test.ExpectNotMatch(a2dtest.OCRScreen({invert=true}), "OK", "selection should be cleared")
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
@@ -355,7 +355,7 @@ test.Step(
 
     a2d.OAShortcut("R")
     a2d.NavigateFilePickerTo("/A2.DESKTOP/EXTRAS")
-    test.Expect(not a2dtest.OCRScreen():find("OK"), "OK button should be disabled")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
 
     a2d.DialogCancel()
     apple2.Type("D")

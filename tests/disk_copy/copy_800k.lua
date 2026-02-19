@@ -45,7 +45,7 @@ test.Step(
     a2d.DialogOK()
 
     emu.wait(5)
-    test.Expect(not a2dtest.OCRScreen():find("OK"), "the OK button should be disabled")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "the OK button should be disabled")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
@@ -90,18 +90,18 @@ test.Step(
     -- copying...
     a2dtest.WaitForAlert({timeout=480, match="successful"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Blocks to transfer: %d+,%d+"),
+    test.ExpectMatch(ocr, "Blocks to transfer: %d+,%d+",
                 "the transfer block count should have thousands separator")
-    test.Expect(ocr:find("Blocks Read: %d+,%d+"),
+    test.ExpectMatch(ocr, "Blocks Read: %d+,%d+",
                 "the read block count should have thousands separator")
-    test.Expect(ocr:find("Blocks Written: %d+,%d+"),
+    test.ExpectMatch(ocr, "Blocks Written: %d+,%d+",
                 "the written block count should have thousands separator")
-    test.Expect(not ocr:find("Press Esc to stop copying"),
+    test.ExpectNotMatch(ocr, "Press Esc to stop copying",
                 "the tip should be erased")
     a2d.DialogOK()
 
     emu.wait(5)
-    test.Expect(not a2dtest.OCRScreen():find("OK"), "the OK button should be disabled")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "the OK button should be disabled")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit

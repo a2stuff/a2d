@@ -288,9 +288,9 @@ test.Variants(
     emu.wait(0.25)
 
     if action == "move" then
-      test.Expect(a2dtest.OCRScreen():find("Moving: 2 files"), "correct count should be shown")
+      test.ExpectMatch(a2dtest.OCRScreen(), "Moving: 2 files", "correct count should be shown")
     else
-      test.Expect(a2dtest.OCRScreen():find("Copying: 4 files"), "correct count should be shown")
+      test.ExpectMatch(a2dtest.OCRScreen(), "Copying: 4 files", "correct count should be shown")
     end
 
     emu.wait(2)
@@ -322,7 +322,7 @@ test.Step(
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(0.25)
-    test.Expect(a2dtest.OCRScreen():find("Copying: 3 files"), "correct count should be shown")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Copying: 3 files", "correct count should be shown")
     emu.wait(5)
 
     a2d.SelectPath("/RAM1/READ.ME")
@@ -358,7 +358,7 @@ test.Step(
 
     a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
     emu.wait(0.25)
-    test.Expect(a2dtest.OCRScreen():find("Copying: 4 files"), "correct count should be shown")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Copying: 4 files", "correct count should be shown")
     -- vol becomes folder, makes it +1
     emu.wait(5)
 

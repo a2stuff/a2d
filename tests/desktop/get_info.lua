@@ -16,7 +16,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.OAShortcut("I")
-    test.Expect(a2dtest.OCRScreen():find("Size: +.*%dK"), "size should be in K")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Size: +.*%dK", "size should be in K")
     a2d.DialogOK()
 end)
 
@@ -30,8 +30,8 @@ test.Step(
     a2d.SelectPath("/TESTS/VIEW/BY.NAME/EMPTY")
     a2d.OAShortcut("I")
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Size: +.*%dK"), "size should be in K")
-    test.Expect(ocr:find("Size: +.* for 1 item"), "size should be for 1 item")
+    test.ExpectMatch(ocr, "Size: +.*%dK", "size should be in K")
+    test.ExpectMatch(ocr, "Size: +.* for 1 item", "size should be for 1 item")
     a2d.DialogOK()
 end)
 
@@ -45,8 +45,8 @@ test.Step(
     a2d.SelectPath("/TESTS/VIEW/BY.NAME/ONE.FILE")
     a2d.OAShortcut("I")
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Size: +.*%dK"), "size should be in K")
-    test.Expect(ocr:find("Size: +.* for 2 items"), "size should be for 2 items")
+    test.ExpectMatch(ocr, "Size: +.*%dK", "size should be in K")
+    test.ExpectMatch(ocr, "Size: +.* for 2 items", "size should be for 2 items")
     a2d.DialogOK()
 end)
 
@@ -61,8 +61,8 @@ test.Step(
     a2d.SelectPath("/TESTS/VIEW/BY.NAME/A1.B1.A.B")
     a2d.OAShortcut("I")
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Size: +.*%dK"), "size should be in K")
-    test.Expect(ocr:find("Size: +.* for 5 items"), "size should be for 5 items")
+    test.ExpectMatch(ocr, "Size: +.*%dK", "size should be in K")
+    test.ExpectMatch(ocr, "Size: +.* for 5 items", "size should be for 5 items")
     a2d.DialogOK()
 end)
 
@@ -80,7 +80,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     a2d.OAShortcut("I")
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Size used/total: +%dK for 0 items / .*K"), "size should be _K for 0 items / %d+K")
+    test.ExpectMatch(ocr, "Size used/total: +%dK for 0 items / .*K", "size should be _K for 0 items / %d+K")
     a2d.DialogOK()
 end)
 
@@ -95,7 +95,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     a2d.OAShortcut("I")
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Size used/total: +.*K for 1 item / .*K"), "size should be _K for 1 item / %d+K")
+    test.ExpectMatch(ocr, "Size used/total: +.*K for 1 item / .*K", "size should be _K for 1 item / %d+K")
     a2d.DialogOK()
     a2d.EraseVolume("RAM1")
 end)
@@ -111,7 +111,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     a2d.OAShortcut("I")
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Size used/total: +.*K for 5 items / .*K"), "size should be _K for 5 items / %d+K")
+    test.ExpectMatch(ocr, "Size used/total: +.*K for 5 items / .*K", "size should be _K for 5 items / %d+K")
     a2d.DialogOK()
     a2d.EraseVolume("RAM1")
 end)
@@ -125,7 +125,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/FILE.TYPES/IIGS.50")
     a2d.OAShortcut("I")
-    test.Expect(a2dtest.OCRScreen():find("Created: .* 20%d%d "), "date after 1999 should show correctly")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Created: .* 20%d%d ", "date after 1999 should show correctly")
     a2d.DialogOK()
 end)
 
@@ -139,7 +139,7 @@ test.Step(
     a2d.SelectPath("/TESTS")
     a2d.OAShortcut("I")
     emu.wait(30) -- slow
-    test.Expect(a2dtest.OCRScreen():find("Size used/total: .* 32,768K"), "total size should be 32,768K, not 0K")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Size used/total: .* 32,768K", "total size should be 32,768K, not 0K")
     a2d.DialogOK()
 end)
 
@@ -200,7 +200,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/PROPERTIES/KNOWN.SIZE")
     a2d.OAShortcut("I")
-    test.Expect(a2dtest.OCRScreen():find("Size: +17K for 2 items"), "size should be 17K for 2 items")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Size: +17K for 2 items", "size should be 17K for 2 items")
     a2d.DialogOK()
 end)
 

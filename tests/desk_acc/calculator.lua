@@ -125,7 +125,7 @@ test.Step(
     end)
     emu.wait(5) -- slow repaint
 
-    test.Expect(OCRDisplay():find("123%.456"), "result should be 123.456")
+    test.ExpectMatch(OCRDisplay(), "123%.456", "result should be 123.456")
     a2d.CloseWindow()
 end)
 
@@ -248,8 +248,7 @@ test.Step(
       local p2 = "^" .. pattern:gsub("%.", "%%."):gsub("%-", "%%-") .. "$"
       a2d.WaitForRepaint()
       local ocr = OCRDisplay()
-      test.Expect(ocr:find(p2),
-                  string.format("result should match %q but was %q", pattern, ocr), {}, 1)
+      test.ExpectMatch(ocr, p2, "result", {}, 1)
       apple2.EscapeKey()
     end
 

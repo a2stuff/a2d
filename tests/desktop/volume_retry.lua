@@ -52,8 +52,8 @@ test.Step(
 
     a2dtest.WaitForAlert({match="subdirectory cannot be found"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:match("Try Again"), "no Try Again button should be present")
-    test.Expect(not ocr:match("Cancel"), "no Cancel button should be present")
+    test.ExpectNotMatch(ocr, "Try Again", "no Try Again button should be present")
+    test.ExpectNotMatch(ocr, "Cancel", "no Cancel button should be present")
     a2d.DialogOK()
 
     -- cleanup
@@ -105,8 +105,8 @@ test.Step(
 
     a2dtest.WaitForAlert({match="file cannot be found"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:match("Try Again"), "no Try Again button should be present")
-    test.Expect(not ocr:match("Cancel"), "no Cancel button should be present")
+    test.ExpectNotMatch(ocr, "Try Again", "no Try Again button should be present")
+    test.ExpectNotMatch(ocr, "Cancel", "no Cancel button should be present")
     a2d.DialogOK()
 
     -- cleanup
@@ -150,8 +150,8 @@ test.Step(
 
     a2dtest.WaitForAlert({imatch="Insert the disk: FLOPPY1"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:match("OK"), "Try Again button should be present")
-    test.Expect(ocr:match("Cancel"), "Cancel button should be present")
+    test.ExpectMatch(ocr, "OK", "Try Again button should be present")
+    test.ExpectMatch(ocr, "Cancel", "Cancel button should be present")
     a2d.DialogCancel()
     drive1:load(disk1)
 end)

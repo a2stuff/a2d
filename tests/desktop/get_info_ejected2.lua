@@ -67,7 +67,7 @@ test.Step(
     drive:load(current)
     apple2.Type("A") -- Try Again
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():upper():find("LOREM%.IPSUM"),
+    test.ExpectIMatch(a2dtest.OCRScreen(), "LOREM%.IPSUM",
                 "details should be shown for second file")
     a2d.DialogCancel()
     emu.wait(5)
@@ -94,7 +94,7 @@ test.Step(
     -- Cancel attempt to show info on first file, proceed wth second
     a2d.DialogCancel()
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():upper():find("SHAKESPEARE"),
+    test.ExpectIMatch(a2dtest.OCRScreen(), "SHAKESPEARE",
                 "details should be shown for second file")
     a2d.DialogOK()
 end)

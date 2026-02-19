@@ -16,7 +16,7 @@ test.Step(
   function()
     a2d.CopyDisk()
 
-    test.Expect(a2dtest.OCRScreen():find("DOS 3%.3"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "DOS 3%.3",
                 "DOS 3.3 disk in list should be uppercase")
 
     -- cleanup
@@ -52,9 +52,9 @@ test.Step(
     -- insert destination
     a2dtest.WaitForAlert({match="Insert the destination disk"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("DOS 3%.3 disk copy"),
+    test.ExpectMatch(ocr, "DOS 3%.3 disk copy",
                 "status line should say 'DOS 3.3 disk copy'")
-    test.Expect(ocr:find("Source .* Slot 6 +Drive 1 +\n"),
+    test.ExpectMatch(ocr, "Source .* Slot 6 +Drive 1 +\n",
                 "should be no volume name after Source label")
 
     -- cleanup

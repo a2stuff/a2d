@@ -4,6 +4,8 @@
 
   ============================================================]]
 
+local util = require("util")
+
 local test = {}
 
 local skip_count = emu.subst_env("$SKIP_COUNT")
@@ -203,6 +205,22 @@ end
 
 function test.ExpectGreaterThanOrEqual(a, b, message, options, level)
   test.Expect(a >= b, message .. " - actual " .. format(a) .. " should be >= " .. format(b), options, inc(level))
+end
+
+function test.ExpectMatch(actual, pattern, message, options, level)
+  test.Expect(actual:match(pattern), message .. " - actual " .. format(actual) .. " should match " .. format(pattern), options, inc(level))
+end
+
+function test.ExpectNotMatch(actual, pattern, message, options, level)
+  test.Expect(not actual:match(pattern), message .. " - actual " .. format(actual) .. " should not match " .. format(pattern), options, inc(level))
+end
+
+function test.ExpectIMatch(actual, pattern, message, options, level)
+  test.Expect(actual:match(util.CaseInsensitivePattern(pattern)), message .. " - actual " .. format(actual) .. " should match " .. format(pattern), options, inc(level))
+end
+
+function test.ExpectNotIMatch(actual, pattern, message, options, level)
+  test.Expect(not actual:match(util.CaseInsensitivePattern(pattern)), message .. " - actual " .. format(actual) .. " should not match " .. format(pattern), options, inc(level))
 end
 
 function test.ExpectError(pattern, func, message, options, level)

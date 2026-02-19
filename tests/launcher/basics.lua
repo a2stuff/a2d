@@ -110,7 +110,7 @@ test.Step(
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
     emu.wait(5)
-    test.Expect(apple2.GrabTextScreen():match("HELLO"), "file should be present")
+    test.ExpectMatch(apple2.GrabTextScreen(), "HELLO", "file should be present")
     apple2.TypeLine("DELETE /RAM/HELLO")
     apple2.TypeLine("-/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()

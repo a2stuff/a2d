@@ -26,8 +26,8 @@ test.Step(
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:find("Try Again"), "no Try Again button should be present")
-    test.Expect(not ocr:find("Cancel"), "no Cancel button should be present")
+    test.ExpectNotMatch(ocr, "Try Again", "no Try Again button should be present")
+    test.ExpectNotMatch(ocr, "Cancel", "no Cancel button should be present")
     a2d.DialogOK()
 
     s6d1:load(disk)
@@ -50,8 +50,8 @@ test.Step(
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:find("Try Again"), "no Try Again button should be present")
-    test.Expect(not ocr:find("Cancel"), "no Cancel button should be present")
+    test.ExpectNotMatch(ocr, "Try Again", "no Try Again button should be present")
+    test.ExpectNotMatch(ocr, "Cancel", "no Cancel button should be present")
     a2d.DialogOK()
 
     s6d1:load(disk)
@@ -74,8 +74,8 @@ test.Step(
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:find("Try Again"), "no Try Again button should be present")
-    test.Expect(not ocr:find("Cancel"), "no Cancel button should be present")
+    test.ExpectNotMatch(ocr, "Try Again", "no Try Again button should be present")
+    test.ExpectNotMatch(ocr, "Cancel", "no Cancel button should be present")
     a2d.DialogOK()
 
     s6d1:load(disk)
@@ -98,8 +98,8 @@ test.Step(
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:find("Try Again"), "no Try Again button should be present")
-    test.Expect(not ocr:find("Cancel"), "no Cancel button should be present")
+    test.ExpectNotMatch(ocr, "Try Again", "no Try Again button should be present")
+    test.ExpectNotMatch(ocr, "Cancel", "no Cancel button should be present")
     a2d.DialogOK()
 
     s6d1:load(disk)
@@ -119,8 +119,8 @@ test.Step(
     a2dtest.WaitForAlert({match="insert the system disk"})
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Try Again"), "Try Again button should be present")
-    test.Expect(ocr:find("Cancel"), "Cancel button should be present")
+    test.ExpectMatch(ocr, "Try Again", "Try Again button should be present")
+    test.ExpectMatch(ocr, "Cancel", "Cancel button should be present")
 
     a2d.DialogCancel()
 
@@ -146,8 +146,8 @@ test.Step(
     a2dtest.WaitForAlert({match="insert the system disk"})
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("OK"), "OK button should be present")
-    test.Expect(not ocr:find("Cancel"), "no Cancel button should be present")
+    test.ExpectMatch(ocr, "OK", "OK button should be present")
+    test.ExpectNotMatch(ocr, "Cancel", "no Cancel button should be present")
 
     s7d1:load(disk)
 

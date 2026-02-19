@@ -11,10 +11,10 @@ local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
 a2d.ClearSelection()
 
 function disabled(r, str)
-  test.Expect(not r:find(str), str .. " should be disabled", {}, 1)
+  test.ExpectNotMatch(r, str, str .. " should be disabled", {}, 1)
 end
 function enabled(r, str)
-  test.Expect(r:find(str), str .. " should be enabled", {}, 1)
+  test.ExpectMatch(r, str, str .. " should be enabled", {}, 1)
 end
 
 test.Step(

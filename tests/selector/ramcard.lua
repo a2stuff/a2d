@@ -27,7 +27,7 @@ test.Step(
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():find("A2%.DeskTop .*\n.*Ram1 "),
+    test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop .*\n.*Ram1 ",
                 "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
@@ -59,7 +59,7 @@ test.Step(
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
-    test.Expect(a2dtest.OCRScreen():find("A2%.DeskTop .*\n.*Ram1 "),
+    test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop .*\n.*Ram1 ",
                 "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
@@ -131,10 +131,10 @@ test.Step(
     apple2.Type("1")
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Unable to run the program"})
-    test.Expect(a2dtest.OCRScreen():find(" Shortcuts .* 1 .* Monarch "),
+    test.ExpectMatch(a2dtest.OCRScreen(), " Shortcuts .* 1 .* Monarch ",
                 "shortcuts list should render correctly")
     a2d.DialogOK()
-    test.Expect(a2dtest.OCRScreen():find(" Shortcuts .* 1 .* Monarch "),
+    test.ExpectMatch(a2dtest.OCRScreen(), " Shortcuts .* 1 .* Monarch ",
                 "shortcuts list should render correctly")
 
     -- cleanup
@@ -175,7 +175,7 @@ test.Step(
     apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX")
     emu.wait(1)
-    test.Expect(apple2.GrabTextScreen():match("/RAM1/EXTRAS/"), "prefix should be set")
+    test.ExpectMatch(apple2.GrabTextScreen(), "/RAM1/EXTRAS/", "prefix should be set")
 
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()

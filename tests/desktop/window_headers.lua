@@ -24,19 +24,19 @@ test.Step(
   "Item counts",
   function()
     a2d.OpenPath("/TESTS/WINDOWS/HEADERS/EMPTY")
-    test.Expect(a2dtest.OCRScreen():find("0 Items"), "header should say '0 Items'")
+    test.ExpectMatch(a2dtest.OCRScreen(), "0 Items", "header should say '0 Items'")
     a2d.OpenPath("/TESTS/WINDOWS/HEADERS/ONE.ITEM")
-    test.Expect(a2dtest.OCRScreen():find("1 Item"), "header should say '1 Item'")
+    test.ExpectMatch(a2dtest.OCRScreen(), "1 Item", "header should say '1 Item'")
     a2d.OpenPath("/TESTS/WINDOWS/HEADERS/TWO.ITEMS")
-    test.Expect(a2dtest.OCRScreen():find("2 Items"), "header should say '2 Items'")
+    test.ExpectMatch(a2dtest.OCRScreen(), "2 Items", "header should say '2 Items'")
 
     a2d.OpenPath("/TESTS/WINDOWS/HEADERS/EMPTY")
     a2d.CreateFolder("NEW")
-    test.Expect(a2dtest.OCRScreen():find("1 Item"), "header should say '1 Item'")
+    test.ExpectMatch(a2dtest.OCRScreen(), "1 Item", "header should say '1 Item'")
 
     a2d.OpenPath("/TESTS/WINDOWS/HEADERS/ONE.ITEM")
     a2d.CreateFolder("NEW")
-    test.Expect(a2dtest.OCRScreen():find("2 Items"), "header should say '2 Items'")
+    test.ExpectMatch(a2dtest.OCRScreen(), "2 Items", "header should say '2 Items'")
 end)
 
 --[[
@@ -114,14 +114,14 @@ test.Step(
     a2d.MoveWindowBy(-150, 0)
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:find("Items"), "left edge of header text should be cut off")
-    test.Expect(ocr:find("available"), "right edge of header text should be visible")
+    test.ExpectNotMatch(ocr, "Items", "left edge of header text should be cut off")
+    test.ExpectMatch(ocr, "available", "right edge of header text should be visible")
 
     a2d.MoveWindowBy(400, 0)
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Items"), "left edge of header text should be visible")
-    test.Expect(not ocr:find("available"), "right edge of header text should be cut off")
+    test.ExpectMatch(ocr, "Items", "left edge of header text should be visible")
+    test.ExpectNotMatch(ocr, "available", "right edge of header text should be cut off")
 
     a2d.MoveWindowBy(-250, 0)
 
@@ -131,12 +131,12 @@ test.Step(
     a2d.MoveWindowBy(-150, 0)
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(not ocr:find("Items"), "left edge of header text should be cut off")
-    test.Expect(ocr:find("available"), "right edge of header text should be visible")
+    test.ExpectNotMatch(ocr, "Items", "left edge of header text should be cut off")
+    test.ExpectMatch(ocr, "available", "right edge of header text should be visible")
 
     a2d.MoveWindowBy(450, 0)
 
     local ocr = a2dtest.OCRScreen()
-    test.Expect(ocr:find("Items"), "left edge of header text should be visible")
-    test.Expect(not ocr:find("available"), "right edge of header text should be cut off")
+    test.ExpectMatch(ocr, "Items", "left edge of header text should be visible")
+    test.ExpectNotMatch(ocr, "available", "right edge of header text should be cut off")
 end)

@@ -30,11 +30,11 @@ test.Step(
 
     apple2.SpaceKey() -- toggle modes
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find("Fixed"), "should be in Fixed mode")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Fixed", "should be in Fixed mode")
 
     apple2.SpaceKey() -- toggle modes
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find("Proportional"), "should be in Proportional mode")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Proportional", "should be in Proportional mode")
 
     a2d.CloseWindow()
 end)
@@ -51,7 +51,7 @@ test.Step(
   "Click toggles modes",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME")
-    test.Expect(a2dtest.OCRScreen():find("TOGGLE%.ME .* Proportional"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "TOGGLE%.ME .* Proportional",
                 "Proportional label baseline should align with window title")
 
     local wx, wy, ww, wh = a2dtest.GetFrontWindowContentRect()
@@ -66,7 +66,7 @@ test.Step(
         m.Click()
     end)
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find("TOGGLE%.ME .* Fixed"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "TOGGLE%.ME .* Fixed",
                 "Fixed label baseline should align with window title")
 
     a2d.InMouseKeysMode(function(m)
@@ -174,7 +174,7 @@ test.Step(
     -- Home/End using OA+SA
     a2d.OASADown()
     a2d.WaitForRepaint()
-    test.Expect(a2dtest.OCRScreen():find("THIS IS LINE 2000"),
+    test.ExpectMatch(a2dtest.OCRScreen(), "THIS IS LINE 2000",
                 "should have scrolled to end")
 
     a2d.OASAUp()
@@ -372,7 +372,7 @@ test.Step(
     a2d.OASADown()
 
     local ocr = a2dtest.OCRScreen();
-    test.Expect(not ocr:find("L 283"), "file should not be truncated to about 200 lines")
-    test.Expect(ocr:find("L 9440"), "file should show about 9400 lines")
+    test.ExpectNotMatch(ocr, "L 283", "file should not be truncated to about 200 lines")
+    test.ExpectMatch(ocr, "L 9440", "file should show about 9400 lines")
     a2d.CloseWindow()
 end)

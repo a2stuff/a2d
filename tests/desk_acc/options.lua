@@ -93,5 +93,5 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("REM *** Did not crash ***")
-    test.Expect(apple2.GrabTextScreen():match("Did not crash"), "should not crash")
+    test.ExpectMatch(apple2.GrabTextScreen(), "Did not crash", "should not crash")
 end)
