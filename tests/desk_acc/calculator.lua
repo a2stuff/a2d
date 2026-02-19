@@ -21,6 +21,7 @@ function ExpectExpression(expr, result)
   apple2.EscapeKey()
 end
 
+
 --[[
   Run Apple Menu > Calculator. Move the Calculator window. Verify that
   the mouse cursor is drawn correctly.
@@ -229,12 +230,28 @@ end)
 
   * Enter '8' '9' 'TAN' 'ATAN'. Verify that the result is
     approximately 89.
+
+  * Verify asin(1) = 90
+  * Verify asin(-1) = -90
+  * Verify acos(1) is 0
+  * Verify acos(-1) is 180
+
 ]]
 test.Step(
   "Sci.Calc - Trig functions",
   function()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS/SCI.CALC")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+
+    -- Pattern - '.' and '-' do not need escaping
+    function ExpectMatch(pattern)
+      local p2 = "^" .. pattern:gsub("%.", "%%."):gsub("%-", "%%-") .. "$"
+      a2d.WaitForRepaint()
+      local ocr = OCRDisplay()
+      test.Expect(ocr:find(p2),
+                  string.format("result should match %q but was %q", pattern, ocr), {}, 1)
+      apple2.EscapeKey()
+    end
 
     function Click(cx, cy)
       a2d.InMouseKeysMode(function(m)
@@ -251,45 +268,47 @@ test.Step(
     function ATan() Click(65, 40) end
     function Neg() Click(30, 90) end
 
+    -- Trig and infix operators
+
     apple2.Type("1+2") Sin() apple2.Type("=")
-    a2d.WaitForRepaint()
-    test.Expect(OCRDisplay():find("1%.034%d+"), "result should be 1.034...")
-    apple2.EscapeKey()
+    ExpectMatch("1.034%d+")
 
     apple2.Type("1") Sin() apple2.Type("+2=")
-    a2d.WaitForRepaint()
-    test.Expect(OCRDisplay():find("2%.017%d+"), "result should be 2.017...")
-    apple2.EscapeKey()
+    ExpectMatch("2.017%d+")
+
+    -- Trig basics
 
     apple2.Type("45") Sin()
-    a2d.WaitForRepaint()
-    test.Expect(OCRDisplay():find("0%.707%d+"), "result should be 0.707...")
-    apple2.EscapeKey()
+    ExpectMatch("0.707%d+")
 
     apple2.Type("45") Neg() Sin()
-    a2d.WaitForRepaint()
-    test.Expect(OCRDisplay():find("%-0%.707%d+"), "result should be -0.707...")
-    apple2.EscapeKey()
+    ExpectMatch("-0.707%d+")
 
     apple2.Type("180") Cos()
-    a2d.WaitForRepaint()
-    test.ExpectEquals(OCRDisplay(), "-1", "result should be -1")
-    apple2.EscapeKey()
+    ExpectMatch("-1")
 
     apple2.Type("45") Sin() ASin()
-    a2d.WaitForRepaint()
-    test.Expect(OCRDisplay():find("45%.?%d*"), "result should be approximately 45")
-    apple2.EscapeKey()
+    ExpectMatch("45.?%d*")
 
     apple2.Type("45") Cos() ACos()
-    a2d.WaitForRepaint()
-    test.Expect(OCRDisplay():find("45%.?%d*"), "result should be approximately 45")
-    apple2.EscapeKey()
+    ExpectMatch("45.?%d*")
 
     apple2.Type("89") Tan() ATan()
-    a2d.WaitForRepaint()
-    test.Expect(OCRDisplay():find("89%.?%d*"), "result should be approximately 89")
-    apple2.EscapeKey()
+    ExpectMatch("89.?%d*")
+
+    -- Discontinuities
+
+    apple2.Type("1") ASin()
+    ExpectMatch("90")
+
+    apple2.Type("1") Neg() ASin()
+    ExpectMatch("-90")
+
+    apple2.Type("1") ACos()
+    ExpectMatch("0")
+
+    apple2.Type("1") Neg() ACos()
+    ExpectMatch("180")
 
     a2d.CloseWindow()
 end)

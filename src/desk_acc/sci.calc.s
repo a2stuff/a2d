@@ -991,34 +991,12 @@ ret:   rts
 
     ELSE_IF A = #Function::fn_asin
         ;; ASIN(x) = ATN(X/SQR(-X*X+1))
-        ROM_CALL FAC_TO_ARG_R   ; ARG = X
-        jsr     PushARG
-        jsr     FixSGNCPR
-        ROM_CALL FMULTT         ; FAC = X * X
-        ROM_CALL NEGOP          ; FAC = -X*X
-        lday    #CON_ONE
-        ROM_CALL FADD           ; FAC = -X*X+1
-        ROM_CALL SQR            ; FAC = SQR(-X*X+1)
-        jsr     PopARG          ; ARG = X
-        jsr     FixSGNCPR
-        ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
-        ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
+        jsr     ASin
         jsr     RadToDeg
 
     ELSE_IF A = #Function::fn_acos
         ;; ACOS(x) = -ATN(X/SQR(-X*X+l))+1.5708
-        ROM_CALL FAC_TO_ARG_R   ; ARG = X
-        jsr     PushARG
-        jsr     FixSGNCPR
-        ROM_CALL FMULTT         ; FAC = X * X
-        ROM_CALL NEGOP          ; FAC = -X*X
-        lday    #CON_ONE
-        ROM_CALL FADD           ; FAC = -X*X+1
-        ROM_CALL SQR            ; FAC = SQR(-X*X+1)
-        jsr     PopARG          ; ARG = X
-        jsr     FixSGNCPR
-        ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
-        ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
+        jsr     ASin
         ROM_CALL NEGOP          ; FAC = -ATN(X/SQR(-X*X+1))
         lday    #CON_HALF_PI    ;
         ROM_CALL FADD           ; FAC = -ATN(X/SQR(-X*X+1))+1.5708
@@ -1566,6 +1544,36 @@ PROC_AT chrget_routine, ::CHRGET
 end:    rts
 END_PROC_AT
         sizeof_chrget_routine = .sizeof(chrget_routine)
+
+;;; ============================================================
+
+;;; FAC = ASIN(FAC) - handles 1/-1
+;;; `ErrorHook` hook will be invoked if out of bounds
+.proc ASin
+        ROM_CALL FAC_TO_ARG_R   ; ARG = X
+        jsr     PushARG
+        jsr     FixSGNCPR
+        ROM_CALL FMULTT         ; FAC = X * X
+        ROM_CALL NEGOP          ; FAC = -X*X
+        lday    #CON_ONE
+        ROM_CALL FADD           ; FAC = -X*X+1
+   IF NOT ZERO
+        ROM_CALL SQR            ; FAC = SQR(-X*X+1)
+        jsr     PopARG          ; ARG = X
+        jsr     FixSGNCPR
+        ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
+        ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
+        rts
+   END_IF
+
+        ;; Handle 1/-1
+        jsr     PopARG
+        ROM_CALL ARG_TO_FAC     ; FAC = X
+        ROM_CALL SGN            ; FAC = SGN(X)
+        lday    #CON_HALF_PI
+        ROM_CALL FMULT          ; FAC = SGN(X) * HALF_PI
+        rts
+.endproc ; ASin
 
 ;;; ============================================================
 

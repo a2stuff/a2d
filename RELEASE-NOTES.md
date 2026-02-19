@@ -95,6 +95,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Calculator & Sci.Calc
   * Fix clicking button edges and button spacing.
   * Support repeating last operation.
+* Sci.Calc: Fix ASIN/ACOS for 1/-1.
 * New Screen Saver: Maze
 * Text Preview: Show first 64K of larger files correctly.
 
