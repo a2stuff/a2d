@@ -24,7 +24,7 @@ end
 local test_name = emu.subst_env("$TEST_NAME")
 -- Convert from "wildcard" pattern (with * and ?) to Lua pattern
 local test_patterns = {}
-for chunk in test_name:gmatch("([^|]+)") do
+for chunk in tostring(test_name):gmatch("([^|]+)") do
   local pattern  = "^" ..
   string.gsub(
     chunk, "([%^$()%%.%[%]*+%-?])", -- pattern special characters
@@ -97,7 +97,7 @@ function test.Step(title, func)
   end
 
   in_step_flag = true
-  print("-- " .. title)
+  print(string.format("-- %s", title))
   local status, err = xpcall(func, handler)
   if not status then
     test.Failure(err)
@@ -126,7 +126,7 @@ function test.Variants(t, func)
 end
 
 function test.Failure(message)
-  io.stderr:write(message .. "\n")
+  io.stderr:write(string.format("%s\n", message))
  os.exit(1)
 end
 
@@ -163,80 +163,100 @@ end
 function test.Expect(expr, message, options, level)
   if not expr then
     if options and options.snap then
-      test.Snap("FAILURE - " .. message)
+      test.Snap(string.format("FAILURE - %s", message))
     end
-    error("Expectation failure: " .. message, inc(inc(level)))
-  end
-end
-
-local function format(value)
-  if type(value) == "string" then
-    return string.format("%q", value)
-  elseif type(value) == "boolean" then
-    return value and "true" or "false"
-  else
-    return value
+    error(string.format("Expectation failure: %s", message), inc(inc(level)))
   end
 end
 
 function test.ExpectEquals(actual, expected, message, options, level)
-  test.Expect(actual == expected, message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options, inc(level))
+  test.Expect(actual == expected,
+              string.format("%s - actual %q should equal %q", message, actual, expected),
+              options, inc(level))
 end
 
 function test.ExpectEqualsIgnoreCase(actual, expected, message, options, level)
-  test.Expect(actual:lower() == expected:lower(), message .. " - actual " .. format(actual) .. " should equal " .. format(expected), options, inc(level))
+  test.Expect(actual:lower() == expected:lower(),
+              string.format("%s - actual %q should equal %q", message, actual, expected),
+              options, inc(level))
 end
 
 function test.ExpectNotEquals(actual, expected, message, options, level)
-  test.Expect(actual ~= expected, message .. " - actual " .. format(actual) .. " should not equal " .. format(expected), options, inc(level))
+  test.Expect(actual ~= expected,
+              string.format("%s - actual %q should not equal %q", message, actual, expected),
+              options, inc(level))
 end
 
 function test.ExpectLessThan(a, b, message, options, level)
-  test.Expect(a < b, message .. " - actual " .. format(a) .. " should be < " .. format(b), options, inc(level))
+  test.Expect(a < b,
+              string.format("%s - actual %q should be < %q", message, a, b),
+              options, inc(level))
 end
 
 function test.ExpectLessThanOrEqual(a, b, message, options, level)
-  test.Expect(a <= b, message .. " - actual " .. format(a) .. " should be <= " .. format(b), options, inc(level))
+  test.Expect(a <= b,
+              string.format("%s - actual %q should be <= %q", message, a, b),
+              options, inc(level))
 end
 
 function test.ExpectGreaterThan(a, b, message, options, level)
-  test.Expect(a > b, message .. " - actual " .. format(a) .. " should be > " .. format(b), options, inc(level))
+  test.Expect(a > b,
+              string.format("%s - actual %q should be > %q", message, a, b),
+              options, inc(level))
 end
 
 function test.ExpectGreaterThanOrEqual(a, b, message, options, level)
-  test.Expect(a >= b, message .. " - actual " .. format(a) .. " should be >= " .. format(b), options, inc(level))
+  test.Expect(a >= b,
+              string.format("%s - actual %q should be >= %q", message, a, b),
+              options, inc(level))
 end
 
 function test.ExpectMatch(actual, pattern, message, options, level)
-  test.Expect(actual:match(pattern), message .. " - actual " .. format(actual) .. " should match " .. format(pattern), options, inc(level))
+  test.Expect(actual:match(pattern),
+              string.format("%s - actual %q should match %q", message, actual, pattern),
+              options, inc(level))
 end
 
 function test.ExpectNotMatch(actual, pattern, message, options, level)
-  test.Expect(not actual:match(pattern), message .. " - actual " .. format(actual) .. " should not match " .. format(pattern), options, inc(level))
+  test.Expect(not actual:match(pattern),
+              string.format("%s - actual %s should not match %q", message, actual, pattern),
+              options, inc(level))
 end
 
 function test.ExpectIMatch(actual, pattern, message, options, level)
-  test.Expect(actual:match(util.CaseInsensitivePattern(pattern)), message .. " - actual " .. format(actual) .. " should match " .. format(pattern), options, inc(level))
+  test.Expect(actual:match(util.CaseInsensitivePattern(pattern)),
+              string.format("%s - actual %q should match %q", message, actual, pattern),
+              options, inc(level))
 end
 
 function test.ExpectNotIMatch(actual, pattern, message, options, level)
-  test.Expect(not actual:match(util.CaseInsensitivePattern(pattern)), message .. " - actual " .. format(actual) .. " should not match " .. format(pattern), options, inc(level))
+  test.Expect(not actual:match(util.CaseInsensitivePattern(pattern)),
+              string.format("%s - actual %s should not match %q", message, actual, pattern),
+              options, inc(level))
 end
 
 function test.ExpectError(pattern, func, message, options, level)
   local status, err = pcall(func)
-  test.Expect(not status, "saw no error; " .. message, options, inc(level))
-  test.Expect(string.match(err, pattern), message .. ", error was: " .. err, options, inc(level))
+  test.Expect(not status,
+              string.format("saw no error; %s", message),
+              options, inc(level))
+  test.Expect(string.match(err, pattern),
+              string.format("%s, error was %q", message, err),
+              options, inc(level))
 end
 
 function test.ExpectBinaryEquals(a, b, message, options, level)
   if a == b then
     return
   end
-  test.Expect(#a == #b, message .. string.format(" - sizes differ %d vs. %d", #a, #b), options, inc(level))
+  test.Expect(#a == #b,
+              string.format("%s - sizes differ %d vs. %d", message, #a, #b),
+              options, inc(level))
   for i = 1, #a do
     local ba, bb = a:sub(i,i):byte(), b.sub(i,i):byte()
-    test.Expect(ba == bb, message .. string.format(" - bytes differ at index %d - 0x%02X vs. 0x%02X", i, ba, bb))
+    test.Expect(ba == bb,
+                string.format("%s - bytes differ at index %d - 0x%02X vs. 0x%02X", message, i, ba, bb),
+                options, inc(level))
   end
 end
 
