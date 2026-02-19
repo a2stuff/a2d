@@ -593,8 +593,6 @@ init:
         copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
         ROM_CALL ZERO_FAC       ; FAC = 0
-        ldxy    #farg
-        ROM_CALL ROUND          ; `farg` = FAC
 
         tsx
         stx     saved_stack
@@ -843,8 +841,6 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 .proc ProcessFunction
     IF A = #Function::clear
         ROM_CALL ZERO_FAC       ; FAC = 0
-        ldxy    #farg
-        ROM_CALL ROUND          ; `farg` = FAC
         copy8   #Function::equals, calc_op
         lda     #0
         sta     calc_p
@@ -980,25 +976,20 @@ ret:   rts
 
         ;; --------------------------------------------------
         ;; Function? These modify the FAC in place
+
     IF A = #Function::fn_sin
         jsr     DegToRad
         ROM_CALL SIN
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_cos
+    ELSE_IF A = #Function::fn_cos
         jsr     DegToRad
         ROM_CALL COS
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_tan
+    ELSE_IF A = #Function::fn_tan
         jsr     DegToRad
         ROM_CALL TAN
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_asin
+    ELSE_IF A = #Function::fn_asin
         ;; ASIN(x) = ATN(X/SQR(-X*X+1))
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
@@ -1013,10 +1004,8 @@ ret:   rts
         ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
         ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
         jsr     RadToDeg
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_acos
+    ELSE_IF A = #Function::fn_acos
         ;; ACOS(x) = -ATN(X/SQR(-X*X+l))+1.5708
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
@@ -1034,98 +1023,100 @@ ret:   rts
         lday    #CON_HALF_PI    ;
         ROM_CALL FADD           ; FAC = -ATN(X/SQR(-X*X+1))+1.5708
         jsr     RadToDeg
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_atan
+    ELSE_IF A = #Function::fn_atan
         ROM_CALL ATN
         jsr     RadToDeg
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_sqrt
+    ELSE_IF A = #Function::fn_sqrt
         ROM_CALL SQR
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_neg
+    ELSE_IF A = #Function::fn_neg
         ROM_CALL NEGOP
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_ln
+    ELSE_IF A = #Function::fn_ln
         ROM_CALL LOG
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_exp
+    ELSE_IF A = #Function::fn_exp
         ROM_CALL EXP
-        jmp     post_op
-    END_IF
 
-    IF A = #Function::fn_inv
+    ELSE_IF A = #Function::fn_inv
         lday    #CON_ONE
         ROM_CALL FDIV
-        jmp     post_op
-    END_IF
 
+    ELSE_IF A = #Function::equals
         ;; --------------------------------------------------
-        ;; Infix Operators / Equals
+        ;; Equals
 
-        ;; Save FAC for repeated ops, e.g. the "2" in "1 + 2 = ="
-        pha
-        ldxy    #ftmp
-        ROM_CALL ROUND
+        ldx     calc_op
+      IF X = #Function::equals
+        ;; no pending op
         pla
-
-        ldx     calc_op         ; X = previous op
-
-    IF A <> #Function::equals
-        ;; In a sequence like "2 * 3 = = + 1" this prevents the "+"
-        ;; from executing a pending op.
-        bit     calc_r
-      IF NS
-        ldx     #Function::equals
+        jmp     ResetBuffer1AndState
       END_IF
 
-        sta     calc_op
-    END_IF
+        bit     calc_r
+      IF NC
+        ;; not repeating yet - save FAC
+        ldxy    #ftmp
+        ROM_CALL ROUND          ; `ftmp` = FAC
+      ELSE
+        ;; repeating - use previous FAC
+        lday    #ftmp
+        ROM_CALL LOAD_FAC       ; FAC = `ftmp`
+      END_IF
 
-        lday    #farg           ; A,Y = previous intermediate result
-
-    IF X = #Function::op_add
+        ;; perform pending op
+        lday    #farg
+        ldx     calc_op
+      IF X = #Function::op_add
         ROM_CALL FADD           ; FAC = (Y,A) + FAC
-    ELSE_IF X = #Function::op_subtract
+      ELSE_IF X = #Function::op_subtract
         ROM_CALL FSUB           ; FAC = (Y,A) - FAC
-    ELSE_IF X = #Function::op_multiply
+      ELSE_IF X = #Function::op_multiply
         ROM_CALL FMULT          ; FAC = (Y,A) * FAC
-    ELSE_IF X = #Function::op_divide
+      ELSE_IF X = #Function::op_divide
         ROM_CALL FDIV           ; FAC = (Y,A) / FAC
-    ELSE_IF X = #Function::op_power
+      ELSE_IF X = #Function::op_power
         ROM_CALL LOAD_ARG       ; ARG = (Y,A)
         ROM_CALL FPWRT          ; FAC = ARG ^ FAC
-    ELSE_IF X = #Function::equals
-        ;; special...
+      END_IF
 
+        ;; store result
+        ldxy    #farg
+        ROM_CALL ROUND          ; `farg` = FAC
+
+    ELSE
+        ;; --------------------------------------------------
+        ;; Infix Operators
+
+        ldx     calc_op
+        sta     calc_op
         bit     calc_r
-      IF NS
-
-        ldy     calc_g
-       IF ZERO
-        pla
-        sta     calc_op         ; redundant
-        jmp     ResetBuffer1AndState
+      IF NC AND X <> #Function::equals
+        ;; perform pending op
+        lday    #farg
+       IF X = #Function::op_add
+        ROM_CALL FADD           ; FAC = (Y,A) + FAC
+       ELSE_IF X = #Function::op_subtract
+        ROM_CALL FSUB           ; FAC = (Y,A) - FAC
+       ELSE_IF X = #Function::op_multiply
+        ROM_CALL FMULT          ; FAC = (Y,A) * FAC
+       ELSE_IF X = #Function::op_divide
+        ROM_CALL FDIV           ; FAC = (Y,A) / FAC
+       ELSE_IF X = #Function::op_power
+        ROM_CALL LOAD_ARG       ; ARG = (Y,A)
+        ROM_CALL FPWRT          ; FAC = ARG ^ FAC
        END_IF
       END_IF
-    END_IF
 
-        ldxy    #farg           ; save intermediate result
-        ROM_CALL ROUND          ; (Y,A) = ROUND(FAC)
+        ;; store result
+        ldxy    #farg
+        ROM_CALL ROUND          ; `farg` = FAC
+    END_IF
 
         ;; --------------------------------------------------
         ;; Done with operation, result is in FAC
-
-post_op:
 
         jsr     PushFAC
         ROM_CALL FOUT       ; output as null-terminated string to FBUFFR
@@ -1179,9 +1170,6 @@ post_op:
 
         pla                     ; A = `Function::*`
     IF A = #Function::equals
-        ;; Restore FAC for repeated op, e.g. "2" in "1 + 2 = ="
-        lday    #ftmp
-        ROM_CALL LOAD_FAC
         SET_BIT7_FLAG calc_r
     ELSE
         CLEAR_BIT7_FLAG calc_r
