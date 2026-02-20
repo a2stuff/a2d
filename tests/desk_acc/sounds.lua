@@ -33,12 +33,14 @@ end)
 test.Step(
   "Clicking on an item again plays the sound again",
   function()
-    print("NOTE: Run this test with --slow --audible")
-    print(" * MouseKeys entry sound (lo-hi)")
-    print(" * IIgs Bonk")
-    print(" * IIgs Bonk")
-    print(" * IIgs Bonk")
-    print(" * MouseKeys exit sound (hi-lo)")
+    io.stderr:write(
+      "NOTE: Run this test with --slow --audible\n" ..
+      " * MouseKeys entry sound (lo-hi)\n" ..
+      " * IIgs Bonk\n" ..
+      " * IIgs Bonk\n" ..
+      " * IIgs Bonk\n" ..
+      " * MouseKeys exit sound (hi-lo)\n")
+
     a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
