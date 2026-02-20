@@ -123,6 +123,9 @@ a2d.RemoveClockDriverAndReboot()
   dates in the window are shown with "Today". Open Date and Time.
   Click OK without changing anything. Verify that the entire desktop
   does not repaint
+
+  NOTE: Requires that the last git commit date matches the date the
+  files were actually built.
 ]]
 test.Step(
   "Fresh disk image",

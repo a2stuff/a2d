@@ -33,6 +33,7 @@ test.Step(
     emu.wait(5) -- file load
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "MONACO.EN", "window title should match")
     test.Snap("Font Preview")
+    a2d.CloseWindow()
     a2d.CloseAllWindows()
 end)
 

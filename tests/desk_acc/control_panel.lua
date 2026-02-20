@@ -60,6 +60,7 @@ test.Step(
     a2dtest.ExpectAlertNotShowing()
 
     drive:load(current)
+    emu.wait(5)
     a2d.CloseAllWindows()
 end)
 
@@ -82,6 +83,7 @@ test.Step(
     a2d.DialogCancel()
 
     drive:load(current)
+    emu.wait(5)
     a2d.CloseAllWindows()
 end)
 

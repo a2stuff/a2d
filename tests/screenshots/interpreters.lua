@@ -12,7 +12,7 @@ test.Step(
     a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/HELLO.WORLD")
     util.WaitFor(
       "hello world", function()
-        apple2.GrabTextScreen():match("Hello world!")
+        return apple2.GrabTextScreen():match("Hello world!")
     end)
     test.Snap("Applesoft BASIC")
     apple2.ControlOAReset()
