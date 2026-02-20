@@ -122,7 +122,7 @@ test.Step(
     a2d.Drag(a_x, a_y, trash_x, trash_y)
     a2dtest.WaitForAlert({match="delete 2 files%?"})
     a2d.DialogOK({no_wait=true})
-    a2dtest.MultiSnap(30, "count stops at 0")
+    a2dtest.VerifyFilesRemainingCountdown(30, "deletion")
 
     a2d.EraseVolume("RAM1")
 end)

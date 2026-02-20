@@ -394,7 +394,7 @@ test.Step(
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    a2dtest.MultiSnap(60, "verify copy count ends at 0")
+    a2dtest.VerifyFilesRemainingCountdown(60, "copy")
 
     -- cleanup
     a2d.EraseVolume("/RAM1")
@@ -418,7 +418,7 @@ test.Step(
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y,dst_x, dst_y, {sa_drop=true})
-    a2dtest.MultiSnap(60, "verify move count ends at 0")
+    a2dtest.VerifyFilesRemainingCountdown(60, "move")
 
     -- cleanup
     a2d.EraseVolume("/RAM1")
@@ -465,7 +465,7 @@ test.Step(
     a2d.WaitForRepaint()
     a2dtest.WaitForAlert({match='already exists.*replace it%?'})
     apple2.Type("Y")
-    a2dtest.MultiSnap(60, "verify count ends at 0")
+    a2dtest.VerifyFilesRemainingCountdown(60, "copy")
 
     -- cleanup
     a2d.EraseVolume("/RAM1")

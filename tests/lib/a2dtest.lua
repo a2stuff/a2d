@@ -522,4 +522,40 @@ end
 
 --------------------------------------------------
 
+function a2dtest.GetFilesRemainingCount()
+  local count = nil
+  local ocr = a2dtest.OCRScreen({x1=280, y1=25, x2=470, y2=45})
+  local _, _, match = ocr:find("Files remaining: ([0-9,]+)")
+  if match then
+    count = tonumber((match:gsub(",", "")))
+  end
+  return count
+end
+
+function a2dtest.VerifyFilesRemainingCountdown(frames, message)
+  local last = nil
+
+  for i = 1, frames/2 do
+    local count = a2dtest.GetFilesRemainingCount()
+    if count then
+      test.Expect(not last or count <= last,
+                  string.format("%s - should only count down, saw %q -> %q", message, last, count),
+                  {}, 1)
+
+      last = count
+    elseif last then
+      -- erased, so done early
+      break
+    end
+
+    emu.wait(2/60)
+  end
+
+  test.ExpectEquals(last, 0,
+              string.format("%s - progress should bottom out at 0", message),
+              {}, 1)
+end
+
+--------------------------------------------------
+
 return a2dtest

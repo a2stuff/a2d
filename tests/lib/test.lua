@@ -127,7 +127,7 @@ end
 
 function test.Failure(message)
   io.stderr:write(string.format("%s\n", message))
- os.exit(1)
+  os.exit(1)
 end
 
 -- For disabling a test while maintaining count/skip behavior
