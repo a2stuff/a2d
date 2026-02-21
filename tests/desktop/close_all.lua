@@ -59,7 +59,14 @@ test.Variants(
   function(idx, name, press, release)
     a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
-    local file_menu_x, file_menu_y = 30, 5
+    local file_menu_x, file_menu_y
+    a2dtest.OCRIterate(function(run, x, y)
+        if run == "File" then
+          file_menu_x, file_menu_y = x, y
+          return false
+        end
+    end)
+
     a2d.InMouseKeysMode(function(m)
         press()
 
@@ -73,6 +80,9 @@ test.Variants(
     a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(0, 0)
+    end)
 end)
 
 --[[
@@ -106,7 +116,14 @@ test.Variants(
   function(idx, name, key)
     a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
-    local file_menu_x, file_menu_y = 30, 5
+    local file_menu_x, file_menu_y
+    a2dtest.OCRIterate(function(run, x, y)
+        if run == "File" then
+          file_menu_x, file_menu_y = x, y
+          return false
+        end
+    end)
+
     a2d.InMouseKeysMode(function(m)
         apple2.PressSA()
         m.MoveToApproximately(file_menu_x, file_menu_y)
@@ -117,4 +134,7 @@ test.Variants(
     a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(0, 0)
+    end)
 end)

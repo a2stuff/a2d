@@ -68,6 +68,7 @@ function coords()
   a2dtest.OCRIterate(function(run, x, y)
       if run:upper():find("SEAGATE") then
         found_x, found_y = x, y
+        return false
       end
   end, {invert=true})
   return found_x, found_y

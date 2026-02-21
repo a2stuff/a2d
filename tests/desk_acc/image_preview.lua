@@ -300,7 +300,14 @@ test.Step(
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.ClearSelection()
 
-    local file_menu_x, file_menu_y = 30, 5
+    local file_menu_x, file_menu_y
+    a2dtest.OCRIterate(function(run, x, y)
+        if run == "File" then
+          file_menu_x, file_menu_y = x, y
+          return false
+        end
+    end)
+
     -- Drop file menu without activating anything
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)

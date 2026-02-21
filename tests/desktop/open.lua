@@ -399,7 +399,15 @@ test.Variants(
   },
   function(idx, name, func, key)
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
-    local menu_x, menu_y = 30, 5
+
+    local menu_x, menu_y
+    a2dtest.OCRIterate(function(run, x, y)
+        if run == "File" then
+          menu_x, menu_y = x, y
+          return false
+        end
+    end)
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(menu_x, menu_y)
         m.Click()
@@ -410,6 +418,10 @@ test.Variants(
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")
+
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(0, 0)
+    end)
 
     a2d.CloseAllWindows()
     a2d.ClearSelection()

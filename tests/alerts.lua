@@ -102,39 +102,48 @@ test.Step(
     a2d.CopySelectionTo("/RAM1")
     emu.wait(5) -- allow copy to complete
     a2d.CopySelectionTo("/RAM1")
+
+    local yes_x, yes_y, no_x, no_y, all_x, all_y
+    local delta_x, delta_y = 30, 5
+
+    a2dtest.OCRIterate(function(run, x, y)
+        if run:match("Yes") then
+          yes_x, yes_y = x + delta_x, y + delta_y
+        elseif run:match("No") then
+          no_x, no_y = x + delta_x, y + delta_y
+        elseif run:match("All") then
+          all_x, all_y = x + delta_x, y + delta_y
+        end
+    end)
+
     a2d.InMouseKeysMode(function(m)
-        local btn_y = 110
-        local yes_x = 280
-        local no_x  = 360
-        local all_x = 420
-
-        m.MoveToApproximately(yes_x, btn_y)
+        m.MoveToApproximately(yes_x, yes_y)
         m.ButtonDown()
         emu.wait(2/60)
-        test.Snap("verify down on yes")
+        test.Expect(a2dtest.OCRScreen({invert=true}):match("Yes"), "should be down on Yes")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
-        m.MoveToApproximately(yes_x, btn_y)
+        m.MoveToApproximately(yes_x, yes_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
 
-        m.MoveToApproximately(no_x, btn_y)
+        m.MoveToApproximately(no_x, no_y)
         m.ButtonDown()
         emu.wait(2/60)
-        test.Snap("verify down on no")
+        test.Expect(a2dtest.OCRScreen({invert=true}):match("No"), "should be down on No")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
-        m.MoveToApproximately(yes_x, btn_y)
+        m.MoveToApproximately(no_x, no_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
 
-        m.MoveToApproximately(all_x, btn_y)
+        m.MoveToApproximately(all_x, all_y)
         m.ButtonDown()
         emu.wait(2/60)
-        test.Snap("verify down on all")
+        test.Expect(a2dtest.OCRScreen({invert=true}):match("All"), "should be down on All")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
-        m.MoveToApproximately(all_x, btn_y)
+        m.MoveToApproximately(all_x, all_y)
         m.Click()
         emu.wait(5) -- allow copy to continue
     end)

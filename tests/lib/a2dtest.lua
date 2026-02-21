@@ -378,6 +378,9 @@ end
   Call with {invert=true} to look for white-on-black text e.g. a
   selected menu item, list box item, flashing button, etc.
 
+  Callback is invoked with run, x, y. If callback explicitly returns
+  false then the iteration stops.
+
   NOTE: The function is relatively slow, taking 1/4 second on an
   example machine.
 ]]
@@ -438,7 +441,7 @@ function a2dtest.OCRIterate(callback, options)
         end
         -- Match?
         local char = ocr_table[key1] or ocr_table[key2]
-        if char then
+        if char and (run ~= "" or char ~= " ") then
           run = run .. char
           x = x + w
           goto got_a_hit
@@ -447,8 +450,9 @@ function a2dtest.OCRIterate(callback, options)
       end
 
       -- miss; if end of run, emit
+      run = run:gsub(" +$", "")
       if run ~= "" then
-        callback(run, run_x, y)
+        if callback(run, run_x, y) == false then return end
         run = ""
       end
       x = x + 1
@@ -457,8 +461,9 @@ function a2dtest.OCRIterate(callback, options)
       ::got_a_hit::
     end
 
-    if not run:match("^ *+$") then
-      callback(run, run_x, y)
+    run = run:gsub(" +$", "")
+    if run ~= "" then
+      if callback(run, run_x, y) == false then return end
     end
   end
 end
@@ -483,6 +488,8 @@ function a2dtest.OCRScreen(options)
   end
 
   a2dtest.OCRIterate(function(run, x, y)
+      --print(string.format("run: %q, %d, %d", run, x, y))
+
       --[[
         NOTE: With current system font, 0 and O are not homoglyphs, so
         this is not necessary.
@@ -497,10 +504,12 @@ function a2dtest.OCRScreen(options)
         last_y = y
       end
 
+      if line ~= "" then
+        line = line .. "  "
+      end
       line = line .. run
   end, options)
   finish_line()
-
 
   return str
 end

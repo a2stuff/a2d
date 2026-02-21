@@ -1,6 +1,12 @@
 a2d.ConfigureRepaintTime(0.25)
 
-local file_menu_x, file_menu_y = 30, 5
+local file_menu_x, file_menu_y
+a2dtest.OCRIterate(function(run, x, y)
+    if run == "File" then
+      file_menu_x, file_menu_y = x, y
+      return false
+    end
+end)
 
 --[[
   Enter MouseKeys mode. "Pull down" a menu (using Comma) and select an

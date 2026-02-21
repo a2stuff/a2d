@@ -782,6 +782,8 @@ function a2d.InMouseKeysMode(func)
       end,
 
       MoveToApproximately = function(x, y)
+        assert(x)
+        assert(y)
         if last_x == nil then
           a2d.MouseKeysMoveToApproximately(x, y)
         else

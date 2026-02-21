@@ -27,7 +27,7 @@ test.Step(
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
-    test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop .*\n.*Ram1 ",
+    test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop%s.*\n.*%sRam1",
                 "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
@@ -59,7 +59,7 @@ test.Step(
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
     emu.wait(5)
-    test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop .*\n.*Ram1 ",
+    test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop%s.*\n.*%sRam1",
                 "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
@@ -131,10 +131,10 @@ test.Step(
     apple2.Type("1")
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Unable to run the program"})
-    test.ExpectMatch(a2dtest.OCRScreen(), " Shortcuts .* 1 .* Monarch ",
+    test.ExpectMatch(a2dtest.OCRScreen(), "Shortcuts%s.*1%s.*Monarch",
                 "shortcuts list should render correctly")
     a2d.DialogOK()
-    test.ExpectMatch(a2dtest.OCRScreen(), " Shortcuts .* 1 .* Monarch ",
+    test.ExpectMatch(a2dtest.OCRScreen(), "Shortcuts%s.*1%s.*Monarch",
                 "shortcuts list should render correctly")
 
     -- cleanup
