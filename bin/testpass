@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "$0")/.."
+source "bin/util.sh"
+
+START="$(date)"
+
+if [ $# -gt 0 ]; then
+  FILES="$@"
+else
+  FILES="\
+    tests/screenshots/*.lua \
+    tests/configs/*.lua \
+    tests/launcher/*.lua \
+    tests/desktop/*.lua \
+    tests/disk_copy/*.lua \
+    tests/selector/*.lua \
+    tests/desk_acc/*.lua \
+    tests/*.lua"
+fi
+
+TMPDIR="/tmp/mametest"
+results="$TMPDIR/results"
+mkdir -p "$results"
+cp "res/testutil/index.html" "$results/index.html"
+cp "res/testutil/index.js" "$results/index.js"
+MANIFEST="$results/manifest.txt"
+rm -f "$MANIFEST"
+
+for i in $FILES
+do
+  cecho yellow "==$i=="
+
+  SCRIPT="$(realpath "$1")"
+  SCRIPTDIR="$(dirname "$SCRIPT")"
+
+  bin/mametest --nosnaps "$SCRIPT"
+
+  relpath="${SCRIPT#$(pwd)/tests/}"
+  resdir="$(dirname "$relpath")"
+  zipfile="${resdir}/$(basename "$i" .lua).zip"
+
+  echo "$zipfile" >> "$MANIFEST"
+done
+
+echo "Start: $START"
+echo "End: $(date)"
+
+echo ""
+cecho green "Serving results at http://localhost:8000 - Ctrl+C to stop"
+echo ""
+
+# Serve the results. We must enable job control so the server can be
+# started in the background, then we open a browser, then we
+# foreground the server so it can be terminated with Ctrl+C.
+set -m
+python3 -m http.server -d "$results" 8000 2> /dev/null &
+open http://localhost:8000
+fg > /dev/null
