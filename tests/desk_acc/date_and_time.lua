@@ -337,7 +337,7 @@ local month_x = day_x + 45
 local year_x = month_x + 45
 local hour_x = year_x + 45
 local minute_x = hour_x + 40
-local period_x = minute_x + 30
+local period_x = minute_x + 20
 
 --[[
   Launch DeskTop. Run the Date and Time DA. Click on the up/down

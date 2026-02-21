@@ -13,6 +13,6 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.ExpectMatch(a2dtest.OCRScreen(), "Slot 3: .* Passport MIDI",
+    test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Slot 3: .* Passport MIDI",
                 "Slot 3: Passport MIDI should be detected")
 end)

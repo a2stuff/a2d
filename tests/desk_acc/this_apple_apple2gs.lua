@@ -18,6 +18,6 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.ExpectNotIMatch(a2dtest.OCRScreen(), "000,000",
+    test.ExpectNotIMatch(a2dtest.OCRFrontWindowContent(), "000,000",
                 "memory count should not be '000,000'")
 end)

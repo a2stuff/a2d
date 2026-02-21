@@ -5,6 +5,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
+a2d.RemoveClockDriverAndReboot() -- to avoid clock repaints
 a2d.ConfigureRepaintTime(2)
 
 --[[

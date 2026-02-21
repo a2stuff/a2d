@@ -184,7 +184,7 @@ function a2dtest.GetFrontWindowID()
 end
 
 function a2dtest.GetNextWindowID(window_id)
-  local winfo = mgtk.GetWinPtr(window_id) + bank_offset
+  local winfo = mgtk.GetWinPtr(assert(window_id)) + bank_offset
   local next = ram_u16(winfo + 56)
   if next == 0 then
     return 0
@@ -197,7 +197,7 @@ function a2dtest.GetFrontWindowDragCoords()
 end
 
 function a2dtest.GetWindowDragCoords(window_id)
-  local x, y, w, h = a2dtest.GetWindowContentRect(window_id)
+  local x, y, w, h = a2dtest.GetWindowContentRect(assert(window_id))
   return x + w / 2, y - 5
 end
 
@@ -229,7 +229,7 @@ function a2dtest.GetFrontWindowTitle()
   return a2dtest.GetWindowTitle(a2dtest.GetFrontWindowID())
 end
 function a2dtest.GetWindowTitle(window_id)
-  return mgtk.GetWindowName(window_id)
+  return mgtk.GetWindowName(assert(window_id))
 end
 
 -- returns x,y,width,height
@@ -237,7 +237,7 @@ function a2dtest.GetFrontWindowContentRect()
   return a2dtest.GetWindowContentRect(a2dtest.GetFrontWindowID())
 end
 function a2dtest.GetWindowContentRect(window_id)
-  local winfo = bank_offset + mgtk.GetWinPtr(window_id)
+  local winfo = bank_offset + mgtk.GetWinPtr(assert(window_id))
   local port = winfo + 20
   local vx,vy = ram_s16(port + 0), ram_s16(port + 2)
   local x1,y1 = ram_s16(port + 8), ram_s16(port + 10)
@@ -512,6 +512,18 @@ function a2dtest.OCRScreen(options)
   finish_line()
 
   return str
+end
+
+function a2dtest.OCRFrontWindowContent(options)
+  if options == nil then options = {} end
+
+  local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+  options.x1 = x
+  options.x2 = x + w
+  options.y1 = y
+  options.y2 = y + h
+
+  return a2dtest.OCRScreen(options)
 end
 
 --------------------------------------------------

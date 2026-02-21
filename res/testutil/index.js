@@ -65,14 +65,12 @@ function blobToDataURL(blob) {
 
 async function review(option) {
   if (option.output) {
-    $('#output').innerHTML = ansiToHTML(option.output);
     $('#snap').src = '';
+    $('#output').innerHTML = ansiToHTML(option.output);
     $('#instructions').innerText = '';
   } else if (option.entry) {
-    const blob = await option.entry.blob('image/png');
-    const url = await blobToDataURL(blob);
-    $('#snap').src = url;
-    $('#output').value = option.parent.output;
+    $('#snap').src = await blobToDataURL(await option.entry.blob('image/png'));
+    $('#output').innerHTML = ansiToHTML(option.parent.output);
     $('#instructions').innerText = option.instructions;
   }
 }
