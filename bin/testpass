@@ -31,14 +31,14 @@ for i in $FILES
 do
   cecho yellow "==$i=="
 
-  SCRIPT="$(realpath "$1")"
+  SCRIPT="$(realpath "$i")"
   SCRIPTDIR="$(dirname "$SCRIPT")"
 
   bin/mametest --nosnaps "$SCRIPT"
 
   relpath="${SCRIPT#$(pwd)/tests/}"
   resdir="$(dirname "$relpath")"
-  zipfile="${resdir}/$(basename "$i" .lua).zip"
+  zipfile="${resdir}/$(basename "$SCRIPT" .lua).zip"
 
   echo "$zipfile" >> "$MANIFEST"
 done
