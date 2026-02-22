@@ -25,7 +25,7 @@ window.addEventListener('DOMContentLoaded', async e => {
     option.entries = entries;
 
     Object.keys(entries)
-      .filter(k => k.endsWith('.png'))
+      .filter(k => k.match(/^\d\d\d\d - .*\.png$/))
       .sort((a, b) => order(a.name,b.name))
       .forEach(key => {
         const entry = entries[key];
@@ -33,13 +33,15 @@ window.addEventListener('DOMContentLoaded', async e => {
         const subopt = document.createElement('option');
         subopt.className = 'snap';
         subopt.innerText = entry.name;
+
         subopt.parent = option;
         subopt.instructions = entry.name
           .replace(/^\d\d\d\d - /, '')
           .replace(/\.png$/, '');
-        list.append(subopt);
-
+        subopt.snapnum = entry.name.match(/^(\d\d\d\d) - /)[1];
         subopt.entry = entry;
+
+        list.append(subopt);
       });
   }
 
@@ -63,15 +65,35 @@ function blobToDataURL(blob) {
   });
 }
 
+
+let last_snap;
 async function review(option) {
+  function showOutput(output) {
+    let html = ansiToHTML(output);
+    html = html.replace(/\[snap: (\d+)\] .*/g, '<a id="snap$1">$&</a>');
+    $('#output').innerHTML = html;
+  }
+
+  if (last_snap) {
+    last_snap.classList.remove('highlighted');
+    last_snap = undefined;
+  }
+
   if (option.output) {
     $('#snap').src = '';
-    $('#output').innerHTML = ansiToHTML(option.output);
     $('#instructions').innerText = '';
+    showOutput(option.output);
   } else if (option.entry) {
     $('#snap').src = await blobToDataURL(await option.entry.blob('image/png'));
-    $('#output').innerHTML = ansiToHTML(option.parent.output);
     $('#instructions').innerText = option.instructions;
+    showOutput(option.parent.output);
+
+    const anchor = $('#snap' + option.snapnum);
+    if (anchor) {
+      anchor.scrollIntoView({block:'center'});
+      anchor.classList.add('highlighted');
+      last_snap = anchor;
+    }
   }
 }
 
@@ -122,8 +144,6 @@ function ansiToHTML(text) {
           .filter(s => s)
           .join('; ');
     return '<span style="' + s + '">';
-
-
   });
 
   return text;

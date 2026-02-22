@@ -22,8 +22,9 @@ fi
 TMPDIR="/tmp/mametest"
 results="$TMPDIR/results"
 mkdir -p "$results"
-cp "res/testutil/index.html" "$results/index.html"
-cp "res/testutil/index.js" "$results/index.js"
+for file in index.html index.js; do
+  ln -sf $(realpath "res/testutil/$file") "$results/$file"
+done
 MANIFEST="$results/manifest.txt"
 rm -f "$MANIFEST"
 
@@ -46,14 +47,14 @@ done
 echo "Start: $START"
 echo "End: $(date)"
 
-echo ""
-cecho green "Serving results at http://localhost:8000 - Ctrl+C to stop"
-echo ""
-
 # Serve the results. We must enable job control so the server can be
 # started in the background, then we open a browser, then we
 # foreground the server so it can be terminated with Ctrl+C.
 set -m
 python3 -m http.server -d "$results" 8000 2> /dev/null &
+sleep 1
+echo ""
+cecho green "Serving results at http://localhost:8000 - Ctrl+C to stop"
+echo ""
 open http://localhost:8000
 fg > /dev/null
