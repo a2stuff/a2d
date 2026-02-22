@@ -255,17 +255,14 @@ jt_callbacks:
       DO
         lda     path_buf0,x
         BREAK_IF A = #'/'
-        dex
-      WHILE NOT_ZERO            ; always, since path is valid
+      WHILE dex : NOT_ZERO      ; always, since path is valid
         inx
 
         ldy     #1
       DO
         copy8   path_buf0,x, text_input_buf,y
         BREAK_IF X = path_buf0
-        inx
-        iny
-      WHILE NOT_ZERO            ; always
+      WHILE inx: iny : NOT_ZERO ; always
 
         ;; Truncate if necessary
         cpy     #kSelectorMaxNameLength+1

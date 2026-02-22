@@ -329,8 +329,7 @@ finish: jmp     InputLoop
         ldy     #.sizeof(MGTK::Point)-1
       DO
         copy8   (pos_ptr),y, object_params::viewloc,y
-        dey
-      WHILE POS
+      WHILE dey : POS
         MGTK_CALL MGTK::PaintBits, object_params
 
         add16_8 pos_ptr, #.sizeof(MGTK::Point)
@@ -371,8 +370,7 @@ finish: jmp     InputLoop
       DO
         lda     (pos_ptr),y
         pha
-        iny
-      WHILE Y <> #4
+      WHILE iny : Y <> #4
 
         ;; --------------------------------------------------
         ;; Update X coordinate and maybe delta
@@ -434,8 +432,7 @@ finish: jmp     InputLoop
         ldy     #.sizeof(MGTK::Point)-1
       DO
         copy8   (pos_ptr),y, object_params::viewloc,y
-        dey
-      WHILE POS
+      WHILE dey : POS
         jsr     _Paint
 
         ;; Old coords
@@ -443,8 +440,7 @@ finish: jmp     InputLoop
       DO
         pla
         sta     object_params::viewloc,y
-        dey
-      WHILE POS
+      WHILE dey : POS
         jsr     _Paint
 
         ;; --------------------------------------------------
@@ -455,8 +451,7 @@ finish: jmp     InputLoop
 
         pla
         tax
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         rts
 

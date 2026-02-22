@@ -40,6 +40,13 @@
 ;;; e.g. "IF A = #1 OR X = #2"
 ;;;
 ;;; ("NOT" has highest precedence, then "AND", then "OR")
+;;;
+;;; Conditions can optionally be preceded by one or more statements
+;;; that start with BIT, LDA, LDX, LDY, INC, INX, INY, DEC, DEX, or
+;;; DEY (upper or lowercase), terminated by a ':'.
+;;; e.g. "IF BIT flag : NS"
+;;; e.g. "WHILE INX : X < #10"
+;;; e.g. "WHILE DEX : DEX : POS"
 
 ;;; ============================================================
 ;;; Infrastructure
@@ -118,7 +125,7 @@
         ;;.out .sprintf("> peeked %s", str)
 .endmacro
 .macro F2_LOG_FUNC name
-        ;;.out .sprintf(") %s", name)
+        ;;.out .sprintf("( %s", name)
 .endmacro
 .macro F2_LOG_END_FUNC name
         ;;.out .sprintf(") %s", name)
@@ -812,6 +819,56 @@
         F2_LOG_END_FUNC "PARSE_BEXPR_LOOP"
 .endmacro
 
+;;; Parse (and emit) a statement - everything up to next ':'
+.macro F2_PARSE_STATEMENT
+        F2_LOG_FUNC "PARSE_STATEMENT"
+
+        .define f2_stmt .left(1, {f2_token_list})
+
+        F2_PARSE_CONSUME
+        F2_PARSE_STATEMENT2
+
+        f2_stmt
+
+        .undef f2_stmt
+
+        F2_LOG_END_FUNC "PARSE_STATEMENT"
+.endmacro
+.macro F2_PARSE_STATEMENT2
+        F2_LOG_FUNC "PARSE_STATEMENT2"
+        .if .tcount({f2_token_list}) = 0
+          F2_ERR_EXPECTED "end-of-statement (':')"
+        .endif
+
+        .if .xmatch(.left(1, {f2_token_list}), :)
+          F2_PARSE_CONSUME
+        .else
+          .define f2_tmp f2_stmt
+          .undef f2_stmt
+          .define f2_stmt f2_tmp .left(1, {f2_token_list})
+          .undef f2_tmp
+          F2_PARSE_CONSUME
+          F2_PARSE_STATEMENT2
+        .endif
+        F2_LOG_END_FUNC "PARSE_STATEMENT2"
+.endmacro
+
+.macro F2_PARSE_STATEMENTS
+        F2_LOG_FUNC "PARSE_STATEMENTS"
+
+        ;; Match any of BIT, LDA, LDX, LDY, INC, INX, INY, DEC, DEX, DEY, upper or lowercase
+        .if .xmatch(.left(1, {f2_token_list}), bit) .or .xmatch(.left(1, {f2_token_list}), BIT) .or .xmatch(.left(1, {f2_token_list}), lda) .or .xmatch(.left(1, {f2_token_list}), LDA) .or .xmatch(.left(1, {f2_token_list}), ldx) .or .xmatch(.left(1, {f2_token_list}), LDX) .or .xmatch(.left(1, {f2_token_list}), ldy) .or .xmatch(.left(1, {f2_token_list}), LDY) .or .xmatch(.left(1, {f2_token_list}), inc) .or .xmatch(.left(1, {f2_token_list}), INC) .or .xmatch(.left(1, {f2_token_list}), inx) .or .xmatch(.left(1, {f2_token_list}), INX) .or .xmatch(.left(1, {f2_token_list}), iny) .or .xmatch(.left(1, {f2_token_list}), INY) .or .xmatch(.left(1, {f2_token_list}), dec) .or .xmatch(.left(1, {f2_token_list}), DEC) .or .xmatch(.left(1, {f2_token_list}), dex) .or .xmatch(.left(1, {f2_token_list}), DEX) .or .xmatch(.left(1, {f2_token_list}), dey) .or .xmatch(.left(1, {f2_token_list}), DEY)
+          F2_PARSE_STATEMENT
+
+          .ifnblank token_list
+            F2_PARSE_STATEMENTS
+          .endif
+
+        .endif
+
+        F2_LOG_END_FUNC "PARSE_STATEMENTS"
+.endmacro
+
 ;;; Parse a condition
 .macro F2_PARSE_COND sense, stay_target, branch_target, token_list
         F2_LOG_FUNC "PARSE_COND"
@@ -824,6 +881,10 @@
         .define f2_stay_target stay_target
         .define f2_branch_target branch_target
         F2_LOG_TCOUNT
+
+        ;; Condition may be preceded by statements
+        F2_PARSE_STATEMENTS
+
         F2_PARSE_BEXPR_LOOP
         .undef f2_token_list
         .undef f2_stay_target

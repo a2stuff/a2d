@@ -67,8 +67,7 @@ volume_bitmap_blocks:   .byte   0
         ldy     #3      ; ptr is off by 1
     DO
         copy8   (params_src),y, params-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Bank and call
         sta     ALTZPOFF
@@ -247,11 +246,9 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
     DO
       DO
         sta     (ptr),y
-        iny
-      WHILE NOT ZERO
+      WHILE iny : NOT ZERO
         inc     ptr+1
-        dex
-    WHILE NOT ZERO
+    WHILE dex : NOT ZERO
 
         ;; Now mark block-pages used in memory bitmap
         page  := $06
@@ -263,8 +260,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         CALL    MarkUsedInMemoryBitmap, A=page
         inc     page
         inc     page
-        dec     count
-    WHILE NOT ZERO
+    WHILE dec count : NOT ZERO
         rts
 .endscope
 
@@ -291,8 +287,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
 
         inc     block_params::block_num
         add16   block_params::data_buffer, #$200, block_params::data_buffer
-        dec     blocks
-    WHILE NOT ZERO
+    WHILE dec blocks : NOT ZERO
         rts
 .endproc ; QuickCopy
 .endproc ; ReadVolumeBitmap
@@ -686,8 +681,7 @@ bit_shift_table:
         CALL    _MarkFreeInMemoryBitmap, A=page
         inc     page
         inc     page
-        dec     count
-    WHILE NOT ZERO
+    WHILE dec count : NOT ZERO
         rts
 
 ;;; Input: A = high byte of first page of memory block (e.g. $40 for block at $4000...$401F)
@@ -825,8 +819,7 @@ done:   rts
         sta     (ptr1),y
         lda     default_block_buffer+$100,y
         sta     (ptr2),y
-        iny
-    WHILE NOT_ZERO
+    WHILE iny : NOT_ZERO
         rts
 .endproc ; CopyFromBlockBuffer
 
@@ -896,8 +889,7 @@ done:   rts
         sta     default_block_buffer,y
         lda     (ptr2),y
         sta     default_block_buffer+$100,y
-        iny
-    WHILE NOT_ZERO
+    WHILE iny : NOT_ZERO
         rts
 .endproc ; CopyToBlockBuffer
 

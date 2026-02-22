@@ -993,8 +993,7 @@ match:  tya
         lda     PRAVETZ_8AC_ID_ADDR,x
         cmp     pravetz_8ac_sequence,x
         bne     :+
-        dex
-      WHILE POS
+      WHILE dex : POS
         lda     #model::pravetz
         bne     found           ; always
 :
@@ -1023,8 +1022,7 @@ match:  tya
         lda     TLC_ID_ADDR,x
         cmp     tlc_sequence,x
         bne     :+
-        dex
-      WHILE POS
+      WHILE dex : POS
         lda     #model::tlc
         bne     found           ; always
 :
@@ -1034,8 +1032,7 @@ match:  tya
         lda     TK3000_ID_ADDR,x
         cmp     tk3000_sequence,x
         bne     :+
-        dex
-      WHILE POS
+      WHILE dex : POS
         lda     #model::tk3000
         bne     found           ; always
 :
@@ -1361,8 +1358,7 @@ draw_maybe_sp:
       END_IF
 
         lsr     mask
-        dec     slot
-    WHILE NOT ZERO
+    WHILE dec slot : NOT ZERO
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
         CALL    DrawStringRightFromMain, AX=#str_aux
@@ -1600,8 +1596,7 @@ notpas:
         @compare_byte := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     no_match
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         ;; match
         RETURN  C=1
@@ -1725,8 +1720,7 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
         ldx     #.sizeof(Z80Routine)-1
     DO
         swap8   Z80Routine::target,x, Z80Routine,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; SwapRoutine
 .endproc ; DetectZ80

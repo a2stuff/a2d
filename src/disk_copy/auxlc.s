@@ -1054,8 +1054,7 @@ ret:    rts
         ldy     #3              ; ptr is off by 1
     DO
         copy8   (params_src),y, params-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Bank and call
         sta     RAMRDON
@@ -1119,8 +1118,7 @@ params: .res    3
         tay
       DO
         copy8   (src_ptr),y, (dst_ptr),y
-        dey
-      WHILE POS
+      WHILE dey : POS
         rts
 .endproc ; AssignDriveName
 
@@ -1188,8 +1186,7 @@ match:  RETURN  C=0
         ldy     #kMaxFilenameLength
     DO
         copy8   str_name,y, (ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; If less than 15 characters, increase len by one
         ldy     str_name
@@ -1277,8 +1274,7 @@ match:  RETURN  C=0
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
       END_IF
-        iny
-    WHILE Y < #16               ; bits
+    WHILE iny : Y < #16         ; bits
         rts
 
         ;; --------------------------------------------------
@@ -1317,8 +1313,7 @@ fallback:
         ldy     #.sizeof(MGTK::Point)-1
     DO
         copy8   (pt_ptr),y, list_entry_pos,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         pla
 
         bit     selection_mode_flag  ; source or destination?
@@ -1434,9 +1429,8 @@ keep_it:
 
 next_device:
         pla
-        tax
-        inx                     ; X = index
-    WHILE X <> #kMaxNumDrives+1
+        tax                     ; X = index
+    WHILE inx : X <> #kMaxNumDrives+1
 
         rts
 
@@ -1480,8 +1474,7 @@ next_device:
 
         pla
         tax
-        inx
-    WHILE X <> num_src_drives
+    WHILE inx : X <> num_src_drives
 
         ;; Clear selection
         copy8   #$FF, current_drive_selection
@@ -1530,8 +1523,7 @@ next_device:
 
         pla
         tax
-        inx
-    WHILE X <> num_drives
+    WHILE inx : X <> num_drives
         rts
 .endproc ; GetAllBlockCounts
 
@@ -1839,8 +1831,7 @@ err_writing_flag:
     DO
         copy8   default_block_buffer,y,      (ptr1),y
         copy8   default_block_buffer+$100,y, (ptr2),y
-        iny
-    WHILE NOT_ZERO
+    WHILE iny : NOT_ZERO
 
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -1868,8 +1859,7 @@ ret:    rts
     DO
         copy8   (ptr1),y, default_block_buffer,y
         copy8   (ptr2),y, default_block_buffer+$100,y
-        iny
-    WHILE NOT_ZERO
+    WHILE iny : NOT_ZERO
 
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -2073,8 +2063,7 @@ find_in_alert_table:
     DO
         cmp     alert_table,y
         beq     :+
-        iny
-    WHILE Y <> #kNumAlertMessages
+    WHILE iny : Y <> #kNumAlertMessages
         ldy     #0              ; default
 :
         ;; Y = index
@@ -2102,8 +2091,7 @@ find_in_alert_table:
         tay
     DO
         copy8   (ptr),y, str_confirm_erase_buf-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         pla
         clc

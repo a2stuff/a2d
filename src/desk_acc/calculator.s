@@ -484,8 +484,7 @@ intl_deci_sep:  .byte   0
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
     DO
         copy8   chrget_routine-1,x, CHRGET-1,x
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         lda     #0
         sta     ERRFLG          ; Turn off errors
@@ -1053,8 +1052,7 @@ empty:  inc     calc_l
     DO
         lda     FBUFFR,y
         BREAK_IF ZERO
-        iny
-    WHILE NOT_ZERO              ; always
+    WHILE iny : NOT_ZERO        ; always
 
         ldx     #kTextBufferSize ; copy to text buffers
     DO
@@ -1147,8 +1145,7 @@ empty:  inc     calc_l
         MGTK_CALL MGTK::WaitVBL
         pla
         tax
-        dex
-      WHILE NOT ZERO
+      WHILE dex : NOT ZERO
         jsr     invert_rect
         RETURN  A=#1            ; non-zero to continue
     END_IF
@@ -1219,8 +1216,7 @@ invert_rect:
         ldy     #kTextBufferSize
     DO
         copy8   #' ', text_buffer1-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         copy8   #'0', text_buffer1 + kTextBufferSize
         rts
 .endproc ; ResetBuffer1
@@ -1229,8 +1225,7 @@ invert_rect:
         ldy     #kTextBufferSize
     DO
         copy8   #' ', text_buffer2-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         copy8   #'0', text_buffer2 + kTextBufferSize
         rts
 .endproc ; ResetBuffer2

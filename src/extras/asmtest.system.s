@@ -709,6 +709,95 @@ table := *
         nop
     WHILE NOT A BETWEEN #1, #9 OR CS
 
+;;; --------------------------------------------------
+;;; Statements within conditions
+;;; --------------------------------------------------
+
+        ;; BIT
+    IF bit var : NS
+        nop
+    END_IF
+    IF BIT var : NS
+        nop
+    END_IF
+
+        ;; LDA
+    IF lda var : NS
+        nop
+    END_IF
+    IF LDA var : NS
+        nop
+    END_IF
+
+        ;; LDX
+    IF ldx var : NS
+        nop
+    END_IF
+    IF LDX var : NS
+        nop
+    END_IF
+
+        ;; LDY
+    IF ldy var : NS
+        nop
+    END_IF
+    IF LDY var : NS
+        nop
+    END_IF
+
+        ;; INC
+    DO
+        nop
+    WHILE inc var : X < #10
+    DO
+        nop
+    WHILE INC var : X < #10
+
+        ;; INX
+    DO
+        nop
+    WHILE inx : X < #10
+    DO
+        nop
+    WHILE INX : X < #10
+
+        ;; INY
+    DO
+        nop
+    WHILE iny : X < #10
+    DO
+        nop
+    WHILE INY : X < #10
+
+        ;; DEC
+    DO
+        nop
+    WHILE dec var : X < #10
+    DO
+        nop
+    WHILE DEC var : X < #10
+
+        ;; DEX
+    DO
+        nop
+    WHILE dex : X < #10
+    DO
+        nop
+    WHILE DEX : X < #10
+
+        ;; DEY
+    DO
+        nop
+    WHILE dey : X < #10
+    DO
+        nop
+    WHILE DEY : X < #10
+
+        ;; Multiple statements
+    DO
+        nop
+    WHILE dex : dex : POS
+
 ;;; ============================================================
 ;;; Flow Control Macros - Functions
 ;;; ============================================================
@@ -856,6 +945,7 @@ kSet = 1
         RTS_IF A BETWEEN #'0', '9' ; RTS_IF: Expected immediate 2nd argument for 'BETWEEN'
         RTS_IF A IN                ; RTS_IF: Expected argument(s) after 'IN'
         RTS_IF A IN #0 #1          ; Expected 'end-of-line' but found '#'
+        RTS_IF BIT var             ; Expected end-of-statement (':')
 
         CALL    target, FOO=        ; CALL: Expected 'reg=...'
         CALL    target, A           ; CALL: Expected 'A=...'
@@ -864,4 +954,3 @@ kSet = 1
         CALL    target, C=1 bad     ; CALL: Unexpected tokens after 'C=...'
         CALL    target, C=var       ; CALL: Expected constant expression after 'C='
 .endif
-

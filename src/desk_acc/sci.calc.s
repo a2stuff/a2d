@@ -582,8 +582,7 @@ init:
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
     DO
         copy8   chrget_routine-1,x, CHRGET-1,x
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 .endproc ; CopyToB1
 
         lda     #0
@@ -771,8 +770,7 @@ ret:    rts
         ldy     #.sizeof(MGTK::Rect)-1
        DO
         copy8   (rect_ptr),y, inrect_rect,y
-        dey
-       WHILE POS
+       WHILE dey : POS
         MGTK_CALL MGTK::InflateRect, grow_rect
         MGTK_CALL MGTK::InRect, inrect_rect
         beq     next
@@ -932,8 +930,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         sta     text_buffer1-1,x
         sta     text_buffer2-1,x
         inx
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
 empty:  inc     calc_l
         pla
@@ -963,8 +960,7 @@ ret:   rts
         lda     #'.'
        END_IF
         sta     FBUFFR,x
-        dex
-      WHILE POS
+      WHILE dex : POS
         copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN
@@ -1104,8 +1100,7 @@ ret:   rts
     DO
         lda     FBUFFR,y
         BREAK_IF ZERO
-        iny
-    WHILE NOT_ZERO
+    WHILE iny : NOT_ZERO        ; always
 
         ldx     #kTextBufferSize ; copy to text buffers
     DO
@@ -1138,8 +1133,7 @@ ret:   rts
         lda     #' '
         sta     text_buffer1,x
         sta     text_buffer2,x
-        dex
-      WHILE POS
+      WHILE dex : POS
     END_IF
 
         jsr     DisplayBuffer1
@@ -1310,8 +1304,7 @@ kRegSize = 6
         ldy     #.sizeof(MGTK::Rect)-1
     DO
         copy8   (ptr),y, inrect_rect,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         MGTK_CALL MGTK::InflateRect, grow_rect
 
         ;; --------------------------------------------------
@@ -1328,8 +1321,7 @@ kRegSize = 6
         MGTK_CALL MGTK::WaitVBL
         pla
         tax
-        dex
-      WHILE NOT ZERO
+      WHILE dex : NOT ZERO
         jmp     invert_rect
 
     END_IF
@@ -1398,8 +1390,7 @@ invert_rect:
         ldy     #kTextBufferSize
     DO
         copy8   #' ', text_buffer1-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         copy8   #'0', text_buffer1 + kTextBufferSize
         rts
 .endproc ; ResetBuffer1
@@ -1408,8 +1399,7 @@ invert_rect:
         ldy     #kTextBufferSize
     DO
         copy8   #' ', text_buffer2-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         copy8   #'0', text_buffer2 + kTextBufferSize
         rts
 .endproc ; ResetBuffer2

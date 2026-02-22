@@ -1085,8 +1085,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
         lda     disk_in_device_table,x
         cmp     last_disk_in_devices_table,x
         bne     changed
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
     END_IF
         RETURN  A=#0
 
@@ -1098,8 +1097,7 @@ changed:
     DO
         cmp     DEVLST,y
         beq     found
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 
 found:
@@ -1138,8 +1136,7 @@ last_disk_in_devices_table:
       DO
         CALL    CheckDiskInDevice, A=removable_device_table,x
         sta     disk_in_device_table,x
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
     END_IF
 
         pla
@@ -1203,8 +1200,7 @@ last_disk_in_devices_table:
         sta     last_disk_in_devices_table,x
         rts
        END_IF
-        dex
-      WHILE NOT ZERO
+      WHILE dex : NOT ZERO
     END_IF
         rts
 .endproc ; UpdateDiskInDevicesTables
@@ -1743,8 +1739,7 @@ retry:
         lda     read_buf,x
         cmp     check_header,x
         bne     bad
-        dex
-      WHILE POS
+      WHILE dex : POS
 
         CALL    CopyToSrcPath, AX=#read_buf + kLinkFilePathLengthOffset
         RETURN  C=0
@@ -1785,8 +1780,7 @@ check_header:
         lda     (ptr),y
         jsr     ToUpperCase
         sta     (ptr),y
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     END_IF
         rts
 .endproc ; UpcaseString
@@ -1882,8 +1876,7 @@ filerecords_free_start:
         inx                     ; include the count itself
     DO
         copy8   devlst_backup,x, DEVLST-1,x ; DEVCNT is at DEVLST-1
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; RestoreDeviceList
 
@@ -2072,11 +2065,9 @@ entry_num:
       DO
         lda     entry_path,y
         BREAK_IF A = #'/'
+      WHILE dey : NOT_ZERO
         dey
-      WHILE NOT_ZERO
-        dey
-        dex
-    WHILE NOT ZERO
+    WHILE dex : NOT ZERO
 
         ;; Append last two segments to `src_path_buf`
         ldx     src_path_buf
@@ -2150,8 +2141,7 @@ entry_num:
         lda     (ptr1),y
         addr := *+1
         sta     SELF_MODIFIED,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 .endproc ; CopyPtr1ToBuf
 
@@ -2169,8 +2159,7 @@ entry_num:
         lda     (ptr2),y
         addr := *+1
         sta     SELF_MODIFIED,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 .endproc ; CopyPtr2ToBuf
 
@@ -2502,8 +2491,7 @@ main_length:    .word   0
         sty     filename_buf
     DO
         copy8   operation_dst_path+1,y, filename_buf,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         copy8   #1, operation_dst_path
         rts
 .endproc ; SplitOperationDstPath
@@ -2969,8 +2957,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
         ldy     #15
     DO
         sta     digits,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; While digits, pop from string (X=len) onto digits (Y=len)
         ldx     stashed_name
@@ -2979,8 +2966,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
         BREAK_IF A NOT_BETWEEN #'0', #'9'
         iny
         sta     digits,y        ; stash digits as we go
-        dex
-    WHILE NOT_ZERO              ; always (name must start w/ letter)
+    WHILE dex : NOT_ZERO        ; always (name must start w/ letter)
 
         ;; Did the string end with '.' then digits?
         cmp     #'.'            ; dot before numbers?
@@ -3001,8 +2987,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
         cmp     #'9'+1
         bne     concatenate     ; done
         copy8   #'0', digits+1,x
-        inx
-      WHILE X <> digits
+      WHILE inx : X <> digits
         inc     digits
     WHILE X <> #13              ; max of 13 digits
         beq     SpinName        ; restart
@@ -3030,8 +3015,7 @@ concatenate:
         lda     digits,y
         inx
         sta     stashed_name,x
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         stx     stashed_name
         rts
 .endproc ; SpinName
@@ -3086,9 +3070,7 @@ adjust:
       END_IF
 
 done:
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
         lda     dirty
     IF NOT_ZERO
@@ -3123,8 +3105,7 @@ done:   rts
         stx     selection_count_copy
     DO
         copy8   selected_icon_list-1,x, selection_list_copy-1,x
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         ;; If ejecting, clear selection
         bit     eject_flag
@@ -3153,8 +3134,7 @@ done:   rts
 
         pla                     ; A = index
         tax                     ; X = index
-        inx
-    WHILE X <> selection_count_copy
+    WHILE inx : X <> selection_count_copy
 
         rts
 
@@ -3351,8 +3331,7 @@ entry3:
         CALL    GetIconRecordNum, A=selected_icon_list-1,x
         ldx     selected_icon_count
         sta     selected_icon_list-1,x
-        dec     selected_icon_count
-       WHILE NOT_ZERO
+       WHILE dec selected_icon_count : NOT_ZERO
 
         copy8   #0, selected_window_id
       END_IF
@@ -3386,8 +3365,7 @@ entry3:
 
         pla
         tax                     ; X = index
-        dex
-      WHILE POS
+      WHILE dex : POS
 
         ;; For each record num in the list, find and
         ;; highlight the corresponding icon.
@@ -3397,8 +3375,7 @@ entry3:
         CALL    AddToSelectionList, A=mapping,y
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
-        dec     selection_preserved_count
-      WHILE NOT_ZERO
+      WHILE dec selection_preserved_count : NOT_ZERO
 
         copy8   cached_window_id, selected_window_id
     END_IF
@@ -3452,8 +3429,7 @@ RefreshView := RefreshViewImpl::entry3
        END_IF
         pla                     ; A = index+1
         tax                     ; X = index+1
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
     END_IF
 
         rts
@@ -3544,8 +3520,7 @@ found:  lda     DEVLST,x
         ldx     #kMaxVolumes-1
     DO
         BREAK_IF A = device_to_icon_map,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         rts
 .endproc ; IconToDeviceIndex
@@ -3795,8 +3770,7 @@ common:
     DO
         cmp     buffer+1,x
         beq     pick_next_prev
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; If not in our list, use a fallback.
 fallback:
@@ -4157,8 +4131,7 @@ cloop:  iny
         bcc     cloop
 
 next:   inc     index
-        lda     index
-    WHILE A <> num_filenames
+    WHILE lda index : A <> num_filenames
 
         dec     index
 found:  RETURN  A=index
@@ -4362,8 +4335,7 @@ ret:    rts
         dex
     DO
         copy8   cached_window_icon_list,x, selected_icon_list,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         copy8   cached_window_icon_count, selected_icon_count
         copy8   cached_window_id, selected_window_id
@@ -4545,9 +4517,7 @@ _PreamblePreCached:
         ldx     #2              ; loop over dimensions
     DO
         sub16   viewport+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::topleft,x, viewport_size,x
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
         lda     cached_window_icon_count
     IF ZERO
@@ -4569,9 +4539,7 @@ _PreamblePreCached:
     DO
         ;; stash bbox dimensions before union below
         sub16   iconbb_rect+MGTK::Rect::bottomright,x, iconbb_rect+MGTK::Rect::topleft,x, bbox_size,x
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
         MGTK_CALL MGTK::UnionRects, unionrects_viewport_iconbb
         COPY_STRUCT MGTK::Rect, iconbb_rect, ubox
@@ -4963,8 +4931,7 @@ ScrollUpdateWinfo := ScrollManager::ActivateCtlsSetThumbsWinfo
 
         pla                     ; A = index
         tax                     ; X = index
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; CmdCheckAllDrives
 
@@ -4988,8 +4955,7 @@ pending_alert:
         compare := *+1
         cmp     #SELF_MODIFIED_BYTE
         BREAK_IF EQ
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; UnitNumberToDeviceIndex
 
@@ -5245,8 +5211,7 @@ arbitrary_target:
         ldx     #kHeaderSize-1
     DO
         copy8   header,x, link_struct,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         COPY_STRING operation_src_path, link_struct::path
         lda     link_struct::path
@@ -5274,9 +5239,7 @@ arbitrary_target:
         ldy     #.strlen(kAliasSuffix)-1
     DO
         copy8   suffix,y, stashed_name,x
-        dex
-        dey
-    WHILE POS
+    WHILE dex : dey : POS
 
         ;; Repeat to find a free name
     REPEAT
@@ -5442,14 +5405,12 @@ alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_FILE_NOT
         ;; Find index in list
         ldx     selected_icon_count
     DO
-        dex
-    WHILE A <> selected_icon_list,x
+    WHILE dex : A <> selected_icon_list,x
 
         ;; Move everything down
     DO
         copy8   selected_icon_list+1,x, selected_icon_list,x
-        inx
-    WHILE X <> selected_icon_count
+    WHILE inx : X <> selected_icon_count
 
         dec     selected_icon_count
     IF ZERO
@@ -5609,8 +5570,7 @@ clear:  jsr     ClearSelection
         lda     initial_pos,x
         sta     tmp_rect::topleft,x
         sta     tmp_rect::bottomright,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         jsr     FrameTmpRect
 
@@ -5699,9 +5659,7 @@ event_loop:
         cmp     #kDragBoundThreshold
         bcs     beyond
 
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
         jmp     event_loop
 
         ;; Beyond threshold; erase rect
@@ -5723,9 +5681,7 @@ beyond:
         copy16  initial_pos,x, tmp_rect::topleft,x
         copy16  event_params::coords,x, tmp_rect::bottomright,x
       END_IF
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
         jsr     FrameTmpRect
         jmp     event_loop
@@ -5908,8 +5864,7 @@ validate_windows_flag:
         END_IF
        END_IF
 
-        dec     window_id
-      WHILE NOT_ZERO
+      WHILE dec window_id : NOT_ZERO
     END_IF
 
         rts
@@ -5930,8 +5885,7 @@ validate_windows_flag:
         ldy     #.sizeof(MGTK::GrafPort) - 1
     DO
         copy8   (ptr),y, window_grafport,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 .endproc ; ApplyWinfoToWindowGrafport
 
@@ -5944,9 +5898,7 @@ validate_windows_flag:
 
         sub16   viewport+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::topleft,x, viewport+MGTK::Rect::bottomright,x
         copy16  #0, viewport+MGTK::Rect::topleft,x
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
         FALL_THROUGH_TO AssignActiveWindowCliprect
 .endproc ; ResetActiveWindowViewport
 
@@ -5959,9 +5911,7 @@ validate_windows_flag:
         ldx     #.sizeof(MGTK::Rect)-1
     DO
         copy8   window_grafport+MGTK::GrafPort::maprect,x, (ptr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
         rts
 .endproc ; AssignActiveWindowCliprect
 
@@ -6120,8 +6070,7 @@ no_win:
     DO
         lda     src_path_buf,y
         BREAK_IF A = #'/'
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Copy to `filename_buf`
         ldx     #0
@@ -6140,8 +6089,7 @@ no_win:
         ldy     #kMaxFilenameLength
     DO
         copy8   filename_buf,y, (title_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; --------------------------------------------------
         ;; Prepare path
@@ -6154,8 +6102,7 @@ no_win:
         ldy     src_path_buf
     DO
         copy8   src_path_buf,y, (path_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; --------------------------------------------------
 
@@ -6198,9 +6145,7 @@ no_win:
         ldx     #.sizeof(MGTK::Rect)-1
     DO
         sta     (winfo_ptr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; --------------------------------------------------
         ;; Scrollbars - start off inactive but ready to go
@@ -6254,18 +6199,14 @@ no_win:
         ldx     #.sizeof(MGTK::Point)-1
       DO
         copy8   new_window_viewloc,x, (winfo_ptr),y
-        dey
-        dex
-      WHILE POS
+      WHILE dey : dex : POS
 
         ;; maprect
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
       DO
         copy8   new_window_maprect,x, (winfo_ptr),y
-        dey
-        dex
-      WHILE POS
+      WHILE dey : dex : POS
     END_IF
 
         jsr     InitWindowIcons
@@ -6557,8 +6498,7 @@ done:
 
         pla                     ; A = index
         tax
-        inx
-       WHILE X <> selected_icon_count
+       WHILE inx : X <> selected_icon_count
 
         jsr     CachedIconsWindowToScreen
         jsr     PopPointers     ; do not tail-call optimize!
@@ -6577,8 +6517,7 @@ done:
         ITK_CALL IconTK::DrawIcon, icon_param
         pla
         tax
-        inx
-    WHILE X <> selected_icon_count
+    WHILE inx : X <> selected_icon_count
 
         rts
 .endproc ; RedrawSelectedIcons
@@ -6604,9 +6543,7 @@ done:
        ELSE
         sub16   #0, map_delta,x, offset_icons_params::delta,x
        END_IF
-        dex
-        dex
-      WHILE POS
+      WHILE dex : dex : POS
 
         ITK_CALL IconTK::OffsetAll, offset_icons_params
     END_IF
@@ -6673,8 +6610,7 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
        DO
         lda     found_windows_list-1,y
         jsr     AssignWindowBlockCounts
-        dey
-       WHILE NOT_ZERO
+       WHILE dey : NOT_ZERO
       END_IF
     END_IF
 
@@ -6709,8 +6645,7 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
         lda     (ptr),y
         cmp     #'/'
         beq     slash
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Oops - no slash
         ldy     #1
@@ -6848,8 +6783,7 @@ new_window_flag:        .byte   0
         ldx     #0
     DO
         copy8   dir_buffer+SubdirectoryHeader::entry_length,x, dir_header,x
-        inx
-    WHILE X <> #.sizeof(dir_header)
+    WHILE inx : X <> #.sizeof(dir_header)
 
         ;; Is there room for the files?
         lda     dir_header::file_count+1 ; > 255?
@@ -6958,8 +6892,7 @@ next:   inc     index_in_block
     DO
         ldy     file_entry_to_file_record_mapping_table-1,x
         copy8   (entry_ptr),y, record,x
-        inx
-    WHILE X <> #.sizeof(FileRecord)
+    WHILE inx : X <> #.sizeof(FileRecord)
 
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         bit     LCBANK2
@@ -6967,8 +6900,7 @@ next:   inc     index_in_block
         ldy     #.sizeof(FileRecord)-1
     DO
         copy8   record,y, (record_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
         bit     LCBANK1
         bit     LCBANK1
         add16_8 record_ptr, #.sizeof(FileRecord)
@@ -7256,9 +7188,7 @@ copy_new_window_bounds_flag:
         ldx     #2              ; loop over dimensions
     DO
         sub16   bbox_dx,x, iconbb_rect+MGTK::Rect::topleft,x, bbox_dx,x
-        dex
-        dex
-    WHILE POS
+    WHILE dex : dex: POS
 
         ;; Account for window header
         add16_8 bbox_dy, #kWindowHeaderHeight
@@ -7510,9 +7440,7 @@ window_mapinfo_cache := $40
         ldx     #.sizeof(MGTK::MapInfo) - 1
     DO
         copy8   (winfo_ptr),y, window_mapinfo_cache,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         rts
 .endproc ; CacheWindowMapInfo
@@ -7732,8 +7660,7 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
       DO
         txa
         sta     cached_window_icon_list-1,x ; entries are 1-based
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
     END_IF
 
         jsr     PopPointers     ; do not tail-call optimize!
@@ -7854,9 +7781,7 @@ END_PARAM_BLOCK
       DO
         copy8   (ptr2),y, scratch::date_a,x ; order descending
         copy8   (ptr1),y, scratch::date_b,x
-        dey
-        dex
-      WHILE POS
+      WHILE dey : dex : POS
 
         ;; Crack the ProDOS values into more useful structs, and
         ;; handle various year encodings.
@@ -7997,9 +7922,7 @@ END_PARAM_BLOCK
         ldx     #init_view_size-1
     DO
         copy8   init_views,y, init_view,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; Init/zero out the rest of the state
         copy16  icon_coords+MGTK::Point::xcoord, initial_xcoord
@@ -8014,8 +7937,7 @@ END_PARAM_BLOCK
         dex
     DO
         copy8   cached_window_icon_list,x, record_order_list,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         copy8   #0, cached_window_icon_count
 
@@ -8110,8 +8032,7 @@ records_base_ptr:
         ldy     #kMaxFilenameLength
     DO
         copy8   (file_record),y, name_tmp,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Copy out file metadata needed to determine icon type
         jsr     FileRecordToSrcFileInfo ; uses `FileRecord` ptr in $08
@@ -8133,18 +8054,14 @@ records_base_ptr:
         ldx     #kMaxFilenameLength
     DO
         copy8   name_tmp,x, (icon_entry),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; Assign location
         ldy     #IconEntry::iconx + .sizeof(MGTK::Point) - 1
         ldx     #.sizeof(MGTK::Point) - 1
     DO
         copy8   icon_coords,x, (icon_entry),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         jsr     GetCachedWindowViewBy
         ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
@@ -8164,8 +8081,7 @@ records_base_ptr:
         sbc     #0
         sta     (icon_entry),y
         iny
-        inx
-      WHILE X < #2
+      WHILE inx : X < #2
     END_IF
 
         ;; Next col
@@ -8316,8 +8232,7 @@ records_base_ptr:
         ldy     #.sizeof(FileRecord)-1
     DO
         copy8   (ptr),y, list_view_filerecord,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         bit     LCBANK1
         bit     LCBANK1
 
@@ -8441,9 +8356,7 @@ set_pos:
         ldy     #0
     DO
         copy8   str_from_int+1,y, text_buffer2+1,x
-        iny
-        inx
-    WHILE Y <> str_from_int
+    WHILE iny : inx : Y <> str_from_int
 
         ;; Append ".5" if needed
         frac_flag := *+1
@@ -8461,9 +8374,7 @@ set_pos:
         ldy     #0
     DO
         copy8   str_kb_suffix+1, y, text_buffer2+1,x
-        iny
-        inx
-    WHILE Y <> str_kb_suffix
+    WHILE iny : inx : Y <> str_kb_suffix
 
         stx     text_buffer2
         rts
@@ -8890,9 +8801,7 @@ map_delta_y:    .word   0
         ldx     #2              ; loop over dimensions
     DO
         sub16   window_mapinfo_cache+MGTK::GrafPort::maprect+MGTK::Rect::topleft,x, window_mapinfo_cache+MGTK::GrafPort::viewloc,x, map_delta,x
-        dex
-        dex
-    WHILE POS
+    WHILE dex : dex : POS
         rts
 
 .endproc ; PrepWindowScreenMapping
@@ -8995,8 +8904,7 @@ is_sp:  CALL    FindSmartportDispatchAddress, A=block_params::unit_num
       DO
         lda     dib_buffer+SPDIB::Device_Name-1,y
         BREAK_IF A <> #' '
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     END_IF
         sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
@@ -9016,8 +8924,7 @@ is_sp:  CALL    FindSmartportDispatchAddress, A=block_params::unit_num
         bcs     done_adjust_case  ; is lower case
         END_IF
        END_IF
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         ldy     dib_buffer+SPDIB::ID_String_Length
         dey
@@ -9035,8 +8942,7 @@ is_sp:  CALL    FindSmartportDispatchAddress, A=block_params::unit_num
         sta     dib_buffer+SPDIB::Device_Name,y
          END_IF
         END_IF
-        dey
-       WHILE NOT_ZERO
+       WHILE dey : NOT_ZERO
       END_IF
     END_IF
 done_adjust_case:
@@ -9208,9 +9114,7 @@ error:
         ldx     #kMaxFilenameLength
     DO
         copy8   cvi_data_buffer,x, (icon_ptr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; NOTE: Done with `cvi_data_buffer` at this point,
         ;; so $800 is free.
@@ -9315,8 +9219,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
 .proc FreeDesktopIconPosition
         ldx     #kMaxVolumes-1
     DO
-        dex
-    WHILE A <> desktop_icon_usage_table,x
+    WHILE dex : A <> desktop_icon_usage_table,x
         copy8   #0, desktop_icon_usage_table,x
         rts
 .endproc ; FreeDesktopIconPosition
@@ -9329,8 +9232,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
     DO
         cmp     cached_window_icon_list,x
         beq     remove
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 
 remove:
@@ -9351,8 +9253,7 @@ remove:
         ldx     #kMaxDeskTopWindows-1
     DO
         BREAK_IF A = window_to_dir_icon_table,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; FindWindowIndexForDirIcon
 
@@ -9394,9 +9295,7 @@ kMaxAnimationStep = 7
       DO
         sub16   maprect+MGTK::Rect::bottomright,x, maprect+MGTK::Rect::topleft,x, win_rect + MGTK::Rect::bottomright,x
         add16   win_rect + MGTK::Rect::topleft,x, win_rect + MGTK::Rect::bottomright,x, win_rect + MGTK::Rect::bottomright,x
-        dex                     ; next dimension
-        dex
-      WHILE POS
+      WHILE dex : dex : POS     ; next dimension
     END_IF
 
         ;; --------------------------------------------------
@@ -9434,12 +9333,9 @@ kMaxAnimationStep = 7
 
         pla                     ; A = step
         tax                     ; X = step
-        inx
-      WHILE X <> #kMaxAnimationStep-1
+      WHILE inx : X <> #kMaxAnimationStep-1
 
-        iny
-        iny
-    WHILE Y <> #.sizeof(MGTK::Rect)
+    WHILE iny : iny: Y <> #.sizeof(MGTK::Rect)
 
         ;; --------------------------------------------------
         ;; Animate it
@@ -9522,8 +9418,7 @@ table:
         dec     step
         step := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     #AS_BYTE(-3)
-    WHILE NE
+    WHILE A <> #AS_BYTE(-3)
         rts
 .endproc ; _AnimateClose
 
@@ -9545,9 +9440,7 @@ table:
         ldy     #.sizeof(MGTK::Rect)-1
     DO
         copy8   rect_table,x, tmp_rect,y
-        dex
-        dey
-    WHILE POS
+    WHILE dex : dey : POS
 
         FALL_THROUGH_TO FrameTmpRect
 .endproc ; _FrameTableRect
@@ -9567,9 +9460,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
     DO
         ecmp16  tmp_rect::topleft,x, tmp_rect::bottomright,x
         beq     ret
-        dex
-        dex
-    WHILE POS
+    WHILE dex : dex : POS
 
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     SetPenModeXOR
@@ -9787,8 +9678,7 @@ iterate_selection:
 
         pla                     ; A = index
         tax                     ; X = index
-        inx
-    WHILE X <> selected_icon_count
+    WHILE inx : X <> selected_icon_count
 
         ;; --------------------------------------------------
 
@@ -10076,15 +9966,13 @@ entry_err_flag: .byte   0       ; bit7
     DO
         ldy     map,x
         copy8   file_entry,y, src_file_info_params::access,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Fix `storage_type`
         ldx     #4
     DO
         lsr     src_file_info_params::storage_type
-        dex
-    WHILE NOT_ZERO
+    WHILE dex: NOT_ZERO
 
         rts
 
@@ -10977,8 +10865,7 @@ Start:  lda     DEVNUM
         ldy     #FileEntry::header_pointer-1
     DO
         swap8   (src_ptr),y, (dst_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; --------------------------------------------------
         ;; Write out the updated blocks
@@ -11007,8 +10894,7 @@ Start:  lda     DEVNUM
         ldx     #2
       DO
         swap8   src_block + SubdirectoryHeader::parent_pointer,x, dst_block + SubdirectoryHeader::parent_pointer,x
-        dex
-      WHILE POS
+      WHILE dex : POS
 
         ;; Write out the updated key blocks
         jsr     _WriteBlocks
@@ -11286,13 +11172,11 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
         tya
        DO
         ora     (ptr),y
-        iny
-       WHILE NOT_ZERO
+       WHILE iny : NOT_ZERO
         inc     ptr+1           ; second half
        DO
         ora     (ptr),y
-        iny
-       WHILE NOT_ZERO
+       WHILE iny : NOT_ZERO
         tay
        IF ZERO
         ;; Block is all zeros, skip over it
@@ -12514,8 +12398,7 @@ retry:
         ldy     new_name_buf
     DO
         copy8   new_name_buf,y, (icon_name_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; If not volume, find and update associated FileEntry
         lda     selected_window_id
@@ -12538,8 +12421,7 @@ retry:
         ldy     new_name_buf
     DO
         copy8   new_name_buf,y, (file_record_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Copy out file metadata needed to determine icon type
         jsr     FileRecordToSrcFileInfo ; uses `FileRecord` ptr in $08
@@ -12577,9 +12459,7 @@ retry:
         sub16   tmpc,x, tmp_rect::bottomright,x, delta
         add16in (icon_ptr),y, delta, (icon_ptr),y
         iny
-        inx
-        inx
-      WHILE X <> #4
+      WHILE inx : inx : X <> #4
     END_IF
 
 end_filerecord_and_icon_update:
@@ -12597,8 +12477,7 @@ end_filerecord_and_icon_update:
         ldy     new_name_buf
       DO
         copy8   new_name_buf,y, (dst),y
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         lda     result_flags
         ora     #$80
@@ -12772,9 +12651,7 @@ ignore:
         ldx     #2              ; loop over dimensions
     DO
         sub16   tmp_rect::bottomright,x, tmp_rect::topleft,x, tmp_rect::bottomright,x
-        dex
-        dex
-    WHILE POS
+    WHILE dex : dex : POS
 
         ;; Assert: width is < 256, so operating on lower byte is enough
         lsr   tmp_rect::x2      ; want half, for centering
@@ -12945,8 +12822,7 @@ list:   .word   0               ; 0 items in list
       END_IF
         pla
         tax
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         ;; --------------------------------------------------
         ;; Update prefixes
@@ -13010,8 +12886,7 @@ list:   .word   0               ; 0 items in list
         ldy     dst_path_buf
     DO
         copy8   dst_path_buf,y, new_path,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Copy the suffix from `old_path` to `new_path`
         ldx     src_path_buf
@@ -13030,8 +12905,7 @@ list:   .word   0               ; 0 items in list
 assign: ldy     new_path
     DO
         copy8   new_path,y, (dst),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; _UpdateTargetPath
@@ -13138,8 +13012,7 @@ compare:
         @char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     ok
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Self or subfolder
         RETURN  A=#$FF
@@ -13454,8 +13327,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         lda     (path_ptr),y
         cmp     #'/'
         beq     :+
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
         iny
 :
         dey
@@ -13498,8 +13370,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
     DO
         asl     a
         rol     hi
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         hi := *+1
         ldx     #SELF_MODIFIED_BYTE
@@ -13527,8 +13398,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         cmp     #'a'            ; set C if lowercase
         ror     bits+1
         ror     bits
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         sec
         ror     bits+1
         ror     bits
@@ -13941,8 +13811,7 @@ exit:   rts
         ldy     #::kPathBufferSize-1
     DO
         copy8   (path_ptr),y, (data_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Copy view_by in
         pla                     ; A = window_id
@@ -13956,34 +13825,26 @@ exit:   rts
         ldx     #.sizeof(MGTK::Point)-1
     DO
         copy8   (winfo_ptr),y, new_window_viewloc,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
     DO
         copy8   new_window_viewloc,x, (data_ptr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; Bounds - copy to `new_window_maprect` as a temp location, then into data
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
     DO
         copy8   (winfo_ptr),y, new_window_maprect,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
     DO
         copy8   new_window_maprect,x, (data_ptr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; Offset to next entry
         add16_8 data_ptr, #.sizeof(DeskTopFileItem)
@@ -14070,8 +13931,7 @@ kEntriesPerBlock = $0D
         lda     path_buf,y      ; find last '/'
         BREAK_IF A = #'/'
         inx                     ; length of filename
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         dey                     ; length not including '/'
     IF ZERO
@@ -14156,8 +14016,7 @@ next_entry:
         lda     (entry_ptr),y
         cmp     filename,y
         bne     next_entry
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Match!
         clc
@@ -14197,8 +14056,7 @@ exit:
     IF Y <> #0
       DO
         addax8  #.sizeof(FileEntry)
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     END_IF
 
         rts
@@ -14245,8 +14103,7 @@ mli_relay_checkevents_flag:     ; bit7
         ldy     #3      ; ptr is off by 1
     DO
         copy8   (params_src),y, params-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Bank and call
         sta     ALTZPOFF
@@ -14622,8 +14479,7 @@ ret:    rts
         dex
     DO
         BREAK_IF A = window_id_to_filerecord_list_entries,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; FindIndexInFileRecordListEntries
 
@@ -14845,8 +14701,7 @@ shift_offsets:
         delta := *+1
         adc     #SELF_MODIFIED_BYTE
         sta     window_entry_offset_table,x
-        inx
-    WHILE X <> #kMaxDeskTopWindows+1
+    WHILE inx : X <> #kMaxDeskTopWindows+1
 
 done_shift:
 
@@ -14860,9 +14715,7 @@ done_shift:
       DO
         copy8   cached_window_icon_list,y, window_entry_table,x
         inx
-        iny
-        cpy     cached_window_icon_count
-      WHILE NE
+      WHILE iny : Y <> cached_window_icon_count
     END_IF
 
         rts

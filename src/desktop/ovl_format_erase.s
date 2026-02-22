@@ -432,8 +432,7 @@ END_PARAM_BLOCK
         tay
     DO
         copy8   (ptr),y, path+1,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         clc
         adc     #1
         sta     path
@@ -636,21 +635,18 @@ got_blocks:
         sta     block_buffer + VolumeDirectoryHeader::storage_type_name_length
     DO
         copy8   vol_name_buf,y, block_buffer + VolumeDirectoryHeader::file_name - 1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ldy     #kNumKeyBlockHeaderBytes-1 ; other header bytes
     DO
         copy8   key_block_header_bytes,y, block_buffer+kKeyBlockHeaderOffset,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         MLI_CALL GET_TIME       ; Apply timestamp
         ldy     #3
     DO
         copy8   DATELO,y, block_buffer + VolumeDirectoryHeader::creation_date,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         copy16  case_bits, block_buffer + VolumeDirectoryHeader::case_bits
 
@@ -735,8 +731,7 @@ got_blocks:
         ;; Call the write/increment/zero routine, and loop back if we're not done
 gowrite:
         jsr     WriteBlockAndZero
-        lda     lastblock
-    WHILE A >= write_block_params::block_num
+    WHILE lda lastblock : A >= write_block_params::block_num
 
         ;; Success
         lda     #$00
@@ -775,8 +770,7 @@ lastblock:
     DO
         sta     block_buffer,y  ; Fill this entire block
         sta     block_buffer+$100,y ; with $FF bytes
-        iny
-    WHILE NOT_ZERO
+    WHILE iny : NOT_ZERO
 
         lda     write_block_params::block_num
         cmp     lastblock       ; Is this the last block?
@@ -839,8 +833,7 @@ zero_buffers:
     DO
         sta     block_buffer,y
         sta     block_buffer+$100,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         rts
 .endproc ; WriteBlockAndZero
 
@@ -986,8 +979,7 @@ pascal_disk:
         tax
     DO
         copy8   read_buffer + 6,x, ovl_string_buf,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         inc     ovl_string_buf
         ldx     ovl_string_buf
         copy8   #':', ovl_string_buf,x
@@ -1012,8 +1004,7 @@ pascal_disk:
         ldx     on_line_buffer
     DO
         copy8   on_line_buffer,x, ovl_string_buf,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         jmp     EnquoteStringBuf
 

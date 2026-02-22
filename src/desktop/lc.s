@@ -70,8 +70,7 @@ ASSERT_EQUALS *, WriteSettingFromAux, "entry point"
         ldy     #3              ; ptr is off by 1
     DO
         copy8   (params_src),y, params-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Bank and call
         jsr     BankInAux
@@ -146,8 +145,7 @@ params: .res    3
         ldy     #.sizeof(MGTK::GrafPort)-1
     DO
         copy8   (port_ptr),y, desktop_grafport,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Determine if the update's maprect is already below the header; if
         ;; not, we need to offset the maprect below the header to prevent
@@ -267,8 +265,7 @@ op:     lda     SELF_MODIFIED
     DO
         lda     $06 + 4,x
         pha
-        inx
-    WHILE NOT_ZERO
+    WHILE inx : NOT_ZERO
 
         ;; Restore return address
         hi := *+1
@@ -306,8 +303,7 @@ op:     lda     SELF_MODIFIED
     DO
         pla
         sta     $06,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Restore return address to stack
         hi := *+1
@@ -550,8 +546,7 @@ read_byte:
         jsr     _WriteByte      ; preserves X
         pla
         tay                     ; Y = index
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
         beq     resume          ; always
 .endproc ; _AppendString
 

@@ -130,8 +130,7 @@ saved_stack:
         ldy     #kOpJTSize-1
     DO
         copy8   copy_jt,y, op_jt_addrs,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         tsx
         stx     saved_stack
@@ -192,8 +191,7 @@ block_count:                    ; totaled during enumeration
         ldy     #kOpJTSize-1
     DO
         copy8   enum_jt,y, op_jt_addrs,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         tsx
         stx     saved_stack
@@ -274,8 +272,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ldy     dst_path
     DO
         copy8   dst_path,y, pathname_dst,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; CopyPathsFromBufsToSrcAndDst
@@ -290,16 +287,14 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
     DO
         lda     src_path,y
         BREAK_IF A = #'/'
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         dey
         sty     src_path
 
     DO
         lda     src_path,y
         BREAK_IF A = #'/'
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ldx     #0
     DO

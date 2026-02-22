@@ -100,8 +100,7 @@ start:
         lda     alert_load_addr + ($100 * i),x
         sta     alert_final_addr + ($100 * i),x
         .endrepeat
-        inx
-    WHILE NOT_ZERO
+    WHILE inx : NOT_ZERO
 
         sta     ALTZPOFF
         bit     ROMIN2

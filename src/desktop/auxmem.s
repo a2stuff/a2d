@@ -561,8 +561,7 @@ start:
     DO
         cmp     alert_table,y
         beq     :+
-        dey
-    WHILE POS
+    WHILE dey : POS
         iny                     ; default
 :
 
@@ -607,9 +606,7 @@ AlertById := AlertByIdImpl::start
     DO
         swap8   mgtk::hires_table_lo,x, mgtk::hires_table_lo,y
         swap8   mgtk::hires_table_hi,x, mgtk::hires_table_hi,y
-        dex
-        iny
-    WHILE Y <> #kScreenHeight/2
+    WHILE dex : iny : Y <> #kScreenHeight/2
 
         rts
 .endproc ; FlipMGTKHiresTable

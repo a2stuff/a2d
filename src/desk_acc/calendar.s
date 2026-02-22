@@ -509,8 +509,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         MGTK_CALL MGTK::MoveTo, SELF_MODIFIED, pt_start
         MGTK_CALL MGTK::LineTo, SELF_MODIFIED, pt_end
 
-        dec     index
-      WHILE POS
+      WHILE dec index : POS
     END_IF
 
         ;; --------------------------------------------------
@@ -539,8 +538,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         copy16  day_str_table,x, @addr
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
 
-        dec     index
-      WHILE POS
+      WHILE dec index : POS
     END_IF
 
         ;; --------------------------------------------------
@@ -594,8 +592,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
       DO
         BREAK_IF A < #10
         sbc     #10
-        inx
-      WHILE NOT_ZERO            ; always
+      WHILE inx : NOT_ZERO      ; always
 
         ora     #'0'            ; convert to digit
         sta     str_date+2      ; units place

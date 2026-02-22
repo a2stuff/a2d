@@ -708,8 +708,7 @@ shortcut_table_addr_hi:
         ldy     #7
     DO
         copy8   (ptr),y, pattern,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF ZERO                     ; not obscured
@@ -807,14 +806,12 @@ lasty:  .byte   0
         ldy     #kFatBitWidthShift
     DO
         lsr16   screentowindow_params::windowx
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ldy     #kFatBitHeightShift
     DO
         lsr16   screentowindow_params::windowy
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         rts
 .endproc ; MapCoords
@@ -926,8 +923,7 @@ dblclick_speed: .word   0
         ldy     #.sizeof(MGTK::Pattern)-1
     DO
         copy8   (ptr),y, pattern,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 .endproc ; InitPattern
 
@@ -937,8 +933,7 @@ dblclick_speed: .word   0
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
     DO
         CALL    WriteSetting, A=pattern - DeskTopSettings::pattern,x
-        dex
-    WHILE X <> #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE dex : X <> #AS_BYTE(DeskTopSettings::pattern-1)
 
         jsr     MarkDirty
 
@@ -1020,8 +1015,7 @@ notpencopy:     .byte   MGTK::notpencopy
         addr := *+1
         lda     SELF_MODIFIED,y
         sta     darrow_params::viewloc,y
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         MGTK_CALL MGTK::PaintBits, darrow_params
         add16_8 addr, #.sizeof(MGTK::Point)
@@ -1201,10 +1195,8 @@ arrow_num:
         lda     rotated_pattern,x
         cmp     #$80
         rol     rotated_pattern,x
-        dex
-      WHILE POS
-        dey
-    WHILE POS
+      WHILE dex : POS
+    WHILE dey : POS
 
         ;; Draw it
 
@@ -1298,14 +1290,12 @@ mode:   .byte   0
         ldx     #kFatBitWidthShift
     DO
         asl16   bitrect::x1
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         ldx     #kFatBitHeightShift
     DO
         asl16   bitrect::y1
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
         add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2

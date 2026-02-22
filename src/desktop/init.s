@@ -184,8 +184,7 @@ end:
         inx                     ; include DEVCNT itself
     DO
         copy8   DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
-        dex
-    WHILE POS
+    WHILE dex : POS
         FALL_THROUGH_TO MoveStartupVolumeFirst
 
 .endproc ; PreserveDEVLST
@@ -214,8 +213,7 @@ end:
         target := *+1
         cmp     #SELF_MODIFIED_BYTE
         beq     found
-        inx
-    WHILE X < DEVCNT
+    WHILE inx : X < DEVCNT
         bcs     done            ; last one or not found
 
         ;; Save it
@@ -224,8 +222,7 @@ found:  ldy     DEVLST,x
         ;; Move everything up
     DO
         copy8   DEVLST+1,x, DEVLST,x
-        inx
-    WHILE X <> DEVCNT
+    WHILE inx : X <> DEVCNT
 
         ;; Place it at the end
         tya
@@ -257,8 +254,7 @@ done:
     DO
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
-        dex
-    WHILE X <> #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE dex : X <> #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
@@ -347,9 +343,7 @@ done:
         ldx     #0
     DO
         copy8   trash_name,x, (ptr),y
-        iny
-        inx
-    WHILE X <> trash_name
+    WHILE iny : inx : X <> trash_name
         copy8   trash_name,x, (ptr),y
 
         ITK_CALL IconTK::DrawIcon, icon_param
@@ -409,8 +403,7 @@ done:
 
 next:
         pla
-        dec     device_index
-    WHILE POS
+    WHILE dec device_index : POS
 
         copy8   #0, cached_window_id
         jsr     main::StoreCachedWindowIconList
@@ -424,8 +417,7 @@ next:
         inx
         copy8   DEVLST+1,x, DEVLST,x
         copy8   main::device_to_icon_map+1,x, main::device_to_icon_map,x
-        cpx     DEVCNT
-    WHILE NOT_ZERO
+    WHILE X <> DEVCNT
         dec     DEVCNT
 
         ;; ProDOS requires an ON_LINE call after a device is
@@ -504,13 +496,11 @@ next:
         ldy     text_input_buf
       DO
         copy8   text_input_buf,y, (devname_ptr),y
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         pla                     ; A = index
         tay                     ; Y = index
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         FALL_THROUGH_TO InitializeDisksInDevicesTables
 
@@ -551,8 +541,7 @@ next:
         bmi     append          ; bit 7 - Medium is removable
 
 next:   inc     index
-        lda     DEVCNT          ; continue while index <= DEVCNT
-    WHILE A >= index
+    WHILE lda DEVCNT : A >= index ; continue while index <= DEVCNT
 
         lda     count
         sta     main::removable_device_table
@@ -564,8 +553,7 @@ next:   inc     index
     IF NOT_ZERO
       DO
         copy8   main::disk_in_device_table,x, main::last_disk_in_devices_table,x
-        dex
-      WHILE POS
+      WHILE dex : POS
     END_IF
 
         jmp     end_of_scope
@@ -700,8 +688,7 @@ count:  .byte   0
         tay
     DO
         copy8   (ptr1),y, (ptr2),y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 .endproc ; _CopyPtr1ToPtr2
 
@@ -735,11 +722,9 @@ not_found:
         ldy     #0
       DO
         sta     (ptr),y
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
         inc     ptr+1
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
         rts
 .endproc ; _ReadSelectorList
 
@@ -833,8 +818,7 @@ process_block:
         tay
     DO
         copy8   (dir_ptr),y, name_buf,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; If a directory, prepend name with folder glyphs
         ldy     #FileEntry::file_type
@@ -843,8 +827,7 @@ process_block:
         ldy     name_buf
       DO
         copy8   name_buf,y, name_buf+3,y
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
 
         copy8   #kGlyphFolderLeft, name_buf+1
         copy8   #kGlyphFolderRight, name_buf+2
@@ -864,8 +847,7 @@ process_block:
         lda     #' '
       END_IF
         sta     (da_ptr),y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         inc     desk_acc_num
         inc     apple_menu      ; number of menu items
@@ -977,8 +959,8 @@ end:
         tax
         inx
 
-next:   dec     slot
-    WHILE NOT_ZERO
+next:
+    WHILE dec slot : NOT_ZERO
 
         ;; Set number of menu items.
         stx     startup_menu
@@ -1054,8 +1036,7 @@ slot_string_table:
         tay
       DO
         copy8   (data_ptr),y, INVOKER_PREFIX,y
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         jsr     PushPointers
 
@@ -1064,8 +1045,7 @@ slot_string_table:
       DO
         lda     INVOKER_PREFIX+1,x
         BREAK_IF A = #'/'       ; look for next '/'
-        inx
-      WHILE X <> INVOKER_PREFIX
+      WHILE inx : X <> INVOKER_PREFIX
 
         dex
         stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length
@@ -1082,18 +1062,14 @@ slot_string_table:
         ldx     #.sizeof(MGTK::Point)-1
       DO
         copy8   (data_ptr),y, new_window_viewloc,x
-        dey
-        dex
-      WHILE POS
+      WHILE dey : dex : POS
 
         ;; Copy bounds to `new_window_maprect`
         ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
       DO
         copy8   (data_ptr),y, new_window_maprect,x
-        dey
-        dex
-      WHILE POS
+      WHILE dey : dex : POS
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag

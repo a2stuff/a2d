@@ -437,8 +437,8 @@ done_keys:
         txa
         sta     slot_table,y
 
-next:   dex
-    WHILE NOT_ZERO
+next:
+    WHILE dex : NOT_ZERO
 .endscope
 
         ;; --------------------------------------------------
@@ -450,8 +450,7 @@ next:   dex
     DO
         cmp     slot_table,y
         jeq     StartupSlot
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         FALL_THROUGH_TO set_startup_menu_items
 
 set_startup_menu_items:
@@ -505,8 +504,7 @@ set_startup_menu_items:
     DO
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
-        dex
-    WHILE X <> #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE dex : X <> #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
 
@@ -978,16 +976,14 @@ control_char:
         lda     #$FF
     DO
         sta     entries_flag_table,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ldx     #0
     DO
         BREAK_IF X = num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
-        inx
-    WHILE NOT_ZERO
+    WHILE inx : NOT_ZERO
 
         ldx     #0
     DO
@@ -996,8 +992,7 @@ control_char:
         clc
         adc     #8
         sta     entries_flag_table+8,x
-        inx
-    WHILE NOT_ZERO
+    WHILE inx : NOT_ZERO
 
         rts
 .endproc ; PopulateEntriesFlagTable
@@ -1076,8 +1071,7 @@ error:
         inx                     ; include DEVCNT itself
     DO
         copy8   DEVCNT,x, backup_devlst,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Find the startup volume's unit number
         copy8   DEVNUM, target
@@ -1098,8 +1092,7 @@ error:
         target := *+1
         cmp     #SELF_MODIFIED_BYTE
         beq     found
-        inx
-    WHILE X < DEVCNT
+    WHILE inx : X < DEVCNT
         bcs     done            ; last one or not found
 
         ;; Save it
@@ -1108,8 +1101,7 @@ found:  ldy     DEVLST,x
         ;; Move everything up
     DO
         copy8   DEVLST+1,x, DEVLST,x
-        inx
-    WHILE X <> DEVCNT
+    WHILE inx : X <> DEVCNT
 
         ;; Place it at the end
         tya
@@ -1127,8 +1119,7 @@ done:   rts
         inx                     ; include DEVCNT itself
     DO
         copy8   backup_devlst,x, DEVCNT,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
 ret:    rts
 .endproc ; RestoreDeviceList
@@ -1291,8 +1282,7 @@ hi:     .byte   0
         tay
     DO
         copy8   (ptr),y, entry_string_buf+3,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Increase length by 3
         ldy     #0
@@ -1559,8 +1549,7 @@ check_path:
         lda     INVOKER_PREFIX,y
         cmp     #'/'
         beq     :+
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         CALL    ShowAlert, A=#AlertID::insert_source_disk
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
@@ -1624,8 +1613,7 @@ check_path:
         tay
     DO
         copy8   (ptr),y, INVOKER_PREFIX,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; CopyPathToInvokerPrefix
@@ -1660,8 +1648,7 @@ check_path:
         lda     read_buf,x
         cmp     check_header,x
         bne     err
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         COPY_STRING read_buf + kLinkFilePathLengthOffset, INVOKER_PREFIX
         RETURN  C=0
@@ -1703,8 +1690,7 @@ str_basix_system:
         stx     path_length
     DO
         copy8   launch_path,x, interp_path,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Pop off a path segment.
 pop_segment:
@@ -1714,8 +1700,7 @@ pop_segment:
         lda     interp_path,x
         cmp     #'/'
         beq     found_slash
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
 no_bs:  copy8   #0, interp_path ; null out the path
         RETURN  A=#$FF          ; non-zero is failure
@@ -1796,8 +1781,7 @@ CheckBasicSystem        := CheckBasixSystemImpl::basic
         lda     (ptr),y
         jsr     ToUpperCase
         sta     (ptr),y
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     END_IF
         rts
 .endproc ; UpcaseString
@@ -1835,15 +1819,13 @@ str_extras_awlaunch:
     DO
         lda     (path_addr),y
         BREAK_IF A = #'/'
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         dey
     DO
         lda     (path_addr),y
         BREAK_IF A = #'/'
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         dey
         ldx     buf

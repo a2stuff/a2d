@@ -95,8 +95,7 @@ start:  bit     app::invoked_during_boot_flag ; if no UI, just return cancel
     DO
         cmp     alert_table,y
         beq     :+
-        dey
-    WHILE POS
+    WHILE dey : POS
         ldy     #0              ; default
 :
 

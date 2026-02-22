@@ -538,16 +538,14 @@ handle_button:
         lda     #$FF
     DO
         sta     entries_flag_table,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ldx     #0
     DO
         BREAK_IF X = num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
-        inx
-    WHILE NOT_ZERO
+    WHILE inx : NOT_ZERO
 
         ldx     #0
     DO
@@ -556,8 +554,7 @@ handle_button:
         clc
         adc     #kSelectorListNumPrimaryRunListEntries
         sta     entries_flag_table+8,x
-        inx
-    WHILE NOT_ZERO
+    WHILE inx : NOT_ZERO
 
         rts
 .endproc ; PopulateEntriesFlagTable
@@ -585,8 +582,7 @@ entries_flag_table:
         ldy     main::stashed_name
     DO
         copy8   main::stashed_name,y, (ptr_file),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Assign flags to file
         ldy     #kSelectorEntryFlagsOffset
@@ -598,8 +594,7 @@ entries_flag_table:
         ldy     path_buf0
     DO
         copy8   path_buf0,y, (ptr_file),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; If primary run list, update the menu as well
         lda     index
@@ -692,8 +687,7 @@ index:  .byte   0
         tay
     DO
         copy8   (ptr2),y, (ptr1),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; And flags
         ldy     #kSelectorEntryFlagsOffset
@@ -710,8 +704,7 @@ index:  .byte   0
         tay
     DO
         copy8   (ptr2),y, (ptr1),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; MoveEntryDown
@@ -781,8 +774,7 @@ finish:
         tay
     DO
         copy8   (ptr_file),y, (ptr_res),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; _CopyString
@@ -917,11 +909,9 @@ not_found:
         ldy     #0
       DO
         sta     (ptr),y
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
         inc     ptr+1
-        dex
-    WHILE NOT_ZERO
+    WHILE dex: NOT_ZERO
         RETURN  A=#0
 .endproc ; ReadFile
 
