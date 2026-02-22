@@ -26,8 +26,9 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
+    emu.wait(5)
     apple2.ControlKey("D") -- Drives
-    a2d.WaitForRepaint()
+    emu.wait(5)
     test.Snap("verify A2.DESKTOP volume is first")
     a2d.DialogCancel()
 end)
@@ -58,8 +59,9 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
+    emu.wait(5)
     apple2.ControlKey("D") -- Drives
-    a2d.WaitForRepaint()
+    emu.wait(5)
     test.Snap("verify A2.DESKTOP volume is first")
     a2d.DialogCancel()
 

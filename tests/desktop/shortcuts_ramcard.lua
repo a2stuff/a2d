@@ -149,7 +149,7 @@ test.Step(
 
     a2d.OAShortcut("1", {no_wait=true})
     emu.wait(0.1)
-    test.Snap("copy dialog should still be enumerating, no progress bar")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "Files remaining:", "should still be enumerating")
     apple2.EscapeKey()
     a2d.WaitForRepaint()
 
@@ -181,7 +181,7 @@ test.Step(
 
     a2d.OAShortcut("1", {no_wait=true})
     emu.wait(0.5)
-    test.Snap("copy dialog should by copying, with progress bar")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Files remaining:", "should be copying")
     apple2.EscapeKey()
     emu.wait(5)
 

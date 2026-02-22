@@ -510,9 +510,9 @@ test.Step(
         test.Snap("verify folder not highlighted")
 
         m.MoveToApproximately(volume_x, volume_y)
-        test.Snap("verify folder highlighted")
+        test.Snap("verify volume highlighted")
         m.MoveByApproximately(-10, -10)
-        test.Snap("verify folder not highlighted")
+        test.Snap("verify volume not highlighted")
 
         m.MoveToApproximately(folder_x, folder_y)
         test.Snap("verify folder highlighted")

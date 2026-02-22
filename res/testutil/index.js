@@ -10,7 +10,7 @@ window.addEventListener('DOMContentLoaded', async e => {
 
   // Iterate manifest
   const manifest = await (await fetch('manifest.txt')).text();
-  for (const path of manifest.split(/\n/).filter(s => s)) {
+  for (const path of manifest.split(/\n/).filter(s => s).sort()) {
     const option = document.createElement('option');
     option.className = 'test';
     option.innerText = path;
@@ -89,8 +89,11 @@ function ansiToHTML(text) {
   // ANSI sequences
   // NOTE: Assumes it's always a pair
 
-
   const styles = {
+    1: 'font-weight: bold',
+    3: 'font-style: italic',
+    4: 'text-decoration: underline',
+
     30: 'color: black',
     31: 'color: red',
     32: 'color: green',
@@ -110,14 +113,18 @@ function ansiToHTML(text) {
     47: 'background-color: white',
   };
 
-  text = text
-    .replace(/\x1B\(B/g, '')
-    .replace(/\x1B\[(\d+)m/g, function(_, n) {
-      return '<span style="' + styles[n] + '">';
-    })
-    .replace(/\x1B\[m/g, '</span>');
+  text = text.replace(/\x1B[()][AB012]/g, ''); // VT100: set charset
+  text = text.replace(/\x1B\[0*m/g, '</span>');
+  text = text.replace(/(\x1B\[\d+m)+/g, function(sequence) {
+    const s = [...sequence.matchAll(/\x1B\[(\d+)m/g)]
+          .map(match => match[1])
+          .map(code => styles[code] || '')
+          .filter(s => s)
+          .join('; ');
+    return '<span style="' + s + '">';
 
+
+  });
 
   return text;
-
 }

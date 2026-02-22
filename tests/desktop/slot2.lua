@@ -15,5 +15,5 @@ test.Step(
   "Slot 2 can have drive controller",
   function()
     a2d.OpenMenu(a2d.STARTUP_MENU)
-    test.Snap("verify Slot 2 is listed")
+    test.ExpectMatch(a2dtest.OCRScreen(), "Slot 2", "Slot 2 should be listed")
 end)

@@ -18,7 +18,8 @@ test.Step(
     test.Snap("verify boot volume is in top right")
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    emu.wait(5)
     apple2.ControlKey("D") -- Drives
-    a2d.WaitForRepaint()
+    emu.wait(5)
     test.Snap("verify boot volume is first disk")
 end)

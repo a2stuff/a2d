@@ -44,6 +44,7 @@ test.Step(
     -- Folder, single item but auxtype $8642
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CHANGE.TYPE")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
+    emu.wait(5)
     apple2.TabKey() -- focus on auxtype
     a2d.ClearTextField()
     apple2.Type("8642")

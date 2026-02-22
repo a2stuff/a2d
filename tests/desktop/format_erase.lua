@@ -377,7 +377,7 @@ FormatEraseTest(
     end)
     test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
     apple2.DownArrowKey()
-    test.ExpectMatch(a2dtest.OCRScreen(), , , , , "OK", "OK button should be enabled")
+    test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
     a2d.DialogOK()
 
     -- name

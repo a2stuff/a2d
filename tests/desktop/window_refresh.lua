@@ -145,7 +145,7 @@ test.Variants(
     if when == "during" then
       -- abort during enumeration
       emu.wait(0.25)
-      test.Snap("verify enumerating")
+      test.ExpectNotMatch(a2dtest.OCRScreen(), "Files remaining:", "should be enumerating")
       apple2.EscapeKey()
     else
       -- abort after enumeration
@@ -154,7 +154,7 @@ test.Variants(
       else
         emu.wait(2)
       end
-      test.Snap("verify performing action")
+      test.ExpectMatch(a2dtest.OCRScreen(), "Files remaining:", "should be performing action")
       apple2.EscapeKey()
     end
 
