@@ -2,6 +2,42 @@
 ;;; Not included in the package - just used as a reference for
 ;;; testing that edge cases build and generate the expected code.
 
+;;; The suggested approach is to extending these tests is as follows:
+;;;
+;;; (1) Write out the test case using macros, e.g.:
+;;;
+;;;   IF X < #5
+;;;   nop
+;;;   END_IF
+;;;
+;;; (2) Comment out the macros, and write the expected output, e.g.:
+;;;
+;;;   ;; IF X < #5
+;;;   cpx #5
+;;;   bcs end_if
+;;;
+;;;   nop
+;;;
+;;;   ;; END_IF
+;;;   end_if := *
+;;;
+;;; (3) Build, and capture an MD5 of `out/asmtest.system.SYS`
+;;;
+;;; (4) Switch the code back to the macros:
+;;;
+;;;   IF X < #5
+;;;   nop
+;;;   END_IF
+;;;
+;;; (5) Build, and compare the MD5 of `out/asmtest.system.SYS` with
+;;; that from (3). If these don't match, then either the macros aren't
+;;; working as expected, or you made a mistake in the transcription in
+;;; (2).
+;;;
+;;; (6) Once they match, commit final code here. There is no need to
+;;; capture intermediate states as long as the output is verified
+;;; whenever changing the macro definitions.
+
         .include "../config.inc"
 
         .include "../inc/macros.inc"
@@ -881,6 +917,17 @@ table := *
     DO
         nop
     WHILE dex : dex : POS
+
+        ;; Staments in "gotos"
+    DO
+        nop
+        REDO_IF bit var : NS
+        nop
+        CONTINUE_IF bit var : NS
+        nop
+        BREAK_IF bit var : NS
+        nop
+    WHILE POS
 
 ;;; ============================================================
 ;;; Flow Control Macros - Functions
