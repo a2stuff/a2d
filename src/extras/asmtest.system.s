@@ -104,7 +104,7 @@
         nop
     FOREVER
 
-;;; BREAK
+;;; BREAK_IF
     DO
         nop
         BREAK_IF NC
@@ -119,7 +119,25 @@
         nop
     FOREVER
 
-;;; REDO
+;;; CONTINUE_IF
+    DO
+        nop
+        CONTINUE_IF NC
+        CONTINUE_IF NOT NC
+        nop
+    WHILE CS
+
+    DO
+        ;; NOTE: With `FOREVER`, `CONTINUE_IF` is branches to the
+        ;; start of the loop body not the end of the loop body, to
+        ;; save a few cycles.
+        nop
+        CONTINUE_IF NC
+        CONTINUE_IF NOT NC
+        nop
+    FOREVER
+
+;;; REDO_IF
     DO
         nop
         REDO_IF NC
@@ -134,7 +152,7 @@
         nop
     FOREVER
 
-;;; RTS
+;;; RTS_IF
         RTS_IF NC
         RTS_IF NOT NC
 
@@ -182,7 +200,7 @@
         nop
     UNTIL NOT A < #$12
 
-;;; BREAK
+;;; BREAK_IF
     DO
         nop
         BREAK_IF A < #$12
@@ -190,7 +208,7 @@
         nop
     WHILE CS
 
-;;; REDO
+;;; REDO_IF
     DO
         nop
         REDO_IF A < #$12
@@ -198,7 +216,15 @@
         nop
     WHILE CS
 
-;;; RTS
+;;; CONTINUE_IF
+    DO
+        nop
+        CONTINUE_IF A < #$12
+        CONTINUE_IF NOT A < #$12
+        nop
+    WHILE CS
+
+;;; RTS_IF
         RTS_IF A < #$12
         RTS_IF NOT A < #$12
 
@@ -230,21 +256,28 @@ table := *
         nop
     UNTIL A < table,y
 
-;;; BREAK
+;;; BREAK_IF
     DO
         nop
         BREAK_IF A < table,y
         nop
     WHILE CS
 
-;;; REDO
+;;; REDO_IF
     DO
         nop
         REDO_IF A < table,y
         nop
     WHILE CS
 
-;;; RTS
+;;; CONTINUE_IF
+    DO
+        nop
+        CONTINUE_IF A < table,y
+        nop
+    WHILE CS
+
+;;; RTS_IF
         RTS_IF A < table,y
 
 ;;; --------------------------------------------------
@@ -374,6 +407,31 @@ table := *
     DO
         nop
         REDO_IF NOT X NOT_IN #1, #2, #3
+        nop
+    WHILE CC
+
+;;; CONTINUE_IF ... IN / NOT_IN
+    DO
+        nop
+        CONTINUE_IF X IN #1, #2, #3
+        nop
+    WHILE CC
+
+    DO
+        nop
+        CONTINUE_IF X NOT_IN #1, #2, #3
+        nop
+    WHILE CC
+
+    DO
+        nop
+        CONTINUE_IF NOT X IN #1, #2, #3
+        nop
+    WHILE CC
+
+    DO
+        nop
+        CONTINUE_IF NOT X NOT_IN #1, #2, #3
         nop
     WHILE CC
 
@@ -524,6 +582,31 @@ table := *
         nop
     WHILE CS
 
+;;; CONTINUE_IF ... BETWEEN / NOT_BETWEEN
+    DO
+        nop
+        CONTINUE_IF A BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+    DO
+        nop
+        CONTINUE_IF A NOT_BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+    DO
+        nop
+        CONTINUE_IF NOT A BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
+    DO
+        nop
+        CONTINUE_IF NOT A NOT_BETWEEN #'A', #'Z'
+        nop
+    WHILE CS
+
 ;;; RTS_IF ... BETWEEN / NOT_BETWEEN
         RTS_IF A BETWEEN #'0', #'9'
 
@@ -542,6 +625,7 @@ table := *
 @cheap:
         BREAK_IF CS
         REDO_IF CS
+        CONTINUE_IF CS
         beq     @cheap
     WHILE A < #123
 

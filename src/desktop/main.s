@@ -3053,7 +3053,7 @@ concatenate:
 
         ;; Is right/bottom of icon beyond window? If so, adjust by delta (positive)
         sub16   tmp_rect::bottomright,x, viewport+MGTK::Rect::bottomright,x, delta
-        bmi     done
+        CONTINUE_IF NEG
 
 adjust:
         lda     delta
@@ -3064,7 +3064,6 @@ adjust:
         add16   viewport+MGTK::Rect::bottomright,x, delta, viewport+MGTK::Rect::bottomright,x
       END_IF
 
-done:
     WHILE dex : dex : POS       ; next dimension
 
         lda     dirty

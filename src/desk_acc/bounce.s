@@ -180,9 +180,7 @@ object_deltas:
         and     #31
         sta     tmp             ; lo
         sub16   tmp, #16, object_deltas,x
-        dex
-        dex
-    WHILE POS
+    WHILE dex : dex : POS
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow

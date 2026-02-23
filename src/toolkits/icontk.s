@@ -755,12 +755,11 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
     IF NEG
         cpy     #AS_BYTE(-kDragDelta)
         bcc     is_drag         ; above threshold, so drag
-        bcs     next            ; always
+        CONTINUE_IF CS          ; always
     END_IF
         cpy     #kDragDelta     ; above threshold, so drag
         bcs     is_drag
 
-next:
     WHILE dex : dex : POS
         bmi     peek            ; always
 .endscope ; _DragDetectImpl

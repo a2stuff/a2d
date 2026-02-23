@@ -6202,14 +6202,12 @@ next:   ldx     menu_index
         bvs     by_shortcut
         bmi     by_coord
 
-        cpx     find_menu_item_id
-        bne     next
+        CONTINUE_IF X <> find_menu_item_id
         rts
 
 by_coord:
         lda     menu_item_y_table,x
-        cmp     cursor_pos::ycoord
-        bcc     next
+        CONTINUE_IF A < cursor_pos::ycoord
         rts
 
 by_shortcut:
@@ -6229,7 +6227,6 @@ by_shortcut:
        END_IF
       END_IF
 
-next:
     WHILE X <>menu_item_count
 
         ldx     #0

@@ -14,7 +14,7 @@
 ;;; ============================================================
 
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
-;;; * DO / REDO_IF cond / BREAK_IF cond / WHILE cond
+;;; * DO / REDO_IF cond / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
 ;;;   * or REPEAT / UNTIL cond if you prefer
 ;;;   * DO / FOREVER (or REPEAT / FOREVER) for unconditional JMP
 ;;; * RTS_IF cond
@@ -1042,7 +1042,7 @@
 
 
 ;;; ============================================================
-;;; DO / REDO_IF / BREAK_IF / WHILE or REPEAT / UNTIL
+;;; DO / REDO_IF / CONTINUE_IF / BREAK_IF / WHILE or REPEAT / UNTIL
 ;;; ============================================================
 
 ;;; Usage:
@@ -1052,6 +1052,8 @@
 ;;;     ...
 ;;;     REDO_IF <condition> ; optional
 ;;;     ...
+;;;     CONTINUE_IF <condition> ; optional
+;;;     ...
 ;;;     WHILE <condition>
 ;;;
 ;;;     REPEAT
@@ -1060,6 +1062,8 @@
 ;;;     ...
 ;;;     REDO_IF <condition> ; optional
 ;;;     ...
+;;;     CONTINUE_IF <condition> ; optional
+;;;     ...
 ;;;     UNTIL <condition>
 ;;;
 ;;; Macros:
@@ -1067,8 +1071,23 @@
 ;;;     WHILE
 ;;;     UNTIL
 ;;;
-;;;     REDO_IF
-;;;     BREAK_IF
+;;;     REDO_IF         - branches to start of loop body
+;;;     CONTINUE_IF     - branches to end of loop body
+;;;     BREAK_IF        - branches to after end of loop
+;;;
+;;; Example:
+;;;     DO
+;;;   eg_redo:
+;;;       nop
+;;;       REDO_IF Y = #1       ; conditionally branches to `eg_redo`
+;;;       nop
+;;;       CONTINUE_IF Y = #2   ; conditionally branches to `eg_continue`
+;;;       nop
+;;;       BREAK_IF Y = #3      ; conditionally branches to `eg_break`
+;;;       nop
+;;;   eg_continue:
+;;;     WHILE inx : X < #30    ; 0+ statements, conditional branch to `eg_redo`
+;;;   eg_break:
 
 ;;; A numeric variable for the current nesting depth of flow control
 ;;; structures. Incremented when entering a structure, decremented
@@ -1110,6 +1129,17 @@
   _FLOW_END_STATEMENT
 .endmacro
 
+.macro CONTINUE_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_STATEMENT "CONTINUE_IF"
+
+        .local @continue
+        @continue := __flow_loop_ident__ {"continue"}
+
+        _FLOW_PARSE_AND_GEN_BIT @continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+
+  _FLOW_END_STATEMENT
+.endmacro
+
 .macro BREAK_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "BREAK_IF"
 
@@ -1126,6 +1156,9 @@
 
         .local redo
         redo := __flow_loop_ident__ {"do_while"}
+
+        __flow_loop_ident__ {"continue"} := *
+        .refto __flow_loop_ident__ {"continue"}
 
         _FLOW_PARSE_AND_GEN_BIT redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
@@ -1147,6 +1180,9 @@
         .local redo
         redo := __flow_loop_ident__ {"do_while"}
 
+        __flow_loop_ident__ {"continue"} := *
+        .refto __flow_loop_ident__ {"continue"}
+
         _FLOW_PARSE_AND_GEN_BIF redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         __flow_loop_ident__ {"break"} := *
@@ -1166,6 +1202,12 @@
 
         .local redo
         redo := __flow_loop_ident__ {"do_while"}
+
+        ;; NOTE: The `continue` label here points at start of the
+        ;; block (i.e. `redo` label) not the end of the block (i.e.
+        ;; the `JMP` statement) to save cycles.
+        __flow_loop_ident__ {"continue"} := redo
+        .refto __flow_loop_ident__ {"continue"}
 
         jmp     redo
 

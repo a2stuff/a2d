@@ -133,9 +133,7 @@ exit:
         MGTK_CALL MGTK::MoveTo, pt1
         MGTK_CALL MGTK::LineTo, pt2
 
-        inc     tindex
-        lda     tindex
-    WHILE A <> #60
+    WHILE inc tindex : lda tindex : A <> #60
 
         rts
 

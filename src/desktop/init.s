@@ -530,18 +530,17 @@ next:
         sta     unit_num
         jsr     main::DeviceDriverAddress
         bvs     append          ; remapped SmartPort, it's usable
-        bne     next            ; if RAM-based driver (not $CnXX), skip
+        CONTINUE_IF NE          ; if RAM-based driver (not $CnXX), skip
         stx     slot_ptr+1      ; just need high byte ($Cn)
         copy8   #0, slot_ptr    ; make $Cn00
         ldy     #$FF            ; Firmware ID byte
         lda     (slot_ptr),y    ; $CnFF: $00=Disk II, $FF=13-sector, else=block
-        beq     next
+        CONTINUE_IF ZERO
         dey
         lda     (slot_ptr),y    ; $CnFE: Status Byte
         bmi     append          ; bit 7 - Medium is removable
-
-next:   inc     index
-    WHILE lda DEVCNT : A >= index ; continue while index <= DEVCNT
+next:
+    WHILE inc index : lda DEVCNT : A >= index ; continue while index <= DEVCNT
 
         lda     count
         sta     main::removable_device_table
@@ -928,18 +927,15 @@ end:
 
         ldy     #$01            ; $Cn01 == $20 ?
         lda     (slot_ptr),y
-        cmp     #$20
-        bne     next
+        CONTINUE_IF A <> #$20
 
         ldy     #$03            ; $Cn03 == $00 ?
         lda     (slot_ptr),y
-        cmp     #$00
-        bne     next
+        CONTINUE_IF A <> #$00
 
         ldy     #$05            ; $Cn05 == $03 ?
         lda     (slot_ptr),y
-        cmp     #$03
-        bne     next
+        CONTINUE_IF A <> #$03
 
         ;; It is a ProDOS device - prepare menu item.
         copy8   slot, main::startup_slot_table,x
@@ -959,7 +955,6 @@ end:
         tax
         inx
 
-next:
     WHILE dec slot : NOT_ZERO
 
         ;; Set number of menu items.

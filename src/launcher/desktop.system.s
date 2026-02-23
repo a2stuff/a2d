@@ -563,8 +563,7 @@ str_slash_desktop:
 
         ;; Ignore current volume
         and     #UNIT_NUM_MASK
-        cmp     current_unit_num
-        beq     next_unit
+        CONTINUE_IF A = current_unit_num
 
         lda     unit_num        ; not masked
 
@@ -576,7 +575,8 @@ str_slash_desktop:
 
         ;; Smartport?
         jsr     FindSmartportDispatchAddress ; handles unmasked unit num
-        bcs     next_unit
+        CONTINUE_IF CS
+
         stax    dispatch
         sty     status_params::unit_num
 
@@ -585,19 +585,19 @@ str_slash_desktop:
         jsr     SELF_MODIFIED
         .byte   SPCall::Status
         .addr   status_params
-        bcs     next_unit
+        CONTINUE_IF CS
 
         ;; Online?
         lda     dib_buffer+SPDIB::Device_Statbyte1
         and     #$10            ; general status byte, $10 = disk in drive
-        beq     next_unit
+        CONTINUE_IF ZERO
 
         ;; Check device type
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer+SPDIB::Device_Type_Code
         ASSERT_EQUALS SPDeviceType::MemoryExpansionCard, 0
-        bne     next_unit       ; $00 = Memory Expansion Card (RAM Disk)
+        CONTINUE_IF NOT_ZERO  ; $00 = Memory Expansion Card (RAM Disk)
         lda     unit_num
         bne     test_unit_num   ; always
 

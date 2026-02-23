@@ -2079,7 +2079,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         ldy     #$FB            ; $CnFB is SmartPort ID Type byte
         lda     (slot_ptr),y
         and     #%00000001      ; bit 0 = RAM card
-        beq     next
+        CONTINUE_IF ZERO
 
         ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
         ldy     #$FF
@@ -2096,7 +2096,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         jsr     SELF_MODIFIED
         .byte   $00             ; STATUS
         .addr   status_params
-        bcs     next
+        CONTINUE_IF CS
 
         ;; Convert blocks (0.5k) to banks (64k)
         ldx     #7

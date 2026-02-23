@@ -418,18 +418,15 @@ done_keys:
 
         ldy     #$01            ; $Cn01 == $20 ?
         lda     (slot_ptr),y
-        cmp     #$20
-        bne     next
+        CONTINUE_IF A <> #$20
 
         ldy     #$03            ; $Cn03 == $00 ?
         lda     (slot_ptr),y
-        cmp     #$00
-        bne     next
+        CONTINUE_IF A <> #$00
 
         ldy     #$05            ; $Cn05 == $03 ?
         lda     (slot_ptr),y
-        cmp     #$03
-        bne     next
+        CONTINUE_IF A <> #$03
 
         ;; Match! Add to slot_table
         inc     slot_table
@@ -437,7 +434,6 @@ done_keys:
         txa
         sta     slot_table,y
 
-next:
     WHILE dex : NOT_ZERO
 .endscope
 
