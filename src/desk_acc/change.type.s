@@ -149,8 +149,8 @@ auxtype:        .word   SELF_MODIFIED
 ;;; ============================================================
 
 .proc RunDA
-        bit     data::type_valid
-    IF NC
+
+    IF bit data::type_valid : NC
         copy8   #0, str_type
     ELSE
         copy8   #2, str_type
@@ -159,8 +159,8 @@ auxtype:        .word   SELF_MODIFIED
         stx     str_type+2
     END_IF
 
-        bit     data::auxtype_valid
-    IF NC
+
+    IF bit data::auxtype_valid : NC
         copy8   #0, str_auxtype
     ELSE
         copy8   #4, str_auxtype
@@ -191,8 +191,8 @@ auxtype:        .word   SELF_MODIFIED
 ;;; Input loop
 
 .proc InputLoop
-        bit     auxtype_focused_flag
-    IF NC
+
+    IF bit auxtype_focused_flag : NC
         LETK_CALL LETK::Idle, type_le_params
     ELSE
         LETK_CALL LETK::Idle, auxtype_le_params
@@ -306,8 +306,8 @@ auxtype:        .word   SELF_MODIFIED
     END_IF
 
     IF A = #CHAR_TAB
-        bit     auxtype_focused_flag
-      IF NC
+
+      IF bit auxtype_focused_flag : NC
         jsr     FocusAuxtype
       ELSE
         jsr     FocusType
@@ -323,8 +323,8 @@ auxtype:        .word   SELF_MODIFIED
       END_IF
     END_IF
 
-        bit     auxtype_focused_flag
-    IF NC
+
+    IF bit auxtype_focused_flag : NC
         sta     type_le_params::key
         copy8   event_params::modifiers, type_le_params::modifiers
         LETK_CALL LETK::Key, type_le_params
@@ -373,8 +373,7 @@ yes:    RETURN  C=0
 
 ;;; No-op if type already focused
 .proc FocusType
-        bit     auxtype_focused_flag
-    IF NS
+    IF bit auxtype_focused_flag : NS
         LETK_CALL LETK::Deactivate, auxtype_le_params
         LETK_CALL LETK::Activate, type_le_params
         CLEAR_BIT7_FLAG auxtype_focused_flag
@@ -384,8 +383,7 @@ yes:    RETURN  C=0
 
 ;;; No-op if auxtype already focused
 .proc FocusAuxtype
-        bit     auxtype_focused_flag
-    IF NC
+    IF bit auxtype_focused_flag : NC
         LETK_CALL LETK::Deactivate, type_le_params
         LETK_CALL LETK::Activate, auxtype_le_params
         SET_BIT7_FLAG auxtype_focused_flag
@@ -688,8 +686,7 @@ callback:
         jsr     GetFileInfo
         RTS_IF NOT_ZERO
 
-        bit     data::type_valid
-    IF NS
+    IF bit data::type_valid : NS
         ;; Disallow changing type to/from directory
         lda     data::type
         cmp     gfi_params::file_type
@@ -712,8 +709,7 @@ callback:
     END_IF
 skip:
 
-        bit     data::auxtype_valid
-    IF NS
+    IF bit data::auxtype_valid : NS
         copy16  data::auxtype, gfi_params::aux_type
     END_IF
 
@@ -736,8 +732,7 @@ IterationCallback:
         tay
     DO
         copy8   (ptr),y, path,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
     DO
         lda     path
@@ -798,8 +793,7 @@ index:  .byte   0
 ;;; ============================================================
 
 .proc ShowDirError
-        bit     flag
-    IF NC
+    IF bit flag : NC
         CALL    JUMP_TABLE_SHOW_ALERT_PARAMS, AX=#aux::AlertDirectoriesNotOK
         SET_BIT7_FLAG flag
     END_IF

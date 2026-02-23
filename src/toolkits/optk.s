@@ -203,8 +203,7 @@ grafport_win:   .tag    MGTK::GrafPort
       END_IF
 
         tax                     ; X = index
-        inx
-    WHILE X <> max_entries
+    WHILE inx : X <> max_entries
 
         rts
 .endproc ; UpdateImpl

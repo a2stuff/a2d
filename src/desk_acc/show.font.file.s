@@ -435,8 +435,7 @@ expected_size:
         dex
     WHILE NOT_ZERO              ; = (lastchar + 1) * height
 
-        bit     font_buffer + MGTK::Font::fonttype
-    IF NS
+    IF bit font_buffer + MGTK::Font::fonttype : NS
         asl16   expected_size   ; *= 2 if double width
     END_IF
 

@@ -387,8 +387,7 @@ search:
         lda     buf_search,y    ; copy characters
         jsr     ToUpperCase
         sta     pattern-1,y
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     END_IF
 
         copy16  #pattern, STARTLO
@@ -586,8 +585,7 @@ NoOp:   rts
         ldx     #6              ; offset = num * 64
     DO
         asl16   offset
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #::main::entries_buffer, offset
@@ -642,8 +640,7 @@ entry:
         tay
     DO
         copy8   (ptr),y, searchPath,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Append '/' needed by algorithm
         ldy     searchPath
@@ -679,8 +676,7 @@ continue:
         tay
       DO
         copy8   ($06),y, INVOKER_PREFIX,y
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         ;; Inject JT call to stack
         pla
@@ -712,8 +708,7 @@ continue:
         ldx     #6              ; offset = num * 64
     DO
         asl16   offset
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #entries_buffer, offset
 
@@ -821,8 +816,7 @@ num_entries:
         ldy     searchPath      ; prime the search path
     DO
         copy8   searchPath,y, nameBuffer,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         lda     #0              ; reset recursion/results state
         sta     Depth
@@ -1008,8 +1002,7 @@ OpenDone:
         tay
     DO
         copy8   (dirName),y, (ptr),y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         lda     (dirName),y     ; Y is 0...
         tax
@@ -1292,8 +1285,7 @@ string:         .res    16      ; 15 + null terminator
         jsr     ToUpperCase
 
         sta     string-1,y
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     END_IF
 .endscope
 
@@ -1427,8 +1419,7 @@ repeat: ldx     devidx
         ldx     #0
     DO
         copy8   on_line_buffer+1,x, searchPath+2,x
-        inx
-    WHILE X <> on_line_buffer
+    WHILE inx : X <> on_line_buffer
 
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx

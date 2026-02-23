@@ -42,8 +42,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         ;; Init the dialog, set title
         CALL    file_dialog::Init, A=#file_dialog::kSelectionRequiredDirsOK, X=#file_dialog::kShowAllFiles
         ldax    #label_edit
-        bit     is_add_flag
-    IF NS
+    IF bit is_add_flag : NS
         ldax    #label_add
     END_IF
         stax    shortcut_dialog_res::winfo_extended::title
@@ -249,8 +248,7 @@ jt_callbacks:
         CALL    file_dialog::GetPath, AX=#main::tmp_path_buf
 
         ;; If name is empty, use last path segment
-        lda     text_input_buf
-    IF ZERO
+    IF lda text_input_buf : ZERO
         ldx     path_buf0
       DO
         lda     path_buf0,x
@@ -265,8 +263,7 @@ jt_callbacks:
       WHILE inx: iny : NOT_ZERO ; always
 
         ;; Truncate if necessary
-        cpy     #kSelectorMaxNameLength+1
-      IF GE
+      IF Y >= #kSelectorMaxNameLength+1
         ldy     #kSelectorMaxNameLength
       END_IF
         sty     text_input_buf
@@ -356,8 +353,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; HandleClick
 
 .proc ClickPrimaryRunListCtrl
-        lda     which_run_list
-    IF A <> #kRunListPrimary
+    IF lda which_run_list : A <> #kRunListPrimary
         CALL    UpdateRunListButton, C=0
         copy8   #kRunListPrimary, which_run_list
         CALL    UpdateRunListButton, C=1
@@ -366,8 +362,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickPrimaryRunListCtrl
 
 .proc ClickSecondaryRunListCtrl
-        lda     which_run_list
-    IF A <> #kRunListSecondary
+    IF lda which_run_list : A <> #kRunListSecondary
         CALL    UpdateRunListButton, C=0
         copy8   #kRunListSecondary, which_run_list
 	CALL    UpdateRunListButton, C=1
@@ -376,8 +371,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickSecondaryRunListCtrl
 
 .proc ClickAtFirstBootCtrl
-        lda     copy_when
-    IF A <> #kCopyOnBoot
+    IF lda copy_when : A <> #kCopyOnBoot
         CALL    DrawCopyWhenButton, C=0
         lda     #kCopyOnBoot
         sta     copy_when
@@ -387,8 +381,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickAtFirstBootCtrl
 
 .proc ClickAtFirstUseCtrl
-        lda     copy_when
-    IF A <> #kCopyOnUse
+    IF lda copy_when : A <> #kCopyOnUse
         CALL    DrawCopyWhenButton, C=0
         lda     #kCopyOnUse
         sta     copy_when
@@ -398,8 +391,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickAtFirstUseCtrl
 
 .proc ClickNeverCtrl
-        lda     copy_when
-    IF A <> #kCopyNever
+    IF lda copy_when : A <> #kCopyNever
         CALL    DrawCopyWhenButton, C=0
         lda     #kCopyNever
         sta     copy_when

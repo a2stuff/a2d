@@ -146,8 +146,7 @@ quit:   MLI_CALL QUIT, quit_params
         stx     path_length
     DO
         copy8   prefix_path,x, bs_path,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         inc     bs_path
         ldx     bs_path
@@ -172,8 +171,7 @@ quit:   MLI_CALL QUIT, quit_params
         lda     bs_path,x
         cmp     #'/'
         beq     found_slash
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
 
 no_bs:  RETURN  A=#$FF          ; non-zero is failure
 
@@ -214,8 +212,7 @@ str_basic_system:
         tay
     DO
         copy8   (ptr),y, prefix_path,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         RETURN  A=#0
 
 fail:   RETURN  A=#1

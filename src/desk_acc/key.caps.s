@@ -596,8 +596,7 @@ start:  lda     KBD
         MGTK_CALL MGTK::PaintPoly, tmp_poly
 
 :
-        bit     KBDSTRB
-      IF NS
+      IF bit KBDSTRB : NS
         lda     KBD
         and     #CHAR_MASK
         cmp     last_char
@@ -713,8 +712,7 @@ return_flag:
         ldy     #.sizeof(MGTK::Rect)-1
        DO
         copy8   (ptr),y, tmp_rect,y
-        dey
-       WHILE POS
+       WHILE dey : POS
 
         MGTK_CALL MGTK::FrameRect, tmp_rect
 
@@ -727,11 +725,9 @@ return_flag:
       END_IF
 
         dec     char
-        lda     char
-    WHILE POS
+    WHILE lda char : POS
 
-        bit     extended_layout_flag
-    IF NS
+    IF bit extended_layout_flag : NS
         ;; Extended layout's non-rectangular Return key
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, winfo::pattern
@@ -793,8 +789,7 @@ check:
 
         cmp     #CHAR_RETURN
     IF EQ
-        bit     extended_layout_flag
-      IF NS
+      IF bit extended_layout_flag : NS
         ;; Special key
         COPY_BYTES      2 + 7 * .sizeof(MGTK::Point), poly_new_ret_inner, tmp_poly
         rts
@@ -814,8 +809,7 @@ check:
         ldy     #.sizeof(MGTK::Rect)-1
     DO
         copy8   (ptr),y, tmp_rect,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         copy8   #5, tmp_poly+0  ; # vertices
         copy8   #0, tmp_poly+1  ; no more polys

@@ -144,8 +144,7 @@ penXOR:         .byte   MGTK::penXOR
         add16_8 rect+MGTK::Rect::x1, #kTextBoxTextHOffset-1, pos+MGTK::Point::xcoord
         add16_8 rect+MGTK::Rect::y1, #kTextBoxTextVOffset-1, pos+MGTK::Point::ycoord
 
-        bit     options         ; bit7 = centered
-    IF NS
+    IF bit options : NS         ; bit7 = centered
         add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
 
         jsr     _PrepTextParams
@@ -591,8 +590,7 @@ modified:
         adc     #1
         sta     (a_buf),y
 
-        bit     options         ; bit7 = centered
-      IF NS
+      IF bit options : NS       ; bit7 = centered
         ;; Redraw everything
         jsr     _ClearAndDrawText
       ELSE
@@ -686,8 +684,7 @@ ret:    rts
         sta     (a_buf),y
     WHILE NOT_ZERO              ; always
 
-        bit     options         ; bit7 = centered
-    IF NS
+    IF bit options : NS         ; bit7 = centered
         ;; Redraw everything
         jmp     _ClearAndDrawText
     END_IF

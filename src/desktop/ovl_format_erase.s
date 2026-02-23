@@ -61,8 +61,7 @@ Exec:
         jsr     main::SetPortForPromptDialog
 
         ldax    #aux::label_format_disk
-        bit     erase_flag
-    IF NS
+    IF bit erase_flag : NS
         ldax    #aux::label_erase_disk
     END_IF
         jsr     main::DrawDialogTitle
@@ -73,8 +72,7 @@ Exec:
         lda     unit_num
     IF ZERO
         MGTK_CALL MGTK::MoveTo, vol_picker_select_pos
-        bit     erase_flag
-      IF NS
+      IF bit erase_flag : NS
         MGTK_CALL MGTK::DrawString, aux::str_select_erase
       ELSE
         MGTK_CALL MGTK::DrawString, aux::str_select_format

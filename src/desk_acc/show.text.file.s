@@ -578,8 +578,7 @@ end:    rts
 
         offset_ptr := $08
 
-        bit     record_offsets_flag
-    IF NS
+    IF bit record_offsets_flag : NS
         ;; Render the whole file (visible and invisible), and record
         ;; offsets for every Nth line as we go.
         copy16  #0, line_offsets
@@ -698,8 +697,7 @@ end:    rts
 
         MGTK_CALL MGTK::UnshieldCursor
 
-        bit     record_offsets_flag
-      IF NS
+      IF bit record_offsets_flag : NS
         ;; Doing a full pass. Determine current file offset.
         sub16   ptr, #default_buffer, cur_offset
         add16   cur_offset, buf_mark, cur_offset
@@ -733,8 +731,7 @@ end:    rts
 
 done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
 
-        bit     record_offsets_flag
-    IF NS
+    IF bit record_offsets_flag : NS
         sub16   current_line, #kLinesPerPage - 1, max_visible_line
       IF NEG
         copy16  #0, max_visible_line

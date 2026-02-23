@@ -496,8 +496,7 @@ scrambled_flag:                 ; bit7
         tya
         sta     position_table,y
         sta     swapped_table,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -514,8 +513,7 @@ scrambled_flag:                 ; bit7
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
-        bit     scrambled_flag
-    IF NC
+    IF bit scrambled_flag : NC
         jsr     PreScramble
     END_IF
 
@@ -547,8 +545,7 @@ bail:   rts
 
         ;; client area?
     IF A = #MGTK::Area::content
-        bit     scrambled_flag
-      IF NC
+      IF bit scrambled_flag : NC
         jmp     Scramble
       END_IF
 
@@ -575,8 +572,7 @@ destroy:
         bne     bail
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        bit     dragwindow_params::moved
-    IF NS
+    IF bit dragwindow_params::moved : NS
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawWindow
     END_IF
@@ -599,8 +595,7 @@ ret:    rts
         cmp     #CHAR_ESCAPE
         beq     OnClick::destroy
 
-        bit     scrambled_flag
-    IF NC
+    IF bit scrambled_flag : NC
         jmp     Scramble
     END_IF
 
@@ -729,8 +724,7 @@ nope:   RETURN  C=0
       DO
         clc
         adc     #4
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     END_IF
 
         sta     draw_rc
@@ -770,8 +764,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
     DO
         copy8   position_table+1,y, position_table,y
         iny
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
         beq     row             ; always
 .endproc ; ClickInRow
 
@@ -792,8 +785,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         dey
         dey
         dey
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
         beq     col
 
 after:  lda     click_y         ; click after hole
@@ -806,8 +798,7 @@ after:  lda     click_y         ; click after hole
         iny
         iny
         iny
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 .endproc ; ClickInCol
 
 col:    copy8   #kHolePiece, position_table,y
@@ -830,8 +821,7 @@ done:   jsr     CheckVictory
         jsr     InvertWindow
         pla
         tax
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
         CLEAR_BIT7_FLAG scrambled_flag
 .endproc ; OnVictory
 
@@ -979,8 +969,7 @@ ret:    rts
         tya
         cmp     position_table,y
         bne     nope
-        iny
-    WHILE Y < #5
+    WHILE iny : Y < #5
 
         ;; 5/6 are identical
         lda     position_table+5
@@ -1034,8 +1023,7 @@ ret:    rts
         tya
         cmp     position_table,y
         bne     nope
-        iny
-    WHILE Y < #16
+    WHILE iny : Y < #16
         rts
 
 nope:   RETURN  C=0
@@ -1084,14 +1072,12 @@ redo:
         ldy     #0
       DO
         copy8   position_table+1,y, position_table,y
-        iny
-      WHILE Y < #15
+      WHILE iny : Y < #15
 
         stx     position_table+15
         pla
         tay
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         swap8   position_table, position_table+1
 
@@ -1120,8 +1106,7 @@ redo:
         ldy     #15
     DO
         swap8   position_table,y, swapped_table,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 .endproc ; SwapTables
 

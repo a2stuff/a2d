@@ -198,8 +198,7 @@ ret:
 
 .proc FlashImpl
         ;; If disabled, return canceled
-        bit     state
-    IF NS
+    IF bit state : NS
         RETURN  A=#$80
     END_IF
 
@@ -213,8 +212,7 @@ ret:
         MGTK_CALL MGTK::WaitVBL
         pla
         tax
-        dex
-    WHILE NOT ZERO
+    WHILE dex : NOT ZERO
 
 
         FALL_THROUGH_TO _Invert
@@ -277,8 +275,7 @@ skip_port:
         jsr     _DrawLabel
     END_IF
 
-        bit     state
-    IF NS
+    IF bit state : NS
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penOR
         MGTK_CALL MGTK::InflateRect, shrink_rect
@@ -370,8 +367,7 @@ window          .tag MGTK::Point
 UNSUPPRESS_SHADOW_WARNING
 
         ;; If disabled, return canceled
-        bit     state
-    IF NS
+    IF bit state : NS
         RETURN  A=#$80
     END_IF
 
@@ -502,8 +498,7 @@ unchecked_rb_bitmap:
 .proc _DrawRadioBitmap
         COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, rb_params::viewloc
         ldax    #unchecked_rb_bitmap
-        bit     state
-    IF NS
+    IF bit state : NS
         ldax    #checked_rb_bitmap
     END_IF
         stax    rb_params::mapbits
@@ -578,8 +573,7 @@ unchecked_cb_bitmap:
 .proc _DrawCheckboxBitmap
         COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, cb_params::viewloc
         ldax    #unchecked_cb_bitmap
-        bit     state
-    IF NS
+    IF bit state : NS
         ldax    #checked_cb_bitmap
     END_IF
         stax    cb_params::mapbits
@@ -673,9 +667,7 @@ unchecked_cb_bitmap:
         ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
     DO
         copy8   rect,x, (params_addr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
         rts
 .endproc ; _WriteRectBackToButtonRecord
 

@@ -337,8 +337,7 @@ found:  ldx     num_file_names
         stax    ptr
 
         ;; Any selection?
-        bit     selected_index
-    IF NC
+    IF bit selected_index : NC
         ;; Append filename temporarily
         jsr     _AppendSelectedFilename
     END_IF
@@ -351,8 +350,7 @@ found:  ldx     num_file_names
         dey
     WHILE POS
 
-        bit     selected_index
-    IF NC
+    IF bit selected_index : NC
         jsr     _StripPathBufSegment
     END_IF
 
@@ -431,8 +429,7 @@ found:  ldx     num_file_names
         .assert kSelectionRequiredNoDirs     & $80 = $80, error, "enum mismatch"
         .assert kSelectionRequiredDirsOK     & $80 = $80, error, "enum mismatch"
 
-        bit     selection_requirement_flags
-    IF NS
+    IF bit selection_requirement_flags : NS
         ;; Selection required
         bit     selected_index
         bmi     _ReturnNotAllowed ; no selection
@@ -1253,11 +1250,9 @@ next:   add16_8 ptr, #16        ; advance to next
        END_IF
 
         inc     inner
-        lda     inner
-      WHILE A <> outer
+      WHILE lda inner : A <> outer
 
-        dec     outer
-    WHILE NOT_ZERO
+    WHILE dec outer : NOT_ZERO
         rts
 
 .endproc ; _SortFileNames

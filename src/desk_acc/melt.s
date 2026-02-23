@@ -151,8 +151,7 @@ delta:  .byte   0
         sta     PAGE2ON
         sta     (dst_ptr),y
 
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 
 row:    .byte   0

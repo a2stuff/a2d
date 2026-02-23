@@ -446,8 +446,7 @@ init_window:
         lda     selected_field
         sbc     #1
         bne     UpdateSelection
-        bit     clock_24hours
-    IF NC
+    IF bit clock_24hours : NC
         lda     #Field::period
     ELSE
         lda     #Field::period-1
@@ -460,8 +459,7 @@ init_window:
         lda     selected_field
         adc     #1
 
-        bit     clock_24hours
-    IF NC
+    IF bit clock_24hours : NC
         cmp     #Field::period+1
     ELSE
         cmp     #Field::period
@@ -586,8 +584,7 @@ hit_target_jump_table:
         dex
         txa
 
-        bit     clock_24hours
-    IF NS
+    IF bit clock_24hours : NS
         RTS_IF A = #Field::period
     END_IF
 
@@ -620,8 +617,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         ;; Hour requires special handling for 12-hour clock; patch the
         ;; min/max table depending on clock setting and period.
-        bit     clock_24hours
-    IF NC
+    IF bit clock_24hours : NC
         lda     hour
       IF A < #12
         copy8   #kHourMin, min_table + Field::hour - 1
@@ -811,8 +807,7 @@ str_pm: PASCAL_STRING "PM"
 
 .proc PrepareHourString
         lda     hour
-        bit     clock_24hours
-    IF NC
+    IF bit clock_24hours : NC
       IF A = #0
         lda     #12
       END_IF
@@ -822,8 +817,7 @@ str_pm: PASCAL_STRING "PM"
     END_IF
 
         jsr     NumberToASCII
-        bit     clock_24hours
-    IF NC AND A = #'0'
+    IF bit clock_24hours : NC AND A = #'0'
         lda     #' '
     END_IF
         sta     hour_string+1
@@ -1045,8 +1039,8 @@ label_downarrow:
 
 .proc DrawPeriod
         MGTK_CALL MGTK::MoveTo, period_pos
-        bit     clock_24hours
-    IF NS
+
+    IF bit clock_24hours : NS
         MGTK_CALL MGTK::DrawString, spaces_string
     ELSE
         lda     hour
@@ -1311,13 +1305,11 @@ current:
         JSR_TO_AUX aux::RunDA
         sta     result
 
-        bit     result
-    IF NS
+    IF bit result : NS
         jsr     SaveDate
     END_IF
 
-        bit     result
-    IF VS
+    IF bit result : VS
         jsr     SaveSettings
     END_IF
 

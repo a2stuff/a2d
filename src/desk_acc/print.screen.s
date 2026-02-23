@@ -51,8 +51,7 @@ sig_bytes:
         lda     SLOT1,x
         cmp     sig_bytes,y
         bne     no_device
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         hbasl := $6
         kScreenWidth  = 560
@@ -78,8 +77,7 @@ no_device:
         ldy     #0
     DO
         CALL    COut, A=spacing_sequence,y
-        iny
-    WHILE Y <> #kLenSpacingSequence
+    WHILE iny : Y <> #kLenSpacingSequence
         rts
 .endproc ; SendSpacing
 
@@ -87,8 +85,7 @@ no_device:
         ldy     #0
     DO
         CALL    COut, A=restore_sequence,y
-        iny
-    WHILE Y <> #kLenRestoreSequence
+    WHILE iny : Y <> #kLenRestoreSequence
         rts
 .endproc ; SendRestoreState
 
@@ -96,8 +93,7 @@ no_device:
         ldx     #0
     DO
         CALL    COut, A=init_graphics,x
-        inx
-    WHILE X <> #kLenInitGraphics
+    WHILE inx : X <> #kLenInitGraphics
         rts
 init_graphics:
         .byte   CHAR_ESCAPE,"G0560"     ; Graphics, 560 data bytes
@@ -138,8 +134,7 @@ col_loop:
         plp
         ror     accum           ; Doubled
         inc     y_coord
-        dec     count
-    WHILE NOT_ZERO
+    WHILE dec count : NOT_ZERO
 
         ;; Send the 8 pixels to the printer.
         lda     accum           ; Now output it

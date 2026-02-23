@@ -270,8 +270,7 @@ joystick_bitmap:
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 
-        bit     dragwindow_params::moved
-    IF NS
+    IF bit dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -345,8 +344,7 @@ notpencopy:     .byte   MGTK::notpencopy
         lda     pdl0,x
         lsr                     ; clamp range to 0...127
         sta     curr+InputState::pdl0,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         lsr     curr+InputState::pdl1 ; clamp Y to 0...63 (due to pixel aspect ratio)
         lsr     curr+InputState::pdl3 ; clamp Y to 0...63 (due to pixel aspect ratio)
@@ -371,8 +369,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ;; If last state was valid, see if joystick 2 registered
         ;; a change; if so, set a flag.
-        bit     last+InputState::valid
-    IF NS
+    IF bit last+InputState::valid : NS
         lda     curr+InputState::pdl2
         cmp     last+InputState::pdl2
         bne     set
@@ -384,15 +381,13 @@ set:    SET_BIT7_FLAG joy2_valid_flag
     END_IF
 
         ;; Changed? (or first time through)
-        bit     force_draw_flag
-    IF NC
+    IF bit force_draw_flag : NC
         ldx     #.sizeof(InputState)-1
       DO
         lda     curr,x
         cmp     last,x
         bne     :+              ; changed - draw
-        dex
-      WHILE POS
+      WHILE dex : POS
         rts                     ; no change - skip
 :
     END_IF
@@ -414,8 +409,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         ;; Erase old
         MGTK_CALL MGTK::SetPenMode, penOR
-        bit     joy2_valid_flag
-    IF NS
+    IF bit joy2_valid_flag : NS
         MGTK_CALL MGTK::PaintBits, joy_marker2
     END_IF
         MGTK_CALL MGTK::PaintBits, joy_marker
@@ -445,8 +439,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         ;; Draw new
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        bit     joy2_valid_flag
-    IF NS
+    IF bit joy2_valid_flag : NS
         MGTK_CALL MGTK::PaintBits, joy_marker2
     END_IF
         MGTK_CALL MGTK::PaintBits, joy_marker
@@ -509,8 +502,7 @@ pdl3:   .byte   0
         jsr     PRead
         tya
         sta     pdl0,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         JSR_TO_MAIN JUMP_TABLE_RESUME_SPEED
 

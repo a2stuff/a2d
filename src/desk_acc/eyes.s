@@ -714,15 +714,13 @@ oval := $50
 
         ;; if (ovalWidth [16.0] < 0)
         ;;   ovalWidth [16.0] = 0
-        bit     ovalWidth+1
-    IF NEG
+    IF bit ovalWidth+1 : NEG
         copy16  #0, ovalWidth
     END_IF
 
         ;; if (ovalHeight [16.0] < 0)
         ;;   ovalHeight [16.0] = 0
-        bit     ovalHeight+1
-    IF NEG
+    IF bit ovalHeight+1 : NEG
         copy16  #0, ovalHeight
     END_IF
 
@@ -829,8 +827,7 @@ oval := $50
         sta     remainder+1
         inc     quotient
       END_IF
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 .endscope ; fixed_div
 
 
@@ -1002,8 +999,7 @@ endloop2:
 
         copy16  d0, temp        ; temp = d0
         lda     #0
-        bit     temp+1          ; sign-extend
-    IF NS
+    IF bit temp+1 : NS          ; sign-extend
         lda     #$FF
     END_IF
         sta     temp+2
@@ -1029,8 +1025,7 @@ endloop2:
         ldy     #.sizeof(OvalRec)-1
     DO
         copy8   oval,y, (ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; SaveOval
@@ -1042,8 +1037,7 @@ endloop2:
         ldy     #.sizeof(OvalRec)-1
     DO
         copy8   (ptr),y, oval,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; LoadOval

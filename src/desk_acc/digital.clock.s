@@ -118,8 +118,7 @@ exit:
         lda     datetime,x
         cmp     last,x
         bne     diff
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts                     ; no change
 
         ;; Different! update
@@ -147,15 +146,13 @@ last:   .tag    DateTime
         ldx     str_time        ; A = string length
     DO
         add16_8 vector_cursor::xcoord, #kCharWidth+1
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         dec16   vector_cursor::xcoord
         ldx     #kCharXShift    ; scale x
     DO
         asl16   vector_cursor::xcoord
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         sub16   #kScreenWidth, vector_cursor::xcoord, vector_cursor::xcoord
         asr16   vector_cursor::xcoord
@@ -173,8 +170,7 @@ last:   .tag    DateTime
 
         lda     idx
         BREAK_IF A = str_time
-        inc     idx
-    WHILE NOT_ZERO
+    WHILE inc idx : NOT_ZERO
 
 done:
         rts
@@ -212,14 +208,12 @@ ploop:  copy8   (ptr),y, num_verts ; A = num vertices
         ldx     #kCharXShift    ; scale x
       DO
         asl16   cur::xcoord
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
 
         ldx     #kCharYShift    ; scale y
       DO
         asl16   cur::ycoord
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
 
         ;; Offset
         add16   vector_cursor::xcoord, cur::xcoord, cur::xcoord
@@ -239,9 +233,7 @@ ploop:  copy8   (ptr),y, num_verts ; A = num vertices
         tay                     ; Y = ptr offset
 
         inc     vindex
-
-        dec     num_verts
-    WHILE NOT_ZERO
+    WHILE dec num_verts : NOT_ZERO
 
         lda     (ptr),y         ; A = num vertices, 0 if done
         beq     advance         ; done

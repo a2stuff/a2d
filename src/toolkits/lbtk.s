@@ -186,15 +186,13 @@ UNSUPPRESS_SHADOW_WARNING
         ldy     #kMaxCommandDataSize-1
     DO
         copy8   (params_addr),y, command_data,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Cache static copy of the record in `lbr_copy`, for convenience
         ldy     #.sizeof(LBTK::ListBoxRecord)-1
     DO
         copy8   (a_record),y, lbr_copy,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Invoke the command
         dispatch := *+1
@@ -718,9 +716,7 @@ update:
         ldx     #.sizeof(MGTK::Rect)-1
     DO
         copy8   (winfo_ptr),y, tmp_rect,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; Set y2 to height
         sub16   tmp_rect+MGTK::Rect::y2, tmp_rect+MGTK::Rect::y1, tmp_rect+MGTK::Rect::y2
@@ -739,9 +735,7 @@ update:
         ldx     #.sizeof(MGTK::Rect)-1
     DO
         copy8   tmp_rect,x, (winfo_ptr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         add16   winfo_ptr, #MGTK::Winfo::port, setport_addr
         MGTK_CALL MGTK::SetPort, SELF_MODIFIED, setport_addr
@@ -798,8 +792,7 @@ update:
         inc     index
         lda     index
         BREAK_IF A = lbr_copy + LBTK::ListBoxRecord::num_items
-        dec     rows
-    WHILE NOT_ZERO
+    WHILE dec rows : NOT_ZERO
 
 finish: MGTK_CALL MGTK::UnshieldCursor
         rts

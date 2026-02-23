@@ -31,8 +31,7 @@ Exec:
 
 .proc Exit
         pha                     ; A = result
-        lda     clean_flag
-    IF NC
+    IF lda clean_flag : NC
         ;; Update total count of entries (used for menu item states)
         lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
@@ -519,8 +518,7 @@ handle_button:
 
 .proc UpdateOKButton
         lda     #BTK::kButtonStateNormal
-        bit     shortcut_picker_record::selected_index
-    IF NS
+    IF bit shortcut_picker_record::selected_index : NS
         lda     #BTK::kButtonStateDisabled
     END_IF
 
@@ -597,8 +595,7 @@ entries_flag_table:
     WHILE dey : POS
 
         ;; If primary run list, update the menu as well
-        lda     index
-    IF A < #kSelectorListNumPrimaryRunListEntries
+    IF lda index : A < #kSelectorListNumPrimaryRunListEntries
         jsr     UpdateMenuResources
     END_IF
 

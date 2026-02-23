@@ -283,8 +283,7 @@ button_eor_table:
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 common:
-        bit     dragwindow_params::moved
-    IF NS
+    IF bit dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -321,8 +320,7 @@ common:
         TAIL_CALL ToggleButton, A=index
       END_IF
 
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
 
         ;; ----------------------------------------
 

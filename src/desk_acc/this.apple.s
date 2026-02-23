@@ -1265,8 +1265,7 @@ egg:    .byte   0
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::mem_pos
         CALL    DrawStringFromMain, AX=#str_memory_prefix
         CALL    DrawStringFromMain, AX=#str_from_int
-        bit     memory_is_mb_flag
-    IF NS
+    IF bit memory_is_mb_flag : NS
         CALL    DrawStringFromMain, AX=#str_memory_mb_suffix
     ELSE
         CALL    DrawStringFromMain, AX=#str_memory_kb_suffix
@@ -2115,8 +2114,8 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 
         add16   memory, dib_buffer+SPDIB::Device_Size_Lo, memory
 
-next:   dec     slot
-    WHILE NOT_ZERO
+next:
+    WHILE dec slot : NOT_ZERO
         rts
 
 sig_offsets:
@@ -2342,8 +2341,7 @@ done_adjust_case:
         COPY_STRING str_current, str_last
 
         ;; Need a comma?
-        bit     empty_flag
-      IF NC
+      IF bit empty_flag : NC
         CALL    DrawStringFromMain, AX=#str_list_separator
       END_IF
         CLEAR_BIT7_FLAG empty_flag ; saw a unit!
@@ -2361,8 +2359,7 @@ finish:
         jsr     MaybeDrawDuplicateSuffix
 
         ;; If no units, populate with "(none)"
-        bit     empty_flag
-    IF NS
+    IF bit empty_flag : NS
         CALL    DrawStringFromMain, AX=#str_none
     END_IF
 

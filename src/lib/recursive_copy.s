@@ -731,8 +731,7 @@ fail:   jmp     OpHandleErrorCode
       END_IF
 
 .if ::kCopyInteractive
-        bit     src_dst_exclusive_flag
-      IF NS
+      IF bit src_dst_exclusive_flag : NS
         ;; Swap
         MLI_CALL GET_MARK, mark_src_params
         MLI_CALL CLOSE, close_src_params
@@ -766,8 +765,7 @@ fail:   jmp     OpHandleErrorCode
 close:
         MLI_CALL CLOSE, close_dst_params
 .if ::kCopyInteractive
-        bit     src_dst_exclusive_flag
-    IF NC
+    IF bit src_dst_exclusive_flag : NC
         MLI_CALL CLOSE, close_src_params
     END_IF
 .else

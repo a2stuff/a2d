@@ -793,8 +793,7 @@ check_drag:
         RTS_IF ZERO
 
         ;; Double modifier?
-        bit     double_modifier_flag
-      IF NS
+      IF bit double_modifier_flag : NS
         jsr     SetOperationDstPathFromDragDropResult
         RTS_IF CS               ; failure, e.g. path too long
         jmp     MakeLinkInTarget
@@ -834,8 +833,7 @@ check_drag:
         RTS_IF CS               ; failure, e.g. path too long
 
         ;; Double modifier?
-        bit     double_modifier_flag
-    IF NS
+    IF bit double_modifier_flag : NS
         jsr     GetSingleSelectedIcon
         RTS_IF ZERO
         jmp     MakeLinkInTarget
@@ -886,8 +884,7 @@ prev_selected_icon:
 
         PREDEFINE_SCOPE ::main::operations
 
-        bit     operations::move_flags
-    IF NS
+    IF bit operations::move_flags : NS
         ;; Update source vol's contents
         jsr     _MaybeStashDropTargetName ; in case target is in window...
         jsr     UpdateActivateAndRefreshSelectedWindow
@@ -1446,8 +1443,7 @@ rest:
         ;; Get the file info to determine type.
 retry:  jsr     GetSrcFileInfo
     IF CS
-        bit     sys_prompt_flag
-      IF NC
+      IF bit sys_prompt_flag : NC
         jsr     ShowAlert       ; arbitrary ProDOS error
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     retry
@@ -2530,8 +2526,7 @@ main_length:    .word   0
 
         ;; Close after open only if from real menu, and modifier is down.
         lda     #0
-        bit     menu_modified_click_flag
-    IF NS
+    IF bit menu_modified_click_flag : NS
         lda     selected_window_id
     END_IF
         sta     window_id_to_close
@@ -3108,8 +3103,7 @@ done:   rts
     WHILE dex : NOT_ZERO
 
         ;; If ejecting, clear selection
-        bit     eject_flag
-    IF NS
+    IF bit eject_flag : NS
         jsr     ClearSelection
     END_IF
 
@@ -3122,8 +3116,7 @@ done:   rts
         lda     selection_list_copy,x
       IF A <> trash_icon_num
         ldy     #kCheckDriveShowUnexpectedErrors
-        bit     eject_flag
-       IF NS
+       IF bit eject_flag : NS
         pha
         jsr     SmartportEject
         pla
@@ -3793,8 +3786,7 @@ pick_next_prev:
         FALL_THROUGH_TO select_index
 
 select_index:
-        bit     extend_selection_flag
-    IF NS
+    IF bit extend_selection_flag : NS
         stx     cur_index
         CALL    IsIconSelected, A=buffer+1,x
       IF ZS
@@ -5431,8 +5423,7 @@ alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_FILE_NOT
         jsr     _TryActivateAndRefreshWindow
         pla                     ; A = window id
 
-        bit     exception_flag
-    IF NC
+    IF bit exception_flag : NC
         RETURN  A=#0
     END_IF
 
@@ -5840,8 +5831,7 @@ validate_windows_flag:
         .byte   0
 
 .proc ValidateWindows
-        bit     validate_windows_flag
-    IF NS
+    IF bit validate_windows_flag : NS
         CLEAR_BIT7_FLAG validate_windows_flag
         copy8   #kMaxDeskTopWindows, window_id
 
@@ -6188,8 +6178,7 @@ no_win:
         ;; --------------------------------------------------
         ;; Create window and icons
 
-        bit     copy_new_window_bounds_flag
-    IF NS
+    IF bit copy_new_window_bounds_flag : NS
         ;; DeskTopSettings::kViewByXXX
         ldx     cached_window_id
         copy8   new_window_view_by, win_view_by_table-1,x
@@ -6211,8 +6200,7 @@ no_win:
 
         jsr     InitWindowIcons
 
-        bit     copy_new_window_bounds_flag
-    IF NC
+    IF bit copy_new_window_bounds_flag : NC
         jsr     ComputeInitialWindowSize
         jsr     AdjustViewportForNewIcons
     END_IF
@@ -6702,8 +6690,7 @@ start:  stax    ptr1
         window_num := *+1
         lda     #SELF_MODIFIED_BYTE
       IF A >= #kMaxDeskTopWindows+1 ; directory windows are 1-8
-        bit     exact_match_flag
-       IF NS
+       IF bit exact_match_flag : NS
         lda     #0
        END_IF
         rts
@@ -6717,8 +6704,7 @@ start:  stax    ptr1
         CALL    GetWindowPath, A=window_num
         stax    ptr2
 
-        bit     exact_match_flag
-      IF NS
+      IF bit exact_match_flag : NS
         jsr     CompareStrings  ; Z=1 if equal
         CONTINUE_IF ZC
         RETURN  A=window_num
@@ -6806,8 +6792,7 @@ too_many_files:
         jsr     _DoClose
 
         ;; Show error, unless this is during window restore.
-        bit     suppress_error_on_open_flag
-    IF NC
+    IF bit suppress_error_on_open_flag : NC
         ldax    #aux::str_warning_window_must_be_closed ; too many files to show
         ldy     active_window_id ; is a window open?
       IF ZERO
@@ -6956,8 +6941,7 @@ file_entry_to_file_record_mapping_table:
         MLI_CALL OPEN, open_params
     IF CS
         ;; Show error, unless this is during window restore.
-        bit     suppress_error_on_open_flag
-      IF NC
+      IF bit suppress_error_on_open_flag : NC
         CALL    ShowAlertOption, X=#AlertButtonOptions::OK
       END_IF
 
@@ -6986,11 +6970,9 @@ suppress_error_on_open_flag:
 .proc _HandleFailure
         php                     ; C = check vol flag
 
-        bit     new_window_flag
-    IF NS
+    IF bit new_window_flag : NS
         ;; If opening an icon, need to reset icon state.
-        bit     icon_param      ; Were we opening a path? (N=1)
-      IF NC
+      IF bit icon_param : NC    ; Were we opening a path? (N=1)
         jsr     MarkIconNotDimmed
       END_IF
 
@@ -7334,8 +7316,7 @@ assign_height:
         copy8   (ptr),y, flags
 
         ;; Does Aux Type matter, and if so does it match?
-        bit     flags
-      IF NS                     ; bit 7 = compare aux
+      IF bit flags : NS         ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
         ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
         lda     aux_type
@@ -7348,8 +7329,7 @@ assign_height:
       END_IF
 
         ;; Does Block Count matter, and if so does it match?
-        bit     flags
-      IF VS                     ; bit 6 = compare blocks
+      IF bit flags : VS         ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
         lda     blocks_used
         cmp     (ptr),y
@@ -9645,8 +9625,7 @@ iterate_selection:
         ;; If copy, validate the source vs. target during enumeration phase
         ;; NOTE: Here rather than in `CopyProcessSelectedFile` because we don't
         ;; run this for copy using paths (i.e. Duplicate, Copy to RAMCard)
-        bit     do_op_flag
-       IF NC
+       IF bit do_op_flag : NC
         bit     operation_flags
         ASSERT_EQUALS operations::kOperationFlagsCheckBadCopy, $40
         IF VS
@@ -9683,8 +9662,7 @@ iterate_selection:
         ;; --------------------------------------------------
 
         ;; Done icons - did we complete the operation?
-        bit     do_op_flag
-    IF NS
+    IF bit do_op_flag : NS
         jsr     InvokeOperationCompleteCallback
         RETURN  A=#0
     END_IF
@@ -10312,8 +10290,7 @@ operation_traversal_callbacks_for_copy:
 .proc _CopyDialogEnumerationCallback
         jsr     SetPortForProgressDialogAndShieldCursor
 
-        bit     move_flags
-    IF NC
+    IF bit move_flags : NC
         CALL    DrawProgressDialogLabel, Y=#0, AX=#aux::str_copy_copying
     ELSE
         CALL    DrawProgressDialogLabel, Y=#0, AX=#aux::str_move_moving
@@ -10422,8 +10399,7 @@ retry:  jsr     GetSrcFileInfo
         jsr     _CopyCreateFile
         bcs     done
 
-        bit     move_flags      ; same volume relink move?
-      IF VS
+      IF bit move_flags : VS    ; same volume relink move?
         jmp     RelinkFile
       END_IF
 
@@ -10437,8 +10413,7 @@ retry:  jsr     GetSrcFileInfo
         jsr     _CopyCreateFile
         bcs     done
 
-        bit     move_flags      ; same volume relink move?
-    IF VS
+    IF bit move_flags : VS      ; same volume relink move?
         jsr     RelinkFile
         jmp     NotifyPathChanged
     END_IF
@@ -10448,8 +10423,7 @@ retry:  jsr     GetSrcFileInfo
         jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove
 
-        bit     move_flags
-    IF NS
+    IF bit move_flags : NS
         jsr     NotifyPathChanged
     END_IF
 
@@ -10591,8 +10565,7 @@ retry:  jsr     GetDstFileInfo
         ;; Show appropriate message
 
         ldax    #aux::str_large_copy_prompt
-        bit     move_flags
-    IF NS
+    IF bit move_flags : NS
         ldax    #aux::str_large_move_prompt
     END_IF
         CALL    ShowAlertBasedOnFileCount ; A,X = string
@@ -10610,8 +10583,7 @@ retry:  jsr     GetDstFileInfo
 
 .proc MaybeFinishFileMove
         ;; Copy or move?
-        bit     move_flags
-    IF NS
+    IF bit move_flags : NS
         ;; Was a move - delete file
 retry:  MLI_CALL DESTROY, destroy_src_params
       IF CS
@@ -10658,8 +10630,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         bit     operations::operation_flags
         ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
     IF NC
-        bit     move_flags      ; same volume relink move?
-      IF VC
+      IF bit move_flags : VC    ; same volume relink move?
         ;; No, verify that there is room.
         jsr     _CheckSpaceAvailable
         RTS_IF CS
@@ -10710,8 +10681,7 @@ retry:
       END_IF
 
         ;; Regular file - prompt to replace
-        bit     operations::all_flag
-      IF NC
+      IF bit operations::all_flag : NC
         CALL    ShowAlertParams, Y=#AlertButtonOptions::YesNoAllCancel, AX=#aux::str_exists_prompt
 
         cmp     #kAlertResultNo
@@ -10994,8 +10964,7 @@ fail:   jmp     OpHandleErrorCode
       END_IF
 
 .if ::kCopyInteractive
-        bit     src_dst_exclusive_flag
-      IF NS
+      IF bit src_dst_exclusive_flag : NS
         ;; Swap
         MLI_CALL GET_MARK, mark_src_params
         MLI_CALL CLOSE, close_src_params
@@ -11027,8 +10996,7 @@ fail:   jmp     OpHandleErrorCode
 close:
         MLI_CALL CLOSE, close_dst_params
 .if ::kCopyInteractive
-        bit     src_dst_exclusive_flag
-    IF NC
+    IF bit src_dst_exclusive_flag : NC
         MLI_CALL CLOSE, close_src_params
     END_IF
 .else
@@ -11821,8 +11789,7 @@ retry:  CALL    GetFileInfo, AX=src_ptr
 
         ;; if err is "volume not found" prompt specifically for src/dst disk
         ldax    #operation_src_path
-        bit     dst_flag
-    IF NS
+    IF bit dst_flag : NS
         ldax    #operation_dst_path
     END_IF
         jsr     GetVolumeName   ; populates `filename_buf`
@@ -12090,8 +12057,7 @@ write_protected_flag:
     IF ZERO
         ;; Volume - regular label
         ldax    #aux::str_info_no
-        bit     write_protected_flag
-      IF NS
+      IF bit write_protected_flag : NS
         ldax    #aux::str_info_yes
       END_IF
         CALL    DrawDialogLabel, Y=#6 | DDL_VALUE
@@ -12217,8 +12183,7 @@ num_blocks:
 .proc _ToggleFileLock
         ;; Modify file
         lda     src_file_info_params::access
-        bit     locked_button::state
-    IF NS
+    IF bit locked_button::state : NS
         ;; Unlock
         ora     #LOCKED_MASK
     ELSE
@@ -13413,8 +13378,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc PromptInputLoop
-        bit     has_input_field_flag
-    IF NS
+    IF bit has_input_field_flag : NS
         LETK_CALL LETK::Idle, prompt_le_params
     END_IF
 
@@ -13488,8 +13452,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
       END_IF
     END_IF
 
-        bit     has_input_field_flag
-    IF NC
+    IF bit has_input_field_flag : NC
         lda     #$FF            ; in case handler is just RTS
         jmp     (PromptDialogClickHandlerHook)
     END_IF
@@ -13514,8 +13477,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
     IF NOT_ZERO
         ;; Modifiers
 
-        bit     has_input_field_flag
-      IF NS
+      IF bit has_input_field_flag : NS
         LETK_CALL LETK::Key, prompt_le_params
         jsr     UpdateOKButton
       ELSE
@@ -13536,8 +13498,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         bmi     _HandleKeyOK    ; always
       END_IF
 
-        bit     has_input_field_flag
-      IF NS
+      IF bit has_input_field_flag : NS
         jsr     IsControlChar   ; pass through control characters
         bcc     allow
         CALL    IsFilenameChar, Y=prompt_line_edit_rec+LETK::LineEditRecord::caret_pos
@@ -14082,8 +14043,7 @@ mli_relay_checkevents_flag:     ; bit7
 
         ;; Since this is likely to be I/O bound, process events
         ;; so the mouse stays responsive.
-        bit     mli_relay_checkevents_flag
-    IF NS
+    IF bit mli_relay_checkevents_flag : NS
         jsr     CheckEvents
     END_IF
 
@@ -14282,8 +14242,7 @@ calc_y:
 
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc UpdateOKButton
-        bit     has_device_picker_flag
-    IF NS
+    IF bit has_device_picker_flag : NS
         lda     #0
         jsr     ::FormatEraseOverlay::ValidSelection ; preserves A
         bpl     set_state

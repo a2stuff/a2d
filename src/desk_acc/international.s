@@ -450,8 +450,7 @@ dialog_result:  .byte   0
 
         ;; Dates in DeskTop list views may be invalidated, so if any
         ;; settings changed, force a full redraw to avoid artifacts.
-        bit     dialog_result
-    IF NS
+    IF bit dialog_result : NS
         MGTK_CALL MGTK::RedrawDeskTop
     END_IF
 

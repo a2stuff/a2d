@@ -329,8 +329,7 @@ common: bit     dragwindow_params::moved
 
         TAIL_CALL ToggleButton, A=index
       END_IF
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
 
         ;; ----------------------------------------
 
@@ -373,8 +372,7 @@ common: bit     dragwindow_params::moved
 
         BTK_CALL BTK::RadioDraw, SELF_MODIFIED, params_addr
 
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
 
         ;; --------------------------------------------------
 

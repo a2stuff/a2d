@@ -1029,8 +1029,7 @@ ret:   rts
         jmp     ResetBuffer1AndState
       END_IF
 
-        bit     calc_r
-      IF NC
+      IF bit calc_r : NC
         ;; not repeating yet - save FAC
         ldxy    #ftmp
         ROM_CALL ROUND          ; `ftmp` = FAC
@@ -1066,8 +1065,7 @@ ret:   rts
 
         ldx     calc_op
         sta     calc_op
-        bit     calc_r
-      IF NC AND X <> #Function::equals
+      IF bit calc_r : NC AND X <> #Function::equals
         ;; perform pending op
         lday    #farg
        IF X = #Function::op_add

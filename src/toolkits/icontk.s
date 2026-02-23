@@ -375,8 +375,7 @@ END_PARAM_BLOCK
 
         ;; Next entry
         add16_8 table_ptr, #.sizeof(IconEntry)
-        inx
-    WHILE X <> #kMaxIconCount+1 ; allow up to the maximum
+    WHILE inx : X <> #kMaxIconCount+1 ; allow up to the maximum
 
         ;; --------------------------------------------------
         ;; MaxDraggableItems = BufferSize / kIconPolySize
@@ -386,8 +385,7 @@ END_PARAM_BLOCK
         sub16_8 bufsize, #kIconPolySize
         bit     bufsize+1
         BREAK_IF NS
-        iny
-    WHILE NOT_ZERO              ; always
+    WHILE iny : NOT_ZERO              ; always
         sty     max_draggable_icons
 
         rts
@@ -495,8 +493,7 @@ END_PARAM_BLOCK
 
         pla
         tax
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; HighlightAllImpl
 
@@ -516,8 +513,7 @@ END_PARAM_BLOCK
 
         pla
         tax
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; UnhighlightAllImpl
 
@@ -656,8 +652,7 @@ END_PARAM_BLOCK
 
         pla
         tax
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 .endproc ; FreeAllImpl
 
@@ -765,9 +760,8 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         cpy     #kDragDelta     ; above threshold, so drag
         bcs     is_drag
 
-next:   dex
-        dex
-    WHILE POS
+next:
+    WHILE dex : dex : POS
         bmi     peek            ; always
 .endscope ; _DragDetectImpl
 
@@ -818,8 +812,7 @@ is_drag:
         ldy     #kIconPolySize-1
     DO
         copy8   poly,y, (poly_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         add16_8 poly_ptr, #kIconPolySize
         rts
@@ -855,8 +848,7 @@ is_drag:
         lda     findwindow_params,x
         cmp     last_coords,x
         bne     moved
-        dex
-      WHILE POS
+      WHILE dex : POS
         CONTINUE_IF NEG         ; always
 
         ;; --------------------------------------------------
@@ -891,9 +883,7 @@ update_poly:
         ldx     #2              ; loop over dimensions
       DO
         sub16   findwindow_params,x, last_coords,x, poly_coords,x
-        dex                     ; next dimension
-        dex
-      WHILE POS
+      WHILE dex : dex : POS     ; next dimension
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, last_coords
 
         copy16  polybuf_addr, poly_ptr
@@ -902,8 +892,7 @@ ploop:  ldy     #2              ; offset in poly to first vertex
         add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         iny
         add16in (poly_ptr),y, poly_dy, (poly_ptr),y
-        iny
-      WHILE Y <> #kIconPolySize
+      WHILE iny : Y <> #kIconPolySize
 
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     (poly_ptr),y
@@ -998,9 +987,7 @@ move_ok:
         ldx     #2              ; loop over dimensions
     DO
         sub16   findwindow_params,x, initial_coords,x, poly_coords,x
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         jsr     SetIconPtr
@@ -1273,9 +1260,7 @@ start:
         scmp16  bitmap_rect+MGTK::Rect::bottomright,x, params::rect+MGTK::Rect::topleft,x
         bmi     :+
 
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
         bmi     inside          ; always
 :
         ;; --------------------------------------------------
@@ -1291,9 +1276,7 @@ start:
         scmp16  label_rect+MGTK::Rect::bottomright,x, params::rect+MGTK::Rect::topleft,x
         bmi     outside
 
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
 inside:
         RETURN  A=#1
@@ -1327,9 +1310,7 @@ END_PARAM_BLOCK
         ldy     #1 + .sizeof(MGTK::Rect)-1
     DO
         copy8   bounding_rect,x, (params_addr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         rts
 .endproc ; CopyBoundingRectIntoOutParams
@@ -1352,9 +1333,7 @@ END_PARAM_BLOCK
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
     DO
         copy8   rename_rect,x, (params_addr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         rts
 .endproc ; GetRenameRectImpl
@@ -1377,9 +1356,7 @@ END_PARAM_BLOCK
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
     DO
         copy8   bitmap_rect,x, (params_addr),y
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         rts
 .endproc ; GetBitmapRectImpl
@@ -1464,8 +1441,7 @@ END_PARAM_BLOCK
         lda     (res_ptr),y
         sta     icon_paintbits_params::mapbits,y
         sta     mask_paintbits_params::mapbits,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Icon definition is followed by pointer to mask address.
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point)
@@ -1503,8 +1479,7 @@ rest:
         jsr     _DoPaint
         jsr     OffsetPortAndIcon
 
-        bit     more_drawing_needed_flag
-    WHILE NS
+    WHILE bit more_drawing_needed_flag : NS
 
 ret:    rts
 
@@ -1530,14 +1505,12 @@ reserved:       .byte   0
         lda     bitmap_rect+MGTK::Rect::topleft,x
         sta     icon_paintbits_params::viewloc,x
         sta     mask_paintbits_params::viewloc,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Set text background color
         lda     #MGTK::textbg_white
         ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
-        bit     state           ; highlighted?
-    IF VS
+    IF bit state : VS           ; highlighted?
         lda     #MGTK::textbg_black
     END_IF
         sta     settextbg_params
@@ -1548,16 +1521,14 @@ reserved:       .byte   0
 
         ;; Shade (XORs background)
         ASSERT_EQUALS ::kIconEntryStateDimmed, $80
-        bit     state
-    IF NS
+    IF bit state : NS
         MGTK_CALL MGTK::SetPattern, dark_pattern
         jsr     _Shade
     END_IF
 
         ;; Mask (cleared to white or black)
         ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
-        bit     state
-    IF VS
+    IF bit state : VS
         MGTK_CALL MGTK::SetPenMode, penBIC
     ELSE
         MGTK_CALL MGTK::SetPenMode, penOR
@@ -1566,15 +1537,13 @@ reserved:       .byte   0
 
         ;; Shade again (restores background)
         ASSERT_EQUALS ::kIconEntryStateDimmed, $80
-        bit     state
-    IF NS
+    IF bit state : NS
         jsr     _Shade
     END_IF
 
         ;; Icon (drawn in black or white)
         ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
-        bit     state
-    IF VS
+    IF bit state : VS
         MGTK_CALL MGTK::SetPenMode, penOR
     ELSE
         MGTK_CALL MGTK::SetPenMode, penBIC
@@ -1634,9 +1603,7 @@ win_flags:                      ; copy of IconEntry::win_flags
         ldx     #3
     DO
         copy8   (icon_ptr),y, bitmap_rect+MGTK::Rect::topleft,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; Bitmap bottom/right
         ldy     #IconResource::maprect + MGTK::Rect::x2
@@ -1748,8 +1715,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
       DO
         ldx     smicon_poly_map,y
         copy8   $00,x, poly::vertices,y
-        dey
-      WHILE POS
+      WHILE dey : POS
         rts
    END_IF
 
@@ -1758,8 +1724,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
    DO
         ldx     icon_poly_map,y
         copy8   $00,x, poly::vertices,y
-        dey
-   WHILE POS
+   WHILE dey : POS
         rts
 
 .macro MAP_POINT xsrc, ysrc
@@ -1828,9 +1793,7 @@ icon_poly_map:
         ldx     #.sizeof(IconEntry) - IconEntry::name
     DO
         copy8   (icon_ptr),y, dest + 1,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ldy     dest + 1
         iny
@@ -1862,9 +1825,7 @@ END_PARAM_BLOCK
         ldy     #MGTK::MapInfo::maprect + .sizeof(MGTK::Rect)-1
     DO
         copy8   (port_ptr),y, icon_in_rect_params::rect,x
-        dey
-        dex
-    WHILE POS
+    WHILE dey : dex : POS
 
         ;; Loop over all icons
         ldx     #AS_BYTE(-1)
@@ -2038,16 +1999,14 @@ END_PARAM_BLOCK
 
         MGTK_CALL MGTK::ShieldCursor, bounding_rect
 
-        bit     clip_icons_flag
-    IF NC
+    IF bit clip_icons_flag : NC
         MGTK_CALL MGTK::PaintPoly, poly
     ELSE
       DO
         jsr     CalcWindowIntersections
         BREAK_IF CS             ; nothing remaining to draw
         MGTK_CALL MGTK::PaintPoly, poly
-        bit     more_drawing_needed_flag
-      WHILE NS
+      WHILE bit more_drawing_needed_flag : NS
     END_IF
 
         MGTK_CALL MGTK::UnshieldCursor
@@ -2078,8 +2037,7 @@ END_PARAM_BLOCK
         cmp     clip_window_id
         bne     next
 
-        bit     redraw_highlighted_flag
-      IF NC
+      IF bit redraw_highlighted_flag : NC
         ldy     #IconEntry::state
         lda     (icon_ptr),y
         and     #kIconEntryStateHighlighted
@@ -2179,9 +2137,7 @@ reserved:       .byte   0
         copy16  viewloc,x, portbits::maprect::topleft,x
         add16   portbits::maprect+MGTK::Rect::topleft,x, portbits::maprect+MGTK::Rect::bottomright,x, portbits::maprect+MGTK::Rect::bottomright,x
 
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
         ;; For window's items/used/free space bar
         add16_8 portbits::maprect+MGTK::Rect::y1, header_height
@@ -2213,9 +2169,7 @@ reserved:       .byte   0
         scmp16  portbits::maprect::bottomright,x, portbits::maprect::topleft,x
         bmi     empty
 
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
 
         ;; Duplicate structs needed for clipping
         COPY_BLOCK portbits::maprect, clip_bounds
@@ -2370,9 +2324,7 @@ do_pt:  lda     pt_num
         ldy     #0
     DO
         copy8   pt1::xcoord,x, cwi_findwindow_params,y
-        iny
-        inx
-    WHILE Y <> #4
+    WHILE iny : inx : Y <> #4
 
         inc     pt_num
         MGTK_CALL MGTK::FindWindow, cwi_findwindow_params
@@ -2511,9 +2463,7 @@ CalcWindowIntersections := CalcWindowIntersectionsImpl::start
         ldx     #2              ; loop over dimensions
     DO
         sub16   #0, clip_coords,x, clip_coords,x
-        dex                     ; next dimension
-        dex
-    WHILE POS
+    WHILE dex : dex : POS       ; next dimension
         rts
 .endproc ; OffsetPortAndIcon
 

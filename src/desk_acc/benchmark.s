@@ -365,8 +365,7 @@ done:   jmp     InputLoop
         jsr     ProbeSpeed
 
         copy16  counter, progress_muldiv_params::numerator
-        bit     radio_60hz_button::state
-    IF NS
+    IF bit radio_60hz_button::state : NS
         copy16  #kSpeedMax * kSpeedDefault60Hz, progress_muldiv_params::denominator
     ELSE
         copy16  #kSpeedMax * kSpeedDefault50Hz, progress_muldiv_params::denominator

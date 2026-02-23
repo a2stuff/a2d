@@ -336,8 +336,7 @@ finish: jmp     InputLoop
 
         pla
         tax
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         rts
 .endproc ; XDrawObjects

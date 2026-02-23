@@ -170,8 +170,7 @@ backspace:
         ;; Initialize on first input
         ;; Preserves A
 maybe_init:
-        bit     placeholder_flag
-    IF NS
+    IF bit placeholder_flag : NS
         ldx     #0
         stx     placeholder_flag
         ldx     #2

@@ -32,11 +32,9 @@
         sta     PAGE2OFF
         lda     (ptr_screen),y
         sta     (ptr_main_buf),y
-        dey
-      WHILE POS
+      WHILE dey : POS
         jsr     IncPointers
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         pla
     IF NC
@@ -62,11 +60,9 @@
         sta     PAGE2OFF
         lda     (ptr_main_buf),y
         sta     (ptr_screen),y
-        dey
-      WHILE POS
+      WHILE dey : POS
         jsr     IncPointers
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         pla
     IF NC

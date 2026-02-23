@@ -512,8 +512,7 @@ intl_deci_sep:  .byte   0
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
-        lda     event_params::kind
-    IF A = #MGTK::EventKind::button_down
+    IF lda event_params::kind : A = #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
@@ -534,8 +533,8 @@ intl_deci_sep:  .byte   0
         cmp     #MGTK::Area::content
         bcc     ignore_click
 
-        lda     findwindow_params::window_id
-    IF A <> #kDAWindowId        ; This window?
+        ;; This window?
+    IF lda findwindow_params::window_id : A <> #kDAWindowId
 ignore_click:
         rts
     END_IF
@@ -564,8 +563,7 @@ exit:   pla                     ; pop OnClick / OnKeyPress
 
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        bit     dragwindow_params::moved
-    IF NS
+    IF bit dragwindow_params::moved : NS
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawContent
     END_IF
@@ -901,9 +899,7 @@ miss:   RETURN  C=0
         lda     text_buffer1,x
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
-        dex
-        dey
-      WHILE NOT_ZERO
+      WHILE dex : dey : NOT_ZERO
         lda     #' '
 
         sta     text_buffer1+1,x
@@ -988,8 +984,7 @@ empty:  inc     calc_l
         lda     #'.'
        END_IF
         sta     FBUFFR,x
-        dex
-      WHILE POS
+      WHILE dex : POS
         copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN            ; FAC = parsed `FBUFFR`
@@ -1011,8 +1006,7 @@ empty:  inc     calc_l
 
         ;; In a sequence like "2 * 3 = = + 1" this prevents the "+"
         ;; from executing a pending op.
-        bit     calc_r          ; X = pending op
-      IF NS
+      IF bit calc_r : NS        ; X = pending op
         ldx     #'='
       END_IF
 
@@ -1062,9 +1056,7 @@ empty:  inc     calc_l
       END_IF
         sta     text_buffer1,x
         sta     text_buffer2,x
-        dex
-        dey
-    WHILE NOT_ZERO
+    WHILE dex : dey : NOT_ZERO
 
         ;; Add leading zero if starting with decimal
     IF A = #'-'
@@ -1085,8 +1077,7 @@ empty:  inc     calc_l
         lda     #' '
         sta     text_buffer1,x
         sta     text_buffer2,x
-        dex
-      WHILE POS
+      WHILE dex : POS
     END_IF
 
         jsr     DisplayBuffer1
@@ -1127,8 +1118,7 @@ empty:  inc     calc_l
         ldy     #.sizeof(MGTK::Rect)-1
     DO
         copy8   (ptr),y, inrect_rect,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         MGTK_CALL MGTK::InflateRect, grow_rect
 
         ;; --------------------------------------------------

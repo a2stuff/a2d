@@ -582,8 +582,7 @@ quick_boot_slot:
     IF A = #MGTK::EventKind::key_down
         ;; --------------------------------------------------
         ;; Key Down
-        bit     desktop_available_flag
-      IF NC
+      IF bit desktop_available_flag : NC
         lda     event_params::key
         jsr     ToUpperCase
        IF A = #kShortcutRunDeskTop
@@ -813,8 +812,7 @@ done:   rts
         ;; DeskTop button?
 
 check_desktop_btn:
-        bit     desktop_available_flag
-    IF NC
+    IF bit desktop_available_flag : NC
         MGTK_CALL MGTK::InRect, desktop_button::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, desktop_button
@@ -847,8 +845,7 @@ ret:    rts
 
 .proc UpdateOKButton
         lda     #BTK::kButtonStateNormal
-        bit     op_record::selected_index
-    IF NS
+    IF bit op_record::selected_index : NS
         lda     #BTK::kButtonStateDisabled
     END_IF
 
@@ -881,8 +878,7 @@ noop:   rts
 ;;; Assert: ROM banked in, ALTZP/LC is OFF
 
 .proc RestoreSystem
-        bit     desktop_started_flag
-    IF NS
+    IF bit desktop_started_flag : NS
         MGTK_CALL MGTK::StopDeskTop
     END_IF
         jsr     RestoreTextMode
@@ -1152,15 +1148,13 @@ backup_devlst:
     IF CS
         ;; Processing update event
         BTK_CALL BTK::Update, ok_button
-        bit     desktop_available_flag
-      IF NC
+      IF bit desktop_available_flag : NC
         BTK_CALL BTK::Update, desktop_button
       END_IF
     ELSE
         ;; Non-update
         BTK_CALL BTK::Draw, ok_button
-        bit     desktop_available_flag
-      IF NC
+      IF bit desktop_available_flag : NC
         BTK_CALL BTK::Draw, desktop_button
       END_IF
     END_IF
@@ -1351,8 +1345,7 @@ start:
         ;; --------------------------------------------------
         ;; Set cursor for duration of operation
 
-        bit     invoked_during_boot_flag
-    IF NC                       ; skip if there's no UI yet
+    IF bit invoked_during_boot_flag : NC ; skip if there's no UI yet
         jsr     SetCursorWatch  ; before invoking entry
         jsr     rest
         jmp     SetCursorPointer ; after invoking entry
@@ -1365,8 +1358,7 @@ rest:
 
         ;; --------------------------------------------------
         ;; Figure out entry path, given entry options and overrides
-        bit     invoked_during_boot_flag
-    IF NC
+    IF bit invoked_during_boot_flag : NC
         bit     BUTN0           ; if Open-Apple is down, skip RAMCard copy
         jmi     use_entry_path
 
@@ -1414,8 +1406,7 @@ rest:
         ;; --------------------------------------------------
         ;; `kSelectorEntryCopyOnBoot`
 on_boot:
-        bit     invoked_during_boot_flag
-    IF NC                       ; skip if no UI
+    IF bit invoked_during_boot_flag : NC ; skip if no UI
         CALL    GetEntryCopiedToRAMCardFlag, X=invoke_index
         bpl     use_entry_path  ; wasn't copied!
         FALL_THROUGH_TO use_ramcard_path
@@ -1444,8 +1435,7 @@ InvokeEntry := InvokeEntryImpl::start
         ;; --------------------------------------------------
         ;; Set cursor for duration of operation
 
-        bit     invoked_during_boot_flag
-    IF NC                       ; skip if there's no UI yet
+    IF bit invoked_during_boot_flag : NC ; skip if there's no UI yet
         jsr     SetCursorWatch  ; before launching path
         jsr     rest
         jmp     SetCursorPointer ; after launching path
@@ -1460,8 +1450,7 @@ retry:
 
         ;; Not present; maybe show a retry prompt
         tax
-        bit     invoked_during_boot_flag
-    IF NC
+    IF bit invoked_during_boot_flag : NC
         txa
         pha
         jsr     ShowAlert
@@ -1534,8 +1523,7 @@ check_type:
 
         ;; Don't know how to invoke
 err:
-        bit     invoked_during_boot_flag
-    IF NC
+    IF bit invoked_during_boot_flag : NC
         CALL    ShowAlert, A=#AlertID::selector_unable_to_run
     END_IF
         jmp     ClearSelectedIndex
@@ -1590,8 +1578,7 @@ check_path:
         DEFINE_QUIT_PARAMS quit_params
 
 .proc ClearSelectedIndex
-        bit     invoked_during_boot_flag
-    IF NC
+    IF bit invoked_during_boot_flag : NC
         copy8   #$FF, op_params::new_selection
         OPTK_CALL OPTK::SetSelection, op_params
         jsr     UpdateOKButton

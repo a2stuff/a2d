@@ -82,8 +82,7 @@ mirrored_slot   .byte
 
         ;; Figure out SmartPort control unit number in Y
         ldy     #1              ; start with unit 1
-        bit     unit_number     ; high bit is D
-    IF NS
+    IF bit unit_number : NS     ; high bit is D
         iny                     ; Y = 1 or 2 (for Drive 1 or 2)
     END_IF
 

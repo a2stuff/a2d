@@ -124,8 +124,7 @@ load_target:
         ;; When launching BASIS.SYSTEM, ProDOS 2.4's Bitsy Bye populates
         ;; $280 with the path containing the target file.
         BITSY_DIR_PATH := $280
-        bit     INVOKER_BITSY_COMPAT
-      IF NS
+      IF bit INVOKER_BITSY_COMPAT : NS
         ldy     INVOKER_PREFIX
        DO
         lda     INVOKER_PREFIX,y

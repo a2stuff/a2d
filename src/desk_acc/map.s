@@ -363,8 +363,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 .proc HandleDrag
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        bit     dragwindow_params::moved
-    IF NS
+    IF bit dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -405,8 +404,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         jsr     ToUpperCase
         cmp     (ptr),y
         bne     next
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
 
         ;; Match!
         ldy     #0
@@ -591,8 +589,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Latitude
         copy16  lat, tmp
         CLEAR_BIT7_FLAG sflag
-        bit     tmp+1
-    IF NS
+    IF bit tmp+1 : NS
         SET_BIT7_FLAG sflag
         sub16   #0, tmp, tmp
     END_IF
@@ -601,8 +598,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::MoveTo, pos_lat
         MGTK_CALL MGTK::DrawString, str_from_int
         MGTK_CALL MGTK::DrawString, str_degree_suffix
-        bit     sflag
-    IF NC
+    IF bit sflag : NC
         MGTK_CALL MGTK::DrawString, str_n
     ELSE
         MGTK_CALL MGTK::DrawString, str_s
@@ -612,8 +608,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Longitude
         copy16  long, tmp
         CLEAR_BIT7_FLAG sflag
-        bit     tmp+1
-    IF NS
+    IF bit tmp+1 : NS
         SET_BIT7_FLAG sflag
         sub16   #0, tmp, tmp
     END_IF
@@ -622,8 +617,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::MoveTo, pos_long
         MGTK_CALL MGTK::DrawString, str_from_int
         MGTK_CALL MGTK::DrawString, str_degree_suffix
-        bit     sflag
-    IF NC
+    IF bit sflag : NC
         MGTK_CALL MGTK::DrawString, str_e
     ELSE
         MGTK_CALL MGTK::DrawString, str_w

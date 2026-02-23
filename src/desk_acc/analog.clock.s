@@ -156,8 +156,7 @@ tfives: .byte   0
         lda     datetime,x
         cmp     last,x
         bne     diff
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts                     ; no change
 
         ;; Different! update

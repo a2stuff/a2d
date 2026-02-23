@@ -685,8 +685,7 @@ done:   rts
         ldy     #.sizeof(MGTK::Point)-1
     DO
         copy8   (pt_ptr),y, pt,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         pla
 
         ;; Calculate address of `CatalogEntry`
@@ -753,8 +752,7 @@ type_table:
     DO
         lsr     a
         BREAK_IF CS
-        inx
-    WHILE X <> #8
+    WHILE inx : X <> #8
         rts
 .endproc ; clz
 
@@ -920,8 +918,7 @@ start:
         inc     control_block+ControlBlock::dev_count
        END_IF
       END_IF
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
 
         rts
 
@@ -981,8 +978,7 @@ index:  .byte   0
         and     #$7F            ; strip high bit
         sta     entry_buf+aux::CatalogEntry::Name+1,x
         iny
-        inx
-       WHILE X <> #dos33::MaxFilenameLen
+       WHILE inx : X <> #dos33::MaxFilenameLen
 
        DO
         dex
@@ -1134,8 +1130,7 @@ start:
        END_IF
       END_IF
 
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         ;; Can't start with non-alpha, replace with 'X'
         lda     str_name+1
@@ -1294,8 +1289,7 @@ finish:
         jsr     SendControlBlock
         JSR_TO_AUX aux::Catalog::UpdateProgressMeter
 
-        bit     set_eof_flag
-    IF NS
+    IF bit set_eof_flag : NS
         JUMP_TABLE_MLI_CALL SET_EOF, set_eof_params
     END_IF
         JUMP_TABLE_MLI_CALL CLOSE, close_params
@@ -1333,8 +1327,7 @@ no:     RETURN  C=1
     DO
         lsr     a
         BREAK_IF CS
-        inx
-    WHILE X <> #8
+    WHILE inx : X <> #8
         rts
 .endproc ; clz
 
@@ -1388,8 +1381,7 @@ prefix_path:    .res    ::kPathBufferSize, 0
         tay
     DO
         copy8   (ptr),y, prefix_path,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         RETURN  A=#0
 
 fail:   RETURN  A=#1
@@ -1456,8 +1448,7 @@ DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
         ldy     #0
     DO
         copy8   (src_ptr),y, (dst_ptr),y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         RETURN  C=0
 .endproc ; Read
@@ -1485,8 +1476,7 @@ DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
         ldy     #0
     DO
         copy8   (src_ptr),y, (dst_ptr),y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Write the updated block back out
         JUMP_TABLE_MLI_CALL WRITE_BLOCK, block_params

@@ -946,8 +946,7 @@ CmdDiskCopy := SetCopyModeImpl::disk_copy
         MGTK_CALL MGTK::PaintRect, rect_erase_title
         MGTK_CALL MGTK::MoveTo, point_title
         ldax    #label_quick_copy
-        bit     disk_copy_flag
-    IF NS
+    IF bit disk_copy_flag : NS
         ldax    #label_disk_copy
     END_IF
         TAIL_CALL DrawStringCentered
@@ -1316,8 +1315,7 @@ fallback:
     WHILE dey : POS
         pla
 
-        bit     selection_mode_flag  ; source or destination?
-    IF NS
+    IF bit selection_mode_flag : NS ; source or destination?
         tax                     ; indirection for destination
         lda     destination_index_table,x
     END_IF
@@ -1660,8 +1658,7 @@ remainder:      .word   0              ; (out)
         tmp_written := $08
         copy16  blocks_read, tmp_read
         copy16  blocks_written, tmp_written
-        bit     progress_muldiv_params::denominator+1
-    IF NC
+    IF bit progress_muldiv_params::denominator+1 : NC
         ;; Use (read + written) / total*2
         asl16   progress_muldiv_params::denominator
     ELSE

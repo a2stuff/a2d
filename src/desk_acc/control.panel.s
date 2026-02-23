@@ -583,8 +583,7 @@ shortcut_table_addr_hi:
 .proc HandleDrag
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        bit     dragwindow_params::moved
-    IF NS
+    IF bit dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -750,8 +749,7 @@ shortcut_table_addr_hi:
         ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
         lda     pattern,y
-        bit     flag
-      IF NS
+      IF bit flag : NS
         ora     mask1,x         ; set bit
       ELSE
         and     mask2,x         ; clear bit
@@ -1303,8 +1301,7 @@ mode:   .byte   0
         add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
         lda     #MGTK::pencopy
-        bit     mode
-    IF NC
+    IF bit mode : NC
         lda     #MGTK::notpencopy
     END_IF
         sta     mode

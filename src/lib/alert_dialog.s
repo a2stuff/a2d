@@ -176,8 +176,7 @@ start:
 
 
 .ifdef AD_SAVEBG
-        bit     alert_params::options
-    IF VS                       ; V = use save area
+    IF bit alert_params::options : VS ; V = use save area
         MGTK_CALL MGTK::SaveScreenRect, alert_rect
     END_IF
 .endif ; AD_SAVEBG
@@ -308,8 +307,7 @@ done:
         ;; --------------------------------------------------
         ;; Play bell
 
-        bit     alert_params::options
-    IF NS                       ; N = play sound
+    IF bit alert_params::options : NS ; N = play sound
         jsr     Bell
     END_IF
 
@@ -318,8 +316,7 @@ done:
 
 event_loop:
 .ifdef AD_EJECTABLE
-        bit     ejectable_flag
-    IF NS
+    IF bit ejectable_flag : NS
         jsr     WaitForDiskOrEsc
         jeq     finish_ok
         jmp     finish_cancel
@@ -491,8 +488,7 @@ finish:
         pha
 
 .ifdef AD_SAVEBG
-        bit     alert_params::options
-    IF VS                       ; V = use save area
+    IF bit alert_params::options : VS ; V = use save area
         MGTK_CALL MGTK::RestoreScreenRect, alert_rect
     END_IF
 .else

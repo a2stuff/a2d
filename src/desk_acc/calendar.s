@@ -381,8 +381,7 @@ fin:    jsr     UpdateWindow
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 common:
-        bit     dragwindow_params::moved
-    IF NS
+    IF bit dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -462,8 +461,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         lsr16   pos_month_year::xcoord
 
         ;; Erase background if needed
-        bit     full_flag
-    IF NC
+    IF bit full_flag : NC
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintRect, rect_month_year
     END_IF
@@ -478,8 +476,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         ;; --------------------------------------------------
         ;; Grid lines
 
-        bit     full_flag
-    IF NS
+    IF bit full_flag : NS
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPenSize, grid_pen
 
@@ -515,8 +512,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
         ;; --------------------------------------------------
         ;; Day names
 
-        bit full_flag
-    IF NS
+    IF bit full_flag : NS
         copy8   #6, index
       DO
         lda     index
@@ -625,8 +621,7 @@ draw_date:
         ;; --------------------------------------------------
         ;; Left/right arrow buttons
 
-        bit     full_flag
-    IF NS
+    IF bit full_flag : NS
         BTK_CALL BTK::Draw, left_button
         BTK_CALL BTK::Draw, right_button
     END_IF

@@ -380,8 +380,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         CALL    _ReadOrWriteBlock, AX=auxlc::block_num
 
         ;; Update displayed counts
-        bit     write_flag
-       IF NC
+       IF bit write_flag : NC
         jsr     auxlc::IncAndDrawBlocksRead
        ELSE
         jsr     auxlc::IncAndDrawBlocksWritten
@@ -417,8 +416,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         ;; read/write block directly to/from main mem buffer
         ;; $00-$0F = 0/$0000 - 0/$FFFF
 
-        bit     write_flag
-    IF NC
+    IF bit write_flag : NC
         jsr     ReadBlockToMain
         bmi     error
         rts
@@ -441,8 +439,7 @@ need_move:
         ;; read/write block to/from aux lcbank1
         ;; $1D-$1F = 1/$D000 - 1/$FFFF
 
-        bit     write_flag
-    IF NC
+    IF bit write_flag : NC
         jsr     ReadBlockToLCBank1
         bmi     error
         rts
@@ -456,8 +453,7 @@ need_move:
         ;; read/write block to/from aux
         ;; $10-$1C = 1/$0000 - 1/$CFFF
 use_auxmem:
-        bit     write_flag      ; 16-28
-    IF NC
+    IF bit write_flag : NC      ; 16-28
         jsr     auxlc::ReadBlockToAuxmem
         bmi     error
         rts
@@ -471,8 +467,7 @@ use_auxmem:
         ;; read/write block to/from aux lcbank2
         ;; $20+ = 1b/$D000 - 1b/$DFFF
 use_lcbank2:
-        bit     write_flag
-    IF NC
+    IF bit write_flag : NC
         jsr     ReadBlockToLCBank2
         bmi     error
         rts

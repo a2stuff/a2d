@@ -132,8 +132,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
         lda     name_buf+1,x
         sta     name_buf,x
         inx
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         MGTK_CALL MGTK::OpenWindow, winfo
 
@@ -230,8 +229,7 @@ ret:    rts
     DO
         lda     INVOKE_PATH,y   ; find last '/'
         BREAK_IF A = #'/'
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ldx     #0
     DO

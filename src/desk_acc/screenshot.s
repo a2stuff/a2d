@@ -84,15 +84,13 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
       DO
         lda     (ptr),y
         sta     BLOCK_BUFFER,y
-        iny
-      WHILE NOT_ZERO
+      WHILE iny : NOT_ZERO
         inc     ptr+1
 
       DO
         lda     (ptr),y
         sta     BLOCK_BUFFER+$100,y
-        iny
-      WHILE NOT_ZERO
+      WHILE iny : NOT_ZERO
         inc     ptr+1
 
         sta     PAGE2OFF
@@ -100,8 +98,7 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
         JUMP_TABLE_MLI_CALL WRITE, write_block_params
 
-        lda     ptr+1
-    WHILE A <> #$40
+    WHILE lda ptr+1 : A <> #$40
 
         ;; ----------------------------------------
         ;; Write main segment

@@ -114,12 +114,10 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         copy8   #kAuxPageClearByte, (BASL),y
         sta     PAGE2OFF
 
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         inc     CV
-        lda     CV
-    WHILE A <> #24
+    WHILE lda CV : A <> #24
 
         sta     CLR80STORE
         rts
@@ -149,12 +147,10 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         copy8   (ptr2),y, (BASL),y
         sta     PAGE2OFF
 
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         inc     CV
-        lda     CV
-    WHILE A <> #24
+    WHILE lda CV : A <> #24
 
         sta     CLR80STORE
         rts
@@ -199,8 +195,7 @@ kNumCursors = 4
         tax
         copy16  list,x, ptr
         jsr     ResetCursor
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
 
         ;; --------------------------------------------------
 
@@ -237,8 +232,7 @@ MainLoop:
         jsr     AdvanceCursor
       END_IF
 
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
         bmi     MainLoop        ; always
 
 exit:   rts

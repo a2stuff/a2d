@@ -602,8 +602,7 @@ str_slash_desktop:
         bne     test_unit_num   ; always
 
 next_unit:
-        dec     devnum
-    WHILE POS
+    WHILE dec devnum : POS
         jmp     DidNotCopy
 
         ;; Have a prospective device.
@@ -907,8 +906,7 @@ done:   dex
         CALL    CoutString, AX=#str_esc_to_cancel
 
         ;; Tip
-        bit     supports_mousetext
-    IF NS
+    IF bit supports_mousetext : NS
         copy8   #kHtabCopyingTip, OURCH
         CALL    VTABZ, A=#kVtabCopyingTip
         CALL    CoutString, AX=#str_tip_skip_copying

@@ -82,8 +82,7 @@
         tay
     DO
         copy8   (ptr),y, searchPath,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Append '/' needed by algorithm
         ldy     searchPath
@@ -118,8 +117,7 @@ continue:
         ldx     #0
     DO
         CALL    COut, A=iw2_init,x
-        inx
-    WHILE X <> #kLenIW2Init
+    WHILE inx : X <> #kLenIW2Init
 
         ;; Recurse and print
         jsr     PrintCatalog
@@ -133,13 +131,11 @@ PrintCatalog:
         ldx     #0
     DO
         CALL    COut, A=str_header+1,x
-        inx
-    WHILE X <> str_header
+    WHILE inx : X <> str_header
         jsr     CROut
 
         ;; If we're doing multiple volumes, get started
-        bit     vol_flag
-    IF NS
+    IF bit vol_flag : NS
         jsr     InitVolumes
         jsr     NextVolume
         bcs     finish
@@ -150,8 +146,7 @@ next:
         ldx     #0
     DO
         CALL    COut, A=searchPath+1,x
-        inx
-    WHILE X < searchPath
+    WHILE inx : X < searchPath
         jsr     CROut
         copy8   #1, indent
 
@@ -159,8 +154,7 @@ next:
         jsr     ::RecursiveCatalog::Start
 
         ;; If we're doing multiple volumes, do the next one
-        bit     vol_flag
-    IF NS
+    IF bit vol_flag : NS
         jsr     NextVolume
         bcc     next
     END_IF
@@ -207,9 +201,7 @@ iw2_init:
         and     (ptr),y
         iny
         BREAK_IF A <> (ptr),y
-
-        dec     count
-    WHILE NOT_ZERO
+    WHILE dec count : NOT_ZERO
 
         rts
 
@@ -309,8 +301,7 @@ saved_stack:
         ldy     searchPath      ; prime the search path
     DO
         copy8   searchPath,y, nameBuffer,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         lda     #0              ; reset recursion/results state
         sta     Depth
@@ -484,8 +475,7 @@ OpenDone:
       DO
         jsr     COut
         jsr     COut
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
     END_IF
 
         ;; Print name
@@ -497,8 +487,7 @@ OpenDone:
     DO
         CALL    COut, A=(entPtr),y
         iny
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         rts
 .endproc ; PrintName
@@ -513,8 +502,7 @@ OpenDone:
         ldx     #0
     DO
         CALL    COut, A=str_file_type+1,x
-        inx
-    WHILE X <> str_file_type
+    WHILE inx : X <> str_file_type
 
         rts
 .endproc ; PrintType
@@ -537,15 +525,13 @@ OpenDone:
         lda     #' '
     DO
         jsr     COut
-        dex
-    WHILE X <> str_from_int
+    WHILE dex : X <> str_from_int
 
         ;; Print it
         ldx     #0
     DO
         CALL    COut, A=str_from_int+1,x
-        inx
-    WHILE X <> str_from_int
+    WHILE inx : X <> str_from_int
 
         rts
 .endproc ; PrintSize
@@ -628,15 +614,13 @@ OpenDone:
         lda     #' '
     DO
         jsr     COut
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         ;; Print it
         ldx     #0
     DO
         CALL    COut, A=str_date+1,x
-        inx
-    WHILE X <> str_date
+    WHILE inx : X <> str_date
 
         rts
 
@@ -922,8 +906,7 @@ repeat: ldx     devidx
         ldx     #0
     DO
         copy8   on_line_buffer+1,x, searchPath+2,x
-        inx
-    WHILE X <> on_line_buffer
+    WHILE inx : X <> on_line_buffer
 
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx

@@ -312,8 +312,7 @@ reserved:       .byte   0
         plp
         ror     tmp+1
         ror     tmp
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
 
         rol     tmp
         rol     tmp+1
@@ -324,8 +323,7 @@ reserved:       .byte   0
         dec16   dst
         copy8   tmp, (dst),y
 
-        dec     count
-    WHILE NOT_ZERO
+    WHILE dec count : NOT_ZERO
         rts
 .endproc ; FrameDouble
 
@@ -621,8 +619,7 @@ skip:   .word   0
         ldx     #0
         lda     x_delta
     IF A >= #kMove/2
-        bit     x_neg
-      IF NEG
+      IF bit x_neg: NEG
         inx
       END_IF
         inx
@@ -634,8 +631,7 @@ skip:   .word   0
 
         lda     y_delta
     IF A >= #kMove/2
-        bit     y_neg
-      IF NEG
+      IF bit y_neg : NEG
         inx
       END_IF
         inx
@@ -783,16 +779,14 @@ set_frame:
 .proc MoveAndClamp
         ;; Move
         asl     x_delta
-        bit     x_neg
-    IF POS
+    IF bit x_neg : POS
         add16_8 x_pos, x_delta
     ELSE
         sub16_8 x_pos, x_delta
     END_IF
         lsr     x_delta
 
-        bit     y_neg
-    IF POS
+    IF bit y_neg : POS
         add16_8 y_pos, y_delta
     ELSE
         sub16_8 y_pos, y_delta
@@ -937,8 +931,7 @@ cur_frame:                      ; NekoFrame::XXX
         jsr     GetSetPort
     IF ZERO
         ;; Erase if needed
-        bit     moved_flag
-      IF NS
+      IF bit moved_flag : NS
         JSR_TO_AUX aux::EraseFrame
       END_IF
 

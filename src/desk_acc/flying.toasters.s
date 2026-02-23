@@ -176,8 +176,7 @@ exit:
         copy16  ypos, ypos_table,x
 
         ;; Next
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
         rts
 
 index:  .byte   0

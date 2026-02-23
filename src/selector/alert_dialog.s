@@ -80,8 +80,9 @@ buttons:        .byte   0       ; AlertButtonOptions
 options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 .endparams
 
-start:  bit     app::invoked_during_boot_flag ; if no UI, just return cancel
-    IF NS
+start:
+    IF bit app::invoked_during_boot_flag : NS
+        ;; if no UI, just return cancel
         RETURN  A=#kAlertResultCancel
     END_IF
 
