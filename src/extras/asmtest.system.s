@@ -119,18 +119,18 @@
         nop
     FOREVER
 
-;;; CONTINUE
+;;; REDO
     DO
         nop
-        CONTINUE_IF NC
-        CONTINUE_IF NOT NC
+        REDO_IF NC
+        REDO_IF NOT NC
         nop
     WHILE CS
 
     DO
         nop
-        CONTINUE_IF NC
-        CONTINUE_IF NOT NC
+        REDO_IF NC
+        REDO_IF NOT NC
         nop
     FOREVER
 
@@ -190,11 +190,11 @@
         nop
     WHILE CS
 
-;;; CONTINUE
+;;; REDO
     DO
         nop
-        CONTINUE_IF A < #$12
-        CONTINUE_IF NOT A < #$12
+        REDO_IF A < #$12
+        REDO_IF NOT A < #$12
         nop
     WHILE CS
 
@@ -237,10 +237,10 @@ table := *
         nop
     WHILE CS
 
-;;; CONTINUE
+;;; REDO
     DO
         nop
-        CONTINUE_IF A < table,y
+        REDO_IF A < table,y
         nop
     WHILE CS
 
@@ -352,28 +352,28 @@ table := *
         nop
     WHILE CC
 
-;;; CONTINUE_IF ... IN / NOT_IN
+;;; REDO_IF ... IN / NOT_IN
     DO
         nop
-        CONTINUE_IF X IN #1, #2, #3
+        REDO_IF X IN #1, #2, #3
         nop
     WHILE CC
 
     DO
         nop
-        CONTINUE_IF X NOT_IN #1, #2, #3
+        REDO_IF X NOT_IN #1, #2, #3
         nop
     WHILE CC
 
     DO
         nop
-        CONTINUE_IF NOT X IN #1, #2, #3
+        REDO_IF NOT X IN #1, #2, #3
         nop
     WHILE CC
 
     DO
         nop
-        CONTINUE_IF NOT X NOT_IN #1, #2, #3
+        REDO_IF NOT X NOT_IN #1, #2, #3
         nop
     WHILE CC
 
@@ -499,28 +499,28 @@ table := *
         nop
     WHILE CS
 
-;;; CONTINUE_IF ... BETWEEN / NOT_BETWEEN
+;;; REDO_IF ... BETWEEN / NOT_BETWEEN
     DO
         nop
-        CONTINUE_IF A BETWEEN #'A', #'Z'
+        REDO_IF A BETWEEN #'A', #'Z'
         nop
     WHILE CS
 
     DO
         nop
-        CONTINUE_IF A NOT_BETWEEN #'A', #'Z'
+        REDO_IF A NOT_BETWEEN #'A', #'Z'
         nop
     WHILE CS
 
     DO
         nop
-        CONTINUE_IF NOT A BETWEEN #'A', #'Z'
+        REDO_IF NOT A BETWEEN #'A', #'Z'
         nop
     WHILE CS
 
     DO
         nop
-        CONTINUE_IF NOT A NOT_BETWEEN #'A', #'Z'
+        REDO_IF NOT A NOT_BETWEEN #'A', #'Z'
         nop
     WHILE CS
 
@@ -541,7 +541,7 @@ table := *
     DO
 @cheap:
         BREAK_IF CS
-        CONTINUE_IF CS
+        REDO_IF CS
         beq     @cheap
     WHILE A < #123
 
@@ -909,7 +909,7 @@ kSet = 1
         nop
 .endrepeat
         ;; Should be `BMI`
-        CONTINUE_IF NS
+        REDO_IF NS
 
         ;; Should be `BCS`
     WHILE CS
@@ -919,7 +919,7 @@ kSet = 1
         nop
 .endrepeat
         ;; Should be `BPL` / `JMP`
-        CONTINUE_IF NS
+        REDO_IF NS
 
         ;; Should be `BCC` / `JMP`
     WHILE CS

@@ -183,7 +183,7 @@ counter:
 ;;; If caller already called GetEvent, start here.
 skip_get:
         MGTK_CALL MGTK::BeginUpdate, event_params::window_id
-        CONTINUE_IF NOT_ZERO    ; obscured
+        REDO_IF NOT_ZERO        ; obscured
 
         lda     event_params::window_id
       IF ZERO
@@ -6699,19 +6699,19 @@ start:  stax    ptr1
         tax
         lda     window_to_dir_icon_table-1,x
         ASSERT_EQUALS ::kWindowToDirIconFree, 0
-        CONTINUE_IF ZERO
+        REDO_IF ZERO
 
         CALL    GetWindowPath, A=window_num
         stax    ptr2
 
       IF bit exact_match_flag : NS
         jsr     CompareStrings  ; Z=1 if equal
-        CONTINUE_IF ZC
+        REDO_IF ZC
         RETURN  A=window_num
       END_IF
 
         jsr     IsPathPrefixOf  ; Z=0 if prefix
-        CONTINUE_IF ZS
+        REDO_IF ZS
         ldx     found_windows_count
         copy8   window_num, found_windows_list,x
         inc     found_windows_count
@@ -10980,7 +10980,7 @@ fail:   jmp     OpHandleErrorCode
         jsr     _WriteDst
 .if ::kCopyInteractive
         bit     src_dst_exclusive_flag
-        CONTINUE_IF NC
+        REDO_IF NC
 
         ;; Swap
         MLI_CALL CLOSE, close_dst_params
@@ -12492,7 +12492,7 @@ DoRename        := DoRenameImpl::start
 .proc _DialogRun
     REPEAT
         jsr     _InputLoop
-        CONTINUE_IF NS          ; continue?
+        REDO_IF NS              ; continue?
         bne     _DialogClose    ; canceled!
 
         lda     text_input_buf  ; treat empty as cancel

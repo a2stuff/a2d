@@ -751,7 +751,7 @@ fail:   jmp     OpHandleErrorCode
 
 .if ::kCopyInteractive
         bit     src_dst_exclusive_flag
-        CONTINUE_IF NC
+        REDO_IF NC
 
         ;; Swap
         MLI_CALL CLOSE, close_dst_params

@@ -1311,7 +1311,7 @@ invert_rect:
         clc
         adc     #.sizeof(btn_c)
         sta     ptr
-        CONTINUE_IF CC
+        REDO_IF CC
         inc     ptr+1
     FOREVER
 .endproc ; DrawContent

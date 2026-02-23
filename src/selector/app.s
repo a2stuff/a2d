@@ -626,10 +626,10 @@ CheckAndClearUpdates:
 
 ClearUpdates:
         lda     event_params::window_id
-        CONTINUE_IF A <> #winfo::kDialogId
+        REDO_IF A <> #winfo::kDialogId
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
-        CONTINUE_IF NOT_ZERO    ; obscured
+        REDO_IF NOT_ZERO        ; obscured
 
         CALL    DrawWindow, C=1 ; is update
         OPTK_CALL OPTK::Update, op_params

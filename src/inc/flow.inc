@@ -14,7 +14,7 @@
 ;;; ============================================================
 
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
-;;; * DO / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
+;;; * DO / REDO_IF cond / BREAK_IF cond / WHILE cond
 ;;;   * or REPEAT / UNTIL cond if you prefer
 ;;;   * DO / FOREVER (or REPEAT / FOREVER) for unconditional JMP
 ;;; * RTS_IF cond
@@ -1042,7 +1042,7 @@
 
 
 ;;; ============================================================
-;;; DO / CONTINUE_IF / BREAK_IF / WHILE or REPEAT / UNTIL
+;;; DO / REDO_IF / BREAK_IF / WHILE or REPEAT / UNTIL
 ;;; ============================================================
 
 ;;; Usage:
@@ -1050,7 +1050,7 @@
 ;;;     ...
 ;;;     BREAK_IF <condition> ; optional
 ;;;     ...
-;;;     CONTINUE_IF <condition> ; optional
+;;;     REDO_IF <condition> ; optional
 ;;;     ...
 ;;;     WHILE <condition>
 ;;;
@@ -1058,7 +1058,7 @@
 ;;;     ...
 ;;;     BREAK_IF <condition> ; optional
 ;;;     ...
-;;;     CONTINUE_IF <condition> ; optional
+;;;     REDO_IF <condition> ; optional
 ;;;     ...
 ;;;     UNTIL <condition>
 ;;;
@@ -1067,7 +1067,7 @@
 ;;;     WHILE
 ;;;     UNTIL
 ;;;
-;;;     CONTINUE_IF
+;;;     REDO_IF
 ;;;     BREAK_IF
 
 ;;; A numeric variable for the current nesting depth of flow control
@@ -1099,13 +1099,13 @@
 
 .define REPEAT DO
 
-.macro CONTINUE_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-  _FLOW_STATEMENT "CONTINUE_IF"
+.macro REDO_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_STATEMENT "REDO_IF"
 
-        .local @continue
-        @continue := __flow_loop_ident__ {"do_while"}
+        .local @redo
+        @redo := __flow_loop_ident__ {"do_while"}
 
-        _FLOW_PARSE_AND_GEN_BIT @continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        _FLOW_PARSE_AND_GEN_BIT @redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
   _FLOW_END_STATEMENT
 .endmacro
@@ -1124,10 +1124,10 @@
 .macro WHILE expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "WHILE"
 
-        .local continue
-        continue := __flow_loop_ident__ {"do_while"}
+        .local redo
+        redo := __flow_loop_ident__ {"do_while"}
 
-        _FLOW_PARSE_AND_GEN_BIT continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        _FLOW_PARSE_AND_GEN_BIT redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
@@ -1144,10 +1144,10 @@
         ;; so that DO and REPEAT remain synonyms and helpers can be
         ;; shared between WHILE and UNTIL.
 
-        .local continue
-        continue := __flow_loop_ident__ {"do_while"}
+        .local redo
+        redo := __flow_loop_ident__ {"do_while"}
 
-        _FLOW_PARSE_AND_GEN_BIF continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        _FLOW_PARSE_AND_GEN_BIF redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
@@ -1164,10 +1164,10 @@
         ;; so that DO and REPEAT remain synonyms and helpers can be
         ;; shared between WHILE and UNTIL.
 
-        .local continue
-        continue := __flow_loop_ident__ {"do_while"}
+        .local redo
+        redo := __flow_loop_ident__ {"do_while"}
 
-        jmp     continue
+        jmp     redo
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
@@ -1222,7 +1222,7 @@
         .define .ident(.sprintf("ELSE_IF_%s", cond)) ELSE_IF .ident(cond)
         .define .ident(.sprintf("WHILE_%s", cond)) WHILE .ident(cond)
         .define .ident(.sprintf("UNTIL_%s", cond)) UNTIL .ident(cond)
-        .define .ident(.sprintf("CONTINUE_IF_%s", cond)) CONTINUE_IF .ident(cond)
+        .define .ident(.sprintf("REDO_IF_%s", cond)) REDO_IF .ident(cond)
         .define .ident(.sprintf("BREAK_IF_%s", cond)) BREAK_IF .ident(cond)
         .define .ident(.sprintf("RTS_IF_%s", cond)) RTS_IF .ident(cond)
 .endmacro
@@ -1231,7 +1231,7 @@
         .define .ident(.sprintf("ELSE_IF_A_%s", cond)) ELSE_IF A .ident(cond)
         .define .ident(.sprintf("WHILE_A_%s", cond)) WHILE A .ident(cond)
         .define .ident(.sprintf("UNTIL_A_%s", cond)) UNTIL A .ident(cond)
-        .define .ident(.sprintf("CONTINUE_IF_A_%s", cond)) CONTINUE_IF A .ident(cond)
+        .define .ident(.sprintf("REDO_IF_A_%s", cond)) REDO_IF A .ident(cond)
         .define .ident(.sprintf("BREAK_IF_A_%s", cond)) BREAK_IF A .ident(cond)
         .define .ident(.sprintf("RTS_IF_A_%s", cond)) RTS_IF A .ident(cond)
 
@@ -1239,7 +1239,7 @@
         .define .ident(.sprintf("ELSE_IF_X_%s", cond)) ELSE_IF X.ident(cond)
         .define .ident(.sprintf("WHILE_X_%s", cond)) WHILE X.ident(cond)
         .define .ident(.sprintf("UNTIL_X_%s", cond)) UNTIL X.ident(cond)
-        .define .ident(.sprintf("CONTINUE_IF_X_%s", cond)) CONTINUE_IF X.ident(cond)
+        .define .ident(.sprintf("REDO_IF_X_%s", cond)) REDO_IF X.ident(cond)
         .define .ident(.sprintf("BREAK_IF_X_%s", cond)) BREAK_IF X.ident(cond)
         .define .ident(.sprintf("RTS_IF_X_%s", cond)) RTS_IF X.ident(cond)
 
@@ -1247,7 +1247,7 @@
         .define .ident(.sprintf("ELSE_IF_Y_%s", cond)) ELSE_IF Y .ident(cond)
         .define .ident(.sprintf("WHILE_Y_%s", cond)) WHILE Y .ident(cond)
         .define .ident(.sprintf("UNTIL_Y_%s", cond)) UNTIL Y .ident(cond)
-        .define .ident(.sprintf("CONTINUE_IF_Y_%s", cond)) CONTINUE_IF Y .ident(cond)
+        .define .ident(.sprintf("REDO_IF_Y_%s", cond)) REDO_IF Y .ident(cond)
         .define .ident(.sprintf("BREAK_IF_Y_%s", cond)) BREAK_IF Y .ident(cond)
         .define .ident(.sprintf("RTS_IF_Y_%s", cond)) RTS_IF Y .ident(cond)
 .endmacro

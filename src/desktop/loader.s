@@ -140,7 +140,7 @@ continue:
         ldx     segment_num
         inc     segment_num
         lda     segment_type_table,x
-        CONTINUE_IF ZERO        ; type 0 = main, so done
+        REDO_IF ZERO            ; type 0 = main, so done
         cmp     #2              ; carry set if banked, clear if aux
       IF GE
         ;; Handle bank-switched memory segment
@@ -208,7 +208,7 @@ vector_buf:
     DO
         copy8   (src),y, (dst),y
         iny
-        CONTINUE_IF NOT_ZERO
+        REDO_IF NOT_ZERO
         inc     src+1
         inc     dst+1
         dex

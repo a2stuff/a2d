@@ -186,7 +186,7 @@ step:
       IF A = #0
         inx
         jsr     IsCellFree
-        CONTINUE_IF CS
+        REDO_IF CS
         jsr     VisitCell
         jsr     CarveLeft
         jmp     yield
@@ -196,7 +196,7 @@ step:
       IF A = #1
         iny
         jsr     IsCellFree
-        CONTINUE_IF CS
+        REDO_IF CS
         jsr     VisitCell
         jsr     CarveUp
         jmp     yield
@@ -206,7 +206,7 @@ step:
       IF A = #2
         dex
         jsr     IsCellFree
-        CONTINUE_IF CS
+        REDO_IF CS
         jsr     VisitCell
         jsr     CarveRight
         jmp     yield
@@ -216,7 +216,7 @@ step:
       IF A = #3
         dey
         jsr     IsCellFree
-        CONTINUE_IF CS
+        REDO_IF CS
         jsr     VisitCell
         jsr     CarveDown
         jmp     yield

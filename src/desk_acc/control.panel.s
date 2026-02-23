@@ -775,7 +775,7 @@ shortcut_table_addr_hi:
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
-        CONTINUE_IF ZERO
+        REDO_IF ZERO
 
         jsr     MapCoords
         ldx     screentowindow_params::windowx

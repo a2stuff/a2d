@@ -25,7 +25,7 @@ done:   rts
         cmp     #'A'
         bcs     check_alpha
         dey
-        CONTINUE_IF POS         ; always
+        REDO_IF POS             ; always
 
 check_alpha:
         iny

@@ -393,7 +393,7 @@ start:  copy8   #0, flag
         BREAK_IF CS
 
         jsr     CompareFileEntries
-        CONTINUE_IF LT
+        REDO_IF LT
 
         jsr     SwapEntries
         copy8   #$FF, flag

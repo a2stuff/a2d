@@ -92,7 +92,7 @@ xcoord  .word
 
 * **Do** use `IF` / `ELSE_IF` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
 
-* **Do** use `DO` / `CONTINUE_IF` / `BREAK_IF` / `WHILE` / `FOREVER` macros to avoid throw-away local labels.
+* **Do** use `DO` / `REDO_IF` / `BREAK_IF` / `WHILE` / `FOREVER` macros to avoid throw-away local labels.
 
 * Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
 
@@ -230,7 +230,7 @@ The following macros should be used to improve code readability by eliminating r
   * `COPY_xx` for fixed size copy loops
 * flow control:
   * `IF`/`ELSE_IF`/`ELSE`/`END_IF` for conditional branches, to avoid throw-away labels
-  * `DO`/`BREAK_IF`/`CONTINUE_IF`/`WHILE` for loopings, to avoid throw-away labels
+  * `DO`/`BREAK_IF`/`REDO_IF`/`WHILE` for loopings, to avoid throw-away labels
   * `CALL proc, AX=params, Y=#opt` (and `TAIL_CALL`) for more semantic function calls
   * `RETURN C=1, AX=#val` for more semantic return values
 * definitions:

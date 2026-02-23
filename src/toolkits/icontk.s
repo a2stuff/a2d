@@ -849,7 +849,7 @@ is_drag:
         cmp     last_coords,x
         bne     moved
       WHILE dex : POS
-        CONTINUE_IF NEG         ; always
+        REDO_IF NEG             ; always
 
         ;; --------------------------------------------------
         ;; Mouse moved - check for (un)highlighting, and
