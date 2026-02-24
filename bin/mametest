@@ -102,6 +102,14 @@ if [ ! -f "tests/images/$HARDIMG" ]; then
   make package
 fi
 
+# Generate a read-only (Zipped) copy of the A2D disk
+ROHARDIMG="$HARDIMG.zip"
+if [ ! -f "tests/images/$ROHARDIMG" -o \
+       "tests/images/$ROHARDIMG" -ot "tests/images/$HARDIMG" ] ; then
+  rm -f $ROHARDIMG
+  zip -q "tests/images/$ROHARDIMG" "tests/images/$HARDIMG"
+fi
+
 MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
@@ -117,14 +125,18 @@ fi
 # --------------------------------------------------
 # Disk handling
 
+# Make a fresh copy of each disk into temp directory, renamed per
+# drive e.g. "-flop1 disk.po" becomes "-flop1 /tmp/.../flop1.po"
 NEWDISKARGS=""
 while read -r arg disk; do
-  target="$DISKSDIR/${arg#?}"
+  # Maintaining extension is necessary for ZIP files
+  target="$DISKSDIR/${arg#?}.${disk##*.}"
   cp "tests/images/$disk" "$target"
   NEWDISKARGS="$NEWDISKARGS $arg $target"
 done < <(echo $DISKARGS | xargs -n 2)
 DISKARGS="$NEWDISKARGS"
 
+# Make an unformatted disk available to tests
 export UNFORMATTED_IMG="$DISKSDIR/unformatted.2mg"
 cp "tests/images/unformatted.2mg" "$UNFORMATTED_IMG"
 

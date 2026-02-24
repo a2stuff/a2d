@@ -1305,14 +1305,22 @@ current:
         JSR_TO_AUX aux::RunDA
         sta     result
 
+    IF bit result : VS
+        jsr     SaveSettings
+
+        ;; If we failed to save settings (e.g. write protected), don't
+        ;; bother trying to save the date as that is more error prone;
+        ;; e.g. if write protected, the CLOSE will fail leaving the IO
+        ;; buffer and file control block permanently in use.
+        bcs     ret
+    END_IF
+
     IF bit result : NS
         jsr     SaveDate
     END_IF
 
-    IF bit result : VS
-        jsr     SaveSettings
-    END_IF
 
+ret:
         rts
 
 result: .byte   0
@@ -1324,7 +1332,15 @@ result: .byte   0
 filename:
         PASCAL_STRING kFilenameLauncher
 
-filename_buffer:
+write_buffer:
+        .tag    DateTime
+        sizeof_write_buffer = * - write_buffer
+
+        ;; If running from RAMCard, we temporarily swap the ProDOS
+        ;; prefix for writing back to the startup disk.
+current_prefix:
+        .res ::kPathBufferSize
+orig_prefix:
         .res ::kPathBufferSize
 
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
@@ -1332,86 +1348,94 @@ filename_buffer:
         DEFINE_READWRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
         DEFINE_CLOSE_PARAMS close_params
 
-write_buffer:
-        .tag    DateTime
-        sizeof_write_buffer = * - write_buffer
+        DEFINE_GET_PREFIX_PARAMS current_prefix_params, current_prefix
+        DEFINE_GET_PREFIX_PARAMS orig_prefix_params, orig_prefix
+
 
 .proc SaveSettings
         ;; ProDOS GP has the updated data, copy somewhere usable.
         COPY_STRUCT DateTime, DATELO, write_buffer
 
+        ;; First time - ask if we should even try.
+        CLEAR_BIT7_FLAG retry_flag
+
         ;; Write to desktop current prefix
-        ldax    #filename
-        stax    open_params::pathname
         jsr     _DoWrite
         bcs     done            ; failed and canceled
 
         ;; Write to the original file location, if necessary
         jsr     JUMP_TABLE_GET_RAMCARD_FLAG
-        beq     done
-        ldax    #filename_buffer
-        stax    open_params::pathname
-        jsr     JUMP_TABLE_GET_ORIG_PREFIX
-        jsr     _AppendFilename
+    IF ZC
+        CALL    JUMP_TABLE_GET_ORIG_PREFIX, AX=#orig_prefix
+        JUMP_TABLE_MLI_CALL GET_PREFIX, current_prefix_params
+retry:
+        JUMP_TABLE_MLI_CALL SET_PREFIX, orig_prefix_params
+      IF CS
+        jsr     _CheckRetry
+        beq     retry
+        sec                     ; failed
+        rts
+      END_IF
         jsr     _DoWrite
+        JUMP_TABLE_MLI_CALL SET_PREFIX, current_prefix_params
+        ;; Assert: Succeeded (otherwise RAMCard was deleted out from under us)
+    END_IF
 
 done:   rts
-
-.proc _AppendFilename
-        ;; Append filename to buffer
-        inc     filename_buffer ; Add '/' separator
-        ldx     filename_buffer
-        copy8   #'/', filename_buffer,x
-
-        ldx     #0              ; Append filename
-        ldy     filename_buffer
-    DO
-        inx
-        iny
-        copy8   filename,x, filename_buffer,y
-    WHILE X <> filename
-        sty     filename_buffer
-        rts
-.endproc ; _AppendFilename
+.endproc ; SaveSettings
 
 .proc _DoWrite
-        ;; First time - ask if we should even try.
-        copy8   #kErrSaveChanges, message
-
-retry:
+retry3:
         JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcs     error
+    IF CC
         lda     open_params::ref_num
         sta     set_mark_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-
         JUMP_TABLE_MLI_CALL SET_MARK, set_mark_params ; seek
-        bcs     close
+        bcs     :+
         JUMP_TABLE_MLI_CALL WRITE, write_params
-close:  php                     ; preserve result
+:       php                     ; preserve result
         JUMP_TABLE_MLI_CALL CLOSE, close_params
+        ;; BUG: If write protected, this will leave the `io_buffer` in use!
         plp
-        bcc     ret             ; succeeded
+    END_IF
+    IF CS
+        jsr     _CheckRetry
+        beq     retry3
+        bne     failed          ; always
+    END_IF
+        rts                     ; C=0
 
-error:
-        ;; TODO: Consider doing this only on `ERR_VOL_NOT_FOUND`
-        message := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     JUMP_TABLE_SHOW_ALERT ; `kErrSaveChanges` or `kErrInsertSystemDisk`
-
-        ;; If we do this again, prompt to insert.
-        ldx     #kErrInsertSystemDisk
-        stx     message
-
-        ;; Responses are either OK/Cancel or Try Again/Cancel
-        cmp     #kAlertResultCancel
-        bne     retry
-
-        sec                     ; failed
-ret:    rts
+failed:
+        sec
+ret:    rts                     ; C=1
 .endproc ; _DoWrite
-.endproc ; SaveSettings
+
+;;; Before calling: ensure `retry_flag` was cleared at some point.
+;;; Input: A = ProDOS error code
+;;; Output: Z = 1 if retry was selected
+.proc _CheckRetry
+    IF bit retry_flag : NC
+        ;; First time - prompt see if we want to try saving.
+        SET_BIT7_FLAG retry_flag
+        CALL    JUMP_TABLE_SHOW_ALERT, A=#kErrSaveChanges ; OK/Cancel
+        cmp     #kAlertResultOK
+        rts                     ; Z=1 if OK selected (i.e. retry)
+    END_IF
+
+        ;; Special case
+    IF A = #ERR_VOL_NOT_FOUND
+        lda     #kErrInsertSystemDisk ; Try Again/Cancel
+    END_IF
+        jsr     JUMP_TABLE_SHOW_ALERT ; arbitrary ProDOS error
+        ;; Responses are either OK or Try Again/Cancel
+        cmp     #kAlertResultTryAgain
+        rts
+.endproc
+
+retry_flag:        .byte   0 ; bit7
+
 .endproc ; save_date
 SaveDate := save_date::SaveSettings
 

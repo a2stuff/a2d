@@ -5255,9 +5255,7 @@ arbitrary_target:
         sta     write_params::ref_num
         sta     close_params::ref_num
         MLI_CALL WRITE, write_params
-        php
         MLI_CALL CLOSE, close_params
-        plp
         bcs     err
 
         ;; Update name case bits on disk, if possible.

@@ -50,6 +50,7 @@ Tests can define custom MAME configurations. The contents of an optional config 
   * NOTE: This is parsed as space-delimited pairs and the second argument is copied from `tests/images` to a temp directory so that the original disk images are not modified
   * These environment variables can be used.
     * `HARDIMG` has the path to the 800K package disk
+    * `ROHARDIMG` has the path to the 800K package disk but write protected (NOTE: requires `superdrive`)
     * `FLOP1IMG` has the path to the 140K package disk #1 (desktop)
     * `FLOP2IMG` has the path to the 140K package disk #2 (accessories)
 * `RESOLUTION` - defaults to `"560x384"`; for IIgs should be set to `"704x462"`

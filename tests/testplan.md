@@ -75,6 +75,23 @@ The following tests have not (yet) been automated because the Escape key conflic
 * Using MAME (e.g. via Ample), configure a system with an SSC in Slot 1 and a Serial Printer. Invoke the Print Screen DA. Verify that the File menu is not corrupted.
 > This can not be (currently) tested in MAME.
 
+### Control Panels
+
+Repeat for each of:
+* Control Panel
+* Date & Time
+* International
+* Options
+* Sounds
+* Views
+
+* Start with a fresh disk image. Launch DeskTop. Apple Menu > Control Panels. Open the DA. Toggle a setting. Close the DA. Write protect the disk. Then:
+  * Open the DA. Toggle a setting. Close the DA. Verify an alert shows asking about saving the changes. Click Cancel. Open the DA. Verify the DA opens correctly. Close the DA.
+  * Open the DA. Toggle a setting. Close the DA. Verify an alert shows asking about saving the changes. Click OK. Verify an alert shows that the disk is write protected. Click Try Again. Verify the same alert shows. Click Cancel.
+  * Open the DA. Toggle a setting. Close the DA. Verify an alert shows asking about saving the changes. Click OK. Verify an alert shows that the disk is write protected. Click Try Again. Verify the same alert shows. Un-protect the disk. Click Try Again. Verify the settings are saved.
+
+> This can not be (currently) tested in MAME. (A write-protected disk can be emulated by providing a ZIP file containing the image, but dynamically toggling the protection state is TBD.)
+
 ## Hardware Configurations
 
 > Coverage throughout `tests` where possible

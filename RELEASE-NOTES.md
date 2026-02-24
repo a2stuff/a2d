@@ -68,6 +68,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Make retries on "volume not found" errors more consistent.
 * Fix buttons shown in alerts for errors after actions like New Folder, Duplicate, and Make Alias.
 * Reduce disk activity needed after showing file dialog.
+* Handle write protected disk when modifying shortcuts.
 
 ### Selector
 
@@ -98,6 +99,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Sci.Calc: Fix ASIN/ACOS for 1/-1.
 * New Screen Saver: Maze
 * Text Preview: Show first 64K of larger files correctly.
+* Control Panels: Handle write protected disk when modifying settings.
 
 ### Misc
 

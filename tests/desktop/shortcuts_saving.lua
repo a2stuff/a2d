@@ -78,7 +78,7 @@ test.Variants(
       drive:load(current)
       a2d.DialogOK()
     end
-
+    emu.wait(10)
     a2dtest.ExpectAlertNotShowing()
 
     -- TODO: Verify that changes were saved

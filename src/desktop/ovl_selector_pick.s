@@ -19,6 +19,15 @@ io_buf := $0800
 
 selector_list := SELECTOR_FILE_BUF
 
+        .assert SELECTOR_FILE_BUF + kSelectorListBufSize = $1400, error, "constants"
+PARAM_BLOCK, $1400
+orig_prefix     .res    ::kSelectorListBufSize
+current_prefix  .res    ::kPathBufferSize
+
+;;; Table for 24 entries; index (0...23) if in use, $FF if empty
+entries_flag_table .res ::kSelectorListNumEntries
+END_PARAM_BLOCK
+
 Exec:
         sta     selector_action
         ldx     #$FF            ; `INC` to clear high bit
@@ -38,17 +47,33 @@ Exec:
         adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
 
-        ;; Write out file
-        jsr     WriteFile
-      IF NC
-        ;; ... and if successful, see if we need to update system disk
+        ;; First time - ask if we should even try.
+        CLEAR_BIT7_FLAG retry_flag
+
+        ;; Write to desktop current prefix
+        jsr     _DoWrite
+        bcs     done
+
+        ;; Write to the original file location, if necessary.
         jsr     main::GetCopiedToRAMCardFlag
-       IF NS
-        jsr     WriteFileToOriginalPrefix
+      IF ZC
+        CALL    main::CopyDeskTopOriginalPrefix, AX=#orig_prefix
+        MLI_CALL GET_PREFIX, current_prefix_params
+retry:
+        MLI_CALL SET_PREFIX, orig_prefix_params
+       IF CS
+        jsr     _CheckRetry
+        beq     retry
+        bne     done            ; always
        END_IF
+        jsr     _DoWrite
+        MLI_CALL SET_PREFIX
+        JUMP_TABLE_MLI_CALL SET_PREFIX, current_prefix_params
+        ;; Assert: Succeeded (otherwise RAMCard was deleted out from under us)
       END_IF
     END_IF
 
+done:
         pla                     ; A = result
         rts
 .endproc ; Exit
@@ -557,10 +582,6 @@ handle_button:
         rts
 .endproc ; PopulateEntriesFlagTable
 
-;;; Table for 24 entries; index (0...23) if in use, $FF if empty
-entries_flag_table:
-        .res    ::kSelectorListNumEntries, 0
-
 ;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer
 ;;; and (if it's in the primary run list) also updates the
@@ -855,6 +876,7 @@ index:  .byte   0
 
 filename_buffer := $1C00
 
+        DEFINE_DESTROY_PARAMS destroy_params, filename
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
         DEFINE_READWRITE_PARAMS write_params, selector_list, kSelectorListBufSize
@@ -862,6 +884,12 @@ filename_buffer := $1C00
 
 filename:
         PASCAL_STRING kPathnameSelectorList
+
+        DEFINE_GET_PREFIX_PARAMS current_prefix_params, current_prefix
+        DEFINE_GET_PREFIX_PARAMS orig_prefix_params, orig_prefix
+
+local_dir:      PASCAL_STRING kFilenameLocalDir
+        DEFINE_CREATE_PARAMS create_localdir_params, local_dir, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 ;;; ============================================================
 ;;; Read SELECTOR.LIST file (using current prefix)
@@ -879,6 +907,8 @@ rest:
 retry:  MLI_CALL OPEN, open_curpfx_params
         bcc     read
         cmp     #ERR_FILE_NOT_FOUND
+        beq     not_found
+        cmp     #ERR_PATH_NOT_FOUND
         beq     not_found
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
@@ -913,44 +943,6 @@ not_found:
 .endproc ; ReadFile
 
 ;;; ============================================================
-;;; Write SELECTOR.LIST file (using current prefix)
-
-.proc WriteFile
-        ldax    #filename
-        stax    create_params::pathname
-        stax    open_params::pathname
-        jmp     _DoWrite
-.endproc
-
-;;; ============================================================
-;;; Write out SELECTOR.LIST file, using original prefix.
-;;; Used if DeskTop was copied to RAMCard.
-
-.proc WriteFileToOriginalPrefix
-        ;; Prepare paths
-
-        CALL    main::CopyDeskTopOriginalPrefix, AX=#filename_buffer
-
-        ldx     filename_buffer ; Append '/' separator
-        inx
-        lda     #'/'
-        sta     filename_buffer,x
-
-        ldy     #0              ; Append filename
-    DO
-        inx
-        iny
-        copy8   filename,y, filename_buffer,x
-    WHILE Y <> filename
-        stx     filename_buffer
-
-        ldax    #filename_buffer
-        stax    create_params::pathname
-        stax    open_params::pathname
-        FALL_THROUGH_TO _DoWrite
-.endproc
-
-;;; ============================================================
 ;;; Write out SELECTOR.LIST file.
 
 .proc _DoWrite
@@ -960,43 +952,80 @@ not_found:
 rest:
         ;; --------------------------------------------------
 
-        ;; First time - ask if we should even try.
-        copy8   #kErrSaveChanges, message
+        ldax    DATELO
+        stax    create_params::create_date
+        stax    create_localdir_params::create_date
+        ldax    TIMELO
+        stax    create_params::create_time
+        stax    create_localdir_params::create_time
 
-retry:
-        ;; Create if necessary
-        copy16  DATELO, create_params::create_date
-        copy16  TIMELO, create_params::create_time
-        MLI_CALL CREATE, create_params
+        ;; Create local dir if necessary
+retry1:
+        JUMP_TABLE_MLI_CALL CREATE, create_localdir_params
+    IF CS AND A <> #ERR_DUPLICATE_FILENAME
+        jsr     _CheckRetry
+        beq     retry1
+        bne     failed          ; always
+    END_IF
 
-        MLI_CALL OPEN, open_params
-        bcs     error
+        ;; Destroy existing settings file if necessary
+        ;; This is to catch write failures before the file `OPEN`, as
+        ;; failure to `WRITE`/`FLUSH` will make the `CLOSE` fail,
+        ;; leaving the `io_buffer` in use.
+retry2:
+        JUMP_TABLE_MLI_CALL DESTROY, destroy_params
+    IF CS AND A <> #ERR_FILE_NOT_FOUND
+        jsr     _CheckRetry
+        beq     retry2
+        bne     failed          ; always
+    END_IF
+
+        ;; Create/write settings file if necessary
+retry3:
+        JUMP_TABLE_MLI_CALL CREATE, create_params
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+    IF CC
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-        MLI_CALL WRITE, write_params
-        php                     ; preserve result
-        MLI_CALL CLOSE, close_params
-        plp
-        bcc     ret             ; succeeded
+        JUMP_TABLE_MLI_CALL WRITE, write_params
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+    END_IF
+    IF CS
+        jsr     _CheckRetry
+        beq     retry3
+        bne     failed          ; always
+    END_IF
+        rts                     ; C=0
 
-error:
-        ;; TODO: Consider doing this only on `ERR_VOL_NOT_FOUND`
-        message := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     ShowAlert       ; `kErrSaveChanges` or `kErrInsertSystemDisk`
-
-        ;; If we do this again, prompt to insert.
-        ldx     #kErrInsertSystemDisk
-        stx     message
-
-        ;; Responses are either OK/Cancel or Try Again/Cancel
-        cmp     #kAlertResultCancel
-        bne     retry
-
-        sec                     ; failed
-ret:    rts
+failed:
+        sec
+ret:    rts                     ; C=1
 .endproc ; _DoWrite
+
+;;; Before calling: ensure `retry_flag` was cleared at some point.
+;;; Input: A = ProDOS error code
+;;; Output: Z = 1 if retry was selected
+.proc _CheckRetry
+    IF bit retry_flag : NC
+        ;; First time - prompt see if we want to try saving.
+        SET_BIT7_FLAG retry_flag
+        CALL    JUMP_TABLE_SHOW_ALERT, A=#kErrSaveChanges ; OK/Cancel
+        cmp     #kAlertResultOK
+        rts                     ; Z=1 if OK selected (i.e. retry)
+    END_IF
+
+        ;; Special case
+    IF A = #ERR_VOL_NOT_FOUND
+        lda     #kErrInsertSystemDisk ; Try Again/Cancel
+    END_IF
+        jsr     JUMP_TABLE_SHOW_ALERT ; arbitrary ProDOS error
+        ;; Responses are either OK or Try Again/Cancel
+        cmp     #kAlertResultTryAgain
+        rts
+.endproc
+
+retry_flag:        .byte   0 ; bit7
 
 ;;; ============================================================
 
