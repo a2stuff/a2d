@@ -667,8 +667,7 @@ unit_num:
     END_IF
 
         ;; No separator if it is last
-        lda     selector_menu
-    IF A = #kSelectorMenuFixedItems
+    IF lda selector_menu : A = #kSelectorMenuFixedItems
         dec     selector_menu
     END_IF
         jmp     end_of_scope
@@ -864,8 +863,7 @@ next_entry:
 
         ;; Any more entries in block?
         inc     entry_in_block
-        lda     entry_in_block
-    IF A = entries_per_block
+    IF lda entry_in_block : A = entries_per_block
         MLI_CALL READ, read_params
         copy16  #read_dir_buffer + 4, dir_ptr
 

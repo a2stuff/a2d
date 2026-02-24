@@ -118,8 +118,8 @@ DoAdd:  ldx     #kRunListPrimary
     END_IF
 
         copy16  selector_list, num_primary_run_list_entries
-        lda     which_run_list
-    IF A = #kRunListPrimary
+
+    IF lda which_run_list : A = #kRunListPrimary
         lda     num_primary_run_list_entries
         cmp     #kSelectorListNumPrimaryRunListEntries
         beq     ShowFullAlert

@@ -660,8 +660,7 @@ new_state:
         cmp     #NekoState::rest
         ;; ------------------------------
     IF EQ
-        lda     dir
-      IF NOT_ZERO
+      IF lda dir : NOT_ZERO
         TAIL_CALL set_state_and_frame, X=#NekoState::chase, A=#NekoFrame::surprise
       END_IF
 
@@ -684,8 +683,7 @@ new_state:
         cmp     #NekoState::chase
         ;; ------------------------------
     IF EQ
-        lda     dir
-      IF ZERO
+      IF lda dir : ZERO
         TAIL_CALL set_state_and_frame, X=#NekoState::rest, A=#NekoFrame::sitting
       END_IF
 

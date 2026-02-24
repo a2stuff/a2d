@@ -1018,8 +1018,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::PaintBits, darrow_params
         add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
-        lda     arrow_num
-    WHILE A <> #kNumArrows
+    WHILE lda arrow_num : A <> #kNumArrows
 .endscope
 
         BTK_CALL BTK::RadioDraw, dblclick_button1
@@ -1247,8 +1246,7 @@ store:
 
         ;; next x
         inc     xpos
-        lda     xpos
-    IF A <> #8
+    IF lda xpos : A <> #8
         add16_8 bitrect::x1, #kFatBitWidth
         add16_8 bitrect::x2, #kFatBitWidth
         jmp     xloop
@@ -1256,8 +1254,7 @@ store:
 
         ;; next y
         inc     ypos
-        lda     ypos
-    IF A <> #8
+    IF lda ypos : A <> #8
         add16_8 bitrect::y1, #kFatBitHeight
         add16_8 bitrect::y2, #kFatBitHeight
         jmp     yloop

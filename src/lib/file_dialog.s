@@ -620,8 +620,7 @@ cloop:  iny
         bcc     cloop
 
 next:   inc     index
-        lda     index
-    WHILE A <> num_file_names
+    WHILE lda index : A <> num_file_names
         dec     index
 found:  RETURN  A=index
 

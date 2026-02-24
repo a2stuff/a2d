@@ -368,8 +368,7 @@ path_length:
         LBTK_CALL LBTK::Init, lb_params
         jsr     PrepDrawIncrementalResults
 
-        lda     path_length
-    IF A = #1
+    IF lda path_length : A = #1
         JSR_TO_MAIN ::main::InitVolumes
         JSR_TO_MAIN ::main::NextVolume
         bcs     finish

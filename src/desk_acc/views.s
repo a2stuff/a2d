@@ -361,8 +361,7 @@ common: bit     dragwindow_params::moved
         copy16  button_button_table,x, params_addr
 
         lda     #BTK::kButtonStateNormal
-        ldx     current_view_index
-      IF X = index
+      IF ldx current_view_index : X = index
         lda     #BTK::kButtonStateChecked
       END_IF
 

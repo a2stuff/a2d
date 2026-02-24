@@ -1075,8 +1075,9 @@ kSet = 1
         RTS_IF A BETWEEN '0', #'9' ; RTS_IF: Expected immediate 1st argument for 'BETWEEN'
         RTS_IF A BETWEEN #'0', '9' ; RTS_IF: Expected immediate 2nd argument for 'BETWEEN'
         RTS_IF A IN                ; RTS_IF: Expected argument(s) after 'IN'
+        RTS_IF aa >= #1            ; RTS_IF: Expected boolean expression, saw identifier ('aa')
         RTS_IF A IN #0 #1          ; Expected 'end-of-line' but found '#'
-        RTS_IF BIT var             ; Expected end-of-statement (':')
+        RTS_IF BIT var             ; RTS_IF: Expected end-of-statement (':')
 
         CALL    target, FOO=        ; CALL: Expected 'reg=...'
         CALL    target, A           ; CALL: Expected 'A=...'
@@ -1084,4 +1085,6 @@ kSet = 1
         CALL    target, A=kConstant ; CALL: Constant in 'A=expr' assignment; did you mean '#kConstant'?
         CALL    target, C=1 bad     ; CALL: Unexpected tokens after 'C=...'
         CALL    target, C=var       ; CALL: Expected constant expression after 'C='
+
+
 .endif

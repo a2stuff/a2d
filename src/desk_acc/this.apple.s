@@ -1978,8 +1978,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         sta     sigb0
         eor     #$FF            ; complement as second signature
         sta     sigb1
-        dex
-    WHILE X <> #255
+    WHILE dex : X <> #255
 .endscope
 
         ;; Iterate upwards, tallying valid banks.

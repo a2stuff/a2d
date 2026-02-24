@@ -186,9 +186,9 @@
         .elseif .match({f2_tok}, {,})
           F2_ERR "Unexpected token: ','"
         .elseif .match({f2_tok}, some_ident)
-          F2_ERR .sprintf("Expected %s, saw identifier ('%s')", .string(f2_tok))
+          F2_ERR .sprintf("Expected %s, saw identifier ('%s')", what, .string(f2_tok))
         .elseif .match({f2_tok}, 1234)
-          F2_ERR .sprintf("Expected %s, saw number (%d)", f2_tok)
+          F2_ERR .sprintf("Expected %s, saw number (%d)", what, f2_tok)
         .else
           F2_ERR .sprintf("Expected %s", what)
         .endif

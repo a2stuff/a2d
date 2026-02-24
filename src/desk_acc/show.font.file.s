@@ -287,8 +287,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
 
         inc     index
-        lda     index
-    WHILE A <> #kLineCount
+    WHILE lda index : A <> #kLineCount
 
         MGTK_CALL MGTK::ShowCursor
         rts

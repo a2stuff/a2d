@@ -3283,8 +3283,7 @@ entry2:
 ;;; Entry point when refreshing window contents
 entry3:
         ;; Clear selection if in the window
-        lda     selected_window_id
-    IF A = active_window_id
+    IF lda selected_window_id : A = active_window_id
         lda     #0
         sta     selected_icon_count
         sta     selected_window_id
@@ -3310,8 +3309,7 @@ entry3:
 ;;; valid across view changes.
 
 .proc _PreserveSelection
-        lda     selected_window_id
-    IF A = active_window_id
+    IF lda selected_window_id : A = active_window_id
         lda     selected_icon_count
       IF NOT_ZERO
         sta     selection_preserved_count
@@ -4350,8 +4348,7 @@ ret:    rts
         tay
 
         ;; Need at least two windows to cycle.
-        lda     num_open_windows
-    IF A >= #2
+    IF lda num_open_windows : A >= #2
         cpy     #'~'
         beq     reverse
 
@@ -5914,8 +5911,7 @@ validate_windows_flag:
 ;;; return zero.
 ;;; Z=0 and A=icon num if only one, Z=0 and A=0 otherwise
 .proc GetSingleSelectedIcon
-        lda     selected_icon_count
-    IF A <> #1
+    IF lda selected_icon_count : A <> #1
         RETURN  A=#0
     END_IF
         RETURN  A=selected_icon_list
@@ -5981,8 +5977,7 @@ for_path:
 
 no_win:
         ;; Is there a free window?
-        lda     num_open_windows
-    IF A >= #kMaxDeskTopWindows
+    IF lda num_open_windows : A >= #kMaxDeskTopWindows
         ;; Nope, show error.
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_warning_too_many_windows
         ldx     saved_stack
@@ -6839,8 +6834,7 @@ do_entry:
         jeq     finish
 
 next:   inc     index_in_block
-        lda     index_in_block
-    IF A <> dir_header::entries_per_block
+    IF lda index_in_block : A <> dir_header::entries_per_block
         add16_8 entry_ptr, dir_header::entry_length
     ELSE
         copy8   #$00, index_in_block
@@ -8065,8 +8059,7 @@ records_base_ptr:
         add16_8 icon_coords+MGTK::Point::xcoord, col_spacing
         inc     icons_this_row
         ;; Next row?
-        lda     icons_this_row
-    IF A = icons_per_row
+    IF lda icons_this_row : A = icons_per_row
         add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
         copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
         copy8   #0, icons_this_row
@@ -8286,8 +8279,7 @@ set_pos:
 .proc _PrepareColSize
         file_type := list_view_filerecord + FileRecord::file_type
 
-        lda     file_type
-    IF A = #FT_DIRECTORY
+    IF lda file_type : A = #FT_DIRECTORY
         copy8   #1, text_buffer2
         copy8   #'-', text_buffer2+1
         rts
@@ -10077,8 +10069,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
     END_IF
 
         inc     entry_index_in_block
-        lda     entry_index_in_block
-    IF A >= entries_per_block
+    IF lda entry_index_in_block : A >= entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
