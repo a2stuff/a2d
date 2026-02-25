@@ -810,7 +810,7 @@ end)
 
 function GetNumbers(ocr, index)
   for items, used, free in ocr:gmatch(
-    " (%d+,?%d*) Items? +(%d+[.,]?%d*)K in disk +(%d+[.,]?%d*)K") do
+    "(%d+,?%d*) Items? +(%d+[.,]?%d*)K in disk +(%d+[.,]?%d*)K") do
     if index == 1 then
       return assert(items), assert(used), assert(free)
     end

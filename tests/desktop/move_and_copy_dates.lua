@@ -9,8 +9,8 @@ a2d.ConfigureRepaintTime(1)
 
 function GetCreatedModifiedDates()
   local ocr = a2dtest.OCRScreen()
-  local _, _, created_date = ocr:find("Created: +([^\n]*)  ")
-  local _, _, modified_date = ocr:find("Modified: +([^\n]*)  ")
+  local _, _, created_date = ocr:find("Created: +([^\n]*)")
+  local _, _, modified_date = ocr:find("Modified: +([^\n]*)")
   return assert(created_date), assert(modified_date)
 end
 
