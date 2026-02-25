@@ -14,7 +14,7 @@ DrawIconRaw     = $03   ; { .byte icon }
 FreeIcon        = $04   ; { .byte icon }
 FreeAll         = $05   ; { .byte window_id }
 FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
-DragHighlighted = $07   ; { .byte icon/target, .word mousex, .word mousey, .byte fixed }
+DragHighlighted = $07   ; { .byte icon/target, .word mousex, .word mousey }
                         ; Input: specific icon being dragged, mouse coords
                         ; Output: A = kDragResultXYZ; if drop/move, then target byte is:
                         ;  * hi bit clear: low bits are target icon

@@ -170,7 +170,7 @@ TBCOLOR         := $C022        ; IIgs - text foreground/background colors
 
 KEYMODREG       := $C025        ; IIgs - keyboard modifiers
         ;; bit 7= Open Apple key active
-        ;; bit 6= Closed Apple key active
+        ;; bit 6= Solid Apple key active
         ;; bit 5= Updated modifier latch without keypress
         ;; bit 4= Keypad key active
         ;; bit 3= Repeat active

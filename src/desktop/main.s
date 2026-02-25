@@ -130,6 +130,12 @@ loop:
         ;; Get an event
         jsr     GetNextEvent
 
+        ;; Sample modifiers as close to event as possible
+        pha
+        jsr     ComputeModifiers
+        sta     modifiers
+        pla
+
         ;; Did the mouse move?
     IF A = #kEventKindMouseMoved
         jsr     ClearTypeDown   ; always returns Z=1
@@ -157,6 +163,11 @@ loop:
         bne     loop            ; always
 
 counter:
+        .byte   0
+
+;;; Computed just after `GetEvent`, so as close to synchronized with
+;;; the event as possible, without MGTK API changes.
+modifiers:
         .byte   0
 
 .endproc ; MainLoop
@@ -511,16 +522,21 @@ offset_table:
       END_IF
 
         ;; Note if menu showing via modified click
-        jsr     ModifierDown
+        lda     MainLoop::modifiers ; bit7 = OA, bit6 = SA
+        and     #kEitherAppleModifierMask
+      IF NOT ZERO
+        lda     #$80
+      END_IF
         sta     menu_modified_click_flag
 
         MGTK_CALL MGTK::MenuSelect, menu_click_params
 
         ;; But allow double-modifier click or shortcut too
-        lda     BUTN0
-        and     BUTN1
-        ora     menu_modified_click_flag
-        sta     menu_modified_click_flag
+        jsr     ComputeModifiers ; bit7 = OA, bit6 = SA
+        and     #kEitherAppleModifierMask
+      IF A = #kEitherAppleModifierMask
+        copy8   #$80, menu_modified_click_flag
+      END_IF
 
         jmp     MenuDispatch
     END_IF
@@ -696,8 +712,9 @@ h_proc_hi:        .hibytes ScrollNoOp, ScrollLeft, ScrollRight, ScrollPageLeft, 
     IF EQ
         ;; --------------------------------------------------
         ;; Icon was already selected
-        jsr     ExtendSelectionModifierDown
-      IF NS
+        lda     MainLoop::modifiers
+        and     #kExtendSelectionModifierMask
+      IF NOT ZERO
         ;; Modifier down - remove from selection
         CALL    UnhighlightAndDeselectIcon, A=findicon_params::which_icon
         CLEAR_BIT7_FLAG maybe_select_parent_flag
@@ -706,8 +723,9 @@ h_proc_hi:        .hibytes ScrollNoOp, ScrollLeft, ScrollRight, ScrollPageLeft, 
     ELSE
         ;; --------------------------------------------------
         ;; Icon was not already selected
-        jsr     ExtendSelectionModifierDown
-      IF NS
+        lda     MainLoop::modifiers
+        and     #kExtendSelectionModifierMask
+      IF NOT ZERO
         ;; Modifier down - add to selection
         ;; ...if there is a selection, and it is same window
         lda     selected_icon_count
@@ -745,17 +763,17 @@ check_drag:
 
         RTS_IF A = #IconTK::kDragResultCanceled
 
+        ;; Snapshot modifiers before doing any real work
+        ;; TODO: Return modifier state as part of drag result
+        pha
+        jsr     ComputeModifiers
+        sta     drag_end_modifiers
+        pla
+
     IF A = #IconTK::kDragResultNotADrag
         jsr     _ActivateClickedWindow ; no-op if already active
         jmp     _CheckRenameClick
     END_IF
-
-        ;; Snapshot modifiers before doing any real work
-        pha
-        lda     BUTN1
-        and     BUTN0
-        sta     double_modifier_flag
-        pla
 
         ;; ----------------------------------------
 
@@ -793,7 +811,9 @@ check_drag:
         RTS_IF ZERO
 
         ;; Double modifier?
-      IF bit double_modifier_flag : NS
+        lda     drag_end_modifiers
+        and     #kEitherAppleModifierMask
+      IF A = #kEitherAppleModifierMask
         jsr     SetOperationDstPathFromDragDropResult
         RTS_IF CS               ; failure, e.g. path too long
         jmp     MakeLinkInTarget
@@ -833,17 +853,27 @@ check_drag:
         RTS_IF CS               ; failure, e.g. path too long
 
         ;; Double modifier?
-    IF bit double_modifier_flag : NS
+        lda     drag_end_modifiers
+        and     #kEitherAppleModifierMask
+    IF A = #kEitherAppleModifierMask
         jsr     GetSingleSelectedIcon
         RTS_IF ZERO
         jmp     MakeLinkInTarget
     END_IF
 
         ;; Copy/Move
-        jsr     DoCopyOrMoveSelection
+        lda     drag_end_modifiers
+        and     #kEitherAppleModifierMask
+    IF NOT ZERO
+        lda     #$80
+    END_IF
+        jsr     DoCopyOrMoveSelection ; A bit7 is "invert default" flag
         jmp     _PerformPostDropUpdates
 
-double_modifier_flag:           ; bit7
+
+;;; Computed after drag, so as close to synchronized as possible,
+;;; without IconTK API changes.
+drag_end_modifiers:
         .byte   0
 .endproc ; _IconClick
 
@@ -1521,8 +1551,9 @@ basic:  jsr     _CheckBasicSystem ; Only launch if BASIC.SYSTEM is found
 binary:
         lda     menu_click_params::menu_id ; From a menu (File, Selector)
         jne     launch
-        jsr     ModifierDown ; Otherwise, only launch if a button is down
-        jmi     launch
+        lda     MainLoop::modifiers
+        and     #kEitherAppleModifierMask
+        jne     launch
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#aux::str_alert_confirm_running
         RTS_IF A <> #kAlertResultOK
         jmp     launch
@@ -2559,8 +2590,10 @@ from_keyboard:
         ;; Close after open if modifier is down.
 from_double_click:
         copy8   #0, window_id_to_close
-        jsr     ModifierDown
-    IF NS
+
+        lda     MainLoop::modifiers ; bit7 = OA, bit6 = SA
+        and     #kEitherAppleModifierMask
+    IF NOT ZERO
         copy8   selected_window_id, window_id_to_close
     END_IF
         FALL_THROUGH_TO common
@@ -5524,8 +5557,9 @@ END_PARAM_BLOCK
         lda     event_params::kind
     IF A <> #MGTK::EventKind::drag
         ;; No, just a click; optionally clear selection
-        jsr     ExtendSelectionModifierDown
-        jpl     ClearSelection  ; don't clear if mis-clicking
+        lda     MainLoop::modifiers
+        and     #kExtendSelectionModifierMask
+        jeq     ClearSelection  ; don't clear if mis-clicking
         rts
     END_IF
 
@@ -5534,8 +5568,11 @@ END_PARAM_BLOCK
         lda     window_id
         cmp     selected_window_id
         bne     clear
-        jsr     ExtendSelectionModifierDown
-        bmi     :+
+
+        lda     MainLoop::modifiers
+        and     #kExtendSelectionModifierMask
+        bne     :+
+
 clear:  jsr     ClearSelection
         CALL    CacheWindowIconList, A=window_id
 :
@@ -5727,8 +5764,11 @@ beyond:
         RTS_IF ZERO
 
         ;; If modifier is down, close all windows
-        jsr     ModifierDown
-        jmi     CmdCloseAll
+        lda     MainLoop::modifiers ; bit7 = OA, bit6 = SA
+        and     #kEitherAppleModifierMask
+    IF NOT ZERO
+        jmp     CmdCloseAll
+    END_IF
 
         FALL_THROUGH_TO CloseActiveWindow
 .endproc ; HandleCloseClick
@@ -9545,7 +9585,10 @@ FinishOperation:
 ;;; File > Copy To...
 ;;; Drag / Drop (to anything but Trash)
 ;;; Caller sets `operation_dst_path` (destination)
+;;; Input: A = bit7=1 to invert default
 .proc DoCopyOrMoveSelection
+        sta     invert_flag
+
         lda     selected_window_id
     IF NOT_ZERO                 ; dragging volume always copies
         ;; In case `CheckMoveOrCopy` fails, recovery path needs to be functional
@@ -9556,7 +9599,9 @@ FinishOperation:
 
         lda     selected_window_id
         jsr     GetWindowPath
-        jsr     CheckMoveOrCopy
+        invert_flag := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        jsr     CheckMoveOrCopy ; A,X = path, Y = invert flag
     END_IF
         SKIP_NEXT_2_BYTE_INSTRUCTION
 
@@ -11642,7 +11687,7 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 ;;; ============================================================
 ;;; Move or Copy? Compare src/dst paths, same vol = move.
 ;;; Button down inverts the default action.
-;;; Input: A,X = source path
+;;; Input: A,X = source path, Y = invert flag
 ;;; Output: A=bit 7 set if move, clear if copy
 ;;;           bit 6 set if same vol move and block ops supported
 
@@ -11652,7 +11697,8 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 
         stax    src_ptr
 
-        jsr     ModifierDown    ; Apple inverts the default
+        ;; Y bit7 is invert flag
+        tya
         and     #%10000000
         sta     flag
 
@@ -14485,36 +14531,35 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
-;;; Output: A=high bit/N flag set if either is down.
+kEitherAppleModifierMask        = %11000000 ; OA or SA
+kExtendSelectionModifierMask    = %10000001 ; OA or Shift
 
-.proc ModifierDown
-        lda     BUTN0
-        ora     BUTN1
-        rts
-.endproc ; ModifierDown
-
-;;; Test if either primary modifier (Open-Apple) or shift is down,
-;;; (if shift key can be detected).
-;;; Output: A=high bit/N flag set if either is down.
-
-.proc ExtendSelectionModifierDown
+;;; Grab the state of Open Apple, Solid Apple, and Shift (if possible)
+;;; Output: A = bit 7 = OA, bit 6 = SA, bit 0 = Shift
+.proc ComputeModifiers
         ;; IIgs? Use KEYMODREG instead
         CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
         and     #DeskTopSettings::kSysCapIsIIgs
         bne     iigs
 
-        jsr     TestShiftMod  ; Shift key state, if detectable
-        ora     BUTN0           ; Either way, check button state
+        jsr     TestShiftMod    ; bit7 = shift down, if detectable
+        rol                     ; C = shift (s)
+        php
+        lda     BUTN0           ; A = %Oxxxxxxx
+        asl                     ; A = %xxxxxxxx C=O
+        lda     BUTN1           ; A = %Sxxxxxxx C=O
+        ror                     ; A = %OSxxxxxx
+        lsr                     ; A = %xOSxxxxx
+        and     #%01100000      ; A = %0OS00000
+        plp                     ; A = %0OS00000 C=s
+        rol                     ; A = %OS00000s
         rts
 
-        ;; IIgs - do everything using one I/O location
-iigs:   lda     KEYMODREG
-        and     #%10000001      ; bit 7 = Command (OA), bit 0 = Shift
-        beq     ret
-        lda     #$80
-ret:    rts
-.endproc ; ExtendSelectionModifierDown
+        ;; IIgs - has everything using one I/O location
+iigs:   lda     KEYMODREG       ; bits match our return value
+        and     #%11000001
+        rts
+.endproc ; ComputeModifiers
 
 ;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
