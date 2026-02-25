@@ -24,6 +24,10 @@ window.addEventListener('DOMContentLoaded', async e => {
     option.output = await entries['output.txt'].text();
     option.entries = entries;
 
+    if (option.output.match(/Expectation failure/)) {
+      option.classList.add('failure');
+    }
+
     Object.keys(entries)
       .filter(k => k.match(/^\d\d\d\d - .*\.png$/))
       .sort((a, b) => order(a.name,b.name))
