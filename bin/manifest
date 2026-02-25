@@ -72,7 +72,7 @@ emit add_file $disposition "out/disk_copy.built" "Modules" "Disk.Copy" F10000
 
 # --------------------------------------------------
 # Part 3: Optional.
-disposition="optional"
+disposition="extra"
 
 # Add Selector
 emit add_file $disposition "out/selector.built" "Modules" "Selector" F10000
