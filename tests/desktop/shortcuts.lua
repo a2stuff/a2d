@@ -687,3 +687,56 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)
+
+--[[
+  Create multiple shortcuts. Delete one that is not the last. Verify
+  the correct shortcut is removed.
+]]
+test.Variants(
+  {
+    {"Deleting a shortcut removes the right one - menu and list", {}},
+    {"Deleting a shortcut removes the right one - list only", {list_only=true}},
+  },
+  function(idx, name, options)
+    a2d.AddShortcut("/A2.DESKTOP/READ.ME", options)
+    a2d.AddShortcut("/A2.DESKTOP/PRODOS", options)
+    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", options)
+    a2d.CloseAllWindows()
+
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    local ocr = a2dtest.OCRScreen()
+    test.ExpectIMatch(ocr, "READ%.ME", "shortcut should be present")
+    test.ExpectIMatch(ocr, "PRODOS", "shortcut should be present")
+    test.ExpectIMatch(ocr, "BASIC%.SYSTEM", "shortcut should be present")
+    apple2.DownArrowKey() -- READ.ME
+    apple2.DownArrowKey() -- PRODOS
+    a2d.DialogOK()
+
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    local ocr = a2dtest.OCRScreen()
+    test.ExpectIMatch(ocr, "READ%.ME", "shortcut should be present")
+    test.ExpectNotIMatch(ocr, "PRODOS", "shortcut should be removed")
+    test.ExpectIMatch(ocr, "BASIC%.SYSTEM", "shortcut should be present")
+    apple2.DownArrowKey() -- READ.ME
+    a2d.DialogOK()
+
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    local ocr = a2dtest.OCRScreen()
+    test.ExpectNotIMatch(ocr, "READ%.ME", "shortcut should be removed")
+    test.ExpectNotIMatch(ocr, "PRODOS", "shortcut should be removed")
+    test.ExpectIMatch(ocr, "BASIC%.SYSTEM", "shortcut should be present")
+    apple2.DownArrowKey() -- BASIC.SYSTEM
+    a2d.DialogOK()
+
+    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    local ocr = a2dtest.OCRScreen()
+    test.ExpectNotIMatch(ocr, "READ%.ME", "shortcut should be removed")
+    test.ExpectNotIMatch(ocr, "PRODOS", "shortcut should be removed")
+    test.ExpectNotIMatch(ocr, "BASIC%.SYSTEM", "shortcut should be removed")
+    a2d.DialogCancel()
+
+    -- cleanup
+    a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end)

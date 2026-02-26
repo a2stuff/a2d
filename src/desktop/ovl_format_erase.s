@@ -79,10 +79,7 @@ Exec:
       END_IF
 
         jsr     main::SetPenModeNotCopy
-        MGTK_CALL MGTK::MoveTo, vol_picker_line1_start
-        MGTK_CALL MGTK::LineTo, vol_picker_line1_end
-        MGTK_CALL MGTK::MoveTo, vol_picker_line2_start
-        MGTK_CALL MGTK::LineTo, vol_picker_line2_end
+        MGTK_CALL MGTK::FrameRect, vol_picker_rect
 
         copy8   #$FF, vol_picker_record::selected_index
         copy16  #HandleClick, main::PromptDialogClickHandlerHook

@@ -404,12 +404,7 @@ ShortcutPickerSelChangeCallback:
         jsr     SelectorPickOverlay::SelChangeCallback
         jmp     BankInAux
 
-
-        ;; Line endpoints
-        DEFINE_POINT entry_picker_line1_start, kBorderDX*2, 22
-        DEFINE_POINT entry_picker_line1_end, winfo_entry_picker::kWidth - kBorderDX*2, 22
-        DEFINE_POINT entry_picker_line2_start, kBorderDX*2, winfo_entry_picker::kHeight-21
-        DEFINE_POINT entry_picker_line2_end, winfo_entry_picker::kWidth - kBorderDX*2, winfo_entry_picker::kHeight-21
+        DEFINE_RECT entry_picker_rect, kBorderDX*2 - 1, 22, winfo_entry_picker::kWidth - kBorderDX*2 + 1, winfo_entry_picker::kHeight - 21
 
         DEFINE_BUTTON entry_picker_ok_button, winfo_entry_picker::kWindowId, res_string_button_ok, kGlyphReturn, 210, winfo_entry_picker::kHeight-18
         DEFINE_BUTTON entry_picker_cancel_button, winfo_entry_picker::kWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, winfo_entry_picker::kHeight-18
@@ -450,11 +445,7 @@ VolPickerSelChangeCallback:
         ;; Label pos
         DEFINE_POINT vol_picker_select_pos, kDialogLabelDefaultX, kVolPickerTop - 4
 
-        ;; Line endpoints
-        DEFINE_POINT vol_picker_line1_start, 7, kVolPickerTop - 2
-        DEFINE_POINT vol_picker_line1_end, winfo_prompt_dialog::kWidth - 8, kVolPickerTop - 2
-        DEFINE_POINT vol_picker_line2_start, 7, winfo_prompt_dialog::kHeight-22
-        DEFINE_POINT vol_picker_line2_end, winfo_prompt_dialog::kWidth - 8, winfo_prompt_dialog::kHeight-22
+        DEFINE_RECT vol_picker_rect, kBorderDX*2-1, kVolPickerTop - 2, winfo_prompt_dialog::kWidth - kBorderDX*2 + 1, winfo_prompt_dialog::kHeight - 22
 
 the_dos_33_disk_format:
         PASCAL_STRING res_string_the_dos_33_disk_format

@@ -173,18 +173,20 @@ copy_when:
 
         OPTK_CALL OPTK::Draw, shortcut_picker_params
 
-        FALL_THROUGH_TO dialog_loop
+        FALL_THROUGH_TO DialogLoop
 .endproc ; Init
 
-dialog_loop:
+;;; ============================================================
+
+.proc DialogLoop
         jsr     EventLoop
-        bmi     dialog_loop     ; N set = nothing selected, re-enter loop
+        bmi     DialogLoop      ; N set = nothing selected, re-enter loop
 
         jne     DoCancel        ; Z set = OK selected
 
         ;; Which action are we?
         lda     shortcut_picker_record::selected_index
-        bmi     dialog_loop
+        bmi     DialogLoop
         lda     selector_action
         cmp     #SelectorAction::edit
         beq     DoEdit
@@ -193,8 +195,9 @@ dialog_loop:
         beq     DoDelete
 
         cmp     #SelectorAction::run
-        bne     dialog_loop
+        bne     DialogLoop
         jmp     DoRun
+.endproc ; DialogLoop
 
 ;;; ============================================================
 
@@ -384,10 +387,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_CALL MGTK::FrameRect, entry_picker_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        MGTK_CALL MGTK::MoveTo, entry_picker_line1_start
-        MGTK_CALL MGTK::LineTo, entry_picker_line1_end
-        MGTK_CALL MGTK::MoveTo, entry_picker_line2_start
-        MGTK_CALL MGTK::LineTo, entry_picker_line2_end
+        MGTK_CALL MGTK::FrameRect, entry_picker_rect
 
         BTK_CALL BTK::Draw, entry_picker_ok_button
         BTK_CALL BTK::Draw, entry_picker_cancel_button
@@ -401,7 +401,8 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         TAIL_CALL DrawTitleCentered, AX=#label_del
     END_IF
 
-        TAIL_CALL DrawTitleCentered, AX=#label_run
+        ldax    #label_run
+        FALL_THROUGH_TO DrawTitleCentered
 .endproc ; OpenWindow
 
 ;;; ============================================================
@@ -641,40 +642,21 @@ flags:  .byte   0
         bcs     secondary_run_list
 
         ;; Primary run list
-.scope
-        tax
-        inx
-        cpx     num_primary_run_list_entries
-        bne     loop
-
-finish:
+    DO
+        lda     index
+      IF A = num_primary_run_list_entries
         dec     selector_list + kSelectorListNumPrimaryRunListOffset
         dec     num_primary_run_list_entries
         TAIL_CALL UpdateMenuResources
-
-loop:   lda     index
-        cmp     num_primary_run_list_entries
-        beq     finish
+      END_IF
 
         jsr     MoveEntryDown
-
-        inc     index
-        jmp     loop
-.endscope
+    WHILE inc index : NOT ZERO  ; always
 
         ;; --------------------------------------------------
 
 secondary_run_list:
-.scope
-        sec
-        sbc     #kSelectorListNumPrimaryRunListEntries - 1
-    IF A = num_secondary_run_list_entries
-        dec     selector_list + kSelectorListNumSecondaryRunListOffset
-        dec     num_secondary_run_list_entries
-        rts
-    END_IF
-
-    REPEAT
+    DO
         lda     index
         sec
         sbc     #kSelectorListNumPrimaryRunListEntries
@@ -686,9 +668,7 @@ secondary_run_list:
 
         CALL    MoveEntryDown, A=index
 
-        inc     index
-    FOREVER
-.endscope
+    WHILE inc index : NOT ZERO  ; always
 
 index:  .byte   0
 
@@ -1052,9 +1032,7 @@ retry_flag:        .byte   0 ; bit7
         rts
 .endproc ; DrawEntryCallback
 
-.proc SelChangeCallback
-        jmp     UpdateOKButton
-.endproc ; SelChangeCallback
+SelChangeCallback := UpdateOKButton
 
 
 ;;; ============================================================

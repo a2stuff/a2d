@@ -31,7 +31,7 @@ function util.SlurpFile(pathname)
 end
 
 function util.CaseInsensitivePattern(p)
-  return (p:gsub("(%%?)(.)", function(escape, char)
+  return (assert(p):gsub("(%%?)(.)", function(escape, char)
     if escape == "" and char:match("%a") then
       return "[" .. char:lower() .. char:upper() .. "]"
     else
