@@ -130,12 +130,6 @@ port:           .addr   grafport
 
 grafport:       .tag    MGTK::GrafPort
 
-.params drawtext_params_char
-        .addr   char_label
-        .byte   1
-.endparams
-char_label:  .byte   0
-
 ;;; ============================================================
 
 .proc Init

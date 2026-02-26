@@ -45,7 +45,6 @@ kButtonInsetX   = 25
 window_id:     .byte   kDAWindowId
 .endparams
 
-penXOR:         .byte   MGTK::penXOR
 pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
@@ -104,7 +103,6 @@ grafport_win:       .tag MGTK::GrafPort
 
 
 str_from_int:   PASCAL_STRING "000,000"    ; Filled in by IntToString
-str_spaces:     PASCAL_STRING "    "
 
 counter:        .word   0       ; set by `ProbeSpeed`
 

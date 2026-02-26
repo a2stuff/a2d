@@ -613,8 +613,6 @@ start:  lda     KBD
 last_char:
         .byte   0
 
-return_flag:
-        .byte   0
 .endproc ; HandleKey
 
 ;;; ============================================================

@@ -413,8 +413,6 @@ fin:    jsr     UpdateWindow
 
 pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
-notpenXOR:      .byte   MGTK::notpenXOR
-
 
 ;;; ============================================================
 

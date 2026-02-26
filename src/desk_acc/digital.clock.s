@@ -244,7 +244,6 @@ advance:
 
 vindex:         .byte   0
 num_verts:      .byte   0
-more_flag:      .byte   0
 
 .endproc ; DrawVectorChar
 

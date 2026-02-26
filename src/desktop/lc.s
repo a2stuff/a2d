@@ -164,18 +164,6 @@ params: .res    3
 .endproc ; AdjustUpdatePortForEntries
 
 ;;; ============================================================
-;;; From MAIN, load AUX (A,X) into A
-;;; Assert: Main is banked in
-
-.proc AuxLoad
-        stax    op+1
-        sta     RAMRDON
-op:     lda     SELF_MODIFIED
-        sta     RAMRDOFF
-        rts
-.endproc ; AuxLoad
-
-;;; ============================================================
 ;;; From MAIN, show alert
 ;;; Assert: Main is banked in
 

@@ -87,8 +87,6 @@ str_title:
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
-penXOR:         .byte   MGTK::penXOR
-pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
 .params winfo

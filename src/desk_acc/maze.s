@@ -52,7 +52,6 @@ checkerboard_pattern:
 carvepen:       .byte MGTK::penOR
 wallpen:        .byte MGTK::penBIC
 pencopy:        .byte MGTK::pencopy
-notpencopy:     .byte MGTK::notpencopy
 
 ;;; ============================================================
 ;;; DA Init
@@ -233,8 +232,6 @@ yield:
 
 row:    .byte   0
 col:    .byte   0
-
-count:  .byte   0
 .endproc ; DoMaze
 StepMaze := DoMaze::step
 

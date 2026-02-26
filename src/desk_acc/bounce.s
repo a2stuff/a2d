@@ -82,7 +82,6 @@ port:           .addr   grafport
 
 grafport:       .tag    MGTK::GrafPort
 
-pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 penXOR:         .byte   MGTK::penXOR
 

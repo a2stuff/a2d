@@ -144,8 +144,6 @@ width:  .word   0
 
         DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
 
-penXOR:         .byte   MGTK::penXOR
-pencopy:        .byte   MGTK::pencopy
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
