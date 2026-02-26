@@ -172,7 +172,6 @@ last:   .tag    DateTime
         BREAK_IF A = str_time
     WHILE inc idx : NOT_ZERO
 
-done:
         rts
 .endproc ; Update
 

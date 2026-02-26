@@ -126,6 +126,7 @@ numerator:      .word   0           ; (in) populated dynamically
 denominator:    .word   kSpeedMax   ; (in) constant
 result:         .word   0           ; (out)
 remainder:      .word   0           ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .params progress_muldiv_params
@@ -134,6 +135,7 @@ numerator:      .word   0           ; (in) populated dynamically
 denominator:    .word   0           ; (in) populated dynamically
 result:         .word   0           ; (out)
 remainder:      .word   0           ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 pattern_left:

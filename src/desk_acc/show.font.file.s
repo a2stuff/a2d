@@ -253,8 +253,6 @@ line_addrs:
 
 
 .proc DrawWindow
-        ptr := $06
-
 PARAM_BLOCK params, $06
 data    .addr
 width   .word

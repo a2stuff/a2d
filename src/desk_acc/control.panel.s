@@ -742,7 +742,7 @@ shortcut_table_addr_hi:
         lda     #0
         SKIP_NEXT_2_BYTE_INSTRUCTION
 :       lda     #$FF
-@store: sta     flag
+        sta     flag
 
         ;; Toggle pattern bit
     REPEAT
@@ -783,7 +783,7 @@ shortcut_table_addr_hi:
         BREAK_IF X <> lastx
       WHILE Y = lasty
 
-moved:  stx     lastx
+        stx     lastx
         sty     lasty
     FOREVER
 
@@ -1087,7 +1087,7 @@ notpencopy:     .byte   MGTK::notpencopy
     END_IF
 
 
-done:   MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::ShowCursor
         rts
 
 arrow_num:
@@ -1236,7 +1236,6 @@ xloop:  ror     row
         SKIP_NEXT_2_BYTE_INSTRUCTION
         .assert MGTK::notpencopy <> $C0, error, "Bad BIT skip"
 zero:   lda     #MGTK::notpencopy
-store:
     IF A <> mode
         sta     mode
         MGTK_CALL MGTK::SetPenMode, mode

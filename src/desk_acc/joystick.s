@@ -468,7 +468,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::ShowCursor
-done:   rts
+        rts
 
 curr:   .tag InputState
 last:   .tag InputState

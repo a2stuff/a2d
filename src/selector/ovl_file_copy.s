@@ -420,6 +420,7 @@ numerator:      .word   0                 ; (in) populated dynamically
 denominator:    .word   0                 ; (in) populated dynamically
 result:         .word   0                 ; (out)
 remainder:      .word   0                 ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .proc PrepWindowForCopy

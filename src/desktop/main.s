@@ -1174,8 +1174,6 @@ last_disk_in_devices_table:
 ;;; Input: A = unit_number
 ;;; Preserves X
 .proc CheckDiskInDevice
-        status_buffer := $800
-
         tay                     ; Y = unit_number
         txa                     ; preserve X
         pha
@@ -2869,7 +2867,7 @@ spin:   jsr     SpinName
 
         ;; --------------------------------------------------
         ;; Try creating the folder
-create:
+
         MLI_CALL CREATE, create_params
         bcs     error
 
@@ -7290,7 +7288,6 @@ assign_height:
     END_IF
 
         winfo_ptr := $06
-        tmpw := $08
 
         CALL    GetWindowPtr, A=cached_window_id
         stax    winfo_ptr
@@ -12435,8 +12432,6 @@ retry:
     IF ZERO
 
         tmpc := $50
-        tmpx := tmpc + MGTK::Point::xcoord
-        tmpy := tmpc + MGTK::Point::ycoord
         delta := $54
 
         ;; Compute old bounds of icon bitmap

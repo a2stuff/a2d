@@ -338,7 +338,7 @@ done:   jmp     InputLoop
 
 
         MGTK_CALL MGTK::ShowCursor
-done:   rts
+        rts
 .endproc ; DrawWindow
 
 
@@ -489,6 +489,7 @@ numerator:      .word   .sizeof(CatalogEntry) ; (in) constant
 denominator:    .word   1                     ; (in) constant
 result:         .word   0                     ; (out)
 remainder:      .word   0                     ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .params progress_muldiv_params
@@ -497,6 +498,7 @@ numerator:      .word   0                 ; (in) populated dynamically
 denominator:    .word   0                 ; (in) populated dynamically
 result:         .word   0                 ; (out)
 remainder:      .word   0                 ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 ;;; ============================================================
@@ -672,7 +674,7 @@ done:   jmp     InputLoop
         BTK_CALL BTK::Draw, close_button
 
         MGTK_CALL MGTK::ShowCursor
-done:   rts
+        rts
 .endproc ; DrawWindow
 
         DEFINE_POINT pt, 0, 0
@@ -850,7 +852,6 @@ str_from_int:   PASCAL_STRING "000000" ; filled in by IntToString
 
 ;;; ============================================================
 
-start:
         ;; Get active window's path
         jsr     GetWinPath
     IF NOT_ZERO

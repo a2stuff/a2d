@@ -474,7 +474,6 @@ textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
-        winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
 pencopy:         .byte  MGTK::pencopy
 notpenXOR:       .byte  MGTK::notpenXOR
@@ -577,7 +576,7 @@ destroy:
         jmp     DrawWindow
     END_IF
 
-ret:    rts
+        rts
 .endproc ; OnClick
 
         ;; on key press - exit if Escape
@@ -808,24 +807,22 @@ col:    copy8   #kHolePiece, position_table,y
 row:    copy8   #kHolePiece, position_table,y
         jsr     DrawRow
 
-done:   jsr     CheckVictory
-        bcc     after_click
-
+done:
+        jsr     CheckVictory
+    IF CS
         ;; Yay! Play the sound 4 times
-.proc OnVictory
         ldx     #4
-    DO
+      DO
         txa
         pha
         jsr     PlaySound
         jsr     InvertWindow
         pla
         tax
-    WHILE dex : NOT_ZERO
+      WHILE dex : NOT_ZERO
         CLEAR_BIT7_FLAG scrambled_flag
-.endproc ; OnVictory
+    END_IF
 
-after_click:
         jmp     FindHole
 .endproc ; ProcessClick
 

@@ -1855,7 +1855,6 @@ fail:   RETURN  C=0
         bne     fail
 
         ;; Probe successful
-success:
         RETURN  C=1
 
 fail:   RETURN  C=0

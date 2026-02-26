@@ -35,6 +35,7 @@ numerator:      .word   0          ; (in) populated dynamically
 denominator:    .word   kMapHeight ; (in) constant
 result:         .word   0          ; (out)
 remainder:      .word   0          ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .params x_to_long
@@ -43,6 +44,7 @@ numerator:      .word   0         ; (in) populated dynamically
 denominator:    .word   kMapWidth ; (in) constant
 result:         .word   0         ; (out)
 remainder:      .word   0         ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .params lat_to_y
@@ -51,6 +53,7 @@ numerator:      .word   0          ; (in) populated dynamically
 denominator:    .word   180        ; (in) constant
 result:         .word   0          ; (out)
 remainder:      .word   0          ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .params long_to_x
@@ -59,6 +62,7 @@ numerator:      .word   0         ; (in) populated dynamically
 denominator:    .word   360       ; (in) constant
 result:         .word   0         ; (out)
 remainder:      .word   0         ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 
@@ -436,9 +440,7 @@ next:   inc     index
 :
     FOREVER
 
-
-
-fail:   JSR_TO_MAIN JUMP_TABLE_BELL
+        JSR_TO_MAIN JUMP_TABLE_BELL
 
 done:   ;; Update display
         jsr     SetPort

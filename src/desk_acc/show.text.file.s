@@ -191,6 +191,7 @@ numerator:      .word   0       ; (in)
 denominator:    .word   0       ; (in)
 result:         .word   0       ; (out)
 remainder:      .word   0       ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 ;;; ============================================================

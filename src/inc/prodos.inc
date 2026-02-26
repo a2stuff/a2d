@@ -517,6 +517,7 @@ quit_type:
         .byte   0
         .word   0
         .refto param_count
+        .refto quit_type
 .endparams
 .endmacro
 

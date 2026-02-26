@@ -515,7 +515,7 @@ done:   jmp     InputLoop
         BTK_CALL BTK::Draw, cancel_button
 
         MGTK_CALL MGTK::ShowCursor
-done:   rts
+        rts
 .endproc ; DrawWindow
 
 ;;; ============================================================

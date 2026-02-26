@@ -288,7 +288,7 @@ exit_hook := MaybeCallExitHook::hook
         ;; Check file type
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
     IF CS
-fail:   rts
+        rts
     END_IF
 
         lda     get_file_info_params::file_type
@@ -455,8 +455,6 @@ fail:   RETURN  C=1             ; failure
 
 ;;; Output: C=0 on success, C=1 on failure
 .proc ShowDHRFile
-        ptr := $06
-
         ;; If suffix is ".A2FM" show in mono mode
         CALL    CheckSuffix, AX=#str_a2fm_suffix
     IF CC
@@ -595,7 +593,7 @@ next:
         adc     #1
     WHILE A <> #kRows
 
-done:   rts
+        rts
 .endproc ; HRToDHR
 
 ;;; ============================================================
@@ -1096,7 +1094,6 @@ clear:  copy16  #hires, ptr
     WHILE dex : NOT_ZERO
         rts
 
-done:
 .endproc ; ClearScreen
 
 ;;; ============================================================

@@ -1494,8 +1494,7 @@ retry3:
 
 failed:
         sec
-ret:    rts                     ; C=1
-
+        rts                     ; C=1
 .endproc ; _DoWrite
 
 ;;; Before calling: ensure `retry_flag` was cleared at some point.

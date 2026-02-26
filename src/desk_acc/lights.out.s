@@ -57,6 +57,7 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
         .repeat kCols, xx
 
         DEFINE_BUTTON .ident(.sprintf("button_%d_%d", xx, yy)), kDAWindowId,,, kHPadding + kLightWidth * xx, kVPadding + kLightHeight * yy
+        .refto .ident(.sprintf("button_%d_%d", xx, yy))
 
         .endrepeat
         .endrepeat
@@ -221,7 +222,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         jsr     DrawWindow
     END_IF
 
-ret:    rts
+        rts
 .endproc ; DoDrag
 
 ;;; ============================================================

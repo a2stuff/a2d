@@ -874,8 +874,6 @@ index:  .byte   0
 
 ;;; ============================================================
 
-filename_buffer := $1C00
-
         DEFINE_DESTROY_PARAMS destroy_params, filename
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
@@ -1000,7 +998,7 @@ retry3:
 
 failed:
         sec
-ret:    rts                     ; C=1
+        rts                     ; C=1
 .endproc ; _DoWrite
 
 ;;; Before calling: ensure `retry_flag` was cleared at some point.

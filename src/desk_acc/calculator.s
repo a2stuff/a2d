@@ -432,7 +432,6 @@ textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
-openwindow_params_top := winfo::top
 
 window_title:
         PASCAL_STRING res_string_window_title
@@ -567,7 +566,7 @@ exit:   pla                     ; pop OnClick / OnKeyPress
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawContent
     END_IF
-ret:    rts
+        rts
 .endproc ; OnClick
 exit := OnClick::exit
 

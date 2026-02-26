@@ -190,7 +190,6 @@ cleanup:
     END_IF
 
         ;; default is to return with A=0
-exit_with_0:
         lda     #0
 
 rts1:   rts
@@ -209,7 +208,7 @@ exit_with_a:
         ldx     stack_ptr_stash
         txs
         ldy     #$FF
-rts2:   rts
+        rts
 
         ;; Macro for exit_with_a
 
@@ -4201,8 +4200,8 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
 
 finish:
         plp
+        rts
 .endproc ; SetCursorImpl
-srts:   rts
 
 ;;; ============================================================
 

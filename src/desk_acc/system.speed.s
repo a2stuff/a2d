@@ -116,9 +116,6 @@ grafport_win:       .tag MGTK::GrafPort
 kRunPosX        = 12
 kRunPosY        = 51
 kRunDistance    = 104
-kRunWidth  = 21
-kRunHeight = 11
-
 
 run_pos:
         .byte   0

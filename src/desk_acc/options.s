@@ -282,7 +282,7 @@ button_eor_table:
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common:
+
     IF bit dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES

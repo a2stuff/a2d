@@ -1298,7 +1298,7 @@ hi:     .byte   0
     END_IF
 
         ;; Draw the string
-common: MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawText, text_params
         rts
 
 .params text_params
@@ -1382,7 +1382,6 @@ rest:
         bmi     use_ramcard_path ; already copied
 
         ;; Need to copy to RAMCard
-        path_addr := $06
         CALL    GetSelectorListPathAddr, A=invoke_index
         jsr     CopyPathToInvokerPrefix
 

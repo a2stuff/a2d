@@ -40,6 +40,7 @@ mapbits:        .addr   nw_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kRoundWidth-1, kRoundHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 ne_bitmap:
@@ -54,6 +55,7 @@ mapbits:        .addr   ne_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kRoundWidth-1, kRoundHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 sw_bitmap:
@@ -68,6 +70,7 @@ mapbits:        .addr   sw_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kRoundWidth-1, kRoundHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 se_bitmap:
@@ -82,6 +85,7 @@ mapbits:        .addr   se_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kRoundWidth-1, kRoundHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 ;;; ============================================================

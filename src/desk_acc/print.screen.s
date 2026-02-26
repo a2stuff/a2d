@@ -68,7 +68,7 @@ sig_bytes:
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
-ret:    rts
+        rts
 
 no_device:
         TAIL_CALL JUMP_TABLE_SHOW_ALERT, A=#ERR_DEVICE_NOT_CONNECTED

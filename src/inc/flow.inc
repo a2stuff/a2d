@@ -386,6 +386,7 @@
         .endif
 
         @skip := *
+        .refto @skip
         F2_LOG_END_FUNC "CODEGEN_IN_LIST"
 .endmacro
 .macro F2_CODEGEN_IN_LIST2 cop, bop1, target1, target1_name, bop2, target2, target2_name, p1, p2, p3, p4, p5, p6, p7, p8, p9
@@ -516,6 +517,7 @@
         .endif
 
         @skip := *
+        .refto @skip
         F2_LOG_END_FUNC "F2_CODEGEN_BETWEEN"
 .endmacro
 
@@ -934,6 +936,7 @@
         .undef f2_params
 
         @stay := *
+        .refto @stay
 .endmacro
 
 ;;; Parse expression and generate code with "branch if false" semantics
@@ -945,6 +948,7 @@
         .undef f2_params
 
         @stay := *
+        .refto @stay
 .endmacro
 
 ;;; ============================================================
