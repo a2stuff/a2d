@@ -1249,6 +1249,8 @@ egg:    .byte   0
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
+        ;; Model
+
         copy16  model_pix_ptr, bits_addr
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::notpencopy
         JUMP_TABLE_MGTK_CALL MGTK::PaintBits, SELF_MODIFIED, bits_addr
@@ -1256,11 +1258,12 @@ egg:    .byte   0
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::model_pos
         CALL    DrawStringFromMain, AX=model_str_ptr
 
+        ;; ProDOS version
+
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pdver_pos
         CALL    DrawStringFromMain, AX=#str_prodos_version
 
-        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::line1
-        JUMP_TABLE_MGTK_CALL MGTK::LineTo, aux::line2
+        ;; Memory
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::mem_pos
         CALL    DrawStringFromMain, AX=#str_memory_prefix
@@ -1274,8 +1277,29 @@ egg:    .byte   0
         jsr     CPUId
         jsr     DrawStringFromMain
 
-        copy8   #7, slot
-        copy8   #1<<7, mask
+        ;; Separator
+
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::line1
+        JUMP_TABLE_MGTK_CALL MGTK::LineTo, aux::line2
+
+        ;; Aux Slot
+
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
+        CALL    DrawStringRightFromMain, AX=#str_aux
+        ldax    #str_80col
+        ldy     rw_banks
+    IF Y <> #1
+        ldax    #str_ramworks
+    END_IF
+        CALL    DrawStringFromMain
+        CALL    DrawStringFromMain, AX=#str_ramworks_prefix
+        CALL    DrawStringFromMain, AX=#str_ramworks_memory
+        CALL    DrawStringFromMain, AX=#str_memory_kb_suffix
+
+        ;; Slots 1-7
+
+        copy8   #1, slot
+        copy8   #1 << 1, mask
 
     DO
         lda     slot
@@ -1356,20 +1380,8 @@ draw_maybe_sp:
        END_IF
       END_IF
 
-        lsr     mask
-    WHILE dec slot : NOT ZERO
-
-        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
-        CALL    DrawStringRightFromMain, AX=#str_aux
-        ldax    #str_80col
-        ldy     rw_banks
-    IF Y <> #1
-        ldax    #str_ramworks
-    END_IF
-        CALL    DrawStringFromMain
-        CALL    DrawStringFromMain, AX=#str_ramworks_prefix
-        CALL    DrawStringFromMain, AX=#str_ramworks_memory
-        CALL    DrawStringFromMain, AX=#str_memory_kb_suffix
+        asl     mask
+    WHILE inc slot : lda slot : A < #8
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
