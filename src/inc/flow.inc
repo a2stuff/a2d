@@ -423,46 +423,28 @@
             F2_LOG_PEEKED "EOF"
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCS, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
             .else
               ;; e.g. WHILE A BETWEEN #1, #9
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_stay_target, "stay_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), AND)
             F2_LOG_PEEKED "AND"
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9 AND CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCS, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
             .else
               ;; e.g. WHILE A BETWEEN #1, #9 AND CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_stay_target, "stay_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), OR)
             F2_LOG_PEEKED "OR"
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9 OR CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, @skip, "skip"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_stay_target, "stay_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_stay_target, "stay_target"
             .else
               ;; e.g. WHILE A BETWEEN #1, #9 OR CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, @skip, "skip"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_branch_target, "branch_target"
             .endif
           .else
             F2_ERR_UNEXPECTED_TOKEN
@@ -472,46 +454,28 @@
             F2_LOG_PEEKED "EOF"
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_stay_target, "stay_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .else
               ;; e.g. WHILE NOT A BETWEEN #1, #9
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCS, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), AND)
             F2_LOG_PEEKED "AND"
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9 AND CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, @skip, "skip"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_branch_target, "branch_target"
             .else
               ;; e.g. WHILE NOT A BETWEEN #1, #9 AND CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, @skip, "skip"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_stay_target, "stay_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_stay_target, "stay_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), OR)
             F2_LOG_PEEKED "OR"
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9 OR CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_stay_target, "stay_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .else
               ;; e.g. WHILE NOT A BETWEEN #1, #9 OR CS
-              F2_CODEGEN_COMPARE cop, {lo}
-              F2_CODEGEN_BRANCH BCC, f2_branch_target, "branch_target"
-              F2_CODEGEN_COMPARE cop, {hi+1}
-              F2_CODEGEN_BRANCH BCS, f2_branch_target, "branch_target"
+              F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
             .endif
           .endif
         .endif
@@ -519,6 +483,16 @@
         @skip := *
         .refto @skip
         F2_LOG_END_FUNC "F2_CODEGEN_BETWEEN"
+.endmacro
+.macro F2_CODEGEN_BETWEEN2 cop, lo, hi, bop1, target1, target1_name, bop2, target2, target2_name
+        F2_LOG_END_FUNC "F2_CODEGEN_BETWEEN2"
+
+        F2_CODEGEN_COMPARE cop, {lo}
+        F2_CODEGEN_BRANCH bop1, target1, target1_name
+        F2_CODEGEN_COMPARE cop, {hi+1}
+        F2_CODEGEN_BRANCH bop2, target2, targe2_name
+
+        F2_LOG_END_FUNC "F2_CODEGEN_BETWEEN2"
 .endmacro
 
 ;;; --------------------------------------------------
