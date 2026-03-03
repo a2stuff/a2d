@@ -174,7 +174,7 @@ kButtonSpacing  = kSystemFontHeight + 2
 
         DEFINE_BUTTON invisible_button, kDAWindowId, res_string_label_invisible, res_string_shortcut_apple_5, kButtonLeft, kButtonTop + kButtonSpacing * 4
 
-        DEFINE_BUTTON check525_button, kDAWindowId, "Check 5.25\" drives on startup", res_string_shortcut_apple_6, kButtonLeft, kButtonTop + kButtonSpacing * 5
+        DEFINE_BUTTON check525_button, kDAWindowId, res_string_label_check525, res_string_shortcut_apple_6, kButtonLeft, kButtonTop + kButtonSpacing * 5
 
 button_button_table:
         .addr   ramcard_button, selector_button, shortcuts_button, casebits_button, invisible_button, check525_button
