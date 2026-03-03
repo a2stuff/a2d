@@ -2301,9 +2301,8 @@ start:
         CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y
         IF ZS
         lda     dib_buffer+SPDIB::Device_Name,y
-         IF A >= #'a'           ; guarded by `kBuildSupportsLowercase`
+        cmp     #'a'           ; guarded by `kBuildSupportsLowercase`
         bcs     done_adjust_case ; is lower case
-         END_IF
         END_IF
         dey
        WHILE POS
