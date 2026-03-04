@@ -16,9 +16,9 @@ dd="$(git log -1 --format="%ad" --date=format:%d)"
 month="$(grep -E "\bres_string_month_name_$((10#$mm))\b" "$resfile" | cut -d'"' -f2)"
 order="$(grep -E "\bres_const_date_order\b" "$resfile" | cut -d' ' -f3)"
 if [ "$order" = "0" ]; then
-    date="$month $dd, $yyyy"
+    date="$month $((10#$dd)), $yyyy"
 else
-    date="$dd $month $yyyy"
+    date="$((10#$dd)) $month $yyyy"
 fi
 
 if [ "$supports_lowercase" != "1" ]; then
