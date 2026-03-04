@@ -482,7 +482,7 @@ unchecked_rb_bitmap:
 
         jsr     _ShieldCursor
         jsr     _DrawRadioBitmap
-        CALL    _MaybeDrawLabel, A=#kSystemFontHeight - 1
+        CALL    _MaybeDrawLabel, X=#BTK::kRadioButtonWidth + kLabelPadding, YA=#kSystemFontHeight - 1
         jsr     _MaybeDrawShortcut
         jmp     _UnshieldCursor
 .endproc ; RadioDrawImpl
@@ -557,7 +557,7 @@ unchecked_cb_bitmap:
 
         jsr     _ShieldCursor
         jsr     _DrawCheckboxBitmap
-        CALL    _MaybeDrawLabel, A=#kSystemFontHeight
+        CALL    _MaybeDrawLabel, X=#BTK::kCheckboxWidth + kLabelPadding, Y=#kSystemFontHeight
         jsr     _MaybeDrawShortcut
         jmp     _UnshieldCursor
 .endproc ; CheckboxDrawImpl
@@ -607,19 +607,22 @@ unchecked_cb_bitmap:
 
 ;;; ============================================================
 
-;;; Input: A = delta from top of rect to text baseline; `kSystemFontHeight` + 0 or 1
-;;; Scrambles: $B-$F
+;;; Input: X = delta from left of rect to text, Y = delta from top of rect to text baseline; `kSystemFontHeight` + 0 or 1
+;;; Scrambles: $B-$E
 .proc _MaybeDrawLabel
-        delta := $F
-        sta     delta
+        pos := $B
+        deltax := pos+MGTK::Point::xcoord ; overwritten immediately after use
+        deltay := pos+MGTK::Point::ycoord
+
+        stx     deltax
+        sty     deltay
 
         lda     a_label
         ora     a_label+1
     IF NOT_ZERO
         ;; Draw the label
-        pos := $B
-        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
-        add16_8 rect+MGTK::Rect::y1, delta, pos+MGTK::Point::ycoord
+        add16_8 rect+MGTK::Rect::x1, deltax, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, deltay, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
     END_IF
