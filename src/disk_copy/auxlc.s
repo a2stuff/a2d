@@ -1388,7 +1388,7 @@ fallback:
         bcs     next_device     ; failure
 
         jsr     IsPascalBootBlock ; returns C=0 if yes
-        IF ZS                     ; TODO: Should be `CC`
+        IF CC
         ;; Pascal
         CALL    GetDriveNameTableSlot, A=num_drives ; result in A,X
         jsr     GetPascalVolName ; A,X is buffer to populate
