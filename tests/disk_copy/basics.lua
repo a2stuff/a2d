@@ -14,9 +14,9 @@ test.Step(
 
     a2d.CopyDisk()
     test.ExpectMatch(a2dtest.OCRScreen(),
-                     ".* 7  1  A2%.DeskTop .*\n" ..
-                     ".* 6  1  Unknown .*\n" ..
-                     ".* 6  2  Unknown .*\n",
+                     "7  1  A2%.DeskTop.*\n" ..
+                     "6  1  Unknown.*\n" ..
+                     "6  2  Unknown.*\n",
                      "drive list should be correct (S7D1, S6D1, S6D2)")
 
     -- cleanup
