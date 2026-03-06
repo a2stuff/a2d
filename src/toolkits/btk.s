@@ -144,6 +144,16 @@ checkerboard_pattern:
         .word   1, 1
 .endparams
 
+.params default_ring_grow
+        .addr   rect
+        .word   4, 2
+.endparams
+
+.params default_ring_shrink
+        .addr   rect
+        .word   AS_WORD(-4), AS_WORD(-2)
+.endparams
+
 ;;; ============================================================
 
 ;;; Shadows params in Selector's `app` and Disk Copy's `auxlc` scopes.
@@ -191,7 +201,24 @@ ret:
         MGTK_CALL MGTK::SetPenMode, penXOR
         CALL    _ShieldCursor
         MGTK_CALL MGTK::FrameRect, rect
-        beq     btk::HiliteImpl::skip_port ; always
+
+        lda     a_shortcut
+        ora     a_shortcut+1
+    IF NOT ZERO
+        ldy     #1                      ; offset past Pascal string length byte
+        lda     (a_shortcut),y
+      IF A = #kGlyphReturn
+        CALL    ReadSetting, X=#DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsDefaultButton
+       IF NOT ZERO
+        MGTK_CALL MGTK::InflateRect, default_ring_grow
+        MGTK_CALL MGTK::FrameRect, rect
+        MGTK_CALL MGTK::InflateRect, default_ring_shrink
+       END_IF
+      END_IF
+    END_IF
+
+        jmp     btk::HiliteImpl::skip_port
 .endproc ; UpdateImpl
 
 ;;; ============================================================

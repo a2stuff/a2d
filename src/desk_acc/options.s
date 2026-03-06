@@ -159,7 +159,7 @@ grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-kNumButtons     = 6
+kNumButtons     = 7
 kButtonLeft     = 10
 kButtonTop      = 5
 kButtonSpacing  = kSystemFontHeight + 2
@@ -176,18 +176,20 @@ kButtonSpacing  = kSystemFontHeight + 2
 
         DEFINE_BUTTON check525_button, kDAWindowId, res_string_label_check525, res_string_shortcut_apple_6, kButtonLeft, kButtonTop + kButtonSpacing * 5
 
+        DEFINE_BUTTON defaultbutton_button, kDAWindowId, "Show thick border for default button", " (\x1F7)", kButtonLeft, kButtonTop + kButtonSpacing * 6
+
 button_button_table:
-        .addr   ramcard_button, selector_button, shortcuts_button, casebits_button, invisible_button, check525_button
+        .addr   ramcard_button, selector_button, shortcuts_button, casebits_button, invisible_button, check525_button, defaultbutton_button
         ASSERT_ADDRESS_TABLE_SIZE button_button_table, kNumButtons
 
 ;;; Which bit in DeskTopSettings::options this checkbox corresponds to
 button_mask_table:
-        .byte   DeskTopSettings::kOptionsSkipRAMCard, DeskTopSettings::kOptionsSkipSelector, DeskTopSettings::kOptionsShowShortcuts, DeskTopSettings::kOptionsSetCaseBits, DeskTopSettings::kOptionsShowInvisible, DeskTopSettings::kOptionsSkipCheck525
+        .byte   DeskTopSettings::kOptionsSkipRAMCard, DeskTopSettings::kOptionsSkipSelector, DeskTopSettings::kOptionsShowShortcuts, DeskTopSettings::kOptionsSetCaseBits, DeskTopSettings::kOptionsShowInvisible, DeskTopSettings::kOptionsSkipCheck525, DeskTopSettings::kOptionsDefaultButton
         ASSERT_TABLE_SIZE button_mask_table, kNumButtons
 
 ;;; For inverting the sense of a bit vs. its checkbox; high bit set to invert
 button_eor_table:
-        .byte   0, 0, BTK::kButtonStateChecked, BTK::kButtonStateChecked, BTK::kButtonStateChecked, 0
+        .byte   0, 0, BTK::kButtonStateChecked, BTK::kButtonStateChecked, BTK::kButtonStateChecked, 0, BTK::kButtonStateChecked
         ASSERT_TABLE_SIZE button_eor_table, kNumButtons
 
 

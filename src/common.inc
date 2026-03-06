@@ -196,6 +196,7 @@ DeskTopSettings::kOptionsShowShortcuts = %00000100 ; show button shortcuts, if s
 DeskTopSettings::kOptionsSetCaseBits   = %00001000 ; write GS/OS case bits, if set
 DeskTopSettings::kOptionsShowInvisible = %00010000 ; show "invisible" files, if set
 DeskTopSettings::kOptionsSkipCheck525  = %00100000 ; skip checking 5.25" drives, if set
+DeskTopSettings::kOptionsDefaultButton = %01000000 ; show thick border on default button, if set
 
 DeskTopSettings::kSysCapIsIIgs     = %00000001
 DeskTopSettings::kSysCapIsIIc      = %00000010 ; also set for IIc Plus

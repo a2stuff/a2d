@@ -699,6 +699,12 @@ function a2d.ToggleOptionSkipChecking525Drives()
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
+function a2d.ToggleOptionDefaultButtons()
+  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OAShortcut("7") -- Toggle "Show thick border for default button"
+  a2d.CloseWindow()
+  a2d.CloseAllWindows()
+end
 
 function a2d.Quit()
   a2d.OAShortcut("Q")

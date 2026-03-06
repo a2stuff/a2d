@@ -21,16 +21,23 @@ local function DialogTest(name, func)
     {
       {name .. " - defaults", "", {}},
       {name .. " - keyboard shortcuts", " - with shortcuts", {shortcuts=true}},
+      {name .. " - default button", " - with default button highlighted", {ring=true}},
     },
     function(idx, name, suffix, flags)
       if flags.shortcuts then
         a2d.ToggleOptionShowKeyboardShortcuts()
+      end
+      if flags.ring then
+        a2d.ToggleOptionDefaultButtons()
       end
 
       func(suffix)
 
       if flags.shortcuts then
         a2d.ToggleOptionShowKeyboardShortcuts()
+      end
+      if flags.ring then
+        a2d.ToggleOptionDefaultButtons()
       end
   end)
 end
