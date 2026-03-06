@@ -60,8 +60,7 @@ end
 
 local scan_for_mouse = false
 if machine.system.name:match("^apple2e")
-  or machine.system.name:match("^tk3000")
-  or machine.system.name:match("^prav8c") then
+  or machine.system.name:match("^tk3000") then
   -- Apple IIe
   -- * mouse card required (if mouse is used)
   -- * many possible aux memory devices
@@ -150,6 +149,38 @@ elseif machine.system.name:match("^ace2200") then
   keyboard["Open Apple"].field = "Open F"
   keyboard["Solid Apple"].field = "Solid F"
   keyboard["Reset"].field = "RESET"
+
+elseif machine.system.name:match("^prav8c") then
+  -- Pravetz 8C
+  -- * mouse card required
+  -- * many possible aux memory devices
+  scan_for_mouse = true
+  if emu.subst_env("$CHECKAUXMEMORY") == "true" then
+    auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
+  end
+
+  keyboard = {
+    ["Return"]      = { port = ":kbd:KEY8", field = "Return" },
+    ["Delete"]      = { port = ":kbd:KEY8", field = "Del" },
+    ["Escape"]      = { port = ":kbd:KEY4", field = "Esc" },
+    ["Tab"]         = { port = ":kbd:KEY4", field = "Tab" },
+
+    ["Up Arrow"]    = { port = ":kbd:KEY9", field = "Cursor Up" },
+    ["Left Arrow"]  = { port = ":kbd:KEY7", field = "Cursor Left" },
+    ["Right Arrow"] = { port = ":kbd:KEY8", field = "Cursor Right" },
+    ["Down Arrow"]  = { port = ":kbd:KEY9", field = "Cursor Down" },
+
+    -- modifiers
+    ["Control"]     = { port = ":kbd:KEY4", field = "Ctrl" },
+    ["Shift"]       = { port = ":kbd:KEY5", field = "Shift (Left)" },
+    ["Open Apple"]  = { port = ":kbd:FN",   field = "F1" },
+    ["Solid Apple"] = { port = ":kbd:FN",   field = "F2" },
+
+    -- Other
+    ["Reset"]       = { port = ":kbd:KEY9", field = "Reset"     },
+    ["Caps Lock"]   = { port = ":kbd:KEY6", field = "Caps Lock", bits = 0x01 }, -- TODO: bits?
+  }
+
 elseif machine.system.name:match("^apple2p") then
   -- minimal support for launcher testing
 
