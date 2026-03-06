@@ -7,17 +7,22 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk -flop2 prodos_floppy2.dsk"
 
 a2d.ConfigureRepaintTime(1)
 
+local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
+local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
+
 --[[============================================================
 
   Dump all the dialogs
 
   ============================================================]]
 
+local DialogTest = test.Step
+
 --------------------------------------------------
 -- Apple Menu
 --------------------------------------------------
 
-test.Step(
+DialogTest(
   "Apple > About Apple II DeskTop",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
@@ -25,7 +30,7 @@ test.Step(
     a2d.CloseWindow()
 end)
 
-test.Step(
+DialogTest(
   "Apple > About This Apple II",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
@@ -37,7 +42,7 @@ end)
 -- File Menu
 --------------------------------------------------
 
-test.Step(
+DialogTest(
   "File > Get Info (volume)",
   function()
     a2d.SelectPath("/A2.DESKTOP")
@@ -47,7 +52,7 @@ test.Step(
     a2d.DialogCancel()
 end)
 
-test.Step(
+DialogTest(
   "File > Get Info (file)",
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
@@ -57,7 +62,7 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
-test.Step(
+DialogTest(
   "File > Copy To...",
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
@@ -71,7 +76,7 @@ end)
 -- Special Menu
 --------------------------------------------------
 
-test.Step(
+DialogTest(
   "Special > Format Disk...",
   function()
     a2d.ClearSelection()
@@ -102,7 +107,7 @@ test.Step(
     test.Snap("Special > Format Disk... - Format in progress")
 end)
 
-test.Step(
+DialogTest(
   "Special > Erase Disk...",
   function()
     a2d.ClearSelection()
@@ -137,18 +142,26 @@ end)
 -- Shortcuts Menu
 --------------------------------------------------
 
-test.Step(
+local shortcut_added = false
+
+DialogTest(
   "Shortcuts > Add a Shortcut...",
   function()
     a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("Shortcuts > Add a Shortcut...")
     a2d.DialogOK()
+    shortcut_added = true
 end)
 
-test.Step(
+DialogTest(
   "Shortcuts > Edit a Shortcut...",
   function()
+    if not shortcut_added then
+      a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+      shortcut_added = true
+    end
+
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut")
     apple2.DownArrowKey()
@@ -158,27 +171,43 @@ test.Step(
     a2d.CloseAllWindows()
 end)
 
-test.Step(
+DialogTest(
   "Shortcuts > Delete a Shortcut...",
   function()
+    if not shortcut_added then
+      a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+      shortcut_added = true
+    end
+
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     test.Snap("Shortcuts > Delete a Shortcut...")
     a2d.DialogCancel()
 end)
 
-test.Step(
+DialogTest(
   "Shortcuts > Run a Shortcut...",
   function()
+    if not shortcut_added then
+      a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+      shortcut_added = true
+    end
+
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
     test.Snap("Shortcuts > Run a Shortcut...")
     a2d.DialogCancel()
 end)
 
+if shortcut_added then
+  a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
+  a2d.Reboot()
+  a2d.WaitForDesktopReady()
+end
+
 --------------------------------------------------
 -- Disk Copy
 --------------------------------------------------
 
-test.Step(
+DialogTest(
   "Special > Copy Disk...",
   function()
     a2d.CopyDisk()
@@ -236,21 +265,25 @@ test.Step(
     emu.wait(3)
     test.Snap("Disk Copy - Success")
 
-    -- back to desktop
+    -- cleanup
     a2d.DialogOK()
     emu.wait(10) -- scanning drives
-    a2d.OAShortcut('Q')
+    a2d.OAShortcut('Q') -- back to DeskTop
     a2d.WaitForDesktopReady()
     a2d.DialogOK() -- dismiss "two volumes with the same name"
-end)
-
-test.Step(
-  "Selector",
-  function()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
+    local image1 = s6d1.filename
+    s6d1:unload()
+    a2d.CheckAllDrives()
+    emu.wait(5)
+    a2d.RenamePath("/FLOPPY1", "Floppy2")
+    s6d1:load(image1)
     a2d.Reboot()
     a2d.WaitForDesktopReady()
+end)
 
+DialogTest(
+  "Selector",
+  function()
     a2d.ToggleOptionCopyToRAMCard()
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
@@ -276,4 +309,13 @@ test.Step(
     apple2.ReturnKey()
     emu.wait(2)
     test.Snap("Selector - Copying shortcut to RAMCard...")
+
+    -- cleanup
+    apple2.WaitForBasicSystem()
+    apple2.TypeLine("BYE")
+    a2d.WaitForDesktopReady() -- back to Shortcuts
+    apple2.Type("D")
+    a2d.WaitForDesktopReady() -- back to DeskTop
+    a2d.ToggleOptionCopyToRAMCard()
+    a2d.ToggleOptionShowShortcutsOnStartup()
 end)

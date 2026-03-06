@@ -17,7 +17,7 @@ a2d.ConfigureRepaintTime(1)
 -- Apple Menu
 --------------------------------------------------
 
-function OpenFileTest(name, path)
+local function OpenFileTest(name, path)
   test.Step(
     name,
     function()
