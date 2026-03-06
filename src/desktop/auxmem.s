@@ -254,11 +254,17 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 
         DEFINE_RECT_FRAME prompt_dialog_frame_rect, kPromptDialogWidth, kPromptDialogHeight
 
-        kPromptDialogInsetLeft   = 8
-        kPromptDialogInsetTop    = 20
-        kPromptDialogInsetRight  = 8
-        kPromptDialogInsetBottom = 26
-        DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
+        kPromptDialogInsetLeft   = kBorderDX*2
+        kPromptDialogInsetTop    = kDialogTitleY + 3
+        kPromptDialogInsetRight  = kBorderDX*2
+        kPromptDialogInsetBottom = kBorderDY*2
+        kPromptDialogButtonsTop  = kPromptDialogHeight - (kBorderDY*2 + kButtonHeight + kControlMarginY*2)
+
+        ;; Clear the dialog except for the title and buttons
+        DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogButtonsTop
+
+        ;; Clear the dialog buttons
+        DEFINE_RECT clear_dialog_buttons_rect, kPromptDialogInsetLeft, kPromptDialogButtonsTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
 
 ;;; ============================================================
 ;;; Progress dialog resources

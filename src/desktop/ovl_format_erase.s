@@ -153,8 +153,7 @@ loop2:
 
         CLEAR_BIT7_FLAG has_input_field_flag
         jsr     SetPortAndClear
-        MGTK_CALL MGTK::PaintRect, ok_button::rect
-        MGTK_CALL MGTK::PaintRect, cancel_button::rect
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_buttons_rect
 
         CALL    GetVolName, A=unit_num ; populates `ovl_string_buf`
 
