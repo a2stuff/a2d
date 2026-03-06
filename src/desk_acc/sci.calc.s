@@ -387,13 +387,6 @@ kMaxEntryLength = 10
 ;;; ============================================================
 ;;; Miscellaneous param blocks
 
-.params background_box_params
-left:   .word   1
-top:    .word   0
-right:  .word   259
-bottom: .word   96
-.endparams
-
 background_pattern:
         .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
 
@@ -488,8 +481,9 @@ ftmp:   .byte   $00,$00,$00,$00,$00,$00
 
 grafport:       .tag    MGTK::GrafPort
 
-penmode_normal: .byte   MGTK::pencopy
-penmode_xor:    .byte   MGTK::notpenXOR
+pencopy:        .byte   MGTK::pencopy
+notpenBIC:      .byte   MGTK::notpenBIC
+notpenXOR:      .byte   MGTK::notpenXOR
 
         kDAWidth = 130 + kBasicOffset
         kDAHeight = 96
@@ -1370,7 +1364,7 @@ invert_rect:
         RTS_IF  A = #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPattern, black_pattern
-        MGTK_CALL MGTK::SetPenMode, penmode_xor
+        MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, invert_addr
         rts
 
@@ -1454,7 +1448,7 @@ end:    rts
         ;; Frame
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetPattern, background_pattern
-        MGTK_CALL MGTK::PaintRect, background_box_params
+        MGTK_CALL MGTK::PaintRect, winfo::maprect
         MGTK_CALL MGTK::SetPattern, black_pattern
         MGTK_CALL MGTK::FrameRect, frame_display_params
         MGTK_CALL MGTK::SetPattern, white_pattern
@@ -1473,8 +1467,14 @@ end:    rts
         add16_8 ptr, #(btn_c::viewloc - btn_c), bitmap_addr
         add16_8 ptr, #(btn_c::pos - btn_c), text_addr
         add16_8 ptr, #(btn_c::label - btn_c), label
+        add16_8 ptr, #(btn_c::port - btn_c), rect_addr
 
-        MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw shadowed rect
+        MGTK_CALL MGTK::SetPenMode, notpenBIC
+        MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw drop shadow
+
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr ; draw button face
+
         MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
         MGTK_CALL MGTK::DrawString, 0, label
 

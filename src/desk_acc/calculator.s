@@ -194,19 +194,19 @@ button_bitmap:                  ; bitmap for normal buttons
 
         kWideBitmapStride = 8
 wide_button_bitmap:             ; bitmap for '0' button
-        PIXELS  ".................................................#######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  ".###############################################..######"
-        PIXELS  "..................................................######"
-        PIXELS  "#.................................................######"
+        PIXELS  ".................................................#"
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".###############################################.."
+        PIXELS  ".................................................."
+        PIXELS  "#................................................."
 
 tall_button_bitmap:             ; bitmap for '+' button
         PIXELS  "....................#"
@@ -257,13 +257,6 @@ kMaxEntryLength = 10
 
 ;;; ============================================================
 ;;; Miscellaneous param blocks
-
-.params background_box_params
-left:   .word   1
-top:    .word   0
-right:  .word   129
-bottom: .word   96
-.endparams
 
 background_pattern:
         .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
@@ -389,8 +382,9 @@ width:          .word   kScreenWidth - 1
 height:         .word   kScreenHeight - kMenuBarHeight - 2
 .endparams
 
-penmode_normal: .byte   MGTK::pencopy
-penmode_xor:    .byte   MGTK::notpenXOR
+pencopy:        .byte   MGTK::pencopy
+notpenBIC:      .byte   MGTK::notpenBIC
+notpenXOR:      .byte   MGTK::notpenXOR
 
         kWindowWidth = 130
         kWindowHeight = 96
@@ -1187,7 +1181,7 @@ invert_rect:
         RTS_IF  A = #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPattern, black_pattern
-        MGTK_CALL MGTK::SetPenMode, penmode_xor
+        MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, invert_addr
         rts
 
@@ -1271,7 +1265,7 @@ invert_rect:
         ;; Frame
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetPattern, background_pattern
-        MGTK_CALL MGTK::PaintRect, background_box_params
+        MGTK_CALL MGTK::PaintRect, winfo::maprect
         MGTK_CALL MGTK::SetPattern, black_pattern
         MGTK_CALL MGTK::FrameRect, frame_display_params
         MGTK_CALL MGTK::SetPattern, white_pattern
@@ -1299,10 +1293,17 @@ invert_rect:
         iny
 :       sty     text_addr+1
 
+        add16   ptr, #(btn_c::port - btn_c), rect_addr ; address button face rect
+
         ldy     #(btn_c::label - btn_c) ; label
         copy8   (ptr),y, label
 
+        MGTK_CALL MGTK::SetPenMode, notpenBIC
         MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw shadowed rect
+
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr ; draw button face
+
         MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
         MGTK_CALL MGTK::DrawText, drawtext_params_label  ; button label text
 
