@@ -244,7 +244,7 @@ output=$(
   # eval here to allow configs to specify empty variables e.g. -sl6 ''
   time eval "'$MAMEEXE' \
     -skip_gameinfo -nosamples \
-    -window -nomax -resolution '$RESOLUTION' -nounevenstretch \
+    -window -nomax -resolution '$RESOLUTION' -nounevenstretch -nosnapbilinear \
     -mouse \
     -cfg_directory '$CFGDIR' \
     -nvram_directory '$NVRAMDIR' \
