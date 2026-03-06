@@ -59,7 +59,7 @@ test.Step(
     a2dtest.ConfigureForSelector()
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(dialog_x + 100, dialog_y + 30) -- over shortcut
+        m.MoveToApproximately(dialog_x + 100, dialog_y + 25) -- over shortcut
         m.DoubleClick()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "OK", "OK button should flash")
         a2d.WaitForRepaint()

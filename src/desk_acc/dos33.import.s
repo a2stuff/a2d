@@ -108,23 +108,24 @@ str_alert_no_windows_open:
 .scope DevicePicker
 
 kDAWindowId     = $80
+
+kLabelGap       = 2
 kDAWidth        = 270
-kDAHeight       = kPickerHeight + 45
+kDAHeight       = kModalDialogInsetY + kSystemFontHeight + kLabelGap + (kPickerHeight + 2) + kControlMarginY + kButtonHeight + kModalDialogInsetY - 1
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
-kButtonsTop  = kDAHeight - 20
-kButtonsRight = kDAWidth - 19
-kButtonsGap  = 10
+kButtonsTop   = (kDAHeight + 1) - kModalDialogInsetY - kButtonHeight
+kButtonsRight = (kDAWidth + 1) - kModalDialogInsetX
+kButtonsGap   = kControlMarginX
 
 kPickerRows            = 6
 kPickerWindowId        = kDAWindowId+1
-kPickerWidth           = kDAWidth - 60
-kPickerWidthSB         = kPickerWidth + 20
+kScrollBarWidth        = 20
+kPickerWidth           = kDAWidth - (kScrollBarWidth + 2) - kModalDialogInsetX*2
 kPickerHeight          = kPickerRows * kListItemHeight - 1
-kPickerLeft            = kDALeft + (kDAWidth - kPickerWidthSB) / 2
-kPickerTop             = kDATop + 20
-
+kPickerLeft            = kDALeft + kModalDialogInsetX + 1
+kPickerTop             = kDATop + kModalDialogInsetY + kSystemFontHeight + kLabelGap
 
 .params winfo_picker
 window_id:      .byte   kDAWindowId
@@ -317,7 +318,7 @@ done:   jmp     InputLoop
 
 ;;; ============================================================
 
-        DEFINE_LABEL prompt, res_string_select_disk, 20, 16
+        DEFINE_LABEL prompt, res_string_select_disk, 20, 17
 
 .proc DrawWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -389,26 +390,25 @@ str_template:
 
 kDAWindowId     = $80
 kDAWidth        = 355
-kDAHeight       = kCatalogHeight + 46
+kDAHeight       = kModalDialogInsetY + kButtonHeight + kControlMarginY + kProgressBarHeight + kControlMarginY + (kCatalogHeight + 2) + kModalDialogInsetY
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
-kButtonsTop  = 8
-kButtonsRight = kDAWidth - 19
-kButtonsGap  = 10
+kButtonsTop  = kModalDialogInsetY
+kButtonsRight = kDAWidth - kModalDialogInsetX
+kButtonsGap  = kControlMarginX
 
-kProgressBarTop = 23
-kProgressBarInset = 20
+kProgressBarTop = kModalDialogInsetY + kButtonHeight + kControlMarginY + 1
+kProgressBarInset = kModalDialogInsetX + 1
 kProgressBarWidth = kDAWidth - kProgressBarInset*2
-kProgressBarHeight = 7
 
-kCatalogRows            = 11
+kCatalogRows            = 10
 kCatalogWindowId        = kDAWindowId+1
-kCatalogWidth           = kDAWidth - 60
-kCatalogWidthSB         = kCatalogWidth + 20
+kScrollBarWidth         = 20
+kCatalogWidth           = kDAWidth - (kScrollBarWidth + 2) - kModalDialogInsetX*2
 kCatalogHeight          = kCatalogRows * kListItemHeight - 1
-kCatalogLeft            = kDALeft + (kDAWidth - kCatalogWidthSB) / 2
-kCatalogTop             = kDATop + 36
+kCatalogLeft            = kDALeft + kModalDialogInsetX + 1
+kCatalogTop             = kDATop + kModalDialogInsetY + kButtonHeight + kControlMarginY + kProgressBarHeight + kControlMarginY + 1
 
 .params winfo_catalog
 window_id:      .byte   kDAWindowId
@@ -446,11 +446,11 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
 
-        DEFINE_BUTTON import_button, kDAWindowId, res_string_button_import, kGlyphReturn, kButtonsRight - kButtonWidth*2 - kButtonsGap, kButtonsTop
-        DEFINE_BUTTON close_button, kDAWindowId, res_string_button_close, res_string_button_cancel_shortcut, kButtonsRight - kButtonWidth, kButtonsTop
+        DEFINE_BUTTON import_button, kDAWindowId, res_string_button_import, kGlyphReturn, kButtonsRight - kButtonWidth*2 - kButtonsGap + 1, kButtonsTop
+        DEFINE_BUTTON close_button, kDAWindowId, res_string_button_close, res_string_button_cancel_shortcut, kButtonsRight - kButtonWidth + 1, kButtonsTop
 
-        DEFINE_RECT_SZ progress_frame, kProgressBarInset-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight+2
-        DEFINE_RECT_SZ progress_meter, kProgressBarInset, kProgressBarTop, kProgressBarWidth, kProgressBarHeight
+        DEFINE_RECT_SZ progress_frame, kProgressBarInset-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight-1
+        DEFINE_RECT_SZ progress_meter, kProgressBarInset, kProgressBarTop, kProgressBarWidth, kProgressBarHeight-3
 
 pencopy:        .byte   MGTK::pencopy
 
@@ -481,7 +481,7 @@ window_id:      .byte   kDAWindowId
 port:           .addr   grafport_win
 .endparams
 
-        DEFINE_LABEL disk_vol, res_string_disk_volume_prefix, 20, 18
+        DEFINE_LABEL disk_vol, res_string_disk_volume_prefix, 20, 19
 
 .params entry_muldiv_params
 number:         .word   0                     ; (in) populated dynamically

@@ -50,7 +50,7 @@ kLineEditOptionsCentered = %10000000
 .params name
 window_id:      .byte   winid
 a_buf:          .addr   buf
-        DEFINE_RECT_SZ rect, left+1, top+1, width-2, kTextBoxHeight-2
+        DEFINE_RECT_SZ rect, left+1, top+1, width-2, kTextBoxHeight-3
 max_length:     .byte   maxlen
 .if .paramcount > 7
 options:        .byte   options_param

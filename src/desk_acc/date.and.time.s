@@ -58,7 +58,7 @@
 ;;; Param blocks
 
         kDialogWidth = 287
-        kDialogHeight = 75
+        kDialogHeight = 77
 
         ;; The following rects are iterated over to identify
         ;; a hit target for a click.
@@ -67,9 +67,10 @@
         kUpRectIndex = 1        ; 1-based
         kDownRectIndex = 2
 
-        kControlMarginX = 16
+        kMarginX = kModalDialogInsetX
+        kMarginY = kModalDialogInsetY
 
-        kFieldTop = 14
+        kFieldTop = kMarginY + 5
         kField1Left = 22
         kField2Left = kField1Left + 40
         kField3Left = kField2Left + 48
@@ -83,7 +84,7 @@
 
         kUpDownButtonWidth = 10
         kUpDownButtonHeight = 10
-        kUpDownButtonLeft = kDialogWidth - kUpDownButtonWidth - kControlMarginX
+        kUpDownButtonLeft = kDialogWidth - kUpDownButtonWidth - kMarginX
 
         first_hit_rect := *
         DEFINE_RECT_SZ up_arrow_rect, kUpDownButtonLeft, kFieldTop - 6, kUpDownButtonWidth, kUpDownButtonHeight
@@ -109,11 +110,11 @@
         DEFINE_POINT date_sep2_pos, kField3Left - 12, kFieldTop + 10
         DEFINE_POINT time_sep_pos,  kField5Left -  9, kFieldTop + 10
 
-        DEFINE_RECT_SZ date_rect, kControlMarginX, kFieldTop-kFieldPaddingY, 122, kFieldHeight+kFieldPaddingY*2
+        DEFINE_RECT_SZ date_rect, kMarginX, kFieldTop-kFieldPaddingY, 122, kFieldHeight+kFieldPaddingY*2
         DEFINE_RECT_SZ time_rect, 150, kFieldTop-kFieldPaddingY, 102, kFieldHeight+kFieldPaddingY*2
 
-        kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
-        kOKButtonTop = kDialogHeight - kButtonHeight - 7
+        kOKButtonLeft = (kDialogWidth + 1) - kButtonWidth - kMarginX
+        kOKButtonTop  = (kDialogHeight + 1) - kButtonHeight - kMarginY
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
 
 .params settextbg_black_params

@@ -98,7 +98,7 @@ text_input_buf:
 .params winfo_rename_dialog
         kWindowId = $12
         kWidth = kIconRenameLineEditWidth
-        kHeight = kTextBoxHeight - 2
+        kHeight = kTextBoxHeight - 3
 
 window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
@@ -143,7 +143,7 @@ nextwinfo:      .addr   0
 ;;; * Special > Erase Disk...
 
         kPromptDialogWidth = 400
-        kPromptDialogHeight = 107
+        kPromptDialogHeight = 111
         kPromptDialogLeft = (kScreenWidth - kPromptDialogWidth) / 2
         kPromptDialogTop  = (kScreenHeight - kPromptDialogHeight) / 2
 
@@ -193,14 +193,18 @@ nextwinfo:      .addr   0
         kNameInputTop = 67
         kNameInputWidth = 320
 
-        DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
+        DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight-1
         DEFINE_POINT pos_dialog_title, 0, aux::kDialogTitleY
 
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
         kPromptWindowId = winfo_prompt_dialog::kWindowId
-        DEFINE_BUTTON ok_button, kPromptWindowId, res_string_button_ok, kGlyphReturn, 260, kPromptDialogHeight-19
-        DEFINE_BUTTON cancel_button, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
+        kPromptButtonMarginX = 22
+        kPromptButtonLeft = kModalDialogInsetX + kPromptButtonMarginX
+        kPromptButtonRight = (kPromptDialogWidth + 1) - kPromptButtonLeft
+        kPromptButtonTop = (kPromptDialogHeight + 1) - kModalDialogInsetY - kButtonHeight
+        DEFINE_BUTTON ok_button, kPromptWindowId, res_string_button_ok, kGlyphReturn, kPromptButtonRight - kButtonWidth, kPromptButtonTop
+        DEFINE_BUTTON cancel_button, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kPromptButtonLeft, kPromptButtonTop
 
         DEFINE_BUTTON locked_button, kPromptWindowId, res_string_get_info_checkbox_locked, res_string_get_info_shortcut_locked, kDialogValueLeft, aux::kDialogLabelRow5+2
 
@@ -266,9 +270,8 @@ nextwinfo:      .addr   0
 
         kProgressBarTop = 41
         kProgressBarWidth = winfo_progress_dialog::kWidth - kProgressDialogLabelDefaultX*2
-        kProgressBarHeight = 7
-        DEFINE_RECT_SZ progress_dialog_bar_frame, kProgressDialogLabelDefaultX-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight+2
-        DEFINE_RECT_SZ progress_dialog_bar_meter, kProgressDialogLabelDefaultX, kProgressBarTop,  kProgressBarWidth,kProgressBarHeight
+        DEFINE_RECT_SZ progress_dialog_bar_frame, kProgressDialogLabelDefaultX-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight-1
+        DEFINE_RECT_SZ progress_dialog_bar_meter, kProgressDialogLabelDefaultX, kProgressBarTop,  kProgressBarWidth, kProgressBarHeight-3
 
 progress_pattern:
         .byte   %01000100
@@ -336,7 +339,7 @@ nextwinfo:      .addr   0
 .params winfo_entry_picker
         kWindowId = $1B
         kWidth = 350
-        kHeight = 126
+        kHeight = 131
 
 window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
@@ -404,10 +407,14 @@ ShortcutPickerSelChangeCallback:
         jsr     SelectorPickOverlay::SelChangeCallback
         jmp     BankInAux
 
-        DEFINE_RECT entry_picker_rect, kBorderDX*2 - 1, 22, winfo_entry_picker::kWidth - kBorderDX*2 + 1, winfo_entry_picker::kHeight - 21
+        DEFINE_RECT entry_picker_rect, kBorderDX*2 - 1, kShortcutPickerTop - 2, winfo_entry_picker::kWidth - kBorderDX*2 + 1, kShortcutPickerTop + kShortcutPickerRows * kShortcutPickerItemHeight + 1
 
-        DEFINE_BUTTON entry_picker_ok_button, winfo_entry_picker::kWindowId, res_string_button_ok, kGlyphReturn, 210, winfo_entry_picker::kHeight-18
-        DEFINE_BUTTON entry_picker_cancel_button, winfo_entry_picker::kWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, winfo_entry_picker::kHeight-18
+        kEntryPickerButtonMarginX = 22
+        kEntryPickerButtonLeft = kModalDialogInsetX + kEntryPickerButtonMarginX
+        kEntryPickerButtonRight = (winfo_entry_picker::kWidth + 1) - kEntryPickerButtonLeft
+        kEntryPickerButtonTop = (winfo_entry_picker::kHeight + 1) - kModalDialogInsetY - kButtonHeight
+        DEFINE_BUTTON entry_picker_ok_button, winfo_entry_picker::kWindowId, res_string_button_ok, kGlyphReturn, kEntryPickerButtonRight - kButtonWidth, kEntryPickerButtonTop
+        DEFINE_BUTTON entry_picker_cancel_button, winfo_entry_picker::kWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kEntryPickerButtonLeft, kEntryPickerButtonTop
 
 ;;; ============================================================
 ;;; Format/Erase dialogs
@@ -445,7 +452,7 @@ VolPickerSelChangeCallback:
         ;; Label pos
         DEFINE_POINT vol_picker_select_pos, kDialogLabelDefaultX, kVolPickerTop - 4
 
-        DEFINE_RECT vol_picker_rect, kBorderDX*2-1, kVolPickerTop - 2, winfo_prompt_dialog::kWidth - kBorderDX*2 + 1, winfo_prompt_dialog::kHeight - 22
+        DEFINE_RECT vol_picker_rect, kBorderDX*2-1, kVolPickerTop - 2, (winfo_prompt_dialog::kWidth + 1) - kBorderDX*2, kVolPickerTop + kVolPickerRows * kVolPickerItemHeight + 1
 
 the_dos_33_disk_format:
         PASCAL_STRING res_string_the_dos_33_disk_format
@@ -531,7 +538,7 @@ nextwinfo:      .addr   0
         kLineEditX = file_dialog_res::kControlsLeft
         kLineEditWidth = 435
         kLineEditY = 114
-        kLineEditHeight = kTextBoxHeight
+        kLineEditHeight = kTextBoxHeight-1
 
         DEFINE_POINT line_edit_label_pos, kLineEditX, kLineEditY-2
         DEFINE_RECT_SZ line_edit_rect, kLineEditX, kLineEditY, kLineEditWidth, kLineEditHeight

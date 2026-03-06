@@ -65,16 +65,29 @@ kSystemFontWidth  = 7           ; proportional, but this is the maximum
 kMenuBarHeight  = kSystemFontHeight+4
 
 ;;; Standard button sizes; sometimes narrower
-kButtonWidth  = 100
-kButtonHeight = kSystemFontHeight+2
+kButtonWidth  = 101
+kButtonHeight = kSystemFontHeight+3      ; text + 1px gap above + 1px top border + 1px bottom border
 kButtonTextHOffset = 5                   ; from left edge of rect to text pos
-kButtonTextVOffset = kSystemFontHeight+1 ; from top edge of rect to text pos
+kButtonTextVOffset = kSystemFontHeight+2 ; from top edge of rect to text pos
+
+;;; Standard border for modal dialogs. This is both the inset of the
+;;; border and the pen used to draw the border.
+kBorderDX = 4
+kBorderDY = 2
+
+;;; Standard margins around controls like buttons.
+kControlMarginX = 10
+kControlMarginY = 5
+
+;;; Combining the above gives the standard inset for modal dialogs.
+kModalDialogInsetX = kBorderDX*2 + kControlMarginX
+kModalDialogInsetY = kBorderDY*2 + kControlMarginY
 
 ;;; Horizontal distance for label/control pairs
 kLabelHOffset = 3
 
 ;;; Standard line edit (text input) control metrics
-kTextBoxHeight = kSystemFontHeight+2
+kTextBoxHeight = kSystemFontHeight+3      ; text + 1px gap above + 1px top border + 1px bottom border
 kTextBoxTextHOffset = 5                   ; from left edge of rect to text pos
 kTextBoxTextVOffset = kSystemFontHeight+1 ; from top edge of rect to text pos
 
@@ -92,6 +105,9 @@ kListViewNameX = kListViewIconX + kListViewIconWidth + kListViewIconGap
 ;;; Mouse threshold for double click detection.
 kDoubleClickDeltaX      = 5
 kDoubleClickDeltaY      = 4
+
+;;; Standard progress bar (includes border and meter)
+kProgressBarHeight      = 10
 
 ;;; ============================================================
 ;;; Selector List file
@@ -396,8 +412,6 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
 ;;; Define an rect for an inset frame drawn with a 4x2 pen, with a 4x2
 ;;; gap between the passed window bounds and the border. This is the
 ;;; standard style for modal dialog boxes and alerts.
-kBorderDX = 4
-kBorderDY = 2
 .macro DEFINE_RECT_FRAME ident, width, height
         WARN_IF_SHADOWING ident
         ident := *

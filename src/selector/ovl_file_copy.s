@@ -378,11 +378,10 @@ str_from_int:
         PASCAL_STRING "000,000"
 
         kProgressBarTop = 51
-        kProgressBarInset = 20
+        kProgressBarInset = kModalDialogInsetX + 2
         kProgressBarWidth = winfo::kWidth - kProgressBarInset*2
-        kProgressBarHeight = 7
-        DEFINE_RECT_SZ progress_frame, kProgressBarInset-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight+2
-        DEFINE_RECT_SZ progress_meter, kProgressBarInset, kProgressBarTop,  kProgressBarWidth,kProgressBarHeight
+        DEFINE_RECT_SZ progress_frame, kProgressBarInset-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight-1
+        DEFINE_RECT_SZ progress_meter, kProgressBarInset, kProgressBarTop,  kProgressBarWidth, kProgressBarHeight-3
 
 progress_pattern:
         .byte   %01000100

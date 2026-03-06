@@ -155,7 +155,7 @@ kFatBitHeightShift      = 2
         ;; For hit testing
         DEFINE_RECT_SZ fatbits_rect, kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1
 
-        DEFINE_BUTTON pattern_button, kDAWindowId, res_string_label_pattern, "^D", kPatternEditX-10, kPatternEditY + 36, 180
+        DEFINE_BUTTON pattern_button, kDAWindowId, res_string_label_pattern, "^D", kPatternEditX-9, kPatternEditY + 36, 181
 
 kPreviewLeft    = kPatternEditX + 79
 kPreviewTop     = kPatternEditY

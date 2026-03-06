@@ -56,11 +56,11 @@ a_shortcut:     .addr   0
 
 
 .if     .paramcount = 8
-        DEFINE_RECT_SZ rect, (left), (top), (width), (height)
+        DEFINE_RECT_SZ rect, (left), (top), (width-1), (height-1)
 .elseif .paramcount = 7
-        DEFINE_RECT_SZ rect, (left), (top), (width), kButtonHeight
+        DEFINE_RECT_SZ rect, (left), (top), (width-1), (kButtonHeight - 1)
 .else
-        DEFINE_RECT_SZ rect, (left), (top), kButtonWidth, kButtonHeight
+        DEFINE_RECT_SZ rect, (left), (top), (kButtonWidth - 1), (kButtonHeight - 1)
 .endif
 
 state:          .byte   0

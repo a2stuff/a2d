@@ -39,17 +39,17 @@ kShortcutFast = res_char_button_fast_shortcut
 
 kDAWindowId     = $80
 kDAWidth        = 290
-kDAHeight       = 70
+kDAHeight       = 72
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 kButtonInsetX   = 25
 
         DEFINE_BUTTON norm_button, kDAWindowId, res_string_button_norm, res_char_button_norm_shortcut, kButtonInsetX, 28
-        DEFINE_BUTTON fast_button, kDAWindowId, res_string_button_fast, res_char_button_fast_shortcut, kDAWidth - kButtonWidth - kButtonInsetX, 28
-        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kButtonWidth - kButtonInsetX, 52
+        DEFINE_BUTTON fast_button, kDAWindowId, res_string_button_fast, res_char_button_fast_shortcut, kDAWidth - kButtonWidth - kButtonInsetX + 1, 28
+        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kButtonWidth - kButtonInsetX + 1, 52
 
-        DEFINE_LABEL title, res_string_dialog_title, 0, 18
+        DEFINE_LABEL title, res_string_dialog_title, 0, kModalDialogInsetY + kSystemFontHeight
 
 ;;; ============================================================
 

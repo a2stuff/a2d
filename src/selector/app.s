@@ -175,7 +175,7 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 .params winfo
         kDialogId = 1
         kWidth = 460
-        kHeight = 124
+        kHeight = 128
 window_id:      .byte   kDialogId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -211,8 +211,12 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok_button,      winfo::kDialogId, res_string_button_ok, kGlyphReturn, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
-        DEFINE_BUTTON desktop_button, winfo::kDialogId, res_string_button_desktop, res_char_button_desktop_shortcut,       60, winfo::kHeight - 18
+        kButtonMarginX = 42
+        kButtonLeft = kModalDialogInsetX + kButtonMarginX
+        kButtonRight = (winfo::kWidth + 1) - kButtonLeft
+        kButtonTop = (winfo::kHeight + 1) - kModalDialogInsetY - kButtonHeight
+        DEFINE_BUTTON ok_button,      winfo::kDialogId, res_string_button_ok, kGlyphReturn, kButtonRight - kButtonWidth, kButtonTop
+        DEFINE_BUTTON desktop_button, winfo::kDialogId, res_string_button_desktop, res_char_button_desktop_shortcut, kButtonLeft, kButtonTop
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -232,11 +236,8 @@ str_selector_title:
         kEntryPickerTextHOffset = 4
         kEntryPickerTextVOffset = kEntryPickerItemHeight-1
 
-        ;; Line endpoints
-        DEFINE_POINT line1_pt1, kBorderDX*2, 19
-        DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 19
-        DEFINE_POINT line2_pt1, kBorderDX*2, winfo::kHeight - 22
-        DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
+        ;; Frame
+        DEFINE_RECT entry_picker_rect, kBorderDX*2 - 1, kEntryPickerTop - 2, winfo::kWidth - kBorderDX*2 + 1, kEntryPickerTop + kEntryPickerRows * kEntryPickerItemHeight + 1
 
         io_buf_sl = $BB00
 
@@ -1140,6 +1141,8 @@ backup_devlst:
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         CALL    DrawTitleString, AX=#str_selector_title
 
+        MGTK_CALL MGTK::FrameRect, entry_picker_rect
+
         plp
     IF CS
         ;; Processing update event
@@ -1155,11 +1158,6 @@ backup_devlst:
       END_IF
     END_IF
 
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::MoveTo, line1_pt1
-        MGTK_CALL MGTK::LineTo, line1_pt2
-        MGTK_CALL MGTK::MoveTo, line2_pt1
-        MGTK_CALL MGTK::LineTo, line2_pt2
         rts
 .endproc ; DrawWindow
 

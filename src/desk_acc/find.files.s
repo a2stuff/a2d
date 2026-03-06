@@ -61,16 +61,16 @@
 
 kDAWindowId     = $80
 kDAWidth        = 465
-kDAHeight       = kResultsHeight + 40
+kDAHeight       = kModalDialogInsetY + (kResultsHeight+2) + kControlMarginY + kTextBoxHeight + kModalDialogInsetY
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 kResultsWindowId        = kDAWindowId+1
-kResultsWidth           = kDAWidth - 60
-kResultsWidthSB         = kResultsWidth + 20
+kScrollBarWidth         = 20
+kResultsWidth           = kDAWidth - (kScrollBarWidth + 2) - kModalDialogInsetX*2
 kResultsHeight          = kResultsRows * kListItemHeight - 1
-kResultsLeft            = kDALeft + (kDAWidth - kResultsWidthSB) / 2
-kResultsTop             = kDATop + 30
+kResultsLeft            = kDALeft + kModalDialogInsetX + 1
+kResultsTop             = kDATop + kModalDialogInsetY + kTextBoxHeight + kControlMarginY + 1
 
 kResultsRows    = 11                ; line height is 10
 
@@ -128,8 +128,8 @@ grafport_win:   .tag    MGTK::GrafPort
 
         DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
 
-        kControlsTop = 10
-        kFindLeft = 20
+        kControlsTop = 9
+        kFindLeft = kModalDialogInsetX
         DEFINE_LABEL find, res_string_label_find, kFindLeft, 20
 
 .params measure_find_label_params
@@ -137,12 +137,15 @@ str:    .addr   find_label_str
 width:  .word   0
 .endparams
 
+        kControlsGap = kControlMarginX + 1
+        kMarginX = kModalDialogInsetX
+
         ;; Left edges are adjusted dynamically based on label width
-        DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
+        DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth - kMarginX - kButtonWidth*2 - kControlsGap*2 + 2, kControlsTop + kTextBoxHeight - 1
 
-        DEFINE_BUTTON search_button, kDAWindowId, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
+        DEFINE_BUTTON search_button, kDAWindowId, res_string_button_search, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth*2 - kControlsGap + 2, kControlsTop
 
-        DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
+        DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth - kMarginX - kButtonWidth + 1, kControlsTop
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY

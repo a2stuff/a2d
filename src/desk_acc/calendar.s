@@ -23,10 +23,11 @@
 
 ;;; ============================================================
 
-kDayDX = 35
-kDayDY = 13
 
 kDAWindowId     = $80
+
+kDayDX          = 35
+kDayDY          = 13
 kDAWidth        = kDayDX * 7
 kDAHeight       = kDayDY * 8 - 2
 kDALeft         = (kScreenWidth - kDAWidth)/2
@@ -158,20 +159,25 @@ grid_lines:
 grid_pen:
         .byte   2, 1
 
-        kArrowDX = 16
-        kArrowDY = 10
-        DEFINE_BUTTON left_button, kDAWindowId, kGlyphLeftArrow,, 40, 2, kArrowDX, kArrowDY
-        DEFINE_BUTTON right_button, kDAWindowId, kGlyphRightArrow,, kDAWidth - kArrowDX - 40, 2, kArrowDX, kArrowDY
+        kMarginY = 2
 
-        DEFINE_RECT rect_month_year, kArrowDX+44, 0, kDAWidth-kArrowDX-44, 11
+        kArrowX = 40
+        kArrowY = kMarginY
+        kArrowDX = 17
+        kArrowDY = 11
+        DEFINE_BUTTON left_button, kDAWindowId, kGlyphLeftArrow,, kArrowX, kArrowY, kArrowDX, kArrowDY
+        DEFINE_BUTTON right_button, kDAWindowId, kGlyphRightArrow,, kDAWidth - kArrowX - kArrowDX + 1, kArrowY, kArrowDX, kArrowDY
 
-        DEFINE_POINT pos_month_year, SELF_MODIFIED, 11
+        kGap = 3
+        DEFINE_RECT rect_month_year, kArrowX + kArrowDX + kGap, 0, kDAWidth - kArrowX - kArrowDX - kGap, kSystemFontHeight + kMarginY
+
+        DEFINE_POINT pos_month_year, SELF_MODIFIED, kSystemFontHeight + kMarginY
 str_space:
         PASCAL_STRING " "
 str_year:
         PASCAL_STRING "0000"
 
-        DEFINE_POINT date_base, 12, kGridYPos + 11
+        DEFINE_POINT date_base, 12, kGridYPos + kSystemFontHeight + 2
         DEFINE_POINT date_pos, 0, 0
 
 str_date:

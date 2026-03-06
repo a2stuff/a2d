@@ -21,6 +21,7 @@ Note that these are for inspiration, not to be dutifully followed.
   * 2x4 pixels thick.
   * Offset 2x4 pixels from the window frame.
   * Drawn with solid black pen (not XOR).
+* Minimum margin of 10x5 between inner border and controls.
 
 ## Buttons
 
@@ -39,6 +40,7 @@ Note that these are for inspiration, not to be dutifully followed.
     * Indicate cancel action with Esc.
 * Arrow buttons to increment or decrement values can be non-default height.
 * When clicking, the internal area is inverted, but not the border.
+* Minimum margin of 10x5 pixels around/between buttons.
 
 ## Check Boxes and Radio Buttons
 

@@ -65,7 +65,7 @@ dialog_result:
 
 kDAWindowId     = $80
 kDAWidth        = 200
-kDAHeight       = 90
+kDAHeight       = (kNumButtons + 1) * kButtonSpacing + kControlMarginY * 2 - 3
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
@@ -162,7 +162,7 @@ kButtonLeft     = 20
 kButtonTop      = 5
 kButtonSpacing  = kSystemFontHeight + 2
 
-        DEFINE_LABEL view_style, res_string_initial_view, kButtonLeft - 3, kButtonTop + kSystemFontHeight
+        DEFINE_LABEL view_style, res_string_initial_view, kControlMarginX, kButtonTop + kSystemFontHeight - 1
 
         DEFINE_BUTTON as_icons_radiobutton, kDAWindowId, res_string_radio_button_by_icon, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 1
         DEFINE_BUTTON as_smallicons_radiobutton, kDAWindowId, res_string_radio_button_by_small_icon, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 2

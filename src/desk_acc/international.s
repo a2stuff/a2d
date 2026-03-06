@@ -52,22 +52,23 @@
 ;;; ============================================================
 ;;; Param blocks
 
-        kDialogWidth = 430
-        kDialogHeight = 89
+        kDialogWidth = 432
+        kDialogHeight = 90
 
-        kControlMarginX = 16
+        kMarginX = kModalDialogInsetX
+        kMarginY = kModalDialogInsetY
 
-        kRow1 = 10
-        kRow2 = 25
-        kRow3 = 40
-        kRow4 = 55
-        kRow5 = 70
+        kRow1 = 9
+        kRow2 = kRow1 + 15
+        kRow3 = kRow2 + 15
+        kRow4 = kRow3 + 15
+        kRow5 = kRow4 + 15
 
-        kLabelLeft = kControlMarginX
+        kLabelLeft = kMarginX
         kFieldLeft = 160
         kFieldWidth = kTextBoxTextHOffset * 2 + 7
         kFieldHeight = kSystemFontHeight + 4
-        kSampleLeft = kFieldLeft + kFieldWidth + kControlMarginX
+        kSampleLeft = kFieldLeft + kFieldWidth + kMarginX
 
 .macro DEFINE_FIELD name, string, sample, row
         DEFINE_RECT_SZ .ident(.sprintf("%s_rect", .string(name))), kFieldLeft, row, kFieldWidth, kFieldHeight
@@ -87,14 +88,14 @@
         kThouSampleOffset = 3
 
         kOptionDisplayX = 260
-        DEFINE_BUTTON date_mdy_button, kDAWindowId, res_string_label_mdy, res_string_shortcut_apple_1, kOptionDisplayX, 16
-        DEFINE_BUTTON date_dmy_button, kDAWindowId, res_string_label_dmy, res_string_shortcut_apple_2, kOptionDisplayX, 27
+        DEFINE_BUTTON date_mdy_button, kDAWindowId, res_string_label_mdy, res_string_shortcut_apple_1, kOptionDisplayX, 15
+        DEFINE_BUTTON date_dmy_button, kDAWindowId, res_string_label_dmy, res_string_shortcut_apple_2, kOptionDisplayX, 26
 
-        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_3, kOptionDisplayX, 45
-        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_4, kOptionDisplayX, 56
+        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_3, kOptionDisplayX, 44
+        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_4, kOptionDisplayX, 55
 
-        kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
-        kOKButtonTop = kDialogHeight - kButtonHeight - 7
+        kOKButtonLeft = (kDialogWidth + 1) - kButtonWidth - kMarginX
+        kOKButtonTop  = (kDialogHeight + 1) - kButtonHeight - kMarginY
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
 
         DEFINE_LABEL first_dow, res_string_label_first_dow, kLabelLeft, kRow5+2+kSystemFontHeight

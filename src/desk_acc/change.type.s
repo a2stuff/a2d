@@ -76,11 +76,11 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 ;;; ============================================================
 ;;; Buttons
 
-        kControlMarginX = 16
+        kMarginX = kModalDialogInsetX
 
-        kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
-        kCancelButtonLeft = kControlMarginX
-        kButtonTop = kDialogHeight - kButtonHeight - 7
+        kOKButtonLeft = (kDialogWidth + 1) - kButtonWidth - kMarginX
+        kCancelButtonLeft = kMarginX
+        kButtonTop = (kDialogHeight + 1) - kModalDialogInsetY - kButtonHeight
 
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kButtonTop
         DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kCancelButtonLeft, kButtonTop
@@ -98,16 +98,16 @@ str_auxtype:
 
         kTextBoxLeft = 145
         kTextBoxWidth = 40
-        kTypeY = 18
-        kAuxtypeY = 35
+        kTypeY = 15
+        kAuxtypeY = 32
 
         DEFINE_LINE_EDIT type_line_edit_rec, kDAWindowId, str_type, kTextBoxLeft, kTypeY, kTextBoxWidth, 2
         DEFINE_LINE_EDIT_PARAMS type_le_params, type_line_edit_rec
-        DEFINE_RECT_SZ type_rect, kTextBoxLeft, kTypeY, kTextBoxWidth, kTextBoxHeight
+        DEFINE_RECT_SZ type_rect, kTextBoxLeft, kTypeY, kTextBoxWidth, kTextBoxHeight-1
 
         DEFINE_LINE_EDIT auxtype_line_edit_rec, kDAWindowId, str_auxtype, kTextBoxLeft, kAuxtypeY, kTextBoxWidth, 4
         DEFINE_LINE_EDIT_PARAMS auxtype_le_params, auxtype_line_edit_rec
-        DEFINE_RECT_SZ auxtype_rect, kTextBoxLeft, kAuxtypeY, kTextBoxWidth, kTextBoxHeight
+        DEFINE_RECT_SZ auxtype_rect, kTextBoxLeft, kAuxtypeY, kTextBoxWidth, kTextBoxHeight-1
 
         DEFINE_LABEL type, res_string_label_type, kTextBoxLeft-2, kTypeY+kSystemFontHeight+1
         DEFINE_LABEL auxtype, res_string_label_auxtype, kTextBoxLeft-2, kAuxtypeY+kSystemFontHeight+1

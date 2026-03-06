@@ -25,15 +25,15 @@
 
 kDAWindowId     = $80
 kDAWidth        = 400
-kDAHeight       = 70
+kDAHeight       = 72
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
-kButtonInsetX   = 25
+kButtonInsetX   = 7
 
-        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kButtonWidth - kButtonInsetX, 52
+        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, (kDAWidth + 1) - kButtonWidth - kModalDialogInsetX - kButtonInsetX, (kDAHeight + 1) - kModalDialogInsetY - kButtonHeight
 
-        DEFINE_LABEL title, res_string_window_title, 0, 18
+        DEFINE_LABEL title, res_string_window_title, 0, kModalDialogInsetY + kSystemFontHeight
 
 ;;; ============================================================
 

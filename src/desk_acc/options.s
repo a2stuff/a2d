@@ -67,7 +67,7 @@ dialog_result:
 
 kDAWindowId     = $80
 kDAWidth        = 375
-kDAHeight       = 100
+kDAHeight       = kButtonTop*2 + kNumButtons * kButtonSpacing - 3
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
@@ -161,7 +161,7 @@ grafport:       .tag    MGTK::GrafPort
 
 kNumButtons     = 6
 kButtonLeft     = 10
-kButtonTop      = 10
+kButtonTop      = 5
 kButtonSpacing  = kSystemFontHeight + 2
 
         DEFINE_BUTTON ramcard_button, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 0

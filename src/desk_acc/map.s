@@ -24,8 +24,8 @@
 ;;; ============================================================
 ;;; Resources
 
-kMapLeft = 10
-kMapTop = 5
+kMapLeft = kFrameDX*2 + kControlMarginX
+kMapTop = kFrameDY*2 + kControlMarginY
 kMapWidth = 230
 kMapHeight = 52
 
@@ -65,24 +65,26 @@ remainder:      .word   0         ; (out)
         REF_MULDIV_MEMBERS
 .endparams
 
+        kFrameDX = 2
+        kFrameDY = 1
 
 pensize_normal: .byte   1, 1
-pensize_frame:  .byte   2, 1
+pensize_frame:  .byte   kFrameDX, kFrameDY
 
-        DEFINE_RECT_SZ frame_rect, kMapLeft - 4, kMapTop - 2, kMapWidth + 6, kMapHeight + 3
+        DEFINE_RECT_SZ frame_rect, kMapLeft - kFrameDX*2, kMapTop - kFrameDY*2, kMapWidth + kFrameDX*3, kMapHeight + kFrameDY*3
         DEFINE_RECT_SZ map_rect, kMapLeft, kMapTop, kMapWidth, kMapHeight
 
-kControlsLeft = 6
-kControlsRight = kDAWidth - kControlsLeft
+kControlsLeft = kControlMarginX
+kControlsRight = (kDAWidth + 1) - kControlsLeft
 
-kRow1 = kMapTop + kMapHeight + 6
+kRow1 = kMapTop + kMapHeight + 7
 kRow2 = kRow1 + kTextBoxHeight + 4
-kRow3 = kRow2 + kSystemFontHeight + 4
+kRow3 = kRow2 + kSystemFontHeight + 3
 
 kTextBoxLeft = kControlsLeft
 kTextBoxTop = kRow1
-kTextBoxWidth = kControlsRight - kButtonWidth - kControlsLeft * 2
-        DEFINE_RECT_SZ input_rect, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kTextBoxHeight
+kTextBoxWidth = kControlsRight - kButtonWidth - kControlsLeft * 2 - 1
+        DEFINE_RECT_SZ input_rect, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kTextBoxHeight - 1
         DEFINE_BUTTON find_button, kDAWindowId, res_string_button_find, kGlyphReturn, kControlsRight - kButtonWidth, kTextBoxTop
 
 kLabelLeft = kControlsLeft + kTextBoxTextHOffset
@@ -172,8 +174,9 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 ;;; ============================================================
 
 kDAWindowId     = $80
-kDAWidth        = kMapWidth + 19
-kDAHeight       = kMapHeight + 51
+
+kDAWidth        = kMapWidth + kFrameDX*4 + kControlMarginX*2 - 1
+kDAHeight       = kMapHeight + 54
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
