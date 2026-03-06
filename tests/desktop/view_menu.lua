@@ -285,20 +285,24 @@ test.Step(
     local window_x,window_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.ClearSelection()
+    test.ExpectNotIMatch(a2dtest.OCRScreen({invert=true}), "FILE", "file should not be selected")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(window_x+11, window_y+21)
         m.Click()
         a2d.WaitForRepaint()
+        m.MoveByApproximately(20, 20)
     end)
-    test.Snap("verify clicking bitmap selects")
+    test.ExpectIMatch(a2dtest.OCRScreen({invert=true}), "FILE", "clicking bitmap should select")
 
     a2d.ClearSelection()
+    test.ExpectNotIMatch(a2dtest.OCRScreen({invert=true}), "FILE", "file should not be selected")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(window_x+35, window_y+21)
         m.Click()
         a2d.WaitForRepaint()
+        m.MoveByApproximately(20, 20)
     end)
-    test.Snap("verify clicking name selects")
+    test.ExpectIMatch(a2dtest.OCRScreen({invert=true}), "FILE", "clicking name should select")
 
     a2d.ClearSelection()
     a2d.InMouseKeysMode(function(m)
@@ -306,7 +310,8 @@ test.Step(
         m.ButtonDown()
         m.MoveToApproximately(vol_icon_x, vol_icon_y)
         m.ButtonUp()
-        a2dtest.MultiSnap(30, "verify drag to other volume icon initiates copy")
+        emu.wait(0.25)
+        test.ExpectMatch(a2dtest.OCRScreen(), "Copying: 1 file", "drag to other volume icon should initiate copy")
     end)
     emu.wait(10) -- wait for copy
 
@@ -318,8 +323,8 @@ test.Step(
         a2d.WaitForRepaint()
         test.Snap("verify dragging over folder icon highlights")
         m.ButtonUp()
-        emu.wait(20/60)
-        test.Snap("verify drop on folder icon initiates move")
+        emu.wait(0.25)
+        test.ExpectMatch(a2dtest.OCRScreen(), "Moving: 1 file", "drop on folder icon should initiate move")
     end)
     emu.wait(10) -- wait for move
 
