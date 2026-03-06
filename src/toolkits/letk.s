@@ -759,8 +759,7 @@ a_record  .addr
         ldy     #0
         lda     (a_buf),y
         ldy     #LETK::LineEditRecord::caret_pos
-        cmp     (a_record),y    ; len >= caret_pos
-    IF LT
+    IF A < (a_record),y         ; len >= caret_pos
         sta     (a_record),y    ; no, clamp caret_pos
     END_IF
 

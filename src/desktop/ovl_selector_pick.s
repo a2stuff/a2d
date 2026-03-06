@@ -230,8 +230,7 @@ copy_when:
 
         ldx     #kRunListPrimary
         lda     shortcut_picker_record::selected_index
-        cmp     #kSelectorListNumPrimaryRunListEntries
-    IF GE
+    IF A >= #kSelectorListNumPrimaryRunListEntries
         inx                     ; `kRunListSecondary`
     END_IF
 

@@ -657,9 +657,8 @@ new_state:
         pla
 
         ;; ------------------------------
-        cmp     #NekoState::rest
+    IF A = #NekoState::rest
         ;; ------------------------------
-    IF EQ
       IF lda dir : NOT_ZERO
         TAIL_CALL set_state_and_frame, X=#NekoState::chase, A=#NekoFrame::surprise
       END_IF
@@ -680,9 +679,8 @@ new_state:
     END_IF
 
         ;; ------------------------------
-        cmp     #NekoState::chase
+    IF A = #NekoState::chase
         ;; ------------------------------
-    IF EQ
       IF lda dir : ZERO
         TAIL_CALL set_state_and_frame, X=#NekoState::rest, A=#NekoFrame::sitting
       END_IF
@@ -704,9 +702,8 @@ new_state:
     END_IF
 
         ;; ------------------------------
-        cmp     #NekoState::scratch
+    IF A = #NekoState::scratch
         ;; ------------------------------
-    IF EQ
         lda     dir
       IF A <> scratch_dir
         TAIL_CALL set_state_and_frame, X=#NekoState::chase, A=#NekoFrame::surprise
@@ -720,9 +717,8 @@ new_state:
     END_IF
 
         ;; ------------------------------
-        cmp     #NekoState::itch
+    IF A = #NekoState::itch
         ;; ------------------------------
-    IF EQ
       IF Y < #$20               ; Y = random
         ldx     #NekoState::rest
         lda     #NekoFrame::sitting
@@ -735,9 +731,8 @@ new_state:
     END_IF
 
         ;; ------------------------------
-        cmp     #NekoState::yawn
+    IF A = #NekoState::yawn
         ;; ------------------------------
-    IF EQ
       IF Y < #$20               ; Y = random
         ldx     #NekoState::sleep
         lda     #NekoFrame::sleep1
@@ -749,9 +744,8 @@ new_state:
     END_IF
 
         ;; ------------------------------
-        ;; cmp     #NekoState::sleep
+        ;; IF A = #NekoState::sleep
         ;; ------------------------------
-        ;; IF EQ
         lda     dir
       IF NOT_ZERO
         ldx     #NekoState::chase

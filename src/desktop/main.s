@@ -3884,8 +3884,7 @@ END_PARAM_BLOCK
 
         ldx     selected_icon_count
         jeq     fallback
-        cpx     cached_window_icon_count
-    IF EQ
+    IF X = cached_window_icon_count
         ;; All icons in window are selected; use fallback if not
         ;; extending selection w/ Shift
         bit     shift_flag
@@ -5127,7 +5126,7 @@ close_loop:
         ldy     devlst_index
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
-        jsr     IsDiskII
+        jsr     IsDiskII        ; returns Z=1 if yes
         RTS_IF ZS               ; is Disk II; that's fine
     END_IF
 

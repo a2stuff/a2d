@@ -32,8 +32,7 @@ remove: lda     DEVLST,x
 
 shift:  lda     DEVLST+1,x
         sta     DEVLST,x
-        cpx     DEVCNT
-    IF NE
+    IF X <> DEVCNT
         inx
         bne     shift           ; always
     END_IF

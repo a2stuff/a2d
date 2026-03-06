@@ -784,8 +784,7 @@ check:
 .proc ConstructKeyPoly
         ptr := $06
 
-        cmp     #CHAR_RETURN
-    IF EQ
+    IF A = #CHAR_RETURN
       IF bit extended_layout_flag : NS
         ;; Special key
         COPY_BYTES      2 + 7 * .sizeof(MGTK::Point), poly_new_ret_inner, tmp_poly

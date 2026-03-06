@@ -490,8 +490,8 @@ path:
 .proc FormatUnit
         sta     unit_num
 
-        jsr     main::IsDiskII
-    IF EQ
+        jsr     main::IsDiskII  ; returns Z=1 if yes
+    IF ZS
         ;; Format as Disk II
         TAIL_CALL FormatDiskII, A=unit_num
     END_IF
@@ -523,15 +523,14 @@ path:
 .proc CheckSupportsFormat
         sta     unit_num
 
-        jsr     main::IsDiskII
-    IF NE
+        jsr     main::IsDiskII  ; returns Z=1 if yes
+    IF ZC
         ;; Check if the driver is firmware ($CnXX).
         CALL    GetDriverAddress, A=unit_num
         stx     addr+1          ; self-modify address below
         txa                     ; high byte
         and     #$F0            ; look at high nibble
-        cmp     #$C0            ; firmware? ($Cn)
-      IF EQ                     ; TODO: Should we guess yes or no here???
+      IF A = #$C0               ; firmware? ($Cn) TODO: Should we guess yes or no here???
         ;; Check the firmware status byte
         addr := *+1
         lda     $C0FE           ; $CnFE, high byte is self-modified above
@@ -577,8 +576,8 @@ unit_num:
         ;; Get the block count for the device
 
         ;; Check if it's a Disk II
-        CALL    main::IsDiskII, A=unit_num
-    IF NE
+        CALL    main::IsDiskII, A=unit_num ; returns Z=1 if yes
+    IF ZC
         ;; Not Disk II - use the driver.
         CALL    GetDriverAddress, A=unit_num
         stax    @driver

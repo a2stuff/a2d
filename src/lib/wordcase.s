@@ -30,8 +30,7 @@ done:   rts
 check_alpha:
         iny
         lda     (ptr),y
-        cmp     #'A'
-      IF GE
+      IF a >= #'A'
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
       END_IF

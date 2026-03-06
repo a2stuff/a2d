@@ -373,7 +373,7 @@ done:
         skip_check_diskii_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
       IF NOT ZERO
-        jsr     main::IsDiskII  ; A = (optionally unmasked) unit number
+        jsr     main::IsDiskII  ; A = (optionally unmasked) unit number, returns Z=1 if yes
         beq     next
       END_IF
 
@@ -392,7 +392,7 @@ done:
         pla                     ; A = unmasked unit number
         pha                     ; A = unmasked unit number
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
-        jsr     main::IsDiskII
+        jsr     main::IsDiskII  ; returns Z=1 if yes
        IF ZC
         CALL    _RemoveDevice, X=device_index
        END_IF

@@ -1511,8 +1511,7 @@ ret:    rts
         GET_FWB $0C             ; $Cn0C == ....
 
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
-        cmp     #byte
-    IF EQ
+    IF A = #byte
         RETURN  AX=#arg         ; C=1 implicitly if Z=1
     END_IF
 .endmacro
@@ -2395,9 +2394,7 @@ num_devices:
         sp_addr = SmartPortCall::sp_addr
 
 .proc CompareWithLast
-        lda     str_current
-        cmp     str_last
-    IF EQ
+    IF lda str_current : A = str_last
         tax
       DO
         lda     str_current,x

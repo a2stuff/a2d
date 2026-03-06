@@ -188,8 +188,7 @@ exit1:  jmp     Exit
         lda     window_id       ; any window open?
         beq     exit1           ; nope, bail
 
-        cmp     #kMaxDeskTopWindows+1 ; is it DeskTop window?
-    IF GE
+    IF A >= #kMaxDeskTopWindows+1 ; is it DeskTop window?
         copy8   #0, window_id   ; nope, bail
         beq     exit1           ; always
     END_IF

@@ -71,8 +71,7 @@
         sbc     #1              ; A = s2
 
         ;; Recurse on smaller partition
-        cmp     s1
-    IF GE
+    IF A >= s1
         tya
         pha                     ; A = hi
         lda     gt

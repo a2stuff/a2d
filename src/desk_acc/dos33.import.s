@@ -902,12 +902,12 @@ str_from_int:   PASCAL_STRING "000000" ; filled in by IntToString
         ldx     index
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
-        jsr     IsDiskII
+        jsr     IsDiskII        ; returns Z=1 if yes
       IF ZS
         ldx     index
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
-        jsr     IsDOS33
+        jsr     IsDOS33         ; returns Z=1 if yes
        IF ZS
         ;; It is DOS 3.3 - append it to the list
         ldx     index

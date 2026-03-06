@@ -892,8 +892,7 @@ found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
         adc     path_buf
 
         ;; Enough room?
-        cmp     #kPathBufferSize
-    IF GE
+    IF A >= #kPathBufferSize
         dec     path_buf
         rts                     ; C=1 failure
     END_IF

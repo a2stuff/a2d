@@ -640,7 +640,7 @@ maybe_format:
 
 try_format:
         ldx     dest_drive_index
-        CALL    main::IsDiskII, A=drive_unitnum_table,x
+        CALL    main::IsDiskII, A=drive_unitnum_table,x ; returns Z=1 if yes
         beq     format
 
         ldx     dest_drive_index
@@ -800,8 +800,7 @@ check:  lda     current_drive_selection
         lda     #SELF_MODIFIED_BYTE
         CALL    ShowAlertDialog, X=#$80 ; X != 0 means Y=unit number, auto-dismiss
 
-        cmp     #kAlertResultOK
-      IF NE
+      IF A <> #kAlertResultOK
         pla                     ; Cancel
         pla
         jmp     InitDialog
@@ -1377,7 +1376,7 @@ fallback:
        IF A = #ERR_DEVICE_NOT_CONNECTED
         ;; Device Not Connected - skip, unless it's a Disk II device
         dey                     ; Y = 0
-        CALL    main::IsDiskII, A=(on_line_ptr),y ; A = unmasked unit number
+        CALL    main::IsDiskII, A=(on_line_ptr),y ; A = unmasked unit number; returns Z=1 if yes
         bne     next_device
 
         lda     #ERR_DEVICE_NOT_CONNECTED
@@ -1388,15 +1387,15 @@ fallback:
         CALL    main::ReadBootBlock, A=drive_unitnum_table,x
         bcs     next_device     ; failure
 
-        jsr     IsPascalBootBlock
-        IF EQ
+        jsr     IsPascalBootBlock ; returns C=0 if yes
+        IF ZS                     ; TODO: Should be `CC`
         ;; Pascal
         CALL    GetDriveNameTableSlot, A=num_drives ; result in A,X
         jsr     GetPascalVolName ; A,X is buffer to populate
         jmp     keep_it
         END_IF
 
-        jsr     IsDOS33BootBlock
+        jsr     IsDOS33BootBlock ; returns C=0 if yes
         IF CC
         ;; DOS 3.3
         CALL    AssignDriveName, AX=#str_dos33
@@ -1536,7 +1535,7 @@ next_device:
 
         pha
         tax                     ; X is device index
-        CALL    main::IsDiskII, A=drive_unitnum_table,x
+        CALL    main::IsDiskII, A=drive_unitnum_table,x ; returns Z=1 if yes
     IF EQ
         ;; Disk II - always 280 blocks
         pla
@@ -2198,8 +2197,7 @@ Alert := alert_dialog::Alert
 
         loop_counter := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     #kMaxCounter
-    IF GE
+    IF A >= #kMaxCounter
         copy8   #0, loop_counter
         jsr     main::ResetIIgsRGB ; in case it was reset by control panel
     END_IF

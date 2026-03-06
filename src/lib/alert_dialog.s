@@ -346,8 +346,7 @@ event_loop:
         bit     alert_params::buttons ; high bit clear = OK only
         bpl     check_only_ok
 
-        cmp     #CHAR_ESCAPE
-    IF EQ
+    IF A = #CHAR_ESCAPE
         ;; Cancel
         BTK_CALL BTK::Flash, cancel_button
 finish_cancel:

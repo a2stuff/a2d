@@ -381,8 +381,7 @@ search:
         ;; and copy to main
         ldy     buf_search
         copy8   #0, pattern,y   ; null-terminate
-        cpy     #0
-    IF NE
+    IF Y <> #0
       DO
         lda     buf_search,y    ; copy characters
         jsr     ToUpperCase
@@ -1278,8 +1277,7 @@ string:         .res    16      ; 15 + null terminator
         and     #NAME_LENGTH_MASK
         tay
         copy8   #0, string,y    ; null-terminate
-        cpy     #0
-    IF NE
+    IF Y <> #0
       DO
         lda     (entPtr),y      ; copy characters
         jsr     ToUpperCase

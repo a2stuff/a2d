@@ -754,8 +754,8 @@ shortcut_table_addr_hi:
       ELSE
         and     mask2,x         ; clear bit
       END_IF
-        cmp     pattern,y       ; did it change?
-      IF NE
+
+      IF A <> pattern,y         ; did it change?
         sta     pattern,y
 
         CALL    DrawBit, X=screentowindow_params::windowx, Y=screentowindow_params::windowy, A=flag
@@ -889,8 +889,7 @@ dblclick_speed: .word   0
         lda     ZIDBYTE
         bit     LCBANK1
         bit     LCBANK1
-        cmp     #0              ; ZIDBYTE=0 for IIc / IIc+
-    IF EQ
+    IF A = #0                   ; ZIDBYTE=0 for IIc / IIc+
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF

@@ -127,8 +127,8 @@ params:  .res    3
         ldx     auxlc::dest_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     unit_number
-        jsr     IsDiskII
-    IF NE
+        jsr     IsDiskII        ; returns Z=1 if yes
+    IF ZC
         ;; Get driver address
         CALL    DeviceDriverAddress, A=unit_number
         stax    $06
