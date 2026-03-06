@@ -675,6 +675,12 @@ function a2d.ToggleOptionShowShortcutsOnStartup()
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
+function a2d.ToggleOptionShowKeyboardShortcuts()
+  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OAShortcut("3") -- Toggle "Show keyboard shortcuts in dialogs"
+  a2d.CloseWindow()
+  a2d.CloseAllWindows()
+end
 function a2d.ToggleOptionPreserveCase()
   a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
   a2d.OAShortcut("4") -- Toggle "Preserve uppercase and lowercase in names"

@@ -16,7 +16,24 @@ local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
 
   ============================================================]]
 
-local DialogTest = test.Step
+local function DialogTest(name, func)
+  test.Variants(
+    {
+      {name .. " - defaults", "", {}},
+      {name .. " - keyboard shortcuts", " - with shortcuts", {shortcuts=true}},
+    },
+    function(idx, name, suffix, flags)
+      if flags.shortcuts then
+        a2d.ToggleOptionShowKeyboardShortcuts()
+      end
+
+      func(suffix)
+
+      if flags.shortcuts then
+        a2d.ToggleOptionShowKeyboardShortcuts()
+      end
+  end)
+end
 
 --------------------------------------------------
 -- Apple Menu
@@ -24,17 +41,17 @@ local DialogTest = test.Step
 
 DialogTest(
   "Apple > About Apple II DeskTop",
-  function()
+  function(suffix)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
-    test.Snap("Apple > About Apple II DeskTop")
+    test.Snap("Apple > About Apple II DeskTop" .. suffix)
     a2d.CloseWindow()
 end)
 
 DialogTest(
   "Apple > About This Apple II",
-  function()
+  function(suffix)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    test.Snap("Apple > About This Apple II")
+    test.Snap("Apple > About This Apple II" .. suffix)
     a2d.CloseWindow()
 end)
 
@@ -44,30 +61,30 @@ end)
 
 DialogTest(
   "File > Get Info (volume)",
-  function()
+  function(suffix)
     a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I")
     emu.wait(5) -- enumerating takes a bit
-    test.Snap("File > Get Info (volume)")
+    test.Snap("File > Get Info (volume)" .. suffix)
     a2d.DialogCancel()
 end)
 
 DialogTest(
   "File > Get Info (file)",
-  function()
+  function(suffix)
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.OAShortcut("I")
-    test.Snap("File > Get Info (file)")
+    test.Snap("File > Get Info (file)" .. suffix)
     a2d.DialogCancel()
     a2d.CloseAllWindows()
 end)
 
 DialogTest(
   "File > Copy To...",
-  function()
+  function(suffix)
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
-    test.Snap("File > Copy To...")
+    test.Snap("File > Copy To..." .. suffix)
     a2d.DialogCancel()
     a2d.CloseAllWindows()
 end)
@@ -78,64 +95,64 @@ end)
 
 DialogTest(
   "Special > Format Disk...",
-  function()
+  function(suffix)
     a2d.ClearSelection()
 
     -- show dialog
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK - 2)
-    test.Snap("Special > Format Disk... - Prompt for drive")
+    test.Snap("Special > Format Disk... - Prompt for drive" .. suffix)
 
     -- select RAMFactor
     a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
-    test.Snap("Special > Format Disk... - Drive selected")
+    test.Snap("Special > Format Disk... - Drive selected" .. suffix)
 
     -- accept selection
     a2d.DialogOK()
-    test.Snap("Special > Format Disk... - Prompt for name")
+    test.Snap("Special > Format Disk... - Prompt for name" .. suffix)
 
     -- type new name
     apple2.Type("NEWNAME")
-    test.Snap("Special > Format Disk... - Name entered")
+    test.Snap("Special > Format Disk... - Name entered" .. suffix)
 
     -- accept typed name
     a2d.DialogOK()
-    test.Snap("Special > Format Disk... - Confirm erase")
+    test.Snap("Special > Format Disk... - Confirm erase" .. suffix)
 
     -- confirm format
     a2d.DialogOK({no_wait=true})
     emu.wait(0.2)
-    test.Snap("Special > Format Disk... - Format in progress")
+    test.Snap("Special > Format Disk... - Format in progress" .. suffix)
 end)
 
 DialogTest(
   "Special > Erase Disk...",
-  function()
+  function(suffix)
     a2d.ClearSelection()
 
     -- show dialog
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK - 2)
-    test.Snap("Special > Erase Disk... - Prompt for drive")
+    test.Snap("Special > Erase Disk... - Prompt for drive" .. suffix)
 
     -- select RAMFactor
     a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
-    test.Snap("Special > Erase Disk... - Drive selected")
+    test.Snap("Special > Erase Disk... - Drive selected" .. suffix)
 
     -- accept selection
     a2d.DialogOK()
-    test.Snap("Special > Erase Disk... - Prompt for name")
+    test.Snap("Special > Erase Disk... - Prompt for name" .. suffix)
 
     -- type new name
     apple2.Type("NEWNAME")
-    test.Snap("Special > Erase Disk... - Name entered")
+    test.Snap("Special > Erase Disk... - Name entered" .. suffix)
 
     -- accept typed name
     a2d.DialogOK()
-    test.Snap("Special > Erase Disk... - Confirm erase")
+    test.Snap("Special > Erase Disk... - Confirm erase" .. suffix)
 
     -- confirm erase
     a2d.DialogOK({no_wait=true})
     emu.wait(0.15)
-    test.Snap("Special > Erase Disk... - Erase in progress")
+    test.Snap("Special > Erase Disk... - Erase in progress" .. suffix)
 end)
 
 --------------------------------------------------
@@ -146,54 +163,54 @@ local shortcut_added = false
 
 DialogTest(
   "Shortcuts > Add a Shortcut...",
-  function()
+  function(suffix)
     a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    test.Snap("Shortcuts > Add a Shortcut...")
+    test.Snap("Shortcuts > Add a Shortcut..." .. suffix)
     a2d.DialogOK()
     shortcut_added = true
 end)
 
 DialogTest(
   "Shortcuts > Edit a Shortcut...",
-  function()
+  function(suffix)
     if not shortcut_added then
       a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
       shortcut_added = true
     end
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
-    test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut")
+    test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut" .. suffix)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    test.Snap("Shortcuts > Edit a Shortcut... - Editing")
+    test.Snap("Shortcuts > Edit a Shortcut... - Editing" .. suffix)
     a2d.DialogCancel()
     a2d.CloseAllWindows()
 end)
 
 DialogTest(
   "Shortcuts > Delete a Shortcut...",
-  function()
+  function(suffix)
     if not shortcut_added then
       a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
       shortcut_added = true
     end
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
-    test.Snap("Shortcuts > Delete a Shortcut...")
+    test.Snap("Shortcuts > Delete a Shortcut..." .. suffix)
     a2d.DialogCancel()
 end)
 
 DialogTest(
   "Shortcuts > Run a Shortcut...",
-  function()
+  function(suffix)
     if not shortcut_added then
       a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
       shortcut_added = true
     end
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
-    test.Snap("Shortcuts > Run a Shortcut...")
+    test.Snap("Shortcuts > Run a Shortcut..." .. suffix)
     a2d.DialogCancel()
 end)
 
@@ -209,37 +226,37 @@ end
 
 DialogTest(
   "Special > Copy Disk...",
-  function()
+  function(suffix)
     a2d.CopyDisk()
 
     -- "Disk Copy"
     a2d.InvokeMenuItem(3, 2)
-    test.Snap("Disk Copy - \"Disk Copy\" option")
+    test.Snap("Disk Copy - \"Disk Copy\" option" .. suffix)
 
     -- "Quick Copy" / select source
     a2d.InvokeMenuItem(3, 1)
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S1,D1
     apple2.DownArrowKey() -- S6,D1
-    test.Snap("Disk Copy - \"Quick Copy\" option")
+    test.Snap("Disk Copy - \"Quick Copy\" option" .. suffix)
     a2d.DialogOK()
 
     -- select destination
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
-    test.Snap("Disk Copy - Select destination")
+    test.Snap("Disk Copy - Select destination" .. suffix)
     a2d.DialogOK()
 
     -- insert source
-    test.Snap("Disk Copy - Prompt for source")
+    test.Snap("Disk Copy - Prompt for source" .. suffix)
     a2d.DialogOK()
 
     -- insert destination
-    test.Snap("Disk Copy - Prompt for destination")
+    test.Snap("Disk Copy - Prompt for destination" .. suffix)
     a2d.DialogOK()
 
     -- confirm erase
-    test.Snap("Disk Copy - Confirm erase")
+    test.Snap("Disk Copy - Confirm erase" .. suffix)
     a2d.DialogOK()
 
     --[[
@@ -249,32 +266,33 @@ DialogTest(
 
       -- formatting
       emu.wait(10)
-      test.Snap("Special > Copy Disk...")
+      test.Snap("Special > Copy Disk..." .. suffix)
       emu.wait(10)
     --]]
 
     -- reading progress
     emu.wait(0.25)
-    test.Snap("Disk Copy - Reading progress")
+    test.Snap("Disk Copy - Reading progress" .. suffix)
 
     -- writing progress
     emu.wait(2)
-    test.Snap("Disk Copy - Writing progress")
+    test.Snap("Disk Copy - Writing progress" .. suffix)
 
     -- success
     emu.wait(3)
-    test.Snap("Disk Copy - Success")
+    test.Snap("Disk Copy - Success" .. suffix)
 
     -- cleanup
     a2d.DialogOK()
     emu.wait(10) -- scanning drives
     a2d.OAShortcut('Q') -- back to DeskTop
     a2d.WaitForDesktopReady()
-    a2d.DialogOK() -- dismiss "two volumes with the same name"
+    a2dtest.WaitForAlert({match="2 volumes with the same name"})
+    a2d.DialogOK()
     local image1 = s6d1.filename
     s6d1:unload()
     a2d.CheckAllDrives()
-    emu.wait(5)
+    emu.wait(15)
     a2d.RenamePath("/FLOPPY1", "Floppy2")
     s6d1:load(image1)
     a2d.Reboot()
@@ -283,7 +301,7 @@ end)
 
 DialogTest(
   "Selector",
-  function()
+  function(suffix)
     a2d.ToggleOptionCopyToRAMCard()
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
@@ -291,24 +309,24 @@ DialogTest(
 
     -- Launcher: Copying to RAMCard...
     emu.wait(5)
-    test.Snap("Selector - Copying app to RAMCard...")
+    test.Snap("Selector - Copying app to RAMCard..." .. suffix)
     a2d.WaitForDesktopReady()
 
     -- Shortcuts dialog
     emu.wait(10) -- let copying finish
-    test.Snap("Selector - Shortcuts dialog")
+    test.Snap("Selector - Shortcuts dialog" .. suffix)
 
     -- File > Run a Program...
     a2d.OAShortcut('R')
     a2d.WaitForRepaint()
-    test.Snap("Selector - Run a Program...")
+    test.Snap("Selector - Run a Program..." .. suffix)
     a2d.DialogCancel()
 
     -- Copy to RAMCard...
     apple2.DownArrowKey()
     apple2.ReturnKey()
     emu.wait(2)
-    test.Snap("Selector - Copying shortcut to RAMCard...")
+    test.Snap("Selector - Copying shortcut to RAMCard..." .. suffix)
 
     -- cleanup
     apple2.WaitForBasicSystem()
@@ -318,4 +336,7 @@ DialogTest(
     a2d.WaitForDesktopReady() -- back to DeskTop
     a2d.ToggleOptionCopyToRAMCard()
     a2d.ToggleOptionShowShortcutsOnStartup()
+    a2d.EraseVolume("RAM1")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
 end)
