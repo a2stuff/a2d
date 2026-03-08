@@ -359,8 +359,7 @@ button_eor_table:
 
         BTK_CALL BTK::CheckboxDraw, SELF_MODIFIED, params_addr
 
-        dec     index
-    WHILE POS
+    WHILE dec index : POS
 
         ;; --------------------------------------------------
 

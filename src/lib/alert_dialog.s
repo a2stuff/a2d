@@ -171,8 +171,7 @@ start:
         addr := *+1
         lda     SELF_MODIFIED,x
         sta     alert_params,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         MGTK_CALL MGTK::GetCursorAdr, saved_cursor_addr
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer

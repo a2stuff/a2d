@@ -30,8 +30,7 @@
         lda     DATELO,x
         cmp     last_dt,x
         bne     update
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Settings changed?
         CALL    ReadSetting, X=#DeskTopSettings::clock_24hours

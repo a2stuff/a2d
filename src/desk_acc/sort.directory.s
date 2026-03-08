@@ -204,8 +204,7 @@ exit1:  jmp     Exit
         tay
     DO
         copy8   (ptr),y, path_buf,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         FALL_THROUGH_TO ReadSortWrite
 .endproc ; Start2
@@ -453,8 +452,7 @@ rtcs:   RETURN  C=1
         ldy     #.sizeof(FileEntry) - 1
     DO
         swap8   (ptr1),y, (ptr2),y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 .endproc ; SwapEntries
 
@@ -720,8 +718,7 @@ type0:  .byte   0
         lda     (ptr),y
         cmp     str_system,x
         bne     fail
-        cpx     str_system
-    WHILE NE
+    WHILE X <> str_system
 
         RETURN  C=0
 

@@ -25,8 +25,7 @@
         MGTK_CALL MGTK::WaitVBL
         pla
         tax
-        dex
-      WHILE POS
+      WHILE dex : POS
 
         MGTK_CALL MGTK::FlashMenuBar
     ELSE
@@ -68,8 +67,7 @@
         ldy     #kBellProcLength - 1
     DO
         swap8   BELLPROC,y, BELLDATA,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Restore banking
         plp

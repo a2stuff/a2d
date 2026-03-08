@@ -215,15 +215,13 @@ entry_err_flag:  .byte   0      ; bit7
     DO
         ldy     map,x
         copy8   file_entry,y, src_file_info_params::access,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Fix `storage_type`
         ldx     #4
     DO
         lsr     src_file_info_params::storage_type
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         rts
 
@@ -483,8 +481,7 @@ eof:    RETURN  A=#$FF
         lda     (path_ptr),y
         cmp     #'/'
         beq     :+
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
         iny
 :
         dey
@@ -911,13 +908,11 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
         tya
        DO
         ora     (ptr),y
-        iny
-       WHILE NOT_ZERO
+       WHILE iny : NOT_ZERO
         inc     ptr+1           ; second half
        DO
         ora     (ptr),y
-        iny
-       WHILE NOT_ZERO
+       WHILE iny : NOT_ZERO
         tay
        IF ZERO
         ;; Block is all zeros, skip over it

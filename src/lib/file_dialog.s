@@ -347,8 +347,7 @@ found:  ldx     num_file_names
         lda     path_buf,y
         ptr := *+1
         sta     SELF_MODIFIED,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
     IF bit selected_index : NC
         jsr     _StripPathBufSegment
@@ -832,8 +831,9 @@ found:  RETURN  A=index
 .proc InitPathWithDefaultDevice
         copy8   DEVCNT, device_num
 
+    DO
         device_num := *+1
-retry:  ldx     #SELF_MODIFIED_BYTE
+        ldx     #SELF_MODIFIED_BYTE
         lda     DEVLST,x
 
         and     #UNIT_NUM_MASK
@@ -841,14 +841,14 @@ retry:  ldx     #SELF_MODIFIED_BYTE
         MLI_CALL ON_LINE, on_line_params
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
-        bne     found
+        BREAK_IF NOT ZERO
 
         dec     device_num
-        bpl     retry
+        REDO_IF POS
         copy8   DEVCNT, device_num
-        jmp     retry
+    FOREVER
 
-found:  CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
+        CALL    AdjustOnLineEntryCase, AX=#on_line_buffer
         jsr     _SetRootPath
         TAIL_CALL _AppendToPathBuf, AX=#on_line_buffer
 .endproc ; InitPathWithDefaultDevice
@@ -1110,8 +1110,7 @@ next:   add16_8 ptr, #16        ; advance to next
     DO
         lda     (src_ptr),y
         sta     (dst_ptr),y
-        dey
-    WHILE POS
+    WHILE dey :  POS
 
         rts
 .endproc ; _CopyIntoNthFilename
@@ -1287,11 +1286,11 @@ next:   add16_8 ptr, #16        ; advance to next
         ;; End of string 2?
         len2 := *+1
         cpy     #SELF_MODIFIED_BYTE
-        beq     gt              ; 1>2
+        BREAK_IF EQ             ; 1>2
         iny
     WHILE NOT_ZERO              ; always
 
-gt:     lda     #$FF            ; Z=0
+        lda     #$FF            ; Z=0
         sec
 ret:    rts
 .endproc ; _CompareStrings
@@ -1316,8 +1315,7 @@ OnListSelectionChange := _UpdateDynamicButtons
     DO
         lda     (pt_ptr),y
         sta     file_dialog_res::item_pos,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         pla
 
         tax
@@ -1332,8 +1330,7 @@ OnListSelectionChange := _UpdateDynamicButtons
         ptr := *+1
         lda     SELF_MODIFIED,x
         sta     file_dialog_res::filename_buf,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         copy16  #kListViewNameX, file_dialog_res::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
         MGTK_CALL MGTK::DrawString, file_dialog_res::filename_buf

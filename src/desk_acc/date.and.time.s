@@ -773,9 +773,7 @@ month_length_table:
         ldy     #kLength - 1
     DO
         copy8   month_name_table,x, (ptr),y
-        dex
-        dey
-    WHILE POS
+    WHILE dex : dey : POS
 
         rts
 .endproc ; PrepareMonthString
@@ -1383,9 +1381,9 @@ done:   rts
 .endproc ; SaveSettings
 
 .proc _DoWrite
-retry3:
+    DO
         JUMP_TABLE_MLI_CALL OPEN, open_params
-    IF CC
+      IF CC
         lda     open_params::ref_num
         sta     set_mark_params::ref_num
         sta     write_params::ref_num
@@ -1397,12 +1395,13 @@ retry3:
         JUMP_TABLE_MLI_CALL CLOSE, close_params
         ;; BUG: If write protected, this will leave the `io_buffer` in use!
         plp
-    END_IF
-    IF CS
+      END_IF
+      IF CS
         jsr     _CheckRetry
-        beq     retry3
+        REDO_IF EQ
         bne     failed          ; always
-    END_IF
+      END_IF
+    DONE
         rts                     ; C=0
 
 failed:

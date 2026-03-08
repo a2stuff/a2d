@@ -271,7 +271,7 @@ tick_counter:
 
         ;; Handle accelerator keys
         lda     event_params::modifiers
-        bne     modifiers       ; either Open-Apple or Solid-Apple ?
+    IF ZERO                     ; either Open-Apple or Solid-Apple ?
 
         ;; --------------------------------------------------
         ;; No modifiers
@@ -296,16 +296,15 @@ tick_counter:
         jeq     KeyboardHighlightAlphaNext ; like Tab
         cmp     #'~'
         jeq     KeyboardHighlightAlphaPrev ; like Shift+Tab
-        jmp     menu_accelerators
 
+    ELSE
         ;; --------------------------------------------------
         ;; Modifiers
 
-modifiers:
         jsr     ClearTypeDown
 
         lda     event_params::modifiers
-    IF A = #3                   ; both Open-Apple + Solid-Apple ?
+      IF A = #3                 ; both Open-Apple + Solid-Apple ?
         ;; Double-modifier shortcuts
         CALL    ToUpperCase, A=event_params::key
         cmp     #res_char_menu_item_open_shortcut
@@ -321,7 +320,7 @@ modifiers:
         cmp     #CHAR_CTRL_F
         jeq     CmdFlipScreen
         rts
-    END_IF
+      END_IF
 
         ;; Non-menu keys
         lda     event_params::key
@@ -334,20 +333,20 @@ modifiers:
         jeq     CmdFocusWindow
 
         ldx     active_window_id
-    IF NOT_ZERO
+      IF NOT_ZERO
         cmp     #kShortcutGrowWindow ; Apple-G (Resize)
         jeq     CmdResize
         cmp     #kShortcutMoveWindow ; Apple-M (Move)
         jeq     CmdMove
 
-      IF A IN #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
+       IF A IN #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
         jmp     CmdCycleWindows
+       END_IF
       END_IF
     END_IF
 
         ;; Not one of our shortcuts - check for menu keys
         ;; (shortcuts or entering keyboard menu mode)
-menu_accelerators:
         copy8   event_params::key, menu_click_params::which_key
         copy8   event_params::modifiers, menu_click_params::key_mods
         CLEAR_BIT7_FLAG menu_modified_click_flag ; note that source is not Apple+click
@@ -1469,20 +1468,22 @@ rest:
         sta     INVOKER_BITSY_COMPAT
 
         ;; Get the file info to determine type.
-retry:  jsr     GetSrcFileInfo
-    IF CS
-      IF bit sys_prompt_flag : NC
+    DO
+        jsr     GetSrcFileInfo
+      IF CS
+       IF bit sys_prompt_flag : NC
         jsr     ShowAlert       ; arbitrary ProDOS error
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry
+        REDO_IF ZERO
         rts
-      END_IF
+       END_IF
 
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry
+        REDO_IF ZERO
         rts                     ; cancel, so fail
-    END_IF
+      END_IF
+    DONE
 
         ;; Check file type.
         CALL    DetermineIconType, AX=#src_path_buf ; uses passed name and `src_file_info_params`
@@ -1744,7 +1745,7 @@ LaunchFileWithPath := LaunchFileWithPathImpl::normal_disk
 .proc ReadLinkFile
         read_buf := $800
 
-retry:
+    DO
         MLI_CALL OPEN, open_params
         bcs     err
         lda     open_params::ref_num
@@ -1757,24 +1758,24 @@ retry:
         bcs     err
 
         lda     read_params::trans_count
-    IF A >= #kLinkFilePathLengthOffset
+      IF A >= #kLinkFilePathLengthOffset
 
         ldx     #kCheckHeaderLength-1
-      DO
+       DO
         lda     read_buf,x
         cmp     check_header,x
         bne     bad
-      WHILE dex : POS
+       WHILE dex : POS
 
         CALL    CopyToSrcPath, AX=#read_buf + kLinkFilePathLengthOffset
         RETURN  C=0
-    END_IF
+      END_IF
 
 bad:    lda     #kErrUnknown
 err:    jsr     ShowAlert       ; arbitrary ProDOS error or `kErrUnknown`
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry
-
+        REDO_IF ZERO
+    DONE
         RETURN  C=1
 
 check_header:
@@ -2291,14 +2292,17 @@ CmdDeskAcc      := CmdDeskAccImpl::start
         CALL    AnimateWindowOpen, X=#$FF ; desktop
     END_IF
 
+        ;; --------------------------------------------------
         ;; Load the DA
-retry:  MLI_CALL OPEN, open_params
-    IF CS
+
+    DO
+        MLI_CALL OPEN, open_params
+      IF CS
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry
+        REDO_IF ZERO
         rts                     ; cancel, so fail
-    END_IF
+      END_IF
 
         lda     open_params::ref_num
         sta     read_header_params::ref_num
@@ -2308,8 +2312,7 @@ retry:  MLI_CALL OPEN, open_params
 
         lda     DAHeader::aux_length
         ora     DAHeader::aux_length+1
-        beq     main
-
+      IF NOT ZERO
         ;; Aux memory segment
         copy16  DAHeader::aux_length, read_params::request_count
         MLI_CALL READ, read_params
@@ -2317,17 +2320,23 @@ retry:  MLI_CALL OPEN, open_params
         copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
         add16   #DA_LOAD_ADDRESS-1, DAHeader::aux_length, ENDLO
         CALL    AUXMOVE, C=1    ; main>aux
+      END_IF
 
         ;; Main memory segment
-main:   copy16  DAHeader::main_length, read_params::request_count
+        copy16  DAHeader::main_length, read_params::request_count
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
+    DONE
 
+        ;; --------------------------------------------------
         ;; Invoke it
+
         jsr     SetCursorPointer ; before invoking DA
         jsr     DA_LOAD_ADDRESS
 
+        ;; --------------------------------------------------
         ;; Restore state
+
         jsr     InitSetDesktopPort ; DA's port destroyed, set something real as current
         jsr     ShowClockForceUpdate
         jsr     ClearUpdates    ; following DA close (just in case)
@@ -2645,8 +2654,7 @@ next:   txa
 next_icon:
         pla                     ; A = index
         tax
-        inx
-    WHILE NOT_ZERO              ; always
+    WHILE inx : NOT_ZERO        ; always
 
         ;; File (executable or data)
 maybe_open_file:
@@ -2780,7 +2788,8 @@ str_disk_copy:
         PASCAL_STRING kPathnameDiskCopy
 
 start:
-retry:
+
+    DO
         jsr     SetCursorWatch  ; before loading module (undone in module or failure)
 
         ;; Do this now since we'll use up the space later.
@@ -2791,12 +2800,13 @@ retry:
         sta     DISK_COPY_INITIAL_UNIT_NUM
 
         MLI_CALL OPEN, open_params
-    IF CS
+      IF CS
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry
+        REDO_IF ZERO
         jmp     SetCursorPointer ; after loading module (failure)
-    END_IF
+      END_IF
+    DONE
 
         lda     open_params::ref_num
         sta     read_params::ref_num
@@ -2853,16 +2863,17 @@ start:
         COPY_STRING str_new_folder, stashed_name
 
         ;; Repeat to find a free name
-   REPEAT
+    REPEAT
         CALL    GetWindowPath, A=active_window_id
         jsr     CopyToSrcPath
         CALL    AppendFilenameToSrcPath, AX=#stashed_name
         jsr     GetSrcFileInfo
-        bcc     spin
+      IF CS
         BREAK_IF A = #ERR_FILE_NOT_FOUND
         bne     error           ; always
+      END_IF
 
-spin:   jsr     SpinName
+        jsr     SpinName
     FOREVER
 
         ;; --------------------------------------------------
@@ -2964,8 +2975,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
        END_IF
       END_IF
 
-        inc     index
-    WHILE NOT_ZERO              ; always
+    WHILE inc index : NOT_ZERO  ; always
 
 .endproc ; FindIconByNameInCachedWindow
 
@@ -3990,8 +4000,7 @@ best:
         copy16  icon_rect,y, best_value
 
 next_icon:
-        inc     index
-    WHILE NOT_ZERO              ; always
+    WHILE inc index : NOT_ZERO  ; always
 
         lda     best_icon
         bne     select
@@ -4135,21 +4144,20 @@ file_char:
         ldy     #0
         copy8   (ptr),y, len
 
-cloop:  iny
+      DO
+        iny
         lda     (ptr),y
         jsr     ToUpperCase
-        cmp     typedown_buf,y
-        bcc     next
+        BREAK_IF A < typedown_buf,y
         beq     :+
         bcs     found
 :
         cpy     typedown_buf
         beq     found
 
-        cpy     len
-        bcc     cloop
+      WHILE Y < len
 
-next:   inc     index
+        inc     index
     WHILE lda index : A <> num_filenames
 
         dec     index
@@ -4199,8 +4207,7 @@ typedown_buf:
     DO
         BREAK_IF X = cached_window_icon_count
         copy8   cached_window_icon_list,x, buffer+1,x
-        inx
-    WHILE NOT_ZERO              ; always
+    WHILE inx : NOT_ZERO        ; always
 
         stx     buffer
         rts
@@ -4275,8 +4282,7 @@ typedown_buf:
         len2 := *+1
         cpy     #SELF_MODIFIED_BYTE
         beq     gt              ; 1>2
-        iny
-    WHILE NOT_ZERO              ; always
+    WHILE iny : NOT_ZERO        ; always
 
 gt:     lda     #$FF            ; Z=0
         sec
@@ -4400,8 +4406,7 @@ ret:    rts
        END_IF
         lda     window_to_dir_icon_table,x
         bne     found           ; not `kWindowToDirIconFree`
-        inx
-      WHILE NOT_ZERO            ; always
+      WHILE inx : NOT_ZERO      ; always
 
         ;; --------------------------------------------------
         ;; Search downwards through window-icon map to find next.
@@ -5648,8 +5653,7 @@ event_loop:
 
         pla                     ; A = index
         tax                     ; X = index
-        inx
-      WHILE NOT_ZERO            ; always
+      WHILE inx : NOT_ZERO      ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -6027,8 +6031,7 @@ no_win:
     DO
         lda     window_to_dir_icon_table,x
         BREAK_IF ZERO           ; is `kWindowToDirIconFree`
-        inx
-    WHILE NOT_ZERO              ; always
+    WHILE inx : NOT_ZERO        ; always
 
         ;; Map the window to its source icon
         copy8   icon_param, window_to_dir_icon_table,x ; possibly `kWindowToDirIconNone` if opening via path
@@ -6298,19 +6301,19 @@ OpenWindowForPath := OpenWindowImpl::for_path
 .proc MarkIconNotDimmed
         ;; Find open window for the icon
         lda     icon_param
-        beq     ret
-
+    IF NOT ZERO
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
-    IF EQ
+      IF EQ
         ;; If found, remove from the table.
         copy8   #kWindowToDirIconFree, window_to_dir_icon_table,x
-    END_IF
+      END_IF
 
         ;; Update the icon and redraw
         CALL    MarkIconNotDimmedNoDraw, A=icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; MarkIconNotDimmed
 
 ;;; ============================================================
@@ -7158,8 +7161,7 @@ vol_blocks_used:  .word   0
         tax
         sub16   window_filerecord_table+2,x, window_filerecord_table,x, size
         add16   window_filerecord_table-2,x, size, window_filerecord_table,x
-        inc     index
-    WHILE NOT_ZERO              ; always
+    WHILE inc index : NOT_ZERO              ; always
 
         ;; Update "start of free memory" pointer
         lda     window_id_to_filerecord_list_count
@@ -7982,8 +7984,7 @@ END_PARAM_BLOCK
 
         pla                     ; A = index
         tax                     ; X = index
-        inx
-    WHILE NOT_ZERO              ; always
+    WHILE inx : NOT_ZERO        ; always
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
@@ -14610,8 +14611,7 @@ ret:    rts
         copy8   window_entry_table,x, cached_window_icon_list,y
         inx
         iny
-        cpy     cached_window_icon_count
-      WHILE NE
+      WHILE Y <> cached_window_icon_count
     END_IF
 
         rts

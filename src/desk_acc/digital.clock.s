@@ -85,18 +85,15 @@ parsed: .tag    ParsedDateTime
 ;;; Main Input Loop
 
 .proc InputLoop
+    REPEAT
         jsr     MaybeUpdate
 
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     exit
-        cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     exit
+        BREAK_IF A = #MGTK::EventKind::button_down ; was clicked?
+        BREAK_IF A = #MGTK::EventKind::key_down  ; any key?
+    FOREVER
 
-        jmp     InputLoop
-
-exit:
         MGTK_CALL MGTK::RedrawDeskTop
 
         MGTK_CALL MGTK::DrawMenuBar

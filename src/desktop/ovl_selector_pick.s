@@ -59,13 +59,14 @@ Exec:
       IF ZC
         CALL    main::CopyDeskTopOriginalPrefix, AX=#orig_prefix
         MLI_CALL GET_PREFIX, current_prefix_params
-retry:
+       DO
         MLI_CALL SET_PREFIX, orig_prefix_params
-       IF CS
+        IF CS
         jsr     _CheckRetry
-        beq     retry
+        REDO_IF EQ
         bne     done            ; always
-       END_IF
+        END_IF
+       DONE
         jsr     _DoWrite
         MLI_CALL SET_PREFIX
         JUMP_TABLE_MLI_CALL SET_PREFIX, current_prefix_params
@@ -881,18 +882,17 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 rest:
         ;; --------------------------------------------------
 
-retry:  MLI_CALL OPEN, open_curpfx_params
-        bcc     read
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     not_found
-        cmp     #ERR_PATH_NOT_FOUND
-        beq     not_found
+    DO
+        MLI_CALL OPEN, open_curpfx_params
+      IF CS
+        CONTINUE_IF A = #ERR_FILE_NOT_FOUND OR A = #ERR_PATH_NOT_FOUND
         CALL    ShowAlert, A=#kErrInsertSystemDisk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry
+        REDO_IF EQ
         RETURN  A=#$FF          ; failure
+      END_IF
 
-read:   lda     open_curpfx_params::ref_num
+        lda     open_curpfx_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_params
@@ -902,8 +902,8 @@ read:   lda     open_curpfx_params::ref_num
         pla
         plp
         rts
+    DONE
 
-not_found:
         ;; Clear buffer
         ptr := $06
         copy16  #selector_list, ptr
@@ -937,42 +937,44 @@ rest:
         stax    create_localdir_params::create_time
 
         ;; Create local dir if necessary
-retry1:
+    DO
         JUMP_TABLE_MLI_CALL CREATE, create_localdir_params
-    IF CS AND A <> #ERR_DUPLICATE_FILENAME
+      IF CS AND A <> #ERR_DUPLICATE_FILENAME
         jsr     _CheckRetry
-        beq     retry1
+        REDO_IF EQ
         bne     failed          ; always
-    END_IF
+      END_IF
 
         ;; Destroy existing settings file if necessary
         ;; This is to catch write failures before the file `OPEN`, as
         ;; failure to `WRITE`/`FLUSH` will make the `CLOSE` fail,
         ;; leaving the `io_buffer` in use.
-retry2:
+    DO
         JUMP_TABLE_MLI_CALL DESTROY, destroy_params
-    IF CS AND A <> #ERR_FILE_NOT_FOUND
+      IF CS AND A <> #ERR_FILE_NOT_FOUND
         jsr     _CheckRetry
-        beq     retry2
+        REDO_IF EQ
         bne     failed          ; always
-    END_IF
+      END_IF
+    DONE
 
         ;; Create/write settings file if necessary
-retry3:
+    DO
         JUMP_TABLE_MLI_CALL CREATE, create_params
         JUMP_TABLE_MLI_CALL OPEN, open_params
-    IF CC
+      IF CC
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
         JUMP_TABLE_MLI_CALL WRITE, write_params
         JUMP_TABLE_MLI_CALL CLOSE, close_params
-    END_IF
-    IF CS
+      END_IF
+      IF CS
         jsr     _CheckRetry
-        beq     retry3
+        REDO_IF EQ
         bne     failed          ; always
-    END_IF
+      END_IF
+    DONE
         rts                     ; C=0
 
 failed:

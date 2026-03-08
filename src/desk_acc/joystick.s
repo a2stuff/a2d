@@ -532,8 +532,7 @@ pdl3:   .byte   0
     DO
         lda     PADDL0,X        ; 11 microsecond loop
         bpl     done
-        iny
-    WHILE NOT_ZERO
+    WHILE iny : NOT_ZERO
         dey                     ; handle overflow
 
 done:   rts

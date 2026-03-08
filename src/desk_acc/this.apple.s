@@ -1905,8 +1905,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         ldy     #6
       DO
         asl16   tmp             ; * 64
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
         CALL IntToStringWithSeparators, AX=tmp
         COPY_STRING str_from_int, str_ramworks_memory
 
@@ -1922,15 +1921,13 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         ldy     #6
       DO
         asl16   memory          ; * 64
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
     ELSE
         ;; Convert number of 64K banks to MB
         ldy     #4
       DO
         lsr16   memory          ; / 16
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
         SET_BIT7_FLAG memory_is_mb_flag
     END_IF
 
@@ -2003,8 +2000,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         iny                     ; match - count it
        END_IF
       END_IF
-        inx                     ; next bank
-    WHILE NOT_ZERO              ; if we hit 256 banks, make sure we exit
+    WHILE inx : NOT_ZERO      ; next bank; if we hit 256 banks, make sure we exit
 .endscope
 
         ;; Iterate upwards, restoring valid banks.
@@ -2020,8 +2016,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         copy8   buf1,x, sigb1
        END_IF
       END_IF
-        inx                     ; next bank
-    WHILE NOT_ZERO              ; if we hit 256 banks, make sure we exit
+    WHILE inx : NOT_ZERO      ; next bank; if we hit 256 banks, make sure we exit
 .endscope
 
         ;; Switch back to RW bank 0 (normal aux memory)
@@ -2081,8 +2076,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         lda     (slot_ptr),y
         cmp     sig_values,x
         bne     next
-        dex
-      WHILE POS
+      WHILE dex : POS
 
         ;; Now look for device type
         ldy     #$FB            ; $CnFB is SmartPort ID Type byte
@@ -2113,8 +2107,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         lsr     dib_buffer+SPDIB::Device_Size_Hi
         ror     dib_buffer+SPDIB::Device_Size_Med
         ror     dib_buffer+SPDIB::Device_Size_Lo
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
 
         ;; Rounding up if needed
       IF CS
@@ -2283,8 +2276,7 @@ start:
        DO
         lda     dib_buffer+SPDIB::Device_Name-1,y
         BREAK_IF A <> #' '
-        dey
-       WHILE NOT_ZERO
+       WHILE dey : NOT_ZERO
       END_IF
         sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
@@ -2303,8 +2295,7 @@ start:
         cmp     #'a'           ; guarded by `kBuildSupportsLowercase`
         bcs     done_adjust_case ; is lower case
         END_IF
-        dey
-       WHILE POS
+       WHILE dey : POS
 
         ldy     dib_buffer+SPDIB::ID_String_Length
         dey
@@ -2321,8 +2312,7 @@ start:
         sta     dib_buffer+SPDIB::Device_Name,y
           END_IF
          END_IF
-        dey
-        WHILE NOT_ZERO
+        WHILE dey : NOT_ZERO
        END_IF
 
       END_IF
@@ -2399,8 +2389,7 @@ num_devices:
       DO
         lda     str_current,x
         BREAK_IF A <> str_last,x
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
     END_IF
         rts
 .endproc ; CompareWithLast

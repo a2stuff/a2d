@@ -7,8 +7,7 @@
         ldx     #.sizeof(MGTK::Point)-1
     DO
         copy8   event_params+MGTK::Event::coords,x, coords,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         CALL    ReadSetting, X=#DeskTopSettings::dblclick_speed
         sta     counter

@@ -18,8 +18,7 @@
         cmp     #$B0            ; ProDOS 2.5 uses $B0
 .endif ; PRODOS_2_5
         beq     remove
-        dex
-    WHILE POS
+    WHILE dex : POS
         rts
 
         ;; Remove it, shuffle everything else down.

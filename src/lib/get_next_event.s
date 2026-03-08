@@ -26,8 +26,7 @@
         lda     event_params+MGTK::Event::coords,x
         cmp     coords,x
         bne     diff
-        dex
-      WHILE POS
+      WHILE dex : POS
         lda     #MGTK::EventKind::no_event
         beq     set             ; always
 

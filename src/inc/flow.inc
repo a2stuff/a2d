@@ -16,7 +16,8 @@
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
 ;;; * DO / REDO_IF cond / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
 ;;;   * or REPEAT / UNTIL cond if you prefer
-;;;   * DO / FOREVER (or REPEAT / FOREVER) for unconditional JMP
+;;; * DO / FOREVER (or REPEAT / FOREVER) for unconditional JMP
+;;; * DO / DONE for non-looping blocks; useful with REDO_IF / BREAK_IF
 ;;; * RTS_IF cond
 ;;;
 ;;; Conditions take the form of flag tests or register comparisons.
@@ -59,7 +60,7 @@
 .endmacro
 
 .macro _FLOW_END_STATEMENT
-  .undef __flow_statement__
+    .undef __flow_statement__
 .endmacro
 
 ;;; Increment a numeric variable; if not initialized, treated as 0
@@ -107,32 +108,6 @@
 
 ::F2_SENSE_BIT = 0            ; "branch if true"  (like WHILE)
 ::F2_SENSE_BIF = 1            ; "branch if false" (like IF, UNTIL)
-
-;;; --------------------------------------------------
-;;; Logging
-;;; --------------------------------------------------
-
-.macro F2_LOG_CODEGEN_BRANCH bop, target
-        ;;.out .sprintf("] emitting %s to %s", .string(bop), target)
-.endmacro
-.macro F2_LOG_CODEGEN_COMPARE cop, args
-        ;;.out .sprintf("] emitting %s (args %d tokens)", .string(cop), .tcount({args}))
-.endmacro
-.macro F2_LOG_SAW str
-        ;;.out .sprintf("> saw %s", str)
-.endmacro
-.macro F2_LOG_PEEKED str
-        ;;.out .sprintf("> peeked %s", str)
-.endmacro
-.macro F2_LOG_FUNC name
-        ;;.out .sprintf("( %s", name)
-.endmacro
-.macro F2_LOG_END_FUNC name
-        ;;.out .sprintf(") %s", name)
-.endmacro
-.macro F2_LOG_TCOUNT
-        ;;.out .sprintf("  token list size = %d", .tcount({f2_token_list}))
-.endmacro
 
 ;;; --------------------------------------------------
 ;;; Error Reporting
@@ -206,9 +181,6 @@
 
 ;;; Emit a branch (`bop`) to a target (`target`); `kind` provides a name to log (e.g. "stay")
 .macro F2_CODEGEN_BRANCH bop, target, kind
-        F2_LOG_FUNC "CODEGEN_BRANCH"
-        F2_LOG_CODEGEN_BRANCH bop, kind
-
         .if .def(target) .and .const((*-2)-(target)) .and ((*+2)-(target)>127)
 
          .if .xmatch(bop, BCC)
@@ -241,19 +213,16 @@
 
 ;;;Emit a comparison
 .macro F2_CODEGEN_COMPARE cop, args
-        F2_LOG_FUNC "CODEGEN_COMPARE"
-        F2_LOG_CODEGEN_COMPARE cop, {args}
-
         cop args
 .endmacro
 .macro F2_VALIDATE_COMPARE_RHS op_str,arg1,arg2,arg3
         .if .paramcount > 3
-            F2_ERR .sprintf("Unexpected arguments after comparison '%s'", op_str)
+          F2_ERR .sprintf("Unexpected arguments after comparison '%s'", op_str)
         .endif
         .ifnblank arg2
-        .if .not(.xmatch({arg2},X) .or .xmatch({arg2},Y))
-        F2_ERR .sprintf("Unexpected non-index-register after comparison '%s'", op_str)
-        .endif
+          .if .not(.xmatch({arg2},X) .or .xmatch({arg2},Y))
+            F2_ERR .sprintf("Unexpected non-index-register after comparison '%s'", op_str)
+          .endif
         .endif
 .endmacro
 
@@ -274,7 +243,6 @@
 
 ;;; Given two a pair of branch ops (e.g. BCC, BCS), emit a branch depending on `@f2_sense_flag` and `@f2_negate_flag`
 .macro F2_CODEGEN_BRANCH_WITH_FLAGS bop1, bop2
-        F2_LOG_FUNC "CODEGEN_BRANCH_WITH_FLAGS"
         .if @f2_negate_flag
           F2_CODEGEN_BRANCH_WITH_FLAGS2 bop2, bop1
         .else
@@ -282,26 +250,20 @@
         .endif
 .endmacro
 .macro F2_CODEGEN_BRANCH_WITH_FLAGS2 bop1, bop2
-        F2_LOG_FUNC "CODEGEN_BRANCH_WITH_FLAGS2"
-        F2_LOG_TCOUNT
-
         ;; Look at negate flag, sense flag, and next token (and, or, none), generate code
         .if .tcount({f2_token_list}) = 0
-          F2_LOG_PEEKED "EOF"
           .if @f2_sense_flag
             F2_CODEGEN_BRANCH bop2, f2_branch_target, "branch_target"
           .else
             F2_CODEGEN_BRANCH bop1, f2_branch_target, "branch_target"
           .endif
         .elseif .xmatch(.left(1, {f2_token_list}), OR)
-          F2_LOG_PEEKED "OR"
           .if @f2_sense_flag
             F2_CODEGEN_BRANCH bop1, f2_stay_target, "stay_target"
           .else
             F2_CODEGEN_BRANCH bop1, f2_branch_target, "branch_target"
           .endif
         .elseif .xmatch(.left(1, {f2_token_list}), AND)
-          F2_LOG_PEEKED "AND"
           .if @f2_sense_flag
             F2_CODEGEN_BRANCH bop2, f2_branch_target, "branch_target"
           .else
@@ -310,7 +272,6 @@
         .else
           F2_ERR_UNEXPECTED_TOKEN
         .endif
-        F2_LOG_END_FUNC "CODEGEN_BRANCH_WITH_FLAGS2"
 .endmacro
 
 ;;; ----------------------------------------
@@ -318,14 +279,12 @@
 ;;; ----------------------------------------
 
 .macro F2_CODEGEN_IN_LIST cop, list
-        F2_LOG_FUNC "CODEGEN_IN_LIST"
         .local @skip
 
         ;; TODO: Look for symmetries to exploit to simplify this
 
         .if .not(@f2_negate_flag)
           .if .tcount({f2_token_list}) = 0
-            F2_LOG_PEEKED "EOF"
             .if @f2_sense_flag
               ;; e.g. IF A IN #1, #2, #3
               F2_CODEGEN_IN_LIST2 cop, BEQ, @skip, "skip", BNE, f2_branch_target, "branch_target", list
@@ -334,7 +293,6 @@
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_branch_target, "branch_target", BEQ, f2_branch_target, "branch_target", list
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), AND)
-            F2_LOG_PEEKED "AND"
             .if @f2_sense_flag
               ;; e.g. IF A IN #1, #2, #3 AND CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, @skip, "skip", BNE, f2_branch_target, "branch_target", list
@@ -343,7 +301,6 @@
               F2_CODEGEN_IN_LIST2 cop, BEQ, @skip, "skip", BNE, f2_stay_target, "stay_target", list
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), OR)
-            F2_LOG_PEEKED "OR"
             .if @f2_sense_flag
               ;; e.g. IF A IN #1, #2, #3 OR CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_stay_target, "stay_target", BEQ, f2_stay_target, "stay_target", list
@@ -356,7 +313,6 @@
           .endif
         .else
           .if .tcount({f2_token_list}) = 0
-            F2_LOG_PEEKED "EOF"
             .if @f2_sense_flag
               ;; e.g. IF NOT A IN #1, #2, #3
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_branch_target, "branch_target", BEQ, f2_branch_target, "branch_target", list
@@ -365,7 +321,6 @@
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_stay_target, "stay_target", BNE, f2_branch_target, "branch_target", list
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), AND)
-            F2_LOG_PEEKED "AND"
             .if @f2_sense_flag
               ;; e.g. IF NOT A IN #1, #2, #3 AND CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_branch_target, "branch_target", BEQ, f2_branch_target, "branch_target", list
@@ -374,7 +329,6 @@
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_stay_target, "stay_target", BEQ, f2_stay_target, "stay_target", list
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), OR)
-            F2_LOG_PEEKED "OR"
             .if @f2_sense_flag
               ;; e.g. IF NOT A IN #1, #2, #3 OR CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, @skip, "skip", BNE, f2_stay_target, "stay_target", list
@@ -387,10 +341,8 @@
 
         @skip := *
         .refto @skip
-        F2_LOG_END_FUNC "CODEGEN_IN_LIST"
 .endmacro
 .macro F2_CODEGEN_IN_LIST2 cop, bop1, target1, target1_name, bop2, target2, target2_name, p1, p2, p3, p4, p5, p6, p7, p8, p9
-        F2_LOG_FUNC "CODEGEN_IN_LIST2"
         .ifnblank p2
           F2_CODEGEN_COMPARE cop, p1
           F2_CODEGEN_BRANCH bop1, target1, target1_name
@@ -399,7 +351,6 @@
           F2_CODEGEN_COMPARE cop, p1
           F2_CODEGEN_BRANCH bop2, target2, target2_name
         .endif
-        F2_LOG_END_FUNC "CODEGEN_IN_LIST2"
 .endmacro
 
 ;;; ----------------------------------------
@@ -407,7 +358,6 @@
 ;;; ----------------------------------------
 
 .macro F2_CODEGEN_BETWEEN cop, lo, hi, op_str
-        F2_LOG_FUNC "F2_CODEGEN_BETWEEN"
         .local @skip
 
         .if .not(.xmatch(.left(1, {lo}), {#}))
@@ -420,7 +370,6 @@
 
         .if .not(@f2_negate_flag)
           .if .tcount({f2_token_list}) = 0
-            F2_LOG_PEEKED "EOF"
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
@@ -429,7 +378,6 @@
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), AND)
-            F2_LOG_PEEKED "AND"
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9 AND CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
@@ -438,7 +386,6 @@
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), OR)
-            F2_LOG_PEEKED "OR"
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9 OR CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_stay_target, "stay_target"
@@ -451,7 +398,6 @@
           .endif
         .else
           .if .tcount({f2_token_list}) = 0
-            F2_LOG_PEEKED "EOF"
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
@@ -460,7 +406,6 @@
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), AND)
-            F2_LOG_PEEKED "AND"
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9 AND CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_branch_target, "branch_target"
@@ -469,7 +414,6 @@
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_stay_target, "stay_target"
             .endif
           .elseif .xmatch(.left(1, {f2_token_list}), OR)
-            F2_LOG_PEEKED "OR"
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9 OR CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
@@ -482,17 +426,12 @@
 
         @skip := *
         .refto @skip
-        F2_LOG_END_FUNC "F2_CODEGEN_BETWEEN"
 .endmacro
 .macro F2_CODEGEN_BETWEEN2 cop, lo, hi, bop1, target1, target1_name, bop2, target2, target2_name
-        F2_LOG_END_FUNC "F2_CODEGEN_BETWEEN2"
-
         F2_CODEGEN_COMPARE cop, {lo}
         F2_CODEGEN_BRANCH bop1, target1, target1_name
         F2_CODEGEN_COMPARE cop, {hi+1}
         F2_CODEGEN_BRANCH bop2, target2, targe2_name
-
-        F2_LOG_END_FUNC "F2_CODEGEN_BETWEEN2"
 .endmacro
 
 ;;; --------------------------------------------------
@@ -501,24 +440,19 @@
 
 ;;; Consume a single token from `f2_token_list`
 .macro F2_PARSE_CONSUME
-        F2_LOG_FUNC "PARSE_CONSUME"
         .define f2_tmp .mid(1, 9999, {f2_token_list})
         .undef f2_token_list
         .define f2_token_list f2_tmp
         .undef f2_tmp
-        F2_LOG_END_FUNC "PARSE_CONSUME"
 .endmacro
 
 ;;; Parse `f2_token_list` up to an "AND" or an "OR"; defines `f2_rhs` (caller must .undef it)
 .macro F2_PARSE_RHS
-        F2_LOG_FUNC "PARSE_RHS"
         .define f2_rhs .left(1, {f2_token_list})
         F2_PARSE_CONSUME
         F2_PARSE_RHS2
-        F2_LOG_END_FUNC "PARSE_RHS"
 .endmacro
 .macro F2_PARSE_RHS2
-        F2_LOG_FUNC "PARSE_RHS2"
         .if .tcount({f2_token_list}) > 0
           .if .not(.xmatch(.left(1, {f2_token_list}), AND) .or .xmatch(.left(1, {f2_token_list}), OR))
             .define f2_tmp f2_rhs
@@ -529,32 +463,23 @@
             F2_PARSE_RHS2
           .endif
         .endif
-        F2_LOG_END_FUNC "PARSE_RHS2"
 .endmacro
 
 ;;; Parse `f2_rhs` up to a ","; defines `f2_first` and `f2_second` (caller must .undef them)
 .macro F2_PARSE_PAIR op_str, param1,param2,p3,p4,p5,p6,p7,p8,p9
-        F2_LOG_FUNC "PARSE_PAIR"
         .if .paramcount <> 3
           F2_ERR_EXPECTED .sprintf("two arguments for '%s'", op_str)
         .endif
         .define f2_first param1
         .define f2_second param2
-        F2_LOG_END_FUNC "PARSE_PAIR"
 .endmacro
 
 ;;; Parse a relational expression / binary operation (e.g. `A = #7`)
 .macro F2_PARSE_COMP
-        F2_LOG_FUNC "PARSE_COMP"
-        F2_LOG_TCOUNT
-
         .define f2_lhs .left(1, {f2_token_list})
         .if .xmatch(f2_lhs, A)
-          F2_LOG_SAW "A"
         .elseif .xmatch(f2_lhs, X)
-          F2_LOG_SAW "X"
         .elseif .xmatch(f2_lhs, Y)
-          F2_LOG_SAW "Y"
         .else
           F2_ERR_EXPECTED "register (A,X,Y)"
         .endif
@@ -587,14 +512,13 @@
         .else
           F2_ERR_EXPECTED "operator (=, <>, <, >=, IN, BETWEEN)"
         .endif
-         F2_LOG_SAW f2_op_str
+
         F2_PARSE_CONSUME
 
         .if .tcount({f2_token_list}) = 0
           F2_ERR_EXPECTED .sprintf("argument(s) after '%s'", f2_op_str)
         .endif
         F2_PARSE_RHS
-        F2_LOG_SAW .sprintf("RHS (%d tokens)", .tcount({f2_rhs}))
 
         .if .match({f2_rhs}, 1234)
           F2_ERR .sprintf("Numeric literal in '%s' comparison; did you mean '#%d'?", f2_op_str, f2_rhs)
@@ -692,19 +616,12 @@
         .undef f2_op
         .undef f2_op_str
         .undef f2_rhs
-
-        F2_LOG_TCOUNT
-        F2_LOG_END_FUNC "PARSE_COMP"
 .endmacro
 
 ;;; Parse a unary test (e.g. CS, NC, ...)
 .macro F2_PARSE_FLAG_TEST
-        F2_LOG_FUNC "PARSE_FLAG_TEST"
-        F2_LOG_TCOUNT
-
         .define f2_flag_test .left(1, {f2_token_list})
         F2_PARSE_CONSUME
-        F2_LOG_SAW .string(f2_flag_test)
 
         .if .xmatch(f2_flag_test, ZS)
           F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -727,23 +644,16 @@
         .endif
 
         .undef f2_flag_test
-
-        F2_LOG_TCOUNT
-        F2_LOG_END_FUNC "PARSE_FLAG_TEST"
 .endmacro
 
 ;;; Parse a boolean expression
 .macro F2_PARSE_BEXPR
-        F2_LOG_FUNC "PARSE_BEXPR"
-        F2_LOG_TCOUNT
-
         .define f2_tok .left(1, {f2_token_list})
         .if .xmatch({f2_tok}, NOT)
           .undef f2_tok
 
           ;; NOT - toggle the invert flag, recurse
           F2_PARSE_CONSUME
-          F2_LOG_SAW "NOT"
           @f2_negate_flag .set .not(@f2_negate_flag)
           F2_PARSE_BEXPR
 
@@ -763,42 +673,28 @@
           .undef f2_tok
           F2_ERR_EXPECTED "boolean expression"
         .endif
-
-        F2_LOG_END_FUNC "PARSE_BEXPR"
 .endmacro
 
 ;;; Parse a compound boolean expression (joined by AND/OR)
 .macro F2_PARSE_BEXPR_LOOP
-        F2_LOG_FUNC "PARSE_BEXPR_LOOP"
-        F2_LOG_TCOUNT
-
         @f2_negate_flag .set 0
         F2_PARSE_BEXPR
 
-        F2_LOG_TCOUNT
-
         .if .tcount({f2_token_list}) > 0
           .if .xmatch(.left(1, {f2_token_list}), AND)
-            F2_LOG_SAW "AND"
             F2_PARSE_CONSUME
             F2_PARSE_BEXPR_LOOP
           .elseif .xmatch(.left(1, {f2_token_list}), OR)
-            F2_LOG_SAW "OR"
             F2_PARSE_CONSUME
             F2_PARSE_BEXPR_LOOP
           .else
             F2_ERR_UNEXPECTED_TOKEN
           .endif
         .endif
-
-        F2_LOG_TCOUNT
-        F2_LOG_END_FUNC "PARSE_BEXPR_LOOP"
 .endmacro
 
 ;;; Parse (and emit) a statement - everything up to next ':'
 .macro F2_PARSE_STATEMENT
-        F2_LOG_FUNC "PARSE_STATEMENT"
-
         .define f2_stmt .left(1, {f2_token_list})
 
         F2_PARSE_CONSUME
@@ -807,11 +703,8 @@
         f2_stmt
 
         .undef f2_stmt
-
-        F2_LOG_END_FUNC "PARSE_STATEMENT"
 .endmacro
 .macro F2_PARSE_STATEMENT2
-        F2_LOG_FUNC "PARSE_STATEMENT2"
         .if .tcount({f2_token_list}) = 0
           F2_ERR_EXPECTED "end-of-statement (':')"
         .endif
@@ -826,12 +719,9 @@
           F2_PARSE_CONSUME
           F2_PARSE_STATEMENT2
         .endif
-        F2_LOG_END_FUNC "PARSE_STATEMENT2"
 .endmacro
 
 .macro F2_PARSE_STATEMENTS
-        F2_LOG_FUNC "PARSE_STATEMENTS"
-
         ;; Match any of BIT, LDA, LDX, LDY, INC, INX, INY, DEC, DEX, DEY, upper or lowercase
         .if .xmatch(.left(1, {f2_token_list}), bit) .or .xmatch(.left(1, {f2_token_list}), BIT) .or .xmatch(.left(1, {f2_token_list}), lda) .or .xmatch(.left(1, {f2_token_list}), LDA) .or .xmatch(.left(1, {f2_token_list}), ldx) .or .xmatch(.left(1, {f2_token_list}), LDX) .or .xmatch(.left(1, {f2_token_list}), ldy) .or .xmatch(.left(1, {f2_token_list}), LDY) .or .xmatch(.left(1, {f2_token_list}), inc) .or .xmatch(.left(1, {f2_token_list}), INC) .or .xmatch(.left(1, {f2_token_list}), inx) .or .xmatch(.left(1, {f2_token_list}), INX) .or .xmatch(.left(1, {f2_token_list}), iny) .or .xmatch(.left(1, {f2_token_list}), INY) .or .xmatch(.left(1, {f2_token_list}), dec) .or .xmatch(.left(1, {f2_token_list}), DEC) .or .xmatch(.left(1, {f2_token_list}), dex) .or .xmatch(.left(1, {f2_token_list}), DEX) .or .xmatch(.left(1, {f2_token_list}), dey) .or .xmatch(.left(1, {f2_token_list}), DEY)
           F2_PARSE_STATEMENT
@@ -841,13 +731,10 @@
           .endif
 
         .endif
-
-        F2_LOG_END_FUNC "PARSE_STATEMENTS"
 .endmacro
 
 ;;; Parse a condition
 .macro F2_PARSE_COND sense, stay_target, branch_target, token_list
-        F2_LOG_FUNC "PARSE_COND"
         .ifblank token_list
           F2_ERR "Empty expression"
         .endif
@@ -856,7 +743,6 @@
         @f2_sense_flag .set sense
         .define f2_stay_target stay_target
         .define f2_branch_target branch_target
-        F2_LOG_TCOUNT
 
         ;; Condition may be preceded by statements
         F2_PARSE_STATEMENTS
@@ -865,7 +751,6 @@
         .undef f2_token_list
         .undef f2_stay_target
         .undef f2_branch_target
-        F2_LOG_END_FUNC "PARSE_COND"
 .endmacro
 
 ;;; Squash comma-delimited macro parameters into a single parameter containing commas
@@ -1036,22 +921,26 @@
 ;;;
 ;;;     REPEAT
 ;;;     ...
-;;;     BREAK_IF <condition> ; optional
-;;;     ...
-;;;     REDO_IF <condition> ; optional
-;;;     ...
-;;;     CONTINUE_IF <condition> ; optional
-;;;     ...
 ;;;     UNTIL <condition>
 ;;;
-;;; Macros:
-;;;     DO                 aliases: REPEAT
-;;;     WHILE
-;;;     UNTIL
+;;;     REPEAT
+;;;     ...
+;;;     FOREVER
 ;;;
-;;;     REDO_IF         - branches to start of loop body
-;;;     CONTINUE_IF     - branches to end of loop body
-;;;     BREAK_IF        - branches to after end of loop
+;;;     DO
+;;;     ...
+;;;     DONE
+;;;
+;;; Macros:
+;;;     DO              aliases: REPEAT
+;;;     WHILE           branch to start of loop body if condition is true
+;;;     UNTIL           branch to start of loop body if condition is false
+;;;     FOREVER         unconditional jump to start of loop body
+;;;     DONE            does not loop (works well with REDO_IF, etc)
+;;;
+;;;     REDO_IF         conditionally branches to start of loop body
+;;;     CONTINUE_IF     conditionally branches to end of loop body
+;;;     BREAK_IF        conditionally branches to after end of loop
 ;;;
 ;;; Example:
 ;;;     DO
@@ -1091,7 +980,7 @@
         __INC_IDENT__ __flow_loop_count_at_depth__
 
         __FLOW_LOG__ "do"
-        __flow_loop_ident__ {"do_while"} := *
+        __flow_loop_ident__ {"start"} := *
 .endmacro
 
 .define REPEAT DO
@@ -1100,7 +989,7 @@
   _FLOW_STATEMENT "REDO_IF"
 
         .local @redo
-        @redo := __flow_loop_ident__ {"do_while"}
+        @redo := __flow_loop_ident__ {"start"}
 
         _FLOW_PARSE_AND_GEN_BIT @redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
@@ -1133,7 +1022,7 @@
   _FLOW_STATEMENT "WHILE"
 
         .local redo
-        redo := __flow_loop_ident__ {"do_while"}
+        redo := __flow_loop_ident__ {"start"}
 
         __flow_loop_ident__ {"continue"} := *
         .refto __flow_loop_ident__ {"continue"}
@@ -1151,12 +1040,8 @@
 .macro UNTIL expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "UNTIL"
 
-        ;; Note that "do_while" is still used for minting identifiers
-        ;; so that DO and REPEAT remain synonyms and helpers can be
-        ;; shared between WHILE and UNTIL.
-
         .local redo
-        redo := __flow_loop_ident__ {"do_while"}
+        redo := __flow_loop_ident__ {"start"}
 
         __flow_loop_ident__ {"continue"} := *
         .refto __flow_loop_ident__ {"continue"}
@@ -1174,12 +1059,8 @@
 .macro FOREVER
   _FLOW_STATEMENT "FOREVER"
 
-        ;; Note that "do_while" is still used for minting identifiers
-        ;; so that DO and REPEAT remain synonyms and helpers can be
-        ;; shared between WHILE and UNTIL.
-
         .local redo
-        redo := __flow_loop_ident__ {"do_while"}
+        redo := __flow_loop_ident__ {"start"}
 
         ;; NOTE: The `continue` label here points at start of the
         ;; block (i.e. `redo` label) not the end of the block (i.e.
@@ -1188,6 +1069,20 @@
         .refto __flow_loop_ident__ {"continue"}
 
         jmp     redo
+
+        __flow_loop_ident__ {"break"} := *
+        .refto __flow_loop_ident__ {"break"}
+
+        __DEC_IDENT__ __flow_loop_depth__
+
+  _FLOW_END_STATEMENT
+.endmacro
+
+.macro DONE
+  _FLOW_STATEMENT "DONE"
+
+        __flow_loop_ident__ {"continue"} := *
+        .refto __flow_loop_ident__ {"continue"}
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
@@ -1230,81 +1125,6 @@
 .define POS      NC
 .define GE       CS
 .define LT       CC
-
-;;; ============================================================
-;;; Compatibility Macros
-;;; ============================================================
-
-;;; e.g. IF_EQ, IF_A_LT, etc
-
-.macro _FLOW_DEFINE_FLAG_MACROS_ cond
-        .define .ident(.sprintf("IF_%s", cond)) IF .ident(cond)
-        .define .ident(.sprintf("ELSE_IF_%s", cond)) ELSE_IF .ident(cond)
-        .define .ident(.sprintf("WHILE_%s", cond)) WHILE .ident(cond)
-        .define .ident(.sprintf("UNTIL_%s", cond)) UNTIL .ident(cond)
-        .define .ident(.sprintf("REDO_IF_%s", cond)) REDO_IF .ident(cond)
-        .define .ident(.sprintf("BREAK_IF_%s", cond)) BREAK_IF .ident(cond)
-        .define .ident(.sprintf("RTS_IF_%s", cond)) RTS_IF .ident(cond)
-.endmacro
-.macro _FLOW_DEFINE_COMPARE_MACROS_ cond
-        .define .ident(.sprintf("IF_A_%s", cond)) IF A .ident(cond)
-        .define .ident(.sprintf("ELSE_IF_A_%s", cond)) ELSE_IF A .ident(cond)
-        .define .ident(.sprintf("WHILE_A_%s", cond)) WHILE A .ident(cond)
-        .define .ident(.sprintf("UNTIL_A_%s", cond)) UNTIL A .ident(cond)
-        .define .ident(.sprintf("REDO_IF_A_%s", cond)) REDO_IF A .ident(cond)
-        .define .ident(.sprintf("BREAK_IF_A_%s", cond)) BREAK_IF A .ident(cond)
-        .define .ident(.sprintf("RTS_IF_A_%s", cond)) RTS_IF A .ident(cond)
-
-        .define .ident(.sprintf("IF_X_%s", cond)) IF X.ident(cond)
-        .define .ident(.sprintf("ELSE_IF_X_%s", cond)) ELSE_IF X.ident(cond)
-        .define .ident(.sprintf("WHILE_X_%s", cond)) WHILE X.ident(cond)
-        .define .ident(.sprintf("UNTIL_X_%s", cond)) UNTIL X.ident(cond)
-        .define .ident(.sprintf("REDO_IF_X_%s", cond)) REDO_IF X.ident(cond)
-        .define .ident(.sprintf("BREAK_IF_X_%s", cond)) BREAK_IF X.ident(cond)
-        .define .ident(.sprintf("RTS_IF_X_%s", cond)) RTS_IF X.ident(cond)
-
-        .define .ident(.sprintf("IF_Y_%s", cond)) IF Y .ident(cond)
-        .define .ident(.sprintf("ELSE_IF_Y_%s", cond)) ELSE_IF Y .ident(cond)
-        .define .ident(.sprintf("WHILE_Y_%s", cond)) WHILE Y .ident(cond)
-        .define .ident(.sprintf("UNTIL_Y_%s", cond)) UNTIL Y .ident(cond)
-        .define .ident(.sprintf("REDO_IF_Y_%s", cond)) REDO_IF Y .ident(cond)
-        .define .ident(.sprintf("BREAK_IF_Y_%s", cond)) BREAK_IF Y .ident(cond)
-        .define .ident(.sprintf("RTS_IF_Y_%s", cond)) RTS_IF Y .ident(cond)
-.endmacro
-
-_FLOW_DEFINE_FLAG_MACROS_ "ZS"
-_FLOW_DEFINE_FLAG_MACROS_ "ZC"
-_FLOW_DEFINE_FLAG_MACROS_ "CS"
-_FLOW_DEFINE_FLAG_MACROS_ "CC"
-_FLOW_DEFINE_FLAG_MACROS_ "VS"
-_FLOW_DEFINE_FLAG_MACROS_ "VC"
-_FLOW_DEFINE_FLAG_MACROS_ "NS"
-_FLOW_DEFINE_FLAG_MACROS_ "NC"
-
-_FLOW_DEFINE_FLAG_MACROS_ "EQ"
-_FLOW_DEFINE_FLAG_MACROS_ "ZERO"
-_FLOW_DEFINE_FLAG_MACROS_ "NE"
-_FLOW_DEFINE_FLAG_MACROS_ "NOT_ZERO"
-_FLOW_DEFINE_FLAG_MACROS_ "GE"
-_FLOW_DEFINE_FLAG_MACROS_ "LT"
-_FLOW_DEFINE_FLAG_MACROS_ "MINUS"
-_FLOW_DEFINE_FLAG_MACROS_ "NEG"
-_FLOW_DEFINE_FLAG_MACROS_ "PLUS"
-_FLOW_DEFINE_FLAG_MACROS_ "POS"
-
-_FLOW_DEFINE_COMPARE_MACROS_ "EQ"
-_FLOW_DEFINE_COMPARE_MACROS_ "NE"
-_FLOW_DEFINE_COMPARE_MACROS_ "LT"
-_FLOW_DEFINE_COMPARE_MACROS_ "GE"
-
-
-.macro IF_A_EQ_ONE_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        IF A IN arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-.endmacro
-
-.macro IF_A_NE_ALL_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        IF A NOT_IN arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-.endmacro
 
 ;;; ============================================================
 ;;;

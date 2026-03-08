@@ -61,25 +61,26 @@ update: stxy    DefaultSettings + DeskTopSettings::dblclick_speed
         ;; Now try to load the config file
 .scope
         MLI_CALL OPEN, open_cfg_params
-        bcs     skip            ; failed - use defaults
+    IF CC                       ; if failed - use defaults
         lda     open_cfg_params::ref_num
         sta     read_cfgver_params::ref_num
         sta     read_cfg_params::ref_num
         sta     close_params::ref_num
 
+      DO
         MLI_CALL READ, read_cfgver_params
-        bcs     close           ; failed - use defaults
+        BREAK_IF CS             ; failed - use defaults
 
         ;; Check version byte; ignore on mismatch
         lda     version_byte
-        cmp     #kDeskTopSettingsFileVersion
-        bne     close           ; mismatch - use defaults
+        BREAK_IF A <> #kDeskTopSettingsFileVersion ; mismatch - use defaults
 
         ;; Version byte is fine - read the rest of the file
         MLI_CALL READ, read_cfg_params
+      DONE
 
-close:  MLI_CALL CLOSE, close_params
-skip:
+        MLI_CALL CLOSE, close_params
+     END_IF
 .endscope
 
         ;; --------------------------------------------------
@@ -95,13 +96,13 @@ skip:
         ;; Now try to load the sound file
 .scope
         MLI_CALL OPEN, open_snd_params
-        bcs     close           ; failed - use defaults
+    IF CC                       ; if failed - use defaults
         lda     open_snd_params::ref_num
         sta     read_snd_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_snd_params
-
-close:  MLI_CALL CLOSE, close_params
+    END_IF
+        MLI_CALL CLOSE, close_params
 .endscope
 
         ;; --------------------------------------------------

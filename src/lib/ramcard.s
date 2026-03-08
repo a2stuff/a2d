@@ -50,8 +50,7 @@
         lda     RAMCARD_PREFIX,x
         addr := *+1
         sta     SELF_MODIFIED,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
 .ifdef RC_AUXMEM
         sta     ALTZPON
@@ -84,8 +83,7 @@
         lda     DESKTOP_ORIG_PREFIX,x
         addr := *+1
         sta     SELF_MODIFIED,x
-        dex
-    WHILE POS
+    WHILE dex : POS
 
 .ifdef RC_AUXMEM
         sta     ALTZPON

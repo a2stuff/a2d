@@ -1034,8 +1034,7 @@ nope:   RETURN  C=0
     DO
         lda     position_table,y
         BREAK_IF A = #kHolePiece
-        dey
-    WHILE POS                   ; always
+    WHILE dey : POS             ; always
 
         lda     #0
         sta     hole_x

@@ -382,8 +382,7 @@ filename:       .res    16
     DO
         lda     INVOKE_PATH,y       ; find last '/'
         BREAK_IF A = #'/'
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT ZERO
 
         ldx     #0
     DO
@@ -423,8 +422,7 @@ expected_size:
         inx                     ; lastchar + 1
     DO
         add16_8 expected_size, font_buffer + MGTK::Font::height
-        dex
-    WHILE NOT_ZERO              ; = (lastchar + 1) * height
+    WHILE dex : NOT_ZERO        ; = (lastchar + 1) * height
 
     IF bit font_buffer + MGTK::Font::fonttype : NS
         asl16   expected_size   ; *= 2 if double width

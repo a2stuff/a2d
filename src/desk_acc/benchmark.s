@@ -312,33 +312,29 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClick60Hz
-        bit     radio_60hz_button::state
-        bmi     done
-
+    IF bit radio_60hz_button::state : NC
         lda     #BTK::kButtonStateChecked
         sta     radio_60hz_button::state
         lda     #BTK::kButtonStateNormal
         sta     radio_50hz_button::state
         BTK_CALL BTK::RadioUpdate, radio_60hz_button
         BTK_CALL BTK::RadioUpdate, radio_50hz_button
-
-done:   jmp     InputLoop
+    END_IF
+        jmp     InputLoop
 .endproc ; OnClick60Hz
 
 ;;; ============================================================
 
 .proc OnClick50Hz
-        bit     radio_50hz_button::state
-        bmi     done
-
+    IF bit radio_50hz_button::state : NC
         lda     #BTK::kButtonStateNormal
         sta     radio_60hz_button::state
         lda     #BTK::kButtonStateChecked
         sta     radio_50hz_button::state
         BTK_CALL BTK::RadioUpdate, radio_60hz_button
         BTK_CALL BTK::RadioUpdate, radio_50hz_button
-
-done:   jmp     InputLoop
+    END_IF
+        jmp     InputLoop
 .endproc ; OnClick50Hz
 
 ;;; ============================================================

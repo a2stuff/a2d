@@ -255,16 +255,17 @@ object_deltas:
 .proc HandleDrag
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: lda     dragwindow_params::moved
-        bpl     finish
-
+common:
+    IF lda dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
+    END_IF
 
-finish: jmp     InputLoop
+finish:
+        jmp     InputLoop
 .endproc ; HandleDrag
 
 ;;; ============================================================

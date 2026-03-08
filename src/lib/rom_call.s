@@ -30,8 +30,7 @@
         params := *+1
         lda     SELF_MODIFIED,y
         sta     addr-1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Bank in ROM for call
         bit     ROMIN2

@@ -333,19 +333,20 @@ entry:
         copy8   #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
         SET_BIT7_FLAG invoked_during_boot_flag
+
+        ;; Any shortcuts?
         lda     num_secondary_run_list_entries
         ora     num_primary_run_list_entries
-        bne     check_key_down
-
+   IF ZERO
 quick_run_desktop:
         CALL    GetFileInfo, AX=#str_desktop_2
         jcs     done_keys
         jmp     RunDesktop
+   END_IF
 
         ;; --------------------------------------------------
         ;; Check for key down
 
-check_key_down:
         copy8   #0, quick_boot_slot
 
         lda     KBD
@@ -442,15 +443,14 @@ done_keys:
         ;; Set up Startup menu
 
         lda     quick_boot_slot
-        beq     set_startup_menu_items
+    IF NOT ZERO
         ldy     slot_table
-    DO
+      DO
         cmp     slot_table,y
         jeq     StartupSlot
-    WHILE dey : NOT_ZERO
-        FALL_THROUGH_TO set_startup_menu_items
+      WHILE dey : NOT_ZERO
+    END_IF
 
-set_startup_menu_items:
         copy8   slot_table, startup_menu
 
         lda     slot_x1
@@ -740,15 +740,16 @@ dispatch:
         jsr     ClearSelectedIndex
 
         jsr     SetCursorWatch  ; before loading overlay
-retry:
+    DO
         ;; Load file dialog overlay
         MLI_CALL OPEN, open_selector_params
-    IF CS
+      IF CS
         CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     retry           ; `kAlertResultTryAgain` = 0
+        REDO_IF ZERO             ; `kAlertResultTryAgain` = 0
         jmp     SetCursorPointer  ; after loading overlay (failure)
-    END_IF
+      END_IF
+    DONE
 
         lda     open_selector_params::ref_num
         sta     set_mark_overlay1_params::ref_num
@@ -762,15 +763,17 @@ retry:
         ;; Invoke file dialog
         jsr     file_dialog_init
         ;; Returns Z=1 on success, Y,X = path to launch
-        bne     cancel
-ok:     tya                     ; now A,X = path
+    IF ZS
+      DO
+        tya                     ; now A,X = path
         jsr     SaveFileDialogState
         jsr     LaunchPath
         jsr     RestoreFileDialogState
         jsr     file_dialog_loop ; ditto
-        beq     ok
+      WHILE ZS
+    END_IF
 
-cancel: jmp     LoadSelectorList
+        jmp     LoadSelectorList
 
 .endproc ; CmdRunAProgram
 
@@ -800,29 +803,31 @@ cancel: jmp     LoadSelectorList
         ;; OK button?
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        beq     check_desktop_btn
+    IF ZC
         BTK_CALL BTK::Track, ok_button
         bmi     done
         jsr     TryInvokeSelectedIndex
 done:   rts
+    END_IF
 
         ;; DeskTop button?
-
-check_desktop_btn:
     IF bit desktop_available_flag : NC
         MGTK_CALL MGTK::InRect, desktop_button::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, desktop_button
         bmi     done
 
-retry:  CALL    GetFileInfo, AX=#str_desktop_2
-       IF CS
+       DO
+        CALL    GetFileInfo, AX=#str_desktop_2
+        IF CS
         CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_NOT_EQUALS kAlertResultCancel, 0
         bne     done            ; `kAlertResultCancel` = 1
-        beq     retry           ; `kAlertResultTryAgain` = 0
-       END_IF
+        REDO_IF ZERO            ; `kAlertResultTryAgain` = 0
+        END_IF
         jmp     RunDesktop
+       DONE
+
       END_IF
     END_IF
 
@@ -1011,14 +1016,14 @@ entries_flag_table:
         sta     selector_list + kSelectorListNumSecondaryRunListOffset
 
         MLI_CALL OPEN, open_selector_list_params
-        bcs     cache
-
+    IF CC
         lda     open_selector_list_params::ref_num
         sta     read_selector_list_params::ref_num
         MLI_CALL READ, read_selector_list_params
         MLI_CALL CLOSE, close_desktop_params
+    END_IF
 
-cache:  copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
+        copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
         copy8   selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
         rts
 .endproc ; LoadSelectorList
@@ -1026,8 +1031,9 @@ cache:  copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primar
 ;;; ============================================================
 
 .proc LoadOverlayCopyDialog
-start:  MLI_CALL OPEN, open_selector_params
-        bcs     error
+    DO
+        MLI_CALL OPEN, open_selector_params
+      IF CC
         lda     open_selector_params::ref_num
         sta     set_mark_overlay2_params::ref_num
         sta     read_overlay2_params::ref_num
@@ -1035,11 +1041,13 @@ start:  MLI_CALL OPEN, open_selector_params
         MLI_CALL READ, read_overlay2_params
         MLI_CALL CLOSE, close_overlay_params
         rts
+      END_IF
 
-error:
         CALL    ShowAlert, A=#AlertID::insert_system_disk ; `kAlertResultCancel` = 1
         ASSERT_EQUALS ::kAlertResultTryAgain, 0
-        beq     start           ; `kAlertResultTryAgain` = 0
+        REDO_IF ZERO            ; `kAlertResultTryAgain` = 0
+    DONE
+
         rts
 .endproc ; LoadOverlayCopyDialog
 
@@ -1439,11 +1447,11 @@ rest:
 
 retry:
         CALL    GetFileInfo, AX=#INVOKER_PREFIX
-        bcc     check_type
+    IF CS
 
         ;; Not present; maybe show a retry prompt
         tax
-    IF bit invoked_during_boot_flag : NC
+      IF bit invoked_during_boot_flag : NC
         txa
         pha
         jsr     ShowAlert
@@ -1455,17 +1463,17 @@ retry:
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     fail            ; `kAlertResultCancel` = 1
         jmp     retry           ; TODO: `BEQ`
-    END_IF
+      END_IF
 
 fail:
         jmp     ClearSelectedIndex
+    END_IF
 
         ;; --------------------------------------------------
         ;; Check file type
 
         ;; Ensure it's BIN, SYS, S16 or BAS (if BS is present)
 
-check_type:
         lda     #0
         sta     INVOKER_INTERPRETER
         sta     INVOKER_BITSY_COMPAT
@@ -1673,14 +1681,14 @@ str_basix_system:
     WHILE dex : POS
 
         ;; Pop off a path segment.
-pop_segment:
+    DO
         path_length := *+1
         ldx     #SELF_MODIFIED_BYTE
-    DO
+      DO
         lda     interp_path,x
         cmp     #'/'
         beq     found_slash
-    WHILE dex : NOT_ZERO
+      WHILE dex : NOT_ZERO
 
 no_bs:  copy8   #0, interp_path ; null out the path
         RETURN  A=#$FF          ; non-zero is failure
@@ -1695,14 +1703,14 @@ found_slash:
         ;; Append BASI?.SYSTEM to path and check for file.
         ldx     interp_path
         ldy     #0
-    DO
+      DO
         inx
         iny
         copy8   str_basix_system,y, interp_path,x
-    WHILE Y <> str_basix_system
+      WHILE Y <> str_basix_system
         stx     interp_path
         CALL    GetFileInfo, AX=#interp_path
-        bcs     pop_segment
+    WHILE CS
 
         rts                     ; zero is success
 .endproc ; CheckBasixSystemImpl

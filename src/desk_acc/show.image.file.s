@@ -585,8 +585,7 @@ next:
         and     #(1 << 6)
         sta     spill
 
-        dey
-      WHILE POS
+      WHILE dey : POS
 
         pla
         clc
@@ -1307,8 +1306,7 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         ldy     #.sizeof(FileEntry)-1
     DO
         copy8   (ptr),y, entry,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; TODO: Keep this logic in sync with DeskTop's
         ;; `ICT_RECORD` definitions for graphics files.
@@ -1619,8 +1617,7 @@ fail:   jmp     Init
         lda     (ptr),y
         jsr     ToUpperCase
         sta     last_filename,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; First seen? might need it
         lda     first_filename

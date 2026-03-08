@@ -106,7 +106,7 @@ xcoord  .word
     END_IF
 ```
 
-* **Do** use `DO` / `REDO_IF` / `CONTINUE_IF` / `BREAK_IF` / `WHILE` / `FOREVER` macros to avoid throw-away local labels.
+* **Do** use `DO` / `REDO_IF` / `CONTINUE_IF` / `BREAK_IF` / `WHILE` / `FOREVER` / `DONE` macros to avoid throw-away local labels.
 
 ```asm
         ldx      #0
@@ -119,6 +119,19 @@ xcoord  .word
         BREAK_IF A <> #123
         ...
     WHILE inx : X < #kCount
+
+    DO
+        ...
+        BREAK_IF NS
+        ...
+        MLI_CALL OPEN, open_params
+      IF CS
+        jsr    ShowRetryCancelPrompt
+        REDO_IF A = #RETRY
+        jmp    fail
+      END_IF
+        ....
+    DONE
 ```
 
 * Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.

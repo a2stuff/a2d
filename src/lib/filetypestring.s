@@ -38,8 +38,7 @@ str_file_type:
 
         rts
       END_IF
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Type not found - use generic "$xx"
         copy8   #'$', str_file_type+1

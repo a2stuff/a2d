@@ -171,8 +171,7 @@ str_128k_required:
         sta     $680,x
         sta     $700,x
         sta     $780,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         sta     RAMWRTOFF
 
         ;; Turn on 80-column mode
@@ -215,8 +214,7 @@ str_128k_required:
       DO
         asl     PRODOS_SYS_PATH,x
         lsr     PRODOS_SYS_PATH,x
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
 
         ;; Strip last filename segment
         ldx     PRODOS_SYS_PATH
@@ -627,8 +625,7 @@ test_unit_num:
         sta     dst_path+1
     DO
         copy8   on_line_buffer,y, dst_path+1,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
 
         ;; Record that candidate device is found.
         CALL    SetCopiedToRAMCardFlag, A=#$C0
@@ -666,8 +663,7 @@ test_unit_num:
         ldy     src_path
     DO
         copy8   src_path,y, header_orig_prefix,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; SetHeaderOrigPrefix
@@ -712,8 +708,7 @@ test_unit_num:
         tay
       DO
         copy8   (ptr),y, filename_buf,y
-        dey
-      WHILE POS
+      WHILE dey : POS
         jsr     CopyFile
         inc     filenum
         lda     filenum
@@ -739,8 +734,7 @@ test_unit_num:
         ldx     #BITMAP_SIZE-2
     DO
         sta     BITMAP,x
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
         copy8   #%00000001, BITMAP+BITMAP_SIZE-1 ; ProDOS global page
         copy8   #%11001111, BITMAP ; ZP, Stack, Text Page 1
 
@@ -787,8 +781,7 @@ test_unit_num:
         tay
     DO
         copy8   (ptr),y, target,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         bit     ROMIN2
         rts
@@ -807,8 +800,7 @@ test_unit_num:
         tay
     DO
         copy8   (ptr),y, target,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         bit     ROMIN2
         rts
@@ -826,8 +818,7 @@ test_unit_num:
         iny
         BREAK_IF X >= filename_buf
         copy8   filename_buf+1,x, src_path+1,y
-        inx
-      WHILE NOT_ZERO            ; always
+      WHILE inx : NOT_ZERO      ; always
         sty     src_path
     END_IF
         rts
@@ -842,8 +833,7 @@ test_unit_num:
       DO
         cmp     src_path,x
         beq     done
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
         inx
 
 done:   dex
@@ -864,8 +854,7 @@ done:   dex
         iny
         BREAK_IF X >= filename_buf
         copy8   filename_buf+1,x, dst_path+1,y
-        inx
-      WHILE NOT_ZERO            ; always
+      WHILE inx : NOT_ZERO      ; always
         sty     dst_path
     END_IF
         rts
@@ -881,8 +870,7 @@ done:   dex
       DO
         cmp     dst_path,x
         beq     done
-        dex
-      WHILE NOT_ZERO
+      WHILE dex : NOT_ZERO
         inx
 
 done:   dex
@@ -944,15 +932,13 @@ done:   dex
         ldy     src_path
     DO
         copy8   src_path,y, GenericCopy::pathname_src,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Set up destination path
         ldy     dst_path
     DO
         copy8   dst_path,y, GenericCopy::pathname_dst,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         copy16  #FailCopy, GenericCopy::hook_handle_error_code
         copy16  #FailCopy, GenericCopy::hook_handle_no_space
@@ -1082,8 +1068,7 @@ saved_stack:
         lda     #0
     DO
         sta     ENTRY_COPIED_FLAGS,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         bit     ROMIN2
 
         ;; Load and iterate over the selector file
@@ -1216,8 +1201,7 @@ entry_dir_name:
         ldy     entry_path1
     DO
         copy8   entry_path1,y, GenericCopy::pathname_dst,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         rts
 .endproc ; PreparePathsFromEntryPaths
@@ -1334,24 +1318,21 @@ bits:   .byte   $00
         tay
     DO
         copy8   (ptr),y, entry_path2,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; Strip last segment, e.g. ".../APPLEWORKS/AW.SYSTEM" -> ".../APPLEWORKS"
         ldy     entry_path2
         lda     #'/'
     DO
         BREAK_IF A = entry_path2,y
-        dey
-    WHILE NOT_ZERO
+    WHILE dey : NOT_ZERO
         dey
         sty     entry_path2
 
         ;; Find offset of parent directory name, e.g. "APPLEWORKS"
     DO
         BREAK_IF A = entry_path2,y
-        dey
-    WHILE POS
+    WHILE dey : POS
 
         ;; ... and copy to `entry_dir_name`
         ldx     #0
@@ -1368,8 +1349,7 @@ bits:   .byte   $00
         ldy     RAMCARD_PREFIX
     DO
         copy8   RAMCARD_PREFIX,y, entry_path1,y
-        dey
-    WHILE POS
+    WHILE dey : POS
         bit     ROMIN2
 
         rts
@@ -1593,8 +1573,7 @@ PROC_AT quit_restore_proc, ::quit_code_addr
         .repeat 3, i
         copy8   quit_code_save + ($100 * i),x, SELECTOR + ($100 * i),x
         .endrepeat
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         bit     ROMIN2
 
@@ -1621,8 +1600,7 @@ start:  bit     LCBANK2
         .repeat 3, i
         copy8   SELECTOR + ($100 * i),x, quit_code_save + ($100 * i),x
         .endrepeat
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         bit     ROMIN2
 
@@ -1663,8 +1641,7 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
         cmp     #$B0            ; ProDOS 2.5 uses $B0
 .endif ; PRODOS_2_5
         beq     found
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         rts                     ; not found
 

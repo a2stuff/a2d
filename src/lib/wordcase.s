@@ -34,6 +34,5 @@ check_alpha:
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
       END_IF
-        dey
-    WHILE POS                   ; always
+    WHILE dey : POS             ; always
 .endscope

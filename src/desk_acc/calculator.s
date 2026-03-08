@@ -943,8 +943,7 @@ end:    rts
         sta     text_buffer1-1,x
         sta     text_buffer2-1,x
         inx
-        dey
-      WHILE NOT_ZERO
+      WHILE dey : NOT_ZERO
 
 empty:  inc     calc_l
         pla

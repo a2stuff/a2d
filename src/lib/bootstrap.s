@@ -110,8 +110,7 @@ retry:
         lda     #0
     DO
         sta     BITMAP,x
-        dex
-    WHILE POS
+    WHILE dex : POS
         copy8   #%00000001, BITMAP+BITMAP_SIZE-1 ; ProDOS global page
         copy8   #%11001111, BITMAP ; ZP, Stack, Text Page 1
 

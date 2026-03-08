@@ -170,8 +170,7 @@ month_offset_table:
         ldy     #.sizeof(ParsedDateTime)-1
     DO
         sta     (parsed_ptr),y
-        dey
-    WHILE POS
+    WHILE dey : POS
         rts
 
 not_null:

@@ -598,15 +598,13 @@ end:    rts
         ldx     #kLineOffsetShift
     DO
         lsr16   current_line        ; /= `kLineOffsetDelta`
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT ZERO
 
         copy16  current_line, offset_ptr
         ldx     #kLineOffsetShift
     DO
         asl16   current_line        ; *= `kLineOffsetDelta`
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT ZERO
 
         ;; Use previously recorded offset into file.
         asl16   offset_ptr
@@ -690,8 +688,7 @@ end:    rts
         add16_8 ptr, drawtext_params::textlen
 
         ;; Did the run end due to a tab?
-        lda     tab_flag
-    WHILE NOT ZERO              ; yes, keep going
+    WHILE lda tab_flag : NOT ZERO ; yes, keep going
 
         ;; --------------------------------------------------
         ;; End of line

@@ -16,8 +16,7 @@
         lda     (ptr),y
         cmp     sig_value,x
         bne     not_found
-        dex
-    WHILE POS
+    WHILE dex : POS
 
         ;; Change ptr from $Cs00 to $C0s0
         lda     ptr+1

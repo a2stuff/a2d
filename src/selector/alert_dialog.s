@@ -96,7 +96,7 @@ start:
     DO
         cmp     alert_table,y
         beq     :+
-    WHILE dey : POS
+    WHILE dey : POS             ; TODO: Same result if `NOT_ZERO`, then can drop next line
         ldy     #0              ; default
 :
 

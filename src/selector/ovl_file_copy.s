@@ -16,14 +16,13 @@
 
         jsr     PrepSrcAndDstPaths
         jsr     EnumerateFiles
-        bne     skip
-
+    IF ZS
         jsr     PrepWindowForCopy
 
         jsr     PrepSrcAndDstPaths
         jsr     CopyFiles
+    END_IF
 
-skip:
         pha
         jsr     CloseWindow
         pla
