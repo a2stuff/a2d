@@ -2,40 +2,84 @@
 ;;; Disk II - Format
 ;;; Inputs: A = unit_number
 
+;;; This is byte-identical to Apple's "ProDOS DISK ][ Formatter Device
+;;; Driver", which is documented as:
+
+;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;;; * *                                                 * *
+;;; * * M U S T   B E   O N   P A G E   B O U N D A R Y * *
+;;; * *                                                 * *
+;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;;; *                                                     *
+;;; *  ProDOS DISK ][ Formatter Device Driver             *
+;;; *                                                     *
+;;; *  Copyright Apple Computer, Inc., 1982-1984          *
+;;; *                                                     *
+;;; *  Enter with ProDOS device number in A-register:     *
+;;; *         Zero    = bits 0, 1, 2, 3                   *
+;;; *         Slot No.= bits 4, 5, 6                      *
+;;; *         Drive 1 = bit 7 off                         *
+;;; *         Drive 2 = bit 7 on                          *
+;;; *                                                     *
+;;; *  Error codes returned in A-register:                *
+;;; *         $00 : Good completion                       *
+;;; *         $27 : Unable to format                      *
+;;; *         $2B : Write-Protected                       *
+;;; *         $33 : Drive too SLOW                        *
+;;; *         $34 : Drive too FAST                        *
+;;; *         NOTE: Carry flag is set if error occured.   *
+;;; *                                                     *
+;;; *  Uses zero page locations $D0 thru $DD              *
+;;; *                                                     *
+;;; * - - - - - - - - - - - - - - - - - - - - - - - - - - *
+;;; * Modified 15 December 1983 to disable interrupts     *
+;;; * Modified 20 December 1983 to increase tolerance     *
+;;; *    of disk speed check                              *
+;;; * Modified 30 March 1983 to increase tolerance of     *
+;;; *    disk speed                                       *
+;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+;;; There is an annotated disassembly by @tomcw at:
+;;;
+;;; https://github.com/AppleWin/AppleWin/blob/master/docs/DiskII%20Formatter/Format1.1.1-annotated.txt
+;;;
+;;; Many of the symbols below are derived from that work.
+
 .proc FormatDiskII
         .assert .lobyte(*) = 0, error, "Must be page aligned"
 
-.macro exit_with_result arg
-        lda     #arg
-        jmp     _Exit
-.endmacro
-
         php
         sei
-        jsr     L083A
+        jsr     FormatDisk
         plp
-        cmp     #$00
-        bne     L080C
+        cmp     #0
+        bne     :+
         clc
         rts
-
-L080C:  cmp     #$02
-        bne     L0815
+:
+        ;; Map result to MLI error code
+        cmp     #2
+        bne     :+
         lda     #ERR_WRITE_PROTECTED
         jmp     L0821
-
-L0815:  cmp     #$01
-        bne     L081E
-        lda     #$27
+:
+        cmp     #1
+        bne     :+
+        lda     #ERR_IO_ERROR
         jmp     L0821
-
-L081E:  clc
-        adc     #$30
+:
+        clc
+        adc     #$30            ; 3/4 to $33/$34 (drive too slow/fast)
 L0821:  sec
         rts
 
-L0823:  asl     a
-        asl     current_track
+;;; ============================================================
+
+SeekTrack:
+        asl     a
+        asl     HalfTrack
         sta     seltrack_track
         txa
         lsr     a
@@ -44,111 +88,129 @@ L0823:  asl     a
         lsr     a
         tay
         lda     seltrack_track
-        jsr     _SelectTrack
-        lsr     current_track
+        jsr     SeekHalfTrack
+        lsr     HalfTrack
         rts
 
-L083A:  tax                     ; A=DSSSxxxx
+;;; ============================================================
+
+FormatDisk:
+        tax                     ; A=DSSSxxxx
         and     #$70            ; Slot
-        sta     L0C23
+        sta     Slotx16
         txa
-        ldx     L0C23
+        ldx     Slotx16
         rol     a               ; Drive
         lda     #$00
         rol     a
         bne     :+
-        lda     SELECT,x        ; Select drive 1 or 2
+        lda     SELECT1,x       ; Select drive 1 or 2
         jmp     L0853
 
-:       lda     LCBANK1,x
+:       lda     SELECT2,x
 L0853:  lda     ENABLE,x        ; Turn drive on
         lda     #$D7
         sta     $DA
         lda     #$50
-        sta     current_track
+        sta     HalfTrack
         lda     #$00
-        jsr     L0823
-L0864:  lda     $DA
-        beq     L086E
-        jsr     _L0B3A
-        jmp     L0864
-
-L086E:  lda     #$01
+        jsr     SeekTrack
+:
+        lda     $DA
+        beq     :+
+        jsr     WaitA
+        jmp     :-
+:
+        lda     #$01
         sta     $D3
         lda     #$AA
         sta     $D0
-        lda     L0C20
+        lda     kMaxGap3
         clc
         adc     #$02
         sta     $D4
         lda     #$00
         sta     $D1
-L0882:  lda     $D1
-        ldx     L0C23
-        jsr     L0823
-        ldx     L0C23
+WriteNextTrack:
+        lda     $D1
+        ldx     Slotx16
+        jsr     SeekTrack
+        ldx     Slotx16
         lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
         tay
         lda     RDMODE,x        ; Activate read mode
         lda     XMIT,x
         tya
-        bpl     :+              ; WP mode?
-        exit_with_result 2      ; Yes
+        bpl     WriteTrack      ; WP mode?
+        lda     #2              ; Yes, error
+        jmp     Done
 
-:       jsr     L0B63
-        bcc     L08B5
+WriteTrack:
+        jsr     WriteAndVerifyTrack
+        bcc     CheckGap3Count
         lda     #$01
         ldy     $D4
-        cpy     L0C1F
-        bcs     L08B2
-        lda     #4
-L08B2:  jmp     _Exit
+        cpy     kMinGap3
+        bcs     :+
+        lda     #4              ; error (too fast)
+:
+        jmp     Done
 
-L08B5:  ldy     $D4
-        cpy     L0C1F
-        bcs     L08C1
-        exit_with_result 4
+CheckGap3Count:
+        ldy     $D4
+        cpy     kMinGap3
+        bcs     :+
+        lda     #4              ; error (too fast)
+        jmp     Done
+:
+        cpy     kMaxGap3
+        bcc     FindSector00Init
+        lda     #3              ; error (too slow)
+        jmp     Done
 
-L08C1:  cpy     L0C20
-        bcc     L08CB
-        exit_with_result 3
-
-L08CB:  lda     L0C22
-        sta     L0C25
-L08D1:  dec     L0C25
-        bne     L08DB
-        exit_with_result 1
-
-L08DB:  ldx     L0C23
-        jsr     _L096A
-        bcs     L08D1
+FindSector00Init:
+        lda     k10
+        sta     RetryCount
+FindSector00Cont:
+        dec     RetryCount
+        bne     :+
+        lda     #1              ; error (generic)
+        jmp     Done
+:
+        ldx     Slotx16
+        jsr     ReadAddressField
+        bcs     FindSector00Cont
         lda     $D8
-        bne     L08D1
-        ldx     L0C23
-        jsr     _L0907
-        bcs     L08D1
+        bne     FindSector00Cont
+
+VerifySector:
+        ldx     Slotx16
+        jsr     ReadSectorData
+        bcs     FindSector00Cont
+
+NextTrack:
         inc     $D1
         lda     $D1
         cmp     #$23
-        bcc     L0882
+        bcc     WriteNextTrack
 
-        lda     #0
-        FALL_THROUGH_TO _Exit
+        lda     #0              ; success
 
-.proc _Exit
+Done:
         pha
-        ldx     L0C23
+        ldx     Slotx16
         lda     DISABLE,x       ; Turn drive off
         lda     #0
-        jsr     L0823
+        jsr     SeekTrack
         pla
         rts
-.endproc ; _Exit
 
 ;;; ============================================================
 
-.proc _L0907
+;;; Verify sector
+
+ReadSectorData:
         ldy     #$20
 L0909:  dey
         beq     return_with_carry_set
@@ -201,12 +263,14 @@ L093C:  sty     $D5
         cmp     #$AA
         beq     return_with_carry_clear
         FALL_THROUGH_TO return_with_carry_set
-.endproc ; _L0907
+
 return_with_carry_set:
         sec
         rts
 
-.proc _L096A
+;;; ============================================================
+
+ReadAddressField:
         ldy     #$FC
         sty     $DC
 L096E:  iny
@@ -255,7 +319,7 @@ L0995:  sta     $DB
         cmp     #$AA
         bne     return_with_carry_set
         FALL_THROUGH_TO return_with_carry_clear
-.endproc ; _L096A
+
 return_with_carry_clear:
         clc
         rts
@@ -263,44 +327,44 @@ return_with_carry_clear:
 ;;; ============================================================
 ;;; Move head to track - A = track, X = slot * 16
 
-.proc _SelectTrack
+SeekHalfTrack:
         stx     seltrack_slot
         sta     seltrack_track
-        cmp     current_track
+        cmp     HalfTrack
         beq     done
         lda     #$00
         sta     L0C38
-L09D6:  lda     current_track
+L09D6:  lda     HalfTrack
         sta     L0C39
         sec
         sbc     seltrack_track
         beq     L0A19
         bcs     L09EB
         eor     #$FF
-        inc     current_track
+        inc     HalfTrack
         bcc     L09F0
 L09EB:  adc     #$FE
-        dec     current_track
+        dec     HalfTrack
 L09F0:  cmp     L0C38
-        bcc     L09F8
+        bcc     :+
         lda     L0C38
-L09F8:  cmp     #$0C
-        bcs     L09FD
+:       cmp     #$0C
+        bcs     :+
         tay
-L09FD:  sec
+:       sec
         jsr     L0A1D
         lda     phase_on_table,y
-        jsr     _L0B3A
+        jsr     WaitA
         lda     L0C39
         clc
         jsr     motor
         lda     phase_off_table,y
-        jsr     _L0B3A
+        jsr     WaitA
         inc     L0C38
         bne     L09D6
-L0A19:  jsr     _L0B3A
+L0A19:  jsr     WaitA
         clc
-L0A1D:  lda     current_track
+L0A1D:  lda     HalfTrack
 
 motor:  and     #$03            ; PHASE0 + 2 * phase
         rol     a
@@ -310,12 +374,11 @@ motor:  and     #$03            ; PHASE0 + 2 * phase
         ldx     seltrack_slot
 
 done:   rts
-.endproc ; _SelectTrack
 
 ;;; ============================================================
 
-.proc _FormatSector
-        jsr     rts2
+WriteGap2AndData:
+        jsr     RTS_
         lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
 
@@ -329,17 +392,17 @@ done:   rts
 
 sync:   pha
         pla
-        jsr     Write2
+        jsr     WriteNibble1b
         dey
         bne     sync
 
         ;; Address marks
         lda     #$D5
-        jsr     Write
+        jsr     WriteNibble1a
         lda     #$AA
-        jsr     Write
+        jsr     WriteNibble1a
         lda     #$AD
-        jsr     Write
+        jsr     WriteNibble1a
         ldy     #$56
         nop
         nop
@@ -347,7 +410,7 @@ sync:   pha
         bne     :+
 
         ;; Data
-loop:   jsr     rts2
+loop:   jsr     RTS_
 :       nop
         nop
         lda     #$96
@@ -359,7 +422,7 @@ loop:   jsr     rts2
         ;; Checksum
         bit     $00
         nop
-check:  jsr     rts2
+check:  jsr     RTS_
         lda     #$96
         sta     DATA,x
         cmp     XMIT,x
@@ -369,53 +432,56 @@ check:  jsr     rts2
         bne     check
 
         ;; Slip marks
-        jsr     Write
+        jsr     WriteNibble1a
         lda     #$DE
-        jsr     Write
+        jsr     WriteNibble1a
         lda     #$AA
-        jsr     Write
+        jsr     WriteNibble1a
         lda     #$EB
-        jsr     Write
+        jsr     WriteNibble1a
         lda     #$FF
-        jsr     Write
+        jsr     WriteNibble1a
         lda     RDMODE,x        ; Turn off write mode
         lda     XMIT,x
         rts
 
         ;; Write with appropriate cycle counts
-Write:  nop
-Write2: pha
+WriteNibble1a:
+        nop
+WriteNibble1b:
+        pha
         pla
         sta     DATA,x
         cmp     XMIT,x
         rts
-.endproc ; _FormatSector
 
 ;;; ============================================================
 
-.proc _L0AAE
+CheckWriteProt:
         sec
         lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
         bmi     L0B15
+
+WriteGap0Or3AndAddress:
         lda     #$FF
         sta     WRMODE,x        ; Turn on write mode
         cmp     XMIT,x          ; Start sending bits to disk
         pha                     ; 32 cycles...
         pla
-loop:   jsr     rts1
+:       jsr     rts1
         jsr     rts1
         sta     DATA,x
         cmp     XMIT,x
         nop
         dey
-        bne     loop
+        bne     :-
         lda     #$D5
-        jsr     L0B2D
+        jsr     WriteNibble2b
         lda     #$AA
-        jsr     L0B2D
+        jsr     WriteNibble2b
         lda     #$96
-        jsr     L0B2D
+        jsr     WriteNibble2b
         lda     $D3
         jsr     L0B1C
         lda     $D1
@@ -432,18 +498,17 @@ loop:   jsr     rts1
         lda     XMIT,x
         pla
         ora     #$AA
-        jsr     L0B2C
+        jsr     WriteNibble2a
         lda     #$DE
-        jsr     L0B2D
+        jsr     WriteNibble2b
         lda     #$AA
-        jsr     L0B2D
+        jsr     WriteNibble2b
         lda     #$EB
-        jsr     L0B2D
+        jsr     WriteNibble2b
         clc
 L0B15:  lda     RDMODE,x        ; Turn off write mode
         lda     XMIT,x
 rts1:   rts
-.endproc ; _L0AAE
 
 ;;; ============================================================
 
@@ -457,139 +522,165 @@ L0B1C:  pha
         nop
         nop
         ora     #$AA
-L0B2C:  nop
-L0B2D:  nop
+WriteNibble2a:
+        nop
+WriteNibble2b:
+        nop
         pha
         pla
         sta     DATA,x
         cmp     XMIT,x
         rts
 
+Unused3:
         .byte   0
         .byte   0
         .byte   0
 
-.proc _L0B3A
-start:  ldx     #$11
+WaitA:
+        ldx     #$11
 :       dex
         bne     :-
         inc16   $D9
         sec
         sbc     #1
-        bne     start
+        bne     WaitA
         rts
-.endproc ; _L0B3A
 
 ;;; Timing (100-usecs)
 phase_on_table:  .byte   $01, $30, $28, $24, $20, $1E, $1D, $1C, $1C, $1C, $1C, $1C
 phase_off_table: .byte   $70, $2C, $26, $22, $1F, $1E, $1D, $1C, $1C, $1C, $1C, $1C
 
-L0B63:  lda     L0C21
+;;; ============================================================
+
+WriteAndVerifyTrack:
+        lda     kNibCountHi
         sta     $D6
-L0B68:  ldy     #$80
+WriteGap1AndAddress2:
+        ldy     #$80
         lda     #$00
         sta     $D2
         jmp     L0B73
 
-L0B71:  ldy     $D4
-L0B73:  ldx     L0C23
-        jsr     _L0AAE
-        bcc     L0B7E
-        jmp     rts2
-
-L0B7E:  ldx     L0C23
-        jsr     _FormatSector
+WriteGap3AndAddress:
+        ldy     $D4
+L0B73:  ldx     Slotx16
+        jsr     CheckWriteProt
+        bcc     :+
+        jmp     RTS_
+:
+        ldx     Slotx16
+        jsr     WriteGap2AndData
         inc     $D2
         lda     $D2
         cmp     #$10
-        bcc     L0B71
+        bcc     WriteGap3AndAddress
+
+VerifyTrack:
         ldy     #$0F
         sty     $D2
-        lda     L0C22
-        sta     L0C25
-L0B96:  sta     L0C26,y
+        lda     k10
+        sta     RetryCount
+ResetSectorFlags:
+        sta     SectorFlags,y
         dey
-        bpl     L0B96
+        bpl     ResetSectorFlags
         lda     $D4
         sec
         sbc     #$05
         tay
-L0BA2:  jsr     rts2
-        jsr     rts2
+WaitGap3Count:
+        jsr     RTS_
+        jsr     RTS_
         pha
         pla
         nop
         nop
         dey
-        bne     L0BA2
-        ldx     L0C23
-        jsr     _L096A
-        bcs     L0BF3
+        bne     WaitGap3Count
+        ldx     Slotx16
+        jsr     ReadAddressField
+        bcs     Retry2
         lda     $D8
-        beq     L0BCE
+        beq     VerifyNextSector2
+
+DecGap3Count:
         dec     $D4
         lda     $D4
-        cmp     L0C1F
-        bcs     L0BF3
+        cmp     kMinGap3
+        bcs     Retry2
         sec
         rts
 
-L0BC6:  ldx     L0C23
-        jsr     _L096A
-        bcs     L0BE8
-L0BCE:  ldx     L0C23
-        jsr     _L0907
-        bcs     L0BE8
+VerifyNextSector:
+        ldx     Slotx16
+        jsr     ReadAddressField
+        bcs     Retry
+VerifyNextSector2:
+        ldx     Slotx16
+        jsr     ReadSectorData
+        bcs     Retry
         ldy     $D8
-        lda     L0C26,y
-        bmi     L0BE8
+        lda     SectorFlags,y
+        bmi     Retry
         lda     #$FF
-        sta     L0C26,y
+        sta     SectorFlags,y
         dec     $D2
-        bpl     L0BC6
+        bpl     VerifyNextSector
         clc
         rts
 
-L0BE8:  dec     L0C25
-        bne     L0BC6
+Retry:  dec     RetryCount
+        bne     VerifyNextSector
         dec     $D6
-        bne     L0BF3
+        bne     Retry2
         sec
         rts
 
-L0BF3:  lda     L0C22
+Retry2:  lda     k10
         asl     a
-        sta     L0C25
-L0BFA:  ldx     L0C23
-        jsr     _L096A
-        bcs     L0C08
+        sta     RetryCount
+FindSector0FCont:
+        ldx     Slotx16
+        jsr     ReadAddressField
+        bcs     :+
         lda     $D8
         cmp     #$0F
-        beq     L0C0F
-L0C08:  dec     L0C25
-        bne     L0BFA
+        beq     RetryWait
+:
+        dec     RetryCount
+        bne     FindSector0FCont
         sec
-rts2:   rts
+RTS_:   rts
 
-L0C0F:  ldx     #$D6
-L0C11:  jsr     rts2
-        jsr     rts2
+RetryWait:
+        ldx     #$D6
+:       jsr     RTS_
+        jsr     RTS_
         bit     $00
         dex
-        bne     L0C11
-        jmp     L0B68
+        bne     :-
+        jmp     WriteGap1AndAddress2
 
-L0C1F:  .byte   $0E
-L0C20:  .byte   $1B
-L0C21:  .byte   $03
-L0C22:  .byte   $10
-L0C23:  .byte   0
+;;; ============================================================
 
-current_track:
+kMinGap3:
+        .byte   $0E
+kMaxGap3:
+        .byte   $1B
+kNibCountHi:
+        .byte   $03
+k10:
+        .byte   $10
+Slotx16:
+        .byte   0
+HalfTrack:
+        .byte   0
+RetryCount:
         .byte   0
 
-L0C25:  .byte   0
-L0C26:  .byte   0
+SectorFlags:
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -613,7 +704,5 @@ seltrack_slot:
 
 L0C38:  .byte   0
 L0C39:  .byte   0
-
-.delmacro exit_with_result
 
 .endproc ; FormatDiskII
