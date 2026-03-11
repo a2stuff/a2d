@@ -175,7 +175,7 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 .params winfo
         kDialogId = 1
         kWidth = 460
-        kHeight = 128
+        kHeight = 130
 window_id:      .byte   kDialogId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -221,7 +221,7 @@ nextwinfo:      .addr   0
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
-        DEFINE_POINT pos_title_string, 0, 16
+        DEFINE_POINT pos_title_string, 0, 17
 
 str_selector_title:
         PASCAL_STRING res_string_selector_name
@@ -230,7 +230,7 @@ str_selector_title:
         kEntryPickerCols = 3
         kEntryPickerRows = 8
         kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * kEntryPickerCols + 1) / 2
-        kEntryPickerTop  = 21
+        kEntryPickerTop  = 23
         kEntryPickerItemWidth = 127
         kEntryPickerItemHeight = kListItemHeight
         kEntryPickerTextHOffset = 4

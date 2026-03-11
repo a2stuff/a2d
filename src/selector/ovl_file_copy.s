@@ -315,7 +315,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 .params winfo
         kWindowId = $0B
         kWidth = 350
-        kHeight = 70
+        kHeight = 69
 window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -351,9 +351,9 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_LABEL download, res_string_label_download, 116, 16
+        DEFINE_LABEL download, res_string_label_download, 116, 17
 
-        kProgressDialogDefaultX = 20
+        kProgressDialogDefaultX = 18
         kProgressDialogPathLeft = 100
         kProgressDialogPathWidth = winfo::kWidth - kProgressDialogPathLeft - kProgressDialogDefaultX
 
@@ -376,8 +376,8 @@ str_spaces:
 str_from_int:
         PASCAL_STRING "000,000"
 
-        kProgressBarTop = 51
-        kProgressBarInset = kModalDialogInsetX + 2
+        kProgressBarTop = 52
+        kProgressBarInset = kModalDialogInsetX + 1
         kProgressBarWidth = winfo::kWidth - kProgressBarInset*2
         DEFINE_RECT_SZ progress_frame, kProgressBarInset-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight-1
         DEFINE_RECT_SZ progress_meter, kProgressBarInset, kProgressBarTop,  kProgressBarWidth, kProgressBarHeight-3

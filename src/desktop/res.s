@@ -492,7 +492,7 @@ block_count:                    ; totaled during enumeration
 .scope shortcut_dialog_res
 
 kFilePickerDlgExWidth   = file_dialog_res::kFilePickerDlgWidth + 177
-kFilePickerDlgExHeight  = file_dialog_res::kFilePickerDlgHeight + 24
+kFilePickerDlgExHeight  = file_dialog_res::kFilePickerDlgHeight + 26
 kFilePickerDlgExLeft    = (kScreenWidth - kFilePickerDlgExWidth) / 2
 kFilePickerDlgExTop     = (kScreenHeight - kFilePickerDlgExHeight) / 2
 
@@ -532,12 +532,12 @@ nextwinfo:      .addr   0
 
 ;;; Dividing line
         DEFINE_POINT dialog_sep_start, 315, file_dialog_res::kControlsTop
-        DEFINE_POINT dialog_sep_end,   315, 99
+        DEFINE_POINT dialog_sep_end,   315, 99+3
 
 ;;; Line Edit - Filename (etc)
         kLineEditX = file_dialog_res::kControlsLeft
         kLineEditWidth = 435
-        kLineEditY = 114
+        kLineEditY = 114+3
         kLineEditHeight = kTextBoxHeight-1
 
         DEFINE_POINT line_edit_label_pos, kLineEditX, kLineEditY-2
@@ -555,16 +555,16 @@ kRadioButtonLeft  = 332
 
         kFDWinId = file_dialog_res::kFilePickerDlgWindowID
 
-        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 35
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, file_dialog_res::kControlsTop+8
 
-        DEFINE_BUTTON primary_run_list_button,   kFDWinId, res_string_selector_label_primary_run_list, res_string_shortcut_apple_1, kRadioButtonLeft, 37
-        DEFINE_BUTTON secondary_run_list_button, kFDWinId, res_string_selector_label_secondary_run_list, res_string_shortcut_apple_2, kRadioButtonLeft, 47
+        DEFINE_BUTTON primary_run_list_button,   kFDWinId, res_string_selector_label_primary_run_list, res_string_shortcut_apple_1, kRadioButtonLeft, file_dialog_res::kControlsTop+10
+        DEFINE_BUTTON secondary_run_list_button, kFDWinId, res_string_selector_label_secondary_run_list, res_string_shortcut_apple_2, kRadioButtonLeft, file_dialog_res::kControlsTop+20
 
-        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 69
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, file_dialog_res::kControlsTop+42
 
-        DEFINE_BUTTON at_first_boot_button,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, 71
-        DEFINE_BUTTON at_first_use_button,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, 81
-        DEFINE_BUTTON never_button,              kFDWinId, res_string_selector_label_never, res_string_shortcut_apple_5, kRadioButtonLeft, 91
+        DEFINE_BUTTON at_first_boot_button,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, file_dialog_res::kControlsTop+44
+        DEFINE_BUTTON at_first_use_button,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, file_dialog_res::kControlsTop+54
+        DEFINE_BUTTON never_button,              kFDWinId, res_string_selector_label_never, res_string_shortcut_apple_5, kRadioButtonLeft, file_dialog_res::kControlsTop+64
 
 
 ;;; ============================================================

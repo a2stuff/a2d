@@ -206,8 +206,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_BUTTON dialog_ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
 
         ;; For drawing/updating the dialog title
-        DEFINE_POINT point_title, kDialogWidth/2, 15
-        DEFINE_RECT rect_erase_title, kEraseLeft, 4, kEraseRight, 15
+        DEFINE_POINT point_title, kDialogWidth/2, 17
+        DEFINE_RECT rect_erase_title, kEraseLeft, 4, kEraseRight, 17
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
@@ -231,7 +231,7 @@ str_reading:
         ;; Progress bar
         kProgressTop = 72
         kProgressHeight = 9
-        kProgressLeft = 16
+        kProgressLeft = 19
         kProgressWidth = kDialogWidth-kProgressLeft*2
         DEFINE_RECT_SZ progress_frame, kProgressLeft-1, kProgressTop-1, kProgressWidth+2, kProgressHeight+2
         DEFINE_RECT_SZ progress_bar, kProgressLeft, kProgressTop, kProgressWidth, kProgressHeight

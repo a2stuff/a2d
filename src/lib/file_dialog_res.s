@@ -15,7 +15,7 @@ filename_buf:
         .res    18, 0           ; filename + length + slash (or + folder glyphs for others)
 
 ;;; Dialog title
-        DEFINE_POINT pos_title, 0, 14
+        DEFINE_POINT pos_title, 0, 17
 
 ;;; Dialog frame
 pensize_normal: .byte   1, 1
@@ -31,7 +31,7 @@ str_vol:
         PASCAL_STRING {kGlyphDiskLeft, kGlyphDiskRight}
 
         kControlsLeft = 28
-        kControlsTop  = 27
+        kControlsTop  = 30
         kButtonGap = 2
         kSepGap = 3
         kSep = kSepGap + 1 + kSepGap
@@ -40,12 +40,13 @@ str_vol:
         kMaxNameWidth = 140
 
 ;;; Labels for current directory and current volume
+        kCurrentLabelsTop = 19
         kDirLabelCenterX = kControlsLeft + kListBoxWidth/2
-        DEFINE_POINT dir_label_pos, kDirLabelCenterX, 16 + kSystemFontHeight
-        DEFINE_RECT_SZ dir_name_rect, kDirLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
+        DEFINE_POINT dir_label_pos, kDirLabelCenterX, kCurrentLabelsTop + kSystemFontHeight
+        DEFINE_RECT_SZ dir_name_rect, kDirLabelCenterX - kMaxNameWidth/2, kCurrentLabelsTop, kMaxNameWidth, kSystemFontHeight
         kDiskLabelCenterX = kButtonsLeft + kButtonWidth/2
-        DEFINE_POINT disk_label_pos, kDiskLabelCenterX, 16 + kSystemFontHeight
-        DEFINE_RECT_SZ disk_name_rect, kDiskLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
+        DEFINE_POINT disk_label_pos, kDiskLabelCenterX, kCurrentLabelsTop + kSystemFontHeight
+        DEFINE_RECT_SZ disk_name_rect, kDiskLabelCenterX - kMaxNameWidth/2, kCurrentLabelsTop, kMaxNameWidth, kSystemFontHeight
 
 ;;; Buttons
         DEFINE_BUTTON drives_button, kFilePickerDlgWindowID, res_string_button_drives, res_string_shortcut_drives,        kButtonsLeft, kControlsTop + 0*kButtonHeight + 0*kButtonGap
@@ -76,7 +77,7 @@ checkerboard_pattern:
         kFilePickerDlgWindowID  = $3E
 
         kFilePickerDlgWidth     = 323
-        kFilePickerDlgHeight    = 108
+        kFilePickerDlgHeight    = 111
         kFilePickerDlgLeft      = (kScreenWidth - kFilePickerDlgWidth) / 2
         kFilePickerDlgTop       = (kScreenHeight - kFilePickerDlgHeight) / 2
 
