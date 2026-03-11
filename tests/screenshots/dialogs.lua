@@ -122,6 +122,10 @@ DialogTest(
     a2d.DialogOK({no_wait=true})
     emu.wait(0.2)
     test.Snap("Special > Format Disk... - Format in progress" .. suffix)
+
+    -- cleanup
+    emu.wait(5)
+    a2d.RenamePath("/NEWNAME", "RAM1")
 end)
 
 DialogTest(
@@ -153,6 +157,10 @@ DialogTest(
     a2d.DialogOK({no_wait=true})
     emu.wait(0.15)
     test.Snap("Special > Erase Disk... - Erase in progress" .. suffix)
+
+    -- cleanup
+    emu.wait(5)
+    a2d.RenamePath("/NEWNAME", "RAM1")
 end)
 
 --------------------------------------------------
