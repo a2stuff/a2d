@@ -36,7 +36,7 @@ local function OpenFileTest(name, path)
   AccessoryTest(
     name,
     function(suffix)
-      a2d.OpenPath(path)
+      a2d.OpenPath(a2d.GetLocalizedPath(path))
       test.Snap(name .. suffix)
       a2d.CloseWindow()
   end)
@@ -53,7 +53,7 @@ OpenFileTest("Change Type", "/A2.DESKTOP/APPLE.MENU/CHANGE.TYPE")
 AccessoryTest(
   "Find Files",
   function(suffix)
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/FIND.FILES")
+    a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/FIND.FILES"))
     apple2.Type("C*")
     a2d.DialogOK()
     emu.wait(10)
@@ -66,7 +66,7 @@ OpenFileTest("Key Caps", "/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
 AccessoryTest(
   "Run Basic Here",
   function(suffix)
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/RUN.BASIC.HERE")
+    a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/RUN.BASIC.HERE"))
     apple2.WaitForBasicSystem()
     test.Snap("Run Basic Here" .. suffix)
     apple2.TypeLine("BYE")
@@ -107,7 +107,7 @@ OpenFileTest("CD Remote", "/A2.DESKTOP/EXTRAS/CD.REMOTE")
 AccessoryTest(
   "DOS 3.3 Import",
   function(suffix)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT"))
     emu.wait(5)
     test.Snap("Drive selection")
     apple2.DownArrowKey()

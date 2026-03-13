@@ -295,13 +295,13 @@ DialogTest(
     emu.wait(10) -- scanning drives
     a2d.OAShortcut('Q') -- back to DeskTop
     a2d.WaitForDesktopReady()
-    a2dtest.WaitForAlert({match="2 volumes with the same name"})
+    a2dtest.WaitForAlert() -- 2 volumes with the same name (not 'match' for running localized)
     a2d.DialogOK()
     local image1 = s6d1.filename
     s6d1:unload()
     a2d.CheckAllDrives()
     emu.wait(15)
-    a2d.RenamePath("/FLOPPY1", "Floppy2")
+    a2d.RenamePath("/FLOPPY1", "FLOPPY2")
     s6d1:load(image1)
     a2d.Reboot()
     a2d.WaitForDesktopReady()
@@ -337,7 +337,7 @@ DialogTest(
     test.Snap("Selector - Copying shortcut to RAMCard..." .. suffix)
 
     -- cleanup
-    apple2.WaitForBasicSystem()
+    apple2.WaitForBasicSystem({timeout=120})
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady() -- back to Shortcuts
     apple2.Type("D")

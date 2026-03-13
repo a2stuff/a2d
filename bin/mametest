@@ -234,6 +234,8 @@ export SKIP_COUNT
 export RUN_COUNT
 export WAITFORDESKTOP
 export CHECKAUXMEMORY
+export BASEDIR
+export lang
 
 export COLOR_RED="$(tput setaf 1)"
 export COLOR_RESET="$(tput sgr0)"

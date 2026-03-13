@@ -664,37 +664,37 @@ function a2d.RemoveClockDriverAndReboot()
 end
 
 function a2d.ToggleOptionCopyToRAMCard()
-  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("1") -- Toggle "Copy to RAMCard"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionShowShortcutsOnStartup()
-  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("2") -- Toggle "Show shortcuts on startup"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionShowKeyboardShortcuts()
-  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("3") -- Toggle "Show keyboard shortcuts in dialogs"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionPreserveCase()
-  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("4") -- Toggle "Preserve uppercase and lowercase in names"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionShowInvisible()
-  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("5") -- Toggle "Show invisible files"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionSkipChecking525Drives()
-  a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("6") -- Toggle "Check 5.25" drives on startup"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
@@ -1175,6 +1175,40 @@ function a2d.GetSelectedIcons()
     table.insert(icons, ReadIcon(id))
   end
   return icons
+end
+
+--------------------------------------------------
+
+local da_loc_table
+function a2d.GetLocalizedDAFilename(filename)
+  -- Load, parse, and cache the table on first use
+  if not da_loc_table then
+    local basedir = emu.subst_env("$BASEDIR")
+    local lang = emu.subst_env("$lang")
+    local f = assert(io.open(basedir .. "/src/desk_acc/res/filenames.res." .. lang, "r"))
+    local line = f:read("*line")
+    da_loc_table = {}
+    while line do
+      local key, str = line:match("^%.define res_filename_(%S+) \"(%S+)\"$")
+      if key and str then
+        da_loc_table[key] = str
+      end
+      line = f:read("*line")
+    end
+    assert(f:close())
+  end
+
+  -- Look up the localized name
+  local key = assert(filename):lower():gsub("%.", "_")
+  return da_loc_table[key] or filename
+end
+
+function a2d.GetLocalizedPath(path)
+  local out = ""
+  for segment in path:gmatch("([^/]+)") do
+    out = out .. "/" .. a2d.GetLocalizedDAFilename(segment)
+  end
+  return out
 end
 
 --------------------------------------------------
