@@ -1175,7 +1175,7 @@
 .macro FALL_THROUGH_TO target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
     _FLOW_STATEMENT "FALL_THROUGH_TO"
     _CALL_HELPER {arg1},{arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
-        .assert * = (target), error, .sprintf("Fall through expectation failed: %s", .string(target))
+        .assert * = (target), error, .sprintf("%s: Target not adjacent: '%s'", __flow_statement__, .string(target))
     _FLOW_END_STATEMENT
 .endmacro
 

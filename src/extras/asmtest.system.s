@@ -993,6 +993,57 @@ kSet = 1
         TAIL_CALL target, Y=#kConstant, AX=var
         TAIL_CALL target, C=1, A=table,x, X=table,y
 
+;;; FALL_THROUGH_TO
+
+        FALL_THROUGH_TO ft1
+ft1:
+        FALL_THROUGH_TO ft2, A=#1
+ft2:
+        FALL_THROUGH_TO ft3, A=#0
+ft3:
+        FALL_THROUGH_TO ft4, A=#kConstant
+ft4:
+        FALL_THROUGH_TO ft5, A=var
+ft5:
+        FALL_THROUGH_TO ft6, A=table,x
+ft6:
+
+        FALL_THROUGH_TO ft7, A=#0
+ft7:
+        FALL_THROUGH_TO ft8, X=#0
+ft8:
+        FALL_THROUGH_TO ft9, Y=#0
+ft9:
+        FALL_THROUGH_TO ft10, AX=#0
+ft10:
+        FALL_THROUGH_TO ft11, AY=#0
+ft11:
+        FALL_THROUGH_TO ft12, XY=#0
+ft12:
+
+        FALL_THROUGH_TO ft13, C=0
+ft13:
+        FALL_THROUGH_TO ft14, C=1
+ft14:
+        FALL_THROUGH_TO ft15, C=kClear
+ft15:
+        FALL_THROUGH_TO ft16, C=kSet
+ft16:
+
+        FALL_THROUGH_TO ft17, C=1
+ft17:
+        FALL_THROUGH_TO ft18, D=1
+ft18:
+
+        FALL_THROUGH_TO ft19, C=0, D=1, A=#0, X=#1, Y=#2
+ft19:
+        FALL_THROUGH_TO ft20, Y=#kConstant, AX=var
+ft20:
+        FALL_THROUGH_TO ft21, C=1, A=table,x, X=table,y
+ft21:
+
+
+
 ;;; RETURN
         RETURN
 
@@ -1086,5 +1137,5 @@ kSet = 1
         CALL    target, C=1 bad     ; CALL: Unexpected tokens after 'C=...'
         CALL    target, C=var       ; CALL: Expected constant expression after 'C='
 
-
+        FALL_THROUGH_TO target      ; FALL_THROUGH_TO: Target not adjacent: 'target'
 .endif
