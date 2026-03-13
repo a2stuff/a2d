@@ -949,8 +949,7 @@ vector: jsr     SLOT1                    ; self-modified
         copy8   #0, ch
 
         CALL    COut, A=#CHAR_RETURN
-        lda     #CHAR_DOWN
-        FALL_THROUGH_TO COut
+        FALL_THROUGH_TO COut, A=#CHAR_DOWN
 .endproc ; CROut
 
 .proc COut

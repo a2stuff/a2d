@@ -138,8 +138,7 @@ xcoord  .word
 
 ```asm
         ...
-        lda     #alert_num
-        FALL_THROUGH_TO ShowAlert
+        FALL_THROUGH_TO ShowAlert, A=#alert_num
 .endproc
 
 .proc ShowAlert

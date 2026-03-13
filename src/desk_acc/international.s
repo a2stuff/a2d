@@ -270,8 +270,7 @@ ret:    rts
         adc     #1
         cmp     #Field::LAST+1
         bcc     UpdateSelection
-        lda     #Field::FIRST
-        FALL_THROUGH_TO UpdateSelection
+        FALL_THROUGH_TO UpdateSelection, A=#Field::FIRST
 .endproc ; OnKeyNext
 
 .proc UpdateSelection

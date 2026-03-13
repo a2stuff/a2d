@@ -112,8 +112,7 @@ start:
         tay                     ; Y = index
         copy8   alert_options_table,y, alert_params::buttons
 
-        ldax    #alert_params
-        FALL_THROUGH_TO Alert
+        FALL_THROUGH_TO Alert, AX=#alert_params
 .endproc ; AlertById
 
 ;;; ============================================================

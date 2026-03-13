@@ -1133,8 +1133,7 @@ backup_devlst:
 
 .proc GetPortAndDrawWindow
         CALL    GetWindowPort, A=#winfo::kDialogId
-        clc                     ; not an update
-        FALL_THROUGH_TO DrawWindow
+        FALL_THROUGH_TO DrawWindow, C=0 ; not an update
 .endproc ; GetPortAndDrawWindow
 
 ;;; Inputs: C set if processing update event, clear otherwise

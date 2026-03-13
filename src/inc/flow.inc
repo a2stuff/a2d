@@ -1,6 +1,6 @@
 ;;; ============================================================
 ;;;
-;;; Flow Control
+;;; Control Flow
 ;;;
 ;;; ============================================================
 
@@ -1135,10 +1135,13 @@
 ;;; * CALL proc, args...
 ;;; * TAIL_CALL proc, args...
 ;;; * RETURN args...
+;;; * FALL_THROUGH_TO proc, args...
 ;;;
 ;;; Args take the form of (pseudo-)register or flag assigments, and
-;;; loads/clears/sets are emitted in the order given. CALL produces
-;;; a JSR, TAIL_CALL produces a JMP, and RETURN produces RTS.
+;;; loads/clears/sets are emitted in the order given. CALL produces a
+;;; JSR, TAIL_CALL produces a JMP, and RETURN produces RTS.
+;;; FALL_THROUGH_TO produces nothing, but prevents refactoring
+;;; mistakes.
 ;;;
 ;;; Registers/pseudo-registers are: A, X, Y, AX, AY, XY, YA
 ;;; Expressions can be anything supported by the LD* ops/pseudo-ops.
@@ -1166,6 +1169,13 @@
     _FLOW_STATEMENT "RETURN"
     _CALL_HELPER {arg1},{arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
         rts
+    _FLOW_END_STATEMENT
+.endmacro
+
+.macro FALL_THROUGH_TO target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
+    _FLOW_STATEMENT "FALL_THROUGH_TO"
+    _CALL_HELPER {arg1},{arg2},{arg3},{arg4},{arg5},{arg6},{arg7},{arg8},{arg9}
+        .assert * = (target), error, .sprintf("Fall through expectation failed: %s", .string(target))
     _FLOW_END_STATEMENT
 .endmacro
 

@@ -401,8 +401,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         TAIL_CALL DrawTitleCentered, AX=#label_del
     END_IF
 
-        ldax    #label_run
-        FALL_THROUGH_TO DrawTitleCentered
+        FALL_THROUGH_TO DrawTitleCentered, AX=#label_run
 .endproc ; OpenWindow
 
 ;;; ============================================================

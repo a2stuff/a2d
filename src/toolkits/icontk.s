@@ -998,8 +998,7 @@ move_ok:
         rts
         END_OF_LAMBDA
 
-        lda     #IconTK::kDragResultMove
-        FALL_THROUGH_TO exit_with_a
+        FALL_THROUGH_TO exit_with_a, A=#IconTK::kDragResultMove
 
         ;; --------------------------------------------------
 
@@ -1401,8 +1400,7 @@ clip_window_id:
 .proc DrawIconImpl
         jsr     InitSetIconPort
 
-        lda     #$80            ; `clip_icons_flag`
-        FALL_THROUGH_TO DrawIconCommon
+        FALL_THROUGH_TO DrawIconCommon, A=#$80 ; `clip_icons_flag`
 .endproc ; DrawIconImpl
 
 ;;; ============================================================

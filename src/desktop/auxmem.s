@@ -583,8 +583,7 @@ start:
 
         copy8   #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
 
-        ldax    #alert_params
-        FALL_THROUGH_TO Alert
+        FALL_THROUGH_TO Alert, AX=#alert_params
 .endproc ; AlertByIdImpl
 AlertById := AlertByIdImpl::start
 

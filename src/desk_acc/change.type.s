@@ -425,8 +425,7 @@ yes:    RETURN  C=0
 .endproc ; ExitOK
 
 .proc ExitCancel
-        lda     #0
-        FALL_THROUGH_TO Exit
+        FALL_THROUGH_TO Exit, A=#0
 .endproc ; ExitCancel
 
 .proc Exit

@@ -169,8 +169,7 @@ params: .res    3
 
 ;;; A=alert number, with default options
 .proc ShowAlert
-        ldx     #kShowAlertUseDefaultOptionsForId
-        FALL_THROUGH_TO ShowAlertOption
+        FALL_THROUGH_TO ShowAlertOption, X=#kShowAlertUseDefaultOptionsForId
 .endproc ; ShowAlert
 
 ;;; A=alert number, X=`AlertButtonOptions::*`

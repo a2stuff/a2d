@@ -621,8 +621,7 @@ next:
     IF NS
         JUMP_TABLE_MLI_CALL READ, read_lores_params
     END_IF
-        lda     #$80            ; main
-        FALL_THROUGH_TO convert
+        FALL_THROUGH_TO convert, A=#$80 ; main
 
 convert:
         sta     is_main
@@ -1509,8 +1508,7 @@ saw_header_flag:                ; bit7
         beq     ChangeFile  ; always
 .endproc ; PreviousFile
 .proc FirstFile
-        lda     #$40
-        FALL_THROUGH_TO ChangeFile
+        FALL_THROUGH_TO ChangeFile, A=#$40
 .endproc ; FirstFile
 
 ;;; Input: A = flags, bit6 = modified, bit7 = advance

@@ -121,8 +121,7 @@ file_dialog_loop   := file_dialog::ep_loop
 .endproc ; SaveFileDialogState
 
 .proc RestoreFileDialogState
-        clc                     ; aux>main
-        FALL_THROUGH_TO _MoveFileDialogState
+        FALL_THROUGH_TO _MoveFileDialogState, C=0 ; aux>main
 .endproc ; RestoreFileDialogState
 
 ;;; C set by caller

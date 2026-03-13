@@ -2196,8 +2196,7 @@ CmdAbout := AboutDialogProc
 ;;; ============================================================
 
 .proc CmdAboutThisApple
-        ldax    #str_about_this_apple
-        FALL_THROUGH_TO LaunchPassedPathOnSystemDisk
+        FALL_THROUGH_TO LaunchPassedPathOnSystemDisk, AX=#str_about_this_apple
 .endproc ; CmdAboutThisApple
 
 ;;; ============================================================
@@ -2274,8 +2273,7 @@ CmdDeskAcc      := CmdDeskAccImpl::start
     END_IF
         CALL    IconToAnimate, AX=#tmp_path_buf
         tay
-        ldax    #tmp_path_buf
-        FALL_THROUGH_TO InvokeDeskAccWithIcon
+        FALL_THROUGH_TO InvokeDeskAccWithIcon, AX=#tmp_path_buf
 .endproc ; InvokeDeskAccByPath
 
 ;;; ============================================================
@@ -5343,8 +5341,7 @@ alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_FILE_NOT
 ;;; Same inputs/outputs as `ActivateAndRefreshWindowOrClose`
 
 .proc UpdateActivateAndRefreshSelectedWindow
-        lda     selected_window_id
-        FALL_THROUGH_TO UpdateActivateAndRefreshWindow
+        FALL_THROUGH_TO UpdateActivateAndRefreshWindow, A=selected_window_id
 .endproc ; UpdateActivateAndRefreshSelectedWindow
 
 .proc UpdateActivateAndRefreshWindow
@@ -5412,8 +5409,7 @@ alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_FILE_NOT
         ITK_CALL IconTK::UnhighlightIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
 
-        lda     icon_param
-        FALL_THROUGH_TO RemoveFromSelectionList
+        FALL_THROUGH_TO RemoveFromSelectionList, A=icon_param
 .endproc ; UnhighlightAndDeselectIcon
 
 ;;; ============================================================
@@ -5776,8 +5772,7 @@ beyond:
 
 ;;; Close the active window
 .proc CloseActiveWindow
-        lda     active_window_id
-        FALL_THROUGH_TO CloseSpecifiedWindow
+        FALL_THROUGH_TO CloseSpecifiedWindow, A=active_window_id
 .endproc ; CloseActiveWindow
 
 ;;; Inputs: A = window_id
@@ -5898,8 +5893,7 @@ validate_windows_flag:
 ;;; ============================================================
 
 .proc ApplyActiveWinfoToWindowGrafport
-        lda     active_window_id
-        FALL_THROUGH_TO ApplyWinfoToWindowGrafport
+        FALL_THROUGH_TO ApplyWinfoToWindowGrafport, A=active_window_id
 .endproc ; ApplyActiveWinfoToWindowGrafport
 
 .proc ApplyWinfoToWindowGrafport
@@ -6687,8 +6681,7 @@ slash:  cpy     #1
 ;;; ============================================================
 
 .proc FindWindowForSrcPath
-        ldax    #src_path_buf
-        FALL_THROUGH_TO FindWindowForPath
+        FALL_THROUGH_TO FindWindowForPath, AX=#src_path_buf
 .endproc ; FindWindowForSrcPath
 
 ;;; ============================================================
@@ -7595,8 +7588,7 @@ draw:   MGTK_CALL MGTK::DrawString, text_input_buf
 .endproc ; _PrepAvailable
 
 .proc _Measure
-        ldax    #text_input_buf
-        FALL_THROUGH_TO _MeasureString
+        FALL_THROUGH_TO _MeasureString, AX=#text_input_buf
 .endproc ; _Measure
 
 ;;; Measure text, pascal string address in A,X; result in A,X
@@ -8324,8 +8316,7 @@ set_pos:
 
         blocks := list_view_filerecord + FileRecord::blocks
 
-        ldax    blocks
-        FALL_THROUGH_TO ComposeSizeString
+        FALL_THROUGH_TO ComposeSizeString, AX=blocks
 .endproc ; _PrepareColSize
 
 .endproc ; DrawListViewRow
@@ -8790,8 +8781,7 @@ map_delta_y:    .word   0
 ;;; Trashes: $08
 
 .proc PrepActiveWindowScreenMapping
-        lda     active_window_id
-        FALL_THROUGH_TO PrepWindowScreenMapping
+        FALL_THROUGH_TO PrepWindowScreenMapping, A=active_window_id
 .endproc ; PrepActiveWindowScreenMapping
 
         PROC_USED_CLEARING_UPDATES
@@ -13353,8 +13343,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 ;;; A,X = A * 64
         PROC_USED_IN_OVERLAY
 .proc ATimes64
-        ldx     #6
-        FALL_THROUGH_TO AShiftX
+        FALL_THROUGH_TO AShiftX, X=#6
 .endproc ; ATimes64
 
 ;;; A,X = A << X
@@ -13679,8 +13668,7 @@ ignore: RETURN  C=1
 ;;; ============================================================
 
 .proc DrawDialogPathBuf0
-        ldax    #path_buf0
-        FALL_THROUGH_TO DrawDialogPath
+        FALL_THROUGH_TO DrawDialogPath, AX=#path_buf0
 .endproc ; DrawDialogPathBuf0
 
         .include "../lib/drawdialogpath.s"

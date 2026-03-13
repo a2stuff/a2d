@@ -3836,8 +3836,7 @@ table:  .byte   <(TXTCLR / 2), <(MIXCLR / 2), <(LOWSCR / 2), <(LORES / 2)
 ;;; SetPort
 
 .proc SetPortImpl
-        ldax    params_addr
-        FALL_THROUGH_TO assign_and_prepare_port
+        FALL_THROUGH_TO assign_and_prepare_port, AX=params_addr
 .endproc ; SetPortImpl
 
         ;; Call with port address in (X,A)
@@ -3860,8 +3859,7 @@ prepare_port:
 
 .proc GetPortImpl
         jsr     ApplyPortToActivePort
-        ldax    active_port
-        FALL_THROUGH_TO store_xa_at_params
+        FALL_THROUGH_TO store_xa_at_params, AX=active_port
 .endproc ; GetPortImpl
 
         ;; Store result (X,A) at params
@@ -5187,8 +5185,7 @@ stack_ptr_save:
         asl     preserve_zp_flag
         copy16  params_addr_save, params_addr
 
-        ldax    active_port
-        FALL_THROUGH_TO SetAndPreparePort
+        FALL_THROUGH_TO SetAndPreparePort, AX=active_port
 .endproc ; RestoreParamsAndStack
 
 .proc SetAndPreparePort
@@ -5863,8 +5860,7 @@ set_x:  stax    current_penloc_x
 .endproc ; SetPenloc
 
 .proc SetFillModeXOR
-        lda     #MGTK::penXOR
-        FALL_THROUGH_TO SetFillMode
+        FALL_THROUGH_TO SetFillMode, A=#MGTK::penXOR
 .endproc ; SetFillModeXOR
 
         ;; Set fill mode to A
@@ -6112,8 +6108,7 @@ filler: ldx     menu_item_index
 
 
 .proc FindMenuById
-        lda     #find_mode_by_id
-        FALL_THROUGH_TO FindMenu
+        FALL_THROUGH_TO FindMenu, A=#find_mode_by_id
 .endproc ; FindMenuById
 
 .proc FindMenu
