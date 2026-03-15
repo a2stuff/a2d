@@ -33,7 +33,7 @@ kButtonInsetX   = 7
 
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, (kDAWidth + 1) - kButtonWidth - kModalDialogInsetX - kButtonInsetX, (kDAHeight + 1) - kModalDialogInsetY - kButtonHeight
 
-        DEFINE_LABEL title, res_string_window_title, 0, kModalDialogInsetY + kSystemFontHeight
+        DEFINE_LABEL title, res_string_window_title, kDAWidth/2, kModalDialogInsetY + kSystemFontHeight - 1
 
 ;;; ============================================================
 
@@ -182,7 +182,8 @@ pattern_plaid:
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        CALL    DrawTitleString, AX=#title_label_str
+        MGTK_CALL MGTK::MoveTo, title_label_pos
+        CALL    DrawStringCentered, AX=#title_label_str
 
         MGTK_CALL MGTK::FrameRect, meter_frame
 
@@ -388,25 +389,6 @@ hit:    lda     winfo::window_id
 
         rts
 .endproc ; UpdateMeter
-
-;;; ============================================================
-;;; Draw Title String (centered at top of port)
-;;; Input: A,X = string address
-
-.proc DrawTitleString
-        params := $6
-        str := $6
-        width := $8
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        sub16   #kDAWidth, width, title_label_pos::xcoord
-        lsr16   title_label_pos::xcoord ; /= 2
-        MGTK_CALL MGTK::MoveTo, title_label_pos
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawTitleString
 
 ;;; ============================================================
 

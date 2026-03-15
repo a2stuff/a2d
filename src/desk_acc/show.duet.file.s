@@ -104,12 +104,10 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
 
-ypos_playing:   .word   18
-ypos_credit1:   .word   34
-ypos_credit2:   .word   45
-ypos_instruct:  .word   62
-
-        DEFINE_POINT pos, 0, 0
+        DEFINE_POINT pos_playing, kDAWidth/2, 18
+        DEFINE_POINT pos_credit1, kDAWidth/2, 34
+        DEFINE_POINT pos_credit2, kDAWidth/2, 45
+        DEFINE_POINT pos_instruct, kDAWidth/2, 62
 
 str_playing:    PASCAL_STRING res_string_playing
 name_buf:       .res    16, 0
@@ -144,13 +142,13 @@ str_instruct:   PASCAL_STRING res_string_instructions
 
         MGTK_CALL MGTK::FrameRect, frame_rect
 
-        copy16  ypos_playing, pos::ycoord
+        MGTK_CALL MGTK::MoveTo, pos_playing
         CALL    DrawStringCentered, AX=#str_playing
-        copy16  ypos_credit1, pos::ycoord
+        MGTK_CALL MGTK::MoveTo, pos_credit1
         CALL    DrawStringCentered, AX=#str_credit1
-        copy16  ypos_credit2, pos::ycoord
+        MGTK_CALL MGTK::MoveTo, pos_credit2
         CALL    DrawStringCentered, AX=#str_credit2
-        copy16  ypos_instruct, pos::ycoord
+        MGTK_CALL MGTK::MoveTo, pos_instruct
         CALL    DrawStringCentered, AX=#str_instruct
 
         MGTK_CALL MGTK::FlushEvents
@@ -171,19 +169,21 @@ str_instruct:   PASCAL_STRING res_string_instructions
 ;;; ============================================================
 ;;; Draw centered string
 ;;; Input: A,X = string address, `pos` used, has ycoord
-;;; Trashes $6...$A
+;;; Trashes $6...$9
 .proc DrawStringCentered
-        params := $6
-        str := $6
-        width := $8
+        params := $06
+        str := params
+        width := params+2
+        dx := params
+        dy := params+2
 
         stax    str
         stax    @addr
         MGTK_CALL MGTK::StringWidth, params
-
-        sub16   #kDAWidth, width, pos::xcoord
-        lsr16   pos::xcoord     ; /= 2
-        MGTK_CALL MGTK::MoveTo, pos
+        lsr16   width           ; /= 2
+        sub16   #0, width, dx
+        copy16  #0, dy
+        MGTK_CALL MGTK::Move, params
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawStringCentered
