@@ -109,7 +109,7 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 
 label:          PASCAL_STRING labelstr, aux::kLabelStrSize
-pos:            .word   left + 6, top+kCalcButtonHeight
+pos:            .word   left + kCalcButtonWidth/2 + 1, top+kCalcButtonHeight
 port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
         .refto label
         .refto pos
@@ -132,8 +132,6 @@ key:
 .endif
         .refto function
         .refto key
-        ;; Cheap centering
-        kLabelOff = (kSciButtonWidth - (6 * .strlen(labelstr))) / 2
         DEFINE_POINT viewloc, left - kBorderLeftTop, top - kBorderLeftTop
 mapbits:        .addr   sci_button_bitmap
 mapwidth:       .byte   kSciBitmapStride
@@ -142,7 +140,7 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 
 label:          PASCAL_STRING labelstr, aux::kLabelStrSize
-pos:            .word   left + kLabelOff, top+kCalcButtonHeight
+pos:            .word   left + kSciButtonWidth/2, top+kCalcButtonHeight
 port:           .word   left, top, left+kSciButtonWidth-3, top+kCalcButtonHeight
         .refto label
         .refto pos
@@ -194,24 +192,24 @@ port:           .word   left, top, left+kSciButtonWidth-3, top+kCalcButtonHeight
 .endenum
 
         first_button := *
-        CALC_BUTTON btn_c,   Function::clear,       "c", kCol1Left, kRow1Top, 'C'
-        CALC_BUTTON btn_e,   Function::exp,         "e", kCol2Left, kRow1Top, 'E'
-        CALC_BUTTON btn_eq,  Function::equals,      "=", kCol3Left, kRow1Top, '='
-        CALC_BUTTON btn_mul, Function::op_multiply, "*", kCol4Left, kRow1Top, '*'
+        CALC_BUTTON btn_c,   Function::clear,       res_string_button_c,   kCol1Left, kRow1Top, 'C'
+        CALC_BUTTON btn_e,   Function::exp,         res_string_button_e,   kCol2Left, kRow1Top, 'E'
+        CALC_BUTTON btn_eq,  Function::equals,      res_string_button_eq,  kCol3Left, kRow1Top, '='
+        CALC_BUTTON btn_mul, Function::op_multiply, res_string_button_mul, kCol4Left, kRow1Top, '*'
 
-        CALC_BUTTON btn_7,   Function::digit7,      "7", kCol1Left, kRow2Top, '7'
-        CALC_BUTTON btn_8,   Function::digit8,      "8", kCol2Left, kRow2Top, '8'
-        CALC_BUTTON btn_9,   Function::digit9,      "9", kCol3Left, kRow2Top, '9'
-        CALC_BUTTON btn_div, Function::op_divide,   "/", kCol4Left, kRow2Top, '/'
+        CALC_BUTTON btn_7,   Function::digit7,      res_string_button_7,   kCol1Left, kRow2Top, '7'
+        CALC_BUTTON btn_8,   Function::digit8,      res_string_button_8,   kCol2Left, kRow2Top, '8'
+        CALC_BUTTON btn_9,   Function::digit9,      res_string_button_9,   kCol3Left, kRow2Top, '9'
+        CALC_BUTTON btn_div, Function::op_divide,   res_string_button_div, kCol4Left, kRow2Top, '/'
 
-        CALC_BUTTON btn_4,   Function::digit4,      "4", kCol1Left, kRow3Top, '4'
-        CALC_BUTTON btn_5,   Function::digit5,      "5", kCol2Left, kRow3Top, '5'
-        CALC_BUTTON btn_6,   Function::digit6,      "6", kCol3Left, kRow3Top, '6'
-        CALC_BUTTON btn_sub, Function::op_subtract, "-", kCol4Left, kRow3Top, '-'
+        CALC_BUTTON btn_4,   Function::digit4,      res_string_button_4,   kCol1Left, kRow3Top, '4'
+        CALC_BUTTON btn_5,   Function::digit5,      res_string_button_5,   kCol2Left, kRow3Top, '5'
+        CALC_BUTTON btn_6,   Function::digit6,      res_string_button_6,   kCol3Left, kRow3Top, '6'
+        CALC_BUTTON btn_sub, Function::op_subtract, res_string_button_sub, kCol4Left, kRow3Top, '-'
 
-        CALC_BUTTON btn_1,   Function::digit1,      "1", kCol1Left, kRow4Top, '1'
-        CALC_BUTTON btn_2,   Function::digit2,      "2", kCol2Left, kRow4Top, '2'
-        CALC_BUTTON btn_3,   Function::digit3,      "3", kCol3Left, kRow4Top, '3'
+        CALC_BUTTON btn_1,   Function::digit1,      res_string_button_1,   kCol1Left, kRow4Top, '1'
+        CALC_BUTTON btn_2,   Function::digit2,      res_string_button_2,   kCol2Left, kRow4Top, '2'
+        CALC_BUTTON btn_3,   Function::digit3,      res_string_button_3,   kCol3Left, kRow4Top, '3'
 
 .params btn_0
         left = kCol1Left
@@ -224,24 +222,24 @@ mapbits:        .addr   wide_button_bitmap
 mapwidth:       .byte   kWideBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kWideButtonWidth, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
-label:          PASCAL_STRING "0", aux::kLabelStrSize
-pos:            .word   left + 6, top+kCalcButtonHeight
+label:          PASCAL_STRING res_string_button_0, aux::kLabelStrSize
+pos:            .word   left + kCalcButtonWidth/2 + 1, top+kCalcButtonHeight
 port:           .word   left, top, left+kWideButtonWidth-3, top+kCalcButtonHeight
 .endparams
 
-        CALC_BUTTON_S btn_sin,  Function::fn_sin,    "sin",  kColALeft, kRow0Top
-        CALC_BUTTON_S btn_cos,  Function::fn_cos,    "cos",  kColALeft, kRow1Top
-        CALC_BUTTON_S btn_tan,  Function::fn_tan,    "tan",  kColALeft, kRow2Top
-        CALC_BUTTON_S btn_xy,   Function::op_power,  "x^y",  kColALeft, kRow3Top, '^'
-        CALC_BUTTON_S btn_sqrt, Function::fn_sqrt,   "sqrt", kColALeft, kRow4Top
-        CALC_BUTTON_S btn_pm,   Function::fn_neg,    "+/-",  kColALeft, kRow5Top
+        CALC_BUTTON_S btn_sin,  Function::fn_sin,    res_string_button_sin,  kColALeft, kRow0Top
+        CALC_BUTTON_S btn_cos,  Function::fn_cos,    res_string_button_cos,  kColALeft, kRow1Top
+        CALC_BUTTON_S btn_tan,  Function::fn_tan,    res_string_button_tan,  kColALeft, kRow2Top
+        CALC_BUTTON_S btn_xy,   Function::op_power,  res_string_button_xy,   kColALeft, kRow3Top, '^'
+        CALC_BUTTON_S btn_sqrt, Function::fn_sqrt,   res_string_button_sqrt, kColALeft, kRow4Top
+        CALC_BUTTON_S btn_pm,   Function::fn_neg,    res_string_button_pm,   kColALeft, kRow5Top
 
-        CALC_BUTTON_S btn_asin, Function::fn_asin,   "asin", kColBLeft, kRow0Top
-        CALC_BUTTON_S btn_acos, Function::fn_acos,   "acos", kColBLeft, kRow1Top
-        CALC_BUTTON_S btn_atan, Function::fn_atan,   "atan", kColBLeft, kRow2Top
-        CALC_BUTTON_S btn_ln,   Function::fn_ln,     "ln",   kColBLeft, kRow3Top
-        CALC_BUTTON_S btn_ex,   Function::fn_exp,    "e^x",  kColBLeft, kRow4Top
-        CALC_BUTTON_S btn_1x,   Function::fn_inv,    "1/x",  kColBLeft, kRow5Top
+        CALC_BUTTON_S btn_asin, Function::fn_asin,   res_string_button_asin, kColBLeft, kRow0Top
+        CALC_BUTTON_S btn_acos, Function::fn_acos,   res_string_button_acos, kColBLeft, kRow1Top
+        CALC_BUTTON_S btn_atan, Function::fn_atan,   res_string_button_atan, kColBLeft, kRow2Top
+        CALC_BUTTON_S btn_ln,   Function::fn_ln,     res_string_button_ln,   kColBLeft, kRow3Top
+        CALC_BUTTON_S btn_ex,   Function::fn_exp,    res_string_button_ex,   kColBLeft, kRow4Top
+        CALC_BUTTON_S btn_1x,   Function::fn_inv,    res_string_button_1x,   kColBLeft, kRow5Top
 
 .params btn_dec
 function:       .byte   Function::decimal
@@ -252,8 +250,8 @@ mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
         REF_MAPINFO_MEMBERS
-label:          PASCAL_STRING ".", aux::kLabelStrSize
-pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
+label:          PASCAL_STRING res_string_button_dec, aux::kLabelStrSize
+pos:            .word   kCol3Left + kCalcButtonWidth/2 + 1, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
         .refto label
         .refto pos
@@ -270,8 +268,8 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
         REF_MAPINFO_MEMBERS
 
-label:          PASCAL_STRING '+', aux::kLabelStrSize
-pos:            .word   kCol4Left + 6, kRow5Bot
+label:          PASCAL_STRING res_string_button_add, aux::kLabelStrSize
+pos:            .word   kCol4Left + kCalcButtonWidth/2 + 1, kRow5Bot
 port:           .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot
         .refto label
         .refto pos
@@ -1459,13 +1457,15 @@ end:    rts
         ptr := $06
 
         copy16  #first_button, ptr
-    REPEAT
+loop:
         ldy     #0
         lda     (ptr),y
-        BREAK_IF ZERO
+    IF ZERO
+        jmp     break
+    END_IF
 
         add16_8 ptr, #(btn_c::viewloc - btn_c), bitmap_addr
-        add16_8 ptr, #(btn_c::pos - btn_c), text_addr
+        add16_8 ptr, #(btn_c::pos - btn_c), pos
         add16_8 ptr, #(btn_c::label - btn_c), label
         add16_8 ptr, #(btn_c::port - btn_c), rect_addr
 
@@ -1475,17 +1475,33 @@ end:    rts
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr ; draw button face
 
-        MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
+        MGTK_CALL MGTK::MoveTo, 0, pos
+        copy16  label, params::string
+        MGTK_CALL MGTK::StringWidth, string_width_params
+        lsr16   params::width
+        sub16   #0, params::width, params::dx
+        MGTK_CALL MGTK::Move, move_by_params
+
         MGTK_CALL MGTK::DrawString, 0, label
 
         add16_8 ptr, #.sizeof(btn_c)
-    FOREVER
+        jmp     loop
 
+break:
         jsr     DisplayBuffer2
 
         MGTK_CALL MGTK::ShowCursor
 
         rts
+
+.params params
+string: .addr   0               ; used as string for `StringWidth`
+width:  .addr   0               ; used as width for `StringWidth`, X for `Move`
+dx := width
+dy:     .word   0               ; used as Y for `Move`
+.endparams
+string_width_params := params + 0
+move_by_params := params + 2
 
 .endproc ; DrawContent
 

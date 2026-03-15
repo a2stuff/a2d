@@ -88,7 +88,7 @@ kTextBoxWidth = kControlsRight - kButtonWidth - kControlsLeft * 2 - 1
         DEFINE_BUTTON find_button, kDAWindowId, res_string_button_find, kGlyphReturn, kControlsRight - kButtonWidth, kTextBoxTop
 
 kLabelLeft = kControlsLeft + kTextBoxTextHOffset
-kValueLeft = 80
+kValueLeft = 90
         DEFINE_LABEL lat, res_string_latitude, kLabelLeft, kRow2 + kSystemFontHeight
         DEFINE_POINT pos_lat, kValueLeft, kRow2 + kSystemFontHeight
         DEFINE_LABEL long, res_string_longitude, kLabelLeft, kRow3 + kSystemFontHeight

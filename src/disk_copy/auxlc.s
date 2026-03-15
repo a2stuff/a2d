@@ -335,9 +335,9 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
         kDestTextY   = 135
         kTipTextY    = 145
 
-        kOverviewTextX  =  40
-        kSlotDriveTextX = 110
-        kBlocksTextX    = 300
+        kOverviewTextX  =  18
+        kSlotDriveTextX =  88
+        kBlocksTextX    = 308
 
         DEFINE_LABEL blocks_read, res_string_label_blocks_read, kBlocksTextX, kSourceTextY
         DEFINE_LABEL blocks_written, res_string_label_blocks_written, kBlocksTextX, kDestTextY
@@ -1218,13 +1218,15 @@ match:  RETURN  C=0
         params := $0A
         str := params
         width := params+2
+        dx := params
+        dy := params+2
 
         stax    str
         stax    @addr
         MGTK_CALL MGTK::StringWidth, params
-        lsr16   width
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
+        lsr16   width           ; /= 2
+        sub16   #0, width, dx
+        copy16  #0, dy
         MGTK_CALL MGTK::Move, params
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts

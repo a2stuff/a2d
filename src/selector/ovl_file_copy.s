@@ -351,7 +351,7 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_LABEL download, res_string_label_download, 116, 17
+        DEFINE_LABEL download, res_string_label_download, winfo::kWidth / 2, 17
 
         kProgressDialogDefaultX = 18
         kProgressDialogPathLeft = 100
@@ -406,8 +406,7 @@ progress_pattern:
         MGTK_CALL MGTK::SetPenSize, app::pensize_normal
 
         MGTK_CALL MGTK::MoveTo, download_label_pos
-        MGTK_CALL MGTK::DrawString, download_label_str
-        rts
+        TAIL_CALL app::DrawStringCentered, AX=#download_label_str
 .endproc ; OpenWindow
 
 ;;; ============================================================

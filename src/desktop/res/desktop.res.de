@@ -88,7 +88,7 @@
 .define res_string_erase_disk_prompt_erase_format "Sind Sie sicher, dass Sie l|schen m|chten %0s?"
 .define res_string_erase_disk_status_erasing "L|sche Laufwerk..."
 .define res_string_erase_disk_error "Fehler beim L|schen. ]berpr}fe Laufwerk."
-.define res_string_tip_copy_prodos "Tipp: Kopieren Sie PRODOS auf die Platte, um es bootf{hig zu machen."
+.define res_string_tip_copy_prodos "Tipp: Kopieren PRODOS auf Platte, um es bootf{hig zu machen."
 .define res_string_download_error_ramcard_full "Die RAMCard ist voll. Kopieren nicht vollst{ndig."
 .define res_string_alert_selector_list_full "Die Liste ist voll. L|schen Sie eine Kurzbefehl, bevor eine neue Kurzbefehl erstellt wird."
 .define res_string_alert_window_must_be_closed "Ein Fenster mu~ geschlossen werden um diesen Katalog zu |ffnen."

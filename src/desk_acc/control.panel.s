@@ -390,8 +390,8 @@ caret_blink_selection:
 
         DEFINE_LABEL caret_blink1, res_string_label_ipblink1, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 11
         DEFINE_LABEL caret_blink2, res_string_label_ipblink2, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 21
-        DEFINE_LABEL caret_blink_slow, res_string_label_slow, kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 34
-        DEFINE_LABEL caret_blink_fast, res_string_label_fast, kCaretBlinkDisplayX + 189, kCaretBlinkDisplayY + 34
+        DEFINE_LABEL caret_blink_slow, res_string_label_slow, kCaretBlinkDisplayX + 95, kCaretBlinkDisplayY + 34
+        DEFINE_LABEL caret_blink_fast, res_string_label_fast, kCaretBlinkDisplayX + 194, kCaretBlinkDisplayY + 34
 
         DEFINE_LABEL caret_blink_button1_shortcut, .sprintf("(%c7)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 45
         DEFINE_LABEL caret_blink_button2_shortcut, .sprintf("(%c8)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 144, kCaretBlinkDisplayY + 45
@@ -1643,13 +1643,15 @@ done:   rts
         params := $06
         str := params
         width := params+2
+        dx := params
+        dy := params+2
 
         stax    str
         stax    @addr
         MGTK_CALL MGTK::StringWidth, params
-        lsr16   width
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
+        lsr16   width           ; /= 2
+        sub16   #0, width, dx
+        copy16  #0, dy
         MGTK_CALL MGTK::Move, params
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts

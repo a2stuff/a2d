@@ -73,7 +73,7 @@
 .define res_string_get_info_label_protected "Protetto da scrittura:"
 .define res_string_get_info_label_yes "Si"
 .define res_string_get_info_label_no "No"
-.define res_string_get_info_label_vol_size "Dimensione utilizzata / totale:"
+.define res_string_get_info_label_vol_size "Spazio utilizzato / totale:"
 .define res_string_get_info_size_file_format "%0k"
 .define res_string_get_info_size_dir_singular_format "%0k per %1n elemento  "
 .define res_string_get_info_size_dir_plural_format "%0k per %1n elementi  "

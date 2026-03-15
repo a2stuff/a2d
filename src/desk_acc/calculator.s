@@ -102,24 +102,24 @@ port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
 .endparams
 .endmacro
 
-        CALC_BUTTON btn_c,   'c', kCol1Left, kRow1Top
-        CALC_BUTTON btn_e,   'e', kCol2Left, kRow1Top
-        CALC_BUTTON btn_eq,  '=', kCol3Left, kRow1Top
-        CALC_BUTTON btn_mul, '*', kCol4Left, kRow1Top
+        CALC_BUTTON btn_c,   res_string_button_c,   kCol1Left, kRow1Top
+        CALC_BUTTON btn_e,   res_string_button_e,   kCol2Left, kRow1Top
+        CALC_BUTTON btn_eq,  res_string_button_eq,  kCol3Left, kRow1Top
+        CALC_BUTTON btn_mul, res_string_button_mul, kCol4Left, kRow1Top
 
-        CALC_BUTTON btn_7,   '7', kCol1Left, kRow2Top
-        CALC_BUTTON btn_8,   '8', kCol2Left, kRow2Top
-        CALC_BUTTON btn_9,   '9', kCol3Left, kRow2Top
-        CALC_BUTTON btn_div, '/', kCol4Left, kRow2Top
+        CALC_BUTTON btn_7,   res_string_button_7,   kCol1Left, kRow2Top
+        CALC_BUTTON btn_8,   res_string_button_8,   kCol2Left, kRow2Top
+        CALC_BUTTON btn_9,   res_string_button_9,   kCol3Left, kRow2Top
+        CALC_BUTTON btn_div, res_string_button_div, kCol4Left, kRow2Top
 
-        CALC_BUTTON btn_4,   '4', kCol1Left, kRow3Top
-        CALC_BUTTON btn_5,   '5', kCol2Left, kRow3Top
-        CALC_BUTTON btn_6,   '6', kCol3Left, kRow3Top
-        CALC_BUTTON btn_sub, '-', kCol4Left, kRow3Top
+        CALC_BUTTON btn_4,   res_string_button_4,   kCol1Left, kRow3Top
+        CALC_BUTTON btn_5,   res_string_button_5,   kCol2Left, kRow3Top
+        CALC_BUTTON btn_6,   res_string_button_6,   kCol3Left, kRow3Top
+        CALC_BUTTON btn_sub, res_string_button_sub, kCol4Left, kRow3Top
 
-        CALC_BUTTON btn_1,   '1', kCol1Left, kRow4Top
-        CALC_BUTTON btn_2,   '2', kCol2Left, kRow4Top
-        CALC_BUTTON btn_3,   '3', kCol3Left, kRow4Top
+        CALC_BUTTON btn_1,   res_string_button_1,   kCol1Left, kRow4Top
+        CALC_BUTTON btn_2,   res_string_button_2,   kCol2Left, kRow4Top
+        CALC_BUTTON btn_3,   res_string_button_3,   kCol3Left, kRow4Top
 
 
 .params btn_0
@@ -130,7 +130,7 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 49, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
         REF_MAPINFO_MEMBERS
 
-label:          .byte   '0'
+label:          .byte   res_string_button_0
 pos:            .word   kCol1Left + 6, kRow5Bot
 port:           .word   kCol1Left,kRow5Top,kCol2Right,kRow5Bot
         .refto label

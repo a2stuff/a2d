@@ -500,13 +500,15 @@ hit:    lda     winfo::window_id
         params := $06
         str := params
         width := params+2
+        dx := params
+        dy := params+2
 
         stax    str
         stax    @addr
         MGTK_CALL MGTK::StringWidth, params
-        lsr16   width
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
+        lsr16   width           ; /= 2
+        sub16   #0, width, dx
+        copy16  #0, dy
         MGTK_CALL MGTK::Move, params
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts

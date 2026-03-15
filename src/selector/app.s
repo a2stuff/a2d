@@ -221,7 +221,7 @@ nextwinfo:      .addr   0
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
-        DEFINE_POINT pos_title_string, 0, 17
+        DEFINE_POINT pos_title_string, winfo::kWidth / 2, 17
 
 str_selector_title:
         PASCAL_STRING res_string_selector_name
@@ -1144,9 +1144,10 @@ backup_devlst:
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
-
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        CALL    DrawTitleString, AX=#str_selector_title
+
+        MGTK_CALL MGTK::MoveTo, pos_title_string
+        CALL    DrawStringCentered, AX=#str_selector_title
 
         MGTK_CALL MGTK::FrameRect, entry_picker_rect
 
@@ -1169,23 +1170,27 @@ backup_devlst:
 .endproc ; DrawWindow
 
 ;;; ============================================================
-;;; Draw Title String (centered at top of port)
+;;; Draw Centered String
 ;;; Input: A,X = string address
+;;; Trashes $06...$09
 
-.proc DrawTitleString
+.proc DrawStringCentered
         params := $6
         str := params
         width := params+2
+        dx := params
+        dy := params+2
 
         stax    str
         stax    @addr
         MGTK_CALL MGTK::StringWidth, params
-        sub16   #winfo::kWidth, width, pos_title_string::xcoord
-        lsr16   pos_title_string::xcoord ; /= 2
-        MGTK_CALL MGTK::MoveTo, pos_title_string
+        lsr16   width           ; /= 2
+        sub16   #0, width, dx
+        copy16  #0, dy
+        MGTK_CALL MGTK::Move, params
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
-.endproc ; DrawTitleString
+.endproc ; DrawStringCentered
 
 ;;; ============================================================
 ;;; Set the active GrafPort to the selected window's port

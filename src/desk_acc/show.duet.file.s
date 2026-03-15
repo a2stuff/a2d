@@ -182,7 +182,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::StringWidth, params
 
         sub16   #kDAWidth, width, pos::xcoord
-        lsr16   pos::xcoord ; /= 2
+        lsr16   pos::xcoord     ; /= 2
         MGTK_CALL MGTK::MoveTo, pos
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts

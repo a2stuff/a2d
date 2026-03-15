@@ -186,8 +186,8 @@ nextwinfo:      .addr   0
 .endparams
 
         kDialogLabelDefaultX    =  40
-        kDialogLabelRightX      = 160
-        kDialogValueLeft        = 170
+        kDialogLabelRightX      = 170
+        kDialogValueLeft        = 180
 
         kNameInputLeft = kDialogLabelDefaultX
         kNameInputTop = 67
