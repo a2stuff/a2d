@@ -11992,7 +11992,8 @@ write_protected_flag:
         jsr     OpenPromptDialog
         jsr     SetPortForPromptDialog
 
-        CALL    DrawDialogTitle, AX=#aux::label_get_info
+        MGTK_CALL MGTK::MoveTo, prompt_dialog_title_pos
+        CALL    DrawStringCentered, AX=#aux::label_get_info
 
         ;; Draw labels
         CALL    DrawDialogLabel, Y=#1 | DDL_LRIGHT, AX=#aux::str_info_name
@@ -13018,8 +13019,9 @@ ok:     RETURN  A=#0
         MGTK_CALL MGTK::OpenWindow, winfo_about_dialog
         CALL    SafeSetPortFromWindowId, A=#winfo_about_dialog::kWindowId
         CALL    DrawDialogFrame, AX=#aux::about_dialog_frame_rect
-        jsr     SetPenModeXOR
-        CALL    DrawDialogTitle, AX=#aux::str_about1
+
+        MGTK_CALL MGTK::MoveTo, prompt_dialog_title_pos
+        CALL    DrawStringCentered, AX=#aux::str_about1
         CALL    DrawDialogLabel, Y=#1 | DDL_CENTER, AX=#aux::str_about2
         CALL    DrawDialogLabel, Y=#2 | DDL_CENTER, AX=#aux::str_about3
         CALL    DrawDialogLabel, Y=#3 | DDL_CENTER, AX=#aux::str_about4
@@ -14286,24 +14288,30 @@ ret:    rts
 .endproc ; UpdateOKButton
 
 ;;; ============================================================
+;;; Draw string centered at current position
+;;; Input: A,X = string
+;;; Trashes $06...$09
+;;; Assert: String is not empty
 
+        PROC_USED_IN_OVERLAY
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
-.proc DrawDialogTitle
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_width      := text_params + 2
+.proc DrawStringCentered
+        params := $06
+        str := params
+        width := params+2
+        dx := params
+        dy := params+2
 
-        stax    text_addr       ; input is length-prefixed string
+        stax    str
         stax    @addr
-        MGTK_CALL MGTK::StringWidth, text_params
-
-        sub16   #kPromptDialogWidth, text_width, pos_dialog_title::xcoord
-        lsr16   pos_dialog_title::xcoord ; /= 2
-        MGTK_CALL MGTK::MoveTo, pos_dialog_title
+        MGTK_CALL MGTK::StringWidth, params
+        lsr16   width           ; /= 2
+        sub16   #0, width, dx
+        copy16  #0, dy
+        MGTK_CALL MGTK::Move, params
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
-.endproc ; DrawDialogTitle
-
+.endproc ; DrawStringCentered
 
 ;;; ============================================================
 

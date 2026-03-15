@@ -392,35 +392,19 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         BTK_CALL BTK::Draw, entry_picker_ok_button
         BTK_CALL BTK::Draw, entry_picker_cancel_button
 
+        MGTK_CALL MGTK::MoveTo, entry_picker_title_pos
+
         lda     selector_action
     IF A = #SelectorAction::edit
-        TAIL_CALL DrawTitleCentered, AX=#label_edit
+        TAIL_CALL main::DrawStringCentered, AX=#label_edit
     END_IF
 
     IF A = #SelectorAction::delete
-        TAIL_CALL DrawTitleCentered, AX=#label_del
+        TAIL_CALL main::DrawStringCentered, AX=#label_del
     END_IF
 
-        FALL_THROUGH_TO DrawTitleCentered, AX=#label_run
+        TAIL_CALL main::DrawStringCentered, AX=#label_run
 .endproc ; OpenWindow
-
-;;; ============================================================
-
-.proc DrawTitleCentered
-        params := $06
-        str := params
-        width := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-
-        sub16   #winfo_entry_picker::kWidth, width, pos_dialog_title::xcoord
-        lsr16   pos_dialog_title::xcoord ; /= 2
-        MGTK_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawTitleCentered
 
 ;;; ============================================================
 ;;; When returning from event loop:

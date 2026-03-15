@@ -60,11 +60,12 @@ Exec:
         CALL    main::OpenPromptDialog, A=#kPromptButtonsOKCancel
         jsr     main::SetPortForPromptDialog
 
+        MGTK_CALL MGTK::MoveTo, prompt_dialog_title_pos
         ldax    #aux::label_format_disk
     IF bit erase_flag : NS
         ldax    #aux::label_erase_disk
     END_IF
-        jsr     main::DrawDialogTitle
+        jsr     main::DrawStringCentered
 
         ;; --------------------------------------------------
         ;; Prompt for device

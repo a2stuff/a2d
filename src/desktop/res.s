@@ -194,7 +194,7 @@ nextwinfo:      .addr   0
         kNameInputWidth = 320
 
         DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight-1
-        DEFINE_POINT pos_dialog_title, 0, aux::kDialogTitleY
+        DEFINE_POINT prompt_dialog_title_pos, winfo_prompt_dialog::kWidth/2, aux::kDialogTitleY
 
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
@@ -377,6 +377,8 @@ nextwinfo:      .addr   0
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME entry_picker_frame_rect, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
+
+        DEFINE_POINT entry_picker_title_pos, winfo_entry_picker::kWidth/2, aux::kDialogTitleY
 
         ;; Options control metrics
         kShortcutPickerCols = 3
