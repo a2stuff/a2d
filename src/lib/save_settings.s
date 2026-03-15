@@ -149,7 +149,7 @@ failed:
         ;; Responses are either OK or Try Again/Cancel
         cmp     #kAlertResultTryAgain
         rts
-.endproc
+.endproc ; _CheckRetry
 
 retry_flag:        .byte   0 ; bit7
 

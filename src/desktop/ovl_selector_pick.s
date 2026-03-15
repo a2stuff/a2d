@@ -608,7 +608,7 @@ handle_button:
 
 index:  .byte   0
 flags:  .byte   0
-.endproc ; AssignSecondaryRunListEntryData
+.endproc ; AssignEntryData
 
 ;;; ============================================================
 ;;; Removes the specified entry, shifting later entries down as
@@ -985,7 +985,7 @@ failed:
         ;; Responses are either OK or Try Again/Cancel
         cmp     #kAlertResultTryAgain
         rts
-.endproc
+.endproc ; _CheckRetry
 
 retry_flag:        .byte   0 ; bit7
 
