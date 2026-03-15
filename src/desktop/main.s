@@ -3768,15 +3768,6 @@ alpha:  jsr     ShiftDown
 
         FALL_THROUGH_TO common
 
-        ;; TODO: If shift is down and there is a selection then:
-        ;; * current = last selected
-        ;; * while true
-        ;;   * current = current + delta
-        ;;   * if current does not exist, break
-        ;;   * if current is selected, continue
-        ;;   * otherwise, select current
-
-
 ;;; --------------------------------------------------
 ;;; Figure out current selected index, based on selection.
 
@@ -3911,8 +3902,6 @@ END_PARAM_BLOCK
         ;; NOTE: Intentionally uses bitmap rect as this seems
         ;; to match intuitive expectations better.
         ITK_CALL IconTK::GetBitmapRect, icon_param ; inits `tmp_rect`
-
-        ;; TODO: What about small icon views?
 
 ;;; --------------------------------------------------
 ;;; Extend rect, based on dir

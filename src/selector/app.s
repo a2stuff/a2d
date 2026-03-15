@@ -1466,7 +1466,7 @@ retry:
         txa
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     fail            ; `kAlertResultCancel` = 1
-        jmp     retry           ; TODO: `BEQ`
+        beq     retry           ; always
       END_IF
 
 fail:

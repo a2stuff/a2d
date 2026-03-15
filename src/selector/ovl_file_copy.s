@@ -114,9 +114,6 @@ dst_path:       .res    64, 0
 src_path:       .res    64, 0
 filename:       .res    16, 0
 
-src_path_slash_index:           ; TODO: Written but never read?
-        .byte   0
-
 saved_stack:
         .byte   0
 
@@ -249,23 +246,13 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 
 ;;; ============================================================
 ;;; Copy `src_path` to `pathname_src` and `dst_path` to `pathname_dst`
-;;; and note last '/' in src.
 
 .proc CopyPathsFromBufsToSrcAndDst
-        ldy     #0
-        sta     src_path_slash_index
-        dey
-
         ;; Copy `src_path` to `pathname_src`
-        ;; ... but record index of last '/'
+        ldy     src_path
     DO
-        iny
-        lda     src_path,y
-      IF A = #'/'
-        sty     src_path_slash_index
-      END_IF
-        sta     pathname_src,y
-    WHILE Y <> src_path
+        copy8    src_path,y, pathname_src,y
+    WHILE dey : POS
 
         ;; Copy `dst_path` to `pathname_dst`
         ldy     dst_path

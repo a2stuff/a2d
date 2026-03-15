@@ -123,7 +123,14 @@ params:  .res    3
 
 ;;; ============================================================
 
+;;; Input: `auxlc::dest_drive_index` is target in `auxlc::drive_unitnum_table`
 .proc FormatDevice
+        sta     ALTZPOFF
+        jsr     format
+        sta     ALTZPON
+        rts
+
+format:
         ldx     auxlc::dest_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     unit_number
@@ -133,7 +140,6 @@ params:  .res    3
         CALL    DeviceDriverAddress, A=unit_number
         stax    $06
 
-        ;; TODO: Is this safe with `ALTZPON` ???
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
         lda     unit_number

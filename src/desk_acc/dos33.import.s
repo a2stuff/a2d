@@ -1246,8 +1246,10 @@ translate_type:
 
 write_sector:
         JUMP_TABLE_MLI_CALL WRITE, write_params
-        ;; TODO: CLOSE on error
-        RTS_IF CS
+    IF CS
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        rts
+    END_IF
 
 read_sector:
         ;; Read next sector

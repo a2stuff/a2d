@@ -479,6 +479,56 @@ function FilePickerTest(
       cleanup_func()
   end)
 
+  --------------------------------------------------
+  -- Many Files
+  --------------------------------------------------
+
+  --[[
+    Open a directory with more than 127 files but less than 256 files.
+    Verify that the first 127 files are shown.
+  ]]
+
+  if not options.dirs_only then
+    test.Step(
+      name .. " - more than 127 files",
+      function()
+        activation_func()
+
+        a2d.NavigateFilePickerTo("/TESTS/FILE.PICKER/HAS.140.FILES")
+        -- F1, F10, F100, ... F109, F11, F110, F119, F12, F120, ... F127
+        for i = 1, 32 do
+          apple2.DownArrowKey()
+        end
+        a2d.WaitForRepaint()
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "F127", "F127 should be selected")
+
+        cleanup_func()
+    end)
+  end
+
+  --[[
+    Open a directory with more than 256 files. Verify that the first
+    127 files are shown.
+  ]]
+
+  if not options.dirs_only then
+    test.Step(
+      name .. " - more than 256 files",
+      function()
+        activation_func()
+
+        a2d.NavigateFilePickerTo("/TESTS/FILE.PICKER/HAS.270.FILES")
+        -- F1, F10, F100, ... F109, F11, F110, F119, F12, F120, ... F127
+        for i = 1, 32 do
+          apple2.DownArrowKey()
+        end
+        a2d.WaitForRepaint()
+        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "F127", "F127 should be selected")
+
+        cleanup_func()
+    end)
+  end
+
 end
 
 FilePickerTest(

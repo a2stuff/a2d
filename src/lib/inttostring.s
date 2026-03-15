@@ -56,8 +56,7 @@ not_pad:
 next:   inx
         inx
         cpx     #8              ; up to 4 digits (*2) via subtraction
-        beq     done
-        jmp     loop            ; TODO: `BNE`
+        bne     loop
 
 done:   lda     value           ; handle last digit
         ora     #'0'

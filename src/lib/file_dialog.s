@@ -955,10 +955,19 @@ err:    jsr     _SetRootPath
         sta     entry_in_block
         copy8   dir_read_buf+SubdirectoryHeader::entry_length, entry_length
         copy8   dir_read_buf+SubdirectoryHeader::entries_per_block, entries_per_block
+
+        kMaxEntries = 127
+        lda     dir_read_buf+SubdirectoryHeader::file_count+1
+    IF NOT ZERO
+        lda     #kMaxEntries
+    ELSE
         lda     dir_read_buf+SubdirectoryHeader::file_count
-        and     #$7F            ; TODO: max of 128 entries, but this is still weird
-        sta     num_file_names
         beq     close
+      IF A >= #kMaxEntries+1
+        lda     #kMaxEntries
+      END_IF
+    END_IF
+        sta     num_file_names
 
         ptr := $06
         copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr
