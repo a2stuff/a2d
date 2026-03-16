@@ -246,10 +246,9 @@ retry:
         CALL    main::DrawDialogLabel, Y=#7, AX=#aux::str_tip_prodos
         jsr     main::SetCursorWatch ; before writing header
 
-        ldxy    #main::filename_buf
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     WriteHeaderBlocks
+        CALL    WriteHeaderBlocks, XY=#main::filename_buf
         pha
         jsr     main::SetCursorPointer ; after writing header
         pla

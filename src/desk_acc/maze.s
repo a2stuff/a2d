@@ -166,10 +166,7 @@ backtrack:
         sty     row
 
 step:
-        ldx     col
-        ldy     row
-
-        jsr     CountFreeNeighbors
+        CALL    CountFreeNeighbors, X=col, Y=row
         beq     backtrack
 
         ;; At least one neighbor free - try directions at random until
@@ -663,15 +660,11 @@ pixels_right_b:
         PIXELS "..........####"
         PIXELS ".............."
 
-
 ;;; ============================================================
 
         .include "../lib/prng.s"
 
 ;;; ============================================================
-
-
-
 
 stack_size:
         .word   0
@@ -681,13 +674,6 @@ stack_size:
 visited_cells := *
 stack_x       := * + kNumCells
 stack_y       := * + kNumCells * 2
-
-        .out .sprintf("Space remaining: %d", ($2000 - * - (3 * kNumCells)))
-
-        .out .sprintf("visited_cells: %04X", visited_cells)
-        .out .sprintf("stack_size: %04X", stack_size)
-        .out .sprintf("stack_x: %04X", stack_x)
-        .out .sprintf("stack_y: %04X", stack_y)
 
 ;;; ============================================================
 

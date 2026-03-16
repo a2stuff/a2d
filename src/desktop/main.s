@@ -4519,8 +4519,7 @@ _PreamblePreCached:
         sty     tick_v
 
         ;; Compute effective viewport
-        lda     cached_window_id
-        jsr     ApplyWinfoToWindowGrafport
+        CALL    ApplyWinfoToWindowGrafport, A=cached_window_id
         add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
         COPY_STRUCT MGTK::Point, viewport+MGTK::Rect::topleft, old
 
@@ -6184,8 +6183,7 @@ no_win:
     END_IF
 
         ;; Used cached window's details, which are correct now.
-        lda     cached_window_id
-        jsr     AssignWindowBlockCounts
+        CALL    AssignWindowBlockCounts, A=cached_window_id
 
         copy16  window_blocks_used_table-2,x, window_draw_blocks_used_table-2,x ; 1-based to 0-based
         copy16  window_blocks_free_table-2,x, window_draw_blocks_free_table-2,x
@@ -6611,8 +6609,7 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
         ldy     found_windows_count
       IF NOT_ZERO
        DO
-        lda     found_windows_list-1,y
-        jsr     AssignWindowBlockCounts
+        CALL    AssignWindowBlockCounts, A=found_windows_list-1,y
        WHILE dey : NOT_ZERO
       END_IF
     END_IF
@@ -9573,8 +9570,7 @@ FinishOperation:
         copy16  #operations::DoNothing, operation_complete_callback
         CLEAR_BIT7_FLAG do_op_flag
 
-        lda     selected_window_id
-        jsr     GetWindowPath
+        CALL    GetWindowPath, A=selected_window_id
         invert_flag := *+1
         ldy     #SELF_MODIFIED_BYTE
         jsr     CheckMoveOrCopy ; A,X = path, Y = invert flag
@@ -12478,8 +12474,8 @@ DoRename        := DoRenameImpl::start
 ;;; This uses a minimal dialog window to simulate modeless rename.
 
 .proc _DialogOpen
+        jsr     GetSelectionViewBy
         ldy     #LETK::kLineEditOptionsNormal
-        jsr     GetSelectionViewBy ; preserves Y
     IF A = #DeskTopSettings::kViewByIcon
         ldy     #LETK::kLineEditOptionsCentered
     END_IF

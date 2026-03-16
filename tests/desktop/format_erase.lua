@@ -40,6 +40,8 @@ FormatEraseTest(
   function(invoke)
     invoke(false)
 
+    test.ExpectIMatch(a2dtest.OCRScreen(), "RAM1", "RAM1 should exist")
+
     -- device selection
     a2d.FormatEraseSelectSlotDrive(1, 1)
 
@@ -54,7 +56,7 @@ FormatEraseTest(
     -- command
     emu.wait(5) -- slow
     a2dtest.ExpectAlertNotShowing()
-    test.Snap("verify RAM Card was formatted")
+    test.ExpectNotIMatch(a2dtest.OCRScreen(), "RAM1", "RAM1 should not exist")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should be selected")
 
     -- cleanup
