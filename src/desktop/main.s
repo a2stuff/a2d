@@ -14202,13 +14202,6 @@ params:  .res    3
         sta     row
         tya
         and     #%11110000      ; A = flags
-        beq     calc_y          ; DDL_LEFT
-
-    IF A = #DDL_VALUE
-        copy16  #kDialogValueLeft, dialog_label_pos::xcoord
-        ASSERT_EQUALS .hibyte(::kDialogValueLeft), 0
-        beq     calc_y
-    END_IF
 
         ;; Compute string width
         pha                     ; A = flags
@@ -14216,20 +14209,17 @@ params:  .res    3
         MGTK_CALL MGTK::StringWidth, stringwidth_params
         pla                     ; A = flags
 
-    IF A = #DDL_CENTER
+    IF A = #DDL_VALUE
+        copy16  #kDialogValueLeft, dialog_label_pos::xcoord
+    ELSE_IF A = #DDL_CENTER
         sub16   #kPromptDialogWidth, result, dialog_label_pos::xcoord
         lsr16   dialog_label_pos::xcoord
-        jmp     calc_y
-    END_IF
-
-    IF A = #DDL_RIGHT
+    ELSE_IF A = #DDL_RIGHT
         sub16   #kPromptDialogWidth - kDialogLabelDefaultX, result, dialog_label_pos::xcoord
-    ELSE
-        ;; DDL_LRIGHT
+    ELSE_IF A = #DDL_LRIGHT
         sub16   #kDialogLabelRightX, result, dialog_label_pos::xcoord
     END_IF
 
-calc_y:
         ;; y = base + aux::kDialogLabelHeight * line
         row := *+1
         lda     #SELF_MODIFIED_BYTE ; low byte
@@ -14239,11 +14229,34 @@ calc_y:
         addax   #aux::kDialogLabelBaseY, dialog_label_pos::ycoord
         MGTK_CALL MGTK::MoveTo, dialog_label_pos
         copy16  ptr, @addr
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+
+        ;; Compute shield rect
+        lda     dialog_label_pos::xcoord
+        sta     tmp_rect::x1
+        clc
+        adc     result
+        sta     tmp_rect::x2
+        lda     dialog_label_pos::xcoord+1
+        sta     tmp_rect::x1+1
+        adc     result+1
+        sta     tmp_rect::x2+1
+
+        lda     dialog_label_pos::ycoord
+        sta     tmp_rect::y2
+        sec
+        sbc     #<kSystemFontHeight
+        sta     tmp_rect::y1
+        lda     dialog_label_pos::ycoord+1
+        sta     tmp_rect::y2+2
+        sbc     #>kSystemFontHeight
+        sta     tmp_rect::y1+1
 
         ;; Restore default X position
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
-        rts
+
+        MGTK_CALL MGTK::ShieldCursor, tmp_rect
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        TAIL_CALL UnshieldCursor
 .endproc ; DrawDialogLabel
 
 ;;; ============================================================
