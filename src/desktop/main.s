@@ -1058,7 +1058,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 .proc EraseWindowBackground
         MGTK_CALL MGTK::ShieldCursor, window_grafport+MGTK::GrafPort::maprect
         MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
-        jmp     UnshieldCursor
+        TAIL_CALL UnshieldCursor
 .endproc ; EraseWindowBackground
 
 ;;; ============================================================
@@ -8258,7 +8258,7 @@ in_range:
         CALL    set_pos, AX=#kColDate
         jsr     ComposeDateString
         MGTK_CALL MGTK::DrawString, text_buffer2
-        jmp     UnshieldCursor
+        TAIL_CALL UnshieldCursor
 
 set_pos:
         stax    pos_col::xcoord
@@ -9424,6 +9424,10 @@ table:
         copy8   rect_table,x, tmp_rect,y
     WHILE dex : dey : POS
 
+        MGTK_CALL MGTK::ShieldCursor, tmp_rect
+        jsr     FrameTmpRect
+        TAIL_CALL UnshieldCursor
+
         FALL_THROUGH_TO FrameTmpRect
 .endproc ; _FrameTableRect
 
@@ -10302,7 +10306,7 @@ operation_traversal_callbacks_for_copy:
     END_IF
         jsr     DrawFileCountWithSuffix
 
-        jmp     UnshieldCursor
+        TAIL_CALL UnshieldCursor
 .endproc ; _CopyDialogEnumerationCallback
 
 ;;; Lifecycle callbacks for copy operation (`operation_lifecycle_callbacks`)
@@ -10621,7 +10625,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
 
         jsr     DrawProgressDialogFilesRemaining
 
-        jmp     UnshieldCursor
+        TAIL_CALL UnshieldCursor
 .endproc ; CopyUpdateProgress
 
 ;;; ============================================================
@@ -11229,7 +11233,7 @@ operation_traversal_callbacks_for_delete:
         CALL    DrawProgressDialogLabel, Y=#0, AX=#aux::str_delete_count
         jsr     DrawFileCountWithSuffix
 
-        jmp     UnshieldCursor
+        TAIL_CALL UnshieldCursor
 .endproc ; _DeleteDialogEnumerationCallback
 
 .proc _DeleteDialogConfirmCallback
@@ -11413,7 +11417,7 @@ next_file:
         jsr     DrawTargetFilePath
 
         jsr     DrawProgressDialogFilesRemaining
-        jmp     UnshieldCursor
+        TAIL_CALL UnshieldCursor
 .endproc ; DeleteRefreshProgress
 
 ;;; ============================================================

@@ -71,6 +71,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Reduce disk activity needed after showing file dialog.
 * Handle write protected disk when modifying shortcuts.
 * Fix label/border overlaps in Get Info and Format/Erase dialogs in some locales.
+* Reduce cursor flickering when animating windows open/closed.
 
 ### Selector
 
