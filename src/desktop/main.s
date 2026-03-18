@@ -13899,7 +13899,6 @@ kEntriesPerBlock = $0D
     DO
         lda     path_buf,y      ; find last '/'
         BREAK_IF A = #'/'
-        inx                     ; length of filename
     WHILE dey : NOT_ZERO
 
         dey                     ; length not including '/'
