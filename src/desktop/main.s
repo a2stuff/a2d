@@ -13927,7 +13927,7 @@ kEntriesPerBlock = $0D
         ;; Open directory, search blocks for filename
 
         MLI_CALL OPEN, open_params
-        jcs     exit
+        RTS_IF CS
 
         lda     open_params::ref_num
         sta     read_params::ref_num
