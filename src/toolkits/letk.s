@@ -412,8 +412,7 @@ ycoord  .word
         sta     text_params+MGTK::TextWidthParams::width+1
         sta     text_params+MGTK::TextWidthParams::length
     DO
-        cmp16   text_params+MGTK::TextWidthParams::width, params::xcoord
-        BREAK_IF GE
+        BREAK_IF cmp16 text_params+MGTK::TextWidthParams::width, params::xcoord : GE
         inc     text_params+MGTK::TextWidthParams::length
         lda     text_params+MGTK::TextWidthParams::length
         BREAK_IF A = len

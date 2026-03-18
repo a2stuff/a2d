@@ -329,28 +329,29 @@ get_eof:
         JUMP_TABLE_MLI_CALL GET_EOF, get_eof_params
 
         ;; Maybe LR/DLR?
-        ecmp16  get_file_info_params::aux_type, #$400
-    IF EQ
-        ecmp24  get_eof_params::eof, #$400
-        jeq     ShowLRFile
+    IF ecmp16 get_file_info_params::aux_type, #$400 : EQ
+      IF ecmp24 get_eof_params::eof, #$400 : EQ
+        TAIL_CALL ShowLRFile
+      END_IF
 
-        ecmp24  get_eof_params::eof, #$800
-        jeq     ShowDLRFile
+      IF ecmp24 get_eof_params::eof, #$800 : EQ
+        TAIL_CALL ShowDLRFile
+      END_IF
     END_IF
 
         ;; If bigger than $2000, assume DHR
 
-        ucmp24  get_eof_params::eof, #(kHiresSize+1)
-        jcs     ShowDHRFile
+    IF ucmp24 get_eof_params::eof, #(kHiresSize+1) : GE
+        TAIL_CALL ShowDHRFile
+    END_IF
 
         ;; If bigger than 576, assume HR
-
-        cmp16   get_eof_params::eof, #kMinipixSrcSize+1
-        jcs     ShowHRFile
+    IF cmp16 get_eof_params::eof, #kMinipixSrcSize+1 : GE
+        TAIL_CALL ShowHRFile
+    END_IF
 
         ;; Otherwise, assume Minipix
-
-        jmp     ShowMinipixFile
+        TAIL_CALL ShowMinipixFile
 .endproc ; ShowFile
 
 ;;; ============================================================
@@ -1344,36 +1345,31 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         jne     no
 
         ;; Binary: Must match size/address
-        ecmp16  entry+FileEntry::blocks_used, #33 ; DHR
-    IF EQ
+    IF ecmp16 entry+FileEntry::blocks_used, #33 : EQ ; DHR
         ecmp16  entry+FileEntry::aux_type, #$2000
         jeq     yes
         ecmp16  entry+FileEntry::aux_type, #$4000
         jeq     yes
     END_IF
 
-        ecmp16  entry+FileEntry::blocks_used, #17 ; HR
-    IF EQ
+    IF ecmp16 entry+FileEntry::blocks_used, #17 : EQ ; HR
         ecmp16  entry+FileEntry::aux_type, #$2000
         beq     yes
         ecmp16  entry+FileEntry::aux_type, #$4000
         beq     yes
     END_IF
 
-        ecmp16  entry+FileEntry::blocks_used, #3 ; MiniPix
-    IF EQ
+    IF ecmp16 entry+FileEntry::blocks_used, #3 : EQ ; MiniPix
         ecmp16  entry+FileEntry::aux_type, #$5800
         beq     yes
     END_IF
 
-        ecmp16  entry+FileEntry::blocks_used, #3 ; LR
-    IF EQ
+    IF ecmp16 entry+FileEntry::blocks_used, #3 : EQ ; LR
         ecmp16  entry+FileEntry::aux_type, #$400
         beq     yes
     END_IF
 
-        ecmp16  entry+FileEntry::blocks_used, #5 ; DLR
-    IF EQ
+    IF ecmp16 entry+FileEntry::blocks_used, #5 : EQ ; DLR
         ecmp16  entry+FileEntry::aux_type, #$400
         beq     yes
     END_IF

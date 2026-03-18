@@ -231,11 +231,11 @@
 
 ;;; Increment X,Y as a 16-bit number (x lo, y hi)
 .macro inxy
-        .local skip
+        .local @skip
         inx
-        bne     skip
+        bne     @skip
         iny
-skip:
+@skip:
 .endmacro
 
 ;;; Core for add16/sub16
@@ -440,14 +440,14 @@ skip:
 ;;;    add16_8 $1111, $22               ; absolute, absolute
 .macro add16_8 arg1, arg2, arg3
     .ifblank arg3
-        .local skip
+        .local @skip
         _op_lo  lda, {arg1}
         clc
         adc     arg2
         sta     arg1
-        bcc     skip
+        bcc     @skip
         _op_hi  inc, {arg1}
-skip:
+@skip:
     .else
         _op_lo  lda, {arg1}
         clc
@@ -487,15 +487,15 @@ skip:
 ;;;    addax8 #$11,$2222 ; immediate, absolute
 ;;;    addax8 $11,$2222  ; absolute, absolute
 .macro addax8  arg1, arg2
-.local skip
+.local @skip
         clc
         adc     arg1
     .ifnblank arg2
         sta     arg2
     .endif
-        bcc     skip
+        bcc     @skip
         inx
-skip:
+@skip:
     .ifnblank arg2
         stx     arg2+1
     .endif
@@ -507,15 +507,15 @@ skip:
 ;;;    subax8 #$11,$2222 ; immediate, absolute
 ;;;    subax8 $11,$2222  ; absolute, absolute
 .macro subax8  arg1, arg2
-.local skip
+.local @skip
         sec
         sbc     arg1
     .ifnblank arg2
         sta     arg2
     .endif
-        bcs     skip
+        bcs     @skip
         dex
-skip:
+@skip:
     .ifnblank arg2
         stx     arg2+1
     .endif
@@ -575,14 +575,14 @@ skip:
 ;;;    add16_8 $1111, $22               ; absolute, absolute
 .macro sub16_8 arg1, arg2, arg3
     .ifblank arg3
-        .local skip
+        .local @skip
         _op_lo  lda, {arg1}
         sec
         sbc     arg2
         sta     arg1
-        bcs     skip
+        bcs     @skip
         _op_hi  dec, {arg1}
-skip:
+@skip:
     .else
         _op_lo  lda, {arg1}
         sec
@@ -742,11 +742,11 @@ skip:
 ;;;    scmp16 $1111, $2222,x    ; absolute, indexed
 ;;;    scmp16 $1111,x, $2222,x  ; indexed, indexed
 .macro scmp16 arg1, arg2, arg3, arg4
+        .local @skip
         cmp16 arg1,arg2,arg3,arg4
-    .local skip
-        bvc     skip
+        bvc     @skip
         eor     #$80
-skip:
+@skip:
 .endmacro
 
 ;;; Equality compare 16-bit values - test Z (BEQ/BNE) for equality, or C (BCC/BCS) for ordering.
@@ -761,7 +761,7 @@ skip:
 ;;;    ecmp16 #$1111, $2222,x  ; immediate, indexed
 ;;;    ecmp16 $1111,x, $2222,x ; indexed, indexed
 .macro ecmp16 arg1, arg2, arg3, arg4
-    .local skip
+    .local @skip
         ;; Note that high bytes are compared before low bytes because
         ;; of the early exit when not equal - we want the high byte to
         ;; domimate the ordering.
@@ -769,32 +769,32 @@ skip:
         ;; indexed, indexed
         lda     arg1+1,arg2
         cmp     arg3+1,arg4
-        bne     skip
+        bne     @skip
         lda     arg1,arg2
         cmp     arg3,arg4
     .elseif _is_register {arg2}
         ;; indexed, absolute/immediate
         lda     arg1+1,arg2
         _op_hi  cmp, {arg3}
-        bne     skip
+        bne     @skip
         lda     arg1,arg2
         _op_lo  cmp, {arg3}
     .elseif _is_register {arg3}
         ;; absolute/immediate, indexed
         _op_hi  lda, {arg1}
         cmp     arg2+1,arg3
-        bne     skip
+        bne     @skip
         _op_lo  lda, {arg1}
         cmp     arg2,arg3
     .else
         ;; absolute/immediate, absolute/immediate
         _op_hi  lda, {arg1}
         _op_hi  cmp, {arg2}
-        bne     skip
+        bne     @skip
         _op_lo  lda, {arg1}
         _op_lo  cmp, {arg2}
     .endif
-skip:
+@skip:
 .endmacro
 
 
@@ -823,20 +823,20 @@ skip:
 
 ;;; Increment 16-bit value
 .macro inc16    arg
-        .local skip
+        .local @skip
         inc     arg
-        bne     skip
+        bne     @skip
         inc     arg+1
-skip:
+@skip:
 .endmacro
 
 ;;; Decrement 16-bit value
 .macro dec16    arg
-        .local skip
+        .local @skip
         lda     arg
-        bne     skip
+        bne     @skip
         dec     arg+1
-skip:   dec     arg
+@skip:   dec     arg
 .endmacro
 
 ;;; Push 16-bit value in A,X
@@ -879,13 +879,13 @@ skip:   dec     arg
 
 ;;; Increment 24-bit value
 .macro inc24    arg
-        .local skip
+        .local @skip
         inc     arg
-        bne     skip
+        bne     @skip
         inc     arg+1
-        bne     skip
+        bne     @skip
         inc     arg+2
-skip:
+@skip:
 .endmacro
 
 ;;;    ucmp24 #$111111, $2222 ; immediate, absolute
@@ -902,16 +902,16 @@ skip:
 ;;;    ecmp24 #$111111, $2222 ; immediate, absolute
 ;;;    ecmp24 $1111, $2222    ; absolute, absolute
 .macro ecmp24   arg1, arg2
-        .local skip
+        .local @skip
         _op_b0  lda, {arg1}
         _op_b0  cmp, {arg2}
-        bne     skip
+        bne     @skip
         _op_b1  lda, {arg1}
         _op_b1  cmp, {arg2}
-        bne     skip
+        bne     @skip
         _op_b2  lda, {arg1}
         _op_b2  cmp, {arg2}
-skip:
+@skip:
 .endmacro
 
 ;;; ============================================================

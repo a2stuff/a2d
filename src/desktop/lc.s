@@ -151,8 +151,8 @@ params: .res    3
         ;; not, we need to offset the maprect below the header to prevent
         ;; icons from drawing over the header when vertically scrolled.
         sub16   desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, tmpw
-        scmp16  tmpw, #kWindowHeaderHeight
-    IF NEG
+
+    IF scmp16 tmpw, #kWindowHeaderHeight : NEG
         ;; Adjust grafport to account for header
         add16   window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
         add16   window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1

@@ -866,7 +866,7 @@ table := *
         nop
     WHILE jsr target : jsr target : NS
 
-        ;; Staments in "gotos"
+        ;; Statements in "gotos"
     DO
         nop
         REDO_IF bit var : NS
@@ -876,6 +876,20 @@ table := *
         BREAK_IF bit var : NS
         nop
     WHILE POS
+
+        ;; Macros in statements
+    IF scmp16 var, var : POS
+        nop
+    END_IF
+    IF scmp16 var, #kConstant : POS
+        nop
+    END_IF
+        ;; Note that AS_BYTE(-1) will result in an assembly error
+        ;; because ca65 passes the whole rest of the line as the arg,
+        ;; since commas are the delimiter.
+    IF scmp16 var, #AS_BYTE{-1} : POS
+        nop
+    END_IF
 
 ;;; ============================================================
 ;;; Control Flow Macros - Functions

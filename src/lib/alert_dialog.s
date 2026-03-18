@@ -278,8 +278,7 @@ advance:
         ;; Does this much fit?
         sty     textwidth_params::length
         MGTK_CALL MGTK::TextWidth, textwidth_params
-        cmp16   textwidth_params::width, #kWrapWidth
-    IF LT
+    IF cmp16 textwidth_params::width, #kWrapWidth : LT
         ;; Yes, record possible split position, maybe continue.
         ldy     textwidth_params::length
         sty     split_pos

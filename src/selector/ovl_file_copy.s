@@ -137,10 +137,10 @@ saved_stack:
     IF CS
         jmp     HandleErrorCode
     END_IF
+
         blocks := $06
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks
-        cmp16   blocks, block_count
-    IF LT
+    IF cmp16 blocks, block_count : LT
         jmp     ShowDiskFullError
     END_IF
 

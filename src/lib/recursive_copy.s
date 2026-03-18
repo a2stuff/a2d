@@ -398,8 +398,8 @@ eof:    RETURN  A=#$FF
         jsr     _PopIndexFromStack
         jsr     _OpenSrcDir
 
-:       cmp16   entry_index_in_dir, target_index
-    IF LT
+:
+    IF cmp16 entry_index_in_dir, target_index : LT
         jsr     _ReadFileEntry
         jmp     :-
     END_IF
@@ -666,8 +666,8 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
     END_IF
 
         ;; Does it fit? (free >= needed)
-        cmp16   dst_vol_blocks_free, src_file_info_params::blocks_used
-    IF LT
+
+    IF cmp16 dst_vol_blocks_free, src_file_info_params::blocks_used : LT
         ;; Not enough room
         jmp     OpHandleNoSpace
     END_IF

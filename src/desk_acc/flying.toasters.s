@@ -133,27 +133,18 @@ exit:
         sub16   xpos, #4, xpos
 
         ;; Wrap Y
-        cmp16   ypos, #kScreenHeight
-      IF VS
-        eor     #$80
-      END_IF
-      IF NC
+      IF scmp16 ypos, #kScreenHeight : POS
         copy16  #AS_WORD(-kToasterHeight), ypos
       END_IF
 
         ;; Wrap X
-        cmp16   xpos, #AS_WORD(-kToasterWidth)
-      IF VS
-        eor     #$80
-      END_IF
-      IF NS
+      IF scmp16 xpos, #AS_WORD{-kToasterWidth} : NS
         copy16  #kScreenWidth+kToasterWidth, xpos
       END_IF
 
         ;; Next frame
         inc     frame
-        lda     frame
-      IF A = #4                 ; num frames
+      IF lda frame : A = #4     ; num frames
         copy8   #0, frame
       END_IF
 

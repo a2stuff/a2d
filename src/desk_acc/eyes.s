@@ -535,8 +535,7 @@ outer_only:
 
 next:
         inc16   yy
-        cmp16   yy, outer_oval+OvalRec::bottom
-    WHILE LT
+    WHILE cmp16 yy, outer_oval+OvalRec::bottom : LT
 
         rts
 
@@ -732,8 +731,7 @@ oval := $50
 
         ;; if (ovalWidth [16.0] > d0 [16.0])
         ;;   ovalWidth [16.0] = d0 [16.0]
-        cmp16   ovalWidth, d0
-    IF LT
+    IF cmp16 ovalWidth, d0 : LT
         copy16  d0, ovalWidth
     END_IF
 
@@ -742,8 +740,7 @@ oval := $50
 
         ;; if (ovalHeight [16.0] > d0 [16.0])
         ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
-        cmp16   ovalHeight, d0
-    IF LT
+    IF cmp16 ovalHeight, d0 : LT
         copy16  d0, ovalHeight
     END_IF
 
@@ -933,13 +930,11 @@ rotate:
 
         ;; if (vert [16.0] < oval.top [16.0])
         ;;   return;
-        cmp16   vert, oval+OvalRec::top
-        RTS_IF LT
+        RTS_IF cmp16 vert, oval+OvalRec::top : LT
 
         ;; if (vert [16.0] >= oval.bottom [16.0])
         ;;   return;
-        cmp16   vert, oval+OvalRec::bottom
-        RTS_IF GE
+        RTS_IF cmp16 vert, oval+OvalRec::bottom : GE
 
         ;; d0 [16.0] = oval.y [16.0];
         copy16  oval+OvalRec::yy, d0

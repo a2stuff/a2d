@@ -214,8 +214,7 @@ remainder:      .word   0       ; (out)
         ;; > 64K? Treat as 64K
         ;; TODO: Rework load/display logic to be 24-bit friendly
         kMaxFileSize = $10000 - $200 ; don't wrap adding buffer size
-        ucmp24  get_eof_params::eof, #kMaxFileSize
-    IF GE
+    IF ucmp24 get_eof_params::eof, #kMaxFileSize : GE
         copy16  #kMaxFileSize, get_eof_params::eof
     END_IF
 
@@ -660,10 +659,8 @@ end:    rts
         copy8   #0, tab_flag
 
         ldx     #0
-        cmp16   current_line, first_visible_line
-      IF GE
-        cmp16   last_visible_line, current_line
-       IF GE
+      IF cmp16 current_line, first_visible_line : GE
+       IF cmp16 last_visible_line, current_line : GE
         inx
        END_IF
       END_IF
@@ -806,8 +803,7 @@ loop:
         inc     run_width+1
 :
         ;; Is there room?
-        cmp16   remaining_width, run_width
-    IF GE
+    IF cmp16 remaining_width, run_width : GE
         inc     drawtext_params::textlen
         jmp     loop
     END_IF
@@ -842,8 +838,8 @@ run_width:  .word   0
         copy8   #1, tab_flag
         add16   run_width, line_pos::left, line_pos::left
         ldx     #0
-loop:   cmp16   times70,x, line_pos::left
-    IF LT
+loop:
+    IF cmp16 times70,x, line_pos::left : LT
         inx
         inx
         cpx     #14

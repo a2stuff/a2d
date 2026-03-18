@@ -371,8 +371,7 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::MulDiv, progress_muldiv_params
 
         ;; Max out the meter
-        cmp16   progress_muldiv_params::result, #kMeterWidth
-    IF GE
+    IF cmp16 progress_muldiv_params::result, #kMeterWidth : GE
         copy16  #kMeterWidth, progress_muldiv_params::result
         MGTK_CALL MGTK::SetPattern, pattern_plaid
     END_IF

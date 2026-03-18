@@ -397,8 +397,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
 
         ;; Next block
         inc16   auxlc::block_num
-        cmp16   auxlc::block_num, auxlc::source_block_count
-    WHILE LT
+    WHILE cmp16 auxlc::block_num, auxlc::source_block_count : LT
 
         ;; That was last block so we're done
         RETURN  A=#$80
@@ -514,8 +513,7 @@ mem_block_addr:
       END_IF
 
         inc16   block
-        cmp16   block, auxlc::source_block_count
-      IF GE
+      IF cmp16 block, auxlc::source_block_count : GE
         RETURN  AX=count
       END_IF
     FOREVER

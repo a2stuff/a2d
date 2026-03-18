@@ -375,8 +375,8 @@ finish:
         ldy     #MGTK::Point::xcoord
         add16in (pos_ptr),y, (delta_ptr),y, tmpw
 
-        scmp16  tmpw, #0
-      IF NEG
+
+      IF scmp16 tmpw, #0 : NEG
         copy16  #0, tmpw
 
         ldy     #MGTK::Point::xcoord
@@ -385,8 +385,8 @@ finish:
 
         sub16   winfo::maprect+MGTK::Rect::x2, #kObjectWidth-1, dim
 
-        scmp16  dim, tmpw
-      IF NEG
+
+      IF scmp16 dim, tmpw : NEG
         copy16  dim, tmpw
 
         ldy     #MGTK::Point::xcoord
@@ -402,8 +402,8 @@ finish:
         ldy     #MGTK::Point::ycoord
         add16in (pos_ptr),y, (delta_ptr),y, tmpw
 
-        scmp16  tmpw, #0
-      IF NEG
+
+      IF scmp16 tmpw, #0 : NEG
         copy16  #0, tmpw
 
         ldy     #MGTK::Point::ycoord
@@ -411,8 +411,8 @@ finish:
       END_IF
 
         sub16   winfo::maprect+MGTK::Rect::y2, #kObjectHeight-1, dim
-        scmp16  dim, tmpw
-      IF NEG
+
+      IF scmp16 dim, tmpw : NEG
         copy16  dim, tmpw
 
         ldy     #MGTK::Point::ycoord

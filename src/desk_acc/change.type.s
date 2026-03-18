@@ -662,8 +662,7 @@ callback:
         CLEAR_BIT7_FLAG data::type_valid
       END_IF
 
-        ecmp16  gfi_params::aux_type, data::auxtype
-      IF NE
+      IF ecmp16 gfi_params::aux_type, data::auxtype : NE
         CLEAR_BIT7_FLAG data::auxtype_valid
       END_IF
 

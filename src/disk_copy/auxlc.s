@@ -1459,8 +1459,8 @@ next_device:
         ;; Compare block counts
         asl     a
         tax
-        ecmp16  block_count_table,x, src_block_count
-      IF EQ
+
+      IF ecmp16 block_count_table,x, src_block_count : EQ
         ;; Same - add it
         pla                     ; A = index
         pha

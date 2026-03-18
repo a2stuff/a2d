@@ -115,8 +115,8 @@ fail:   jmp     fail
         inc     src+1
         inc     dst+1
       END_IF
-        ecmp16  src, end
-    WHILE NE
+
+    WHILE ecmp16 src, end : NE
 
         ;; Bank in ROM
         sta     ALTZPOFF
