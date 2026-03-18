@@ -42,12 +42,12 @@
 ;;;
 ;;; ("NOT" has highest precedence, then "AND", then "OR")
 ;;;
-;;; Conditions can optionally be preceded by one or more statements
-;;; that start with BIT, LDA, LDX, LDY, INC, INX, INY, DEC, DEX, or
-;;; DEY (upper or lowercase), terminated by a ':'.
+;;; Conditions can optionally be preceded by one or more statements,
+;;; terminated by a ':'.
 ;;; e.g. "IF BIT flag : NS"
 ;;; e.g. "WHILE INX : X < #10"
 ;;; e.g. "WHILE DEX : DEX : POS"
+;;; e.g. "WHILE JSR GetNext : CC"
 
 ;;; ============================================================
 ;;; Infrastructure
@@ -438,6 +438,14 @@
 ;;; Parsing
 ;;; --------------------------------------------------
 
+
+.define _f2_is_register(arg) .xmatch({arg}, A) .or .xmatch({arg}, X) .or .xmatch({arg}, Y)
+.define _f2_is_flag_test(arg) .xmatch({arg}, CC) .or .xmatch({arg}, CS) .or .xmatch({arg}, NC) .or .xmatch({arg}, NS) .or .xmatch({arg}, ZC) .or .xmatch({arg}, ZS) .or .xmatch({arg}, VC) .or .xmatch({arg}, VS)
+.define _f2_is_unary_op(arg) .xmatch({arg}, NOT)
+
+;;; A condition must start with a register, flag test, or unary operator
+.define _f2_is_cond_start(arg) ( _f2_is_register {arg} .or  _f2_is_flag_test {arg} .or  _f2_is_unary_op {arg} )
+
 ;;; Consume a single token from `f2_token_list`
 .macro F2_PARSE_CONSUME
         .define f2_tmp .mid(1, 9999, {f2_token_list})
@@ -477,9 +485,7 @@
 ;;; Parse a relational expression / binary operation (e.g. `A = #7`)
 .macro F2_PARSE_COMP
         .define f2_lhs .left(1, {f2_token_list})
-        .if .xmatch(f2_lhs, A)
-        .elseif .xmatch(f2_lhs, X)
-        .elseif .xmatch(f2_lhs, Y)
+        .if _f2_is_register {f2_lhs}
         .else
           F2_ERR_EXPECTED "register (A,X,Y)"
         .endif
@@ -657,13 +663,13 @@
           @f2_negate_flag .set .not(@f2_negate_flag)
           F2_PARSE_BEXPR
 
-        .elseif .xmatch({f2_tok}, A) .or .xmatch({f2_tok}, X) .or .xmatch({f2_tok}, Y)
+        .elseif _f2_is_register {f2_tok}
           .undef f2_tok
 
           ;; register - start of a relational expression (comparison)
           F2_PARSE_COMP
 
-        .elseif .xmatch({f2_tok}, CC) .or .xmatch({f2_tok}, CS) .or .xmatch({f2_tok}, NC) .or .xmatch({f2_tok}, NS) .or .xmatch({f2_tok}, ZC) .or .xmatch({f2_tok}, ZS) .or .xmatch({f2_tok}, VC) .or .xmatch({f2_tok}, VS)
+        .elseif _f2_is_flag_test {f2_tok}
           .undef f2_tok
 
           ;; flag test
@@ -722,11 +728,16 @@
 .endmacro
 
 .macro F2_PARSE_STATEMENTS
-        ;; Match any of BIT, LDA, LDX, LDY, INC, INX, INY, DEC, DEX, DEY, upper or lowercase
-        .if .xmatch(.left(1, {f2_token_list}), bit) .or .xmatch(.left(1, {f2_token_list}), BIT) .or .xmatch(.left(1, {f2_token_list}), lda) .or .xmatch(.left(1, {f2_token_list}), LDA) .or .xmatch(.left(1, {f2_token_list}), ldx) .or .xmatch(.left(1, {f2_token_list}), LDX) .or .xmatch(.left(1, {f2_token_list}), ldy) .or .xmatch(.left(1, {f2_token_list}), LDY) .or .xmatch(.left(1, {f2_token_list}), inc) .or .xmatch(.left(1, {f2_token_list}), INC) .or .xmatch(.left(1, {f2_token_list}), inx) .or .xmatch(.left(1, {f2_token_list}), INX) .or .xmatch(.left(1, {f2_token_list}), iny) .or .xmatch(.left(1, {f2_token_list}), INY) .or .xmatch(.left(1, {f2_token_list}), dec) .or .xmatch(.left(1, {f2_token_list}), DEC) .or .xmatch(.left(1, {f2_token_list}), dex) .or .xmatch(.left(1, {f2_token_list}), DEX) .or .xmatch(.left(1, {f2_token_list}), dey) .or .xmatch(.left(1, {f2_token_list}), DEY)
+        ;; If it is not the start of a condition, then it must be a
+        ;; statement. Parse until the ':' end-of-statement delimiter.
+        .define f2_tok .left(1, {f2_token_list})
+        .if _f2_is_cond_start {f2_tok}
+          .undef f2_tok
+        .else
+          .undef f2_tok
           F2_PARSE_STATEMENT
 
-          .ifnblank token_list
+          .ifnblank f2_token_list
             F2_PARSE_STATEMENTS
           .endif
 
