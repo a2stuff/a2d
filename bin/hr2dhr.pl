@@ -19,14 +19,11 @@ for (my $i = 0; $i < 256; ++$i) {
   my $hi;
   if ($bits & 1) {
     # palette bit set is easy case
-    $lo = ($accum & 0x7f);
-    $hi = (($accum >> 7) & 0xff);
+    $lo = $accum & 0x7f;
+    $hi = ($accum >> 7) & 0x3f;
   } else {
-    # otherwise, encode spill bit into hi bit of main mem (hi)
-    my $spill = $accum & 1;
-    $accum = $accum >> 1;
-    $lo = ($accum & 0x7f);
-    $hi = (($accum >> 7) & 0xff) | ($spill << 7); # encode spill bit
+    $lo = ($accum >> 1) & 0x7f;
+    $hi = ($accum >> 8) & 0x3f;
   }
   push @lo, $lo;
   push @hi, $hi;

@@ -109,6 +109,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Control Panels: Handle write protected disk when modifying settings.
 * Control Panel: Fix overlapping button labels in some locales.
 * Map: Fix overlapping labels in some locales.
+* Image Preview: Improve single hires file preview quality.
 
 ### Misc
 

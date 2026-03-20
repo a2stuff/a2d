@@ -9,91 +9,130 @@ display, since at that level HR and DHR are identical. NTSC magic translates the
 
 Hires uses the lower 7 bits per byte directly (bit 0 on the left of the screen).
 7 pixels/byte * 40 bytes per row gives 280 pixels per row. If the 8th bit is set
-that set of 7 pixels is shifted by half a pixel. This gives a resolution of 560
-pixels per row, although most patterns cannot be set.
+that set of 7 pixels is shifted right by half a pixel. This gives a resolution of
+560 pixels per row, although most patterns cannot be set.
 
-Double Hires also uses the lower 7 bits. 7 pixels/byte * 80 bytes per row gives
+Double hires also uses the lower 7 bits. 7 pixels/byte * 80 bytes per row gives
 560 pixels per row. The 8th bit in each byte is complete ignored. For added
 fun, bytes alternate between aux mem and main memory. But we want to reason
 about byte pairs anyway, since we're mapping one hires byte to 2 dhr bytes.
 
-## Conversion
+Finally, the low bit in each byte is the left-most on the screen, so
+it's easiest to describe the bits backwards. That is, `$01` is written
+as `10000000` instead of `00000001`.
 
-### Easy Case
+## Conversion - Theory
 
-Hires bytes with the high bit set turn out to be the easy case. The source
-7 bits are basically just doubled up and then split with 7 going into each
-destination byte. We'll visualize that with the byte patterns for blue/orange:
-```
-source byte:     0xD5                    |    0xAA
-source bits:     0b11010101              |    0b10101010
-hr pixels:       1  0  1  0:  1  0  1    |    0  1  0  1:  0  1  0
-dhr pixels:      11 00 11 0:0 11 00 11   |    00 11 00 1:1 00 11 00
-dest bits:       0b_1100110 0b_1100110   |    0b_1001100 0b_0011001
-dest bytes:      0x66       0x66         |    0x4C       0x19
-```
-To read that table, remember that bits/pixels are in reverse order.
-Also, the high destination bit doesn't matter; this wil prove useful later.
+If everything was simple, the conversion process would be: for every
+row in the screen, convert the 40 HR bytes to 80 DHR bytes by doubling
+the bits. Naming the left-most (lowest) visible bit `a` and the
+right-most (highest) visible bit `g`, the doubling appears as:
 
-### Hard Case
+`abcdefg0` → `aabbccd_` `deeffgg_`
 
-When the high bit is _not_ set, the source pixels are shifted a
-half-pixel *right*, here shown by shifting the dhr pixels *left*.
-We'll visualize this using the byte patterns for violet/green:
+Where `_` signals that we don't care about the high bit on the
+double-hires display, as it is not used.
 
-```
-source byte:     0x55                    |    0x2A
-source bits:     0b01010101              |    0b00101010
-hr pixels:       1  0  1  0:  1  0  1    |    0  1  0  1:  0  1  0
-dhr pixels:   (1)1 00 11 00: 11 00 11(?) | (0)0 11 00 11: 00 11 00(?)
-dest bits:       0b_0011001 0b_?110011   |    0b_1100110 0b_?001100
-dest bytes:      0x19       0x33 | ?<<7  |    0x66       0x06 | ?<<7
-```
+There are multiple complications:
 
-This means we're dropping a bit on the left - shown in parentheses -
-and have an unknown bit on the right - shown as ?. Visualizing it this
-way solves the mystery: when the high bit is clear in the hires bytes,
-a bit "spills" from each dhr pixel pair into the pixel pair to the left.
-Doing this will preserve the original 560 B&W pixel pattern.
+### Palette Bit Shift
 
-### Conversion Algorithm
+As noted, if the high bit in an HR byte is set then there is a
+half-pixel shift to the right:
+
+`abcdefg1` → `Xaabbcc_` `ddeeffg_`
+
+A bit `X` needs to be shifted in from the left. This bit has the same
+value as the rightmost bit in the previous byte.
+
+* If the previous byte had high bit set then it the repetition of the
+  `g` bit that didn't fit.
+
+* If the previous byte had high bit clear then this is a repetition of
+  its final `g` - it is stretched out to cover 3 bits.
+
+* If there was no previous byte, i.e. the left-most byte on the
+  screen, then it is 0.
+
+Following the above logic reproduces the highres monochrome display
+exactly on the double highres display. But if viewed on a color
+display the colors will be wrong!
+
+### 80-Column Shift
+
+On the Apple II (except the IIgs) the 80-column hardware display
+starts 7 "pixels" earlier than the 40-column display, and this affects
+single-hires and double-hires as well. Emulators often skip this
+detail, but it is present on real hardware. It matters here because
+the way that color is derived from the monochrome bitmap depends on
+how the NTSC color clock aligns with the bitmap. The color clock cycle
+is 4 monochrome bits wide, so 4-bit wide patterns produce colors. But
+*which* 4 bits depend on the alignment with the color, not just the
+width. So while the monochrome 560 bitmap starting with 11001100...
+yields purple in single-highres, it yields blue in double-hires!
+
+This is because of the double-hires display starting 7 "pixels"
+earlier; the pattern has shifted by 7 pixels relative to the color
+clock. Since the color clock is 4 bits wide, it is necessary to shift
+the pattern left by one bit or right by 3 bits to align correctly and
+produce purple as expected.
+
+Taking the previous exact conversion of the single-highres monochrome
+screen to double-highres, then shifting everything one bit left will
+yield a correct color conversion of the single-hires screen to double
+hires.
+
+This necessarily results in discarding the leftmost bit ("pixel") on
+the screen; the alternative is to discard the rightmost three bits
+("pixels").
+
+### Summary
+
+Recapping, a color conversion can be done by iterate the screen top to
+bottom, and for each row:
+
+1. Process bytes left to right, converting each single-hires bytes
+   into a pair of double-hires bytes, possibly shifting in a bit on
+   the left, and storing rightmost bit if needed for the next byte.
+
+2. Process bytes right to left, shifting the visible 7 bits one to the
+   left.
+
+... while remembering that "left" and "right" refer to how bits are
+presented on the display. Shifting left will require a `ROR`
+instruction, and vice versa.
+
+## Conversion - Practice
+
+The above conversion can be done bit by bit, but as usual it can
+be accelerated using lookup tables.
+
+A key observation is that on each row we first work left to right,
+possibly propagating a bit to the right. Then we work right to left,
+always propagating a bit to the left. These two steps can be combined,
+working from right to left and possibly propagating a bit to the left.
+
+The previous rule for doubling each single-hires byte:
+
+* `abcdefg0` → `aabbccd_` `deeffgg_`
+* `abcdefg1` → `Xaabbcc_` `ddeeffg_`
+
+When the addition left-shift is considered, becomes:
+
+* `abcdefg0` → `abbccdd_` `eeffggX_`
+* `abcdefg1` → `aabbccd_` `deeffgX_`
 
 We pre-compute a table using this logic for all 256 source bytes to
 two destination bytes.
 
-This "spilling" means we cannot simply convert all 8192 bytes in order;
-we need to process each row 40 bytes at a time. (Bonus - we preserve
-screen holes!) Instead, we start at the right edge of the screen, get
-the source byte, and look up the two destination bytes - one table for
-the left (aux) byte, one for the right (main) byte.
+There are two cases:
 
-If the high bit of the source byte is _set_ we're in the easy case and
-so we're done - we have the two destination bytes.
+* If the previous byte's high bit was also clear, then `X` is `a` from
+  the *previous* byte (shifted).
 
-If the high bit of the source byte is _clear_ we're in the harder case.
-We need to spill a bit _in_ and a bit _out_. We saved the bit we're spilling
-_in_ from the previous iteration, so we `ORA` that into place. (Aside: that
-means we reset the spill bit both at the start of each row _and_ if the
-previous source byte had the high bit set.)
+* If the previous byte's high bit was set, then `X` is `g` from the
+  *current* byte (stretched).
 
-To know what bit to spill _out_ we sneakily look at the otherwise unused
-high bit of the _destination byte_ from the table. The code which constructs
-the mapping table slips it into place there. (I said it would be useful.)
+Again, working from right to left, so "previous" means the byte to the
+right.
 
-## Edge Cases
-
-Astute readers will note that if high bits are clear in the source (i.e. the
-green/violet palette is used) we have some apparent problems.
-
-* For the right-most pixel we don't have anything to spill in; it will be left as 0.
-* The left-most pixel spills out and is ignored.
-
-So far as I can tell, this doesn't cause an actual problem in most cases. This
-effect is below the effective resolution of the hires display, should at most
-alter the NTSC color fringes that occur on the screen edges. Samples demonstrating
-actual problems are welcome.
-
-I also haven't experimented in detail, e.g. with things like the infamous
-"orange squeeze out" where vertical orange lines on byte boundaries disappear.
-In theory the same effect should be present here since we started from
-first-principles but practice may differ.
