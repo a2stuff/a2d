@@ -741,6 +741,7 @@
 ;;;    scmp16 $1111,x, $2222    ; indexed, absolute
 ;;;    scmp16 $1111, $2222,x    ; absolute, indexed
 ;;;    scmp16 $1111,x, $2222,x  ; indexed, indexed
+;;; NOTE: Some callers rely on A's bit7 implicitly matching result in N.
 .macro scmp16 arg1, arg2, arg3, arg4
         .local @skip
         cmp16 arg1,arg2,arg3,arg4

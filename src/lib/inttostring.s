@@ -23,8 +23,7 @@ loop:   lda     #0
 
         ;; Keep subtracting/incrementing until zero is hit
     REPEAT
-        cmp16   value, powers,x
-        BREAK_IF CC
+        BREAK_IF cmp16 value, powers,x : LT
         inc     digit
         sub16   value, powers,x, value
     FOREVER

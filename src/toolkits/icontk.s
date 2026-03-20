@@ -1118,10 +1118,9 @@ find_icon:
         lda     (win_ptr),y
         copy16in (win_ptr),y, headery
         add16_8 headery, header_height
-        cmp16   findwindow_params::mousey, headery
-        bcc     fail
-
+    IF cmp16 findwindow_params::mousey, headery : GE
         RETURN  C=0
+    END_IF
 
 fail:   RETURN  C=1
 
@@ -2300,7 +2299,7 @@ next_pt:
         copy16  cr_l, vx
         copy16  cr_t, vy
 
-        scmp16   cr_r, clip_bounds+MGTK::Rect::x2
+        scmp16   cr_r, clip_bounds+MGTK::Rect::x2 ; result in N / A's bit7
         ;; if (cr_r < clip_bounds::x2) more drawing is needed
         sta     more_drawing_needed_flag ; update bit7
 
@@ -2415,7 +2414,7 @@ do_pt:  lda     pt_num
         ;; --------------------------------------------------
 
 is_degenerate:
-        scmp16  cr_r, cr_l
+        scmp16  cr_r, cr_l      ; result in N
         rts
 
 .endproc ; CalcWindowIntersectionsImpl

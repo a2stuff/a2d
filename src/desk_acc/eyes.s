@@ -341,12 +341,11 @@ common:
         copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+
         sub16   winfo::maprect::x2, mx, tmpw
-        cmp16   #kGrowBoxWidth, tmpw
-        bcc     nope
+    IF cmp16 #kGrowBoxWidth, tmpw : GE
         sub16   winfo::maprect::y2, my, tmpw
-        cmp16   #kGrowBoxHeight, tmpw
-        bcc     nope
+      IF cmp16 #kGrowBoxHeight, tmpw : GE
 
         ;; Initiate the grow... re-using the drag logic
         copy8   #kDAWindowId, dragwindow_params::window_id
@@ -355,7 +354,10 @@ common:
         MGTK_CALL MGTK::GrowWindow, dragwindow_params
         jmp     HandleDrag::common
 
-nope:   jmp     InputLoop
+      END_IF
+    END_IF
+
+        jmp     InputLoop
 
 tmpw:   .word   0
 .endproc ; HandleGrow

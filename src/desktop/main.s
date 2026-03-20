@@ -3969,7 +3969,7 @@ END_PARAM_BLOCK
         ldy     near_offsets,x  ; y = MGTK::Rect member offset
 
         ;; If icon's near edge < selected icon's near edge, ignore
-        scmp16  icon_rect,y, tmp_rect,y
+        scmp16  icon_rect,y, tmp_rect,y ; result in N / A's bit7
         eor     compare_order,x ; flip result if needed
         bmi     next_icon
 
@@ -3978,7 +3978,7 @@ END_PARAM_BLOCK
         beq     best
 
         ;; If icon's near edge > `best_value`, ignore
-        scmp16  icon_rect,y, best_value
+        scmp16  icon_rect,y, best_value ; result in N / A's bit7
         eor     compare_order,x ; flip result if needed
         bpl     next_icon
 
