@@ -1566,15 +1566,13 @@ saw_header_flag:                ; bit7
         ldax    #first_filename
       END_IF
     ELSE_IF NS
-        lda     next_filename
-      IF NOT_ZERO
+      IF lda next_filename : NOT_ZERO
         ldax    #next_filename
       ELSE
         ldax    #first_filename
       END_IF
     ELSE
-        lda     prev_filename
-      IF NOT_ZERO
+      IF lda prev_filename : NOT_ZERO
         ldax    #prev_filename
       ELSE
         ldax    #last_filename

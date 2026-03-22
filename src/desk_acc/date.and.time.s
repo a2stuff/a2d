@@ -1040,12 +1040,10 @@ label_downarrow:
 
     IF bit clock_24hours : NS
         MGTK_CALL MGTK::DrawString, spaces_string
+    ELSE_IF lda hour : A < #12
+      MGTK_CALL MGTK::DrawString, str_am
     ELSE
-      IF lda hour : A < #12
-        MGTK_CALL MGTK::DrawString, str_am
-      ELSE
-        MGTK_CALL MGTK::DrawString, str_pm
-      END_IF
+      MGTK_CALL MGTK::DrawString, str_pm
     END_IF
         rts
 .endproc ; DrawPeriod
