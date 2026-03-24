@@ -138,6 +138,7 @@ reserved:       .res    1
         DEFINE_BITMAP trackstar, 56, 25
         DEFINE_BITMAP mega_iie, 48, 22
         DEFINE_BITMAP pravetz, 51, 24
+        DEFINE_BITMAP delta, 51, 24
 
 ii_bits:
         PIXELS  ".......######################....................."
@@ -491,6 +492,32 @@ pravetz_bits:
         PIXELS  "##..............................................##"
         PIXELS  ".###############################################.."
 
+delta_bits:
+        PIXELS  ".......####################################......."
+        PIXELS  "......##..................................##......"
+        PIXELS  "......##...########################.......##......"
+        PIXELS  "......##..##......................##......##......"
+        PIXELS  "......##..##.........####.........##......##......"
+        PIXELS  "......##..##........######........##..##..##......"
+        PIXELS  "......##..##.......##..####.......##..##..##......"
+        PIXELS  "......##..##......##....####......##......##......"
+        PIXELS  "......##..##.....##......####.....##..##..##......"
+        PIXELS  "......##..##....##........####....##..##..##......"
+        PIXELS  "......##..##.....############.....##......##......"
+        PIXELS  "......##..##......................##..##..##......"
+        PIXELS  "......##...########################...##..##......"
+        PIXELS  "......##..................................##......"
+        PIXELS  ".......####################################......."
+        PIXELS  ".........##............................##........."
+        PIXELS  ".......####################################......."
+        PIXELS  ".....###..................................###....."
+        PIXELS  "...###....##..##..##..##..##..##..##..##....###..."
+        PIXELS  ".###....##..##..##..##..##..##..##..##..##....###."
+        PIXELS  "##....##..##..##..##..##..##..##..##..##..##....##"
+        PIXELS  "##..............................................##"
+        PIXELS  "##..............................................##"
+        PIXELS  ".###############################################.."
+
 ;;; ============================================================
 
         DEFINE_POINT model_pos, 130, 12
@@ -634,6 +661,9 @@ str_tk3000:
 
 str_pravetz:
         PASCAL_STRING res_string_model_pravetz
+
+str_delta:
+        PASCAL_STRING res_string_model_delta
 
 ;;; ============================================================
 
@@ -792,7 +822,9 @@ kMaxSPDeviceNameLength = SPDIB::Device_Type_Code - SPDIB::Device_Name
 ;;;
 ;;; The Pravetz 8A and 8C look like an original IIe, with the string "ПРАВЕЦ" at $FB0A
 ;;;
-;;; The Nuova Elettronica DELTA has: $FA67 = $A0 and $FA68 = $C0
+;;; The Nuova Elettronica DELTA has the same ID bytes as the original
+;;; IIe, but can be distinguished by $FA67 = $A0 and $FA68 = $C0
+;;; (which are $2F/$FB on a IIe)
 
 .enum model
         ii                      ; Apple ][
@@ -817,6 +849,7 @@ kMaxSPDeviceNameLength = SPDIB::Device_Type_Code - SPDIB::Device_Name
         mega_iie                ; Mega IIe
         tk3000                  ; Microdigital TK-3000 //e
         pravetz                 ; Pravetz 8A/C
+        delta                   ; Nuova Elettronica DELTA
         LAST
 .endenum
 kNumModels = model::LAST
@@ -844,6 +877,7 @@ model_str_table:
         .addr   str_mega_iie     ; Mega IIe
         .addr   str_tk3000       ; Microdigital TK-3000 //e
         .addr   str_pravetz      ; Pravetz 8A/C
+        .addr   str_delta        ; Nuova Elettronica DELTA
         ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
@@ -869,6 +903,7 @@ model_pix_table:
         .addr   aux::mega_iie_bitmap ; Mega IIe
         .addr   aux::iie_bitmap      ; Microdigital TK-3000 //e
         .addr   aux::pravetz_bitmap  ; Pravetz 8A/C
+        .addr   aux::delta_bitmap    ; Nuova Elettronica DELTA
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -997,6 +1032,14 @@ match:  tya
         lda     #model::pravetz
         bne     found           ; always
 :
+        ;; Is it a Nuova Elettronica DELTA?
+      IF lda $FA67 : A = #$A0
+       IF lda $FA68 : A = #$C0
+        lda     #model::delta
+        bne     found           ; always
+       END_IF
+      END_IF
+
         lda     #model::iie_original
         .assert model::iie_original <> 0, error, "enum mismatch"
         bne     found           ; always
