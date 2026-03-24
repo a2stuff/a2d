@@ -198,7 +198,12 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         jmp     Scramble
     END_IF
 
-        ;; TODO: Keyboard controls?
+        jsr     ToUpperCase
+    IF A BETWEEN #'A', #'Y'
+        sec
+        sbc     #'A'
+        TAIL_CALL DoLightClick
+    END_IF
 
         rts
 .endproc ; OnKey

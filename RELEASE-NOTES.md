@@ -111,6 +111,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Control Panel: Fix overlapping button labels in some locales.
 * Map: Fix overlapping labels in some locales.
 * Image Preview: Improve single hires file preview quality.
+* Lights Out: Add keyboard support: A..Y toggle lights.
 
 ### Misc
 
