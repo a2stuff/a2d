@@ -51,7 +51,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix behavior after File > Duplicate failed due to space or storage type.
 * Set empty window maprect so that when restored with new file scrollbars are inactive.
 * Fix volume icon flicker after Check All Drives for removable disks.
-* Select volume icomn after Format/Erase.
+* Select volume icon after Format/Erase.
 * Fix display of long device names in Format/Erase volume picker.
 * Animate Apple > About Apple II DeskTop window open/closed.
 * Animate Apple > About This Apple II window open/closed.
@@ -73,6 +73,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix label/border overlaps in Get Info and Format/Erase dialogs in some locales.
 * Reduce cursor flickering when animating windows open/closed.
 * File > Get Info: Reduce cursor flickering when computing volume/folder size.
+* Automatically select newly inserted disks.
+* Select disk (if present) after Special > Check Drive.
 
 ### Selector
 

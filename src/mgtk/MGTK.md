@@ -704,7 +704,7 @@ Conditionally hide the cursor.
 
 Parameters:
 ```
-(input is address of MapInfo record)
+Rect        rect
 ```
 
 If the cursor would overlap with the offset/rectangle described by the passed `Rect`, offset by the current `GrafPort`, the cursor is hidden.

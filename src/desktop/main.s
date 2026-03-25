@@ -3134,18 +3134,17 @@ done:   rts
         cmp     trash_icon_num  ; if it's Trash, skip it
         beq     done
 
+        ;; Make a copy of the volume selection to iterate over
         ldx     selected_icon_count
         stx     selection_count_copy
     DO
         copy8   selected_icon_list-1,x, selection_list_copy-1,x
     WHILE dex : NOT_ZERO
 
-        ;; If ejecting, clear selection
-    IF bit eject_flag : NS
+        ;; ... and clear it
         jsr     ClearSelection
-    END_IF
 
-        ;; Iterate the recorded volumes
+        ;; Iterate the (previously selected) volumes
         ldx     #0              ; X = index
     DO
         txa                     ; A = index
@@ -3494,10 +3493,9 @@ exec:
         RTS_IF NOT_ZERO
 
         txa
-        pha                     ; A = unit number
-        CALL CheckDriveByUnitNumber, Y=#kCheckDriveDoNotShowUnexpectedErrors ; A = unit number
-        pla                     ; A = unit number
-        TAIL_CALL SelectUnitNum
+        TAIL_CALL CheckDriveByUnitNumber, Y=#kCheckDriveDoNotShowUnexpectedErrors ; A = unit number
+
+;;; Alternate entry point
 
 unit:   sta     unit_num
         copy8   #FormatEraseAction::format, action
@@ -4934,7 +4932,7 @@ ScrollUpdateWinfo := ScrollManager::ActivateCtlsSetThumbsWinfo
         pla                     ; A = index
         tax                     ; X = index
     WHILE dex : POS
-        rts
+        TAIL_CALL ClearSelection
 .endproc ; CmdCheckAllDrives
 
 ;;; ============================================================
@@ -5069,8 +5067,11 @@ close_loop:
     IF ZERO
         ldx     cached_window_icon_count
         copy8   cached_window_icon_list-1,x, icon_param
+        pha
         ITK_CALL IconTK::DrawIcon, icon_param
-        jmp     StoreCachedWindowIconList
+        jsr     StoreCachedWindowIconList
+        pla
+        TAIL_CALL SelectIcon
     END_IF
 
         ;; --------------------------------------------------
