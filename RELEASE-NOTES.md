@@ -114,6 +114,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Map: Fix overlapping labels in some locales.
 * Image Preview: Improve single hires file preview quality.
 * Lights Out: Add keyboard support: A..Y toggle lights.
+* Eyes: Reduce cursor flickering.
 
 ### Misc
 
