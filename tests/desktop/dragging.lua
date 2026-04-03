@@ -6,6 +6,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(0.25)
+a2d.AddShortcut("/TESTS/HUNDRED.FILES")
 
 --[[
   Launch DeskTop. Open a window containing folders and files. Scroll
@@ -349,7 +350,8 @@ end)
 test.Step(
   "Can drag unlimited icons",
   function()
-    a2d.OpenPath("/TESTS/HUNDRED.FILES")
+    a2d.CloseAllWindows()
+    a2d.OAShortcut("1") -- Open /TESTS/HUNDRED.FILES
     emu.wait(5)
     a2d.SelectAll()
     emu.wait(5)
