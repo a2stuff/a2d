@@ -66,6 +66,7 @@ function SaveSettingsTest(name, filename, toggle_func)
         drive = s7d1
         current = drive.filename
         drive:unload()
+        emu.wait(5)
       end
 
       a2d.OpenPath("/RAM4/DESKTOP/APPLE.MENU/CONTROL.PANELS/" .. da)
