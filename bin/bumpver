@@ -2,13 +2,10 @@
 
 # Bump version:
 # * Increment version tag number
-# * Update config.inc release string
-# * Update config.inc release date
 
 # Assumes:
-# * config.inc has previous major/minor/suffix
+# * config.inc has major/minor version numbers
 
-set -x
 set -e
 cd "$(dirname "$0")/.."
 
@@ -48,12 +45,12 @@ echo "Building..."
 
 VOL="/A2.DESKTOP"
 IMG="out/A2DeskTop-${version}-${lang}_800k.2mg"
-make > /dev/null
+gmake -j8 > /dev/null
 
 # --------------------------------------------------
 echo "Packaging..."
 
-make package > /dev/null
+gmake -j8 package > /dev/null
 
 # --------------------------------------------------
 echo "Configuring..."
