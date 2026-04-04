@@ -38,7 +38,7 @@ test.Step(
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotMatch(ocr, "disk copy",
                 "should be no status line identifying disk type")
-    test.ExpectMatch(ocr, "Source .* Slot 6 +Drive 1 +\n",
+    test.ExpectMatch(ocr, "Source .* Slot 6 +Drive 1\n",
                 "should be no volume name after Source label")
 
     -- cleanup

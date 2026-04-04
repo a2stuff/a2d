@@ -54,7 +54,7 @@ test.Step(
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "DOS 3%.3 disk copy",
                 "status line should say 'DOS 3.3 disk copy'")
-    test.ExpectMatch(ocr, "Source .* Slot 6 +Drive 1 +\n",
+    test.ExpectMatch(ocr, "Source .* Slot 6 +Drive 1\n",
                 "should be no volume name after Source label")
 
     -- cleanup
