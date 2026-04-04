@@ -962,12 +962,13 @@ err:    jsr     _SetRootPath
         lda     #kMaxEntries
     ELSE
         lda     dir_read_buf+SubdirectoryHeader::file_count
-        beq     close
       IF A >= #kMaxEntries+1
         lda     #kMaxEntries
       END_IF
     END_IF
         sta     num_file_names
+        cmp     #0              ; need `CMP` since Z may not be valid
+        beq     close
 
         ptr := $06
         copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr
