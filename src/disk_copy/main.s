@@ -129,29 +129,28 @@ params:  .res    3
         lda     auxlc::drive_unitnum_table,x
         sta     unit_number
 
-        sta     ALTZPOFF
+        sta     ALTZPOFF        ; Main ZP/LCBANKs
         jsr     format
-        sta     ALTZPON
+        sta     ALTZPON         ; Aux ZP/LCBANKs
         rts
 
 format:
         jsr     IsDiskII        ; returns Z=1 if yes
-    IF ZC
+    IF ZS
+        ;; Format as Disk II
+        TAIL_CALL FormatDiskII, A=unit_number
+    END_IF
+
         ;; Get driver address
         CALL    DeviceDriverAddress, A=unit_number
         stax    $06
 
-        lda     #DRIVER_COMMAND_FORMAT
-        sta     DRIVER_COMMAND
-        lda     unit_number
-        sta     DRIVER_UNIT_NUMBER
-        jmp     ($06)
-    END_IF
-
-        ;; Use Disk II-specific code
+        copy8   #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         unit_number := *+1
         lda     #SELF_MODIFIED_BYTE
-        jmp     FormatDiskII
+        sta     DRIVER_UNIT_NUMBER
+
+        jmp     ($06)
 .endproc ; FormatDevice
 
 ;;; ============================================================
