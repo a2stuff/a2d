@@ -91,6 +91,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Reduce cursor flickering during copy.
 * Fix copying all blocks on volumes with unusual sizes.
 * Fix overlapping labels during copy in some locales.
+* Fix crash on Apple IIc/IIc+ on mouse activity after some copies. ([https://github.com/a2stuff/a2d/issues/900](#900))
 
 ### Desk Accessories
 
