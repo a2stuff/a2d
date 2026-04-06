@@ -90,6 +90,89 @@ DialogTest(
 end)
 
 --------------------------------------------------
+-- File Operations
+--------------------------------------------------
+
+DialogTest(
+  "Copy Progress",
+  function(suffix)
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1", {no_wait=true})
+    emu.wait(5)
+    test.Snap("Copy Progress" .. suffix)
+    a2d.DialogCancel()
+    a2d.CloseAllWindows()
+    a2d.EraseVolume("RAM1")
+end)
+
+DialogTest(
+  "Move Progress",
+  function(suffix)
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
+    emu.wait(5)
+    a2d.CreateFolder("/RAM1/DESTINATION")
+    a2d.OpenPath("/RAM1/DESTINATION")
+    a2d.MoveWindowBy(300, 100)
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    local dst_x, dst_y = x + w/2, y + h/2
+
+    a2d.OpenPath("/RAM1/APPLE.MENU", {keep_windows=true})
+    a2d.SelectAll()
+    local src_x, src_y = a2dtest.GetSelectedIconCoords()
+
+    a2d.Drag(src_x, src_y, dst_x, dst_y)
+    emu.wait(1)
+    test.Snap("Move Progress" .. suffix)
+    a2d.DialogCancel()
+    a2d.CloseAllWindows()
+    a2d.EraseVolume("RAM1")
+end)
+
+DialogTest(
+  "Copy Overwrite Prompt",
+  function(suffix)
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    a2dtest.WaitForAlert({match="already exists"})
+    test.Snap("Copy Overwrite Prompt" .. suffix)
+    a2d.DialogCancel()
+    a2d.CloseAllWindows()
+    a2d.EraseVolume("RAM1")
+end)
+
+DialogTest(
+  "Delete",
+  function(suffix)
+    -- Copy files, so we get a good progress bar
+    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
+    emu.wait(5)
+
+    -- Copy a file and lock it
+    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    emu.wait(1)
+    a2d.SelectPath("/RAM1/READ.ME")
+    a2d.OAShortcut("I") -- File > Get Info
+    a2d.WaitForRepaint()
+    apple2.ControlKey("L")
+    a2d.DialogOK()
+
+    a2d.OpenPath("/RAM1")
+    a2d.SelectAll()
+    a2d.OADelete() -- File > Delete
+    a2dtest.WaitForAlert({match="Are you sure"})
+    test.Snap("Delete Confirm" .. suffix)
+    a2d.DialogOK()
+
+    emu.wait(1)
+    test.Snap("Delete Progress" .. suffix)
+    a2dtest.WaitForAlert({match="file is locked"})
+    test.Snap("Delete Confirm Locked" .. suffix)
+
+    a2d.DialogCancel()
+    a2d.CloseAllWindows()
+    a2d.EraseVolume("RAM1")
+end)
+
+--------------------------------------------------
 -- Special Menu
 --------------------------------------------------
 
@@ -126,6 +209,26 @@ DialogTest(
     -- cleanup
     emu.wait(5)
     a2d.RenamePath("/NEWNAME", "RAM1")
+
+    -- Formatting error
+    a2d.ClearSelection()
+    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK - 2)
+    local disk = s6d1.filename
+    s6d1:unload()
+    a2d.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
+    a2d.DialogOK() -- accept device selection
+    apple2.Type("NEWNAME")
+    a2d.DialogOK() -- accept name
+    a2d.DialogOK() -- confirm erase
+    a2dtest.WaitForAlert({match="error"})
+    test.Snap("Special > Format Disk... - Format Error" .. suffix)
+    s6d1:load(disk)
+    a2d.DialogCancel()
+    emu.wait(5)
+
+    -- cleanup
+    a2d.CheckAllDrives()
+    emu.wait(5)
 end)
 
 DialogTest(
@@ -161,6 +264,26 @@ DialogTest(
     -- cleanup
     emu.wait(5)
     a2d.RenamePath("/NEWNAME", "RAM1")
+
+    -- Erasing error
+    a2d.ClearSelection()
+    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK - 2)
+    local disk = s6d1.filename
+    s6d1:unload()
+    a2d.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
+    a2d.DialogOK() -- accept device selection
+    apple2.Type("NEWNAME")
+    a2d.DialogOK() -- accept name
+    a2d.DialogOK() -- confirm erase
+    a2dtest.WaitForAlert({match="error"})
+    test.Snap("Special > Erase Disk... - Erase Error" .. suffix)
+    s6d1:load(disk)
+    a2d.DialogCancel()
+    emu.wait(5)
+
+    -- cleanup
+    a2d.CheckAllDrives()
+    emu.wait(5)
 end)
 
 --------------------------------------------------
@@ -243,10 +366,14 @@ DialogTest(
 
     -- "Quick Copy" / select source
     a2d.InvokeMenuItem(3, 1)
+    test.Snap("Disk Copy - \"Quick Copy\" option" .. suffix)
+
+    -- Use "Disk Copy" so we get Formatting in there
+    a2d.InvokeMenuItem(3, 2)
+
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S1,D1
     apple2.DownArrowKey() -- S6,D1
-    test.Snap("Disk Copy - \"Quick Copy\" option" .. suffix)
     a2d.DialogOK()
 
     -- select destination
@@ -256,42 +383,73 @@ DialogTest(
     a2d.DialogOK()
 
     -- insert source
+    a2dtest.WaitForAlert({match="Insert the source"})
     test.Snap("Disk Copy - Prompt for source" .. suffix)
     a2d.DialogOK()
 
     -- insert destination
+    a2dtest.WaitForAlert({match="Insert the destination"})
     test.Snap("Disk Copy - Prompt for destination" .. suffix)
     a2d.DialogOK()
 
     -- confirm erase
+    a2dtest.WaitForAlert({match="Are you sure"})
     test.Snap("Disk Copy - Confirm erase" .. suffix)
     a2d.DialogOK()
 
-    --[[
-      BUG: hit "error during formatting" consistently when using "Disk Copy" here!
-      -- Confirmed it is https://github.com/mamedev/mame/issues/14474 ?
-      -- Could work around by using System Speed to slow ZIP Chip
+    local bounds = {x1=130, y1=75, x2=470, y2=100}
 
-      -- formatting
-      emu.wait(10)
-      test.Snap("Special > Copy Disk..." .. suffix)
-      emu.wait(10)
-    --]]
+    -- formatting
+    util.WaitFor(
+      "formatting", function()
+        return a2dtest.OCRScreen(bounds):match("Formatting")
+    end)
+    test.Snap("Disk Copy - Formatting" .. suffix)
 
     -- reading progress
-    emu.wait(0.25)
+    util.WaitFor(
+      "reading", function()
+        return a2dtest.OCRScreen(bounds):match("Reading")
+    end)
+    emu.wait(10)
     test.Snap("Disk Copy - Reading progress" .. suffix)
 
     -- writing progress
-    emu.wait(2)
+    util.WaitFor(
+      "writing", function()
+        return a2dtest.OCRScreen(bounds):match("Writing")
+    end)
+    emu.wait(10)
     test.Snap("Disk Copy - Writing progress" .. suffix)
 
     -- success
-    emu.wait(3)
+    a2dtest.WaitForAlert({match="successful", timeout=3600})
     test.Snap("Disk Copy - Success" .. suffix)
+    a2d.DialogOK()
+    emu.wait(5)
+
+    -- "Quick Copy"
+    a2d.InvokeMenuItem(3, 1) -- Options > Quick Copy
+    apple2.DownArrowKey() -- S7,D1
+    apple2.DownArrowKey() -- S1,D1
+    apple2.DownArrowKey() -- S6,D1
+    a2d.DialogOK()
+    apple2.DownArrowKey() -- S6,D1
+    apple2.DownArrowKey() -- S6,D2
+    a2d.DialogOK()
+    a2dtest.WaitForAlert({match="Insert the source"})
+    a2d.DialogOK()
+    a2dtest.WaitForAlert({match="Insert the destination"})
+    a2d.DialogOK()
+    a2dtest.WaitForAlert({match="Are you sure"})
+    a2d.DialogOK()
+    emu.wait(1)
+    apple2.EscapeKey()
+    a2dtest.WaitForAlert({match="not completed"})
+    test.Snap("Disk Copy - Failure" .. suffix)
+    a2d.DialogOK()
 
     -- cleanup
-    a2d.DialogOK()
     emu.wait(10) -- scanning drives
     a2d.OAShortcut('Q') -- back to DeskTop
     a2d.WaitForDesktopReady()
