@@ -1642,7 +1642,7 @@ win_flags:                      ; copy of IconEntry::win_flags
         ;;  text_left = icon_left + icon_width/2 - text_width/2
         ;;            = (icon_left*2 + icon_width - text_width) / 2
         ;; NOTE: Left is computed before right to match rendering code
-        copy16  bitmap_rect+MGTK::Rect::x1, label_rect+MGTK::Rect::x1
+        add16   bitmap_rect+MGTK::Rect::x1, #1, label_rect+MGTK::Rect::x1 ; rounded
         asl16   label_rect+MGTK::Rect::x1
         ldy     #IconResource::maprect + MGTK::Rect::x2
         add16in label_rect+MGTK::Rect::x1, (res_ptr),y, label_rect+MGTK::Rect::x1

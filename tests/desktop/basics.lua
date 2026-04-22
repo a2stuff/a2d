@@ -126,7 +126,12 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     emu.wait(1)
-    test.Snap("verify the window has non-zero used/free numbers")
+
+    local ocr = a2dtest.OCRFrontWindowContent()
+    test.ExpectMatch(ocr, " %d+K in disk", "should see window used number")
+    test.ExpectNotMatch(ocr, " 0K in disk", "window used number should be non-zero")
+    test.ExpectMatch(ocr, " %d+K available", "should see window free number")
+    test.ExpectNotMatch(ocr, " 0K available", "window free number should be non-zero")
 end)
 
 --[[
