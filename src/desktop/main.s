@@ -593,8 +593,7 @@ window_click:
         ;; Ignore clicks in the header area
         copy8   clicked_window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     screentowindow_params::windowy
-      IF A < #kWindowHeaderHeight
+      IF lda screentowindow_params::windowy : A < #kWindowHeaderHeight
         jmp     _ActivateClickedWindow ; no-op if already active
       END_IF
 
@@ -602,7 +601,9 @@ window_click:
         copy8   clicked_window_id, findicon_params::window_id
         ITK_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
-        jne     _IconClick
+      IF NOT ZERO
+        TAIL_CALL _IconClick
+      END_IF
 
         ;; Not an icon - maybe a drag?
         jsr     _ActivateClickedWindow ; no-op if already active
@@ -613,8 +614,9 @@ window_click:
 
         ;; If not the active window, just activate it
         lda     clicked_window_id
-        cmp     active_window_id
-        jne     ActivateWindow
+    IF A <> active_window_id
+        TAIL_CALL ActivateWindow
+    END_IF
 
         lda     findcontrol_params::which_ctl
         RTS_IF A = #MGTK::Ctl::dead_zone
@@ -3506,16 +3508,6 @@ unit:   sta     unit_num
 CmdFormatDisk := CmdFormatEraseDiskImpl::format
 CmdEraseDisk := CmdFormatEraseDiskImpl::erase
 FormatUnitNum := CmdFormatEraseDiskImpl::unit
-
-;;; ============================================================
-
-.proc SelectUnitNum
-        jsr     UnitNumberToDeviceIndex
-        lda     device_to_icon_map,x
-        RTS_IF  ZERO
-
-        TAIL_CALL SelectIconAndEnsureVisible ; A = icon id
-.endproc ; SelectUnitNum
 
 ;;; ============================================================
 
@@ -13989,7 +13981,6 @@ close:  php
         ldy     entry_num
     END_IF
 
-exit:
         rts
 
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf

@@ -1322,7 +1322,7 @@ result: .byte   0
 
 ;;; ============================================================
 
-.proc save_date
+.scope save_date
 filename:
         PASCAL_STRING kFilenameLauncher
 
@@ -1431,7 +1431,7 @@ failed:
 
 retry_flag:        .byte   0 ; bit7
 
-.endproc ; save_date
+.endscope ; save_date
 SaveDate := save_date::SaveSettings
 
 ;;; ============================================================

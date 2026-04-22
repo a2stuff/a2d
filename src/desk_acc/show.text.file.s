@@ -363,7 +363,7 @@ no_mod:
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     OnVScrollClick
-end:    rts
+        rts
 .endproc ; OnContentClick
 
 ;;; ============================================================
