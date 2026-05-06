@@ -1936,8 +1936,8 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 .proc IdentifyMemory
         copy16  #0, memory
 
-        ;; RamWorks
-        jsr     CheckRamworksMemory
+        ;; RamWorks (etc)
+        jsr     CheckAuxMemory
         sty     memory          ; Y is number of 64k banks
         sty     rw_banks
     IF Y = #0                   ; 0 means 256 banks
@@ -2001,7 +2001,12 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 ;;; will be handled by an invalid signature check for other banks.
 ;;;
 ;;; Assert: Main is banked in
-.proc CheckRamworksMemory
+;;;
+;;; A macro is used to define the procedure, so that variants that
+;;; use different bank selection locations can be instantiated while
+;;; keeping the logic simple.
+.macro CHECK_AUX_MEMORY_PROC procname, banksel
+.proc procname
         sigb0   := $00
         sigb1   := $01
 
@@ -2021,7 +2026,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 .scope
         ldx     #255            ; bank we are checking
     DO
-        stx     RAMWORKS_BANK
+        stx     banksel
         copy8   sigb0, buf0,x   ; preserve bytes
         copy8   sigb1, buf1,x
         txa                     ; bank num as first signature
@@ -2035,7 +2040,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 .scope
         ldx     #0              ; bank we are checking
     DO
-        stx     RAMWORKS_BANK   ; select bank
+        stx     banksel   ; select bank
         txa
       IF A = sigb0              ; verify first signature
         eor     #$FF
@@ -2050,7 +2055,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 .scope
         ldx     #0              ; bank we are checking
     DO
-        stx     RAMWORKS_BANK   ; select bank
+        stx     banksel   ; select bank
         txa
       IF A = sigb0              ; verify first signature
         eor     #$FF
@@ -2063,11 +2068,27 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 .endscope
 
         ;; Switch back to RW bank 0 (normal aux memory)
-        copy8   #0, RAMWORKS_BANK
+        copy8   #0, banksel
 
         plp                     ; restore interrupt state
         rts
-.endproc ; CheckRamworksMemory
+.endproc ; procname
+.endmacro
+
+        ;; Duplicated code, but it's not that long and more maintainble than SMC
+        CHECK_AUX_MEMORY_PROC CheckRamworksMemory, RAMWORKS_BANK
+        CHECK_AUX_MEMORY_PROC CheckSuperExpanderMemory, SUPEREXP_BANK
+
+.proc CheckAuxMemory
+        jsr     CheckRamworksMemory
+    IF Y = #1
+        ;; Y=1 means no extra aux memory detected beyond the main aux
+        ;; bank. Check for the Oxen Super Expander E, which uses a
+        ;; different bank selection softswitch.
+        jsr     CheckSuperExpanderMemory
+    END_IF
+        rts
+.endproc ; CheckAuxMemory
 
 ;;; ============================================================
 

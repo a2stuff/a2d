@@ -215,7 +215,8 @@ STATEREG        := $C068        ; Mega II chip (IIgs, etc)
         ;; bit1 = ROMBANK
         ;; bit0 = INTCXROM
 
-RAMWORKS_BANK   := $C073
+SUPEREXP_BANK   := $C071        ; select aux bank (Oxen Super Expander E)
+RAMWORKS_BANK   := $C073        ; select aux bank (Applied Engineering RamWorks)
 LASER128EX_CFG  := $C074        ; high two bits control speed
 
 ROMIN2          := $C082        ; (W) Read ROM; no write
