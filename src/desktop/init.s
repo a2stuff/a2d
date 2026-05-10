@@ -141,14 +141,14 @@ start:
         CALL    ReadSetting, X=#DeskTopSettings::system_capabilities
 
         tax                     ; A = X = kSysCapXYZ bitmap
-        ora     #DeskTopSettings::kSysCapIsIIgs | DeskTopSettings::kSysCapIsLaser128
+        and     #DeskTopSettings::kSysCapIsIIgs | DeskTopSettings::kSysCapIsLaser128
     IF NOT_ZERO
         lda     #kPeriodicTaskDelayIIgs
         bne     end             ; always
     END_IF
 
         txa                     ; A = X = kSysCapXYZ bitmap
-        ora     #DeskTopSettings::kSysCapIsIIc
+        and     #DeskTopSettings::kSysCapIsIIc
     IF NOT_ZERO
         lda     #kPeriodicTaskDelayIIc
         bne     end             ; always
