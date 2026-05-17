@@ -464,25 +464,6 @@ path:
         .res    17,0            ; length + '/' + 15-char name
 
 ;;; ============================================================
-;;; Get driver address
-;;; Input: A = unit number (no need to mask off low nibble)
-;;; Output: A,X = driver address
-
-.proc GetDriverAddress
-        and     #UNIT_NUM_MASK  ; DSSS0000 after masking
-        lsr                     ; 0DSSS000
-        lsr                     ; 00DSSS00
-        lsr                     ; 000DSSS0
-        tax
-        lda     DEVADR,x        ; low byte of driver address
-        pha
-        lda     DEVADR+1,x      ; high byte of driver address
-        tax
-        pla
-        rts
-.endproc ; GetDriverAddress
-
-;;; ============================================================
 ;;; Format disk
 ;;; Input: A = unit number
 
@@ -502,7 +483,7 @@ format:
     END_IF
 
         ;; Format using driver
-        CALL    GetDriverAddress, A=unit_number
+        CALL    main::DeviceDriverAddress, A=unit_number
         stax    $06
 
         copy8   #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
@@ -517,6 +498,7 @@ format:
 ;;; Check if the device supports formatting
 ;;; Input: A = unit number (with low nibble intact)
 ;;; Output: A=0/Z=1/N=0 if yes, A=$FF/Z=0/N=1 if no
+;;; Returns yes for Disk II because we have the code for that.
 
 .proc CheckSupportsFormat
         sta     unit_num
@@ -524,19 +506,17 @@ format:
         jsr     main::IsDiskII  ; returns Z=1 if yes
     IF ZC
         ;; Check if the driver is firmware ($CnXX).
-        CALL    GetDriverAddress, A=unit_num
-        stx     addr+1          ; self-modify address below
-        txa                     ; high byte
-        and     #$F0            ; look at high nibble
-      IF A = #$C0               ; firmware? ($Cn) TODO: Should we guess yes or no here???
+        CALL    main::DeviceDriverAddress, A=unit_num ; Z=1 if firmware
+        bne     no              ; not firmware, assume can't format
+
         ;; Check the firmware status byte
+        stx     addr+1          ; X=$Cn; self-modify address below
         addr := *+1
         lda     $C0FE           ; $CnFE, high byte is self-modified above
         and     #%00001000      ; Bit 3 = Supports format
-       IF ZERO
+      IF ZERO
 
-        RETURN  A=#$FF          ; no, does not support format
-       END_IF
+no:     RETURN  A=#$FF          ; no, does not support format
       END_IF
     END_IF
 
@@ -577,7 +557,7 @@ unit_num:
         CALL    main::IsDiskII, A=unit_num ; returns Z=1 if yes
     IF ZC
         ;; Not Disk II - use the driver.
-        CALL    GetDriverAddress, A=unit_num
+        CALL    main::DeviceDriverAddress, A=unit_num
         stax    @driver
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs

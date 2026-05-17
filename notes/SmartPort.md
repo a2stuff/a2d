@@ -5,11 +5,9 @@
 
 Given a ProDOS-8 Slot/Drive assignment (i.e. a unit number in `DEVLST`), identify the SmartPort dispatch vector address and unit to request information and issue commands for functionality that ProDOS-8 does not expose.
 
-> Why? Apple II DeskTop is a ProDOS-8 application aimed at ProDOS-8 users. It relies on the ProDOS-8 API for nearly all operations[^1], and assumes the user things of volumes in terms of both paths (e.g. `/MY.DISK`) and Slot/Drive assignments (`CAT,S6,D1`).
+> Why? Apple II DeskTop is a ProDOS-8 application aimed at ProDOS-8 users. It relies on the ProDOS-8 API for nearly all operations[^1], and assumes the user thinks of volumes in terms of both paths (e.g. `/MY.DISK`) and Slot/Drive assignments (`CAT,S6,D1`).
 
-Currently this is done by inspecting internal ProDOS tables. That is done by looking at the ProDOS driver addresses and using a mapping table from driver address to the internal dispatch vector lo, dispatch vector hi, and unit tables.
-
-This is incredibly fragile, and supporting this risks hindering ProDOS-8 development.
+Currently this is done by inspecting internal ProDOS-8 tables which are used to map ProDOS-8 unit numbers (slot/drive pairs) to dispatch vector lo, dispatch vector hi, and SmartPort unit number. This is incredibly fragile, and supporting this risks hindering ProDOS-8 development.
 
 ## SmartPort Uses in Apple II DeskTop
 
@@ -26,7 +24,7 @@ These are all of the places where the application relies on being able to make a
       * Determine if ejectable - `SPCall::Status`/`SPStatusRequest::DIB`
       * Do the eject -  `SPCall::Control`/`SPControlRequest::Eject`
 * **Disk Copy** (a dedicated module with 60K free)
-  * At the start of a copy: Is this device ejectable? `SPCall::Status`/`SPSTatusRequest::DIB`
+  * At the start of a copy: Is this device ejectable? `SPCall::Status`/`SPStatusRequest::DIB`
   * During a copy: Auto-eject when swapping disks `SPCall::Control`/`SPControlRequest::Eject`
 
 > NOTE: the **About This Apple II** and **CD Remote** accessories also make direct SmartPort calls, but these have no dependencies on ProDOS-8 slot/drive mapping.
@@ -35,16 +33,16 @@ These are all of the places where the application relies on being able to make a
 
 Some approaches have been suggested but rejected (pending further data):
 
-* Do a ProDOS ON_LINE call, then enumerate all SmartPort devices request Block 2 to build a mapping by comparing volume names. The problem is that this doesn't handle empty devices / unformatted disks, which are a use case.
-  * Total Replay builds map by reading/comparing blocks using ProDOS vs. SmartPort. But it doesn't care about empty/unformatted disks.
+* Do a ProDOS ON_LINE call, then iterate over all SmartPort devices and request Block 2 to build a SmartPort unit to ProDOS unit mapping by comparing volume names. The problem is that this doesn't handle empty devices / unformatted disks, which are a use case.
+  * Total Replay reportedly builds such a map by reading blocks/comparing names. But it doesn't care about empty/unformatted disks.
 * Abandon the ProDOS-8 Slot/Drive notion entirely. That's... basically a complete rewrite.
 
 Other ideas that haven't been ruled out but require collaboration w/ the ProDOS maintainers:
-* Add a new [ProDOS-8 MLI API](https://prodos8.com/docs/techref/calls-to-the-mli/#4.3) call to map a unit to SP dispatch/unit
+* Add 1 new [ProDOS-8 MLI API](https://prodos8.com/docs/techref/calls-to-the-mli/#4.3) call to map a unit to SmartPort dispatch/unit
 * Add 2 new [ProDOS-8 MLI API](https://prodos8.com/docs/techref/calls-to-the-mli/#4.3) calls to do a Status request for DIB and Status request for Eject.
 * Add support to the [ProDOS-8 Driver API](https://prodos8.com/docs/techref/adding-routines-to-prodos/#6.3)  for:
-  * `SPCall::Status`+DIB - _need parameter to request this_
-  * `SPCall::Control`+eject - _need new command + parameter to request this_
+  * `SPCall::Status`/`SPStatusRequest::DIB` - _need parameter to request this_
+  * `SPCall::Control`/`SPControlRequest::Eject` - _need new command + parameter to request this_
   * ... and a way to probe for support
 * A blend of the above, e.g. new MLI call to request DIB; if that is supported, then CONTROL can be issued to driver.
 * Any other more maintainable way to get from the driver address in `DEVADR` to the mapping tables
@@ -78,9 +76,9 @@ Other thoughts:
 * Unrelated: is slot 5 remapping (for non-SP but block devices) handled? Should it be?
   * $Cn07 != 0 means generic block device (not SmartPort), $CnFE bits 4-5 = DevCnt (etc)
   * Calls driver directly (does it???)
-
+    * Apparently the requirement is that if your generic block device supports more than 2 devices you are required to understand the mapping used in P8, i.e. "if driver is called but not your slot, add 2 to the drive number"
 
 [^1]: DeskTop works around other limitations in ProDOS-8 in a small number of ways:
-  * Formatting disks in Disk ][ drives - uses a code library and talks directly to the hardware
+  * Formatting disks in Disk ][ drives - uses a code library (from Apple) and talks directly to the hardware
   * Reading/writing GS/OS "case bits" for files and volumes - uses `READ_BLOCK`/`WRITE_BLOCK`
   * Moving files within a volume - done by (a) using `CREATE` to create a file at the destination path, (b) swapping directory entries using directory iteration and `READ_BLOCK`/`WRITE_BLOCK`, and finally (c) using `DESTROY` on the source path

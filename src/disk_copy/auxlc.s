@@ -641,21 +641,20 @@ maybe_format:
 try_format:
         ldx     dest_drive_index
         CALL    main::IsDiskII, A=drive_unitnum_table,x ; returns Z=1 if yes
-        beq     format
-
+    IF ZC
+        ;; Check if the driver is firmware ($CnXX).
         ldx     dest_drive_index
         CALL    main::DeviceDriverAddress, A=drive_unitnum_table,x ; Z=1 if firmware
+        bne     do_copy         ; not firmware, assume can't format, just copy
 
-        stax    $06
-        bne     do_copy         ; if not firmware, skip these checks
-
-        copy8   #$00, $06       ; point at $Cn00
-        ldy     #$FE            ; $CnFE
-        lda     ($06),y
-        and     #$08            ; bit 3 = The device supports formatting.
-        beq     do_copy
-
-format: CALL    DrawStatus, AX=#str_formatting
+        ;; Check the firmware status byte
+        stx     addr+1          ; X=$Cn; self-modify address below
+        addr := *+1
+        lda     $C0FE           ; $CnFE, high byte is self-modified above
+        and     #%00001000      ; Bit 3 = Supports format
+        beq     do_copy         ; clear, so skip format and just copy
+    END_IF
+        CALL    DrawStatus, AX=#str_formatting
         jsr     main::FormatDevice
         bcc     do_copy
 
