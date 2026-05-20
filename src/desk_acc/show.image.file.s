@@ -41,13 +41,13 @@
         kHiresSize = $2000
 
         ;; Minipix/Print Shop images are loaded/converted
-        minipix_src_buf := $1800 ; Load address (main)
+        minipix_src_buf := DA_IO_BUFFER - kMinipixSrcSize ; Load address (main)
         kMinipixSrcSize = 576
         minipix_dst_buf := $1800 ; Convert address (aux)
         kMinipixDstSize = 26*52
 
         ;; LR/DLR-Lores images are loaded/converted
-        lores_src_buf := $1800  ; Load address (main
+        lores_src_buf := DA_IO_BUFFER - kLoresBufferSize  ; Load address (main)
         kLoresBufferSize = $400
 
         dir_path := $380
@@ -292,6 +292,7 @@ exit_hook := MaybeCallExitHook::hook
     END_IF
 
         lda     get_file_info_params::file_type
+        ldxy    get_file_info_params::aux_type
 
         RTS_IF A = #FT_DIRECTORY ; C=1 signals failure
 
@@ -301,31 +302,31 @@ exit_hook := MaybeCallExitHook::hook
         cmp     #FT_PIC
         jeq     ShowUnpackedSHR
 
-        cmp     #FT_GRAPHICS
-        bne     get_eof
-
+    IF A = #FT_GRAPHICS
         ;; FOT files
-        lda     get_file_info_params::aux_type
-        ldx     get_file_info_params::aux_type+1
 
         ;; auxtype $8066 - LZ4FH packed image
-    IF X = #$80 AND A = #$66
+      IF Y = #$80 AND X = #$66
         jmp     ShowLZ4FHFile
-    END_IF
+      END_IF
 
         ;; auxtype $4000 / $4001 are packed hires/double-hires
-        cpx     #$40
-        bne     ShowFOTFile
+        cpy     #$40
+        jne     ShowFOTFile
 
-        cmp     #$00
+        cpx     #$00
         jeq     ShowPackedHRFile
 
-        cmp     #$01
+        cpx     #$01
         bne     ShowFOTFile
         jmp     ShowPackedDHRFile
+    END_IF
+
+    IF Y = #$60 AND X = #$FF
+        jmp     ShowAxeFile
+    END_IF
 
         ;; Otherwise, rely on size heuristics to determine the type
-get_eof:
         JUMP_TABLE_MLI_CALL GET_EOF, get_eof_params
 
         ;; Maybe LR/DLR?
@@ -410,15 +411,7 @@ signature:
 ;;; Output: C=0 on success, C=1 on failure
 .proc ShowLZ4FHFile
         sta     PAGE2OFF
-
-        SET_BIT7_FLAG restore_buffer_overlay_flag
-        copy16  #OVERLAY_BUFFER, read_image_params::data_buffer
-        JUMP_TABLE_MLI_CALL READ, read_image_params
-        copy16  #$2000, read_image_params::data_buffer
-
-        ;; NOTE: `Init` also calls `CLOSE`, but it's harmless to call
-        ;; it twice.
-        JUMP_TABLE_MLI_CALL CLOSE, close_image_params
+        jsr     LoadIntoOverlayBuffer
 
         copy16  #OVERLAY_BUFFER, z:::LZ4FH::in_src
         copy16  #$2000, z:::LZ4FH::in_dst
@@ -432,6 +425,121 @@ signature:
 fail:   RETURN  C=1             ; failure
 
 .endproc ; ShowLZ4FHFile
+
+;;; ============================================================
+
+.proc LoadIntoOverlayBuffer
+        SET_BIT7_FLAG restore_buffer_overlay_flag
+        copy16  #OVERLAY_BUFFER, read_image_params::data_buffer
+        JUMP_TABLE_MLI_CALL READ, read_image_params
+        copy16  #$2000, read_image_params::data_buffer
+        rts
+.endproc ; LoadIntoOverlayBuffer
+
+;;; ============================================================
+
+;;; Output: C=0 on success, C=1 on failure
+.proc ShowAxeFile
+
+PARAM_BLOCK,$06
+src_addr        .word           ; source address
+hgr_col         .byte           ; current HGR column
+hgr_row_flag    .byte           ; initially 1, then 0, then done
+hgr_base        .addr           ; like `HBASL`/`HBASH`
+run_value       .byte           ; value of current run
+run_length      .byte           ; length of current run
+hgr_page        .byte           ; decode target
+END_PARAM_BLOCK
+
+        sta     PAGE2OFF
+        jsr     LoadIntoOverlayBuffer
+
+        copy16  #OVERLAY_BUFFER, src_addr
+        copy8   #$20, hgr_page
+        jsr     _AxeDecode
+        jsr     HRToDHR
+
+        RETURN  C=0             ; success
+
+;;; --------------------------------------------------
+
+;;; Input:
+;;; * `src_addr` set to source data address
+;;; * `hgr_page` set to high byte of destination HGR page (e.g. $20)
+
+.proc _AxeDecode
+;;; Based on AXE PACKER by THE AXE
+
+        ;; Start with base pointing at second row
+        lda     hgr_page
+        ora     #$04
+        sta     hgr_base+1
+
+        ;; Start off processing odd rows, then come back and do even
+        ldx     #1
+        stx     hgr_row_flag
+
+        ldy     #0
+        sty     hgr_col
+        sty     hgr_base
+        sty     run_length
+
+DecodeLoop:
+        lda     (src_addr),y
+        bne     Store           ; zero denotes a run
+
+        ;; We have a run...
+
+        inc16   src_addr
+        copy8   (src_addr),y, run_length
+
+        inc16   src_addr
+        copy8   (src_addr),y, run_value
+
+    DO
+        lda     run_value
+        dec     run_length
+
+Store:
+        ldy     hgr_col
+        sta     (hgr_base),y
+
+        ;; Next row (alternating)
+        inx
+        inx
+
+      IF X >= #kScreenHeight
+
+        ;; Next column
+        inc     hgr_col
+
+       IF ldy hgr_col : Y >= #40 ; columns
+
+        ;; Done all columns
+        dec     hgr_row_flag    ; do alternate lines
+        bmi     Exit            ; unless we're done!
+
+        ldy     #0
+        sty     hgr_col
+
+       END_IF
+
+        ldx     hgr_row_flag
+
+      END_IF
+
+        copylohi hires_table_lo,x, hires_table_hi,x, hgr_base
+
+    WHILE ldy run_length : NOT ZERO
+
+        inc     src_addr
+        bne     DecodeLoop
+        inc     src_addr+1
+        bne     DecodeLoop      ; always
+
+Exit:   rts
+.endproc ; _AxeDecode
+.endproc ; ShowAxeFile
 
 ;;; ============================================================
 
@@ -1384,6 +1492,10 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
     IF ecmp16 entry+FileEntry::blocks_used, #5 : EQ ; DLR
         ecmp16  entry+FileEntry::aux_type, #$400
         beq     yes
+    END_IF
+
+    IF ecmp16 entry+FileEntry::aux_type, #$60FF : EQ ; AXE
+        jmp     yes
     END_IF
 
 no:     RETURN  C=0
