@@ -113,6 +113,9 @@ Project Page: https://github.com/a2stuff/a2d
 * Text Preview: Show first 64K of larger files correctly.
 * Control Panels: Handle write protected disk when modifying settings.
 * Control Panel: Fix overlapping button labels in some locales.
+* Map
+  * Fix overlapping labels in some locales.
+  * Reduce cursor flickering when blinking position indicator.
 * Map: Fix overlapping labels in some locales.
 * Image Preview
   * Improve single hires file preview quality.

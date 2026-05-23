@@ -261,6 +261,8 @@ position_marker_bitmap:
         PIXELS  "..#..#..#.."
         PIXELS  ".....#....."
 
+        DEFINE_RECT shield_rect, 0,0,0,0
+
 ;;; ============================================================
 ;;; Line Edit
 
@@ -667,8 +669,18 @@ HidePositionIndicator := ShowPositionIndicator
         lda     indicator_flag
         eor     #$80
         sta     indicator_flag
+
+        ldax    xcoord
+        stax    shield_rect::x1
+        addax   #kPositionMarkerWidth, shield_rect::x2
+        ldax    ycoord
+        stax    shield_rect::y1
+        addax   #kPositionMarkerHeight, shield_rect::y2
+
         MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::ShieldCursor, shield_rect
         MGTK_CALL MGTK::PaintBits, position_marker_params
+        MGTK_CALL MGTK::UnshieldCursor
         rts
 .endproc ; XDrawPositionIndicator
 
