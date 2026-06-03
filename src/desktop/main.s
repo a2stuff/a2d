@@ -13018,6 +13018,120 @@ ok:     RETURN  A=#0
 .endproc ; AboutDialogProc
 
 ;;; ============================================================
+;;; Execute items in "Startup.Items" folder
+
+;;; Note that while this routine is only executed once on startup, it
+;;; can't be in the Initializer segment as that occupies the same
+;;; memory area as DAs that may be executed.
+
+;;; Uses `DIR_READ_DATA_BUFFER` and `IO_BUFFER`
+.proc ExecuteStartupItems
+
+        ;; Does the directory exist?
+        CALL GetFileInfo, AX=#str_startup_items
+        RTS_IF CS
+        RTS_IF lda file_info_params::file_type : A <> #FT_DIRECTORY
+
+        ;; Loop over all entries
+        ldx     #1              ; 1-based, for convenience
+    REPEAT
+        txa
+        pha
+
+        ;; Get Nth entry if it exists
+        jsr     _GetNthEntry
+      IF CS
+        pla
+        rts
+      END_IF
+
+        ;; Construct path and execute it
+        CALL    CopyToSrcPath, AX=#str_startup_items
+        CALL    AppendFilenameToSrcPath, AX=#filename_buf
+        CALL    LaunchFileWithPathOnSystemDisk
+
+        pla
+        tax
+    WHILE inx : NOT ZERO
+        rts
+
+;;; We seek to the Nth entry each time because keeping the directory
+;;; open would consume buffers that items like DAs are likely to use.
+
+;;; Inputs: A = index (1-based, for convenience)
+;;; Output: C=0 and `filename_buf` populated on success, C=1 on failure (e.g. EOF)
+.proc _GetNthEntry
+        read_dir_buffer := DIR_READ_DATA_BUFFER
+
+;;; Local variables on ZP
+PARAM_BLOCK, $06
+dir_ptr         .addr
+index           .byte
+entry_length    .byte
+entries_per_block .byte
+entry_in_block  .byte
+END_PARAM_BLOCK
+
+        sta     index
+
+        MLI_CALL OPEN, open_params
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL READ, read_params
+
+        copy8   #1, entry_in_block ; First block has header instead of entry
+        copy8   read_dir_buffer + SubdirectoryHeader::entries_per_block, entries_per_block
+        copy8   read_dir_buffer + SubdirectoryHeader::entry_length, entry_length
+
+        copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
+
+    REPEAT
+        ldy     #FileEntry::storage_type_name_length
+        lda     (dir_ptr),y
+        and     #NAME_LENGTH_MASK
+      IF NOT ZERO                 ; non-entry (deleted, etc)
+        tay
+        ;; Found Nth item?
+       IF dec index : ZERO
+        sty     filename_buf
+        DO
+        copy8   (dir_ptr),y, filename_buf,y
+        WHILE dey : NOT ZERO
+        clc                     ; C=0 for success
+        BREAK_IF CC             ; always
+       END_IF
+      END_IF
+
+        ;; Any more entries in block?
+        inc     entry_in_block
+      IF lda entry_in_block : A = entries_per_block
+        MLI_CALL READ, read_params
+        BREAK_IF CS             ; C=1 for EOF
+        copy16  #read_dir_buffer + 4, dir_ptr
+        copy8   #0, entry_in_block
+      ELSE
+        add16_8 dir_ptr, entry_length
+      END_IF
+    FOREVER
+
+        php
+        MLI_CALL CLOSE, close_params
+        plp
+        rts
+
+        DEFINE_OPEN_PARAMS open_params, str_startup_items, IO_BUFFER
+        DEFINE_READWRITE_PARAMS read_params, read_dir_buffer, BLOCK_SIZE
+        DEFINE_CLOSE_PARAMS close_params
+
+.endproc ; _GetNthEntry
+
+str_startup_items:
+        PASCAL_STRING kFilenameStartupItemsDir
+
+.endproc ; ExecuteStartupItems
+
+;;; ============================================================
 ;;; Given a path and a prospective name, update the filesystem with
 ;;; the desired case bits, considering type and the option
 ;;; `DeskTopSettings::kOptionsSetCaseBits`.

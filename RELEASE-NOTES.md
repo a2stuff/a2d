@@ -75,6 +75,7 @@ Project Page: https://github.com/a2stuff/a2d
 * File > Get Info: Reduce cursor flickering when computing volume/folder size.
 * Automatically select newly inserted disks.
 * Select disk (if present) after Special > Check Drive.
+* Add "Startup.Items" folder support.
 
 ### Selector
 

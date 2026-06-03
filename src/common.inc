@@ -22,6 +22,7 @@
 .define kPathnameBellProc      .concat(kFilenameLocalDir, "/Bell.proc")
 .define kPathnameQuitSave      .concat(kFilenameLocalDir, "/Quit.tmp")
 .define kFilenameDADir         "Apple.Menu"
+.define kFilenameStartupItemsDir "Startup.Items"
 .define kFilenameExtrasDir     "Extras"
 .define kFilenameRAMCardDir    "DeskTop"
 

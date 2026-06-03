@@ -298,6 +298,20 @@ local function CheckSelectionName(name, options)
   end
 end
 
+local function WaitForSelectionName(name)
+  util.WaitFor(
+    string.format("%q to be selected", name), function()
+      local selected = a2d.GetSelectedIcons()
+      if #selected ~= 1 then
+        return false
+      end
+      if name:lower() ~= selected[1].name:lower() then
+        return false
+      end
+      return true
+  end)
+end
+
 function a2d.Select(name, options)
   options = default_options(options)
 
@@ -305,8 +319,8 @@ function a2d.Select(name, options)
     a2d.ClearSelection()
   end
   apple2.Type(name)
-  a2d.WaitForRepaint() -- TODO: spin here?
-  CheckSelectionName(name, options)
+  a2d.WaitForRepaint()
+  WaitForSelectionName(name)
 end
 
 -- additional option: {close_current=true}
@@ -433,8 +447,8 @@ function a2d.RenameSelection(newname, options)
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
-  emu.wait(5) -- I/O
-  CheckSelectionName(newname, options)
+  a2d.WaitForRepaint()
+  WaitForSelectionName(newname)
 end
 
 function a2d.RenamePath(path, newname, options)
@@ -458,7 +472,7 @@ function a2d.DuplicateSelection(newname, options)
   apple2.Type(newname)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
-  CheckSelectionName(newname, options)
+  WaitForSelectionName(newname)
 end
 
 function a2d.DuplicatePath(path, newname)
@@ -499,8 +513,8 @@ function a2d.CreateFolder(path, options)
   a2d.ClearTextField()
   apple2.Type(name)
   apple2.ReturnKey()
-  emu.wait(5) -- I/O
-  CheckSelectionName(name, options)
+  a2d.WaitForRepaint()
+  WaitForSelectionName(name)
 end
 
 function a2d.FormatVolume(name, opt_new_name)

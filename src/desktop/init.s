@@ -998,7 +998,9 @@ slot_string_table:
     END_IF
 
         ;; And start pumping events
-        jmp     main::MainLoop
+        PUSH_RETURN_ADDRESS main::MainLoop
+        TAIL_CALL main::ExecuteStartupItems
+
 .endproc ; FinalSetup
 
 ;;; ============================================================
