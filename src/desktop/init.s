@@ -981,9 +981,14 @@ slot_string_table:
         ;; Final MGTK configuration
         MGTK_CALL MGTK::CheckEvents
         jsr     main::SetCursorPointer ; after the rest of initialization
+        PUSH_RETURN_ADDRESS main::MainLoop
+
+        ;; Skip the rest if both Open Apple and Solid Apple down
+        lda     BUTN0
+        and     BUTN1
+        RTS_IF NS
 
         ;; Restore state from previous session
-        copy8   #0, active_window_id
         jsr     RestoreWindows
 
         ;; Window restoration can safely trash anything before this
@@ -997,9 +1002,10 @@ slot_string_table:
         CALL    ShowAlertOption, X=#AlertButtonOptions::OK
     END_IF
 
-        ;; And start pumping events
-        PUSH_RETURN_ADDRESS main::MainLoop
+        ;; Execute startup items
         TAIL_CALL main::ExecuteStartupItems
+
+        ;; and we'll return to `main::MainLoop` c/o above
 
 .endproc ; FinalSetup
 

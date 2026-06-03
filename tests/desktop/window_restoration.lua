@@ -178,3 +178,29 @@ test.Step(
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "TRASH", "Case is retained")
 end)
 
+--[[
+  Launch DeskTop. Several windows. Quit and relaunch
+  DeskTop while holding OA+SA. Verify that the window is not restored.
+  are non-zero.
+]]
+test.Step(
+  "Holding OA+SA skips restoration",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+
+    a2d.Quit()
+    apple2.BitsyInvokeFile("PRODOS")
+
+    a2d.WaitForDesktopReady()
+    test.ExpectEquals(a2dtest.GetWindowCount(), 2, "windows should have restored")
+
+    a2d.Quit()
+    apple2.BitsyInvokeFile("PRODOS")
+
+    apple2.PressOA()
+    apple2.PressSA()
+    a2d.WaitForDesktopReady()
+    apple2.ReleaseSA()
+    apple2.ReleaseOA()
+    test.ExpectEquals(a2dtest.GetWindowCount(), 0, "windows should not have restored")
+end)

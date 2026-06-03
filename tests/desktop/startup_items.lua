@@ -6,8 +6,6 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "Startup.Items execute sequentially",
   function()
-    a2d.CreateFolder("/A2.DESKTOP/STARTUP.ITEMS")
-
     a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM", "/A2.DESKTOP/STARTUP.ITEMS")
     a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/SHAKESPEARE", "/A2.DESKTOP/STARTUP.ITEMS")
 
@@ -31,7 +29,10 @@ test.Step(
     a2d.CloseWindow()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/STARTUP.ITEMS")
+    a2d.OpenPath("/A2.DESKTOP/STARTUP.ITEMS")
+    a2d.SelectAll()
+    a2d.DeleteSelection()
+    a2d.CloseAllWindows()
 end)
 
 --[[
@@ -40,6 +41,7 @@ end)
 test.Step(
   "Startup.Items must be a folder",
   function()
+    a2d.DeletePath("/A2.DESKTOP/STARTUP.ITEMS")
     a2d.DuplicatePath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM", "STARTUP.ITEMS")
     a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/STARTUP.ITEMS", "/A2.DESKTOP")
 
@@ -49,4 +51,31 @@ test.Step(
 
     -- cleanup
     a2d.DeletePath("/A2.DESKTOP/STARTUP.ITEMS")
+    a2d.CreateFolder("/A2.DESKTOP/STARTUP.ITEMS")
+    a2d.CloseAllWindows()
+end)
+
+--[[
+  OA+SA skips Startup Items
+]]
+test.Step(
+  "Holding OA+SA skips Startup.Items",
+  function()
+    a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM", "/A2.DESKTOP/STARTUP.ITEMS")
+
+    a2d.CloseAllWindows()
+    a2d.Reboot()
+    apple2.PressOA()
+    apple2.PressSA()
+    a2d.WaitForDesktopReady()
+    apple2.ReleaseSA()
+    apple2.ReleaseOA()
+
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "Lorem ipsum dolor sit amet", "Text preview should not be showing")
+
+    -- cleanup
+    a2d.OpenPath("/A2.DESKTOP/STARTUP.ITEMS")
+    a2d.SelectAll()
+    a2d.DeleteSelection()
+    a2d.CloseAllWindows()
 end)

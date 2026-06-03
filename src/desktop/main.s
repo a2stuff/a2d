@@ -13026,11 +13026,6 @@ ok:     RETURN  A=#0
 
 ;;; Uses `DIR_READ_DATA_BUFFER` and `IO_BUFFER`
 .proc ExecuteStartupItems
-        ;; Skip if both Open Apple and Solid Apple down?
-        lda     BUTN0
-        and     BUTN1
-        RTS_IF NS
-
         ;; Does the directory exist?
         CALL GetFileInfo, AX=#str_startup_items
         RTS_IF CS
