@@ -106,6 +106,7 @@ start:
         jsr     EnsurePrefixSet
         jsr     BrandSystemFolder
         jsr     DetectMousetext
+        jsr     CreateStartupItemsDir
         jsr     CreateLocalDir
         jsr     PreserveQuitCode
         jsr     LoadSettings
@@ -265,6 +266,17 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
 .proc CreateLocalDir
         MLI_CALL CREATE, create_localdir_params
+        rts
+.endproc ; CreateLocalDir
+
+;;; ============================================================
+
+startupitems_dir:
+        PASCAL_STRING kFilenameStartupItemsDir
+        DEFINE_CREATE_PARAMS create_startupitemsdir_params, startupitems_dir, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
+
+.proc CreateStartupItemsDir
+        MLI_CALL CREATE, create_startupitemsdir_params
         rts
 .endproc ; CreateLocalDir
 
@@ -479,17 +491,18 @@ copied_flag:                    ; set to `dst_path`'s length, or reset
         DEFINE_CREATE_PARAMS create_dt_dir_params, dst_path, ACCESS_DEFAULT, FT_DIRECTORY, 0, ST_LINKED_DIRECTORY
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, src_path
 
-kNumFilenames = 5
+kNumFilenames = 6
 
         ;; Files/Directories to copy
 str_f1: PASCAL_STRING kFilenameModulesDir
 str_f2: PASCAL_STRING kFilenameLocalDir
 str_f3: PASCAL_STRING kFilenameDADir
 str_f4: PASCAL_STRING kFilenameExtrasDir
-str_f5: PASCAL_STRING kFilenameLauncher ; last - serves as a sentinel
+str_f5: PASCAL_STRING kFilenameStartupItemsDir
+str_f6: PASCAL_STRING kFilenameLauncher ; last - serves as a sentinel
 
 filename_table:
-        .addr str_f1,str_f2,str_f3,str_f4,str_f5
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
         ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
 
         kHtabCopyingMsg = (80 - .strlen(res_string_copying_to_ramcard)) / 2
