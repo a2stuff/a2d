@@ -53,6 +53,7 @@
 .define res_string_card_type_storage "Masslagring"
 .define res_string_card_type_network "N{tverkskort"
 .define res_string_card_type_mockingboard "Mockingboard"
+.define res_string_card_type_phasor "Phasor"
 .define res_string_card_type_z80 "Z-80 Kort"
 .define res_string_card_type_uthernet2 "Uthernet II"
 .define res_string_card_type_passport "Passport MIDI"
