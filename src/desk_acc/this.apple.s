@@ -743,6 +743,7 @@ str_audio:      PASCAL_STRING res_string_card_type_audio
 str_storage:    PASCAL_STRING res_string_card_type_storage
 str_network:    PASCAL_STRING res_string_card_type_network
 str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
+str_phasor:     PASCAL_STRING res_string_card_type_phasor
 str_z80:        PASCAL_STRING res_string_card_type_z80
 str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
 str_passport:   PASCAL_STRING res_string_card_type_passport
@@ -1700,7 +1701,12 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
 
         CALL    WithInterruptsDisabled, AX=#DetectMockingboard
     IF CS
-        RETURN  AX=#str_mockingboard
+        CALL    WithInterruptsDisabled, AX=#DetectPhasor
+      IF CS
+        RETURN  AX=#str_phasor
+      END_IF
+      
+        RETURN  C=1, AX=#str_mockingboard
     END_IF
 
         CALL    WithInterruptsDisabled, AX=#DetectZ80
@@ -1927,6 +1933,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 .endproc ; DetectPassportMIDI
 
         .include "../lib/detect_mockingboard.s"
+        .include "../lib/detect_phasor.s"
         .include "../lib/detect_thecricket.s"
 
 ;;; ============================================================

@@ -53,6 +53,7 @@
 .define res_string_card_type_storage "u-wo za zapis na danni"
 .define res_string_card_type_network "mrevowa karta"
 .define res_string_card_type_mockingboard "MOCKINGBOARD"
+.define res_string_card_type_phasor "PHASOR"
 .define res_string_card_type_z80 "Z-80 SOFTCARD"
 .define res_string_card_type_uthernet2 "UTHERNET II"
 .define res_string_card_type_passport "PASSPORT MIDI"
