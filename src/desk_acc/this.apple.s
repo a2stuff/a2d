@@ -1702,11 +1702,11 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
         CALL    WithInterruptsDisabled, AX=#DetectMockingboard
     IF CS
         CALL    WithInterruptsDisabled, AX=#DetectPhasor
-        IF CS
-                RETURN  AX=#str_phasor
-        ELSE
-                RETURN  AX=#str_mockingboard
-        END_IF
+      IF CS
+        RETURN  AX=#str_phasor
+      END_IF
+      
+        RETURN  C=1, AX=#str_mockingboard
     END_IF
 
         CALL    WithInterruptsDisabled, AX=#DetectZ80
