@@ -6,6 +6,11 @@ Project Page: https://github.com/a2stuff/a2d
 
 ## 1.6 Alpha
 
+### New Features
+
+* Add "Startup.Items" folder support.
+* New Screen Saver: Maze.
+
 ### General
 
 * Eliminate cursor flickering when mouse is moved.
@@ -118,7 +123,6 @@ Project Page: https://github.com/a2stuff/a2d
 * Map
   * Fix overlapping labels in some locales.
   * Reduce cursor flickering when blinking position indicator.
-* Map: Fix overlapping labels in some locales.
 * Image Preview
   * Improve single hires file preview quality.
   * Support AXE PACKER image files

@@ -318,14 +318,11 @@ end
 --------------------------------------------------
 
 function a2dtest.ExpectNotHanging()
-  local dhr = a2dtest.SnapshotDHRWithoutClock()
   a2d.OpenMenu(a2d.APPLE_MENU)
-  local new = a2dtest.SnapshotDHRWithoutClock()
-  test.Expect(not a2dtest.CompareDHR(dhr, new), "about dialog should have shown", {snap=true}, 1)
+  test.ExpectMatch(a2dtest.OCRScreen(), "About Apple II DeskTop", "Apple menu should have shown")
   apple2.EscapeKey()
   a2d.WaitForRepaint()
-  local new2 = a2dtest.SnapshotDHRWithoutClock()
-  test.Expect(a2dtest.CompareDHR(dhr, new2), "about dialog should have closed", {snap=true}, 1)
+  test.ExpectNotMatch(a2dtest.OCRScreen(), "About Apple II DeskTop", "Apple menu should have closed")
 end
 
 --------------------------------------------------

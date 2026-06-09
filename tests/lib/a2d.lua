@@ -298,9 +298,11 @@ local function CheckSelectionName(name, options)
   end
 end
 
-local function WaitForSelectionName(name)
-  util.WaitFor(
-    string.format("%q to be selected", name), function()
+local function WaitForSelectionName(name, options)
+  options = default_options(options)
+
+  if not util.WaitForNoError(
+    function()
       local selected = a2d.GetSelectedIcons()
       if #selected ~= 1 then
         return false
@@ -309,7 +311,17 @@ local function WaitForSelectionName(name)
         return false
       end
       return true
-  end)
+    end, {timeout=5}) then
+    local selected = a2d.GetSelectedIcons()
+    if #selected ~= 1 then
+      error(string.format("Failed to select %q - have %d selected",
+                          name, #selected), options.level)
+    end
+    if name:lower() ~= selected[1].name:lower() then
+      error(string.format("Failed to select %q - have %q selected",
+                          name, selected[1].name), options.level)
+    end
+  end
 end
 
 function a2d.Select(name, options)
@@ -320,7 +332,7 @@ function a2d.Select(name, options)
   end
   apple2.Type(name)
   a2d.WaitForRepaint()
-  WaitForSelectionName(name)
+  WaitForSelectionName(name, options)
 end
 
 -- additional option: {close_current=true}
@@ -448,7 +460,7 @@ function a2d.RenameSelection(newname, options)
   apple2.Type(newname)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
-  WaitForSelectionName(newname)
+  WaitForSelectionName(newname, options)
 end
 
 function a2d.RenamePath(path, newname, options)
@@ -472,7 +484,7 @@ function a2d.DuplicateSelection(newname, options)
   apple2.Type(newname)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
-  WaitForSelectionName(newname)
+  WaitForSelectionName(newname, options)
 end
 
 function a2d.DuplicatePath(path, newname)
@@ -514,7 +526,7 @@ function a2d.CreateFolder(path, options)
   apple2.Type(name)
   apple2.ReturnKey()
   a2d.WaitForRepaint()
-  WaitForSelectionName(name)
+  WaitForSelectionName(name, options)
 end
 
 function a2d.FormatVolume(name, opt_new_name)

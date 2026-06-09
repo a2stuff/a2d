@@ -23,6 +23,23 @@ function util.WaitFor(message, func, options, level)
   error(string.format("Timeout (%ds) waiting for %s", timeout, message), level + 2)
 end
 
+function util.WaitForNoError(func, options)
+  local timeout = 60
+  if options and options.timeout then
+    timeout = options.timeout
+  end
+  if level == nil then
+    level = 1
+  end
+  for i = 1, timeout do
+    if func() then
+      return true
+    end
+    emu.wait(1)
+  end
+  return false
+end
+
 function util.SlurpFile(pathname)
   local f = assert(io.open(pathname, "rb"))
   local bytes = f:read("*all")
