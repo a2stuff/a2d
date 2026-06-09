@@ -37,7 +37,6 @@ echo "Bumping to ${version}..."
 
 bin/setlang "en"
 
-git commit -a -m "Bump version to ${version}" > /dev/null
 git tag "v${version}" > /dev/null
 
 # --------------------------------------------------
@@ -60,4 +59,6 @@ INSTALL_PATH="$VOL" INSTALL_IMG="$IMG" bin/setopt noram nosel noshort case
 
 # --------------------------------------------------
 echo ""
-echo "Upload $IMG to AWS"
+echo "Now:"
+echo "* git push && git push --tags"
+echo "* Upload $IMG to AWS"
