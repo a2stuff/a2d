@@ -16,10 +16,14 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I") -- File > Get Info
+    util.WaitFor(
+      "write protected label",
+      function()
+        return a2dtest.OCRScreen():match("Write protected: +Yes")
+    end)
+    apple2.EscapeKey() -- cancel enumeration
     emu.wait(5)
-    test.ExpectMatch(a2dtest.OCRScreen(), "Write protected: +Yes", "should be write protected")
-    apple2.EscapeKey() -- cancel enumeration (if it's still happening)
-    a2d.CloseWindow()
+    a2d.DialogCancel()
 end)
 
 --[[
