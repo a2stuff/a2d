@@ -128,6 +128,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Support AXE PACKER image files
 * Lights Out: Add keyboard support: A..Y toggle lights.
 * Eyes: Reduce cursor flickering.
+* International: Reduce cursor flickering.
 
 ### Misc
 

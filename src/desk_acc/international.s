@@ -595,12 +595,14 @@ char:   .byte   SELF_MODIFIED_BYTE
         sta     drawchar_params::char
         sta     date_sample_label_str+kDateSampleOffset1
         sta     date_sample_label_str+kDateSampleOffset2
+        MGTK_CALL MGTK::ShieldCursor, date_hilite
         MGTK_CALL MGTK::PaintRect, date_hilite
         MGTK_CALL MGTK::MoveTo, date_char_pos
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, date_sample_label_pos
         MGTK_CALL MGTK::DrawString, date_sample_label_str
+        MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
 
@@ -608,12 +610,14 @@ char:   .byte   SELF_MODIFIED_BYTE
         CALL    ReadSetting, X=#DeskTopSettings::intl_time_sep
         sta     drawchar_params::char
         sta     time_sample_label_str+kTimeSampleOffset
+        MGTK_CALL MGTK::ShieldCursor, time_hilite
         MGTK_CALL MGTK::PaintRect, time_hilite
         MGTK_CALL MGTK::MoveTo, time_char_pos
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, time_sample_label_pos
         MGTK_CALL MGTK::DrawString, time_sample_label_str
+        MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
 
@@ -621,12 +625,14 @@ char:   .byte   SELF_MODIFIED_BYTE
         CALL    ReadSetting, X=#DeskTopSettings::intl_deci_sep
         sta     drawchar_params::char
         sta     deci_sample_label_str+kDeciSampleOffset
+        MGTK_CALL MGTK::ShieldCursor, deci_hilite
         MGTK_CALL MGTK::PaintRect, deci_hilite
         MGTK_CALL MGTK::MoveTo, deci_char_pos
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, deci_sample_label_pos
         MGTK_CALL MGTK::DrawString, deci_sample_label_str
+        MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
 
@@ -634,12 +640,14 @@ char:   .byte   SELF_MODIFIED_BYTE
         CALL    ReadSetting, X=#DeskTopSettings::intl_thou_sep
         sta     drawchar_params::char
         sta     thou_sample_label_str+kThouSampleOffset
+        MGTK_CALL MGTK::ShieldCursor, thou_hilite
         MGTK_CALL MGTK::PaintRect, thou_hilite
         MGTK_CALL MGTK::MoveTo, thou_char_pos
         MGTK_CALL MGTK::DrawText, drawchar_params
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, thou_sample_label_pos
         MGTK_CALL MGTK::DrawString, thou_sample_label_str
+        MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
 
