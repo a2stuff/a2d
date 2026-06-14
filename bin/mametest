@@ -257,7 +257,7 @@ output=$(
     $MAMEFLAGS \
     $SCRIPTARGS" \
        2> >(IFS='' ; while read line; do echo "${COLOR_RED}${line}${COLOR_RESET}" >&1; done) | \
-    grep -E --line-buffered -v "Secure coding is automatically enabled" | \
+    grep -E --text --line-buffered -v "Secure coding is automatically enabled" | \
     tee /dev/fd/5
       )
 popd > /dev/null
