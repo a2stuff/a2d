@@ -115,8 +115,9 @@ elseif machine.system.name:match("^apple2gs") then
     -- modifiers
     ["Control"]     = { port = ":macadb:KEY3", field = "Control"    },
     ["Shift"]       = { port = ":macadb:KEY3", field = "Shift"      },
-    ["Open Apple"]  = { port = ":macadb:KEY3", field = "Command"    },
-    ["Solid Apple"] = { port = ":macadb:KEY3", field = "Option"     },
+    -- TODO: Ample MAME builds seem to use short form. What's going on?
+    ["Open Apple"]  = { port = ":macadb:KEY3", field = { "Command / Open Apple" , "Command" } },
+    ["Solid Apple"] = { port = ":macadb:KEY3", field = { "Option / Solid Apple" , "Option" }    },
 
     -- Other
     ["Reset"]     = { port = ":macadb:KEY5", field = "Reset / Power" },
@@ -239,9 +240,23 @@ local function get_port(port_name)
   return port
 end
 
+--[[
+  `field_name` can be an array, in which case each name is tried
+  in turn. This can be used to work around field name changes in MAME, etc.
+]]
 local function get_field(port_name, field_name)
   local port = get_port(port_name)
-  local field = port.fields[field_name]
+  local field
+  if type(field_name) == "table" then
+    for i, v in ipairs(field_name) do
+      field = port.fields[v]
+      if field ~= nil then
+        break
+      end
+    end
+  else
+    field = port.fields[field_name]
+  end
   if field == nil then
     error("No field \"" .. field_name .. "\" for port: " .. port_name)
   end
