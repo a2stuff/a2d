@@ -451,19 +451,19 @@ set:    SET_BIT7_FLAG joy2_valid_flag
         and     #$80
         ASSERT_EQUALS BTK::kButtonStateChecked, $80
         sta     joy_btn0_button::state
-        BTK_CALL BTK::RadioDraw, joy_btn0_button
+        BTK_CALL BTK::RadioUpdate, joy_btn0_button
 
         lda     curr+InputState::butn1
         and     #$80
         ASSERT_EQUALS BTK::kButtonStateChecked, $80
         sta     joy_btn1_button::state
-        BTK_CALL BTK::RadioDraw, joy_btn1_button
+        BTK_CALL BTK::RadioUpdate, joy_btn1_button
 
         lda     curr+InputState::butn2
         and     #$80
         ASSERT_EQUALS BTK::kButtonStateChecked, $80
         sta     joy_btn2_button::state
-        BTK_CALL BTK::RadioDraw, joy_btn2_button
+        BTK_CALL BTK::RadioUpdate, joy_btn2_button
 
         ;; --------------------------------------------------
 

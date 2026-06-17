@@ -10840,7 +10840,7 @@ finish:
 .proc ShieldCursorImpl
         dec     cursor_shield_count
 
-        bit     cursor_flag
+        bit     cursor_count
         RTS_IF NS
 
         jsr     ClipRect

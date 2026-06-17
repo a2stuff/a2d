@@ -49,3 +49,24 @@ test.Step(
     apple2.SetJoy2(192, 192)
     test.Snap("verify second indicator")
 end)
+
+--[[
+  Run the DA. Move the cursor over a button indicator. Press OA.
+  Verify that the mouse cursor doesn't disappear.
+]]
+test.Step(
+  "Cursor visibility",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
+
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + w - 45, y + h - 20)
+    end)
+    a2dtest.ExpectNothingChanged(function()
+        apple2.PressOA()
+        emu.wait(1)
+        apple2.ReleaseOA()
+        emu.wait(1)
+    end)
+end)
