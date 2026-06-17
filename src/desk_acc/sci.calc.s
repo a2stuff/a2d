@@ -1285,15 +1285,15 @@ kRegSize = 6
 
 ;;; Input: A,X = button rectangle; `event_params` must be valid
 .proc DepressButton
-        stax    invert_addr
-
         ;; The passed rect is the inner inversion rect; test against
         ;; 1px beyond that, to match BTK. Make a copy and inflate it.
         ptr := $06
         stax    ptr
         ldy     #.sizeof(MGTK::Rect)-1
     DO
-        copy8   (ptr),y, inrect_rect,y
+        lda     (ptr),y
+        sta     paint_rect,y
+        sta     inrect_rect,y
     WHILE dey : POS
         MGTK_CALL MGTK::InflateRect, grow_rect
 
@@ -1363,9 +1363,12 @@ invert_rect:
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPattern, black_pattern
         MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, invert_addr
+        MGTK_CALL MGTK::ShieldCursor, paint_rect
+        MGTK_CALL MGTK::PaintRect, paint_rect
+        MGTK_CALL MGTK::UnshieldCursor
         rts
 
+        DEFINE_RECT paint_rect, 0,0,0,0
         DEFINE_RECT inrect_rect, 0,0,0,0
 .params grow_rect
         .addr   inrect_rect
@@ -1402,22 +1405,24 @@ invert_rect:
 
 .proc DisplayBuffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     end
+    IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         CALL    PreDisplayBuffer, XY=#text_buffer1
         MGTK_CALL MGTK::DrawText, drawtext_params1
-end:    rts
+        MGTK_CALL MGTK::UnshieldCursor
+    END_IF
+        rts
 .endproc ; DisplayBuffer1
 
 .proc DisplayBuffer2
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     end
+    IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         CALL    PreDisplayBuffer, XY=#text_buffer2
         MGTK_CALL MGTK::DrawText, drawtext_params2
-end:    rts
+        MGTK_CALL MGTK::UnshieldCursor
+    END_IF
+        rts
 .endproc ; DisplayBuffer2
 
 .proc PreDisplayBuffer
@@ -1428,6 +1433,9 @@ end:    rts
         sec
         sbc     textwidth_params::result
         sta     text_pos_params3::left
+
+        MGTK_CALL MGTK::ShieldCursor, clear_display_params
+
         MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
         MGTK_CALL MGTK::DrawString, spaces_string
         MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
