@@ -130,6 +130,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Lights Out: Add keyboard support: A..Y toggle lights.
 * Eyes: Reduce cursor flickering.
 * International: Reduce cursor flickering.
+* Joystick: Reduce cursor flickering.
 
 ### Misc
 

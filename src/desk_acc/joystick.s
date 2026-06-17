@@ -125,12 +125,15 @@ kJoystickDisplayH = 64
         DEFINE_BUTTON joy_btn1_button, kDAWindowId, res_string_label_joy_btn1,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
         DEFINE_BUTTON joy_btn2_button, kDAWindowId, res_string_label_joy_btn2,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50
 
+ kMarkerWidth = 8
+ kMarkerHeight = 5
+
 .params joy_marker
         DEFINE_POINT viewloc, kJoystickDisplayX+1, kJoystickDisplayY+1
 mapbits:        .addr   joy_marker_bitmap
 mapwidth:       .byte   2
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 7, 4
+        DEFINE_RECT maprect, 0, 0, kMarkerWidth-1, kMarkerHeight-1
         REF_MAPINFO_MEMBERS
 .endparams
 
@@ -139,7 +142,7 @@ reserved:       .byte   0
 mapbits:        .addr   joy_marker_bitmap2
 mapwidth:       .byte   2
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 7, 4
+        DEFINE_RECT maprect, 0, 0, kMarkerWidth-1, kMarkerHeight-1
         REF_MAPINFO_MEMBERS
 .endparams
 
@@ -402,17 +405,13 @@ set:    SET_BIT7_FLAG joy2_valid_flag
         RTS_IF A = #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
 
         ;; --------------------------------------------------
         ;; Joystick Position
 
         ;; Erase old
         MGTK_CALL MGTK::SetPenMode, penOR
-    IF bit joy2_valid_flag : NS
-        MGTK_CALL MGTK::PaintBits, joy_marker2
-    END_IF
-        MGTK_CALL MGTK::PaintBits, joy_marker
+        jsr     _PaintMarkers
 
 .scope joy1
         joy_x := joy_marker::viewloc::xcoord
@@ -439,10 +438,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         ;; Draw new
         MGTK_CALL MGTK::SetPenMode, notpencopy
-    IF bit joy2_valid_flag : NS
-        MGTK_CALL MGTK::PaintBits, joy_marker2
-    END_IF
-        MGTK_CALL MGTK::PaintBits, joy_marker
+        jsr     _PaintMarkers
 
         ;; --------------------------------------------------
         ;; Button States
@@ -450,25 +446,59 @@ set:    SET_BIT7_FLAG joy2_valid_flag
         lda     curr+InputState::butn0
         and     #$80
         ASSERT_EQUALS BTK::kButtonStateChecked, $80
+        eor     joy_btn0_button::state ; changed?
+    IF NS
+        eor     joy_btn0_button::state ; changed?
         sta     joy_btn0_button::state
         BTK_CALL BTK::RadioUpdate, joy_btn0_button
+    END_IF
 
         lda     curr+InputState::butn1
         and     #$80
         ASSERT_EQUALS BTK::kButtonStateChecked, $80
+        eor     joy_btn1_button::state ; changed?
+    IF NS
+        eor     joy_btn1_button::state
         sta     joy_btn1_button::state
         BTK_CALL BTK::RadioUpdate, joy_btn1_button
+    END_IF
 
         lda     curr+InputState::butn2
         and     #$80
         ASSERT_EQUALS BTK::kButtonStateChecked, $80
+        eor     joy_btn2_button::state ; changed?
+    IF NS
+        eor     joy_btn2_button::state
         sta     joy_btn2_button::state
         BTK_CALL BTK::RadioUpdate, joy_btn2_button
+    END_IF
 
         ;; --------------------------------------------------
 
-        MGTK_CALL MGTK::ShowCursor
         rts
+
+.proc _PaintMarkers
+    IF bit joy2_valid_flag : NS
+        COPY_STRUCT MGTK::Point, joy_marker2::viewloc, shield_rect::topleft
+        add16   shield_rect::x1, #kMarkerWidth, shield_rect::x2
+        add16   shield_rect::y1, #kMarkerHeight, shield_rect::y2
+        MGTK_CALL MGTK::ShieldCursor, shield_rect
+        MGTK_CALL MGTK::PaintBits, joy_marker2
+        MGTK_CALL MGTK::UnshieldCursor
+    END_IF
+
+        COPY_STRUCT MGTK::Point, joy_marker::viewloc, shield_rect::topleft
+        add16   shield_rect::x1, #kMarkerWidth, shield_rect::x2
+        add16   shield_rect::y1, #kMarkerHeight, shield_rect::y2
+        MGTK_CALL MGTK::ShieldCursor, shield_rect
+        MGTK_CALL MGTK::PaintBits, joy_marker
+        MGTK_CALL MGTK::UnshieldCursor
+
+        rts
+
+        DEFINE_RECT shield_rect, 0,0,0,0
+
+.endproc ; _PaintMarkers
 
 curr:   .tag InputState
 last:   .tag InputState
