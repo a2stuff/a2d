@@ -115,7 +115,8 @@ elseif machine.system.name:match("^apple2gs") then
     -- modifiers
     ["Control"]     = { port = ":macadb:KEY3", field = "Control"    },
     ["Shift"]       = { port = ":macadb:KEY3", field = "Shift"      },
-    -- TODO: Ample MAME builds seem to use short form. What's going on?
+    -- Ample MAME builds modify port names for OA/SA, so support both forms
+    -- https://github.com/ksherlock/mame/blob/9069cdfc14f0abc9634540bf3d2ebc1d21951a50/src/mame/apple/macadb.cpp#L157-L169
     ["Open Apple"]  = { port = ":macadb:KEY3", field = { "Command / Open Apple" , "Command" } },
     ["Solid Apple"] = { port = ":macadb:KEY3", field = { "Option / Solid Apple" , "Option" }    },
 

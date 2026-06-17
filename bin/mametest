@@ -83,6 +83,7 @@ fi
 BASEDIR="$(pwd)"
 SCRIPTDIR="$(dirname "$SCRIPT")"
 TMPDIR=/tmp/mametest
+IMAGEDIR="$BASEDIR/tests/images"
 
 DISKSDIR="$TMPDIR"/disks
 mkdir -p "$DISKSDIR"
@@ -98,16 +99,16 @@ HARDIMG="../../out/A2DeskTop-${version}_800k.2mg"
 FLOP1IMG="../../out/A2DeskTop-${version}_140k_disk1.po"
 FLOP2IMG="../../out/A2DeskTop-${version}_140k_disk2.po"
 
-if [ ! -f "tests/images/$HARDIMG" ]; then
+if [ ! -f "$IMAGEDIR/$HARDIMG" ]; then
   make package
 fi
 
 # Generate a read-only (Zipped) copy of the A2D disk
 ROHARDIMG="$HARDIMG.zip"
-if [ ! -f "tests/images/$ROHARDIMG" -o \
-       "tests/images/$ROHARDIMG" -ot "tests/images/$HARDIMG" ] ; then
+if [ ! -f "$IMAGEDIR/$ROHARDIMG" -o \
+       "$IMAGEDIR/$ROHARDIMG" -ot "$IMAGEDIR/$HARDIMG" ] ; then
   rm -f $ROHARDIMG
-  zip -q "tests/images/$ROHARDIMG" "tests/images/$HARDIMG"
+  zip -q "$IMAGEDIR/$ROHARDIMG" "$IMAGEDIR/$HARDIMG"
 fi
 
 MODEL="apple2ee"
@@ -131,14 +132,14 @@ NEWDISKARGS=""
 while read -r arg disk; do
   # Maintaining extension is necessary for ZIP files
   target="$DISKSDIR/${arg#?}.${disk##*.}"
-  cp "tests/images/$disk" "$target"
+  cp "$IMAGEDIR/$disk" "$target"
   NEWDISKARGS="$NEWDISKARGS $arg $target"
 done < <(echo $DISKARGS | xargs -n 2)
 DISKARGS="$NEWDISKARGS"
 
 # Make an unformatted disk available to tests
 export UNFORMATTED_IMG="$DISKSDIR/unformatted.2mg"
-cp "tests/images/unformatted.2mg" "$UNFORMATTED_IMG"
+cp "$IMAGEDIR/unformatted.2mg" "$UNFORMATTED_IMG"
 
 # --------------------------------------------------
 # VEDrive
@@ -150,13 +151,13 @@ VESERVERARGS=""
 if [ -n "$VEDISK1" ]; then
   ext="${VEDISK1##*.}"
   target="$DISKSDIR/vdisk1.${ext}"
-  cp "$VEDISK1" "$target"
+  cp "$IMAGEDIR/$VEDISK1" "$target"
   VESERVERARGS="$VESERVERARGS --disk1=$target"
 fi
 if [ -n "$VEDISK2" ]; then
   ext="${VEDISK2##*.}"
   target="$DISKSDIR/vdisk2.${ext}"
-  cp "$VEDISK2" "$target"
+  cp "$IMAGEDIR/$VEDISK2" "$target"
   VESERVERARGS="$VESERVERARGS --disk2=$target"
 fi
 if [ -n "$VESERVERARGS" ]; then
