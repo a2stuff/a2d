@@ -119,16 +119,19 @@ end)
   key. Start typing another filename. Verify that the matching is
   reset.
 ]]
-test.Step(
-  "type down order, reset on non-name key",
-  function()
+test.Variants(
+  {
+    {"type down order, reset on non-name key, right arrow", apple2.RightArrowKey},
+    {"type down order, reset on non-name key, space", apple2.RightArrowKey},
+  },
+  function(idx, name, keyfunc)
     a2d.OpenPath("/TESTS/TYPING.SELECT/ORDER")
     emu.wait(1)
 
     apple2.Type("WHIS")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHISKEY", "type down order")
 
-    apple2.RightArrowKey()
+    keyfunc()
     a2d.WaitForRepaint()
 
     apple2.Type("ALFA")
@@ -162,14 +165,19 @@ end)
 
 --[[
   Use tab in a window containing no files. Verify selection doesn't change.
+
+  Repeat with Space key.
 ]]
-test.Step(
-  "tab in empty windows does not change selection",
-  function()
+test.Variants(
+  {
+    {"tab in empty windows does not change selection", apple2.TabKey},
+    {"space in empty windows does not change selection", apple2.SpaceKey},
+  },
+  function(idx, name, keyfunc)
     -- Volume selection
     a2d.OpenPath("/RAM1")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should be selected")
-    apple2.TabKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should still be selected")
 
@@ -177,13 +185,13 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should be selected")
-    apple2.TabKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should still be selected")
 
     -- No selection in another window
     a2d.ClearSelection()
-    apple2.TabKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "nothing should be selected")
 end)
@@ -352,15 +360,20 @@ end)
   not change, scrollbars do not appear in the window, and DeskTop does
   not crash. Close the window. Verify that the volume icon is no
   longer dimmed.
+
+  Repeat with Space key.
 ]]
-test.Step(
-  "empty window, tab key",
-  function()
+test.Variants(
+  {
+    {"empty window, tab key", apple2.TabKey},
+    {"empty window, space key", apple2.SpaceKey},
+  },
+  function(idx, name, keyfunc)
     a2d.OpenPath("/RAM1")
     a2d.ClearSelection()
 
     for i = 1, 5 do
-      apple2.TabKey()
+      apple2.SpaceKey()
       a2d.WaitForRepaint()
     end
 
@@ -407,11 +420,13 @@ end)
   Launch DeskTop. Close all windows. Clear selection by clicking on
   the desktop. Press Right Arrow key. Verify that the first
   (non-Trash) volume icon is selected. Repeat with Down Arrow key.
+  Repeat with Space key.
 ]]
 test.Variants(
   {
     {"no windows, right arrow key", apple2.RightArrowKey},
-    {"no windows, down arrow key", apple2.DownArrowKey}
+    {"no windows, down arrow key", apple2.DownArrowKey},
+    {"no windows, space key", apple2.SpaceKey},
   },
   function(idx, name, keyfunc)
     a2d.CloseAllWindows()
@@ -476,12 +491,13 @@ end)
 --[[
   Launch DeskTop. Open a window. Press Right Arrow key. Verify that
   the first icon in the window is selected. Repeat with Down Arrow
-  key.
+  key. Repeat with Space key.
 ]]
 test.Variants(
   {
     {"window, no selection, right arrow", apple2.RightArrowKey},
     {"window, no selection, down arrow", apple2.DownArrowKey},
+    {"window, no selection, space arrow", apple2.SpaceKey},
   },
   function(idx, name, keyfunc)
     a2d.OpenPath("/A2.DESKTOP")
@@ -525,6 +541,7 @@ test.Variants(
     {"window, selection in inactive window, down arrow", apple2.DownArrowKey, "first"},
     {"window, selection in inactive window, left arrow", apple2.LeftArrowKey, "last"},
     {"window, selection in inactive window, up arrow", apple2.UpArrowKey, "last"},
+    {"window, selection in inactive window, space", apple2.SpaceKey, "first"},
   },
   function(idx, name, keyfunc, which)
     a2d.CloseAllWindows()
@@ -627,6 +644,10 @@ test.Step(
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "selection should move down")
+
+    apple2.SpaceKey()
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "first icon should be selected")
 end)
 
 --[[
@@ -686,10 +707,15 @@ end)
   Launch DeskTop. Open a window. Click a volume icon. Click an empty
   area within the window. Press an arrow key. Verify that an icon
   within the window is selected.
+
+  Repeat with Space key.
 ]]
-test.Step(
-  "window open, click volume, click empty area within window",
-  function()
+test.Variants(
+  {
+    {"window open, click volume, click empty area within window, right arrow", apple2.RightArrowKey},
+    {"window open, click volume, click empty area within window, space", apple2.SpaceKey},
+  },
+  function(idx, name, keyfunc)
     a2d.SelectPath("/A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.OpenSelection()
@@ -707,7 +733,7 @@ test.Step(
         m.Click()
     end)
 
-    apple2.RightArrowKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "selection should be in window")
 end)
@@ -751,10 +777,15 @@ end)
   Launch DeskTop. Open a window. Click a volume icon. Click an empty
   space on the desktop. Press the Down Arrow key. Verify that the
   first volume icon in visual order on the desktop is selected.
+
+  Repeat with the Space key.
 ]]
-test.Step(
-  "window open, click volume, click empty area on desktop",
-  function()
+test.Variants(
+  {
+    {"window open, click volume, click empty area on desktop, right arrow", apple2.DownArrowKey},
+    {"window open, click volume, click empty area on desktop, space", apple2.SpaceKey},
+  },
+  function(idx, name, keyfunc)
     a2d.SelectPath("/A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.OpenSelection()
@@ -773,7 +804,7 @@ test.Step(
     a2d.WaitForRepaint()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should be cleared")
 
-    apple2.DownArrowKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "first volume should be selected")
 end)
@@ -782,10 +813,15 @@ end)
   Launch DeskTop. Open a window. Click a file icon. Click an empty
   space on the desktop. Press the Down Arrow key. Verify that the
   first file icon in visual order within the window is selected.
+
+  Repeat with the Space key.
 ]]
-test.Step(
-  "window open, click file, click empty space on desktop",
-  function()
+test.Variants(
+  {
+    {"window open, click file, click empty space on desktop, down arrow", apple2.DownArrowKey},
+    {"window open, click file, click empty space on desktop, space", apple2.SpaceKey},
+  },
+  function(idx, name, keyfunc)
     a2d.SelectPath("/A2.DESKTOP")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
     a2d.OpenSelection()
@@ -807,7 +843,7 @@ test.Step(
     a2d.WaitForRepaint()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should be cleared")
 
-    apple2.DownArrowKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "selection should be in window")
 end)
@@ -1038,13 +1074,18 @@ end)
 --[[
   Launch DeskTop. Close all windows. Edit > Select All. Press the
   Right Arrow key. Verify that a single volume icon becomes selected.
+
+  Repeat with Space key.
 ]]
-test.Step(
-  "no windows, arrow after Select All",
-  function()
+test.Variants(
+  {
+    {"no windows, right arrow key after Select All", apple2.RightArrowKey},
+    {"no windows, space key after Select All", apple2.SpaceKey},
+  },
+  function(idx, name, keyfunc)
     a2d.CloseAllWindows()
     a2d.SelectAll()
-    apple2.RightArrowKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "single volume should be selected")
 end)
@@ -1053,13 +1094,18 @@ end)
   Launch DeskTop. Open a window containing icons. Edit > Select All.
   Press the Right Arrow key. Verify that a single file icon becomes
   selected.
+
+  Repeat with Space key.
 ]]
-test.Step(
-  "window open, arrow after Select All",
-  function()
+test.Variants(
+  {
+    {"window open, arrow after Select All", apple2.RightArrowKey},
+    {"window open, space after Select All", apple2.SpaceKey},
+  },
+  function(idx, name, keyfunc)
     a2d.OpenPath("/A2.DESKTOP")
     a2d.SelectAll()
-    apple2.RightArrowKey()
+    keyfunc()
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS", "single file should be selected")
 end)
@@ -1148,4 +1194,29 @@ test.Step(
 
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "should collapse to 1 selected")
     test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "D", "icon next to last should be selected")
+end)
+
+--[[
+  Open `/TESTS/TYPING.SELECT/ORDER`. Start typing a filename. Press
+  Space key. Verify that the first icon is selected.
+]]
+test.Step(
+  "Space selects first icon",
+  function()
+    a2d.OpenPath("/TESTS/TYPING.SELECT/ORDER")
+    emu.wait(1)
+
+    apple2.Type("ALFA")
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "type down selection")
+    apple2.SpaceKey()
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "space selects first icon")
+
+    apple2.Type("WHISKEY")
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHISKEY", "type down selection")
+    apple2.SpaceKey()
+    a2d.WaitForRepaint()
+    test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "space selects first icon")
 end)

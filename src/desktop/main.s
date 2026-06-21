@@ -296,6 +296,8 @@ tick_counter:
         jeq     KeyboardHighlightAlphaNext ; like Tab
         cmp     #'~'
         jeq     KeyboardHighlightAlphaPrev ; like Shift+Tab
+        cmp     #' '
+        jeq     KeyboardHighlightFirst
 
     ELSE
         ;; --------------------------------------------------
@@ -3993,6 +3995,11 @@ compare_order:  .byte   $80, $00, $80, $00
 ;;; --------------------------------------------------
 ;;; If there was no (usable) selection, pick icon from active window.
 
+first:  sec                     ; C=1 is "next"
+        rol     dir
+        jsr     CacheFocusedWindowIconList
+        FALL_THROUGH_TO fallback
+
 fallback:
         ;; Assert: `cached_window_id` = `active_window_id`
         ldy     cached_window_icon_count
@@ -4033,6 +4040,7 @@ KeyboardHighlightLeft  := KeyboardHighlightSpatialImpl::left
 KeyboardHighlightRight := KeyboardHighlightSpatialImpl::right
 KeyboardHighlightDown  := KeyboardHighlightSpatialImpl::down
 KeyboardHighlightUp    := KeyboardHighlightSpatialImpl::up
+KeyboardHighlightFirst := KeyboardHighlightSpatialImpl::first
 
 ;;; ============================================================
 ;;; Type Down Selection
