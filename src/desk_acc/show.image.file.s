@@ -18,21 +18,30 @@
 ;;; Memory map
 ;;;
 ;;;              Main           Aux
-;;;          :           : :           :
-;;;          |           | |           |
-;;;          | DHR       | | DHR       |
+;;;          :...........: :...........:
+;;;          |.DeskTop...| |...........|
+;;;          |.Code......| |...........|
+;;;  $9000   +-----------+ |...........|
+;;;          |           | |...........|
+;;;          : 16K       : :...........:
+;;;          | "Overlay" | |...........|
+;;;          | Buffer    | |...........|
+;;;  $5000   +-----------+ |.Toolkits..|
+;;;          |.DeskTop...| |.&.DeskTop |
+;;;          |.Code......| |.Resources.|
+;;;  $4000   +-----------+ +-----------+
+;;;          |.DHR.......| |.DHR.......|
+;;;          |.Display...| |.Display...|
+;;;          |.Buffer....| |.Buffer....|
 ;;;  $2000   +-----------+ +-----------+
 ;;;          | IO Buffer | |           |
-;;;  $1C00   +-----------+ |           |
-;;;          |           | |           |
-;;;          |           | |           |
-;;;          |           | |           |
-;;;          | MP Src    | | MP Dst    |
+;;;  $1C00   +-----------+ | MiniPix   |
+;;;          | Src Buf   | | Dst Buf   |
 ;;;  $1800   +-----------+ +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
-;;;          | DA        | | resources |
+;;;          | DA Code   | | resources |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 ;;;
@@ -376,7 +385,6 @@ kSigColor       = %00000001
 kSigDHR         = %00000010
 
         ;; At least one page...
-        sta     PAGE2OFF
         JUMP_TABLE_MLI_CALL READ, read_image_params
 
         copy8   SIGNATURE, signature
@@ -410,11 +418,10 @@ signature:
 
 ;;; Output: C=0 on success, C=1 on failure
 .proc ShowLZ4FHFile
-        sta     PAGE2OFF
         jsr     LoadIntoOverlayBuffer
 
         copy16  #OVERLAY_BUFFER, z:::LZ4FH::in_src
-        copy16  #$2000, z:::LZ4FH::in_dst
+        copy16  #hires, z:::LZ4FH::in_dst
         jsr     LZ4FH
         bne     fail
 
@@ -432,7 +439,7 @@ fail:   RETURN  C=1             ; failure
         SET_BIT7_FLAG restore_buffer_overlay_flag
         copy16  #OVERLAY_BUFFER, read_image_params::data_buffer
         JUMP_TABLE_MLI_CALL READ, read_image_params
-        copy16  #$2000, read_image_params::data_buffer
+        copy16  #hires, read_image_params::data_buffer
         rts
 .endproc ; LoadIntoOverlayBuffer
 
@@ -451,7 +458,6 @@ run_length      .byte           ; length of current run
 hgr_page        .byte           ; decode target
 END_PARAM_BLOCK
 
-        sta     PAGE2OFF
         jsr     LoadIntoOverlayBuffer
 
         copy16  #OVERLAY_BUFFER, src_addr
@@ -551,7 +557,6 @@ Exit:   rts
         jsr     SetBWMode
     END_IF
 
-        sta     PAGE2OFF
         JUMP_TABLE_MLI_CALL READ, read_image_params
 
         jsr     HRToDHR
@@ -571,7 +576,6 @@ Exit:   rts
     END_IF
 
         ;; AUX memory half
-        sta     PAGE2OFF
         JUMP_TABLE_MLI_CALL READ, read_image_params
 
         ;; NOTE: Why not just load into Aux directly by setting
@@ -721,8 +725,6 @@ Exit:   rts
 ;;; Output: C=0 on success, C=1 on failure
 .proc ShowLRFileImpl
         ENTRY_POINTS_FOR_BIT7_FLAG double, single, double_flag
-
-        sta     PAGE2OFF
 
         hr_ptr := $06
         lr_ptr := $08
@@ -1121,8 +1123,6 @@ UnpackRead := UnpackReadImpl::start
 
         copy16  #hires, ptr
 
-        sta     PAGE2OFF
-
         CALL    UnpackRead, AX=#Write
 
     IF bit dhr_flags : NC       ; if hires, need to convert
@@ -1435,41 +1435,60 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         lda     entry+FileEntry::storage_type_name_length
         and     #NAME_LENGTH_MASK
         sta     entry+FileEntry::storage_type_name_length
+
         CALL    check_suffix, AX=#str_a2fc_suffix
-        jcc     yes
+    IF CC
+        RETURN  C=1
+    END_IF
+
         CALL    check_suffix, AX=#str_a2fm_suffix
-        jcc     yes
+    IF CC
+        RETURN  C=1
+    END_IF
+
         CALL    check_suffix, AX=#str_a2lc_suffix
-        jcc     yes
+    IF CC
+        RETURN  C=1
+    END_IF
+
         CALL    check_suffix, AX=#str_a2hr_suffix
-        jcc     yes
+    IF CC
+        RETURN  C=1
+    END_IF
 
         ;; File type
         lda     entry+FileEntry::file_type
-        cmp     #FT_GRAPHICS
-        jeq     yes
+
+    IF A = #FT_GRAPHICS
+        RETURN  C=1
+    END_IF
 
     IF A = #FT_PNT
-        ecmp16  entry+FileEntry::aux_type, #$0001
-        jeq     yes
-        jmp     no
+      IF ecmp16  entry+FileEntry::aux_type, #$0001 : EQ
+        RETURN  C=1
+      END_IF
+        RETURN  C=0
     END_IF
 
     IF A = #FT_PIC
-        ecmp16  entry+FileEntry::aux_type, #$0000
-        jeq     yes
-        jne     no              ; always
+      IF ecmp16 entry+FileEntry::aux_type, #$0000 : EQ
+        RETURN  C=1
+      END_IF
+        RETURN  C=0
     END_IF
 
-        cmp     #FT_BINARY
-        jne     no
+    IF A <> #FT_BINARY
+        RETURN  C=0
+    END_IF
 
         ;; Binary: Must match size/address
     IF ecmp16 entry+FileEntry::blocks_used, #33 : EQ ; DHR
-        ecmp16  entry+FileEntry::aux_type, #$2000
-        jeq     yes
-        ecmp16  entry+FileEntry::aux_type, #$4000
-        jeq     yes
+      IF ecmp16 entry+FileEntry::aux_type, #$2000 : EQ
+        RETURN  C=1
+      END_IF
+      IF ecmp16 entry+FileEntry::aux_type, #$4000 : EQ
+        RETURN  C=1
+      END_IF
     END_IF
 
     IF ecmp16 entry+FileEntry::blocks_used, #17 : EQ ; HR
@@ -1495,10 +1514,10 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
     END_IF
 
     IF ecmp16 entry+FileEntry::aux_type, #$60FF : EQ ; AXE
-        jmp     yes
+        RETURN  C=1
     END_IF
 
-no:     RETURN  C=0
+        RETURN  C=0
 
 yes:    RETURN  C=1
 
