@@ -1417,7 +1417,7 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
 
 ;;; Inputs: A,X = `FileEntry`
 ;;; Output: C=1 if it's an image file we can preview, C=0 otherwise
-;;; Trashes: $06
+;;; Trashes: $06/$07, $0A...$0D
 
 .proc IsImageFileEntry
         ;; Copy somewhere more convenient
@@ -1425,135 +1425,188 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         stax    ptr
         ldy     #.sizeof(FileEntry)-1
     DO
-        copy8   (ptr),y, entry,y
+        copy8   (ptr),y, file_entry,y
     WHILE dey : POS
 
-        ;; TODO: Keep this logic in sync with DeskTop's
-        ;; `ICT_RECORD` definitions for graphics files.
-
-        ;; Check file suffixes
-        lda     entry+FileEntry::storage_type_name_length
+        lda     file_entry+FileEntry::storage_type_name_length
         and     #NAME_LENGTH_MASK
-        sta     entry+FileEntry::storage_type_name_length
+        sta     file_entry+FileEntry::storage_type_name_length
 
-        CALL    check_suffix, AX=#str_a2fc_suffix
-    IF CC
+        CALL    _DetermineIconType, AX=#file_entry+FileEntry::storage_type_name_length
+    IF A = #IconType::graphics
         RETURN  C=1
     END_IF
-
-        CALL    check_suffix, AX=#str_a2fm_suffix
-    IF CC
-        RETURN  C=1
-    END_IF
-
-        CALL    check_suffix, AX=#str_a2lc_suffix
-    IF CC
-        RETURN  C=1
-    END_IF
-
-        CALL    check_suffix, AX=#str_a2hr_suffix
-    IF CC
-        RETURN  C=1
-    END_IF
-
-        ;; File type
-        lda     entry+FileEntry::file_type
-
-    IF A = #FT_GRAPHICS
-        RETURN  C=1
-    END_IF
-
-    IF A = #FT_PNT
-      IF ecmp16  entry+FileEntry::aux_type, #$0001 : EQ
-        RETURN  C=1
-      END_IF
-        RETURN  C=0
-    END_IF
-
-    IF A = #FT_PIC
-      IF ecmp16 entry+FileEntry::aux_type, #$0000 : EQ
-        RETURN  C=1
-      END_IF
-        RETURN  C=0
-    END_IF
-
-    IF A <> #FT_BINARY
-        RETURN  C=0
-    END_IF
-
-        ;; Binary: Must match size/address
-    IF ecmp16 entry+FileEntry::blocks_used, #33 : EQ ; DHR
-      IF ecmp16 entry+FileEntry::aux_type, #$2000 : EQ
-        RETURN  C=1
-      END_IF
-      IF ecmp16 entry+FileEntry::aux_type, #$4000 : EQ
-        RETURN  C=1
-      END_IF
-    END_IF
-
-    IF ecmp16 entry+FileEntry::blocks_used, #17 : EQ ; HR
-        ecmp16  entry+FileEntry::aux_type, #$2000
-        beq     yes
-        ecmp16  entry+FileEntry::aux_type, #$4000
-        beq     yes
-    END_IF
-
-    IF ecmp16 entry+FileEntry::blocks_used, #3 : EQ ; MiniPix
-        ecmp16  entry+FileEntry::aux_type, #$5800
-        beq     yes
-    END_IF
-
-    IF ecmp16 entry+FileEntry::blocks_used, #3 : EQ ; LR
-        ecmp16  entry+FileEntry::aux_type, #$400
-        beq     yes
-    END_IF
-
-    IF ecmp16 entry+FileEntry::blocks_used, #5 : EQ ; DLR
-        ecmp16  entry+FileEntry::aux_type, #$400
-        beq     yes
-    END_IF
-
-    IF ecmp16 entry+FileEntry::aux_type, #$60FF : EQ ; AXE
-        RETURN  C=1
-    END_IF
-
         RETURN  C=0
 
-yes:    RETURN  C=1
+;;; --------------------------------------------------
 
-        ;; --------------------------------------------------
+file_entry:  .tag    FileEntry
 
-;;; Input: A,X = suffix to check against `entry` (uppercase)
-;;; Output: C=0 on match, C=1 otherwise
-.proc check_suffix
-        ptr := $06
-        path := entry+FileEntry::storage_type_name_length
+.enum IconType
+        folder
+        graphics
+        generic
+.endenum
 
-        stax    ptr
+;;; --------------------------------------------------
+;;; Map file type (etc) to icon type
 
-        ldy     #0
+;;; Input: `src_file_info_params` (`file_type`, `aux_type`, `blocks_used`) and A,X = filename
+;;; Output: A is IconType to use (for icons, open/preview, etc)
+
+;;; Copy/Paste of the logic from `src/desktop/main.s`
+;;; TODO: Dedupe this code. `lib/` entry? API?
+
+.proc _DetermineIconType
+PARAM_BLOCK, $06
+        ptr          .addr      ; $06/$07
+        reserved     .word      ; $08/$09 - must be preserved for `EnumerateDirectory`
+.union                          ; $0A/$0B
+        flags        .byte
+        ptr_filename .addr
+.endunion
+        ptr_suffix   .addr      ; $0C/$0D
+END_PARAM_BLOCK
+
+        file_type   := file_entry+FileEntry::file_type
+        aux_type    := file_entry+FileEntry::aux_type
+        blocks_used := file_entry+FileEntry::blocks_used
+
+        stax    ptr_filename
+
+        copy16  #icontype_table, ptr
+
+    REPEAT
+        ldy     #ICTRecord::mask ; $00 if done
         lda     (ptr),y
-        tay
-        ldx     path
-    DO
-        lda     path,x
-        jsr     ToUpperCase     ; passed suffix is always uppercase
+      IF A = #kICTSentinel
+        RETURN  A=#IconType::generic
+      END_IF
+
+        ;; Check type (with mask)
+        and     file_type       ; A = type & mask
+        iny                     ; ASSERT: Y = ICTRecord::filetype
+        ASSERT_EQUALS ICTRecord::filetype, ICTRecord::mask+1
+        cmp     (ptr),y         ; type check
+        bne     next
+
+        ;; Flags
+        iny                     ; ASSERT: Y = ICTRecord::flags
+        ASSERT_EQUALS ICTRecord::flags, ICTRecord::filetype+1
+        copy8   (ptr),y, flags
+
+        ;; Does Aux Type matter, and if so does it match?
+      IF bit flags : NS         ; bit 7 = compare aux
+        iny                     ; ASSERT: Y = FTORecord::aux_suf
+        ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
+        lda     aux_type
         cmp     (ptr),y
-        bne     no              ; different - not a match
-        dey
-        beq     yes             ; out of suffix - it's a match
-    WHILE dex : NOT_ZERO
+        bne     next
+        iny
+        lda     aux_type+1
+        cmp     (ptr),y
+        bne     next
+      END_IF
 
-no:     RETURN  C=1             ; no match
+        ;; Does Block Count matter, and if so does it match?
+      IF bit flags : VS         ; bit 6 = compare blocks
+        ldy     #ICTRecord::blocks
+        lda     blocks_used
+        cmp     (ptr),y
+        bne     next
+        iny
+        lda     blocks_used+1
+        cmp     (ptr),y
+        bne     next
+      END_IF
 
-yes:    RETURN  C=0             ; match!
+        ;; Filename suffix?
+        lda     flags
+        and     #ICT_FLAGS_SUFFIX
+      IF NOT_ZERO
+        ;; Set up pointers to suffix and filename
+        ldy     #ICTRecord::aux_suf
+        copy16in (ptr),y, ptr_suffix
+        ;; Start at the end of the strings
+        ldy     #0
+        copy8   (ptr_suffix),y, suffix_pos
+        copy8   (ptr_filename),y, filename_pos
 
-.endproc ; check_suffix
+        ;; Case-insensitive compare each character
+       DO
+        filename_pos := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        lda     (ptr_filename),y
+        jsr     ToUpperCase
+        suffix_pos := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        cmp     (ptr_suffix),y  ; already uppercase
+        bne     next            ; no match
 
-        ;; --------------------------------------------------
+        ;; Move to previous characters
+        dec     suffix_pos
+        BREAK_IF ZERO           ; if we ran out of suffix, it's a match
+        dec     filename_pos
+        beq     next            ; but if we ran out of filename, it's not
+       WHILE NOT_ZERO           ; otherwise, keep going
+      END_IF
 
-entry:  .tag    FileEntry
+        ;; Have a match
+        ldy     #ICTRecord::icontype
+        lda     (ptr),y
+        rts
+
+        ;; Next entry
+next:   add16_8 ptr, #.sizeof(ICTRecord)
+    FOREVER
+.endproc ; _DetermineIconType
+
+
+;;; Subset of the data from `src/desktop/main.s` - just enough to distinguish graphics types
+
+icontype_table:
+        ;; Types where suffix shouldn't override other metadata
+        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_NONE, 0, 0, IconType::folder        ; $0F
+
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fc_suffix, 0, IconType::graphics ; Apple II Full Color
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fm_suffix, 0, IconType::graphics ; Apple II Full Monochrome
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2lc_suffix, 0, IconType::graphics ; Apple II Low Color
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2hr_suffix, 0, IconType::graphics ; Apple II High Resolution
+
+        ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 17, IconType::graphics ; HR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 33, IconType::graphics ; DHR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 33, IconType::graphics ; DHR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $5800, 3,  IconType::graphics ; Minipix as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $400, 3,  IconType::graphics ; LR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $400, 5,  IconType::graphics ; DLR image as FOT
+        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX, $60FF, 0, IconType::graphics ; AXE PACKER image as FOT
+
+        ;; Simple Mappings
+        DEFINE_ICTRECORD $FF, FT_GRAPHICS,  ICT_FLAGS_NONE, 0, 0, IconType::graphics      ; $08
+
+        ;; IIgs-Specific Files (ranges)
+        DEFINE_ICTRECORD $FF, FT_PNT, ICT_FLAGS_AUX, $0001, 0, IconType::graphics ; IIgs Pkd SHR  $C0
+        DEFINE_ICTRECORD $FF, FT_PIC, ICT_FLAGS_AUX, $0000, 0, IconType::graphics ; IIgs SHR      $C1
+
+        .byte   kICTSentinel
 .endproc ; IsImageFileEntry
+
+;;; ============================================================
+
+;;; Suffixes (must be uppercase)
+str_a2fc_suffix:                ; Double-hires ("Apple II Full Color")
+        PASCAL_STRING ".A2FC"
+
+str_a2fm_suffix:                ; Double-hires ("Apple II Full Mono") - Bmp2DHR uses this
+        PASCAL_STRING ".A2FM"
+
+str_a2lc_suffix:                ; Single-hires ("Apple II Low Color")
+        PASCAL_STRING ".A2LC"
+
+str_a2hr_suffix:                ; Single-hires B&W ("Apple II High Resolution")
+        PASCAL_STRING ".A2HR"
 
 ;;; ============================================================
 
@@ -1809,18 +1862,6 @@ last_filename:
         .res    16
 
 .endproc ; ChangeFile
-
-
-;;; ============================================================
-
-str_a2fc_suffix:
-        PASCAL_STRING ".A2FC"
-str_a2fm_suffix:
-        PASCAL_STRING ".A2FM"
-str_a2lc_suffix:
-        PASCAL_STRING ".A2LC"
-str_a2hr_suffix:
-        PASCAL_STRING ".A2HR"
 
 ;;; ============================================================
 
