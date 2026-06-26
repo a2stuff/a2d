@@ -35,8 +35,8 @@ JT_SYSTEM_TASK:         jmp     SystemTask              ; *
 JT_ACTIVATE_WINDOW:     jmp     ActivateAndRefreshWindow ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_PARAMS:   jmp     ShowAlertStruct         ; *
-JT_LAUNCH_FILE:         jmp     LaunchFileWithPath
-JT_SHOW_FILE:           jmp     ShowFileWithPath        ; *
+JT_LAUNCH_FILE:         jmp     LaunchFileByPath
+JT_SHOW_FILE:           jmp     ShowFileIconForPath     ; *
 JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
@@ -1035,7 +1035,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 ;;; ============================================================
 
 .proc DrawCachedWindowHeaderAndEntries
-        CALL    UnsafeSetPortFromWindowId, A=cached_window_id ; CHECKED
+        CALL    UnsafeSetPortForWindowId, A=cached_window_id ; CHECKED
     IF ZERO
         jsr     DrawWindowHeader
         jsr     AdjustWindowPortForEntries
@@ -1048,7 +1048,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 ;;; Redraw the active window's entries. The header is not redrawn.
 
 .proc ClearAndDrawActiveWindowEntries
-        CALL    UnsafeSetPortFromWindowIdAndAdjustForEntries, A=active_window_id ; CHECKED
+        CALL    UnsafeSetPortForWindowIdAndAdjustForEntries, A=active_window_id ; CHECKED
     IF ZERO
         jsr     EraseWindowBackground
         jsr     DrawWindowEntries
@@ -1069,37 +1069,37 @@ clicked_window_id := _ActivateClickedWindow::window_id
 
 ;;; Used only for file windows; adjusts port to account for header.
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
-.proc UnsafeSetPortFromWindowIdAndAdjustForEntries
+.proc UnsafeSetPortForWindowIdAndAdjustForEntries
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF ZERO                     ; not MGTK::Error::window_obscured
         jsr     AdjustWindowPortForEntries
     END_IF
         rts
-.endproc ; UnsafeSetPortFromWindowIdAndAdjustForEntries
+.endproc ; UnsafeSetPortForWindowIdAndAdjustForEntries
 
 ;;; Used for all sorts of windows, not just file windows.
 ;;; For file windows, used for drawing headers (sometimes);
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
-.proc UnsafeSetPortFromWindowId
+.proc UnsafeSetPortForWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF ZERO                     ; not MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, window_grafport
     END_IF
         rts
-.endproc ; UnsafeSetPortFromWindowId
+.endproc ; UnsafeSetPortForWindowId
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
         PROC_USED_IN_OVERLAY
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
-.proc SafeSetPortFromWindowId
+.proc SafeSetPortForWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Result is not MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
-.endproc ; SafeSetPortFromWindowId
+.endproc ; SafeSetPortForWindowId
 
 ;;; ============================================================
 ;;; Update table tracking disk-in-device status, determine if
@@ -1449,7 +1449,7 @@ tmp_path_buf:
 ;;; Launch file (File > Open, Selector menu, or double-click)
 ;;; Inputs: Path in `src_path_buf` (a.k.a. `INVOKER_PREFIX`)
 
-.proc LaunchFileWithPathImpl
+.proc LaunchFileByPathImpl
         ENTRY_POINTS_FOR_BIT7_FLAG sys_disk, normal_disk, sys_prompt_flag
 
         ;; --------------------------------------------------
@@ -1712,7 +1712,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 .proc _InvokeLink
         jsr     ReadLinkFile
         RTS_IF CS
-        jmp     LaunchFileWithPath
+        jmp     LaunchFileByPath
 .endproc ; _InvokeLink
 
 ;;; --------------------------------------------------
@@ -1736,9 +1736,9 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 
-.endproc ; LaunchFileWithPathImpl
-LaunchFileWithPathOnSystemDisk := LaunchFileWithPathImpl::sys_disk
-LaunchFileWithPath := LaunchFileWithPathImpl::normal_disk
+.endproc ; LaunchFileByPathImpl
+LaunchFileByPathOnSystemDisk := LaunchFileByPathImpl::sys_disk
+LaunchFileByPath := LaunchFileByPathImpl::normal_disk
 
 ;;; ============================================================
 
@@ -2045,7 +2045,7 @@ use_entry_path:
         FALL_THROUGH_TO launch
 
 launch: CALL    CopyPtr1ToBuf, AX=#INVOKER_PREFIX
-        jmp     LaunchFileWithPath
+        jmp     LaunchFileByPath
 
 entry_num:
         .byte   0
@@ -2207,7 +2207,7 @@ CmdAbout := AboutDialogProc
 
 .proc LaunchPassedPathOnSystemDisk
         CALL    CopyToSrcPath
-        TAIL_CALL LaunchFileWithPathOnSystemDisk
+        TAIL_CALL LaunchFileByPathOnSystemDisk
 .endproc ; LaunchPassedPathOnSystemDisk
 
 ;;; ============================================================
@@ -2250,7 +2250,7 @@ skip:   iny
         stx     path
 
         ;; Allow arbitrary types in menu (e.g. folders)
-        jmp     LaunchFileWithPathOnSystemDisk
+        jmp     LaunchFileByPathOnSystemDisk
 .endproc ; CmdDeskAccImpl
 CmdDeskAcc      := CmdDeskAccImpl::start
 
@@ -2674,7 +2674,7 @@ maybe_open_file:
         jne     ShowAlert       ; `ERR_INVALID_PATHNAME`
         CALL    CopyToSrcPath, AX=#operation_src_path
 
-        jmp     LaunchFileWithPath
+        jmp     LaunchFileByPath
 .endproc ; CmdOpen
 CmdOpenThenCloseCurrent := CmdOpen::open_then_close_current
 CmdOpenFromDoubleClick := CmdOpen::from_double_click
@@ -5279,7 +5279,7 @@ arbitrary_target:
 
         CALL    UpdateUsedFreeViaPath, AX=#dst_path_buf
 
-        jsr     ShowFileWithPath
+        jsr     ShowFileIconForPath
         RTS_IF CS
 
         ;; Select and rename the file
@@ -5306,7 +5306,7 @@ err:    TAIL_CALL ShowAlertOption, X=#AlertButtonOptions::OK
         ;; File or volume?
         CALL    FindLastPathSegment, AX=#src_path_buf ; point Y at last '/'
         cpy     src_path_buf
-        jne     ShowFileWithPath
+        jne     ShowFileIconForPath
 
         ;; Volume
         CALL    FindIconForPath, AX=#src_path_buf
@@ -5467,7 +5467,7 @@ exception_flag:
     END_IF
 
         ;; Clear background
-        CALL    UnsafeSetPortFromWindowId, A=active_window_id ; CHECKED
+        CALL    UnsafeSetPortForWindowId, A=active_window_id ; CHECKED
         pha                     ; A = obscured?
     IF ZERO                     ; skip if obscured
         jsr     EraseWindowBackground
@@ -5561,7 +5561,7 @@ clear:  jsr     ClearSelection
         ;; Set up drawing port, draw initial rect
         lda     window_id
     IF NOT_ZERO
-        jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; ASSERT: not obscured
+        jsr     UnsafeSetPortForWindowIdAndAdjustForEntries ; ASSERT: not obscured
     ELSE
         jsr     InitSetDesktopPort
     END_IF
@@ -6297,7 +6297,7 @@ OpenWindowForPath := OpenWindowImpl::for_path
 ;;; Output: C=0 on success
 ;;; Assert: Path is not a volume path
 
-.proc ShowFileWithPath
+.proc ShowFileIconForPath
         jsr     SplitInvokerPath
 
         copy8   num_open_windows, old
@@ -6319,7 +6319,7 @@ OpenWindowForPath := OpenWindowImpl::for_path
         RETURN  C=0
 
 err:    RETURN  C=1
-.endproc ; ShowFileWithPath
+.endproc ; ShowFileIconForPath
 
 ;;; ============================================================
 ;;; Find an icon for a given path. May be volume or in any window.
@@ -6467,7 +6467,7 @@ done:
         ;; drawing can be done using `IconTK::DrawIconRaw` in a
         ;; clipped port.
 
-        jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; CHECKED
+        jsr     UnsafeSetPortForWindowIdAndAdjustForEntries ; CHECKED
         RTS_IF NOT_ZERO         ; obscured
 
         jsr     PushPointers
@@ -12995,7 +12995,7 @@ ok:     RETURN  A=#0
         CALL    AnimateWindowOpen, X=#$FF ; desktop
 
         MGTK_CALL MGTK::OpenWindow, winfo_about_dialog
-        CALL    SafeSetPortFromWindowId, A=#winfo_about_dialog::kWindowId
+        CALL    SafeSetPortForWindowId, A=#winfo_about_dialog::kWindowId
         CALL    DrawDialogFrame, AX=#aux::about_dialog_frame_rect
 
         MGTK_CALL MGTK::MoveTo, prompt_dialog_title_pos
@@ -13055,7 +13055,7 @@ ok:     RETURN  A=#0
         ;; Construct path and execute it
         CALL    CopyToSrcPath, AX=#str_startup_items
         CALL    AppendFilenameToSrcPath, AX=#filename_buf
-        CALL    LaunchFileWithPathOnSystemDisk
+        CALL    LaunchFileByPathOnSystemDisk
 
         pla
         tax
@@ -13722,7 +13722,7 @@ ignore: RETURN  C=1
 ;;; ============================================================
 
 .proc SetPortForProgressDialog
-        TAIL_CALL SafeSetPortFromWindowId, A=#winfo_progress_dialog::kWindowId
+        TAIL_CALL SafeSetPortForWindowId, A=#winfo_progress_dialog::kWindowId
 .endproc ; SetPortForProgressDialog
 
 .proc SetPortForProgressDialogAndShieldCursor
@@ -14273,7 +14273,7 @@ params:  .res    3
 
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SetPortForPromptDialog
-        TAIL_CALL SafeSetPortFromWindowId, A=#winfo_prompt_dialog::kWindowId
+        TAIL_CALL SafeSetPortForWindowId, A=#winfo_prompt_dialog::kWindowId
 .endproc ; SetPortForPromptDialog
 
 ;;; ============================================================
