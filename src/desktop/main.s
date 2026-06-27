@@ -5785,9 +5785,7 @@ beyond:
         dec     num_open_windows
 
         ldx     cached_window_id
-        ASSERT_EQUALS ::kWindowToDirIconFree, 0
-        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
-        copy8   #0, window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
+        copy8   #kWindowToDirIconFree, window_to_dir_icon_table-1,x
 
         ;; Record the new active window
         MGTK_CALL MGTK::FrontWindow, active_window_id
@@ -6241,6 +6239,7 @@ OpenWindowForPath := OpenWindowImpl::for_path
 ;;; it, e.g. if they will subsequently select the icon.
 ;;; Input: A = `icon_id`
 ;;; Trashes $06
+;;; Note: Does not modify `window_to_dir_icon_table` entry
 
 .proc MarkIconNotDimmedNoDraw
         ptr := $06
@@ -6260,6 +6259,7 @@ OpenWindowForPath := OpenWindowImpl::for_path
 ;;; ============================================================
 ;;; Used when recovering from a failed open (bad path, too many icons, etc)
 ;;; Inputs: `icon_param` points at icon
+;;; Note: Marks `window_to_dir_icon_table` entry as `kWindowToDirIconFree` if appropriate
 
 .proc MarkIconNotDimmed
         ;; Find open window for the icon
