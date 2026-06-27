@@ -719,7 +719,9 @@ h_proc_hi:        .hibytes ScrollNoOp, ScrollLeft, ScrollRight, ScrollPageLeft, 
         and     #kExtendSelectionModifierMask
       IF NOT ZERO
         ;; Modifier down - remove from selection
-        CALL    UnhighlightAndDeselectIcon, A=findicon_params::which_icon
+        ITK_CALL IconTK::UnhighlightIcon, findicon_params::which_icon
+        ITK_CALL IconTK::DrawIcon, findicon_params::which_icon
+        CALL    RemoveFromSelectionList, A=findicon_params::which_icon
         CLEAR_BIT7_FLAG maybe_select_parent_flag
         jmp     _ActivateClickedWindow ; no-op if already active
       END_IF
@@ -5380,19 +5382,6 @@ alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_FILE_NOT
         inc     selected_icon_count
         rts
 .endproc ; AddToSelectionList
-
-;;; ============================================================
-;;; Remove specified icon from selection list, and redraw.
-;;; Input: A = icon number
-;;; Assert: Must be in selection list.
-
-.proc UnhighlightAndDeselectIcon
-        sta     icon_param
-        ITK_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-
-        FALL_THROUGH_TO RemoveFromSelectionList, A=icon_param
-.endproc ; UnhighlightAndDeselectIcon
 
 ;;; ============================================================
 ;;; Remove specified icon from `selected_icon_list`
