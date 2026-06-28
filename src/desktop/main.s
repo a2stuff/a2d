@@ -6163,7 +6163,7 @@ no_win:
     END_IF
 
         ;; Used cached window's details, which are correct now.
-        CALL    AssignWindowBlockCounts, A=cached_window_id
+        CALL    AssignWindowUsedFree, A=cached_window_id
 
         copy16  window_blocks_used_table-2,x, window_draw_blocks_used_table-2,x ; 1-based to 0-based
         copy16  window_blocks_free_table-2,x, window_draw_blocks_free_table-2,x
@@ -6591,7 +6591,7 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
         ldy     found_windows_count
       IF NOT_ZERO
        DO
-        CALL    AssignWindowBlockCounts, A=found_windows_list-1,y
+        CALL    AssignWindowUsedFree, A=found_windows_list-1,y
        WHILE dey : NOT_ZERO
       END_IF
     END_IF
@@ -6602,13 +6602,13 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
 ;;; Update `window_blocks_used_table`/`window_blocks_free_table`
 ;;; Input: A = window_id, `vol_blocks_used`/`vol_blocks_free` set
 ;;; Output: X = window_id*2, Y unchanged
-.proc AssignWindowBlockCounts
+.proc AssignWindowUsedFree
         asl     a
         tax
         copy16  vol_blocks_used, window_blocks_used_table-2,x ; 1-based to 0-based
         copy16  vol_blocks_free, window_blocks_free_table-2,x
         rts
-.endproc ; AssignWindowBlockCounts
+.endproc ; AssignWindowUsedFree
 
 ;;; ============================================================
 ;;; Find position of last segment of path at (A,X), return in Y.
