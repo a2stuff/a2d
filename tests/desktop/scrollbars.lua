@@ -6,6 +6,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(0.25)
+a2d.AddShortcut("/TESTS/HUNDRED.FILES")
+a2d.CloseAllWindows()
 
 --[[
   Launch DeskTop. Open a volume window with many items. Adjust the
@@ -279,7 +281,9 @@ end)
 test.Step(
   "Default scrolling is by integral number of icons",
   function()
-    a2d.OpenPath("/TESTS/HUNDRED.FILES")
+    a2d.CloseAllWindows()
+    a2d.OAShortcut("1") -- Open /TESTS/HUNDRED.FILES
+    emu.wait(5)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     emu.wait(5)
     a2d.InMouseKeysMode(function(m)

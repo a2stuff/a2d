@@ -33,7 +33,7 @@ test.Step(
   function()
     a2d.OAShortcut("1") -- Open HUNDRED.FILES
     emu.wait(5)
-    a2d.OpenPath("/TESTS", {keep_windows=true})
+    a2d.OpenPath("/TESTS", {keep_windows=true, no_validate=true})
     a2dtest.WaitForAlert({match="window must be closed"})
     test.ExpectNotMatch(a2dtest.OCRScreen(), "Cancel", "alert should have no Cancel button")
     a2d.DialogOK()

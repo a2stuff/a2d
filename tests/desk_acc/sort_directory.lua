@@ -6,6 +6,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 ======================================== ENDCONFIG ]]
 
 a2d.ConfigureRepaintTime(0.25)
+a2d.AddShortcut("/TESTS/HUNDRED.FILES")
+a2d.CloseAllWindows()
 
 -- Parse on-screen output of CAT; returns filenames in array
 function ParseCat()
@@ -96,7 +98,9 @@ end)
 test.Step(
   "Lexicographical sorting",
   function()
-    a2d.OpenPath("/TESTS/HUNDRED.FILES")
+    a2d.CloseAllWindows()
+    a2d.OAShortcut("1") -- Open HUNDRED.FILES
+    emu.wait(5)
     emu.wait(10) -- slower than usual to open
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
     emu.wait(10) -- directory rewrite

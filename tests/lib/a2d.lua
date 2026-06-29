@@ -388,8 +388,14 @@ function a2d.OpenPath(path, options)
   end
   for index,segment in ipairs(segments) do
     a2d.SelectAndOpen(segment, options)
-    if index ~= #segments then
-      emu.wait(1)
+    emu.wait(1)
+
+    if not options.no_validate then
+      local top = mgtk.GetWindowName(assert(mgtk.FrontWindow()))
+      if top:lower() ~= segment:lower() then
+        error(string.format("%s: failed to open %q, top window is %q",
+                            debug.getinfo(1,"n").name, segment, top), options.level)
+      end
     end
   end
   if not options.no_wait then
