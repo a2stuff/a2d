@@ -4469,12 +4469,12 @@ ret:    rts
 ;;; Inputs: A = icon id
 
 .proc SelectIconAndEnsureVisible
-        ;; No-op if already single selected icon
+        ;; No need to twiddle selection if already the single selection
         ldy     selected_icon_count
         dey
     IF ZERO
         cmp     selected_icon_list
-        RTS_IF EQ
+        beq     make_visible
     END_IF
 
         pha
@@ -4486,6 +4486,7 @@ ret:    rts
         jsr     ActivateWindow  ; no-op if already active, or 0
         pla
 
+make_visible:
         FALL_THROUGH_TO AddIconToSelectionAndEnsureVisible
 .endproc ; SelectIconAndEnsureVisible
 

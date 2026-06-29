@@ -82,6 +82,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Automatically select newly inserted disks.
 * Select disk (if present) after Special > Check Drive.
 * Add "Startup.Items" folder support.
+* When needed, ensure icon scrolled into view even if already selected.
 
 ### Selector
 

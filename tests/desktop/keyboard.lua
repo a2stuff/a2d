@@ -1220,3 +1220,35 @@ test.Step(
     a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "space selects first icon")
 end)
+
+--[[
+  Open /TESTS/SELECTION/GREEK. Type 'ALPHA' to select the first icon.
+  Scroll the window down using the mouse. Type Space. Verify that the
+  'ALPHA' icon is scrolled into view.
+]]
+test.Step(
+  "Keyboard selection scrolls already selected icon into view",
+  function()
+    a2d.OpenPath("/TESTS/SELECTION/GREEK")
+    emu.wait(5) -- full windows can take a bit
+
+    a2d.Select("ALPHA")
+    test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "ALPHA", "ALPHA should be selected")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "OMEGA", "OMEGA should be scrolled out of view")
+
+    local x, y, w, h = a2dtest.GetFrontWindowContentRect()
+    a2d.InMouseKeysMode(function(m)
+        m.MoveToApproximately(x + w + 5, y + h - 5)
+        m.ButtonDown()
+        emu.wait(1)
+        m.ButtonUp()
+    end)
+
+    test.ExpectNotMatch(a2dtest.OCRScreen({invert=true}), "ALPHA", "ALPHA should be scrolled out of view")
+    test.ExpectMatch(a2dtest.OCRScreen(), "OMEGA", "OMEGA should be scrolled into view")
+
+    apple2.SpaceKey()
+    a2d.WaitForRepaint()
+    test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "ALPHA", "ALPHA should be scrolled into view")
+    test.ExpectNotMatch(a2dtest.OCRScreen(), "OMEGA", "OMEGA should be scrolled out of view")
+end)
