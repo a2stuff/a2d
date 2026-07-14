@@ -67,9 +67,14 @@ loop:   lda     (ptr),Y
         sec
         sbc     tmp
         cmp     #($100 - 8)
+        beq     next
+        ;; A real Phasor's native-mode timer reads consume an extra count
+        ;; (c/o mb-audit), and accelerators like the FASTChip //e also
+        ;; stretch the delta; accept it.
+        cmp     #($100 - 9)
         bne     fail
 
-        dex
+next:   dex
         bne     loop
 
         pla
