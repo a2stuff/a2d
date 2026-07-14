@@ -745,6 +745,7 @@ str_network:    PASCAL_STRING res_string_card_type_network
 str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
 str_phasor:     PASCAL_STRING res_string_card_type_phasor
 str_z80:        PASCAL_STRING res_string_card_type_z80
+str_applicard:  PASCAL_STRING res_string_card_type_applicard
 str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
 str_passport:   PASCAL_STRING res_string_card_type_passport
 str_lcmeve:     PASCAL_STRING res_string_card_type_lcmeve
@@ -1727,6 +1728,11 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
         RETURN  AX=#str_passport
     END_IF
 
+        CALL    WithInterruptsDisabled, AX=#DetectApplicard
+    IF CS
+        RETURN  AX=#str_applicard
+    END_IF
+
         RETURN  C=0
 .endproc ; ProbeSlotNoFirmware
 
@@ -1937,6 +1943,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 
         .include "../lib/detect_mockingboard.s"
         .include "../lib/detect_phasor.s"
+        .include "../lib/detect_applicard.s"
         .include "../lib/detect_thecricket.s"
 
 ;;; ============================================================
