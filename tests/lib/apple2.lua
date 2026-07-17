@@ -1,4 +1,3 @@
-
 --[[============================================================
 
   Generic utilities for Apple II
@@ -577,6 +576,24 @@ end
 --------------------------------------------------
 
 -- NOTE: On `apple2e` (etc) need `-gameio joy` or equivalent to enable
+
+function apple2.PressJoyButton1()
+  local buttons = get_port(":gameio:joy:joystick_buttons")
+  if not buttons then
+    error("No joystick ports present")
+  end
+  buttons.fields["P1 Button 1"]:set_value(1)
+emu.wait(1/10)
+end
+
+function apple2.ReleaseJoyButton1()
+  local buttons = get_port(":gameio:joy:joystick_buttons")
+  if not buttons then
+    error("No joystick ports present")
+  end
+  buttons.fields["P1 Button 1"]:clear_value()
+  emu.wait(1/10)
+end
 
 function apple2.SetJoy1(x,y)
   local xport = machine.ioport.ports[":gameio:joy:joystick_1_x"]
