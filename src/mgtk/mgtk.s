@@ -6423,6 +6423,9 @@ menu_item  .byte
 event_loop:
         COPY_BYTES kLastCursorPosLen, cursor_pos::xcoord, last_cursor_pos
 
+        ;; After `ShowMenu` (which can be slow), check for updated cursor
+        ;; position.
+event_loop_recheck:
         jsr     GetAndReturnEvent
 
         ;; --------------------
@@ -6436,7 +6439,7 @@ event_loop:
         bit     was_in_menu_flag
         jmi     handle_click
         lda     cur_open_menu_id
-        bne     event_loop
+        bne     event_loop_recheck
         jeq     handle_click    ; always
     END_IF
 
@@ -6563,7 +6566,7 @@ imb_change:
         sta     cur_open_menu_id
 
         jsr     ShowMenu
-        jmp     event_loop
+        jmp     event_loop_recheck
 
         ;; --------------------------------------------------
         ;; Over an item the current menu

@@ -159,3 +159,6 @@ For the following tests, run on non-IIgs system with any acceleration disabled.
 * Launch DeskTop. Open `/TESTS/HUNDRED.FILES`. Verify that the mouse cursor doesn't flicker as icons far away from the cursor are drawn.
 * Launch DeskTop. Click on the desktop, away from any icons. Verify that the mouse cursor doesn't flicker.
 * Launch DeskTop. Click on in a window, away from any icons. Verify that the mouse cursor doesn't flicker.
+
+* Launch DeskTop. Click on the Apple menu, and while the menu is drawing move the cursor over the File menu. Verify that after it finishes drawing the Apple menu closes and the File menu opens.
+* Launch DeskTop. Click on the Apple menu, and while the menu is drawing move the cursor down over an item in the menu. Verify that after the the Apple menu finishes drawing the item highlights.
