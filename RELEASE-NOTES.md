@@ -25,6 +25,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve appearance of watch cursor.
 * Ensure text caret is visible after key/click.
 * Reduce cursor flickering while menus are drawn.
+* Make mouse cursor responsive while drawing menus.
 * Reduce cursor flickering while list view rows are drawn.
 * Improve appearance of menu items with check marks.
 * Fix file picker behavior with more than 127 files.
