@@ -5957,6 +5957,7 @@ draw_menu:
       DO
         jsr     GetMenuItem
         bit     curmenuitem::options
+        .assert MGTK::MenuOpt::item_is_filler = $40, error, "bad constant"
         bvs     filler          ; bit 6 - is filler
 
         ldax    curmenuitem::name
@@ -6950,6 +6951,9 @@ show_menu:
 
         jsr     GetMenuAndMenuItem
 
+        ;; --------------------------------------------------
+        ;; Loop over all items
+
         ldx     #0
 loop:   jsr     GetMenuItem
 
@@ -6967,16 +6971,20 @@ loop:   jsr     GetMenuItem
         MGTK_CALL MGTK::CheckEvents
         MGTK_CALL MGTK::ShieldCursor, menu_fill_rect
 
+        ;; ----------------------------------------
+        ;; Filler?
         bit     curmenuitem::options
-        bvc     :+
-
+        .assert MGTK::MenuOpt::item_is_filler = $40, error, "bad constant"
+    IF VS
         jsr     DrawFiller
         jmp     next
+    END_IF
 
-:       lda     curmenuitem::options
+        ;; ----------------------------------------
+        ;; Check mark
+        lda     curmenuitem::options
         and     #MGTK::MenuOpt::item_is_checked
-        beq     no_mark
-
+    IF NOT ZERO
         lda     offset_checkmark
         jsr     MovetoMenuitem
 
@@ -6985,22 +6993,24 @@ loop:   jsr     GetMenuItem
 
         lda     curmenuitem::options
         and     #MGTK::MenuOpt::item_has_mark
-        beq     :+
-        lda     curmenuitem::mark_char
-        sta     mark_text+1
-:
-        CALL    DrawText, AX=#mark_text
-        jsr     GetMenuAndMenuItem
+      IF NOT ZERO
+        copy8   curmenuitem::mark_char, mark_text+1
+      END_IF
 
-no_mark:
+        CALL    DrawText, AX=#mark_text
+        jsr     GetMenuAndMenuItem ; restore state
+    END_IF
+
+        ;; ----------------------------------------
+        ;; Name
         lda     offset_text
         jsr     MovetoMenuitem
 
-        ldax    curmenuitem::name
-        jsr     DrawText
+        CALL    DrawText, AX=curmenuitem::name
+        jsr     GetMenuAndMenuItem ; restore state
 
-        jsr     GetMenuAndMenuItem
-
+        ;; ----------------------------------------
+        ;; Shortcut
         lda     #2              ; default is modifier + character
         sta     shortcut_text
 
@@ -7015,12 +7025,11 @@ no_mark:
         bmi     no_shortcut
 
         ;; Special case: if both the same, use glyph at that code point
-        cmp     curmenuitem::shortcut2
-        bne     :+
+    IF A = curmenuitem::shortcut2
         dec     shortcut_text   ; just use single character
         sta     shortcut_text+1
         bne     offset          ; always
-:
+    END_IF
 
         ldx     controlkey_glyph
         stx     shortcut_text+1
@@ -7041,17 +7050,24 @@ offset: lda     offset_shortcut
         jsr     MoveToFromRight
 
         CALL    DrawText, AX=#shortcut_text
-        jsr     GetMenuAndMenuItem
+        jsr     GetMenuAndMenuItem ; restore state
 
 no_shortcut:
+
+        ;; ----------------------------------------
+        ;; Disabled?
+
         lda     curmenu::disabled
         ora     curmenuitem::options
-        bpl     next
-
+        .assert MGTK::MenuOpt::disable_flag = $80, error, "bad constant"
+    IF NS
         jsr     DimMenuItem
+    END_IF
 
+        ;; ----------------------------------------
 next:
         jsr     UnshieldCursorImpl
+
         ldx     menu_item_index
         inx
         cpx     menu_item_count
