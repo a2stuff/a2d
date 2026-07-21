@@ -6961,6 +6961,7 @@ loop:   jsr     GetMenuItem
         lda     menu_item_y_table+1,x
         sta     menu_fill_rect+MGTK::Rect::y2
 
+        MGTK_CALL MGTK::CheckEvents
         MGTK_CALL MGTK::ShieldCursor, menu_fill_rect
 
         bit     curmenuitem::options
