@@ -919,7 +919,7 @@ local ssw_definitions = {
 
   { "IOUDISON"       , "..C.",  0xC07E },        -- (W) Disable IOU access          (IIc)
   { "RDIOUDIS"       , "..C.",  0xC07E },        -- (R7) Read IOUDIS switch (1=on)  (IIc)
-  { "IOUDISOFFF"     , "..C.",  0xC07F },        -- (W) Enable IOU access           (IIc)
+  { "IOUDISOFF"      , "..C.",  0xC07F },        -- (W) Enable IOU access           (IIc)
   { "RDDHIRES"       , "..C.",  0xC07F },        -- (R7) Read DHIRES switch (0=on)  (IIc)
 
   { "ROMIN2"         , "OECG",  0xC082 },        -- (W) Read ROM; no write
