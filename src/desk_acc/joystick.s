@@ -193,6 +193,16 @@ joystick_bitmap:
 ;;; ============================================================
 
 .proc Init
+        ;; IIc (and clones) only have two analog inputs; the I/O
+        ;; locations report mouse locations instead.
+        bit     ROMIN
+        lda     ZIDBYTE
+        bit     LCBANK1
+        bit     LCBANK1
+    IF A = #0                   ; ZIDBYTE=0 for IIc / IIc+
+        copy8   #2, num_analog_inputs
+    END_IF
+
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -324,7 +334,8 @@ notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
 
-        kNumPaddles = 4
+num_analog_inputs:
+        .byte   4               ; IIc only has 2 analog inputs
 
 .struct InputState
         valid   .byte
@@ -342,7 +353,8 @@ notpencopy:     .byte   MGTK::notpencopy
 .proc DoJoystick
         ;; Read paddles, copy into our current state
         jsr     ReadPaddles
-        ldx     #kNumPaddles-1
+        ldx     num_analog_inputs
+        dex
     DO
         lda     pdl0,x
         lsr                     ; clamp range to 0...127
@@ -527,7 +539,8 @@ pdl3:   .byte   0
         JSR_TO_MAIN JUMP_TABLE_SLOW_SPEED
 
         ;; Read all paddles
-        ldx     #kNumPaddles - 1
+        ldx     num_analog_inputs
+        dex
     DO
         jsr     PRead
         tya

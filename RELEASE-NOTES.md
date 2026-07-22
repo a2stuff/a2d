@@ -9,8 +9,8 @@ Project Page: https://github.com/a2stuff/a2d
 ### New Features
 
 * Add "Startup.Items" folder support.
+* Support dragging files onto ProDOS "interpreter" applications. ([https://github.com/a2stuff/a2d/issues/903](#903))
 * New Screen Saver: Maze.
-* Show app icons for system files in file picker.
 
 ### General
 
@@ -30,6 +30,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve appearance of menu items with check marks.
 * Fix file picker behavior with more than 127 files.
 * Add small icons for system files.
+* Show app icons for system files in file picker.
 
 ### Launcher
 
@@ -149,7 +150,9 @@ Project Page: https://github.com/a2stuff/a2d
 * Lights Out: Add keyboard support: A..Y toggle lights.
 * Eyes: Reduce cursor flickering.
 * International: Reduce cursor flickering.
-* Joystick: Reduce cursor flickering.
+* Joystick
+  * Reduce cursor flickering.
+  * Don't show second joystick location on IIc. ([https://github.com/a2stuff/a2d/issues/909](#909))
 * CD Remote: Fix shuffle play randomization.
 
 ### Misc
