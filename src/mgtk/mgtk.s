@@ -11051,7 +11051,7 @@ iic_proc:
     END_IF
 
         pla                     ; restore IOUDIS state
-    IF NC
+    IF NS
         sta     IOUDISON
     END_IF
         rts
