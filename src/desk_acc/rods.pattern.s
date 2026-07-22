@@ -229,6 +229,8 @@ event_params:   .tag MGTK::Event
         .byte   "          Press any key to exit"
         .byte   $00
 
+        lda     DHIRESOFF       ;fix color on //c
+
 begin:  lda     #$03            ;init loop counters
         sta     w
 nxtw:   lda     #$01

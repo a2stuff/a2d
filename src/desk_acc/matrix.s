@@ -77,6 +77,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         sta     TXTCLR
         sta     SET80VID
+        lda     DHIRESOFF       ; fix color on //c
         jsr     RestoreText
         sta     ALTZPON
         bit     LCBANK1
