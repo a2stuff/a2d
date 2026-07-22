@@ -6563,6 +6563,7 @@ in_menu_bar:
 imb_change:
         pha
         jsr     HideMenu
+        MGTK_CALL MGTK::CheckEvents
         pla
         sta     cur_open_menu_id
 
