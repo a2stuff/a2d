@@ -10,6 +10,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Add "Startup.Items" folder support.
 * Support dragging files onto ProDOS "interpreter" applications. ([#903](https://github.com/a2stuff/a2d/issues/903))
+* New Toy: Minesweeper.
 * New Screen Saver: Maze.
 
 ### General
@@ -137,7 +138,8 @@ Project Page: https://github.com/a2stuff/a2d
   * Fix button labels in BG builds.
   * Reduce cursor flickering.
 * Sci.Calc: Fix ASIN/ACOS for 1/-1.
-* New Screen Saver: Maze
+* New Toy: Minesweeper.
+* New Screen Saver: Maze.
 * Text Preview: Show first 64K of larger files correctly.
 * Control Panels: Handle write protected disk when modifying settings.
 * Control Panel: Fix overlapping button labels in some locales.

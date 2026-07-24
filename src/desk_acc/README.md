@@ -52,6 +52,8 @@
   * Sliding tile puzzle. Original DA from MouseDesk, with fixes.
 * [Lights Out](lights.out.s)
   * Try to turn out all the lights by clicking.
+* [Minesweeper](minesweeper.s)
+  * Don't blow up.
 * [Neko](neko.s)
   * An animated cat who interacts with your mouse.
 * [CD Remote](cd.remote.s)
