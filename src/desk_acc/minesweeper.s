@@ -560,6 +560,7 @@ store_and_redraw:
         pla
         rts
         END_OF_LAMBDA
+
         count := *+1
         lda     #SELF_MODIFIED_BYTE
         RTS_IF A <> #kNumMines
@@ -580,7 +581,19 @@ store_and_redraw:
         rts
         END_OF_LAMBDA
 
-        jsr     DrawWindow
+        ;; ----------------------------------------
+        ;; Draw all the unrevealed squares
+
+        INVOKE_WITH_LAMBDA IterateBoard
+        pha
+        and     #kCellRevealed
+    IF ZERO
+        jsr     DrawTileAtXY
+    END_IF
+        pla
+        rts
+        END_OF_LAMBDA
+
         jsr     PlaySound
         SET_BIT7_FLAG game_over_flag
         rts
