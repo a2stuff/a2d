@@ -111,6 +111,8 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 .endparams
 
+        DEFINE_RECT shield_rect, 0, 0, 0, 0
+
 bits_hidden:
         PIXELS "................#"
         PIXELS "....#...#...#...#"
@@ -693,6 +695,10 @@ new_state_table:
 ;;; Input: X,Y = coords to start at
 ;;; Assert: not a mine
 .proc RecursiveReveal
+        PUSH_XY
+        MGTK_CALL MGTK::CheckEvents
+        PULL_XY
+
         ;; Reveal passed cell
         PUSH_XY
         jsr     GetCell
@@ -974,12 +980,24 @@ new_state_table:
       WHILE dey : NOT ZERO
     END_IF
 
+        ldax    paintbits_params::viewloc::xcoord
+        stax    shield_rect::x1
+        addax   #kTileWidth, shield_rect::x2
+        ldax    paintbits_params::viewloc::ycoord
+        stax    shield_rect::y1
+        addax   #kTileWidth, shield_rect::y2
+
+        MGTK_CALL MGTK::ShieldCursor, shield_rect
+
         PULL_XY
 
         ;; Get the state
         jsr     GetCell
 
-        FALL_THROUGH_TO DrawTile
+        jsr     DrawTile
+
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
 
 .endproc ; DrawTileAtXY
 
