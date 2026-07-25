@@ -32,6 +32,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix file picker behavior with more than 127 files.
 * Add small icons for system files.
 * Show app icons for system files in file picker.
+* Fix lo-res color display in DAs on the Apple IIc. ([#911](https://github.com/a2stuff/a2d/issues/911))
 
 ### Launcher
 
