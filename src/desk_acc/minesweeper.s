@@ -113,14 +113,15 @@ reserved:       .byte   0
 
 bits_hidden:
         PIXELS "................#"
-        PIXELS ".#...#...#...#..#"
-        PIXELS "...#...#...#...##"
-        PIXELS ".#...#...#...#..#"
-        PIXELS "...#...#...#...##"
-        PIXELS ".#...#...#...#..#"
-        PIXELS "...#...#...#...##"
-        PIXELS ".#...#...#...#..#"
+        PIXELS "....#...#...#...#"
+        PIXELS "..#...#...#...#.#"
+        PIXELS "....#...#...#...#"
+        PIXELS "..#...#...#...#.#"
+        PIXELS "....#...#...#...#"
+        PIXELS "..#...#...#...#.#"
+        PIXELS "....#...#...#...#"
         PIXELS "#################"
+.if 0
 bits_flag:
         PIXELS "................."
         PIXELS "...########......"
@@ -131,6 +132,18 @@ bits_flag:
         PIXELS ".........##......"
         PIXELS ".......######...."
         PIXELS "................."
+.endif
+bits_flag_precomposed:
+        PIXELS "................#"
+        PIXELS "...########.#...#"
+        PIXELS "..#########...#.#"
+        PIXELS "...########.#...#"
+        PIXELS "..#...#..##...#.#"
+        PIXELS "....#...###.#...#"
+        PIXELS "..#...#..##...#.#"
+        PIXELS "....#..######...#"
+        PIXELS "#################"
+.if 0
 bits_question:
         PIXELS "................."
         PIXELS "....########....."
@@ -141,6 +154,17 @@ bits_question:
         PIXELS "................."
         PIXELS "......###........"
         PIXELS "................."
+.endif
+bits_question_precomposed:
+        PIXELS "................#"
+        PIXELS "....#########...#"
+        PIXELS "..#####...###.#.#"
+        PIXELS "....#...#.###...#"
+        PIXELS "..#...#.###...#.#"
+        PIXELS "....#.###...#...#"
+        PIXELS "..#...#...#...#.#"
+        PIXELS "....#.###...#...#"
+        PIXELS "#################"
 bits_mine:
         PIXELS "................."
         PIXELS "....#...#...#...."
@@ -151,6 +175,16 @@ bits_mine:
         PIXELS ".....#######....."
         PIXELS "....#...#...#...."
         PIXELS "................."
+bits_mine_precomposed:
+        PIXELS "................#"
+        PIXELS "....#...#...#...#"
+        PIXELS "..#..#######..#.#"
+        PIXELS "....##.######...#"
+        PIXELS "..###.#########.#"
+        PIXELS "....#########...#"
+        PIXELS "..#..#######..#.#"
+        PIXELS "....#...#...#...#"
+        PIXELS "#################"
 bits_x:
         PIXELS "##.............##"
         PIXELS "..##.........##.."
@@ -161,7 +195,7 @@ bits_x:
         PIXELS "....##.....##...."
         PIXELS "..##.........##.."
         PIXELS "##.............##"
-bits_revealed:
+bits_0:
         PIXELS "................."
         PIXELS "................#"
         PIXELS "................."
@@ -173,87 +207,87 @@ bits_revealed:
         PIXELS "..#...#...#...#.."
 bits_1:
         PIXELS "................."
-        PIXELS ".......##........"
+        PIXELS ".......##.......#"
         PIXELS "......###........"
+        PIXELS ".......##.......#"
         PIXELS ".......##........"
-        PIXELS ".......##........"
-        PIXELS ".......##........"
+        PIXELS ".......##.......#"
         PIXELS ".....######......"
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 bits_2:
         PIXELS "................."
-        PIXELS ".....######......"
+        PIXELS ".....######.....#"
         PIXELS "....##....##....."
-        PIXELS "........###......"
+        PIXELS "........###.....#"
         PIXELS "......### ......."
-        PIXELS "....###.........."
+        PIXELS "....###.........#"
         PIXELS "....########....."
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 bits_3:
         PIXELS "................."
+        PIXELS "....#######.....#"
+        PIXELS "..........##....."
+        PIXELS ".......####.....#"
+        PIXELS "..........##....."
+        PIXELS "..........##....#"
         PIXELS "....#######......"
-        PIXELS "..........##....."
-        PIXELS ".......####......"
-        PIXELS "..........##....."
-        PIXELS "..........##....."
-        PIXELS "....#######......"
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 bits_4:
         PIXELS "................."
-        PIXELS ".........##......"
+        PIXELS ".........##.....#"
         PIXELS "....##...##......"
-        PIXELS "....##...##......"
+        PIXELS "....##...##.....#"
         PIXELS "....########....."
+        PIXELS ".........##.....#"
         PIXELS ".........##......"
-        PIXELS ".........##......"
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 bits_5:
         PIXELS "................."
-        PIXELS "....########....."
+        PIXELS "....########....#"
         PIXELS "....##..........."
-        PIXELS "....#######......"
+        PIXELS "....#######.....#"
         PIXELS "..........##....."
-        PIXELS "....##....##....."
+        PIXELS "....##....##....#"
         PIXELS ".....######......"
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 bits_6:
         PIXELS "................."
-        PIXELS ".....#####......."
+        PIXELS ".....#####......#"
         PIXELS "....##..........."
-        PIXELS "....#######......"
+        PIXELS "....#######.....#"
         PIXELS "....##....##....."
-        PIXELS "....##....##....."
+        PIXELS "....##....##....#"
         PIXELS ".....######......"
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 bits_7:
         PIXELS "................."
-        PIXELS "....########....."
+        PIXELS "....########....#"
         PIXELS "..........##....."
-        PIXELS ".........##......"
+        PIXELS ".........##.....#"
         PIXELS "........##......."
+        PIXELS ".......##.......#"
         PIXELS ".......##........"
-        PIXELS ".......##........"
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 bits_8:
         PIXELS "................."
-        PIXELS ".....######......"
+        PIXELS ".....######.....#"
         PIXELS "....##....##....."
-        PIXELS ".....######......"
+        PIXELS ".....######.....#"
         PIXELS "....##....##....."
-        PIXELS "....##....##....."
+        PIXELS "....##....##....#"
         PIXELS ".....######......"
-        PIXELS "................."
-        PIXELS "................."
+        PIXELS "................#"
+        PIXELS "..#...#...#...#.."
 
 num_table:
-        .addr   bits_1, bits_2, bits_3, bits_4, bits_5, bits_6, bits_7, bits_8
+        .addr   bits_0, bits_1, bits_2, bits_3, bits_4, bits_5, bits_6, bits_7, bits_8
 
 
 ;;; ============================================================
@@ -967,69 +1001,52 @@ new_state_table:
         ;; Revealed?
         and     #kCellRevealed
     IF NOT ZERO
-        ;; TODO: Consider pre-composing
-        CALL _DrawBase, AX=#bits_revealed
         pla                     ; A = state
         and     #kCellNumMask
-        RTS_IF ZERO
         asl
         tay
-        lda     num_table-2,y
-        ldx     num_table-2+1,y
-        TAIL_CALL _DrawOverlay
+        lda     num_table,y
+        ldx     num_table+1,y
+        TAIL_CALL _Draw
     END_IF
 
-        pla
+        pla                     ; A = state
         and     #kCellMine | kCellFlagsMask
 
         bit     game_over_flag
       IF NS
        IF A = #kCellMine
-        ;; TODO: Consider pre-composing
-        CALL    _DrawBase, AX=#bits_hidden
-        TAIL_CALL _DrawOverlay, AX=#bits_mine
+        TAIL_CALL _Draw, AX=#bits_mine_precomposed
        END_IF
       END_IF
 
         and     #kCellFlagsMask
 
       IF A = #kCellUnknown
-        TAIL_CALL _DrawBase, AX=#bits_hidden
+        TAIL_CALL _Draw, AX=#bits_hidden
       END_IF
 
       IF A = #kCellFlag
-        ;; TODO: Consider pre-composing
-        CALL    _DrawBase, AX=#bits_hidden
-        TAIL_CALL _DrawOverlay, AX=#bits_flag
+        TAIL_CALL _Draw, AX=#bits_flag_precomposed
       END_IF
 
       IF A = #kCellQuestion
-        ;; TODO: Consider pre-composing
-        CALL    _DrawBase, AX=#bits_hidden
-        TAIL_CALL _DrawOverlay, AX=#bits_question
+        TAIL_CALL _Draw, AX=#bits_question_precomposed
       END_IF
 
       IF A = #kCellX
-        TAIL_CALL _DrawBase, AX=#bits_x
+        TAIL_CALL _Draw, AX=#bits_x
       END_IF
 
         ;; Assert: Unreached
         brk
 
-.proc _DrawBase
+.proc _Draw
         stax    paintbits_params::mapbits
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, paintbits_params
         rts
-.endproc ; _DrawBase
-
-.proc _DrawOverlay
-        stax    paintbits_params::mapbits
-        MGTK_CALL MGTK::SetPenMode, penBIC
-        MGTK_CALL MGTK::PaintBits, paintbits_params
-        rts
-.endproc ; _DrawOverlay
-
+.endproc ; _Draw
 
 .endproc ; DrawTile
 
