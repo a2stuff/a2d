@@ -3,6 +3,7 @@
 .define res_filename_puzzle "Pussel"
 .define res_filename_lights_out "Lights.Out"
 .define res_filename_minesweeper "Minsvepare"
+.define res_filename_minesweeper_x "Minsvepare.X"
 .define res_filename_sort_directory "Sortera.Katalog"
 .define res_filename_eyes "Ogon"
 .define res_filename_print_screen "Utskrift.Skarm"

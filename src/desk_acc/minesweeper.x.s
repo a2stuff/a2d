@@ -1,11 +1,11 @@
 ;;; ============================================================
-;;; MINESWEEPER (Beginner) - Desk Accessory
+;;; MINESWEEPER (Intermediate) - Desk Accessory
 ;;;
 ;;; Don't blow up
 ;;; ============================================================
 
-kBoardWidth = 10
-kBoardHeight = 10
-kNumMines = 10
+kBoardWidth = 16
+kBoardHeight = 16
+kNumMines = 40
 
 .include "minesweeper_base.s"

@@ -3,6 +3,7 @@
 .define res_filename_puzzle "Puzzle"
 .define res_filename_lights_out "Lights.Out"
 .define res_filename_minesweeper "Minensuchboot"
+.define res_filename_minesweeper_x "Minensuchboot.X"
 .define res_filename_sort_directory "Dir.Sortieren"
 .define res_filename_eyes "Augen"
 .define res_filename_print_screen "Druckbildschirm"
