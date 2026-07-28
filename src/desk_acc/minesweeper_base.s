@@ -299,6 +299,8 @@ num_table:
 
 board_state:    .res(::kBoardWidth * ::kBoardHeight)
 
+num_hidden:     .word   0       ; counts down during game
+
 kCellMine       = 1 << 7        ; not shown until end of game
 kCellRevealed   = 1 << 6
 kCellUnknown    = 0 << 4        ; initial state
@@ -442,7 +444,11 @@ game_over_flag: .byte   0       ; bit7
         TAIL_CALL DrawWindow
     END_IF
 
+        ;; Stash "kind" so we know if this is a modified click
         copy8   event_params::kind, event_kind
+
+        ;; ----------------------------------------
+        ;; Compute cell coordinates from click coordinates
 
         copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -469,8 +475,10 @@ game_over_flag: .byte   0       ; bit7
       WHILE POS
         RTS_IF Y >= #kBoardHeight
 
-        PUSH_XY                 ; Save X,Y
+        ;; ----------------------------------------
+        ;; Determine current cell state
 
+        PUSH_XY                 ; Save X,Y
         jsr     GetCell
 
         state := $08
@@ -479,12 +487,17 @@ game_over_flag: .byte   0       ; bit7
         event_kind := *+1
         ldx     #SELF_MODIFIED_BYTE
     IF X = #MGTK::EventKind::apple_key
-        ;; modified click
+
+        ;; ----------------------------------------
+        ;; Modified click
 
         lda     state
         and     #kCellRevealed
       IF ZERO
-        ;;  not revealed
+
+        ;; ------------------------------
+        ;; Not revealed + modified click
+
         lda     state
         and     #kCellFlagsMask
 
@@ -517,7 +530,8 @@ game_over_flag: .byte   0       ; bit7
 
       END_IF
 
-        ;; revealed
+        ;; ------------------------------
+        ;; Revealed + modified click
 
         lda     state
         and     #kCellNumMask
@@ -538,13 +552,15 @@ game_over_flag: .byte   0       ; bit7
         PULL_XY
         jmp     DoChording
       END_IF
+
         ;; Otherwise beep
         PULL_XY
         JSR_TO_MAIN JUMP_TABLE_BELL
         rts
 
     ELSE
-        ;; not modified click
+        ;; ----------------------------------------
+        ;; Not modified click
 
         lda     state
       IF NS
@@ -582,22 +598,9 @@ store_and_redraw:
 .proc CheckVictory
 
         ;; ----------------------------------------
-        ;; Count number of non-revealed cells
+        ;; Every non-mine revealed?
 
-        ;; TODO: Track this during play instead
-
-        copy16  #0, count
-        INVOKE_WITH_LAMBDA IterateBoard
-        pha
-        and     #kCellRevealed
-    IF ZERO
-        inc16   count
-    END_IF
-        pla
-        rts
-        END_OF_LAMBDA
-
-        RTS_IF ecmp16 count, #kNumMines : NE
+        RTS_IF ecmp16 num_hidden, #kNumMines : NE
 
         ;; ----------------------------------------
         ;; Flag all the unrevealed squares
@@ -715,6 +718,7 @@ new_state_table:
         sta     count
         ora     #kCellRevealed
         jsr     SetCell
+        dec16   num_hidden
         PULL_XY
         PUSH_XY
         jsr     DrawTileAtXY
@@ -1078,6 +1082,8 @@ new_state_table:
         INVOKE_WITH_LAMBDA IterateBoard
         RETURN A=#kCellUnknown
         END_OF_LAMBDA
+
+        copy16  #kBoardWidth * kBoardHeight, num_hidden
 
         ;; ----------------------------------------
         ;; Place mines

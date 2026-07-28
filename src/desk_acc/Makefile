@@ -26,3 +26,5 @@ clean:
 	rm -f $(OUTDIR)/*.inc
 	rm -f $(OUTDIR)/*.tmp
 	rm -f $(TARGETS)
+
+$(OUTDIR)/minesweeper.o $(OUTDIR)/minesweeper.x.o: minesweeper_base.s
