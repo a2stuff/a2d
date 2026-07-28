@@ -584,20 +584,20 @@ store_and_redraw:
         ;; ----------------------------------------
         ;; Count number of non-revealed cells
 
-        copy8   #0, count
+        ;; TODO: Track this during play instead
+
+        copy16  #0, count
         INVOKE_WITH_LAMBDA IterateBoard
         pha
         and     #kCellRevealed
     IF ZERO
-        inc     count
+        inc16   count
     END_IF
         pla
         rts
         END_OF_LAMBDA
 
-        count := *+1
-        lda     #SELF_MODIFIED_BYTE
-        RTS_IF A <> #kNumMines
+        RTS_IF ecmp16 count, #kNumMines : NE
 
         ;; ----------------------------------------
         ;; Flag all the unrevealed squares
@@ -631,6 +631,8 @@ store_and_redraw:
         jsr     PlaySound
         SET_BIT7_FLAG game_over_flag
         rts
+
+count:  .word   0
 
 .endproc ; CheckVictory
 
