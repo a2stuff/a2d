@@ -89,7 +89,6 @@ emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF
 emit add_file $disposition "out/awlaunch.system.SYS" "Extras" "AWLaunch.system" FF2000
 emit add_file $disposition "res/package/PT3PLR.SYSTEM" "Extras" "PT3PLR.system" FF2000
 emit add_file $disposition "res/package/TTS.SYSTEM" "Extras" "TTS.system" FF0000
-emit add_file $disposition "res/package/SAM.BIN" "Extras" "SAM" 000000
 emit add_file $disposition "res/package/CHIP8.SYSTEM" "Extras" "CHIP8.system" FF2000
 
 # --------------------------------------------------

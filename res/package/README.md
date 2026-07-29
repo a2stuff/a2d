@@ -24,7 +24,6 @@ BinSCII by David Whitney:
 
 Text-to-Speech (https://github.com/a2stuff/prodos-sam):
 * TTS.SYSTEM
-* SAM.BIN
 
 The other files go into the Sample Media folder, and are examples of various file types, including images, text, and music.
 
