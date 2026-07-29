@@ -269,7 +269,7 @@ reserved:       .byte   0
 ;;; ============================================================
 
 ep_start := *
-        .include        "../lib/event_params.s"
+        .include "../lib/event_params.s"
 
 .params trackgoaway_params
 clicked:        .byte   0
@@ -321,7 +321,7 @@ buf_string := *
 ;;; ============================================================
 
 ep_start := *
-        .include        "../lib/event_params.s"
+        .include "../lib/event_params.s"
 
 .params trackgoaway_params
 clicked:        .byte   0

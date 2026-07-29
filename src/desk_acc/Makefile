@@ -26,6 +26,7 @@ clean:
 	rm -f $(TARGETS)
 
 # Additional dependencies of specific targets
+$(OUTDIR)/message.o: ../../res/fonts/Athens
 $(OUTDIR)/minesweeper.o $(OUTDIR)/minesweeper.x.o: minesweeper_base.s
 $(OUTDIR)/neko.o: $(wildcard neko_frames/*.bin.lzsa)
 $(OUTDIR)/show.text.file.o: $(MONO_FONT)

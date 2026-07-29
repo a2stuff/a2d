@@ -9,6 +9,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### New Features
 
 * Add "Startup.Items" folder support.
+* Add option to skip checking 5.25" drives on startup.
 * Support dragging files onto ProDOS "interpreter" applications. ([#903](https://github.com/a2stuff/a2d/issues/903))
 * New Toy: Minesweeper.
 * New Screen Saver: Maze.

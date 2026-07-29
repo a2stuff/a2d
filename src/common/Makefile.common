@@ -11,14 +11,15 @@ OUTDIR = ../../out
 
 BINDIR = ../../bin
 
+BUILD_LANG := $(shell grep 'define kBuildLang' ../config.inc | cut -d'"' -f2)
+
 # Evaluated relative to each Makefile - include, library, and resource files
 COMMON_HEADERS = \
 	../config.inc $(OUTDIR)/buildinfo.inc ../common.inc \
 	$(wildcard ../inc/*.inc *.inc) \
 	$(wildcard ../lib/*.s ../lib/*.inc) \
-	$(wildcard res/*.res.?? ../common/res/*.res.??)
+	$(wildcard res/*.res.$(BUILD_LANG) ../common/res/*.res.$(BUILD_LANG))
 
-BUILD_LANG := $(shell grep 'define kBuildLang' ../config.inc | cut -d'"' -f2)
 SYS_FONT = $(OUTDIR)/System.$(BUILD_LANG).font
 MONO_FONT = $(OUTDIR)/Monaco.$(BUILD_LANG).font
 

@@ -23,7 +23,7 @@ clean:
 	rm -f $(OUTDIR)/*.tmp
 	rm -f $(TARGETS)
 
-$(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s auxmem.s lc.s res.s main.s init.s ovl*.s ../disk_copy/disk_copy.inc ../mgtk/mgtk.s $(foreach TK,$(TOOLKITS),../toolkits/$(TK).s)
+$(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s auxmem.s lc.s res.s main.s init.s ovl*.s ../disk_copy/disk_copy.inc ../mgtk/mgtk.s $(foreach TK,$(TOOLKITS),../toolkits/$(TK).s) ../inc/pdload.dat
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../common/asm.cfg
