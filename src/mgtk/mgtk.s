@@ -6414,6 +6414,7 @@ menu_item  .byte
         jpl     in_menu_bar     ; use mouse coords for menu
 
         copy8   #kKeyboardMouseStateInactive, kbd_mouse_state
+        COPY_BYTES kLastCursorPosLen, cursor_pos::xcoord, last_cursor_pos
         ldx     #0
         jsr     GetMenu         ; X = index
         lda     curmenu::menu_id
