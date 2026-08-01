@@ -351,7 +351,7 @@ view_by_table:
         MGTK_CALL MGTK::MoveTo, view_style_label_pos
         MGTK_CALL MGTK::DrawString, view_style_label_str
 
-        copy8   #kNumButtons-1, index
+        copy8   #0, index
     DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -371,7 +371,7 @@ view_by_table:
 
         BTK_CALL BTK::RadioDraw, SELF_MODIFIED, params_addr
 
-    WHILE dec index : POS
+    WHILE inc index : lda index : A < #kNumButtons
 
         ;; --------------------------------------------------
 

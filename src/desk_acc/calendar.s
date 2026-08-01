@@ -484,7 +484,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPenSize, grid_pen
 
-        copy8   #kNumGridLines - 1, index
+        copy8   #0, index
       DO
         lda     index
         asl                     ; *8 == .sizeof(MGTK::Point) * 2
@@ -510,7 +510,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::MoveTo, SELF_MODIFIED, pt_start
         MGTK_CALL MGTK::LineTo, SELF_MODIFIED, pt_end
 
-      WHILE dec index : POS
+      WHILE inc index : lda index : A < #kNumGridLines
     END_IF
 
         ;; --------------------------------------------------

@@ -339,7 +339,7 @@ button_eor_table:
 
         ;; --------------------------------------------------
 
-        copy8   #kNumButtons-1, index
+        copy8   #0, index
     DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -359,7 +359,7 @@ button_eor_table:
 
         BTK_CALL BTK::CheckboxDraw, SELF_MODIFIED, params_addr
 
-    WHILE dec index : POS
+    WHILE inc index : lda index : A < #kNumButtons
 
         ;; --------------------------------------------------
 

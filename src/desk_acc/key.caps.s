@@ -511,8 +511,9 @@ poly_new_ret_inner:
 extended_layout_flag:           ; high bit set if IIgs/IIc+
         .byte   0
 
+kPolySize = 7
 tmp_poly:
-        .res    2 + 7 * .sizeof(MGTK::Point), 0
+        .res    2 + kPolySize * .sizeof(MGTK::Point), 0
 
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
 
@@ -587,13 +588,14 @@ start:  lda     KBD
         sta     last_char
 
         jsr     ConstructKeyPoly
+        jsr     ConstructBoundingRect
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF A <> #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintPoly, tmp_poly
+        jsr     invert
 
 :
       IF bit KBDSTRB : NS
@@ -601,14 +603,20 @@ start:  lda     KBD
         and     #CHAR_MASK
         cmp     last_char
         beq     :-
-        MGTK_CALL MGTK::PaintPoly, tmp_poly
+        jsr     invert
         jmp     start
       END_IF
 
-        MGTK_CALL MGTK::PaintPoly, tmp_poly
+        jsr     invert
     END_IF
 
         jmp     InputLoop
+
+invert:
+        MGTK_CALL MGTK::ShieldCursor, tmp_rect
+        MGTK_CALL MGTK::PaintPoly, tmp_poly
+        MGTK_CALL MGTK::UnshieldCursor
+        rts
 
 last_char:
         .byte   0
@@ -787,7 +795,7 @@ check:
     IF A = #CHAR_RETURN
       IF bit extended_layout_flag : NS
         ;; Special key
-        COPY_BYTES      2 + 7 * .sizeof(MGTK::Point), poly_new_ret_inner, tmp_poly
+        COPY_BYTES      2 + kPolySize * .sizeof(MGTK::Point), poly_new_ret_inner, tmp_poly
         rts
       END_IF
     END_IF
@@ -825,6 +833,48 @@ check:
         add16   tmp_rect::y1, #2, tmp_poly+2 + (4 * .sizeof(MGTK::Point))+2
         rts
 .endproc ; ConstructKeyPoly
+
+;;; ============================================================
+
+.proc ConstructBoundingRect
+        copy16  #kDAWidth, tmp_rect::x1
+        copy16  #kDAHeight, tmp_rect::y1
+        copy16  #0, tmp_rect::x2
+        copy16  #0, tmp_rect::y2
+
+        ldx     tmp_poly+0      ; number of vertices in polygon
+        ldy     #2
+    DO
+        ;; X?
+        scmp16  tmp_poly,y, tmp_rect::x1
+      IF NEG
+        copy16  tmp_poly,y, tmp_rect::x1
+      END_IF
+        scmp16  tmp_poly,y, tmp_rect::x2
+      IF POS
+        copy16  tmp_poly,y, tmp_rect::x2
+      END_IF
+
+        iny
+        iny
+
+        ;; Y?
+        scmp16  tmp_poly,y, tmp_rect::y1
+      IF NEG
+        copy16  tmp_poly,y, tmp_rect::y1
+      END_IF
+        scmp16  tmp_poly,y, tmp_rect::y2
+      IF POS
+        copy16  tmp_poly,y, tmp_rect::y2
+      END_IF
+
+        iny
+        iny
+    WHILE dex : NOT ZERO
+
+        rts
+
+.endproc ; ConstructBoundingRect
 
 ;;; ============================================================
 

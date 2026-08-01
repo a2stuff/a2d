@@ -552,21 +552,28 @@ NoOp:   rts
 ;;; ============================================================
 
         DEFINE_POINT cur_pos, 0, 0
+        DEFINE_RECT shield_rect, 0, 0, kResultsWidth, kListItemHeight
 
 .proc PrepDrawIncrementalResults
         MGTK_CALL MGTK::SetPort, winfo_results::port
         copy8   #0, cur_line
         copy16  #kListItemTextOffsetX, cur_pos+MGTK::Point::xcoord
         copy16  #kListItemTextOffsetY, cur_pos+MGTK::Point::ycoord
+        copy16  #0, shield_rect::y1
+        copy16  #kListItemHeight, shield_rect::y2
         rts
 .endproc ; PrepDrawIncrementalResults
 
 .proc DrawNextResult
         MGTK_CALL MGTK::MoveTo, cur_pos
 
+        MGTK_CALL MGTK::ShieldCursor, shield_rect
         CALL    DrawListEntryProc, A=cur_line
+        MGTK_CALL MGTK::UnshieldCursor
 
         add16_8 cur_pos+MGTK::Point::ycoord, #kListItemHeight
+        add16_8 shield_rect::y1, #kListItemHeight
+        add16_8 shield_rect::y2, #kListItemHeight
         inc     cur_line
         rts
 .endproc ; DrawNextResult

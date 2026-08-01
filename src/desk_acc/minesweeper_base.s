@@ -567,6 +567,7 @@ game_over_flag: .byte   0       ; bit7
         ;; mine - game over
         PULL_XY
         CALL    SetCell, A=#kCellBoom
+        CALL    DrawTileAtXY
         TAIL_CALL OnDefeat
       END_IF
 
@@ -602,6 +603,8 @@ store_and_redraw:
 
         RTS_IF ecmp16 num_hidden, #kNumMines : NE
 
+        jsr     PlaySound
+
         ;; ----------------------------------------
         ;; Flag all the unrevealed squares
 
@@ -631,7 +634,6 @@ store_and_redraw:
         rts
         END_OF_LAMBDA
 
-        jsr     PlaySound
         SET_BIT7_FLAG game_over_flag
         rts
 
@@ -670,7 +672,17 @@ count:  .word   0
         END_OF_LAMBDA
 
         SET_BIT7_FLAG game_over_flag
-        TAIL_CALL DrawWindow
+
+        ;; Update altered cells
+        INVOKE_WITH_LAMBDA IterateBoard
+        pha
+    IF A = #kCellX OR A = #kCellMine
+        jsr     DrawTileAtXY
+    END_IF
+        pla
+        END_OF_LAMBDA
+
+        rts
 
 new_state_table:
         .assert (kCellUnknown  >> 3) = 0, error, "bad index"
@@ -885,6 +897,7 @@ new_state_table:
         pla                     ; Don't return to caller
         pla
         CALL    SetCell, A=#kCellBoom
+        CALL    DrawTileAtXY
         TAIL_CALL OnDefeat
       END_IF
 
@@ -1075,6 +1088,7 @@ new_state_table:
 ;;; ============================================================
 
 .proc InitBoard
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
         ;; ----------------------------------------
         ;; Init board to empty
@@ -1095,6 +1109,8 @@ new_state_table:
         pha                     ; A = index
 
 re_roll:
+        MGTK_CALL MGTK::CheckEvents
+
         ;; Select X
       DO
         jsr     Random
@@ -1131,6 +1147,7 @@ re_roll:
         rts
         END_OF_LAMBDA
 
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 
 .endproc ; InitBoard
@@ -1283,6 +1300,7 @@ re_roll:
         sta     (ptr),y
 
         inc16   ptr
+        MGTK_CALL MGTK::CheckEvents
         PULL_XY
       WHILE inx : X < #kBoardWidth
     WHILE iny : Y < #kBoardHeight

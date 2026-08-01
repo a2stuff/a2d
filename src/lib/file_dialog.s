@@ -773,13 +773,6 @@ found:  RETURN  A=index
         jsr     _DrawStringCentered
 
         ;; Buttons
-        jsr     _IsOKAllowed
-        ror
-        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        sta     file_dialog_res::ok_button::state
-        BTK_CALL BTK::Draw, file_dialog_res::ok_button
-
-        BTK_CALL BTK::Draw, file_dialog_res::cancel_button
         BTK_CALL BTK::Draw, file_dialog_res::drives_button
 
         jsr     _IsOpenAllowed
@@ -793,6 +786,14 @@ found:  RETURN  A=index
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         sta     file_dialog_res::close_button::state
         BTK_CALL BTK::Draw, file_dialog_res::close_button
+
+        jsr     _IsOKAllowed
+        ror
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
+        sta     file_dialog_res::ok_button::state
+        BTK_CALL BTK::Draw, file_dialog_res::ok_button
+
+        BTK_CALL BTK::Draw, file_dialog_res::cancel_button
 
         ;; Separator between button groups
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
