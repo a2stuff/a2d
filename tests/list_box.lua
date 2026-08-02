@@ -342,11 +342,12 @@ function ListBoxTest(
         local x, y, w, h = a2dtest.GetFrontWindowContentRect()
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w / 2, y + 5)
-            m.DoubleClick()
-            test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.action,
-                        "action button should flash")
+            m.DoubleClick({no_wait=true})
+            util.WaitFor(
+              "action button flash", function()
+                return a2dtest.OCRScreen({invert=true}):match(options.action)
+            end)
         end)
-
         double_click_func()
     end)
   end
@@ -535,6 +536,7 @@ ListBoxTest(
     action = "OK",
   },
   function()
+    emu.wait(5)
     a2d.OpenPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT", {no_validate=true})
     emu.wait(5)
   end,

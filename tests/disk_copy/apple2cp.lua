@@ -49,7 +49,7 @@ test.Step(
     -- Wait for formatting to finish, since that blocks everything
     util.WaitFor(
       "formatting complete", function()
-        return a2dtest.OCRScreen():match("Reading%.%.%.")
+        return a2dtest.OCRFrontWindowContent():match("Reading%.%.%.")
     end)
 
     -- Generate some mouse activity, which should fire interrupts

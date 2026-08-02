@@ -51,7 +51,7 @@ test.Variants(
     a2d.DialogOK()
 
     -- complete
-    a2dtest.WaitForAlert({timeout=10800, match="The copy was successful"})
+    a2dtest.WaitForAlert({timeout=2*10800, match="The copy was successful"})
     local transfer, read, written = a2dtest.DiskCopyGetBlockCounts()
     local total = 65534
     test.ExpectEquals(read, transfer, "blocks read should match transfer count")

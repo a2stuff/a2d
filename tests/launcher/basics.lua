@@ -10,7 +10,11 @@ a2d.ConfigureRepaintTime(0.25)
 
 -- Speed up the rest of these tests
 a2d.DeletePath("/A2.DESKTOP/SAMPLE.MEDIA")
-emu.wait(10)
+util.WaitFor(
+  "done deleting", function()
+    emu.wait(5)
+    return not a2dtest.OCRFrontWindowContent():match("Deleting")
+end)
 
 --[[
   Without starting DeskTop, launch `BASIC.SYSTEM`. Set a prefix (e.g.
@@ -41,7 +45,10 @@ test.Step(
   function()
     a2d.ToggleOptionCopyToRAMCard()
     a2d.CopyPath("/A2.DESKTOP", "/RAM1")
-    emu.wait(30) -- slow copy
+    util.WaitFor(
+      "done copying", function()
+        return not a2dtest.HasOpenWindow()
+      end, {timeout=120})
     a2d.Quit()
     apple2.BitsyInvokePath("/RAM1/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
@@ -128,7 +135,10 @@ test.Step(
   function()
     a2d.ToggleOptionCopyToRAMCard()
     a2d.CopyPath("/A2.DESKTOP", "/RAM1")
-    emu.wait(30) -- slow copy
+    util.WaitFor(
+      "done copying", function()
+        return not a2dtest.HasOpenWindow()
+      end, {timeout=120})
     a2d.Quit()
     apple2.BitsyInvokePath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()

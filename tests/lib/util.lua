@@ -8,17 +8,18 @@ local util = {}
 
 function util.WaitFor(message, func, options, level)
   local timeout = 60
+  local scale = 20
   if options and options.timeout then
     timeout = options.timeout
   end
   if level == nil then
     level = 1
   end
-  for i = 1, timeout do
+  for i = 1, timeout*scale do
     if func() then
       return
     end
-    emu.wait(1)
+    emu.wait(1/scale)
   end
   error(string.format("Timeout (%ds) waiting for %s", timeout, message), level + 2)
 end

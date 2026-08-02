@@ -17,11 +17,12 @@ test.Step(
     a2d.OpenPath("/TESTS")
     emu.wait(1)
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
-    emu.wait(1)
+    emu.wait(2)
     apple2.ReturnKey() -- default name
-    emu.wait(1)
+    emu.wait(2)
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.FOLDER", "new folder should be selected")
     test.Snap("verify scrolled into view")
+    emu.wait(1)
     a2d.DeletePath("/TESTS/NEW.FOLDER")
 end)
 
@@ -34,6 +35,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_DUPLICATE)
+    emu.wait(5)
     a2d.ClearTextField()
     apple2.Type("DUPE")
     apple2.ReturnKey() -- commit
@@ -54,6 +56,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_DUPLICATE)
+    emu.wait(5)
     a2d.ClearTextField()
     apple2.Type("DUPE")
     apple2.ReturnKey() -- commit
@@ -72,6 +75,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_RENAME)
+    emu.wait(5)
     a2d.ClearTextField()
     apple2.Type("NEW.NAME")
     apple2.ReturnKey() -- commit

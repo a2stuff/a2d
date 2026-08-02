@@ -78,6 +78,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.ButtonDown()
+        a2d.WaitForRepaint()
         m.MoveToApproximately(file_menu_x, file_open_y)
         m.ButtonUp()
     end)

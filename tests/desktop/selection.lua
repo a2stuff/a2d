@@ -522,7 +522,7 @@ test.Step(
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
         m.ButtonUp()
-        emu.wait(2)
+        emu.wait(5) -- let double-click timer expire
     end)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "window should be active")
 end)
@@ -940,7 +940,7 @@ test.Step(
 
     local x,y,w,h = a2dtest.GetWindowContentRect(volume_id)
     a2d.InMouseKeysMode(function(m)
-        m.MoveToApproximately(x + w - 5, y + h - 5)
+        m.MoveToApproximately(x + w - 5, y + 5)
         m.Click()
     end)
     a2d.WaitForRepaint()

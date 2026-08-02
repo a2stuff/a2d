@@ -605,11 +605,12 @@ test.Step(
     test.Snap("verify folder is FILE.TYPES")
     test.Snap("verify selection is ROOM.A2FC")
     a2d.DialogCancel()
+    emu.wait(5)
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    emu.wait(30)
 end)
 
 --[[

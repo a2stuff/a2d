@@ -64,7 +64,7 @@ DialogTest(
   function(suffix)
     a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I")
-    emu.wait(5) -- enumerating takes a bit
+    emu.wait(10) -- enumerating takes a bit
     test.Snap("File > Get Info (volume)" .. suffix)
     a2d.DialogCancel()
 end)
@@ -402,14 +402,14 @@ DialogTest(
     -- formatting
     util.WaitFor(
       "formatting", function()
-        return a2dtest.OCRScreen(bounds):match("Formatting")
+        return a2dtest.OCRFrontWindowContent(bounds):match("Formatting")
     end)
     test.Snap("Disk Copy - Formatting" .. suffix)
 
     -- reading progress
     util.WaitFor(
       "reading", function()
-        return a2dtest.OCRScreen(bounds):match("Reading")
+        return a2dtest.OCRFrontWindowContent(bounds):match("Reading")
     end)
     emu.wait(10)
     test.Snap("Disk Copy - Reading progress" .. suffix)
@@ -417,7 +417,7 @@ DialogTest(
     -- writing progress
     util.WaitFor(
       "writing", function()
-        return a2dtest.OCRScreen(bounds):match("Writing")
+        return a2dtest.OCRFrontWindowContent(bounds):match("Writing")
     end)
     emu.wait(10)
     test.Snap("Disk Copy - Writing progress" .. suffix)

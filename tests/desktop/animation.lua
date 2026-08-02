@@ -6,10 +6,10 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP, {no_wait=true})
-    a2dtest.MultiSnap(15, "window animates open")
+    a2dtest.MultiSnap(30, "window animates open")
     emu.wait(5)
     a2d.CloseWindow({no_wait=true})
-    a2dtest.MultiSnap(15, "window animates closed")
+    a2dtest.MultiSnap(30, "window animates closed")
     emu.wait(5)
 end)
 
@@ -31,10 +31,10 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II, {no_wait=true})
-    a2dtest.MultiSnap(15, "window animates open")
+    a2dtest.MultiSnap(30, "window animates open")
     emu.wait(5)
     a2d.CloseWindow({no_wait=true})
-    a2dtest.MultiSnap(15, "window animates closed")
+    a2dtest.MultiSnap(30, "window animates closed")
     emu.wait(5)
 end)
 
@@ -46,12 +46,12 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(apple2.SCREEN_WIDTH, 0)
         m.Click()
-        a2dtest.MultiSnap(15, "window animates open")
+        a2dtest.MultiSnap(30, "window animates open")
     end)
 
     emu.wait(5)
     a2d.CloseWindow({no_wait=true})
-    a2dtest.MultiSnap(15, "window animates closed")
+    a2dtest.MultiSnap(30, "window animates closed")
     emu.wait(5)
 end)
 
@@ -62,10 +62,10 @@ test.Step(
 
     util.WaitFor(
       "player showing", function()
-        return a2dtest.OCRScreen():match("Electric Duet")
+        return a2dtest.OCRFrontWindowContent():match("Electric Duet")
     end)
 
     apple2.EscapeKey()
-    a2dtest.MultiSnap(60, "should animate back to JESU.JOY icon")
+    a2dtest.MultiSnap(120, "should animate back to JESU.JOY icon")
     emu.wait(5)
 end)

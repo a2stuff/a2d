@@ -19,15 +19,20 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     apple2.Type("A")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "type down order")
     apple2.Type("2")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "type down order")
     apple2.Type("Q")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "type down order")
     a2d.ClearSelection()
     apple2.Type("T")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "TESTS", "type down order")
     apple2.Type("Z")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "TRASH", "type down order")
 end)
 
@@ -41,13 +46,16 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.ClearSelection()
     apple2.Type("T")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "TESTS", "type down order")
     apple2.Type("R")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "TRASH", "type down order")
     a2d.InMouseKeysMode(function(m)
         m.MoveByApproximately(20, 20)
     end)
     apple2.Type("A")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "type down order")
 end)
 
@@ -68,26 +76,32 @@ test.Step(
     emu.wait(1)
 
     apple2.Type("A")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "type down order")
     a2d.ClearSelection()
 
     apple2.Type("AB")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "type down order")
     a2d.ClearSelection()
 
     apple2.Type("AL")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "type down order")
     a2d.ClearSelection()
 
     apple2.Type("ALFAA")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHISKEY", "type down order")
     a2d.ClearSelection()
 
     apple2.Type("B")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHISKEY", "type down order")
     a2d.ClearSelection()
 
     apple2.Type("Z")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHISKEY", "type down order")
     a2d.ClearSelection()
 end)
@@ -104,6 +118,7 @@ test.Step(
     emu.wait(1)
 
     apple2.Type("WHIS")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHISKEY", "type down order")
 
     a2d.InMouseKeysMode(function(m)
@@ -111,6 +126,7 @@ test.Step(
     end)
 
     apple2.Type("ALFA")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "type down order")
 end)
 
@@ -129,12 +145,14 @@ test.Variants(
     emu.wait(1)
 
     apple2.Type("WHIS")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHISKEY", "type down order")
 
     keyfunc()
     a2d.WaitForRepaint()
 
     apple2.Type("ALFA")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "ALFA", "type down order")
 end)
 
@@ -148,6 +166,7 @@ test.Step(
     a2d.OpenPath("/RAM1")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should be selected")
     apple2.Type("ANYTHING")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should still be selected")
 
     -- Selection in another window
@@ -155,11 +174,13 @@ test.Step(
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should be selected")
     apple2.Type("ANYTHING")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file should still be selected")
 
     -- No selection in another window
     a2d.ClearSelection()
     apple2.Type("ANYTHING")
+    a2d.WaitForRepaint()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "nothing should be selected")
 end)
 
@@ -246,14 +267,17 @@ test.Step(
     a2d.ClearSelection()
 
     apple2.Type("u")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "UPPER", "case insensitive")
     a2d.ClearSelection()
 
     apple2.Type("L")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "LOWER", "case insensitive")
     a2d.ClearSelection()
 
     apple2.Type("MiXeD")
+    a2d.WaitForRepaint()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "MIXEDCASE", "case insensitive")
 end)
 
@@ -303,6 +327,7 @@ test.Step(
     end)
 
     apple2.Type("A")
+    a2d.WaitForRepaint()
     apple2.ClickMouseButton()
     a2dtest.MultiSnap(10, "verify that Open is enabled")
 end)
@@ -1245,11 +1270,12 @@ test.Step(
         m.ButtonUp()
     end)
 
+    emu.wait(5)
     test.ExpectNotMatch(a2dtest.OCRScreen({invert=true}), "ALPHA", "ALPHA should be scrolled out of view")
     test.ExpectMatch(a2dtest.OCRScreen(), "OMEGA", "OMEGA should be scrolled into view")
 
     apple2.SpaceKey()
-    a2d.WaitForRepaint()
+    emu.wait(5)
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "ALPHA", "ALPHA should be scrolled into view")
     test.ExpectNotMatch(a2dtest.OCRScreen(), "OMEGA", "OMEGA should be scrolled out of view")
 end)

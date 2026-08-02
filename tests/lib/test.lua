@@ -91,6 +91,11 @@ function test.Step(title, func)
       local fn1, st1 = traceback:match("\t%[C%]: in function '(.-)'(.-)\n\t%[C%]: in function '(.-)'")
       if fn1 and st1 then
         arg = arg .. "\ntraceback:" .. st1
+      else
+        st1 = traceback:match("stack traceback:(.-)\n\t%[C%]: in function '(.-)'")
+        if st1 then
+          arg = arg .. "\ntraceback:" .. st1
+        end
       end
     end
     return arg

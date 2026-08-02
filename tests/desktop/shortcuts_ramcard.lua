@@ -23,7 +23,7 @@ test.Step(
   function()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
     a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    a2d.Reboot({no_wait=true})
     while not apple2.GrabTextScreen():match("Esc to cancel") do
       emu.wait(0.25)
     end
@@ -57,7 +57,7 @@ test.Step(
     a2d.CloseAllWindows()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
-    a2d.Reboot()
+    a2d.Reboot({no_wait=true})
     while not apple2.GrabTextScreen():upper():match("EXTRAS") do
       emu.wait(0.25)
     end
@@ -180,8 +180,10 @@ test.Step(
     a2dtest.DHRDarkness()
 
     a2d.OAShortcut("1", {no_wait=true})
-    emu.wait(0.5)
-    test.ExpectMatch(a2dtest.OCRScreen(), "Files remaining:", "should be copying")
+    util.WaitFor(
+      "copying to start", function()
+        return a2dtest.OCRFrontWindowContent():match("Files remaining")
+    end)
     apple2.EscapeKey()
     emu.wait(5)
 

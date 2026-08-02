@@ -216,6 +216,7 @@ test.Step(
     apple2.LeftArrowKey() -- to hour
     for i = 1, 24 do
       apple2.UpArrowKey()
+      a2d.WaitForRepaint()
       local expect = ((i - 1) % 12) + 1
       test.ExpectMatch(a2dtest.OCRFrontWindowContent({invert=true}), tostring(expect),
                   "should be 12 hour cycle")
@@ -252,6 +253,7 @@ test.Step(
     apple2.TabKey() -- to hour
     for i = 1, 24 do
       apple2.UpArrowKey()
+      a2d.WaitForRepaint()
       test.ExpectMatch(a2dtest.OCRFrontWindowContent({invert=true}), string.format("%02d", i % 24),
                   "should be 24 hour cycle")
     end

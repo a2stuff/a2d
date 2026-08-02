@@ -21,8 +21,6 @@ test.Step(
   function()
     a2d.ToggleOptionCopyToRAMCard()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
-    emu.wait(1)
-    apple2.EscapeKey()
     a2d.Reboot()
     a2d.WaitForDesktopReady({timeout=360})
 

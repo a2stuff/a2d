@@ -248,9 +248,9 @@ test.Step(
     a2d.CreateFolder("/A/FOLDER")
     a2d.OpenPath("/A/FOLDER", {leave_parent=true})
 
-    emu.wait(5)
+    emu.wait(10)
     s5d1:unload()
-    emu.wait(5)
+    emu.wait(10)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "both windows should close")
 end)

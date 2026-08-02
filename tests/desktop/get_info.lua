@@ -140,6 +140,7 @@ test.Step(
     a2d.OAShortcut("I")
     emu.wait(30) -- slow
     test.ExpectMatch(a2dtest.OCRScreen(), "Size used/total: .* 32,768K", "total size should be 32,768K, not 0K")
+    apple2.EscapeKey()
     a2d.DialogOK()
 end)
 
@@ -154,13 +155,16 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
     a2d.OAShortcut("I")
+    emu.wait(5)
     a2dtest.ExpectNothingChanged(function()
         a2d.DialogOK()
         a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS")
         a2d.OAShortcut("I")
+        emu.wait(5)
         a2d.DialogOK()
         a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
         a2d.OAShortcut("I")
+        emu.wait(5)
     end)
     a2d.DialogOK()
 end)
@@ -184,7 +188,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/RAMCARD/SHORTCUT/HAS.256.FILES")
     a2d.OAShortcut("I")
-    emu.wait(5) -- slow
+    emu.wait(10) -- slow
     local ocr = a2dtest.OCRScreen()
     local _, _, count = ocr:find("Size: .* for (%d+) items")
     test.ExpectGreaterThan(tonumber(count), 255, "count should be greater than 255")
@@ -214,7 +218,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS")
     a2d.OAShortcut("I", {no_wait=true})
-    emu.wait(1)
+    emu.wait(5)
     apple2.EscapeKey()
     local ocr = a2dtest.OCRScreen()
     local _, _, count = ocr:find("Size used/total: .* for (%d+) items")

@@ -18,14 +18,20 @@ test.Step(
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(listbox_x+130, listbox_y+25)
-        m.DoubleClick()
-        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "OK", "OK button should flash")
+        m.DoubleClick({no_wait=true})
+        util.WaitFor(
+          "button flash", function()
+            return a2dtest.OCRScreen({invert=true}):match("OK")
+          end)
     end)
     a2d.WaitForRepaint()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(listbox_x+130, listbox_y+15)
-        m.DoubleClick()
-        test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "OK", "OK button should flash")
+        m.DoubleClick({no_wait=true})
+        util.WaitFor(
+          "button flash", function()
+            return a2dtest.OCRScreen({invert=true}):match("OK")
+        end)
     end)
 end)

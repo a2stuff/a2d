@@ -144,6 +144,7 @@ test.Step(
     a2dtest.WaitForAlert({match="file is too large"})
     a2d.DialogOK()
 
+    emu.wait(5)
     a2d.OpenPath("/RAM1/SIZES")
     a2d.SelectAll()
     test.Expect(#a2d.GetSelectedIcons(), 2, "2 files should have fit")

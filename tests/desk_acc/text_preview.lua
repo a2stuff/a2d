@@ -6,7 +6,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 ======================================== ENDCONFIG ]]
 
 a2d.RemoveClockDriverAndReboot() -- to avoid clock repaints
-a2d.ConfigureRepaintTime(2)
+a2d.ConfigureRepaintTime(4)
 
 --[[
   Verify that Escape key exits.
@@ -135,6 +135,7 @@ test.Step(
   "Long file and scrolling",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT", {no_validate=true})
+    emu.wait(10)
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectNotEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
 
@@ -188,6 +189,7 @@ test.Step(
     test.Snap("verify scrolled to top and Fixed mode")
 
     a2d.CloseWindow()
+    emu.wait(10)
 end)
 
 --[[
@@ -201,6 +203,7 @@ test.Step(
   "Touching thumb doesn't cause repaint",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT", {no_validate=true})
+    emu.wait(10)
 
     local up_x, up_y = a2dtest.GetFrontWindowUpScrollArrowCoords()
 
@@ -238,6 +241,7 @@ test.Step(
   "Scroll is proportional",
   function()
     a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT", {no_validate=true})
+    emu.wait(10)
 
     local up_x, up_y = a2dtest.GetFrontWindowUpScrollArrowCoords()
 
@@ -247,6 +251,7 @@ test.Step(
         m.MoveByApproximately(0, 60)
         m.ButtonUp()
     end)
+    a2d.WaitForRepaint()
     test.Snap("verify scrolled to about halfway through file")
 
     local dhr = a2dtest.SnapshotDHRWithoutClock()
@@ -256,7 +261,7 @@ test.Step(
 
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
-    a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled down one line")
+    test.Snap("verify scrolled down one line")
 
     a2d.CloseWindow()
 end)
@@ -322,8 +327,8 @@ test.Step(
     a2d.WaitForRepaint()
     for i = 1, 15 do
       apple2.DownArrowKey()
+      a2d.WaitForRepaint()
     end
-    a2d.WaitForRepaint()
     test.Snap("verify 'with' on last line")
     apple2.DownArrowKey()
     a2d.WaitForRepaint()
@@ -371,6 +376,7 @@ test.Step(
     a2d.OpenPath("/TESTS/PREVIEW/TEXT/MORE.THAN.64K", {no_validate=true})
     emu.wait(20)
     a2d.OASADown()
+    a2d.WaitForRepaint()
 
     local ocr = a2dtest.OCRScreen();
     test.ExpectNotMatch(ocr, "L 283", "file should not be truncated to about 200 lines")

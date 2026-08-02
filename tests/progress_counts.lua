@@ -96,6 +96,5 @@ test.Step(
   function()
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A")
     a2d.CopyPath("/A", "/RAM1", {no_wait=true})
-    emu.wait(20/60)
-    a2dtest.VerifyFilesRemainingCountdown(120, "volume copy")
+    a2dtest.VerifyFilesRemainingCountdown(240, "volume copy")
 end)

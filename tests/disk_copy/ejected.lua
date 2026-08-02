@@ -157,9 +157,10 @@ test.Step(
     local image = s5d2.filename
     s5d2:unload()
 
-    emu.wait(5)
-    test.ExpectMatch(a2dtest.OCRScreen(), "Error when writing block",
-                "block errors should be seen writing")
+    util.WaitFor(
+      "error seen", function()
+        return a2dtest.OCRFrontWindowContent():match("Error when writing block")
+    end)
 
     -- cleanup
     apple2.EscapeKey() -- abort the copy

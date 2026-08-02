@@ -198,7 +198,7 @@ test.Step(
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(3)
+      emu.wait(10)
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -206,7 +206,7 @@ test.Step(
     apple2.Type("S") -- anything (including S) stops
     dhr = apple2.SnapshotDHR()
     for i=1,3 do
-      emu.wait(3)
+      emu.wait(10)
       local new = apple2.SnapshotDHR()
       test.Expect(a2dtest.CompareDHR(dhr, new), "slideshow should be stopped", {snap=true})
     end
@@ -226,7 +226,7 @@ test.Step(
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(3)
+      emu.wait(10)
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -234,14 +234,14 @@ test.Step(
     apple2.Type("D") -- anything stops
     dhr = apple2.SnapshotDHR()
     for i=1,3 do
-      emu.wait(3)
+      emu.wait(10)
       local new = apple2.SnapshotDHR()
       test.Expect(a2dtest.CompareDHR(dhr, new), "slideshow should be stopped", {snap=true})
     end
     apple2.Type("S") -- start
     dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(3)
+      emu.wait(10)
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -262,7 +262,7 @@ test.Step(
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(3)
+      emu.wait(10)
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -272,13 +272,13 @@ test.Step(
     a2d.WaitForRepaint()
     test.Snap("verify backed up one slide")
     a2dtest.ExpectNothingChanged(function()
-        emu.wait(3)
+        emu.wait(10)
     end)
 
     apple2.Type("S") -- start
     dhr = apple2.SnapshotDHR()
     for i=1,3 do
-      emu.wait(3)
+      emu.wait(10)
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new

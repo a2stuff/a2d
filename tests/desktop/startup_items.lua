@@ -15,17 +15,16 @@ test.Step(
 
     util.WaitFor(
       "expected Lorem Ipsum text showing", function()
-        return a2dtest.OCRScreen():match("Lorem ipsum dolor sit amet")
+        return a2dtest.HasOpenWindow() and a2dtest.OCRFrontWindowContent():match("Lorem ipsum dolor sit amet")
     end)
-
-
+    emu.wait(2)
     a2d.CloseWindow()
 
     util.WaitFor(
       "expected Hamlet text showing", function()
-        return a2dtest.OCRScreen():match("To be, or not to be, that is the question")
+        return a2dtest.HasOpenWindow() and a2dtest.OCRFrontWindowContent():match("To be, or not to be, that is the question")
     end)
-
+    emu.wait(2)
     a2d.CloseWindow()
 
     -- cleanup
@@ -64,7 +63,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM", "/A2.DESKTOP/STARTUP.ITEMS")
 
     a2d.CloseAllWindows()
-    a2d.Reboot()
+    a2d.Reboot({no_wait=true})
     apple2.PressOA()
     apple2.PressSA()
     a2d.WaitForDesktopReady()

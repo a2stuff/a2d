@@ -21,6 +21,7 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
     a2d.MoveWindowBy(0, 80)
+    emu.wait(1)
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(src_x, src_y, x+w/2, y+h/2)
     emu.wait(1)

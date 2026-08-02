@@ -56,7 +56,7 @@ test.Variants(
           m.MoveToApproximately(x, y)
           m.DoubleClick()
       end)
-      a2d.WaitForRepaint()
+      emu.wait(5)
     end
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)

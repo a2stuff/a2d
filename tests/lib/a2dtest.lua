@@ -175,6 +175,11 @@ local function ram_s16(addr)
   return apple2.GetRAMDeviceProxy().read_s16(addr)
 end
 
+function a2dtest.HasOpenWindow()
+  local window_id = mgtk.FrontWindow()
+  return window_id ~= 0
+end
+
 function a2dtest.GetFrontWindowID()
   local window_id = mgtk.FrontWindow()
   if window_id == 0 then
@@ -357,6 +362,24 @@ function a2dtest.GetSelectedIconCoords()
   end
   local icon = icons[1]
   return icon.x+10, icon.y+5
+end
+
+function a2dtest.GetSelectedIconWindowID()
+  local icons = a2d.GetSelectedIcons()
+  if #icons == 0 then
+    error("Selection is empty", 2)
+  end
+  local icon = icons[1]
+  return icon.window
+end
+
+function a2dtest.IsSelectionInFrontWindow()
+  local icons = a2d.GetSelectedIcons()
+  if #icons == 0 then
+    error("Selection is empty", 2)
+  end
+  local icon = icons[1]
+  return icon.window == a2dtest.GetFrontWindowID()
 end
 
 --------------------------------------------------

@@ -616,6 +616,7 @@ test.Step(
     enabled(ocr, "Close  ")
     enabled(ocr, "Close All")
     apple2.EscapeKey()
+    a2d.WaitForRepaint()
 end)
 
 test.Step(

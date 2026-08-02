@@ -165,7 +165,7 @@ test.Step(
     a2d.CycleWindows()
     local name = a2dtest.GetFrontWindowTitle()
     a2d.CloseWindow()
-    emu.wait(1)
+    emu.wait(5)
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), name, "only closed window should be selected")
 end)
 

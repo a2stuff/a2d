@@ -128,6 +128,7 @@ MaxIconsTest(
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "HUNDRED.FILES", "window should be active")
     apple2.DownArrowKey() -- select first
+    a2d.WaitForRepaint()
     a2d.CopySelectionTo("/RAM1", nil, {no_wait=true})
     a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()

@@ -4,6 +4,10 @@
 
   ============================================================]]
 
+-- May need tweaking between MAME releases
+local TIME_SCALE = 2
+
+
 local a2d = {}
 
 local util = require("util")
@@ -117,8 +121,11 @@ end
 
 local repaint_time = 5
 
-function a2d.WaitForRepaint()
-  emu.wait(repaint_time)
+function a2d.WaitForRepaint(opt_multiplier)
+  if opt_multiplier == nul then
+    opt_multiplier = 1
+  end
+  emu.wait(opt_multiplier * repaint_time * TIME_SCALE)
 end
 
 function a2d.ConfigureRepaintTime(s)
@@ -231,7 +238,7 @@ function a2d.InvokeMenuItem(mth, nth, options)
   apple2.ReturnKey()
 
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    emu.wait(5 * TIME_SCALE)
   end
 end
 
@@ -276,12 +283,12 @@ end
 
 function a2d.OpenSelection()
   a2d.OAShortcut("O")
-  a2d.WaitForRepaint() -- TODO: This is an extra wait - is it needed?
+  a2d.WaitForRepaint(4) -- TODO: This is an extra wait - is it needed?
 end
 
 function a2d.OpenSelectionAndCloseCurrent()
   a2d.OASADown()
-  a2d.WaitForRepaint()
+  a2d.WaitForRepaint(4)
 end
 
 local function CheckSelectionName(name, options)
@@ -349,14 +356,14 @@ end
 
 function a2d.SelectAll()
   a2d.OAShortcut("A")
-  emu.wait(2)
+  emu.wait(2 * TIME_SCALE)
 end
 
 function a2d.CloseWindow(options)
   options = default_options(options)
   a2d.OAShortcut("W", options)
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    emu.wait(2 * TIME_SCALE)
   end
 end
 
@@ -364,6 +371,7 @@ function a2d.CloseAllWindows()
   a2d.OASAShortcut("W")
   util.WaitFor("all windows to close",
                function() return mgtk.FrontWindow() == 0 end)
+  a2d.WaitForRepaint()
 end
 
 -- additional option: {leave_parent=true}
@@ -388,7 +396,7 @@ function a2d.OpenPath(path, options)
   end
   for index,segment in ipairs(segments) do
     a2d.SelectAndOpen(segment, options)
-    emu.wait(1)
+    emu.wait(1 * TIME_SCALE)
 
     if index ~= #segments or not options.no_validate then
       local top = mgtk.GetWindowName(assert(mgtk.FrontWindow()))
@@ -399,7 +407,7 @@ function a2d.OpenPath(path, options)
     end
   end
   if not options.no_wait then
-    emu.wait(1)
+    emu.wait(1 * TIME_SCALE)
   end
 end
 
@@ -442,7 +450,7 @@ function a2d.DialogOK(options)
 
   apple2.ReturnKey()
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    a2d.WaitForRepaint(4)
   end
 end
 
@@ -485,7 +493,7 @@ function a2d.DuplicateSelection(newname, options)
     error("DuplicateSelection: nil passed as newname", options.level)
   end
   a2d.OAShortcut("D")
-  emu.wait(10) -- same as CopySelectionTo
+  emu.wait(10 * TIME_SCALE) -- same as CopySelectionTo
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
@@ -505,9 +513,9 @@ end
 function a2d.DeleteSelection()
   a2d.OADelete()
   -- TODO: Wait for alert
-  emu.wait(5) -- wait for enumeration
+  emu.wait(5 * TIME_SCALE) -- wait for enumeration
   a2d.DialogOK() -- confirm delete
-  emu.wait(5) -- wait for delete
+  emu.wait(5 * TIME_SCALE) -- wait for delete
 end
 
 function a2d.DeletePath(path, options)
@@ -526,7 +534,7 @@ function a2d.CreateFolder(path, options)
       a2d.OpenPath(base, options)
     end
   end
-  emu.wait(1) -- flaky without this
+  emu.wait(1 * TIME_SCALE) -- flaky without this
   a2d.OAShortcut("N") -- File > New Folder
   a2d.ClearTextField()
   apple2.Type(name)
@@ -546,7 +554,7 @@ function a2d.FormatVolume(name, opt_new_name)
   -- TODO: WaitForAlert here (layering violation!)
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
-  emu.wait(5) -- I/O
+  emu.wait(5 * TIME_SCALE) -- I/O
 end
 
 function a2d.EraseVolume(name, opt_new_name, options)
@@ -561,7 +569,7 @@ function a2d.EraseVolume(name, opt_new_name, options)
   -- TODO: WaitForAlert here (layering violation!)
   a2d.WaitForRepaint()
   a2d.DialogOK() -- confirm overwrite
-  emu.wait(5) -- I/O
+  emu.wait(5 * TIME_SCALE) -- I/O
 end
 
 function a2d.CopyDisk(opt_path)
@@ -602,7 +610,7 @@ function a2d.AddShortcut(path, options)
   end
 
   a2d.DialogOK()
-  a2d.WaitForRepaint() -- extra, for I/O
+  emu.wait(5 * TIME_SCALE) -- I/O
 end
 
 function a2d.GetFilePickerCurrentPath()
@@ -611,7 +619,7 @@ end
 
 function a2d.NavigateFilePickerTo(path, opt_file, options)
   apple2.ControlKey("D") -- Drives
-  emu.wait(2)
+  emu.wait(2 * TIME_SCALE)
   for segment in path:gmatch("([^/]+)") do
     apple2.PressOA()
     apple2.Type(segment)
@@ -647,7 +655,7 @@ function a2d.CopySelectionTo(path, is_volume, options)
   a2d.DialogOK(options)
 
   if not options.no_wait then
-    emu.wait(10)
+    emu.wait(10 * TIME_SCALE)
   end
 end
 
@@ -661,7 +669,7 @@ function a2d.CheckAllDrives(options)
   options = default_options(options)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES, options)
   if not options.no_wait then
-    emu.wait(10)
+    emu.wait(10 * TIME_SCALE)
   end
 end
 
@@ -745,10 +753,11 @@ end
 
 -- Reboot via menu equivalent of PR#7 (or PR#5 on IIc+)
 function a2d.Reboot(options)
+  options = default_options(options)
   if manager.machine.system.name:match("^apple2cp") then
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 2) -- PR#5 (list is 6,5,...)
+    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 2, options) -- PR#5 (list is 6,5,...)
   else
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1) -- startup volume index
+    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1, options) -- startup volume index
   end
   apple2.ResetMouse()
 end
@@ -781,9 +790,9 @@ function a2d.WaitForDesktopShowing(options, level)
 end
 
 function a2d.WaitForDesktopReady(options)
-  emu.wait(1) -- Don't check too soon and see old module
+  emu.wait(1 * TIME_SCALE) -- Don't check too soon and see old module
   a2d.WaitForDesktopShowing(options, 1)
-  emu.wait(5) -- TODO: Something better here
+  emu.wait(5 * TIME_SCALE) -- TODO: Something better here
   -- TODO: Some sort of assertion here
 end
 
@@ -852,14 +861,25 @@ function a2d.InMouseKeysMode(func)
   end
 end
 
-function a2d.MouseKeysDoubleClick()
-  a2d.MouseKeysClick()
+function a2d.MouseKeysDoubleClick(options)
+  options = default_options(options)
+
+  apple2.SpaceKey()
   emu.wait(10/60)
-  a2d.MouseKeysClick()
+  apple2.SpaceKey()
+
+  if not options.no_wait then
+    a2d.WaitForRepaint()
+  end
 end
 
-function a2d.MouseKeysClick()
+function a2d.MouseKeysClick(options)
+  options = default_options(options)
   apple2.SpaceKey()
+
+  if not options.no_wait then
+    emu.wait(1) -- let double-click timer expire
+  end
 end
 
 function a2d.MouseKeysOAClick()
@@ -868,6 +888,7 @@ function a2d.MouseKeysOAClick()
   a2d.MouseKeysClick()
   emu.wait(1/60)
   apple2.ReleaseOA()
+  a2d.WaitForRepaint()
 end
 
 function a2d.MouseKeysUp(n)
@@ -943,7 +964,7 @@ function a2d.MoveWindowBy(x, y, options)
   a2d.MouseKeysMoveByApproximately(x,y)
   apple2.ReturnKey()
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    a2d.WaitForRepaint(2)
   end
 end
 
@@ -971,6 +992,7 @@ function a2d.Drag(src_x, src_y, dst_x, dst_y, options)
   a2d.InMouseKeysMode(function(m)
       m.MoveToApproximately(src_x, src_y)
       m.ButtonDown()
+      a2d.WaitForRepaint()
       m.MoveToApproximately(dst_x, dst_y)
 
       if options and options.oa_drop then
@@ -980,7 +1002,9 @@ function a2d.Drag(src_x, src_y, dst_x, dst_y, options)
         apple2.PressSA()
       end
 
+      emu.wait(1)
       m.ButtonUp()
+      emu.wait(1)
 
       if options and options.oa_drop then
         apple2.ReleaseOA()

@@ -43,7 +43,6 @@ test.Step(
     apple2.EscapeKey()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    emu.wait(1)
     a2d.OpenMenu(a2d.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "Edit a Shortcut...", "Edit should be enabled")
@@ -89,7 +88,6 @@ test.Step(
     apple2.EscapeKey()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {list_only=true})
-    emu.wait(1)
     a2d.OpenMenu(a2d.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "Edit a Shortcut...", "Edit should be enabled")
@@ -493,6 +491,7 @@ test.Step(
 
     a2d.OAShortcut("5")
     a2d.DialogOK()
+    emu.wait(5)
     a2dtest.ExpectAlertNotShowing()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)

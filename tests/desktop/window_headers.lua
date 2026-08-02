@@ -57,7 +57,14 @@ test.Step(
   "Available space",
   function()
     function GetUsedFree()
-      local _, _, used, free = a2dtest.OCRScreen():find(
+      local ocr
+      util.WaitFor(
+        "used/free ready", function()
+          ocr = a2dtest.OCRFrontWindowContent()
+          return ocr:match("Item.*available")
+      end)
+
+      local _, _, used, free = ocr:find(
         "Items? +(%d+[,.]?%d*)K in disk + (%d+[,.]?%d*)K available")
       used = assert(used):gsub(",", "")
       free = assert(free):gsub(",", "")

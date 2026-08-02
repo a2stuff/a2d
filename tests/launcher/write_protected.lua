@@ -19,7 +19,7 @@ test.Step(
     util.WaitFor(
       "write protected label",
       function()
-        return a2dtest.OCRScreen():match("Write protected: +Yes")
+        return a2dtest.OCRFrontWindowContent():match("Write protected: +Yes")
     end)
     apple2.EscapeKey() -- cancel enumeration
     emu.wait(5)

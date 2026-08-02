@@ -280,20 +280,27 @@ test.Variants(
           m.ButtonUp()
         else
           apple2.PressSA()
+          emu.wait(1)
           m.ButtonUp()
+          emu.wait(1)
           apple2.ReleaseSA()
         end
 
     end)
-    emu.wait(0.25)
+
+    util.WaitFor(
+      "done enumeration", function()
+        return a2dtest.OCRFrontWindowContent():match("Files remaining")
+    end)
 
     if action == "move" then
-      test.ExpectMatch(a2dtest.OCRScreen(), "Moving: 2 files", "correct count should be shown")
+      test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Moving: 2 files", "correct count should be shown")
     else
-      test.ExpectMatch(a2dtest.OCRScreen(), "Copying: 4 files", "correct count should be shown")
+      test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Copying: 4 files", "correct count should be shown")
     end
 
-    emu.wait(2)
+    emu.wait(10)
+
     -- cleanup
     a2d.EraseVolume("RAM1")
 end)
@@ -1523,7 +1530,7 @@ test.Step(
     a2dtest.WaitForAlert({match="already exists"})
     apple2.Type("Y")
     a2d.DialogOK()
-    emu.wait(1)
+    emu.wait(10)
 
     a2d.SelectPath("/RAM1/PRODOS")
 
