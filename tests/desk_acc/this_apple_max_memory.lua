@@ -15,5 +15,5 @@ test.Step(
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
     emu.wait(5)
-    test.Expect(a2dtest.OCRFrontWindowContent():match("Memory: 49,216K"), "memory count should be 49,216K")
+    test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Memory: 49,216K", "memory count should be 49,216K")
 end)
