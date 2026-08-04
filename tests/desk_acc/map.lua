@@ -50,3 +50,42 @@ test.Step(
     a2dtest.MultiSnap(60, "verify only single indicator position")
     a2d.CloseWindow()
 end)
+
+test.Step(
+  "Search is case insensitive",
+  function()
+    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP", {no_validate=true})
+    emu.wait(1)
+
+    function TryString(search, match)
+      a2d.ClearTextField()
+      apple2.Type(search)
+      apple2.ReturnKey()
+      a2d.WaitForRepaint()
+      apple2.Type("    ") -- ensure OCR doesn't get confused by caret
+      a2d.WaitForRepaint()
+      test.ExpectMatch(a2dtest.OCRFrontWindowContent(), match,
+                       string.format("should have matched %q", match))
+    end
+
+    TryString("VAN", "Vancouver")
+    TryString("VIC", "Victoria")
+    TryString("van", "Vancouver")
+    TryString("vic", "Victoria")
+    TryString("VaNcOuVeR", "Vancouver")
+    TryString("ViCtOrIa", "Victoria")
+
+    a2d.ClearTextField()
+    apple2.Type("VICTORIAX")
+    apple2.ReturnKey()
+    a2d.WaitForRepaint()
+    apple2.Type("    ") -- ensure OCR doesn't get confused by caret
+    a2d.WaitForRepaint()
+    test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "VICTORIAX", "should not have matched")
+
+    -- and hasn't crashed
+    TryString("vic", "Victoria")
+
+    -- clean up
+    a2d.CloseWindow()
+end)

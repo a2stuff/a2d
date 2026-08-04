@@ -148,6 +148,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Map
   * Fix overlapping labels in some locales.
   * Reduce cursor flickering when blinking position indicator.
+  * Search by prefix, and show match with mixed case.
 * Image Preview
   * Improve single hires file preview quality.
   * Support AXE PACKER image files
