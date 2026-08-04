@@ -94,6 +94,27 @@ loop:   lda     src,x
 .define TO_LOWER(char) (char | %00100000)
 .endif
 
+.macro UPPERCASE_CHAR char
+    .if 'a' <= char && char <= 'z'
+        .byte   char & %11011111
+    .else
+        .byte   char
+    .endif
+.endmacro
+
+.macro UPPERCASE_PASCAL_STRING str, res
+        .local  data
+        .local  end
+        .byte   end - data
+data:
+        .repeat .strlen(str), i
+        UPPERCASE_CHAR {.strat(str, i)}
+        .endrepeat
+end:
+    .ifnblank res
+        .res    res - (end - data), 0
+    .endif
+.endmacro
 
 ;;; ============================================================
 ;;; Padding

@@ -736,21 +736,6 @@ blink_counter:
 
 ;;; ============================================================
 
-.macro UPPERCASE_CHAR char
-    .if 'a' <= char && char <= 'z'
-        .byte   char & CASE_MASK
-    .else
-        .byte   char
-    .endif
-.endmacro
-
-.macro UPPERCASE_PASCAL_STRING string
-        .byte   .strlen(string)
-        .repeat .strlen(string), i
-        UPPERCASE_CHAR {.strat(string, i)}
-        .endrepeat
-.endmacro
-
         loc_count .set 0
 .macro DEFINE_LOCATION name, lat, long
         .assert .strlen(name) < kBufSize, error, .sprintf("string too long: '%s' (%d)", name, .strlen(name))
