@@ -347,8 +347,13 @@ left:   .word   69
 base:   .word   16
 .endparams
 
-farg:   .byte   $00,$00,$00,$00,$00,$00
-ftmp:   .byte   $00,$00,$00,$00,$00,$00
+;;; The FAC serves as the "input" register of the calculator.
+
+;;; "Accumulator" register of the calculator
+faccum: .byte   $00,$00,$00,$00,$00,$00
+
+;;; "Constant" register of the calculator
+fconst: .byte   $00,$00,$00,$00,$00,$00
 
 .params title_bar_bitmap      ; Params for MGTK::PaintBits
         DEFINE_POINT viewloc, 115, AS_WORD -9
@@ -486,8 +491,8 @@ intl_deci_sep:  .byte   0
         copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
         ROM_CALL ZERO_FAC       ; FAC = 0
-        ldxy    #farg
-        ROM_CALL ROUND          ; `farg` = FAC
+        ldxy    #faccum
+        ROM_CALL ROUND          ; `faccum` = FAC
 
         tsx
         stx     saved_stack
@@ -730,8 +735,8 @@ miss:   RETURN  C=0
     IF A = #'C'                 ; Clear?
         CALL    DepressButton, XY=#btn_c::port
         ROM_CALL ZERO_FAC       ; FAC = 0
-        ldxy    #farg
-        ROM_CALL ROUND          ; `farg` = FAC
+        ldxy    #faccum
+        ROM_CALL ROUND          ; `faccum` = FAC
         copy8   #'=', calc_op
         lda     #0
         sta     calc_p
@@ -986,8 +991,8 @@ empty:  inc     calc_l
         ;; Do the operation
 
         ;; Save FAC for repeated ops, e.g. the "2" in "1 + 2 = ="
-        ldxy    #ftmp
-        ROM_CALL ROUND
+        ldxy    #fconst
+        ROM_CALL ROUND          ; `fconst` = FAC
 
         ldx     calc_op         ; X = pending op
         pla                     ; passed op
@@ -1005,16 +1010,16 @@ empty:  inc     calc_l
         CLEAR_BIT7_FLAG calc_r
     END_IF
 
-        lday    #farg
+        lday    #faccum
 
     IF X = #'+'
-        ROM_CALL FADD           ; FAC = `farg` + FAC
+        ROM_CALL FADD           ; FAC = `faccum` + FAC
     ELSE_IF X = #'-'
-        ROM_CALL FSUB           ; FAC = `farg` - FAC
+        ROM_CALL FSUB           ; FAC = `faccum` - FAC
     ELSE_IF X = #'*'
-        ROM_CALL FMULT          ; FAC = `farg` * FAC
+        ROM_CALL FMULT          ; FAC = `faccum` * FAC
     ELSE_IF X = #'/'
-        ROM_CALL FDIV           ; FAC = `farg` / FAC
+        ROM_CALL FDIV           ; FAC = `faccum` / FAC
     ELSE_IF X = #'='
         ldy     calc_g
       IF ZERO
@@ -1022,14 +1027,15 @@ empty:  inc     calc_l
       END_IF
     END_IF
 
-        ldxy    #farg           ; after the FP op is done
-        ROM_CALL ROUND          ; `farg` = FAC
+        ldxy    #faccum         ; after the FP op is done
+        ROM_CALL ROUND          ; `faccum` = FAC
+
         ROM_CALL FOUT           ; output as null-terminated string to `FBUFFR`
         ;; NOTE: `FOUT` trashes the FAC
 
         ;; Restore FAC for repeated op, e.g. "2" in "1 + 2 = ="
-        lday    #ftmp
-        ROM_CALL LOAD_FAC
+        lday    #fconst
+        ROM_CALL LOAD_FAC       ; FAC = `fconst`
 
         ;; ----------------------------------------
         ;; Update the display with result in `FBUFFR`

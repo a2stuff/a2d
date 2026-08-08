@@ -475,10 +475,13 @@ left:   .word   69 + kBasicOffset
 base:   .word   16
 .endparams
 
-;;; TODO: Rename `farg` to `faccum`
-;;; TODO: Rename `ftmp` to `fconst`
-farg:   .byte   $00,$00,$00,$00,$00,$00
-ftmp:   .byte   $00,$00,$00,$00,$00,$00
+;;; The FAC serves as the "input" register of the calculator.
+
+;;; "Accumulator" register of the calculator
+faccum: .byte   $00,$00,$00,$00,$00,$00
+
+;;; "Constant" register of the calculator
+fconst: .byte   $00,$00,$00,$00,$00,$00
 
 grafport:       .tag    MGTK::GrafPort
 
@@ -1030,34 +1033,34 @@ ret:   rts
       END_IF
 
       IF bit calc_r : NC
-        ;; not repeating yet - save FAC
-        ldxy    #ftmp
-        ROM_CALL ROUND          ; `ftmp` = FAC
+        ;; not repeating yet - save "constant" (e.g. `1+2===`)
+        ldxy    #fconst
+        ROM_CALL ROUND          ; `fconst` = FAC
       ELSE
-        ;; repeating - use previous FAC
-        lday    #ftmp
-        ROM_CALL LOAD_FAC       ; FAC = `ftmp`
+        ;; repeating - use previous "constant" (e.g. in `1+2===`)
+        lday    #fconst
+        ROM_CALL LOAD_FAC       ; FAC = `fconst`
       END_IF
 
         ;; perform pending op
-        lday    #farg
+        lday    #faccum
         ldx     calc_op
       IF X = #Function::op_add
-        ROM_CALL FADD           ; FAC = (Y,A) + FAC
+        ROM_CALL FADD           ; FAC = `faccum` + FAC
       ELSE_IF X = #Function::op_subtract
-        ROM_CALL FSUB           ; FAC = (Y,A) - FAC
+        ROM_CALL FSUB           ; FAC = `faccum` - FAC
       ELSE_IF X = #Function::op_multiply
-        ROM_CALL FMULT          ; FAC = (Y,A) * FAC
+        ROM_CALL FMULT          ; FAC = `faccum` * FAC
       ELSE_IF X = #Function::op_divide
-        ROM_CALL FDIV           ; FAC = (Y,A) / FAC
+        ROM_CALL FDIV           ; FAC = `faccum` / FAC
       ELSE_IF X = #Function::op_power
-        ROM_CALL LOAD_ARG       ; ARG = (Y,A)
+        ROM_CALL LOAD_ARG       ; ARG = `faccum`
         ROM_CALL FPWRT          ; FAC = ARG ^ FAC
       END_IF
 
         ;; store result
-        ldxy    #farg
-        ROM_CALL ROUND          ; `farg` = FAC
+        ldxy    #faccum
+        ROM_CALL ROUND          ; `faccum` = FAC
 
     ELSE
         ;; --------------------------------------------------
@@ -1067,7 +1070,7 @@ ret:   rts
         ;; If the last entry was not an explicit '=' recurse and do an
         ;; implicit '=' here. We want the same "constant" behavior for
         ;; `1+2+++` and `1+2===` so we substitute our flag in to make
-        ;; sure the constant (`ftmp` ) gets initialized.
+        ;; sure the constant (`fconst` ) gets initialized.
         copy8   calc_o, calc_r
         CALL    DoOp, A=#Function::equals
 
@@ -1083,8 +1086,8 @@ ret:   rts
         pla                     ; A = new op
         sta     calc_op
 
-        ldxy    #farg
-        ROM_CALL ROUND          ; `farg` = FAC
+        ldxy    #faccum
+        ROM_CALL ROUND          ; `faccum` = FAC
 
         jmp     ResetBuffer1AndState
     END_IF
