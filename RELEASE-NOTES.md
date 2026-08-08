@@ -139,7 +139,9 @@ Project Page: https://github.com/a2stuff/a2d
   * Support repeating last operation.
   * Fix button labels in BG builds.
   * Reduce cursor flickering.
-* Sci.Calc: Fix ASIN/ACOS for 1/-1.
+* Sci.Calc
+  * Fix ASIN/ACOS for 1/-1.
+  * Fix repeated operator presses.
 * New Toy: Minesweeper.
 * New Screen Saver: Maze.
 * Text Preview: Show first 64K of larger files correctly.

@@ -379,6 +379,7 @@ calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
 calc_l: .byte   $00             ; input length
 calc_r: .byte   $00             ; result? (i.e. last op was '=')
+calc_o: .byte   $00             ; last was operator (+-*/^)
 
 kMaxEntryLength = 10
 
@@ -474,6 +475,8 @@ left:   .word   69 + kBasicOffset
 base:   .word   16
 .endparams
 
+;;; TODO: Rename `farg` to `faccum`
+;;; TODO: Rename `ftmp` to `fconst`
 farg:   .byte   $00,$00,$00,$00,$00,$00
 ftmp:   .byte   $00,$00,$00,$00,$00,$00
 
@@ -569,6 +572,7 @@ init:
         sta     calc_g
         sta     calc_l
         sta     calc_r
+        sta     calc_o
 
 .proc CopyToB1
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
@@ -839,6 +843,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         sta     calc_e
         sta     calc_n
         sta     calc_r
+        sta     calc_o
         jmp     ResetBuffersAndDisplay
     END_IF
 
@@ -943,6 +948,9 @@ ret:   rts
         pha
         lda     calc_g
     IF NOT_ZERO
+        CLEAR_BIT7_FLAG calc_r
+        CLEAR_BIT7_FLAG calc_o
+
         ;; Parse `text_buffer1` into FAC.
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
@@ -1055,30 +1063,31 @@ ret:   rts
         ;; --------------------------------------------------
         ;; Infix Operators
 
-        ldx     calc_op
-        sta     calc_op
-      IF bit calc_r : NC AND X <> #Function::equals
-        ;; perform pending op
-        lday    #farg
-       IF X = #Function::op_add
-        ROM_CALL FADD           ; FAC = (Y,A) + FAC
-       ELSE_IF X = #Function::op_subtract
-        ROM_CALL FSUB           ; FAC = (Y,A) - FAC
-       ELSE_IF X = #Function::op_multiply
-        ROM_CALL FMULT          ; FAC = (Y,A) * FAC
-       ELSE_IF X = #Function::op_divide
-        ROM_CALL FDIV           ; FAC = (Y,A) / FAC
-       ELSE_IF X = #Function::op_power
-        ROM_CALL LOAD_ARG       ; ARG = (Y,A)
-        ROM_CALL FPWRT          ; FAC = ARG ^ FAC
-       END_IF
-      END_IF
+      IF bit calc_r : NC
+        ;; If the last entry was not an explicit '=' recurse and do an
+        ;; implicit '=' here. We want the same "constant" behavior for
+        ;; `1+2+++` and `1+2===` so we substitute our flag in to make
+        ;; sure the constant (`ftmp` ) gets initialized.
+        copy8   calc_o, calc_r
+        CALL    DoOp, A=#Function::equals
 
-        ;; store result
+        ;; ... and update flags for next time.
+        SET_BIT7_FLAG calc_o
+      ELSE
+        ;; Start of a fresh repeat cycle.
+        CLEAR_BIT7_FLAG calc_o
+      END_IF
+        ;; Either way, no longer an explicit '='
+        CLEAR_BIT7_FLAG calc_r
+
+        pla                     ; A = new op
+        sta     calc_op
+
         ldxy    #farg
         ROM_CALL ROUND          ; `farg` = FAC
-    END_IF
 
+        jmp     ResetBuffer1AndState
+    END_IF
         ;; --------------------------------------------------
         ;; Done with operation, result is in FAC
 
@@ -1136,6 +1145,7 @@ ret:   rts
     ELSE
         CLEAR_BIT7_FLAG calc_r
     END_IF
+        CLEAR_BIT7_FLAG calc_o
 
         FALL_THROUGH_TO ResetBuffer1AndState
 .endproc ; DoOp

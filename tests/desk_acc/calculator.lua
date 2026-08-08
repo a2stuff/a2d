@@ -155,6 +155,11 @@ test.Variants(
     ExpectExpression("1/2=", "0.5")
     ExpectExpression("0-.5=", "-0.5")
 
+    ExpectExpression("6", "6")
+    ExpectExpression("6/", "6")
+    ExpectExpression("6/2", "2")
+    ExpectExpression("6/2=", "3")
+
     a2d.CloseWindow()
 end)
 
@@ -238,7 +243,7 @@ end)
 
 ]]
 test.Step(
-  "Sci.Calc - Trig functions",
+  "Sci.Calc - functions",
   function()
     a2d.OpenPath("/A2.DESKTOP/EXTRAS/SCI.CALC", {no_validate=true})
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
@@ -259,21 +264,32 @@ test.Step(
       end)
     end
 
-    function Sin() Click(30, 10) end
-    function ASin() Click(65, 10) end
-    function Cos() Click(30, 25) end
-    function ACos() Click(65, 25) end
-    function Tan() Click(30, 40) end
-    function ATan() Click(65, 40) end
-    function Neg() Click(30, 90) end
+    local col1, col2 = 30, 65
+    local row1, row2, row3, row4, row5, row6 = 10, 26, 42, 58, 74, 90
 
-    -- Trig and infix operators
+    function Sin()  Click(col1, row1) end
+    function ASin() Click(col2, row1) end
+    function Cos()  Click(col1, row2) end
+    function ACos() Click(col2, row2) end
+    function Tan()  Click(col1, row3) end
+    function ATan() Click(col2, row3) end
+    function Pow()  Click(col1, row4) end
+    function Log()  Click(col2, row4) end
+    function SqRt() Click(col1, row5) end
+    function Exp()  Click(col2, row5) end
+    function Neg()  Click(col1, row6) end
+    function Inv()  Click(col1, row6) end
+
+    -- Functions and infix operators
 
     apple2.Type("1+2") Sin() apple2.Type("=")
     ExpectMatch("1.034%d+")
 
     apple2.Type("1") Sin() apple2.Type("+2=")
     ExpectMatch("2.017%d+")
+
+    apple2.Type("1+1=") SqRt()
+    ExpectMatch("1.41%d+")
 
     -- Trig basics
 
@@ -295,7 +311,7 @@ test.Step(
     apple2.Type("89") Tan() ATan()
     ExpectMatch("89.?%d*")
 
-    -- Discontinuities
+    -- Trig Discontinuities
 
     apple2.Type("1") ASin()
     ExpectMatch("90")
@@ -341,6 +357,33 @@ test.Variants(
     ExpectExpression("64/2==+1", "1")
     ExpectExpression("64/2==+1=", "17")
     ExpectExpression("64/2==+1==", "18")
+
+    ExpectExpression("1+2", "2")
+    ExpectExpression("1+2+", "3")
+    ExpectExpression("1+2++", "5")
+    ExpectExpression("1+2+++", "7")
+
+    ExpectExpression("1+2=", "3")
+    ExpectExpression("1+2==", "5") -- repeats with last input as const
+    ExpectExpression("1+2+", "3")
+    ExpectExpression("1+2++", "5") -- repeats with last input as const
+    ExpectExpression("1+2=+", "3") -- does not repeat
+    ExpectExpression("1+2=+1", "1") -- start of next input, does not repeat
+    ExpectExpression("1+2=+1=", "4")
+    ExpectExpression("1+2-", "3")
+    ExpectExpression("1+2-1", "1") -- start of next input
+    ExpectExpression("1+2-1=", "2") -- start of next input, does not repeat
+
+    -- Current Calculator behavior, not sure if these are by design:
+    ExpectExpression("1+-", "2")
+    ExpectExpression("1+-2=", "0")
+
+    -- And this deviates, but the behavior is nonsensical
+    if idx == 1 then
+      ExpectExpression("1+2=++", "5")
+    else
+      ExpectExpression("1+2=++", "6")
+    end
 
     a2d.CloseWindow()
 end)
