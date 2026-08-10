@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "Schrijven...   "
 .define res_string_label_status_reading "Lezen...    "
 .define res_string_unknown "Onbekend"
-.define res_string_label_select_quit "Selecteer %s in het %s-menu (%c%c) om terug te keren naar het bureaublad."
+.define res_string_label_select_quit "Selecteer Stop in het Archief-menu (\x1FQ) om terug te keren naar het bureaublad."
 .define res_string_label_blocks_read "Blokken lezen: "
 .define res_string_label_blocks_written "Blokken geschreven: "
 .define res_string_label_blocks_to_transfer "Blokken om over te dragen: "

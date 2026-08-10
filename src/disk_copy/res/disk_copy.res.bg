@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "zapiswane...   "
 .define res_string_label_status_reading "~etene...    "
 .define res_string_unknown "neizwesten"
-.define res_string_label_select_quit "izberi %s ot men`to %s (%c%c), za da se wyrne{ kym rabotniq plot."
+.define res_string_label_select_quit "izberi izhod ot men`to fajl (\x1FQ), za da se wyrne{ kym rabotniq plot."
 .define res_string_label_blocks_read "pro~eteni blokowe: "
 .define res_string_label_blocks_written "zapisani blokowe: "
 .define res_string_label_blocks_to_transfer "ob}o blokowe: "

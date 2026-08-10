@@ -43,7 +43,7 @@ placeholder_flag:
         kMaxStringLength = 44
 
         ;; Always leave enough for a leading and trailing space
-buf:    .byte   .sprintf("%c%s%c", kPadChar, res_string_message_placeholder, kPadChar)
+buf:    .byte   kPadChar, res_string_message_placeholder, kPadChar
         .res    kMaxStringLength - (* - buf),0
 
 font:   .incbin "../../res/fonts/Athens"
