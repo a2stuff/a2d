@@ -672,6 +672,7 @@ str_prodos_version:
         kVersionStrMajor = res_const_prodos_version_pattern_offset1
         kVersionStrMinor = res_const_prodos_version_pattern_offset2
         kVersionStrPatch = res_const_prodos_version_pattern_offset3
+        .assert kVersionStrMinor+2 = kVersionStrPatch && .strlen(res_string_prodos_version_pattern) = kVersionStrPatch, error, .sprintf("pattern will not truncate correctly: '%s'", res_string_prodos_version_pattern)
 
 str_aux:
         PASCAL_STRING res_string_aux_slot
