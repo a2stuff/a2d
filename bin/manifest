@@ -153,7 +153,7 @@ if [[ -z "$no_sample_media" ]]; then
     disposition="fonts"
 
     # MGTK Fonts
-    for l in en fr de it es pt sv da nl bg; do
+    for l in en fr de it es pt sv da nl bg he; do
       emit add_file $disposition "out/System.$l.font"      $mediafnt "System.$l"      070000
       emit add_file $disposition "out/Monaco.$l.font"      $mediafnt "Monaco.$l"      070000
     done

@@ -1,0 +1,12 @@
+.define res_string_128k_required "wiqtdl ick ywn lr ugl\r\rxzei xge`n e` IIE-e 128K yexc"
+.define res_string_copying_to_ramcard "...RAMCARD-l APPLE II DESKTOP z` wizrn"
+.define res_string_esc_to_cancel ".lhal ick ESC ywd"
+.define res_string_label_tip_skip_copying ".dlrtdd zra uegl \x0F\x1B\x41\x18\x0E z` wfgd ,RAMCARD-l dwzrd lr blcl ick"
+.define res_string_label_copying ":RAMCARD qihxkl dwzrd "
+.define res_string_prompt_ram_not_empty ".lhal ick ESC e` jiyndl ick RETURN ywd .qxdii RAM/"
+.define res_string_prompt_insert_source ".lhal ick ESC e` jiyndl ick RETURN lr ugle xewnd wqic z` qpkd"
+.define res_string_prompt_ramcard_full ".jiyndl ick RETURN lr ugl .RAMCARD-a mewn witqn oi`"
+.define res_string_error_prefix "dwzrdd zra "
+.define res_string_error_suffix "$ d`iby drxi` "
+.define res_string_prompt_copy_not_completed ".jiyndl ick RETURN lr ugl .mlyed `l wzerd"
+.define res_char_monitor_shortcut 'M'

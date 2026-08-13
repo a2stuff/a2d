@@ -1,0 +1,7 @@
+.define res_string_select_disk ":DOS 3.3 wqic xga"
+.define res_string_slot_drive_pattern "# opek # uixg"
+.define res_const_slot_drive_pattern_offset1 8
+.define res_const_slot_drive_pattern_offset2 1
+.define res_string_disk_volume_prefix "wqic gtp "
+.define res_string_button_import "`eai"
+.define res_string_alert_catalog_could_not_be_read ".belhwd z` `exwl did ozip `l"

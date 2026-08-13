@@ -1,0 +1,4 @@
+.define res_string_col_name "NAME"
+.define res_string_col_type "TYPE"
+.define res_string_col_blocks "BLOCKS"
+.define res_string_col_modified "MODIFIED"

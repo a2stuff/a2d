@@ -9,7 +9,7 @@ package Transcode;
 #  print Transcode::transcode($dir, $lang, $string);
 #
 #   $dir: "encode" (Unicode to Apple) or "decode" (Apple to Unicode)
-#   $lang: "fr", "de", "it", "es", "da", "sv", "pt", "nl", "bg"
+#   $lang: "fr", "de", "it", "es", "da", "sv", "pt", "nl", "bg", "he"
 
 use strict;
 use warnings;
@@ -66,6 +66,13 @@ sub transcode($$$) {
   } elsif ($lang eq 'bg') { # Based on Pravetz 8A (KOI-7 N2 Bulgarian variant)
     if ($decode) { tr/`abcdefghijklmnopqrstuvwxyz{|}~/ЮАБЦДЕФГХИЙКЛМНОПЯРСТУЖВЬЪЗШЭЩЧ/; }
     else {         tr/ЮАБЦДЕФГХИЙКЛМНОПЯРСТУЖВЬЪЗШЭЩЧ/`abcdefghijklmnopqrstuvwxyz{|}~/; }
+  } elsif ($lang eq 'he') { # Based on Elite //e / SI 960
+    if (!$decode) {
+      # Strip combining characters
+      tr/[\x{0591}-\x{05C7}//d;
+    }
+    if ($decode) { tr/`abcdefghijklmnopqrstuvwxyz/אבגדהוזחטיךכלםמןנסעףפץצקרשת/; }
+    else {         tr/אבגדהוזחטיךכלםמןנסעףפץצקרשת/`abcdefghijklmnopqrstuvwxyz/; }
   } elsif ($lang eq 'en') {
     # no-op
   } else {

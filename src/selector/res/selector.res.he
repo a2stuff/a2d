@@ -1,0 +1,17 @@
+.define res_string_selector_name "jxc ixeviw"
+.define res_string_status_loading_selector "...jxc ixeviw ligzn"
+.define res_string_alert_selector_unable_to_run ".zipkezd z` lirtdl gilvn `l"
+.define res_string_menu_bar_item_file "uaew"
+.define res_string_menu_bar_item_startup "ycgn dlrtd"
+.define res_string_menu_item_run_a_program "...zipkez lrtd"
+.define res_char_menu_item_run_a_program_shortcut 'R'
+.define res_string_menu_item_slot_pattern "# zvayn"
+.define res_const_menu_item_slot_pattern_offset1 1
+.define res_string_button_desktop "dcear ogley"
+.define res_char_button_desktop_shortcut 'D'
+.define res_string_label_download "...RAMCARD-l wizrn"
+.define res_string_label_copying ":dwzrd"
+.define res_string_error_not_enough_room ".meyiid z` wizrdl ick RAMCARD-a mewn witqn oi`"
+.define res_string_error_copy_incomplete ".mlyed `l wzerd .dcxedd jldna d`iby drxi`"
+.define res_string_label_files_to_copy ":dwzrdl mivaw "
+.define res_string_label_files_remaining ":exzepy mivaw "

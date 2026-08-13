@@ -1,0 +1,96 @@
+.define res_string_button_ok "xcqa"
+.define res_string_button_cancel "lhal"
+.define res_string_button_cancel_shortcut "ESC"
+.define res_string_button_try_again "aey dqp"
+.define res_char_button_try_again_shortcut 'A'
+.define res_string_button_yes "ok"
+.define res_char_button_yes_shortcut 'Y'
+.define res_string_button_no "`l"
+.define res_char_button_no_shortcut 'N'
+.define res_string_button_all "lk"
+.define res_char_button_all_shortcut 'A'
+.define res_string_shortcut_apple_1 " (\x1F1)"
+.define res_string_shortcut_apple_2 " (\x1F2)"
+.define res_string_shortcut_apple_3 " (\x1F3)"
+.define res_string_shortcut_apple_4 " (\x1F4)"
+.define res_string_shortcut_apple_5 " (\x1F5)"
+.define res_string_shortcut_apple_6 " (\x1F6)"
+.define res_char_shortcut_apple_1 '1'
+.define res_char_shortcut_apple_2 '2'
+.define res_char_shortcut_apple_3 '3'
+.define res_char_shortcut_apple_4 '4'
+.define res_char_shortcut_apple_5 '5'
+.define res_char_shortcut_apple_6 '6'
+.define res_char_shortcut_resize 'G'
+.define res_char_shortcut_move 'M'
+.define res_char_shortcut_scroll 'S'
+.define res_char_shortcut_close 'W'
+.define res_string_button_drives "mippek"
+.define res_string_button_open "xebq"
+.define res_string_button_close "xebql"
+.define res_string_shortcut_drives "^D"
+.define res_string_shortcut_open "^O"
+.define res_string_shortcut_close "^C"
+.define res_string_copyright_line1 "APPLE COMPUTER INC., 1986 mixvei zeiekf"
+.define res_string_copyright_line2 "VERSION SOFT, 1985 - 1986 mixvei zeiekf"
+.define res_string_copyright_line3 "zexeny zeiekfd lk"
+.define res_string_prompt_insert_system_disk ".RETURN lr ugle zkxrnd wqic z` qpkd"
+.define res_string_weekday_abbrev_1 "'`"
+.define res_string_weekday_abbrev_2 "'a"
+.define res_string_weekday_abbrev_3 "'b"
+.define res_string_weekday_abbrev_4 "'c"
+.define res_string_weekday_abbrev_5 "'d"
+.define res_string_weekday_abbrev_6 "'e"
+.define res_string_weekday_abbrev_7 "zay"
+.define res_string_month_name_1 "x`epi"
+.define res_string_month_name_2 "x`exat"
+.define res_string_month_name_3 "qxn"
+.define res_string_month_name_4 "lixt`"
+.define res_string_month_name_5 "i`n"
+.define res_string_month_name_6 "ipei"
+.define res_string_month_name_7 "ilei"
+.define res_string_month_name_8 "hqebe`"
+.define res_string_month_name_9 "xanhtq"
+.define res_string_month_name_10 "xaehwe`"
+.define res_string_month_name_11 "xanaep"
+.define res_string_month_name_12 "xanvc"
+.define res_string_month_abbrev_1 "epi"
+.define res_string_month_abbrev_2 "xat"
+.define res_string_month_abbrev_3 "uxn"
+.define res_string_month_abbrev_4 "xt`"
+.define res_string_month_abbrev_5 "i`n"
+.define res_string_month_abbrev_6 "pei"
+.define res_string_month_abbrev_7 "lei"
+.define res_string_month_abbrev_8 "be`"
+.define res_string_month_abbrev_9 "htq"
+.define res_string_month_abbrev_10 "we`"
+.define res_string_month_abbrev_11 "aep"
+.define res_string_month_abbrev_12 "nvc"
+.define res_char_decimal_separator '.'
+.define res_char_thousands_separator ','
+.define res_char_date_separator '.'
+.define res_char_time_separator ':'
+.define res_const_date_order 1
+.define res_const_clock_format 128
+.define res_const_first_dow 0
+.define res_string_version_format_long "%s VERSION %d.%d%s"
+.define res_string_noprod_version_format_long "VERSION %d.%d%s"
+.define res_string_err27_io_error ".hlt/hlw z`iby"
+.define res_string_err28_device_not_connected ".xaegn xiykn oi`"
+.define res_string_err2B_write_protected ".daizka oben wqicd"
+.define res_string_err40_invalid_pathname ".iweg `l e` icn jex` aizpd my"
+.define res_string_err44_path_not_found ".miiw epi` aizpd myn wlg"
+.define res_string_err45_vol_not_found ".lewd znver z` `evnl ozip `l"
+.define res_string_err46_file_not_found ".uaewd z` `evnl ozip `l"
+.define res_string_err47_duplicate_filename ".xg` mya ynzyd `p` .miiw xak dfd myd"
+.define res_string_err48_overrun_error ".`ln wqicd"
+.define res_string_err49_volume_dir_full ".d`ln oeqg`d irvn` ziixtq"
+.define res_string_err4E_access_error ".lerp uaewd"
+.define res_string_err52_not_prodos_volume ".PRODOS wqic `l df"
+.define res_string_err57_duplicate_volume ".dceard ogley lr df mya sqep jxk epyi"
+.define res_string_alert_insert_source_disk ".xewnd wqic z` qpkd `p`"
+.define res_string_alert_insert_destination ".crid wqic z` qpkd `p`"
+.define res_string_alert_insert_system_disk ".zkxrnd wqic z` qpkd `p`"
+.define res_string_alert_insert_disk "%0s :wqicd z` qpkd"
+.define res_string_alert_basic_system_not_found ".`vnp `l BASIC.SYSTEM"
+.define res_string_alert_no_windows_open ".migezt zepelg oi`"
