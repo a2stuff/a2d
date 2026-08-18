@@ -149,7 +149,7 @@ penXOR:         .byte   MGTK::penXOR
 
         jsr     _PrepTextParams
       IF NOT_ZERO
-        MGTK_CALL MGTK::TextWidth, text_params
+        jsr     _TextWidth
       END_IF
 
         sub16   pos+MGTK::Point::xcoord, text_params+MGTK::TextWidthParams::width, pos+MGTK::Point::xcoord
@@ -386,6 +386,13 @@ END_PARAM_BLOCK
 
 ;;; ============================================================
 
+.proc _TextWidth
+        MGTK_CALL MGTK::TextWidth, text_params
+        rts
+.endproc ; _TextWidth
+
+;;; ============================================================
+
 .proc ClickImpl
         PARAM_BLOCK params, letk::command_data
 a_record  .addr
@@ -416,7 +423,7 @@ ycoord  .word
         inc     text_params+MGTK::TextWidthParams::length
         lda     text_params+MGTK::TextWidthParams::length
         BREAK_IF A = len
-        MGTK_CALL MGTK::TextWidth, text_params
+        jsr     _TextWidth
     WHILE ZERO                  ; always
 
         lda     text_params+MGTK::TextWidthParams::length
@@ -692,7 +699,7 @@ ret:    rts
         jsr     _RedrawRightOfCaret
         jsr     _PrepTextParams
     IF NOT_ZERO
-        MGTK_CALL MGTK::TextWidth, text_params
+        jsr     _TextWidth
         add16   pos, text_params+MGTK::TextWidthParams::width, rect+MGTK::Rect::x1
     END_IF
         jsr     _SetPort        ; aborts rest of this proc if obscured
@@ -709,7 +716,7 @@ ret:    rts
         lda     (a_record),y
     IF NOT_ZERO
         sta     text_params+MGTK::TextWidthParams::length
-        MGTK_CALL MGTK::TextWidth, text_params
+        jsr     _TextWidth
     END_IF
 
         lda     text_params+MGTK::TextWidthParams::width
