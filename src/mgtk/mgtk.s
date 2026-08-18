@@ -374,6 +374,10 @@ jump_table:
         .addr   StringWidthImpl     ; $5C StringWidth
         .addr   DrawStringImpl      ; $5D DrawString
         .addr   WaitVBLImpl         ; $5E WaitVBL
+        .addr   DrawTextRightImpl   ; $5F DrawTextRight
+        .addr   DrawStringRightImpl ; $60 DrawStringRight
+        .addr   DrawTextCenteredImpl   ; $61 DrawTextCentered
+        .addr   DrawStringCenteredImpl ; $62 DrawStringCentered
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -507,6 +511,10 @@ param_lengths:
         PARAM_DEFN  2, $A1, 0                ; $5C StringWidth
         PARAM_DEFN  0, $00, 1                ; $5D DrawString
         PARAM_DEFN  0, $00, 0                ; $5E WaitVBL
+        PARAM_DEFN  3, $A1, 1                ; $5F DrawTextRight
+        PARAM_DEFN  0, $00, 1                ; $60 DrawStringRight
+        PARAM_DEFN  3, $A1, 1                ; $5F DrawTextCentered
+        PARAM_DEFN  0, $00, 1                ; $60 DrawStringCentered
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -3211,6 +3219,12 @@ loop:   sty     pos
         rts
 .endproc ; StringWidthImpl
 
+;;; Convert `DrawString` args to `DrawText` args
+.proc PreDrawString
+        copy16  params_addr, text_addr
+        FALL_THROUGH_TO StringToText
+.endproc ; PreDrawString
+
 ;;; Convert "String" params (Pascal string at $A1) to "Text" params
 ;;; (text address at $A1, length at $A3)
 .proc StringToText
@@ -3226,8 +3240,8 @@ loop:   sty     pos
         ;; Turn the current penloc into left, right, top, and bottom.
         ;;
         ;; Inputs:
-        ;;    A = width
-        ;;    $FF = height
+        ;;    A,X = width
+        ;;    `glyph_height_p` = height
         ;;
 .proc PenlocToBounds
         subax8  #1
@@ -3252,15 +3266,71 @@ loop:   sty     pos
 
 ;;; ============================================================
 
+        text_addr := $A1        ; param
+        text_len  := $A3        ; param
+        text_width := $A4       ; computed
+
 .proc DrawStringImpl
-        copy16  params_addr, $A1
-        jsr     StringToText
+        jsr     PreDrawString   ; convert `DrawString` args to `DrawText` args
         FALL_THROUGH_TO DrawTextImpl
 .endproc ; DrawStringImpl
 
 ;;; 3 bytes of params, copied to $A1
-
 .proc DrawTextImpl
+        jsr     PreDrawText     ; prepare `text_width`
+        jsr     DrawTextCore
+        TAIL_CALL AdjustXPos, AX=text_width
+.endproc ; DrawTextImpl
+
+;;; --------------------------------------------------
+
+.proc DrawStringRightImpl
+        jsr     PreDrawString   ; convert `DrawString` args to `DrawText` args
+        FALL_THROUGH_TO DrawTextRightImpl
+.endproc ; DrawStringRightImpl
+
+;;; 3 bytes of params, copied to $A1
+.proc DrawTextRightImpl
+        jsr     PreDrawText     ; prepare `text_width`
+        sub16   current_penloc_x, text_width, current_penloc_x
+        jmp     DrawTextCore
+.endproc ; DrawTextRightImpl
+
+;;; --------------------------------------------------
+
+.proc DrawStringCenteredImpl
+        jsr     PreDrawString   ; convert `DrawString` args to `DrawText` args
+        FALL_THROUGH_TO DrawTextCenteredImpl
+.endproc ; DrawStringCenteredImpl
+
+;;; 3 bytes of params, copied to $A1
+.proc DrawTextCenteredImpl
+        jsr     PreDrawText     ; prepare `text_width`
+
+        ;; `current_penloc_x` -= `text_width`/2
+        tmpw := $80
+        lda     text_width+1
+        lsr
+        sta     tmpw+1
+        lda     text_width
+        ror
+        sta     tmpw
+        sub16   current_penloc_x, tmpw, current_penloc_x
+
+        jmp     DrawTextCore
+.endproc ; DrawTextCenteredImpl
+
+;;; --------------------------------------------------
+
+;;; Prepare ZP and measure text before drawing
+.proc PreDrawText
+        jsr     MeasureText
+        stax    text_width
+        rts
+.endproc ; PreDrawText
+
+;;; Inputs: `text_addr`, `text_len`, `text_width` set
+.proc DrawTextCore
         text_bits_buf := $00
         vid_addrs_table := $20
 
@@ -3273,14 +3343,9 @@ loop:   sty     pos
         remaining_width := $9A
         vid_page := $9C
         text_index := $9F
-        text_addr := $A1        ; param
-        text_len  := $A3        ; param
-        text_width := $A4       ; computed
-
 
         jsr     maybe_unstash_low_zp
-        jsr     MeasureText
-        stax    text_width
+        ldax    text_width
 
         ldy     #0
         sty     text_index
@@ -3371,10 +3436,7 @@ text_clip_ndbm:
         sta     LOWSCR
 
 text_clipped:
-        jsr     maybe_stash_low_zp
-        ldax    text_width
-        jmp     AdjustXPos
-
+        jmp     maybe_stash_low_zp
 
 do_draw:
         lda     bottom
@@ -3747,7 +3809,7 @@ masked_blit_line_table_high:
         .byte   >.ident (.sprintf ("masked_blit_line_%d", line))
         .endrepeat
 
-.endproc ; DrawTextImpl
+.endproc ; DrawTextCore
 
 ;;; ============================================================
 
@@ -7960,10 +8022,12 @@ ret:    rts
 .proc CenterTitleText
         text_width = $82
 
+        ;; Measure title into `text_width`
         ldax    current_winfo::title
         jsr     DoMeasureText
         stax    text_width
 
+        ;; Y,X = midpoint of window
         lda     winrect::x1
         clc
         adc     winrect::x2
@@ -7973,6 +8037,7 @@ ret:    rts
         adc     winrect::x2+1
         tax
 
+        ;; `current_penloc_x` = Y,X - `text_width`/2
         tya
         sec
         sbc     text_width
@@ -7985,6 +8050,7 @@ ret:    rts
         sta     current_penloc_x+1
         ror     current_penloc_x
 
+        ;; `current_penloc_y` = window title rect bottom - 2
         ldax    winrect::y2
         subax8  #2
         stax    current_penloc_y

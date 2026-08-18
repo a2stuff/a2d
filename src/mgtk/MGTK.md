@@ -363,7 +363,7 @@ Parameters:
 ```
 
 #### DrawText ($19)
-Draw string at the pen location of the current graphport (as left, baseline)
+Draw string at the pen location of the current GrafPort (as left, baseline)
 
 Parameters:
 ```
@@ -371,7 +371,39 @@ Parameters:
 .byte       length
 ```
 
+After the call, the pen location of the current GrafPort is at the (right, baseline) of the drawn text.
+
 This call normally auto-hides the cursor.
+
+#### DrawTextRight ($5F)
+Draw string at the pen location of the current GrafPort (as right, baseline)
+
+Parameters:
+```
+.addr       data
+.byte       length
+```
+
+After the call, the pen location of the current GrafPort is at the (left, baseline) of the drawn text.
+
+This call normally auto-hides the cursor.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### DrawTextCentered ($61)
+Draw string at the pen location of the current GrafPort (as center, baseline)
+
+Parameters:
+```
+.addr       data
+.byte       length
+```
+
+After the call, the pen location of the current GrafPort is unchanged.
+
+This call normally auto-hides the cursor.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 #### StringWidth ($5C)
 Measure the width of a Pascal string in pixels
@@ -382,15 +414,49 @@ Parameters:
 .word       width           (out) result in pixels
 ```
 
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 #### DrawString ($5D)
-Draw string at the pen location of the current graphport (as left, baseline)
+Draw string at the pen location of the current GrafPort (as left, baseline)
 
 Parameters:
 ```
 (input is the address of Pascal string)
 ```
 
+After the call, the pen location of the current GrafPort is at the (right, baseline) of the drawn text.
+
 This call normally auto-hides the cursor.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### DrawStringRight ($60)
+Draw string at the pen location of the current GrafPort (as right, baseline)
+
+Parameters:
+```
+(input is the address of Pascal string)
+```
+
+After the call, the pen location of the current GrafPort is at the (left, baseline) of the drawn text.
+
+This call normally auto-hides the cursor.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### DrawStringCentered ($62)
+Draw string at the pen location of the current GrafPort (as center, baseline)
+
+Parameters:
+```
+(input is the address of Pascal string)
+```
+
+After the call, the pen location of the current GrafPort is unchanged.
+
+This call normally auto-hides the cursor.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 ### Utility - configuration and version
 

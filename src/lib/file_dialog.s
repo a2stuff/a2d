@@ -770,7 +770,8 @@ found:  RETURN  A=index
         MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
 
         plax                    ; AX=title of passed Winfo
-        jsr     _DrawStringCentered
+        stax    @addr
+        MGTK_CALL MGTK::DrawStringCentered, SELF_MODIFIED, @addr
 
         ;; Buttons
         BTK_CALL BTK::Draw, file_dialog_res::drives_button
@@ -816,24 +817,6 @@ found:  RETURN  A=index
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo ; Valid even if another winfo used
         rts
 .endproc ; CloseWindow
-
-;;; ============================================================
-
-.proc _DrawStringCentered
-        params := $06
-        str := params
-        width := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        lsr16   width
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; _DrawStringCentered
 
 ;;; ============================================================
 
@@ -1157,7 +1140,7 @@ next:   add16_8 ptr, #16        ; advance to next
         sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
-        CALL    _DrawStringCentered, AX=#file_dialog_res::filename_buf
+        MGTK_CALL MGTK::DrawStringCentered, file_dialog_res::filename_buf
     END_IF
         MGTK_CALL MGTK::UnshieldCursor
 
@@ -1195,7 +1178,7 @@ next:   add16_8 ptr, #16        ; advance to next
         sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
-        CALL    _DrawStringCentered, AX=#file_dialog_res::filename_buf
+        MGTK_CALL MGTK::DrawStringCentered, file_dialog_res::filename_buf
     END_IF
         MGTK_CALL MGTK::UnshieldCursor
 

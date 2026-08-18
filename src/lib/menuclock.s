@@ -67,8 +67,8 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
 
         CALL    MakeTimeString, AX=#parsed_date
 
-        CALL    DrawStringRight, AX=#str_time
-        CALL    DrawStringRight, AX=#str_space
+        MGTK_CALL MGTK::DrawStringRight, str_time
+        MGTK_CALL MGTK::DrawStringRight, str_space
 
         ;; --------------------------------------------------
         ;; Day of Week
@@ -80,17 +80,17 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         asl
         clc
         adc     #<dow_strings
-        tay
+        sta     @dow_addr
         lda     #0
         adc     #>dow_strings
-        tax
-        tya
-        jsr     DrawStringRight
+        sta     @dow_addr+1
+
+        MGTK_CALL MGTK::DrawStringRight, SELF_MODIFIED, @dow_addr
 
         ;; --------------------------------------------------
         ;; In case string got shorter
 
-        CALL    DrawStringRight, AX=#str_4_spaces
+        MGTK_CALL MGTK::DrawStringRight, str_4_spaces
 
         ;; --------------------------------------------------
         ;; Restore the previous GrafPort
@@ -100,24 +100,6 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         copy16  getport_params::portptr, @addr
         MGTK_CALL MGTK::SetPort, 0, @addr
         rts
-
-;;; Draw string right-aligned to current coords, updating the
-;;; current coords to be on the left side of the string.
-.proc DrawStringRight
-        params := $06
-        str := params
-        width := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        MGTK_CALL MGTK::Move, params
-        rts
-.endproc ; DrawStringRight
 
 last_dt:
         .tag    DateTime        ; previous date/time

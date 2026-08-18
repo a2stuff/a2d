@@ -247,11 +247,6 @@ line_addrs:
 
 
 .proc DrawWindow
-PARAM_BLOCK params, $06
-data    .addr
-width   .word
-END_PARAM_BLOCK
-
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         RTS_IF A = #MGTK::Error::window_obscured
 
@@ -259,24 +254,20 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::HideCursor
 
         copy16  #kInitialY, pos::ycoord
-
+        copy16  #kDAWidth/2, pos::xcoord ; center it
 
         copy8   #0, index
     DO
         lda     index
         asl
         tax
-        copy16  line_addrs,x, params::data
+        copy16  line_addrs,x, @addr
 
         ;; Position the string
-        MGTK_CALL MGTK::StringWidth, params
-        sub16   #kDAWidth, params::width, pos::xcoord ; center it
-        lsr16   pos::xcoord
         add16   pos::ycoord, #kLineHeight, pos::ycoord ; next row
 
         MGTK_CALL MGTK::MoveTo, pos
-        copy16  params::data, @addr
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        MGTK_CALL MGTK::DrawStringCentered, SELF_MODIFIED, @addr
 
         inc     index
     WHILE lda index : A <> #kLineCount

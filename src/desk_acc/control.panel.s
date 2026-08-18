@@ -1066,7 +1066,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::DrawString, caret_blink_slow_label_str
 
         MGTK_CALL MGTK::MoveTo, caret_blink_fast_label_pos
-        CALL    DrawStringRight, AX=#caret_blink_fast_label_str
+        MGTK_CALL MGTK::DrawStringRight, caret_blink_fast_label_str
 
         BTK_CALL BTK::RadioDraw, caret_blink_button1
         BTK_CALL BTK::RadioDraw, caret_blink_button2
@@ -1079,9 +1079,9 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::MoveTo, caret_blink_button1_shortcut_label_pos
         MGTK_CALL MGTK::DrawString, caret_blink_button1_shortcut_label_str
         MGTK_CALL MGTK::MoveTo, caret_blink_button2_shortcut_label_pos
-        CALL    DrawStringCentered, AX=#caret_blink_button2_shortcut_label_str
+        MGTK_CALL MGTK::DrawStringCentered, caret_blink_button2_shortcut_label_str
         MGTK_CALL MGTK::MoveTo, caret_blink_button3_shortcut_label_pos
-        CALL    DrawStringRight, AX=#caret_blink_button3_shortcut_label_str
+        MGTK_CALL MGTK::DrawStringRight, caret_blink_button3_shortcut_label_str
     END_IF
 
 
@@ -1619,41 +1619,6 @@ done:   rts
 
         jmp     InputLoop
 .endproc ; HandleRGBClick
-
-;;; ============================================================
-
-.proc DrawStringRight
-        params := $06
-        str := params
-        width := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringRight
-
-.proc DrawStringCentered
-        params := $06
-        str := params
-        width := params+2
-        dx := params
-        dy := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        lsr16   width           ; /= 2
-        sub16   #0, width, dx
-        copy16  #0, dy
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringCentered
 
 ;;; ============================================================
 

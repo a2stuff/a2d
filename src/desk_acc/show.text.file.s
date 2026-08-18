@@ -1005,7 +1005,7 @@ reserved:       .byte   0
 .endparams
 mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 
-        DEFINE_POINT mode_pos, 0, 10
+        DEFINE_POINT mode_pos, kLabelWidth/2, 10
 
 .params winframerect_params
 window_id:      .byte   kDAWindowId
@@ -1031,12 +1031,6 @@ window_id:      .byte   kDAWindowId
         ;; Clear background
         MGTK_CALL MGTK::PaintRect, mode_mapinfo::maprect
 
-        ;; Center string
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
-
         lda     fixed_mode_flag
     IF NOT_ZERO
         ldax    #fixed_str
@@ -1045,15 +1039,8 @@ window_id:      .byte   kDAWindowId
     END_IF
         stax    text_addr
 
-        ldy     #0
-        copy8   (text_addr),y, text_length
-        inc16   text_addr       ; point past length
-        MGTK_CALL MGTK::TextWidth, text_params
-
-        sub16   #kLabelWidth, text_width, mode_pos::xcoord
-        lsr16   mode_pos::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, mode_pos
-        MGTK_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::DrawStringCentered, SELF_MODIFIED, text_addr
 
         ;; Reset port
         COPY_STRUCT default_port, winfo::port

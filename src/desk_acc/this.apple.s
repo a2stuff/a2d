@@ -1337,6 +1337,7 @@ egg:    .byte   0
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
         CALL    DrawStringRightFromMain, AX=#str_aux
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
         ldax    #str_80col
         ldy     rw_banks
     IF Y <> #1
@@ -1356,12 +1357,14 @@ egg:    .byte   0
         lda     slot
         asl
         tax
-        copy16  slot_pos_table,x, slot_pos
-        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, 0, slot_pos
+        copy16  slot_pos_table,x, slot_pos1
+        copy16  slot_pos_table,x, slot_pos2
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, 0, slot_pos1
         lda     slot
         ora     #'0'
         sta     str_slot_n + kStrSlotNOffset
         CALL    DrawStringRightFromMain, AX=#str_slot_n
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, 0, slot_pos2
 
         ;; Possibilities:
         ;; * ProDOS thinks there's a card - may be firmware or no firmware
@@ -2595,15 +2598,7 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 .proc DrawStringRightFromMain
         jsr     CopyStringFromMain
     IF NOT ZERO
-        params = $06
-        str := $06
-        width := $08
-        copy16  #aux::buf_string, str
-        JUMP_TABLE_MGTK_CALL MGTK::StringWidth, params
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
-        JUMP_TABLE_MGTK_CALL MGTK::Move, params
-        JUMP_TABLE_MGTK_CALL MGTK::DrawString, aux::buf_string
+        JUMP_TABLE_MGTK_CALL MGTK::DrawStringRight, aux::buf_string
     END_IF
         rts
 .endproc ; DrawStringRightFromMain

@@ -448,25 +448,14 @@ spaces_string:
 error_string:
         PASCAL_STRING res_string_error_string
 
-.params textwidth_params
-textptr:        .addr   text_buffer1
-textlen:        .byte   15
-result:         .word   0
-.endparams
-
         kDAWindowId = $80
 
 .params closewindow_params
 window_id:     .byte   kDAWindowId
 .endparams
 
-.params text_pos_params3
-left:   .word   0
-base:   .word   16
-.endparams
-
-.params text_pos_params2
-left:   .word   15 + kBasicOffset
+.params text_pos_params
+left:   .word   kDisplayRight-15
 base:   .word   16
 .endparams
 
@@ -1420,8 +1409,8 @@ invert_rect:
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
-        CALL    PreDisplayBuffer, XY=#text_buffer1
-        MGTK_CALL MGTK::DrawText, drawtext_params1
+        CALL    PreDisplayBuffer
+        MGTK_CALL MGTK::DrawTextRight, drawtext_params1
         MGTK_CALL MGTK::UnshieldCursor
     END_IF
         rts
@@ -1431,27 +1420,19 @@ invert_rect:
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
-        CALL    PreDisplayBuffer, XY=#text_buffer2
-        MGTK_CALL MGTK::DrawText, drawtext_params2
+        CALL    PreDisplayBuffer
+        MGTK_CALL MGTK::DrawTextRight, drawtext_params2
         MGTK_CALL MGTK::UnshieldCursor
     END_IF
         rts
 .endproc ; DisplayBuffer2
 
 .proc PreDisplayBuffer
-        stx     textwidth_params::textptr ; text buffer address in x,y
-        sty     textwidth_params::textptr+1
-        MGTK_CALL MGTK::TextWidth, textwidth_params
-        lda     #kDisplayRight-15 ; ???
-        sec
-        sbc     textwidth_params::result
-        sta     text_pos_params3::left
-
         MGTK_CALL MGTK::ShieldCursor, clear_display_params
 
-        MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
-        MGTK_CALL MGTK::DrawString, spaces_string
-        MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
+        MGTK_CALL MGTK::MoveTo, text_pos_params ; clear with spaces
+        MGTK_CALL MGTK::DrawStringRight, spaces_string
+        MGTK_CALL MGTK::MoveTo, text_pos_params ; set up for display
         rts
 .endproc ; PreDisplayBuffer
 
@@ -1497,13 +1478,7 @@ loop:
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr ; draw button face
 
         MGTK_CALL MGTK::MoveTo, 0, pos
-        copy16  label, params::string
-        MGTK_CALL MGTK::StringWidth, string_width_params
-        lsr16   params::width
-        sub16   #0, params::width, params::dx
-        MGTK_CALL MGTK::Move, move_by_params
-
-        MGTK_CALL MGTK::DrawString, 0, label
+        MGTK_CALL MGTK::DrawStringCentered, SELF_MODIFIED, label
 
         add16_8 ptr, #.sizeof(btn_c)
         jmp     loop
@@ -1514,16 +1489,6 @@ break:
         MGTK_CALL MGTK::ShowCursor
 
         rts
-
-.params params
-string: .addr   0               ; used as string for `StringWidth`
-width:  .addr   0               ; used as width for `StringWidth`, X for `Move`
-dx := width
-dy:     .word   0               ; used as Y for `Move`
-.endparams
-string_width_params := params + 0
-move_by_params := params + 2
-
 .endproc ; DrawContent
 
 ;;; ============================================================

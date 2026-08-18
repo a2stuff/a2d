@@ -455,7 +455,7 @@ InitDialog:
         MGTK_CALL MGTK::MoveTo, select_source_label_pos
         MGTK_CALL MGTK::DrawString, select_source_label_str
         MGTK_CALL MGTK::MoveTo, select_quit_label_pos
-        CALL    DrawStringCentered, AX=#select_quit_label_str
+        MGTK_CALL MGTK::DrawStringCentered, select_quit_label_str
 
         ;; --------------------------------------------------
         ;; Drive select listbox
@@ -943,11 +943,12 @@ CmdDiskCopy := SetCopyModeImpl::disk_copy
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_erase_title
         MGTK_CALL MGTK::MoveTo, point_title
-        ldax    #label_quick_copy
     IF bit disk_copy_flag : NS
-        ldax    #label_disk_copy
+        MGTK_CALL MGTK::DrawStringCentered, label_disk_copy
+        rts
     END_IF
-        TAIL_CALL DrawStringCentered
+        MGTK_CALL MGTK::DrawStringCentered, label_quick_copy
+        rts
 .endproc ; DrawTitle
 
 ;;; ============================================================
@@ -1210,26 +1211,6 @@ match:  RETURN  C=0
 
         .include "../toolkits/lbtk.s"
         LBTKEntry := lbtk::LBTKEntry
-
-;;; ============================================================
-
-.proc DrawStringCentered
-        params := $0A
-        str := params
-        width := params+2
-        dx := params
-        dy := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        lsr16   width           ; /= 2
-        sub16   #0, width, dx
-        copy16  #0, dy
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringCentered
 
 ;;; ============================================================
 
@@ -1575,13 +1556,12 @@ next_device:
 ;;; ============================================================
 
 .proc DrawStatus
-        phax
+        stax    @addr
         jsr     SetPortForDialog
         MGTK_CALL MGTK::ShieldCursor, rect_status
         MGTK_CALL MGTK::PaintRect, rect_status
         MGTK_CALL MGTK::MoveTo, point_status
-        plax
-        jsr     DrawStringCentered
+        MGTK_CALL MGTK::DrawStringCentered, SELF_MODIFIED, @addr
         jmp     UnshieldCursor
 .endproc ; DrawStatus
 
@@ -1764,7 +1744,8 @@ ret:    rts
 .proc DrawEscToStopCopyHint
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, escape_stop_copy_label_pos
-        TAIL_CALL DrawStringCentered, AX=#escape_stop_copy_label_str
+        MGTK_CALL MGTK::DrawStringCentered, escape_stop_copy_label_str
+        rts
 .endproc ; DrawEscToStopCopyHint
 
 ;;; ============================================================

@@ -628,6 +628,20 @@ DrawString            = $5D
 WaitVBL               = $5E
 ;;; (no parameters)
 
+DrawTextRight         = $5F     ; Drawn at penpos as right, baseline
+;;; .addr       data
+;;; .byte       length
+
+DrawStringRight       = $60
+;;; .addr       str             Address of Pascal string
+
+DrawTextCentered      = $61     ; Drawn at penpos as center, baseline
+;;; .addr       data
+;;; .byte       length
+
+DrawStringCentered    = $62
+;;; .addr       str             Address of Pascal string
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 

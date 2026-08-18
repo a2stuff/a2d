@@ -7,37 +7,28 @@
 ;;; `kProgressDialogPathWidth` must be defined
 
 .proc DrawDialogPath
-        ptr := $6
-        stax    ptr
+PARAM_BLOCK params, $06
+string  .addr
+width   .word
+END_PARAM_BLOCK
+
+        stax    params::string
+        stax    addr
 
     REPEAT
-        jsr     measure
+        MGTK_CALL MGTK::StringWidth, params
+        cmp16   params::width, #kProgressDialogPathWidth
         BREAK_IF LT             ; already short enough
 
         jsr     ellipsify
     FOREVER
 
-        ;; Draw
-        MGTK_CALL MGTK::DrawText, txt
-        rts
-
-        ;; Measure
-measure:
-        txt := $8
-        len := $A
-        result := $B
-
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        ldxy    ptr
-        inxy
-        stxy    txt
-        MGTK_CALL MGTK::TextWidth, txt
-        cmp16   result, #kProgressDialogPathWidth
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, addr
         rts
 
 ellipsify:
+        ptr := params::string
+
         ldy     #0
         lda     (ptr),y         ; length
         sta     length

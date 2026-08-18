@@ -254,25 +254,18 @@ skip_port:
         lda     a_shortcut
         ora     a_shortcut+1
       IF NOT_ZERO
-        @width := $9
-        jsr     _MeasureShortcut
-        stax    @width
         sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
-        sub16   pos+MGTK::Point::xcoord, @width, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
-        jsr     _DrawShortcut
+        copy16  a_shortcut, @addr
+        MGTK_CALL MGTK::DrawStringRight, SELF_MODIFIED, @addr
       END_IF
     ELSE
         ;; Draw the label (centered)
-        @width := $9
-        jsr     _MeasureLabel
-        stax    @width
-
         add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
-        sub16   pos+MGTK::Point::xcoord, @width, pos+MGTK::Point::xcoord
         asr16   pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
-        jsr     _DrawLabel
+        copy16  a_label, @addr
+        MGTK_CALL MGTK::DrawStringCentered, SELF_MODIFIED, @addr
     END_IF
 
     IF bit state : NS
@@ -299,11 +292,6 @@ skip_port:
 
 ;;; ============================================================
 
-;;; Input: `a_shortcut` points at string
-.proc _DrawShortcut
-        TAIL_CALL _DrawString, AX=a_shortcut
-.endproc ; _DrawShortcut
-
 ;;; Input: `a_label` points at string
 .proc _DrawLabel
         ldax    a_label
@@ -316,19 +304,6 @@ skip_port:
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; _DrawString
-
-;;; Inputs: `a_shortcut` points at string
-;;; Output: A,X = width
-.proc _MeasureShortcut
-        TAIL_CALL _MeasureString, AX=a_shortcut
-.endproc ; _MeasureShortcut
-
-;;; Inputs: `a_label` points at string
-;;; Output: A,X = width
-.proc _MeasureLabel
-        ldax    a_label
-        FALL_THROUGH_TO _MeasureString
-.endproc ; _MeasureLabel
 
 ;;; Inputs: A,X points at string
 ;;; Output: A,X = width
@@ -476,9 +451,7 @@ unchecked_rb_bitmap:
         add16_8 rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, rect+MGTK::Rect::y2
 
-        CALL    _MaybeMeasureLabel, A=#kSystemFontHeight - BTK::kRadioButtonHeight
-        jsr     _MaybeMeasureShortcut
-        jsr     _WriteRectBackToButtonRecord
+        CALL    _MeasureAndWriteRectBackToButtonRecord, A=#kSystemFontHeight - BTK::kRadioButtonHeight
 
         jsr     _ShieldCursor
         jsr     _DrawRadioBitmap
@@ -551,9 +524,7 @@ unchecked_cb_bitmap:
         add16_8 rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
 
-        CALL    _MaybeMeasureLabel, A=#kSystemFontHeight - BTK::kCheckboxHeight
-        jsr     _MaybeMeasureShortcut
-        jsr     _WriteRectBackToButtonRecord
+        CALL    _MeasureAndWriteRectBackToButtonRecord, A=#kSystemFontHeight - BTK::kCheckboxHeight
 
         jsr     _ShieldCursor
         jsr     _DrawCheckboxBitmap
@@ -583,27 +554,6 @@ unchecked_cb_bitmap:
         MGTK_CALL MGTK::PaintBits, cb_params
         jmp     _UnshieldCursor
 .endproc ; _DrawCheckboxBitmap
-
-;;; ============================================================
-
-;;; Input: A = delta from bottom of bitmap to text baseline; i.e. `kSystemFontHeight` - bitmap height
-;;; Scrambles: $F
-.proc _MaybeMeasureLabel
-        delta := $F
-        sta     delta
-
-        lda     a_label
-        ora     a_label+1
-    IF NOT_ZERO
-        ;; Measure label
-        jsr     _MeasureLabel
-        addax   rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 rect+MGTK::Rect::y2, delta
-    END_IF
-        rts
-
-.endproc ; _MaybeMeasureLabel
 
 ;;; ============================================================
 
@@ -643,28 +593,41 @@ unchecked_cb_bitmap:
 
 ;;; ============================================================
 
-;;; If option is enabled, and if `a_shortcut` is not null, measure it
-;;; and add the width to `rect`.
-.proc _MaybeMeasureShortcut
-        jsr     _ShouldDrawShortcut
-    IF NOT_ZERO
-        jsr     _MeasureShortcut
-        addax   rect+MGTK::Rect::x2
-    END_IF
-        rts
-.endproc ; _MaybeMeasureShortcut
-
 ;;; If option is enabled, and if `a_shortcut` is not null, draw it.
 .proc _MaybeDrawShortcut
         jsr     _ShouldDrawShortcut
     IF NOT_ZERO
-        jsr     _DrawShortcut
+        TAIL_CALL _DrawString, AX=a_shortcut
     END_IF
         rts
 .endproc ; _MaybeDrawShortcut
 
-;;; Copies `rect` back into `a_record`
-.proc _WriteRectBackToButtonRecord
+;;; ============================================================
+
+;;; Extends `rect` to include label and shortcut, writes it back into `a_record`
+;;; Input: A = delta from bottom of bitmap to text baseline; i.e. `kSystemFontHeight` - bitmap height
+;;; Scrambles: $F
+.proc _MeasureAndWriteRectBackToButtonRecord
+        delta := $F
+        sta     delta
+
+        ;; Measure label
+        lda     a_label
+        ora     a_label+1
+    IF NOT_ZERO
+        CALL    _MeasureString, AX=a_label
+        addax   rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 rect+MGTK::Rect::y2, delta
+    END_IF
+
+        ;; Measure shortcut
+        jsr     _ShouldDrawShortcut
+    IF NOT_ZERO
+        CALL    _MeasureString, AX=a_shortcut
+        addax   rect+MGTK::Rect::x2
+    END_IF
+
         ;; Write rect back to button record
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1

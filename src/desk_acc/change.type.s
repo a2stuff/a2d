@@ -500,10 +500,10 @@ yes:    RETURN  C=0
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, type_label_pos
-        CALL    DrawStringRight, AX=#type_label_str
+        MGTK_CALL MGTK::DrawStringRight, type_label_str
 
         MGTK_CALL MGTK::MoveTo, auxtype_label_pos
-        CALL    DrawStringRight, AX=#auxtype_label_str
+        MGTK_CALL MGTK::DrawStringRight, auxtype_label_str
 
         MGTK_CALL MGTK::FrameRect, type_rect
         MGTK_CALL MGTK::FrameRect, auxtype_rect
@@ -541,23 +541,6 @@ yes:    RETURN  C=0
 
 digits: .byte   "0123456789ABCDEF"
 .endproc ; GetDigits
-
-;;; ============================================================
-
-.proc DrawStringRight
-        params := $06
-        str := params
-        width := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringRight
 
 ;;; ============================================================
 

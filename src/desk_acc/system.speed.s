@@ -197,7 +197,7 @@ frame_counter:
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, title_label_pos
-        CALL    DrawStringCentered, AX=#title_label_str
+        MGTK_CALL MGTK::DrawStringCentered, title_label_str
 
         BTK_CALL BTK::Draw, ok_button
         BTK_CALL BTK::Draw, norm_button
@@ -334,26 +334,6 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc ; CloseWindow
-
-;;; ============================================================
-
-.proc DrawStringCentered
-        params := $06
-        str := params
-        width := params+2
-        dx := params
-        dy := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        lsr16   width           ; /= 2
-        sub16   #0, width, dx
-        copy16  #0, dy
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringCentered
 
 ;;; ============================================================
 

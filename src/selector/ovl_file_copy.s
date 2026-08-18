@@ -393,7 +393,8 @@ progress_pattern:
         MGTK_CALL MGTK::SetPenSize, app::pensize_normal
 
         MGTK_CALL MGTK::MoveTo, download_label_pos
-        TAIL_CALL app::DrawStringCentered, AX=#download_label_str
+        MGTK_CALL MGTK::DrawStringCentered, download_label_str
+        rts
 .endproc ; OpenWindow
 
 ;;; ============================================================

@@ -393,14 +393,17 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
         lda     selector_action
     IF A = #SelectorAction::edit
-        TAIL_CALL main::DrawStringCentered, AX=#label_edit
+        MGTK_CALL MGTK::DrawStringCentered, label_edit
+        rts
     END_IF
 
     IF A = #SelectorAction::delete
-        TAIL_CALL main::DrawStringCentered, AX=#label_del
+        MGTK_CALL MGTK::DrawStringCentered, label_del
+        rts
     END_IF
 
-        TAIL_CALL main::DrawStringCentered, AX=#label_run
+        MGTK_CALL MGTK::DrawStringCentered, label_run
+        rts
 .endproc ; OpenWindow
 
 ;;; ============================================================

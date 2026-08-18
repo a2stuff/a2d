@@ -6634,7 +6634,7 @@ in_range:
 
         CALL    set_pos, AX=#kColSize
         jsr     _PrepareColSize
-        CALL    DrawStringRight, AX=#text_buffer2
+        MGTK_CALL MGTK::DrawStringRight, text_buffer2
 
         CALL    set_pos, AX=#kColDate
         jsr     ComposeDateString
@@ -8794,26 +8794,6 @@ finish:
 
         rts
 .endproc ; AppendFilenameToDstPath
-
-;;; ============================================================
-;;; Draw text right aligned, pascal string address in A,X
-;;; String must be in aux or LC memory.
-
-        PROC_USED_CLEARING_UPDATES
-.proc DrawStringRight
-        params := $06
-        str := params
-        width := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        sub16   #0, width, params+MGTK::Point::xcoord
-        copy16  #0, params+MGTK::Point::ycoord
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringRight
 
 ;;; ============================================================
 
@@ -12047,7 +12027,7 @@ write_protected_flag:
         jsr     SetPortForPromptDialog
 
         MGTK_CALL MGTK::MoveTo, prompt_dialog_title_pos
-        CALL    DrawStringCentered, AX=#aux::label_get_info
+        MGTK_CALL MGTK::DrawStringCentered, aux::label_get_info
 
         ;; Draw labels
         CALL    DrawDialogLabel, Y=#1 | DDL_LRIGHT, AX=#aux::str_info_name
@@ -13086,7 +13066,7 @@ ok:     RETURN  A=#0
         CALL    DrawDialogFrame, AX=#aux::about_dialog_frame_rect
 
         MGTK_CALL MGTK::MoveTo, prompt_dialog_title_pos
-        CALL    DrawStringCentered, AX=#aux::str_about1
+        MGTK_CALL MGTK::DrawStringCentered, aux::str_about1
         CALL    DrawDialogLabel, Y=#1 | DDL_CENTER, AX=#aux::str_about2
         CALL    DrawDialogLabel, Y=#2 | DDL_CENTER, AX=#aux::str_about3
         CALL    DrawDialogLabel, Y=#3 | DDL_CENTER, AX=#aux::str_about4
@@ -14474,32 +14454,6 @@ set_state:
 
 ret:    rts
 .endproc ; UpdateOKButton
-
-;;; ============================================================
-;;; Draw string centered at current position
-;;; Input: A,X = string
-;;; Trashes $06...$09
-;;; Assert: String is not empty
-
-        PROC_USED_IN_OVERLAY
-        PROC_USED_IN_FORMAT_ERASE_OVERLAY
-.proc DrawStringCentered
-        params := $06
-        str := params
-        width := params+2
-        dx := params
-        dy := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        lsr16   width           ; /= 2
-        sub16   #0, width, dx
-        copy16  #0, dy
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringCentered
 
 ;;; ============================================================
 

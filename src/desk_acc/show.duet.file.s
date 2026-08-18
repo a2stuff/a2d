@@ -143,13 +143,13 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::FrameRect, frame_rect
 
         MGTK_CALL MGTK::MoveTo, pos_playing
-        CALL    DrawStringCentered, AX=#str_playing
+        MGTK_CALL MGTK::DrawStringCentered, str_playing
         MGTK_CALL MGTK::MoveTo, pos_credit1
-        CALL    DrawStringCentered, AX=#str_credit1
+        MGTK_CALL MGTK::DrawStringCentered, str_credit1
         MGTK_CALL MGTK::MoveTo, pos_credit2
-        CALL    DrawStringCentered, AX=#str_credit2
+        MGTK_CALL MGTK::DrawStringCentered, str_credit2
         MGTK_CALL MGTK::MoveTo, pos_instruct
-        CALL    DrawStringCentered, AX=#str_instruct
+        MGTK_CALL MGTK::DrawStringCentered, str_instruct
 
         MGTK_CALL MGTK::FlushEvents
 
@@ -165,28 +165,6 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::ShowCursor
         rts
 .endproc ; Init
-
-;;; ============================================================
-;;; Draw centered string
-;;; Input: A,X = string address, `pos` used, has ycoord
-;;; Trashes $6...$9
-.proc DrawStringCentered
-        params := $06
-        str := params
-        width := params+2
-        dx := params
-        dy := params+2
-
-        stax    str
-        stax    @addr
-        MGTK_CALL MGTK::StringWidth, params
-        lsr16   width           ; /= 2
-        sub16   #0, width, dx
-        copy16  #0, dy
-        MGTK_CALL MGTK::Move, params
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        rts
-.endproc ; DrawStringCentered
 
 ;;; ============================================================
 
