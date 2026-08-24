@@ -27,17 +27,17 @@
 .define res_const_prodos_version_pattern_offset1 8
 .define res_const_prodos_version_pattern_offset2 10
 .define res_const_prodos_version_pattern_offset3 12
-.define res_string_aux_slot "AUX:   "
-.define res_string_slot_n_pattern ":# uixg   "
-.define res_const_slot_n_pattern_offset1 2
-.define res_string_auxmem_infix ": "
-.define res_string_memory_prefix "MEMORY: "
+.define res_string_aux_slot "   :xfr"
+.define res_string_slot_n_pattern "   :# uixg"
+.define res_const_slot_n_pattern_offset1 5
+.define res_string_auxmem_infix " :"
+.define res_string_memory_prefix " :oexkif"
 .define res_string_memory_kb_suffix "K"
 .define res_string_memory_mb_suffix "MB"
 .define res_string_card_type_diskii "II wqic"
 .define res_string_card_type_diskii_13sector "DISK II (13-SECTOR)"
 .define res_string_card_type_block "ixpb dniqg xiykn"
-.define res_string_card_type_smartport "SMARTPORT: "
+.define res_string_card_type_smartport " :hxethx`nq"
 .define res_string_card_type_ssc "SUPER SERIAL CARD"
 .define res_string_card_type_80col "80 COLUMN CARD"
 .define res_string_card_type_mouse "MOUSE CARD"
@@ -74,9 +74,9 @@
 .define res_string_unknown "(reci `l)"
 .define res_string_empty "(wix)"
 .define res_string_none "(oi`)"
-.define res_string_duplicate_suffix_pattern " (#)"
-.define res_const_duplicate_suffix_pattern_offset1 3
-.define res_string_cpu_prefix "    CPU: "
+.define res_string_duplicate_suffix_pattern "(#) "
+.define res_const_duplicate_suffix_pattern_offset1 2
+.define res_string_cpu_prefix " :carn"
 .define res_string_cpu_type_6502 "6502"
 .define res_string_cpu_type_65C02 "65C02"
 .define res_string_cpu_type_65C02zip "65C02 (ZIP CHIP)"
