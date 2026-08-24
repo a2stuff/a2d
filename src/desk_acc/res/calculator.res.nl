@@ -1,4 +1,4 @@
-.define res_string_error_string "Fout "
+.define res_string_error_string "Fout"
 .define res_string_window_title "Rekenmachine"
 .define res_string_button_c "c"
 .define res_string_button_e "e"

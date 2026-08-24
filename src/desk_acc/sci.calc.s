@@ -459,11 +459,6 @@ left:   .word   kDisplayRight-15
 base:   .word   16
 .endparams
 
-.params error_pos
-left:   .word   69 + kBasicOffset
-base:   .word   16
-.endparams
-
 ;;; The FAC serves as the "input" register of the calculator.
 
 ;;; "Accumulator" register of the calculator
@@ -1503,8 +1498,8 @@ break:
         MGTK_CALL MGTK::GetWinPort, getwinport_params
     IF A <> #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::MoveTo, error_pos
-        MGTK_CALL MGTK::DrawString, error_string
+        MGTK_CALL MGTK::MoveTo, text_pos_params
+        MGTK_CALL MGTK::DrawStringRight, error_string
     END_IF
 
         jsr     ResetBuffer1AndState
