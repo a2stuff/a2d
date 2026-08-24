@@ -222,6 +222,7 @@ rarr_bitmap:
 
 kDblClickX      = 223
 kDblClickY      = 6
+kDblClickWidth  = 220 - 14*2
 
         ;; Selected index (1-3, or 0 for 'no match')
 dblclick_selection:
@@ -234,7 +235,7 @@ dblclick_speed_table:
         .word   kDefaultDblClickSpeed * 4
         .word   kDefaultDblClickSpeed * 16
 
-        DEFINE_LABEL dblclick_speed, res_string_label_dblclick_speed, kDblClickX + 45, kDblClickY + 47
+        DEFINE_LABEL dblclick_speed, res_string_label_dblclick_speed, kDblClickX + kDblClickWidth/2, kDblClickY + 47
 
 .params dblclick_params
         DEFINE_POINT viewloc, kDblClickX, kDblClickY
@@ -324,8 +325,9 @@ darr_bitmap:
 
 kMouseTrackingX = 25
 kMouseTrackingY = 78
+kMouseTrackingWidth = 202 - kMouseTrackingX*2 - 10
 
-        DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + 30, kMouseTrackingY + 45
+        DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + kMouseTrackingWidth/2, kMouseTrackingY + 45
 
         DEFINE_BUTTON tracking_slow_button, kDAWindowId, res_string_label_slow, res_string_shortcut_apple_2, kMouseTrackingX + 84, kMouseTrackingY + 8
         DEFINE_BUTTON tracking_fast_button, kDAWindowId, res_string_label_fast, res_string_shortcut_apple_3, kMouseTrackingX + 84, kMouseTrackingY + 21
@@ -999,7 +1001,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Double-Click Speed
 
         MGTK_CALL MGTK::MoveTo, dblclick_speed_label_pos
-        MGTK_CALL MGTK::DrawString, dblclick_speed_label_str
+        MGTK_CALL MGTK::DrawStringCentered, dblclick_speed_label_str
 
         ;; Arrows
 .scope
@@ -1043,7 +1045,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Mouse Tracking Speed
 
         MGTK_CALL MGTK::MoveTo, mouse_tracking_label_pos
-        MGTK_CALL MGTK::DrawString, mouse_tracking_label_str
+        MGTK_CALL MGTK::DrawStringCentered, mouse_tracking_label_str
 
         BTK_CALL BTK::RadioDraw, tracking_slow_button
         BTK_CALL BTK::RadioDraw, tracking_fast_button
