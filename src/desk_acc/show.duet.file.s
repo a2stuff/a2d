@@ -115,23 +115,18 @@ str_credit1:    PASCAL_STRING res_string_credit1
 str_credit2:    PASCAL_STRING res_string_credit2
 str_instruct:   PASCAL_STRING res_string_instructions
 
+.params sw_playing
+string: .addr   str_playing
+width:  .word   0
+.endparams
+.params sw_name
+string: .addr   name_buf
+width:  .word   0
+.endparams
+
 ;;; ============================================================
 
 .proc Init
-        ;; Combine strings
-        lda     str_playing
-        clc
-        adc     name_buf
-        sta     str_playing
-        ;; Shift it down
-        ldx     #0
-        ldy     name_buf
-    DO
-        lda     name_buf+1,x
-        sta     name_buf,x
-        inx
-    WHILE dey : POS
-
         MGTK_CALL MGTK::OpenWindow, winfo
 
         ;; --------------------------------------------------
@@ -142,8 +137,15 @@ str_instruct:   PASCAL_STRING res_string_instructions
 
         MGTK_CALL MGTK::FrameRect, frame_rect
 
+        MGTK_CALL MGTK::StringWidth, sw_playing
+        MGTK_CALL MGTK::StringWidth, sw_name
+        tmpw := $06
+        add16   sw_playing::width, sw_name::width, tmpw
+        lsr16   tmpw            ; /= 2
+        sub16   pos_playing::xcoord, tmpw, pos_playing::xcoord
         MGTK_CALL MGTK::MoveTo, pos_playing
-        MGTK_CALL MGTK::DrawStringCentered, str_playing
+        MGTK_CALL MGTK::DrawString, str_playing
+        MGTK_CALL MGTK::DrawString, name_buf
         MGTK_CALL MGTK::MoveTo, pos_credit1
         MGTK_CALL MGTK::DrawStringCentered, str_credit1
         MGTK_CALL MGTK::MoveTo, pos_credit2
