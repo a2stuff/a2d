@@ -87,18 +87,21 @@ kTextBoxWidth = kControlsRight - kButtonWidth - kControlsLeft * 2 - 1
         DEFINE_RECT_SZ input_rect, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kTextBoxHeight - 1
         DEFINE_BUTTON find_button, kDAWindowId, res_string_button_find, kGlyphReturn, kControlsRight - kButtonWidth, kTextBoxTop
 
-kLabelLeft = kControlsLeft + kTextBoxTextHOffset
-kValueLeft = 90
-        DEFINE_LABEL lat, res_string_latitude, kLabelLeft, kRow2 + kSystemFontHeight
-        DEFINE_POINT pos_lat, kValueLeft, kRow2 + kSystemFontHeight
-        DEFINE_LABEL long, res_string_longitude, kLabelLeft, kRow3 + kSystemFontHeight
-        DEFINE_POINT pos_long, kValueLeft, kRow3 + kSystemFontHeight
+kLabelWidth = 80
+kValueWidth = 60
+kLabelLeft = kControlMarginX
+kValueLeft = kLabelLeft + kLabelWidth + kControlMarginX
+kValueX = kValueLeft
 
+        DEFINE_LABEL lat, res_string_latitude, kLabelLeft, kRow2 + kSystemFontHeight
+        DEFINE_POINT pos_lat, kValueX, kRow2 + kSystemFontHeight
+        DEFINE_LABEL long, res_string_longitude, kLabelLeft, kRow3 + kSystemFontHeight
+        DEFINE_POINT pos_long, kValueX, kRow3 + kSystemFontHeight
 
 str_spaces:
         PASCAL_STRING "      "
-str_degree_suffix:
-        PASCAL_STRING {kGlyphDegreeSign, " "}
+str_space:
+        PASCAL_STRING " "
 str_n:  PASCAL_STRING res_string_dir_n
 str_s:  PASCAL_STRING res_string_dir_s
 str_e:  PASCAL_STRING res_string_dir_e
@@ -169,7 +172,7 @@ map_bitmap:
 
 ;;; ============================================================
 
-str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
+str_from_int:   PASCAL_STRING "000,000_" ; filled in by IntToString, degree symbol appended
 
 ;;; ============================================================
 
@@ -615,9 +618,13 @@ notpencopy:     .byte   MGTK::notpencopy
     END_IF
 
         CALL    IntToString, AX=tmp
+        ldx     str_from_int
+        inx
+        copy8   #kGlyphDegreeSign, str_from_int,x
+        stx     str_from_int
         MGTK_CALL MGTK::MoveTo, pos_lat
         MGTK_CALL MGTK::DrawString, str_from_int
-        MGTK_CALL MGTK::DrawString, str_degree_suffix
+        MGTK_CALL MGTK::DrawString, str_space
     IF bit sflag : NC
         MGTK_CALL MGTK::DrawString, str_n
     ELSE
@@ -634,9 +641,13 @@ notpencopy:     .byte   MGTK::notpencopy
     END_IF
 
         CALL    IntToString, AX=tmp
+        ldx     str_from_int
+        inx
+        copy8   #kGlyphDegreeSign, str_from_int,x
+        stx     str_from_int
         MGTK_CALL MGTK::MoveTo, pos_long
         MGTK_CALL MGTK::DrawString, str_from_int
-        MGTK_CALL MGTK::DrawString, str_degree_suffix
+        MGTK_CALL MGTK::DrawString, str_space
     IF bit sflag : NC
         MGTK_CALL MGTK::DrawString, str_e
     ELSE
