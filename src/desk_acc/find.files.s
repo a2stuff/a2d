@@ -129,19 +129,16 @@ grafport_win:   .tag    MGTK::GrafPort
         DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
 
         kControlsTop = 9
-        kFindLeft = kModalDialogInsetX
-        DEFINE_LABEL find, res_string_label_find, kFindLeft, 20
-
-.params measure_find_label_params
-str:    .addr   find_label_str
-width:  .word   0
-.endparams
-
+        kFindWidth = kSystemFontWidth * .strlen(res_string_label_find)
+        kInputWidth = kDAWidth - kMarginX*2 - kButtonWidth*2 - kControlsGap*2 - kFindWidth - kLabelHOffset
         kControlsGap = kControlMarginX + 1
         kMarginX = kModalDialogInsetX
 
-        ;; Left edges are adjusted dynamically based on label width
-        DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth - kMarginX - kButtonWidth*2 - kControlsGap*2 + 2, kControlsTop + kTextBoxHeight - 1
+        kFindLeft = kModalDialogInsetX
+        kInputLeft = kFindLeft + kFindWidth + kLabelHOffset
+
+        DEFINE_LABEL find, res_string_label_find, kFindLeft, 20
+        DEFINE_RECT_SZ input_rect, kInputLeft, kControlsTop, kInputWidth, kTextBoxHeight - 1
 
         DEFINE_BUTTON search_button, kDAWindowId, res_string_button_search, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth*2 - kControlsGap + 2, kControlsTop
 
@@ -158,7 +155,7 @@ pattern:        .res    16      ; null-terminated/upcased version
 ;;; ============================================================
 ;;; Search field
 
-        DEFINE_LINE_EDIT line_edit_rec, kDAWindowId, buf_search, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250-(kFindLeft+kLabelHOffset), kMaxFilenameLength
+        DEFINE_LINE_EDIT line_edit_rec, kDAWindowId, buf_search, kInputLeft, kControlsTop, kInputWidth, kMaxFilenameLength
         DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
 
 ;;; ============================================================
@@ -184,10 +181,6 @@ num_entries := listbox_rec::num_items
 .proc Init
         ;; Prep input string
         copy8   #0, buf_search
-
-        MGTK_CALL MGTK::StringWidth, measure_find_label_params
-        add16   input_rect::x1, measure_find_label_params::width, input_rect::x1
-        add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
 
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::HideCursor
