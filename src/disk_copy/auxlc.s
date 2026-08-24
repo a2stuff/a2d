@@ -203,19 +203,22 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT rect_erase_dialog_upper, kEraseLeft, 20, kEraseRight, 103 ; under title to bottom of buttons
         DEFINE_RECT rect_erase_dialog_lower, kEraseLeft, 103, kEraseRight, kDialogHeight-4 ; top of buttons to bottom of dialog
 
-        DEFINE_BUTTON dialog_ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
+        kButtonsLeft = 210
+        kButtonsRight = 440
+
+        DEFINE_BUTTON dialog_ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, kButtonsRight-90, 90
 
         ;; For drawing/updating the dialog title
         DEFINE_POINT point_title, kDialogWidth/2, 17
         DEFINE_RECT rect_erase_title, kEraseLeft, 4, kEraseRight, 17
 
-        DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
+        DEFINE_RECT rect_erase_select_src, kButtonsLeft, 38, kButtonsRight, 46
 
-        DEFINE_BUTTON read_drive_button, winfo_dialog::kWindowId, res_string_button_read_drive, res_char_button_read_drive_shortcut, 210, 90
+        DEFINE_BUTTON read_drive_button, winfo_dialog::kWindowId, res_string_button_read_drive, res_char_button_read_drive_shortcut, kButtonsLeft, 90
 
         DEFINE_LABEL slot_drive_name, res_string_label_slot_drive_name, 20, 28
 
-        DEFINE_LABEL select_source, res_string_prompt_select_source, 270, 46
+        DEFINE_LABEL select_source, res_string_prompt_select_source, (kButtonsLeft+kButtonsRight)/2, 46
 str_select_destination:
         PASCAL_STRING res_string_prompt_select_destination
 
@@ -336,8 +339,11 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
         kTipTextY    = 145
 
         kOverviewTextX  =  18
+        kOverviewTextWidth = kBlocksTextX - kOverviewTextX - 50
+
         kSlotDriveTextX =  88
         kBlocksTextX    = 308
+        kBlocksTextWidth = kDialogWidth - kOverviewTextX - kBlocksTextX
 
         DEFINE_LABEL blocks_read, res_string_label_blocks_read, kBlocksTextX, kSourceTextY
         DEFINE_LABEL blocks_written, res_string_label_blocks_written, kBlocksTextX, kDestTextY
@@ -350,7 +356,6 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
         DEFINE_POINT point_source_slot_drive, kSlotDriveTextX, kSourceTextY
         DEFINE_POINT point_destination_slot_drive, kSlotDriveTextX, kDestTextY
         DEFINE_POINT point_disk_copy, kOverviewTextX, kInfoTextY
-
 
         DEFINE_LABEL select_quit, res_string_label_select_quit, kDialogWidth/2, kTipTextY
         DEFINE_RECT rect_erase_tip, kEraseLeft, kTipTextY-kSystemFontHeight, kEraseRight, kTipTextY
@@ -453,7 +458,7 @@ InitDialog:
         MGTK_CALL MGTK::MoveTo, slot_drive_name_label_pos
         MGTK_CALL MGTK::DrawString, slot_drive_name_label_str
         MGTK_CALL MGTK::MoveTo, select_source_label_pos
-        MGTK_CALL MGTK::DrawString, select_source_label_str
+        MGTK_CALL MGTK::DrawStringCentered, select_source_label_str
         MGTK_CALL MGTK::MoveTo, select_quit_label_pos
         MGTK_CALL MGTK::DrawStringCentered, select_quit_label_str
 
@@ -483,7 +488,7 @@ InitDialog:
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_erase_select_src
         MGTK_CALL MGTK::MoveTo, select_source_label_pos
-        MGTK_CALL MGTK::DrawString, str_select_destination
+        MGTK_CALL MGTK::DrawStringCentered, str_select_destination
         jsr     DrawSourceDriveInfo
 
         ;; Prepare for destination selection
@@ -1899,10 +1904,10 @@ str_insert_source:
 str_insert_dest:
         PASCAL_STRING res_string_prompt_insert_destination
 
-str_confirm_erase:
+confirm_erase_buf := $FF00 ; free page in aux, before copy starts
+
+str_confirm_erase_prefix:
         PASCAL_STRING res_string_prompt_erase_prefix
-str_confirm_erase_buf:  .res    18, 0
-kLenConfirmErase = .strlen(res_string_prompt_erase_prefix)
 str_confirm_erase_suffix:
         PASCAL_STRING res_string_prompt_erase_suffix
 
@@ -1948,7 +1953,7 @@ alert_table:
 message_table:
         .addr   str_insert_source
         .addr   str_insert_dest
-        .addr   str_confirm_erase
+        .addr   confirm_erase_buf
         .addr   str_format_error
         .addr   str_dest_protected
         .addr   str_confirm_erase_sd
@@ -2024,7 +2029,7 @@ start:
     END_IF
 
     IF A = #kAlertMsgConfirmErase
-        jsr     _AppendToConfirmErase
+        jsr     _ComposeConfirmErase
         lda     #kAlertMsgConfirmErase
         bne     find_in_alert_table ; always
     END_IF
@@ -2060,33 +2065,44 @@ find_in_alert_table:
 
 ;;; --------------------------------------------------
 ;;; Inputs: X,Y = volume name
+;;; Output: `confirm_erase_buf` populated
+;;; Scrambles $06...$08
 
-.proc _AppendToConfirmErase
-        ptr := $06
-        stxy    ptr
-        ldy     #$00
-        lda     (ptr),y
+.proc _ComposeConfirmErase
+        buf := confirm_erase_buf
+
+        txa                     ; X,Y = volume name
         pha
-        tay
-    DO
-        copy8   (ptr),y, str_confirm_erase_buf-1,y
-    WHILE dey : NOT_ZERO
+        tya
+        pha
 
+        copy8   #0, buf
+
+        CALL    append, AX=#str_confirm_erase_prefix
+        pla                     ; A,X = volume name
+        tax
         pla
-        clc
-        adc     #kLenConfirmErase
+        CALL    append
+        TAIL_CALL append, AX=#str_confirm_erase_suffix
 
-        tay
-        ldx     #0
+append:
+        ptr := $06
+        len := $08
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        ldx     buf
     DO
-        iny
         inx
-        copy8   str_confirm_erase_suffix,x, str_confirm_erase,y
-    WHILE X <> str_confirm_erase_suffix
-
-        sty     str_confirm_erase
+        iny
+        lda     (ptr),y
+        sta     buf,x
+    WHILE Y < len
+        stx     buf
         rts
-.endproc ; _AppendToConfirmErase
+.endproc ; _ComposeConfirmErase
 
 ;;; --------------------------------------------------
 ;;; Inputs: X = %DSSSxxxx
