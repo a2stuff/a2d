@@ -171,7 +171,7 @@ grid_pen:
         kGap = 3
         DEFINE_RECT rect_month_year, kArrowX + kArrowDX + kGap, 0, kDAWidth - kArrowX - kArrowDX - kGap, kSystemFontHeight + kMarginY
 
-        DEFINE_POINT pos_month_year, SELF_MODIFIED, kSystemFontHeight + kMarginY
+        DEFINE_POINT pos_month_year, kDAWidth/2, kSystemFontHeight + kMarginY
 str_space:
         PASCAL_STRING " "
 str_year:
@@ -183,6 +183,9 @@ str_year:
 str_date:
         PASCAL_STRING "   "
 
+        ;; Long enough for length byte + month + space + year
+buf_month_year:
+        .res    64
 
 ;;; ============================================================
 
@@ -453,16 +456,11 @@ notpencopy:     .byte   MGTK::notpencopy
         copy16  month_str_table-2,x, ptr_str_month
         jsr     MakeYearString
 
-        ;; Measure month + space + year width, to center
-        copy16  #0, width
-        CALL    MeasureString, AX=ptr_str_month
-        addax   width
-        CALL    MeasureString, AX=#str_space
-        addax   width
-        CALL    MeasureString, AX=#str_year
-        addax   width
-        sub16   #kDAWidth, width, pos_month_year::xcoord
-        lsr16   pos_month_year::xcoord
+        ;; Compose strings
+        copy8   #0, buf_month_year
+        CALL    AppendString, AX=ptr_str_month
+        CALL    AppendString, AX=#str_space
+        CALL    AppendString, AX=#str_year
 
         ;; Erase background if needed
     IF bit full_flag : NC
@@ -472,10 +470,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ;; Draw month + space + year
         MGTK_CALL MGTK::MoveTo, pos_month_year
-        copy16  ptr_str_month, @addr
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
-        MGTK_CALL MGTK::DrawString, str_space
-        MGTK_CALL MGTK::DrawString, str_year
+        MGTK_CALL MGTK::DrawStringCentered, buf_month_year
 
         ;; --------------------------------------------------
         ;; Grid lines
@@ -714,15 +709,29 @@ tmp:    .word   0
 
 ;;; ============================================================
 
-.proc MeasureString
+;;; Appends passed string to `buf_month_year`
+;;; Inputs: A,X = string
+;;; Trashes: $06
+.proc AppendString
         ptr := $06
-        width := $08
-
         stax    ptr
-        MGTK_CALL MGTK::StringWidth, ptr
-        ldax    width
+
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+
+        ldx     buf_month_year
+    DO
+        inx
+        iny
+        lda     (ptr),y
+        sta     buf_month_year,x
+    WHILE Y < len
+        stx     buf_month_year
         rts
-.endproc ; MeasureString
+
+len:    .byte   0
+.endproc ; AppendString
 
 ;;; ============================================================
 
