@@ -458,6 +458,12 @@ This call normally auto-hides the cursor.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
+#### Aliases
+
+* `DrawTextForward` and `DrawTextBackward` are aliases for `DrawText` and `DrawTextRight`
+* `DrawStringForward` and `DrawStringBackward` are aliases for `DrawString` and `DrawStringRight`
+
+
 ### Utility - configuration and version
 
 #### SetZP1 ($1A)

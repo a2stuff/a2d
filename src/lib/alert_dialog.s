@@ -288,21 +288,21 @@ advance:
         ;; Whole string fits, just draw it.
         copy8   len, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
-        MGTK_CALL MGTK::DrawText, textwidth_params
+        MGTK_CALL MGTK::DrawTextForward, textwidth_params
         beq     done            ; always
     END_IF
 
         ;; Split string over two lines.
         copy8   split_pos, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt1
-        MGTK_CALL MGTK::DrawText, textwidth_params
+        MGTK_CALL MGTK::DrawTextForward, textwidth_params
         add16_8 textwidth_params::data, split_pos
         lda     len
         sec
         sbc     split_pos
         sta     textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
-        MGTK_CALL MGTK::DrawText, textwidth_params
+        MGTK_CALL MGTK::DrawTextForward, textwidth_params
 
 done:
 .endscope

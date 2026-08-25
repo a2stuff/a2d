@@ -420,7 +420,7 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, alert_sound_label_pos
-        MGTK_CALL MGTK::DrawString, alert_sound_label_str
+        MGTK_CALL MGTK::DrawStringForward, alert_sound_label_str
 
         BTK_CALL BTK::Draw, cancel_button
         BTK_CALL BTK::Draw, ok_button

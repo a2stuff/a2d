@@ -456,7 +456,7 @@ InitDialog:
         jsr     UpdateOKButton
         BTK_CALL BTK::Draw, read_drive_button
         MGTK_CALL MGTK::MoveTo, slot_drive_name_label_pos
-        MGTK_CALL MGTK::DrawString, slot_drive_name_label_str
+        MGTK_CALL MGTK::DrawStringForward, slot_drive_name_label_str
         MGTK_CALL MGTK::MoveTo, select_source_label_pos
         MGTK_CALL MGTK::DrawStringCentered, select_source_label_str
         MGTK_CALL MGTK::MoveTo, select_quit_label_pos
@@ -1584,7 +1584,7 @@ next_device:
         jsr     IntToStringWithSeparators
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, blocks_to_transfer_label_pos
-        MGTK_CALL MGTK::DrawString, blocks_to_transfer_label_str
+        MGTK_CALL MGTK::DrawStringForward, blocks_to_transfer_label_str
         jmp     DrawIntString
 .endproc ; DrawTotalBlocks
 
@@ -1594,7 +1594,7 @@ next_device:
         CALL    IntToStringWithSeparators, AX=blocks_read
         MGTK_CALL MGTK::ShieldCursor, shield_block_counts_rect
         MGTK_CALL MGTK::MoveTo, blocks_read_label_pos
-        MGTK_CALL MGTK::DrawString, blocks_read_label_str
+        MGTK_CALL MGTK::DrawStringForward, blocks_read_label_str
         jsr     DrawIntString
         jmp     UnshieldCursor
 .endproc ; IncAndDrawBlocksRead
@@ -1605,14 +1605,14 @@ next_device:
         CALL    IntToStringWithSeparators, AX=blocks_written
         MGTK_CALL MGTK::ShieldCursor, shield_block_counts_rect
         MGTK_CALL MGTK::MoveTo, blocks_written_label_pos
-        MGTK_CALL MGTK::DrawString, blocks_written_label_str
+        MGTK_CALL MGTK::DrawStringForward, blocks_written_label_str
         jsr     DrawIntString
         jmp     UnshieldCursor
 .endproc ; IncAndDrawBlocksWritten
 
 .proc DrawIntString
-        MGTK_CALL MGTK::DrawString, str_from_int
-        MGTK_CALL MGTK::DrawString, str_2_spaces
+        MGTK_CALL MGTK::DrawStringForward, str_from_int
+        MGTK_CALL MGTK::DrawStringForward, str_2_spaces
         rts
 .endproc ; DrawIntString
 
@@ -1672,12 +1672,12 @@ remainder:      .word   0              ; (out)
 .proc DrawSourceDriveInfo
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, source_label_pos
-        MGTK_CALL MGTK::DrawString, source_label_str
+        MGTK_CALL MGTK::DrawStringForward, source_label_str
 
         ldx     source_drive_index
         CALL    PrepSDStrings, A=drive_unitnum_table,x
         MGTK_CALL MGTK::MoveTo, point_source_slot_drive
-        MGTK_CALL MGTK::DrawString, str_slot_drive_pattern
+        MGTK_CALL MGTK::DrawStringForward, str_slot_drive_pattern
 
         bit     source_disk_format
         ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
@@ -1692,9 +1692,9 @@ remainder:      .word   0              ; (out)
         bne     ret             ; Other
 
 show_name:
-        MGTK_CALL MGTK::DrawString, str_2_spaces
+        MGTK_CALL MGTK::DrawStringForward, str_2_spaces
         COPY_STRING main::on_line_buffer2, device_name_buf
-        MGTK_CALL MGTK::DrawString, device_name_buf
+        MGTK_CALL MGTK::DrawStringForward, device_name_buf
 
 ret:    rts
 .endproc ; DrawSourceDriveInfo
@@ -1704,12 +1704,12 @@ ret:    rts
 .proc DrawDestinationDriveInfo
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, destination_label_pos
-        MGTK_CALL MGTK::DrawString, destination_label_str
+        MGTK_CALL MGTK::DrawStringForward, destination_label_str
 
         ldx     dest_drive_index
         CALL    PrepSDStrings, A=drive_unitnum_table,x
         MGTK_CALL MGTK::MoveTo, point_destination_slot_drive
-        MGTK_CALL MGTK::DrawString, str_slot_drive_pattern
+        MGTK_CALL MGTK::DrawStringForward, str_slot_drive_pattern
 
         rts
 .endproc ; DrawDestinationDriveInfo
@@ -1723,13 +1723,13 @@ ret:    rts
         bit     source_disk_format
         ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
     IF NC                       ; ProDOS
-        MGTK_CALL MGTK::DrawString, str_prodos_disk_copy
+        MGTK_CALL MGTK::DrawStringForward, str_prodos_disk_copy
         rts
     END_IF
 
         ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
     IF VC                       ; DOS 3.3
-        MGTK_CALL MGTK::DrawString, str_dos33_disk_copy
+        MGTK_CALL MGTK::DrawStringForward, str_dos33_disk_copy
         rts
     END_IF
 
@@ -1737,7 +1737,7 @@ ret:    rts
         and     #$0F
         ASSERT_EQUALS auxlc::kSourceDiskFormatPascal & $0F, $00
     IF ZERO                     ; Pascal
-        MGTK_CALL MGTK::DrawString, str_pascal_disk_copy
+        MGTK_CALL MGTK::DrawStringForward, str_pascal_disk_copy
         rts
     END_IF
 
@@ -1778,13 +1778,13 @@ ret:    rts
         lda     err_writing_flag
     IF ZERO
         MGTK_CALL MGTK::MoveTo, error_reading_label_pos
-        MGTK_CALL MGTK::DrawString, error_reading_label_str
+        MGTK_CALL MGTK::DrawStringForward, error_reading_label_str
         jsr     DrawIntString
         RETURN  A=#0
     END_IF
 
         MGTK_CALL MGTK::MoveTo, error_writing_label_pos
-        MGTK_CALL MGTK::DrawString, error_writing_label_str
+        MGTK_CALL MGTK::DrawStringForward, error_writing_label_str
         jsr     DrawIntString
         RETURN  A=#0
 

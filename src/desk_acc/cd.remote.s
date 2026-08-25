@@ -589,7 +589,7 @@ str_time:
         add16_8 STARTLO, textlen, ENDLO
         CALL    AUXMOVE, C=1    ; main>aux
 
-        JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
+        JUMP_TABLE_MGTK_CALL MGTK::DrawTextForward, params
 done:   rts
 .endproc ; DrawStringFromMain
 

@@ -1042,3 +1042,10 @@ ycoord: .word   AS_WORD(top)
 
         .endif
 .endmacro
+
+;;; ----------------------------------------
+
+MGTK::DrawStringForward = MGTK::DrawString
+MGTK::DrawStringBackward = MGTK::DrawStringRight
+MGTK::DrawTextForward = MGTK::DrawText
+MGTK::DrawTextBackward = MGTK::DrawTextRight

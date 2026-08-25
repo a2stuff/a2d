@@ -144,8 +144,8 @@ width:  .word   0
         lsr16   tmpw            ; /= 2
         sub16   pos_playing::xcoord, tmpw, pos_playing::xcoord
         MGTK_CALL MGTK::MoveTo, pos_playing
-        MGTK_CALL MGTK::DrawString, str_playing
-        MGTK_CALL MGTK::DrawString, name_buf
+        MGTK_CALL MGTK::DrawStringForward, str_playing
+        MGTK_CALL MGTK::DrawStringForward, name_buf
         MGTK_CALL MGTK::MoveTo, pos_credit1
         MGTK_CALL MGTK::DrawStringCentered, str_credit1
         MGTK_CALL MGTK::MoveTo, pos_credit2

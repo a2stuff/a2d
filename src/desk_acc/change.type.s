@@ -502,10 +502,10 @@ yes:    RETURN  C=0
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, type_label_pos
-        MGTK_CALL MGTK::DrawStringRight, type_label_str
+        MGTK_CALL MGTK::DrawStringBackward, type_label_str
 
         MGTK_CALL MGTK::MoveTo, auxtype_label_pos
-        MGTK_CALL MGTK::DrawStringRight, auxtype_label_str
+        MGTK_CALL MGTK::DrawStringBackward, auxtype_label_str
 
         MGTK_CALL MGTK::FrameRect, type_rect
         MGTK_CALL MGTK::FrameRect, auxtype_rect

@@ -431,14 +431,14 @@ remainder:      .word   0                 ; (out)
         MGTK_CALL MGTK::ShieldCursor, rect_frame
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         MGTK_CALL MGTK::MoveTo, pos_copying
-        MGTK_CALL MGTK::DrawString, str_copying
+        MGTK_CALL MGTK::DrawStringForward, str_copying
         MGTK_CALL MGTK::MoveTo, pos_path
         COPY_STRING pathname_src, display_path
         CALL    DrawDialogPath, AX=#display_path
         MGTK_CALL MGTK::MoveTo, pos_remaining
-        MGTK_CALL MGTK::DrawString, str_files_remaining
-        MGTK_CALL MGTK::DrawString, str_from_int
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, str_files_remaining
+        MGTK_CALL MGTK::DrawStringForward, str_from_int
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
 
         sub16   total_count, file_count, progress_muldiv_params::numerator
         copy16  total_count, progress_muldiv_params::denominator
@@ -463,9 +463,9 @@ display_path:
         CALL    IntToString, AX=file_count
         MGTK_CALL MGTK::ShieldCursor, rect_frame
         MGTK_CALL MGTK::MoveTo, pos_copying
-        MGTK_CALL MGTK::DrawString, str_files_to_copy
-        MGTK_CALL MGTK::DrawString, str_from_int
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, str_files_to_copy
+        MGTK_CALL MGTK::DrawStringForward, str_from_int
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
         MGTK_CALL MGTK::UnshieldCursor
         rts
 .endproc ; UpdateEnumerationProgress

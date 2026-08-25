@@ -257,7 +257,7 @@ skip_port:
         sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         copy16  a_shortcut, @addr
-        MGTK_CALL MGTK::DrawStringRight, SELF_MODIFIED, @addr
+        MGTK_CALL MGTK::DrawStringBackward, SELF_MODIFIED, @addr
       END_IF
     ELSE
         ;; Draw the label (centered)
@@ -301,7 +301,7 @@ skip_port:
 ;;; Inputs: A,X points at string
 .proc _DrawString
         stax    @addr
-        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
+        MGTK_CALL MGTK::DrawStringForward, SELF_MODIFIED, @addr
         rts
 .endproc ; _DrawString
 

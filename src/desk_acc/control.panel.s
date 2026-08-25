@@ -1057,10 +1057,10 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Caret Blinking
 
         MGTK_CALL MGTK::MoveTo, caret_blink1_label_pos
-        MGTK_CALL MGTK::DrawString, caret_blink1_label_str
+        MGTK_CALL MGTK::DrawStringForward, caret_blink1_label_str
 
         MGTK_CALL MGTK::MoveTo, caret_blink2_label_pos
-        MGTK_CALL MGTK::DrawString, caret_blink2_label_str
+        MGTK_CALL MGTK::DrawStringForward, caret_blink2_label_str
 
         MGTK_CALL MGTK::PaintBits, caret_blink_bitmap_params
 

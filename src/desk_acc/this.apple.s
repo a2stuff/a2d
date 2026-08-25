@@ -1317,15 +1317,15 @@ egg:    .byte   0
         ;; Memory
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::memory_label_pos
-        JUMP_TABLE_MGTK_CALL MGTK::DrawString, aux::memory_label_str
+        JUMP_TABLE_MGTK_CALL MGTK::DrawStringForward, aux::memory_label_str
 
-        CALL    DrawStringFromMain, AX=#str_from_int
+        CALL    DrawStringForwardFromMain, AX=#str_from_int
 
         ;; CPU
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::cpu_label_pos
-        JUMP_TABLE_MGTK_CALL MGTK::DrawString, aux::cpu_label_str
+        JUMP_TABLE_MGTK_CALL MGTK::DrawStringForward, aux::cpu_label_str
         jsr     CPUId
-        jsr     DrawStringFromMain
+        jsr     DrawStringForwardFromMain
 
         ;; Separator
 
@@ -1335,16 +1335,16 @@ egg:    .byte   0
         ;; Aux Slot
 
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
-        CALL    DrawStringRightFromMain, AX=#str_aux
+        CALL    DrawStringBackwardFromMain, AX=#str_aux
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_aux
         ldax    #str_80col
         ldy     rw_banks
     IF Y <> #1
         ldax    #str_ramworks
     END_IF
-        CALL    DrawStringFromMain
-        CALL    DrawStringFromMain, AX=#str_ramworks_prefix
-        CALL    DrawStringFromMain, AX=#str_ramworks_memory
+        CALL    DrawStringForwardFromMain
+        CALL    DrawStringForwardFromMain, AX=#str_ramworks_prefix
+        CALL    DrawStringForwardFromMain, AX=#str_ramworks_memory
 
         ;; Slots 1-7
 
@@ -1413,7 +1413,7 @@ draw_no_sp:
 
 draw_maybe_sp:
         php
-        jsr     DrawStringFromMain
+        jsr     DrawStringForwardFromMain
         plp
       IF VS
         ;; V=1 means smartport - print out the names
@@ -1427,8 +1427,8 @@ draw_maybe_sp:
         jsr     SetSlotPtr
         CALL    WithInterruptsDisabled, AX=#DetectTheCricket
        IF CS
-        CALL    DrawStringFromMain, AX=#str_list_separator
-        CALL    DrawStringFromMain, AX=#str_cricket
+        CALL    DrawStringForwardFromMain, AX=#str_list_separator
+        CALL    DrawStringForwardFromMain, AX=#str_cricket
        END_IF
       END_IF
 
@@ -2473,12 +2473,12 @@ done_adjust_case:
 
         ;; Need a comma?
       IF bit empty_flag : NC
-        CALL    DrawStringFromMain, AX=#str_list_separator
+        CALL    DrawStringForwardFromMain, AX=#str_list_separator
       END_IF
         CLEAR_BIT7_FLAG empty_flag ; saw a unit!
 
         ;; Draw the device name
-        CALL    DrawStringFromMain, AX=#str_current
+        CALL    DrawStringForwardFromMain, AX=#str_current
 
         ;; Next!
 next:   lda     status_params::unit_num
@@ -2491,7 +2491,7 @@ finish:
 
         ;; If no units, populate with "(none)"
     IF bit empty_flag : NS
-        CALL    DrawStringFromMain, AX=#str_none
+        CALL    DrawStringForwardFromMain, AX=#str_none
     END_IF
 
         rts
@@ -2534,7 +2534,7 @@ num_devices:
         txa
         ora     #'0'
         sta     str_duplicate_suffix + kDuplicateCountOffset
-        CALL    DrawStringFromMain, AX=#str_duplicate_suffix
+        CALL    DrawStringForwardFromMain, AX=#str_duplicate_suffix
         copy8   #0, duplicate_count
     END_IF
         rts
@@ -2607,6 +2607,11 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
     END_IF
         rts
 .endproc ; DrawStringRightFromMain
+
+;;; ============================================================
+
+DrawStringForwardFromMain := DrawStringFromMain
+DrawStringBackwardFromMain := DrawStringRightFromMain
 
 ;;; ============================================================
 

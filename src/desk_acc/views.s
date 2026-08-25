@@ -349,7 +349,7 @@ view_by_table:
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::MoveTo, view_style_label_pos
-        MGTK_CALL MGTK::DrawString, view_style_label_str
+        MGTK_CALL MGTK::DrawStringForward, view_style_label_str
 
         copy8   #0, index
     DO

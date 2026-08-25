@@ -586,9 +586,9 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::PaintBits, map_params
 
         MGTK_CALL MGTK::MoveTo, lat_label_pos
-        MGTK_CALL MGTK::DrawString, lat_label_str
+        MGTK_CALL MGTK::DrawStringForward, lat_label_str
         MGTK_CALL MGTK::MoveTo, long_label_pos
-        MGTK_CALL MGTK::DrawString, long_label_str
+        MGTK_CALL MGTK::DrawStringForward, long_label_str
 
         jsr     DrawLatLong
 
@@ -623,14 +623,14 @@ notpencopy:     .byte   MGTK::notpencopy
         copy8   #kGlyphDegreeSign, str_from_int,x
         stx     str_from_int
         MGTK_CALL MGTK::MoveTo, pos_lat
-        MGTK_CALL MGTK::DrawString, str_from_int
-        MGTK_CALL MGTK::DrawString, str_space
+        MGTK_CALL MGTK::DrawStringForward, str_from_int
+        MGTK_CALL MGTK::DrawStringForward, str_space
     IF bit sflag : NC
-        MGTK_CALL MGTK::DrawString, str_n
+        MGTK_CALL MGTK::DrawStringForward, str_n
     ELSE
-        MGTK_CALL MGTK::DrawString, str_s
+        MGTK_CALL MGTK::DrawStringForward, str_s
     END_IF
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
 
         ;; Longitude
         copy16  long, tmp
@@ -646,14 +646,14 @@ notpencopy:     .byte   MGTK::notpencopy
         copy8   #kGlyphDegreeSign, str_from_int,x
         stx     str_from_int
         MGTK_CALL MGTK::MoveTo, pos_long
-        MGTK_CALL MGTK::DrawString, str_from_int
-        MGTK_CALL MGTK::DrawString, str_space
+        MGTK_CALL MGTK::DrawStringForward, str_from_int
+        MGTK_CALL MGTK::DrawStringForward, str_space
     IF bit sflag : NC
-        MGTK_CALL MGTK::DrawString, str_e
+        MGTK_CALL MGTK::DrawStringForward, str_e
     ELSE
-        MGTK_CALL MGTK::DrawString, str_w
+        MGTK_CALL MGTK::DrawStringForward, str_w
     END_IF
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
 
         jsr     UpdateCoordsFromLatLong
         jmp     ShowPositionIndicator

@@ -74,9 +74,9 @@ Exec:
     IF ZERO
         MGTK_CALL MGTK::MoveTo, vol_picker_select_pos
       IF bit erase_flag : NS
-        MGTK_CALL MGTK::DrawString, aux::str_select_erase
+        MGTK_CALL MGTK::DrawStringForward, aux::str_select_erase
       ELSE
-        MGTK_CALL MGTK::DrawString, aux::str_select_format
+        MGTK_CALL MGTK::DrawStringForward, aux::str_select_format
       END_IF
 
         jsr     main::SetPenModeNotCopy

@@ -502,7 +502,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::FrameRect, input_rect
 
         MGTK_CALL MGTK::MoveTo, find_label_pos
-        MGTK_CALL MGTK::DrawString, find_label_str
+        MGTK_CALL MGTK::DrawStringForward, find_label_str
 
         BTK_CALL BTK::Draw, search_button
         BTK_CALL BTK::Draw, cancel_button

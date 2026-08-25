@@ -210,13 +210,13 @@ consume:
 
         ;; Radio buttons
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
-        MGTK_CALL MGTK::DrawString, add_a_new_entry_to_label_str
+        MGTK_CALL MGTK::DrawStringForward, add_a_new_entry_to_label_str
 
         BTK_CALL BTK::RadioDraw, primary_run_list_button
         BTK_CALL BTK::RadioDraw, secondary_run_list_button
 
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
-        MGTK_CALL MGTK::DrawString, down_load_label_str
+        MGTK_CALL MGTK::DrawStringForward, down_load_label_str
 
         BTK_CALL BTK::RadioDraw, at_first_boot_button
         BTK_CALL BTK::RadioDraw, at_first_use_button

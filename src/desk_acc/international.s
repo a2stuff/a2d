@@ -482,19 +482,19 @@ dialog_result:  .byte   0
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::MoveTo, date_label_pos
-        MGTK_CALL MGTK::DrawString, date_label_str
+        MGTK_CALL MGTK::DrawStringForward, date_label_str
         MGTK_CALL MGTK::FrameRect, date_rect
 
         MGTK_CALL MGTK::MoveTo, time_label_pos
-        MGTK_CALL MGTK::DrawString, time_label_str
+        MGTK_CALL MGTK::DrawStringForward, time_label_str
         MGTK_CALL MGTK::FrameRect, time_rect
 
         MGTK_CALL MGTK::MoveTo, deci_label_pos
-        MGTK_CALL MGTK::DrawString, deci_label_str
+        MGTK_CALL MGTK::DrawStringForward, deci_label_str
         MGTK_CALL MGTK::FrameRect, deci_rect
 
         MGTK_CALL MGTK::MoveTo, thou_label_pos
-        MGTK_CALL MGTK::DrawString, thou_label_str
+        MGTK_CALL MGTK::DrawStringForward, thou_label_str
         MGTK_CALL MGTK::FrameRect, thou_rect
 
         CALL    DrawField, A=#Field::date
@@ -509,7 +509,7 @@ dialog_result:  .byte   0
         BTK_CALL BTK::RadioDraw, clock_24hour_button
 
         MGTK_CALL MGTK::MoveTo, first_dow_label_pos
-        MGTK_CALL MGTK::DrawString, first_dow_label_str
+        MGTK_CALL MGTK::DrawStringForward, first_dow_label_str
         BTK_CALL BTK::RadioDraw, sunday_button
         BTK_CALL BTK::RadioDraw, monday_button
 
@@ -617,8 +617,8 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, date_sample_label_pos
         MGTK_CALL MGTK::ShieldCursor, date_sample_rect
-        MGTK_CALL MGTK::DrawString, date_sample_label_str
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, date_sample_label_str
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
         MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
@@ -636,8 +636,8 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, time_sample_label_pos
         MGTK_CALL MGTK::ShieldCursor, time_sample_rect
-        MGTK_CALL MGTK::DrawString, time_sample_label_str
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, time_sample_label_str
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
         MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
@@ -655,8 +655,8 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, deci_sample_label_pos
         MGTK_CALL MGTK::ShieldCursor, deci_sample_rect
-        MGTK_CALL MGTK::DrawString, deci_sample_label_str
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, deci_sample_label_str
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
         MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
@@ -674,8 +674,8 @@ char:   .byte   SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         MGTK_CALL MGTK::MoveTo, thou_sample_label_pos
         MGTK_CALL MGTK::ShieldCursor, thou_sample_rect
-        MGTK_CALL MGTK::DrawString, thou_sample_label_str
-        MGTK_CALL MGTK::DrawString, str_spaces
+        MGTK_CALL MGTK::DrawStringForward, thou_sample_label_str
+        MGTK_CALL MGTK::DrawStringForward, str_spaces
         MGTK_CALL MGTK::UnshieldCursor
         rts
     END_IF
