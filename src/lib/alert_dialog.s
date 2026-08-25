@@ -135,8 +135,15 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         kWrapWidth = kTextRight - kTextLeft
 
+.if kBuildIsRTL
+        DEFINE_POINT pos_prompt1, kTextRight, kAlertRectTop + kAlertMarginY + kSystemFontHeight*2 + 2
+        DEFINE_POINT pos_prompt2, kTextRight, kAlertRectTop + kAlertMarginY + kSystemFontHeight*1
+        pos_prompt := pos_prompt1
+.else
         DEFINE_POINT pos_prompt1, kTextLeft, kAlertRectTop + kAlertMarginY + kSystemFontHeight*1
         DEFINE_POINT pos_prompt2, kTextLeft, kAlertRectTop + kAlertMarginY + kSystemFontHeight*2 + 2
+        pos_prompt := pos_prompt2
+.endif
 
 .params textwidth_params        ; Used for spitting/drawing the text.
 data:   .addr   0
@@ -145,6 +152,8 @@ width:  .word   0
 .endparams
 len:    .byte   0               ; total string length
 split_pos:                      ; last known split position
+        .byte   0
+test_pos:
         .byte   0
 
 .params alert_params
@@ -263,37 +272,65 @@ done_buttons:
         ptr := $06
         copy16  alert_params::text, ptr
         ldy     #0
-        sty     split_pos       ; initialize
         lda     (ptr),y
         sta     len             ; total length
+.if kBuildIsRTL
+        tay
+        iny
+.endif
+        sty     split_pos       ; initialize
 
         ;; Search for space or end of string
 advance:
     DO
+.if kBuildIsRTL
+        dey
+        BREAK_IF Y = #1
+.else
         iny
         BREAK_IF Y = len
+.endif
         lda     (ptr),y
     WHILE A <> #' '
 
         ;; Does this much fit?
+        sty     test_pos
+.if kBuildIsRTL
+        add16_8 alert_params::text, test_pos, textwidth_params::data
+        lda     len
+        sec
+        sbc     test_pos
+        sta     textwidth_params::length
+.else
         sty     textwidth_params::length
+.endif
         MGTK_CALL MGTK::TextWidth, textwidth_params
+.if kBuildIsRTL
+        add16_8 alert_params::text, #1, textwidth_params::data
+.endif
+
     IF cmp16 textwidth_params::width, #kWrapWidth : LT
         ;; Yes, record possible split position, maybe continue.
-        ldy     textwidth_params::length
+        ldy     test_pos
         sty     split_pos
+.if kBuildIsRTL
+        cpy     #1              ; hit start of string?
+.else
         cpy     len             ; hit end of string?
+.endif
         bne     advance         ; no, keep looking
 
         ;; Whole string fits, just draw it.
         copy8   len, textwidth_params::length
-        MGTK_CALL MGTK::MoveTo, pos_prompt2
+        MGTK_CALL MGTK::MoveTo, pos_prompt
         MGTK_CALL MGTK::DrawTextForward, textwidth_params
         beq     done            ; always
     END_IF
 
         ;; Split string over two lines.
-        copy8   split_pos, textwidth_params::length
+        ldx     split_pos
+        dex                     ; eliminate the split position itself
+        stx     textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt1
         MGTK_CALL MGTK::DrawTextForward, textwidth_params
         add16_8 textwidth_params::data, split_pos

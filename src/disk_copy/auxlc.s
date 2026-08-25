@@ -216,9 +216,9 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_BUTTON read_drive_button, winfo_dialog::kWindowId, res_string_button_read_drive, res_char_button_read_drive_shortcut, kButtonsLeft, 90
 
-        DEFINE_LABEL slot_drive_name, res_string_label_slot_drive_name, 20, 28
+        DEFINE_LABEL slot_drive_name, res_string_label_slot_drive_name, 20, 28, kListBoxWidth
 
-        DEFINE_LABEL select_source, res_string_prompt_select_source, (kButtonsLeft+kButtonsRight)/2, 46
+        DEFINE_LABEL select_source, res_string_prompt_select_source, (kButtonsLeft+kButtonsRight)/2, 46, kLabelCentered
 str_select_destination:
         PASCAL_STRING res_string_prompt_select_destination
 
@@ -345,24 +345,30 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
         kBlocksTextX    = 308
         kBlocksTextWidth = kDialogWidth - kOverviewTextX - kBlocksTextX
 
-        DEFINE_LABEL blocks_read, res_string_label_blocks_read, kBlocksTextX, kSourceTextY
-        DEFINE_LABEL blocks_written, res_string_label_blocks_written, kBlocksTextX, kDestTextY
-        DEFINE_LABEL blocks_to_transfer, res_string_label_blocks_to_transfer, kBlocksTextX, kInfoTextY
+        DEFINE_LABEL blocks_read, res_string_label_blocks_read, kBlocksTextX, kSourceTextY, kBlocksTextWidth
+        DEFINE_LABEL blocks_written, res_string_label_blocks_written, kBlocksTextX, kDestTextY, kBlocksTextWidth
+        DEFINE_LABEL blocks_to_transfer, res_string_label_blocks_to_transfer, kBlocksTextX, kInfoTextY, kBlocksTextWidth
         DEFINE_RECT  shield_block_counts_rect, kBlocksTextX, kSourceTextY - kSystemFontHeight, kDialogWidth - kBorderDX*2, kDestTextY
 
-        DEFINE_LABEL source, res_string_source, kOverviewTextX, kSourceTextY
-        DEFINE_LABEL destination, res_string_destination, kOverviewTextX, kDestTextY
+        DEFINE_LABEL source, res_string_source, kOverviewTextX, kSourceTextY, kOverviewTextWidth
+        DEFINE_LABEL destination, res_string_destination, kOverviewTextX, kDestTextY, kOverviewTextWidth
 
+.if kBuildIsRTL
+        DEFINE_POINT point_source_slot_drive, kOverviewTextX + kOverviewTextWidth - (kSlotDriveTextX - kOverviewTextX), kSourceTextY
+        DEFINE_POINT point_destination_slot_drive, kOverviewTextX + kOverviewTextWidth - (kSlotDriveTextX - kOverviewTextX), kDestTextY
+        DEFINE_POINT point_disk_copy, kOverviewTextX + kOverviewTextWidth, kInfoTextY
+.else
         DEFINE_POINT point_source_slot_drive, kSlotDriveTextX, kSourceTextY
         DEFINE_POINT point_destination_slot_drive, kSlotDriveTextX, kDestTextY
         DEFINE_POINT point_disk_copy, kOverviewTextX, kInfoTextY
+.endif
 
-        DEFINE_LABEL select_quit, res_string_label_select_quit, kDialogWidth/2, kTipTextY
+        DEFINE_LABEL select_quit, res_string_label_select_quit, kDialogWidth/2, kTipTextY, kLabelCentered
         DEFINE_RECT rect_erase_tip, kEraseLeft, kTipTextY-kSystemFontHeight, kEraseRight, kTipTextY
 
-        DEFINE_LABEL escape_stop_copy, res_string_escape_stop_copy, kDialogWidth/2, kTipTextY
-        DEFINE_LABEL error_writing, res_string_error_writing, kOverviewTextX, 102
-        DEFINE_LABEL error_reading, res_string_error_reading, kOverviewTextX, 92
+        DEFINE_LABEL escape_stop_copy, res_string_escape_stop_copy, kDialogWidth/2, kTipTextY, kLabelCentered
+        DEFINE_LABEL error_writing, res_string_error_writing, kOverviewTextX, 102, kOverviewTextWidth
+        DEFINE_LABEL error_reading, res_string_error_reading, kOverviewTextX, 92, kOverviewTextWidth
 
 str_slot_drive_pattern:
         PASCAL_STRING res_string_slot_drive_pattern

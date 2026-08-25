@@ -100,8 +100,13 @@ str_auxtype:
         kTypeY = 15
         kAuxtypeY = 32
 
+.if kBuildIsRTL
+        kTextBoxLeft = kDialogWidth/2 - kTextBoxWidth
+        kLabelX = kTextBoxLeft + kTextBoxWidth + 4
+.else
         kTextBoxLeft = kDialogWidth/2
         kLabelX = kTextBoxLeft-2
+.endif
 
         DEFINE_LINE_EDIT type_line_edit_rec, kDAWindowId, str_type, kTextBoxLeft, kTypeY, kTextBoxWidth, 2
         DEFINE_LINE_EDIT_PARAMS type_le_params, type_line_edit_rec
@@ -111,8 +116,8 @@ str_auxtype:
         DEFINE_LINE_EDIT_PARAMS auxtype_le_params, auxtype_line_edit_rec
         DEFINE_RECT_SZ auxtype_rect, kTextBoxLeft, kAuxtypeY, kTextBoxWidth, kTextBoxHeight-1
 
-        DEFINE_LABEL type, res_string_label_type, kLabelX, kTypeY+kSystemFontHeight+1
-        DEFINE_LABEL auxtype, res_string_label_auxtype, kLabelX, kAuxtypeY+kSystemFontHeight+1
+        DEFINE_LABEL type, res_string_label_type, kLabelX, kTypeY+kSystemFontHeight+1, kLabelManualAlignment
+        DEFINE_LABEL auxtype, res_string_label_auxtype, kLabelX, kAuxtypeY+kSystemFontHeight+1, kLabelManualAlignment
 
 ;;; ============================================================
 ;;; Alerts

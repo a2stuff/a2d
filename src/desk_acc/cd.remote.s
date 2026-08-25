@@ -262,8 +262,13 @@ reserved:       .byte   0
 
 ;;; ============================================================
 
+.if kBuildIsRTL
+        DEFINE_POINT pos_track, kCol1 + 20 + 56, kRow1 + 13
+        DEFINE_POINT pos_time, kCol4-8 + 35, kRow1 + 13
+.else
         DEFINE_POINT pos_track, kCol1 + 20, kRow1 + 13
         DEFINE_POINT pos_time, kCol4-8, kRow1 + 13
+.endif
 
 ;;; ============================================================
 

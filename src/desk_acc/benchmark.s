@@ -33,7 +33,7 @@ kButtonInsetX   = 7
 
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, (kDAWidth + 1) - kButtonWidth - kModalDialogInsetX - kButtonInsetX, (kDAHeight + 1) - kModalDialogInsetY - kButtonHeight
 
-        DEFINE_LABEL title, res_string_window_title, kDAWidth/2, kModalDialogInsetY + kSystemFontHeight - 1
+        DEFINE_LABEL title, res_string_window_title, kDAWidth/2, kModalDialogInsetY + kSystemFontHeight - 1, kLabelCentered
 
 ;;; ============================================================
 

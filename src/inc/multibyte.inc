@@ -481,6 +481,32 @@
     .endif
 .endmacro
 
+;;; Subtract A,X from arg1 (immediate or absolute), store to arg2 (or arg1 if not given)
+;;;    subax #$1111, $3333       ; immediate, absolute
+;;;    subax $1111, $3333        ; absolute, absolute
+;;;    subax $1111               ; absolute
+.macro subax arg1, arg2
+    .ifblank arg2
+        sec
+        eor     #$FF
+        adc     arg1
+        sta     arg1
+        txa
+        eor     #$FF
+        adc     arg1+1
+        sta     arg1+1
+    .else
+        sec
+        eor     #$FF
+        _op_lo adc, {arg1}
+        sta     arg2
+        txa
+        eor     #$FF
+        _op_hi adc, {arg1}
+        sta     arg2+1
+    .endif
+.endmacro
+
 ;;; Add arg1 (8 bit value) into A,X, optionally store to arg2
 ;;;    addax8 #$11       ; immediate
 ;;;    addax8 $11        ; absolute

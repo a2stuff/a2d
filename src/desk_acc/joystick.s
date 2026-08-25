@@ -121,9 +121,9 @@ kJoystickDisplayH = 64
         DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 8, kJoystickDisplayH + 5
         DEFINE_RECT_SZ joy_disp_rect,       kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 6, kJoystickDisplayH + 3
 
-        DEFINE_BUTTON joy_btn0_button, kDAWindowId, res_string_label_joy_btn0,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
-        DEFINE_BUTTON joy_btn1_button, kDAWindowId, res_string_label_joy_btn1,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
-        DEFINE_BUTTON joy_btn2_button, kDAWindowId, res_string_label_joy_btn2,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50
+        DEFINE_BUTTON joy_btn0_button, kDAWindowId, res_string_label_joy_btn0,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10, BTK::kRadioButtonWidth+kSystemFontWidth*2
+        DEFINE_BUTTON joy_btn1_button, kDAWindowId, res_string_label_joy_btn1,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30, BTK::kRadioButtonWidth+kSystemFontWidth*2
+        DEFINE_BUTTON joy_btn2_button, kDAWindowId, res_string_label_joy_btn2,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50, BTK::kRadioButtonWidth+kSystemFontWidth*2
 
  kMarkerWidth = 8
  kMarkerHeight = 5

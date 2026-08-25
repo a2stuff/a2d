@@ -458,9 +458,15 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ;; Compose strings
         copy8   #0, buf_month_year
+.if kBuildIsRTL
+        CALL    AppendString, AX=#str_year
+        CALL    AppendString, AX=#str_space
+        CALL    AppendString, AX=ptr_str_month
+.else
         CALL    AppendString, AX=ptr_str_month
         CALL    AppendString, AX=#str_space
         CALL    AppendString, AX=#str_year
+.endif
 
         ;; Erase background if needed
     IF bit full_flag : NC

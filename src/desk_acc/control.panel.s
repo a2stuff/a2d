@@ -215,7 +215,7 @@ rarr_bitmap:
         PIXELS  "####.."
         PIXELS  "##...."
 
-        DEFINE_BUTTON rgb_color_button, kDAWindowId, res_string_label_rgb_color, res_string_shortcut_apple_1, kPatternEditX + 46, kPatternEditY + 50
+        DEFINE_BUTTON rgb_color_button, kDAWindowId, res_string_label_rgb_color, res_string_shortcut_apple_1, kPatternEditX + 46, kPatternEditY + 50, 75
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -235,7 +235,7 @@ dblclick_speed_table:
         .word   kDefaultDblClickSpeed * 4
         .word   kDefaultDblClickSpeed * 16
 
-        DEFINE_LABEL dblclick_speed, res_string_label_dblclick_speed, kDblClickX + kDblClickWidth/2, kDblClickY + 47
+        DEFINE_LABEL dblclick_speed, res_string_label_dblclick_speed, kDblClickX + kDblClickWidth/2, kDblClickY + 47, kLabelCentered
 
 .params dblclick_params
         DEFINE_POINT viewloc, kDblClickX, kDblClickY
@@ -256,13 +256,13 @@ arrows_table:
         DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 22
         ASSERT_RECORD_TABLE_SIZE arrows_table, kNumArrows, .sizeof(MGTK::Point)
 
-        DEFINE_BUTTON dblclick_button1, kDAWindowId,,, kDblClickX + 175, kDblClickY + 25
-        DEFINE_BUTTON dblclick_button2, kDAWindowId,,, kDblClickX + 130, kDblClickY + 25
-        DEFINE_BUTTON dblclick_button3, kDAWindowId,,, kDblClickX +  85, kDblClickY + 25
+        DEFINE_BUTTON dblclick_button1, kDAWindowId,,, kDblClickX + 175, kDblClickY + 25, BTK::kRadioButtonWidth
+        DEFINE_BUTTON dblclick_button2, kDAWindowId,,, kDblClickX + 130, kDblClickY + 25, BTK::kRadioButtonWidth
+        DEFINE_BUTTON dblclick_button3, kDAWindowId,,, kDblClickX +  85, kDblClickY + 25, BTK::kRadioButtonWidth
 
-        DEFINE_LABEL dblclick_shortcut1, .sprintf("(%c4)", ::kGlyphOpenApple), kDblClickX +  85, kDblClickY + 22
-        DEFINE_LABEL dblclick_shortcut2, .sprintf("(%c5)", ::kGlyphOpenApple), kDblClickX + 130, kDblClickY + 22
-        DEFINE_LABEL dblclick_shortcut3, .sprintf("(%c6)", ::kGlyphOpenApple), kDblClickX + 175, kDblClickY + 22
+        DEFINE_LABEL dblclick_shortcut1, .sprintf("(%c4)", ::kGlyphOpenApple), kDblClickX +  85, kDblClickY + 22, kLabelManualAlignment
+        DEFINE_LABEL dblclick_shortcut2, .sprintf("(%c5)", ::kGlyphOpenApple), kDblClickX + 130, kDblClickY + 22, kLabelManualAlignment
+        DEFINE_LABEL dblclick_shortcut3, .sprintf("(%c6)", ::kGlyphOpenApple), kDblClickX + 175, kDblClickY + 22, kLabelManualAlignment
 
 dblclick_bitmap:
         PIXELS  "..........................##.........................."
@@ -327,10 +327,10 @@ kMouseTrackingX = 25
 kMouseTrackingY = 78
 kMouseTrackingWidth = 202 - kMouseTrackingX*2 - 10
 
-        DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + kMouseTrackingWidth/2, kMouseTrackingY + 45
+        DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + kMouseTrackingWidth/2, kMouseTrackingY + 45, kLabelCentered
 
-        DEFINE_BUTTON tracking_slow_button, kDAWindowId, res_string_label_slow, res_string_shortcut_apple_2, kMouseTrackingX + 84, kMouseTrackingY + 8
-        DEFINE_BUTTON tracking_fast_button, kDAWindowId, res_string_label_fast, res_string_shortcut_apple_3, kMouseTrackingX + 84, kMouseTrackingY + 21
+        DEFINE_BUTTON tracking_slow_button, kDAWindowId, res_string_label_slow, res_string_shortcut_apple_2, kMouseTrackingX + 84, kMouseTrackingY + 8, 80
+        DEFINE_BUTTON tracking_fast_button, kDAWindowId, res_string_label_fast, res_string_shortcut_apple_3, kMouseTrackingX + 84, kMouseTrackingY + 21, 80
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
@@ -390,18 +390,18 @@ kCaretBlinkDisplayY = 85
 caret_blink_selection:
         .byte   0
 
-        DEFINE_LABEL caret_blink1, res_string_label_ipblink1, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 11
-        DEFINE_LABEL caret_blink2, res_string_label_ipblink2, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 21
-        DEFINE_LABEL caret_blink_slow, res_string_label_slow, kCaretBlinkDisplayX + 95, kCaretBlinkDisplayY + 34
-        DEFINE_LABEL caret_blink_fast, res_string_label_fast, kCaretBlinkDisplayX + 194, kCaretBlinkDisplayY + 34
+        DEFINE_LABEL caret_blink1, res_string_label_ipblink1, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 11, 100
+        DEFINE_LABEL caret_blink2, res_string_label_ipblink2, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 21, 100
+        DEFINE_LABEL caret_blink_slow, res_string_label_slow, kCaretBlinkDisplayX + 95, kCaretBlinkDisplayY + 34, kLabelManualAlignment
+        DEFINE_LABEL caret_blink_fast, res_string_label_fast, kCaretBlinkDisplayX + 194, kCaretBlinkDisplayY + 34, kLabelManualAlignment
 
-        DEFINE_LABEL caret_blink_button1_shortcut, .sprintf("(%c7)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 45
-        DEFINE_LABEL caret_blink_button2_shortcut, .sprintf("(%c8)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 144, kCaretBlinkDisplayY + 45
-        DEFINE_LABEL caret_blink_button3_shortcut, .sprintf("(%c9)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 189, kCaretBlinkDisplayY + 45
+        DEFINE_LABEL caret_blink_button1_shortcut, .sprintf("(%c7)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 45, kLabelManualAlignment
+        DEFINE_LABEL caret_blink_button2_shortcut, .sprintf("(%c8)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 144, kCaretBlinkDisplayY + 45, kLabelManualAlignment
+        DEFINE_LABEL caret_blink_button3_shortcut, .sprintf("(%c9)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 189, kCaretBlinkDisplayY + 45, kLabelManualAlignment
 
-        DEFINE_BUTTON caret_blink_button1, kDAWindowId,,, kCaretBlinkDisplayX + 116, kCaretBlinkDisplayY + 16
-        DEFINE_BUTTON caret_blink_button2, kDAWindowId,,, kCaretBlinkDisplayX + 136, kCaretBlinkDisplayY + 16
-        DEFINE_BUTTON caret_blink_button3, kDAWindowId,,, kCaretBlinkDisplayX + 156, kCaretBlinkDisplayY + 16
+        DEFINE_BUTTON caret_blink_button1, kDAWindowId,,, kCaretBlinkDisplayX + 116, kCaretBlinkDisplayY + 16, BTK::kRadioButtonWidth
+        DEFINE_BUTTON caret_blink_button2, kDAWindowId,,, kCaretBlinkDisplayX + 136, kCaretBlinkDisplayY + 16, BTK::kRadioButtonWidth
+        DEFINE_BUTTON caret_blink_button3, kDAWindowId,,, kCaretBlinkDisplayX + 156, kCaretBlinkDisplayY + 16, BTK::kRadioButtonWidth
 
 .params caret_blink_bitmap_params
         DEFINE_POINT viewloc, kCaretBlinkDisplayX + 123, kCaretBlinkDisplayY

@@ -56,7 +56,7 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
         .repeat kRows, yy
         .repeat kCols, xx
 
-        DEFINE_BUTTON .ident(.sprintf("button_%d_%d", xx, yy)), kDAWindowId,,, kHPadding + kLightWidth * xx, kVPadding + kLightHeight * yy
+        DEFINE_BUTTON .ident(.sprintf("button_%d_%d", xx, yy)), kDAWindowId,,, kHPadding + kLightWidth * xx, kVPadding + kLightHeight * yy, BTK::kRadioButtonWidth
         .refto .ident(.sprintf("button_%d_%d", xx, yy))
 
         .endrepeat

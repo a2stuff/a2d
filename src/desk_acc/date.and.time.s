@@ -223,8 +223,8 @@ nextwinfo:      .addr   0
 kOptionDisplayX = 150
 kOptionDisplayY = 34
 
-        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_1, kOptionDisplayX, kOptionDisplayY
-        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_2, kOptionDisplayX, kOptionDisplayY+10
+        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_1, kOptionDisplayX, kOptionDisplayY, 80
+        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_2, kOptionDisplayX, kOptionDisplayY+10, 80
 
 .params date_bitmap_params
         DEFINE_POINT viewloc, 14, 34

@@ -1045,7 +1045,19 @@ ycoord: .word   AS_WORD(top)
 
 ;;; ----------------------------------------
 
+;;; Aliases for building code that is direction-aware. In LTR builds,
+;;; `DrawStringForward` is an alias for `DrawString` and
+;;; `DrawStringBackward` is an alias for `DrawStringRight`. In RTL
+;;; builds, these are reversed.
+;;; TODO: Allow building MGTK w/o `kBuildIsRTL` defined at all.
+.if kBuildIsRTL
+MGTK::DrawStringForward = MGTK::DrawStringRight
+MGTK::DrawStringBackward = MGTK::DrawString
+MGTK::DrawTextForward = MGTK::DrawTextRight
+MGTK::DrawTextBackward = MGTK::DrawText
+.else
 MGTK::DrawStringForward = MGTK::DrawString
 MGTK::DrawStringBackward = MGTK::DrawStringRight
 MGTK::DrawTextForward = MGTK::DrawText
 MGTK::DrawTextBackward = MGTK::DrawTextRight
+.endif

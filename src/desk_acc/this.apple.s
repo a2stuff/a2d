@@ -523,13 +523,17 @@ delta_bits:
         DEFINE_POINT model_pos, 130, 12
         DEFINE_POINT pdver_pos, 130, 23
 
-        DEFINE_LABEL memory, res_string_memory_prefix, 130, 34
-        DEFINE_LABEL cpu, res_string_cpu_prefix, 260, 34
+        DEFINE_LABEL memory, res_string_memory_prefix, 130, 34, 100
+        DEFINE_LABEL cpu, res_string_cpu_prefix, 260, 34, 120
 
         DEFINE_POINT line1, 0, 37
         DEFINE_POINT line2, kDAWidth, 37
 
+.if kBuildIsRTL
+        kSlotPosX = kDAWidth - 100
+.else
         kSlotPosX = 100
+.endif
 
         DEFINE_POINT pos_aux,   kSlotPosX, 50
         DEFINE_POINT pos_slot1, kSlotPosX, 61
@@ -2610,8 +2614,13 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 
 ;;; ============================================================
 
+.if kBuildIsRTL
+DrawStringForwardFromMain := DrawStringRightFromMain
+DrawStringBackwardFromMain := DrawStringFromMain
+.else
 DrawStringForwardFromMain := DrawStringFromMain
 DrawStringBackwardFromMain := DrawStringRightFromMain
+.endif
 
 ;;; ============================================================
 

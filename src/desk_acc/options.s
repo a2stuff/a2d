@@ -161,20 +161,21 @@ grafport:       .tag    MGTK::GrafPort
 
 kNumButtons     = 6
 kButtonLeft     = 10
+kButtonWidth    = kDAWidth-(kButtonLeft*2)
 kButtonTop      = 5
 kButtonSpacing  = kSystemFontHeight + 2
 
-        DEFINE_BUTTON ramcard_button, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 0
+        DEFINE_BUTTON ramcard_button, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 0, kButtonWidth
 
-        DEFINE_BUTTON selector_button, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 1
+        DEFINE_BUTTON selector_button, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 1, kButtonWidth
 
-        DEFINE_BUTTON shortcuts_button, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 2
+        DEFINE_BUTTON shortcuts_button, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 2, kButtonWidth
 
-        DEFINE_BUTTON casebits_button, kDAWindowId, res_string_label_case, res_string_shortcut_apple_4, kButtonLeft, kButtonTop + kButtonSpacing * 3
+        DEFINE_BUTTON casebits_button, kDAWindowId, res_string_label_case, res_string_shortcut_apple_4, kButtonLeft, kButtonTop + kButtonSpacing * 3, kButtonWidth
 
-        DEFINE_BUTTON invisible_button, kDAWindowId, res_string_label_invisible, res_string_shortcut_apple_5, kButtonLeft, kButtonTop + kButtonSpacing * 4
+        DEFINE_BUTTON invisible_button, kDAWindowId, res_string_label_invisible, res_string_shortcut_apple_5, kButtonLeft, kButtonTop + kButtonSpacing * 4, kButtonWidth
 
-        DEFINE_BUTTON check525_button, kDAWindowId, res_string_label_check525, res_string_shortcut_apple_6, kButtonLeft, kButtonTop + kButtonSpacing * 5
+        DEFINE_BUTTON check525_button, kDAWindowId, res_string_label_check525, res_string_shortcut_apple_6, kButtonLeft, kButtonTop + kButtonSpacing * 5, kButtonWidth
 
 button_button_table:
         .addr   ramcard_button, selector_button, shortcuts_button, casebits_button, invisible_button, check525_button

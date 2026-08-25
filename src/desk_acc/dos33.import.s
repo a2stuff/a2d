@@ -326,7 +326,7 @@ done:   jmp     InputLoop
 
 ;;; ============================================================
 
-        DEFINE_LABEL prompt, res_string_select_disk, 20, 17
+        DEFINE_LABEL prompt, res_string_select_disk, 20, 17, kDAWidth - 40
 
 .proc DrawWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -489,7 +489,7 @@ window_id:      .byte   kDAWindowId
 port:           .addr   grafport_win
 .endparams
 
-        DEFINE_LABEL disk_vol, res_string_disk_volume_prefix, 20, 19
+        DEFINE_LABEL disk_vol, res_string_disk_volume_prefix, 20, 19, (kDAWidth + 1) - kModalDialogInsetX*2 - kButtonWidth*2 - kButtonsGap*2
 
 .params entry_muldiv_params
 number:         .word   0                     ; (in) populated dynamically

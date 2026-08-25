@@ -72,11 +72,19 @@
         kDOWLabelWidth = 130
         kDOWButtonWidth = 60
 
+.if kBuildIsRTL
+        kLabelLeft = kFieldLeft + kFieldWidth + kControlMarginX
+        kFieldLeft = kSampleLeft + kSampleWidth + kControlMarginX
+        kSampleLeft = kMarginX
+        kDOWLabelLeft = kDOWButtonLeft + kControlMarginX*2 + kDOWButtonWidth*2
+        kDOWButtonLeft = kMarginX
+.else
         kLabelLeft = kMarginX
         kFieldLeft = kLabelLeft + kLabelWidth + kControlMarginX
         kSampleLeft = kFieldLeft + kFieldWidth + kControlMarginX
         kDOWLabelLeft = kMarginX
         kDOWButtonLeft = kDOWLabelLeft + kDOWLabelWidth + kControlMarginX
+.endif
 
 str_spaces:
         PASCAL_STRING "  "
@@ -85,9 +93,10 @@ str_spaces:
         DEFINE_RECT_SZ .ident(.sprintf("%s_rect", .string(name))), kFieldLeft, row, kFieldWidth, kFieldHeight
         DEFINE_RECT_SZ .ident(.sprintf("%s_hilite", .string(name))), kFieldLeft+2, row+2, kFieldWidth-4, kSystemFontHeight
         DEFINE_POINT .ident(.sprintf("%s_char_pos", .string(name))), kFieldLeft+kTextBoxTextHOffset+1, row+2+kSystemFontHeight
-        DEFINE_LABEL name, string,      kLabelLeft, row+2+kSystemFontHeight
-        DEFINE_LABEL .ident(.sprintf("%s_sample", .string(name))), sample, kSampleLeft, row+2+kSystemFontHeight
+        DEFINE_LABEL name, string,      kLabelLeft, row+2+kSystemFontHeight, kLabelWidth
+        DEFINE_LABEL .ident(.sprintf("%s_sample", .string(name))), sample, kSampleLeft, row+2+kSystemFontHeight, kSampleWidth
         DEFINE_RECT_SZ .ident(.sprintf("%s_sample_rect", .string(name))), kSampleLeft, row+2, kSampleWidth, kSystemFontHeight
+
 .endmacro
 
         DEFINE_FIELD date, res_string_label_date_separator, "10/11/12", kRow1
@@ -101,19 +110,19 @@ str_spaces:
         kThouSampleOffset = 3
 
         kOptionDisplayX = 260
-        DEFINE_BUTTON date_mdy_button, kDAWindowId, res_string_label_mdy, res_string_shortcut_apple_1, kOptionDisplayX, 15
-        DEFINE_BUTTON date_dmy_button, kDAWindowId, res_string_label_dmy, res_string_shortcut_apple_2, kOptionDisplayX, 26
+        DEFINE_BUTTON date_mdy_button, kDAWindowId, res_string_label_mdy, res_string_shortcut_apple_1, kOptionDisplayX, 15, 120
+        DEFINE_BUTTON date_dmy_button, kDAWindowId, res_string_label_dmy, res_string_shortcut_apple_2, kOptionDisplayX, 26, 120
 
-        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_3, kOptionDisplayX, 44
-        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_4, kOptionDisplayX, 55
+        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_3, kOptionDisplayX, 44, 120
+        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_4, kOptionDisplayX, 55, 120
 
         kOKButtonLeft = (kDialogWidth + 1) - kButtonWidth - kMarginX
         kOKButtonTop  = (kDialogHeight + 1) - kButtonHeight - kMarginY
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
 
-        DEFINE_LABEL first_dow, res_string_label_first_dow, kDOWLabelLeft, kRow5+2+kSystemFontHeight
-        DEFINE_BUTTON sunday_button, kDAWindowId, res_string_weekday_abbrev_1, res_string_shortcut_apple_5, kDOWButtonLeft, kRow5+3
-        DEFINE_BUTTON monday_button, kDAWindowId, res_string_weekday_abbrev_2, res_string_shortcut_apple_6, kDOWButtonLeft + kControlMarginX + kDOWButtonWidth, kRow5+3
+        DEFINE_LABEL first_dow, res_string_label_first_dow, kDOWLabelLeft, kRow5+2+kSystemFontHeight, kDOWLabelWidth
+        DEFINE_BUTTON sunday_button, kDAWindowId, res_string_weekday_abbrev_1, res_string_shortcut_apple_5, kDOWButtonLeft, kRow5+3, kDOWButtonWidth
+        DEFINE_BUTTON monday_button, kDAWindowId, res_string_weekday_abbrev_2, res_string_shortcut_apple_6, kDOWButtonLeft + kControlMarginX + kDOWButtonWidth, kRow5+3, kDOWButtonWidth
 
 
 .params settextbg_black_params

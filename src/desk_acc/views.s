@@ -159,17 +159,19 @@ grafport:       .tag    MGTK::GrafPort
 
 kNumButtons     = 6
 kButtonLeft     = 20
+kButtonRight    = kDAWidth - kButtonLeft
+kButtonWidth    = kButtonRight - kButtonLeft
 kButtonTop      = 5
 kButtonSpacing  = kSystemFontHeight + 2
 
-        DEFINE_LABEL view_style, res_string_initial_view, kControlMarginX, kButtonTop + kSystemFontHeight - 1
+        DEFINE_LABEL view_style, res_string_initial_view, kControlMarginX, kButtonTop + kSystemFontHeight - 1, kDAWidth - (2*kControlMarginX)
 
-        DEFINE_BUTTON as_icons_radiobutton, kDAWindowId, res_string_radio_button_by_icon, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 1
-        DEFINE_BUTTON as_smallicons_radiobutton, kDAWindowId, res_string_radio_button_by_small_icon, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 2
-        DEFINE_BUTTON by_name_radiobutton, kDAWindowId, res_string_radio_button_by_name, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 3
-        DEFINE_BUTTON by_date_radiobutton, kDAWindowId, res_string_radio_button_by_date, res_string_shortcut_apple_4, kButtonLeft, kButtonTop + kButtonSpacing * 4
-        DEFINE_BUTTON by_size_radiobutton, kDAWindowId, res_string_radio_button_by_size, res_string_shortcut_apple_5, kButtonLeft, kButtonTop + kButtonSpacing * 5
-        DEFINE_BUTTON by_type_radiobutton, kDAWindowId, res_string_radio_button_by_type, res_string_shortcut_apple_6, kButtonLeft, kButtonTop + kButtonSpacing * 6
+        DEFINE_BUTTON as_icons_radiobutton, kDAWindowId, res_string_radio_button_by_icon, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 1, kButtonWidth
+        DEFINE_BUTTON as_smallicons_radiobutton, kDAWindowId, res_string_radio_button_by_small_icon, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 2, kButtonWidth
+        DEFINE_BUTTON by_name_radiobutton, kDAWindowId, res_string_radio_button_by_name, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 3, kButtonWidth
+        DEFINE_BUTTON by_date_radiobutton, kDAWindowId, res_string_radio_button_by_date, res_string_shortcut_apple_4, kButtonLeft, kButtonTop + kButtonSpacing * 4, kButtonWidth
+        DEFINE_BUTTON by_size_radiobutton, kDAWindowId, res_string_radio_button_by_size, res_string_shortcut_apple_5, kButtonLeft, kButtonTop + kButtonSpacing * 5, kButtonWidth
+        DEFINE_BUTTON by_type_radiobutton, kDAWindowId, res_string_radio_button_by_type, res_string_shortcut_apple_6, kButtonLeft, kButtonTop + kButtonSpacing * 6, kButtonWidth
 
 button_button_table:
         .addr as_icons_radiobutton

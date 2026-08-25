@@ -246,7 +246,11 @@ skip_port:
         jsr     _GetShowShortcutsSetting
     IF NOT_ZERO
         ;; Draw the string (left aligned)
+.if kBuildIsRTL
+        sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset, pos+MGTK::Point::xcoord
+.else
         add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
+.endif
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
@@ -254,7 +258,11 @@ skip_port:
         lda     a_shortcut
         ora     a_shortcut+1
       IF NOT_ZERO
+.if kBuildIsRTL
+        add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
+.else
         sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
+.endif
         MGTK_CALL MGTK::MoveTo, pos
         copy16  a_shortcut, @addr
         MGTK_CALL MGTK::DrawStringBackward, SELF_MODIFIED, @addr
@@ -448,7 +456,11 @@ unchecked_rb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
+.if kBuildIsRTL
+        sub16_8 rect+MGTK::Rect::x2, #BTK::kRadioButtonWidth, rect+MGTK::Rect::x1
+.else
         add16_8 rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, rect+MGTK::Rect::x2
+.endif
         add16_8 rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, rect+MGTK::Rect::y2
 
         CALL    _MeasureAndWriteRectBackToButtonRecord, A=#kSystemFontHeight - BTK::kRadioButtonHeight
@@ -469,7 +481,12 @@ unchecked_rb_bitmap:
 .endproc ; RadioUpdateImpl
 
 .proc _DrawRadioBitmap
+.if kBuildIsRTL
+        sub16   rect+MGTK::Rect::x2, #BTK::kRadioButtonWidth, rb_params::viewloc::xcoord
+        copy16  rect+MGTK::Rect::y1, rb_params::viewloc::ycoord
+.else
         COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, rb_params::viewloc
+.endif
         ldax    #unchecked_rb_bitmap
     IF bit state : NS
         ldax    #checked_rb_bitmap
@@ -521,7 +538,11 @@ unchecked_cb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
+.if kBuildIsRTL
+        sub16_8 rect+MGTK::Rect::x2, #BTK::kCheckboxWidth, rect+MGTK::Rect::x1
+.else
         add16_8 rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
+.endif
         add16_8 rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
 
         CALL    _MeasureAndWriteRectBackToButtonRecord, A=#kSystemFontHeight - BTK::kCheckboxHeight
@@ -542,7 +563,12 @@ unchecked_cb_bitmap:
 .endproc ; CheckboxUpdateImpl
 
 .proc _DrawCheckboxBitmap
+.if kBuildIsRTL
+        sub16   rect+MGTK::Rect::x2, #BTK::kCheckboxWidth, cb_params::viewloc::xcoord
+        copy16  rect+MGTK::Rect::y1, cb_params::viewloc::ycoord
+.else
         COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, cb_params::viewloc
+.endif
         ldax    #unchecked_cb_bitmap
     IF bit state : NS
         ldax    #checked_cb_bitmap
@@ -571,7 +597,11 @@ unchecked_cb_bitmap:
         ora     a_label+1
     IF NOT_ZERO
         ;; Draw the label
+.if kBuildIsRTL
+        sub16_8 rect+MGTK::Rect::x2, deltax, pos+MGTK::Point::xcoord
+.else
         add16_8 rect+MGTK::Rect::x1, deltax, pos+MGTK::Point::xcoord
+.endif
         add16_8 rect+MGTK::Rect::y1, deltay, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
@@ -616,8 +646,13 @@ unchecked_cb_bitmap:
         ora     a_label+1
     IF NOT_ZERO
         CALL    _MeasureString, AX=a_label
+.if kBuildIsRTL
+        subax   rect+MGTK::Rect::x1
+        sub16_8 rect+MGTK::Rect::x1, #kLabelPadding
+.else
         addax   rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::x2, #kLabelPadding
+.endif
         add16_8 rect+MGTK::Rect::y2, delta
     END_IF
 
@@ -625,7 +660,11 @@ unchecked_cb_bitmap:
         jsr     _ShouldDrawShortcut
     IF NOT_ZERO
         CALL    _MeasureString, AX=a_shortcut
+.if kBuildIsRTL
+        subax   rect+MGTK::Rect::x1
+.else
         addax   rect+MGTK::Rect::x2
+.endif
     END_IF
 
         ;; Write rect back to button record

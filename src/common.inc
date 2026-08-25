@@ -405,14 +405,20 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
 ;;; ============================================================
 ;;; Macros (specific to this project)
 
-.macro DEFINE_LABEL ident, label, xpos, ypos
+.macro DEFINE_LABEL ident, label, xpos, ypos, width
         WARN_IF_SHADOWING .ident(.sprintf("%s_label_pos", .string(ident)))
         WARN_IF_SHADOWING .ident(.sprintf("%s_label_str", .string(ident)))
 
+    .if kBuildIsRTL && .not(.blank({width}))
+        DEFINE_POINT .ident(.sprintf("%s_label_pos", .string(ident))), ((xpos) + (width)), (ypos)
+    .else
         DEFINE_POINT .ident(.sprintf("%s_label_pos", .string(ident))), (xpos), (ypos)
+    .endif
         .ident(.sprintf("%s_label_str", .string(ident))) := *
         PASCAL_STRING {label}
 .endmacro
+kLabelCentered = 0
+kLabelManualAlignment = 0
 
 ;;; Define an rect for an inset frame drawn with a 4x2 pen, with a 4x2
 ;;; gap between the passed window bounds and the border. This is the

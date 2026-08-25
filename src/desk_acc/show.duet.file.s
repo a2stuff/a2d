@@ -142,7 +142,11 @@ width:  .word   0
         tmpw := $06
         add16   sw_playing::width, sw_name::width, tmpw
         lsr16   tmpw            ; /= 2
+.if kBuildIsRTL
+        add16   pos_playing::xcoord, tmpw, pos_playing::xcoord
+.else
         sub16   pos_playing::xcoord, tmpw, pos_playing::xcoord
+.endif
         MGTK_CALL MGTK::MoveTo, pos_playing
         MGTK_CALL MGTK::DrawStringForward, str_playing
         MGTK_CALL MGTK::DrawStringForward, name_buf

@@ -338,15 +338,25 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_LABEL download, res_string_label_download, winfo::kWidth / 2, 17
+        DEFINE_LABEL download, res_string_label_download, winfo::kWidth / 2, 17, kLabelCentered
 
         kProgressDialogDefaultX = 18
+.if kBuildIsRTL
+        kProgressDialogPathLeft = kProgressDialogDefaultX
+        kProgressDialogPathWidth = winfo::kWidth - kProgressDialogCopyingWidth - kProgressDialogDefaultX*2
+.else
         kProgressDialogPathLeft = kProgressDialogDefaultX + kProgressDialogCopyingWidth
         kProgressDialogPathWidth = winfo::kWidth - kProgressDialogPathLeft - kProgressDialogDefaultX
+.endif
 
         DEFINE_POINT pos_path, kProgressDialogPathLeft, 32
+.if kBuildIsRTL
+        DEFINE_POINT pos_copying, winfo::kWidth - kProgressDialogDefaultX, 32
+        DEFINE_POINT pos_remaining, winfo::kWidth - kProgressDialogDefaultX, 45
+.else
         DEFINE_POINT pos_copying, kProgressDialogDefaultX, 32
         DEFINE_POINT pos_remaining, kProgressDialogDefaultX, 45
+.endif
 
         kProgressDialogCopyingWidth = kSystemFontWidth * .strlen(res_string_label_copying)
 str_copying:

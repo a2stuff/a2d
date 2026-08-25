@@ -23,3 +23,4 @@ kDeskTopVersionMinor = 6
 .define kBuildLang "en"
 .define RESOURCE_FILE(basename) .include .concat("res/", basename, ".", kBuildLang)
 .define kBuildSupportsLowercase 1
+.define kBuildIsRTL 0

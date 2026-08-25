@@ -463,6 +463,8 @@ This call normally auto-hides the cursor.
 * `DrawTextForward` and `DrawTextBackward` are aliases for `DrawText` and `DrawTextRight`
 * `DrawStringForward` and `DrawStringBackward` are aliases for `DrawString` and `DrawStringRight`
 
+> RTL: The aliases are reversed, so that `DrawStringForward` is an alias for `DrawStringRight`, etc.
+
 
 ### Utility - configuration and version
 

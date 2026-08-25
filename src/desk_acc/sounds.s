@@ -135,10 +135,15 @@ nextwinfo:      .addr   0
 
         DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kMarginX, kDAHeight - kMarginY - kButtonHeight + 1
 
+.if kBuildIsRTL
+        kLabelLeft = kListLeft + kListWidth
+        kListLeft = kMarginX
+.else
         kLabelLeft = kMarginX
         kListLeft = kLabelLeft + kLabelWidth
+.endif
 
-        DEFINE_LABEL alert_sound, res_string_label_alert, kLabelLeft, kMarginY+kTextHeight
+        DEFINE_LABEL alert_sound, res_string_label_alert, kLabelLeft, kMarginY+kTextHeight, kLabelWidth
         kLabelWidth = 105
 
         kScrollBarWidth = 20

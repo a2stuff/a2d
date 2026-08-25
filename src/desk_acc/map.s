@@ -89,13 +89,20 @@ kTextBoxWidth = kControlsRight - kButtonWidth - kControlsLeft * 2 - 1
 
 kLabelWidth = 80
 kValueWidth = 60
+
+.if kBuildIsRTL
+kLabelLeft = kValueLeft + kValueWidth + kControlMarginX
+kValueLeft = kControlMarginX
+kValueX = kValueLeft + kValueWidth
+.else
 kLabelLeft = kControlMarginX
 kValueLeft = kLabelLeft + kLabelWidth + kControlMarginX
 kValueX = kValueLeft
+.endif
 
-        DEFINE_LABEL lat, res_string_latitude, kLabelLeft, kRow2 + kSystemFontHeight
+        DEFINE_LABEL lat, res_string_latitude, kLabelLeft, kRow2 + kSystemFontHeight, kLabelWidth
         DEFINE_POINT pos_lat, kValueX, kRow2 + kSystemFontHeight
-        DEFINE_LABEL long, res_string_longitude, kLabelLeft, kRow3 + kSystemFontHeight
+        DEFINE_LABEL long, res_string_longitude, kLabelLeft, kRow3 + kSystemFontHeight, kLabelWidth
         DEFINE_POINT pos_long, kValueX, kRow3 + kSystemFontHeight
 
 str_spaces:

@@ -49,7 +49,7 @@ kButtonInsetX   = 25
         DEFINE_BUTTON fast_button, kDAWindowId, res_string_button_fast, res_char_button_fast_shortcut, kDAWidth - kButtonWidth - kButtonInsetX + 1, 28
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kButtonWidth - kButtonInsetX + 1, 52
 
-        DEFINE_LABEL title, res_string_dialog_title, kDAWidth/2, kModalDialogInsetY + kSystemFontHeight - 1
+        DEFINE_LABEL title, res_string_dialog_title, kDAWidth/2, kModalDialogInsetY + kSystemFontHeight - 1, kLabelCentered
 
 ;;; ============================================================
 

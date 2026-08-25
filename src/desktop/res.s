@@ -206,7 +206,8 @@ nextwinfo:      .addr   0
         DEFINE_BUTTON ok_button, kPromptWindowId, res_string_button_ok, kGlyphReturn, kPromptButtonRight - kButtonWidth, kPromptButtonTop
         DEFINE_BUTTON cancel_button, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kPromptButtonLeft, kPromptButtonTop
 
-        DEFINE_BUTTON locked_button, kPromptWindowId, res_string_get_info_checkbox_locked, res_string_get_info_shortcut_locked, kDialogValueLeft, aux::kDialogLabelRow5+2
+        DEFINE_BUTTON locked_button, kPromptWindowId, res_string_get_info_checkbox_locked, res_string_get_info_shortcut_locked, kDialogValueLeft, aux::kDialogLabelRow5+2, (kPromptDialogWidth - kDialogValueLeft) - kDialogValueLeft
+
 
 ;;; $00 = ok/cancel
 ;;; $80 = ok (only)
@@ -260,13 +261,23 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
+.if kBuildIsRTL
+        kProgressDialogPathLeft = kProgressDialogLabelDefaultX
+        kProgressDialogPathWidth = winfo_progress_dialog::kWidth - 60 - kProgressDialogLabelDefaultX
+.else
         kProgressDialogPathLeft = 60
         kProgressDialogPathWidth = winfo_progress_dialog::kWidth - kProgressDialogPathLeft - kProgressDialogLabelDefaultX
+.endif
 
         kProgressDialogLabelDefaultX    = 25
         kProgressDialogLabelBaseY       = 17
+.if kBuildIsRTL
+        DEFINE_POINT progress_dialog_label_pos, aux::kProgressDialogWidth - kProgressDialogLabelDefaultX, 0
+        DEFINE_POINT progress_dialog_remaining_pos, aux::kProgressDialogWidth/2, aux::kProgressDialogLabelRow0
+.else
         DEFINE_POINT progress_dialog_label_pos, kProgressDialogLabelDefaultX, 0
         DEFINE_POINT progress_dialog_remaining_pos, aux::kProgressDialogWidth/2, aux::kProgressDialogLabelRow0
+.endif
 
         kProgressBarTop = 41
         kProgressBarWidth = winfo_progress_dialog::kWidth - kProgressDialogLabelDefaultX*2
@@ -452,7 +463,11 @@ VolPickerSelChangeCallback:
         jmp     BankInAux
 
         ;; Label pos
+.if kBuildIsRTL
+        DEFINE_POINT vol_picker_select_pos, kPromptDialogWidth - kDialogLabelDefaultX, kVolPickerTop - 4
+.else
         DEFINE_POINT vol_picker_select_pos, kDialogLabelDefaultX, kVolPickerTop - 4
+.endif
 
         DEFINE_RECT vol_picker_rect, kBorderDX*2-1, kVolPickerTop - 2, (winfo_prompt_dialog::kWidth + 1) - kBorderDX*2, kVolPickerTop + kVolPickerRows * kVolPickerItemHeight + 1
 
@@ -542,7 +557,7 @@ nextwinfo:      .addr   0
         kLineEditY = 114+3
         kLineEditHeight = kTextBoxHeight-1
 
-        DEFINE_LABEL shortcut_name, res_string_selector_label_enter_name, kLineEditX, kLineEditY-2
+        DEFINE_LABEL shortcut_name, res_string_selector_label_enter_name, kLineEditX, kLineEditY-2, kLineEditWidth
         DEFINE_RECT_SZ line_edit_rect, kLineEditX, kLineEditY, kLineEditWidth, kLineEditHeight
 
         DEFINE_LINE_EDIT line_edit, file_dialog_res::kFilePickerDlgWindowID, text_input_buf, kLineEditX, kLineEditY, kLineEditWidth, kMaxFilenameLength
@@ -551,20 +566,22 @@ nextwinfo:      .addr   0
 .endscope ; shortcut_dialog_res
 
 kRadioButtonLeft  = 332
+kRadioButtonWidth = shortcut_dialog_res::kFilePickerDlgExWidth - (kRadioButtonLeft + kModalDialogInsetX)
 kLabelLeft = 329
+kLabelWidth = shortcut_dialog_res::kFilePickerDlgExWidth - (kLabelLeft + kModalDialogInsetX)
 
         kFDWinId = file_dialog_res::kFilePickerDlgWindowID
 
-        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   kLabelLeft, file_dialog_res::kControlsTop+8
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   kLabelLeft, file_dialog_res::kControlsTop+8, kLabelWidth
 
-        DEFINE_BUTTON primary_run_list_button,   kFDWinId, res_string_selector_label_primary_run_list, res_string_shortcut_apple_1, kRadioButtonLeft, file_dialog_res::kControlsTop+10
-        DEFINE_BUTTON secondary_run_list_button, kFDWinId, res_string_selector_label_secondary_run_list, res_string_shortcut_apple_2, kRadioButtonLeft, file_dialog_res::kControlsTop+20
+        DEFINE_BUTTON primary_run_list_button,   kFDWinId, res_string_selector_label_primary_run_list, res_string_shortcut_apple_1, kRadioButtonLeft, file_dialog_res::kControlsTop+10, kRadioButtonWidth
+        DEFINE_BUTTON secondary_run_list_button, kFDWinId, res_string_selector_label_secondary_run_list, res_string_shortcut_apple_2, kRadioButtonLeft, file_dialog_res::kControlsTop+20, kRadioButtonWidth
 
-        DEFINE_LABEL down_load,          res_string_selector_label_download,                             kLabelLeft, file_dialog_res::kControlsTop+42
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                             kLabelLeft, file_dialog_res::kControlsTop+42, kLabelWidth
 
-        DEFINE_BUTTON at_first_boot_button,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, file_dialog_res::kControlsTop+44
-        DEFINE_BUTTON at_first_use_button,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, file_dialog_res::kControlsTop+54
-        DEFINE_BUTTON never_button,              kFDWinId, res_string_selector_label_never, res_string_shortcut_apple_5, kRadioButtonLeft, file_dialog_res::kControlsTop+64
+        DEFINE_BUTTON at_first_boot_button,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, file_dialog_res::kControlsTop+44, kRadioButtonWidth
+        DEFINE_BUTTON at_first_use_button,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, file_dialog_res::kControlsTop+54, kRadioButtonWidth
+        DEFINE_BUTTON never_button,              kFDWinId, res_string_selector_label_never, res_string_shortcut_apple_5, kRadioButtonLeft, file_dialog_res::kControlsTop+64, kRadioButtonWidth
 
 
 ;;; ============================================================

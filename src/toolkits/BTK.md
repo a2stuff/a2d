@@ -33,6 +33,10 @@ Draw the button, including frame and label, considering the disable state.
 
 If the `window_id` is non-zero, the control's window GrafPort is selected before any drawing is performed. When processing update events, use `Update` instead.
 
+By default, the label is centered. If `DeskTopSettings::kOptionsShowShortcuts` is enabled and a shortcut is provided then the label is left-aligned and the shortcut is right-aligned.
+
+> RTL: If a shortcut is drawn, the label is right-aligned and the shortcut is left-aligned.
+
 
 ### Update ($01)
 Draw the button, including frame and label, considering the disable state.
@@ -59,6 +63,8 @@ The high bit of the `ButtonRecord::state` signifies whether or not the button is
 
 After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
 
+> RTL: The button will be positioned at the right edge of the initial rect, with the text on the left. Passing a width to `DEFINE_BUTTON` is recommended.
+
 
 ### RadioUpdate ($06)
 Update the bitmap of a radio button.
@@ -72,6 +78,8 @@ Draw a checkbox button.
 The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
 
 After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
+
+> RTL: The button will be positioned at the right edge of the initial rect, with the text on the left. Passing a width to `DEFINE_BUTTON` is recommended.
 
 
 ### CheckboxUpdate ($08)

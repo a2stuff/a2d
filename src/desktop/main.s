@@ -14385,6 +14385,9 @@ params:  .res    3
     ELSE_IF A = #DDL_LRIGHT
         sub16   #kDialogLabelRightX, result, dialog_label_pos::xcoord
     END_IF
+.if kBuildIsRTL
+        sub16   #kPromptDialogWidth, dialog_label_pos::xcoord, dialog_label_pos::xcoord
+.endif
 
         ;; y = base + aux::kDialogLabelHeight * line
         row := *+1
