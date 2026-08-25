@@ -146,8 +146,6 @@ nextwinfo:      .addr   0
         kListHeight = kListItemHeight * kListRows - 1
         kListBottom = kListTop + kListHeight
 
-        DEFINE_RECT listbox_rect, kListLeft, kListTop, kListRight, kListBottom
-
 ;;; ============================================================
 ;;; List Box
 ;;; ============================================================
