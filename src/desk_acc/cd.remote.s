@@ -263,7 +263,6 @@ reserved:       .byte   0
 ;;; ============================================================
 
         DEFINE_POINT pos_track, kCol1 + 20, kRow1 + 13
-
         DEFINE_POINT pos_time, kCol4-8, kRow1 + 13
 
 ;;; ============================================================
@@ -551,21 +550,25 @@ set_key:
 str_track:
         PASCAL_STRING res_string_label_track
 str_track_num:
-        PASCAL_STRING "##  "
+        PASCAL_STRING "##"
 str_time:
-        PASCAL_STRING "##:##  "
+        PASCAL_STRING "##:##"
+str_spaces:
+        PASCAL_STRING "  "
 
 ;;; Caller is responsible for setting port.
 .proc DrawTrack
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_track
         CALL    DrawStringFromMain, AX=#str_track
-        TAIL_CALL DrawStringFromMain, AX=#str_track_num
+        CALL    DrawStringFromMain, AX=#str_track_num
+        TAIL_CALL DrawStringFromMain, AX=#str_spaces
 .endproc ; DrawTrack
 
 ;;; Caller is responsible for setting port.
 .proc DrawTime
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_time
-        TAIL_CALL DrawStringFromMain, AX=#str_time
+        CALL    DrawStringFromMain, AX=#str_time
+        TAIL_CALL DrawStringFromMain, AX=#str_spaces
 .endproc ; DrawTime
 
 ;;; ============================================================
