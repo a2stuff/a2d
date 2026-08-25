@@ -542,7 +542,7 @@ nextwinfo:      .addr   0
         kLineEditY = 114+3
         kLineEditHeight = kTextBoxHeight-1
 
-        DEFINE_POINT line_edit_label_pos, kLineEditX, kLineEditY-2
+        DEFINE_LABEL shortcut_name, res_string_selector_label_enter_name, kLineEditX, kLineEditY-2
         DEFINE_RECT_SZ line_edit_rect, kLineEditX, kLineEditY, kLineEditWidth, kLineEditHeight
 
         DEFINE_LINE_EDIT line_edit, file_dialog_res::kFilePickerDlgWindowID, text_input_buf, kLineEditX, kLineEditY, kLineEditWidth, kMaxFilenameLength
@@ -550,19 +550,17 @@ nextwinfo:      .addr   0
 
 .endscope ; shortcut_dialog_res
 
-enter_the_name_to_appear_label:
-        PASCAL_STRING res_string_selector_label_enter_name
-
 kRadioButtonLeft  = 332
+kLabelLeft = 329
 
         kFDWinId = file_dialog_res::kFilePickerDlgWindowID
 
-        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, file_dialog_res::kControlsTop+8
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   kLabelLeft, file_dialog_res::kControlsTop+8
 
         DEFINE_BUTTON primary_run_list_button,   kFDWinId, res_string_selector_label_primary_run_list, res_string_shortcut_apple_1, kRadioButtonLeft, file_dialog_res::kControlsTop+10
         DEFINE_BUTTON secondary_run_list_button, kFDWinId, res_string_selector_label_secondary_run_list, res_string_shortcut_apple_2, kRadioButtonLeft, file_dialog_res::kControlsTop+20
 
-        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, file_dialog_res::kControlsTop+42
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                             kLabelLeft, file_dialog_res::kControlsTop+42
 
         DEFINE_BUTTON at_first_boot_button,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, file_dialog_res::kControlsTop+44
         DEFINE_BUTTON at_first_use_button,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, file_dialog_res::kControlsTop+54

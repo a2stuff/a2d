@@ -124,7 +124,8 @@ Exec:
         ;; Assert: unit is in `DEVLST`
 
         txa
-        CALL    DrawDeviceNameForIndex, C=0 ; plain
+        CALL    PrepDeviceNameForIndex, C=0 ; plain
+        MGTK_CALL MGTK::DrawStringForward, text_buffer2
 
         CALL    main::DrawDialogLabel, Y=#4, AX=#aux::str_new_volume
 
@@ -341,7 +342,9 @@ no:     RETURN  A=#$80
         index := *+1
         sbc     #SELF_MODIFIED_BYTE
 
-        TAIL_CALL DrawDeviceNameForIndex, C=1 ; ellipsify
+        CALL    PrepDeviceNameForIndex, C=1 ; ellipsify
+        MGTK_CALL MGTK::DrawString, text_buffer2
+        rts
 .endproc ; DrawEntryCallback
 
 .proc SelChangeCallback
@@ -351,7 +354,7 @@ no:     RETURN  A=#$80
 ;;; ============================================================
 
 ;;; Input: A = index in `DEVLST`, C=1 to ellipsify long names
-.proc DrawDeviceNameForIndex
+.proc PrepDeviceNameForIndex
         buf := text_buffer2
         ptr := $06
 
@@ -388,11 +391,8 @@ END_PARAM_BLOCK
        WHILE NOT ZERO
       WHILE NOT POS               ; always
     END_IF
-
-        ;; Draw it
-        MGTK_CALL MGTK::DrawString, buf
         rts
-.endproc ; DrawDeviceNameForIndex
+.endproc ; PrepDeviceNameForIndex
 
 ;;; ============================================================
 ;;; Gets the selected unit number from `DEVLST`

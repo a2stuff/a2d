@@ -200,8 +200,8 @@ consume:
         MGTK_CALL MGTK::SetPort, file_dialog_res::grafport
 
         ;; Name field
-        MGTK_CALL MGTK::MoveTo, shortcut_dialog_res::line_edit_label_pos
-        MGTK_CALL MGTK::DrawString, enter_the_name_to_appear_label
+        MGTK_CALL MGTK::MoveTo, shortcut_dialog_res::shortcut_name_label_pos
+        MGTK_CALL MGTK::DrawStringForward, shortcut_dialog_res::shortcut_name_label_str
         MGTK_CALL MGTK::FrameRect, shortcut_dialog_res::line_edit_rect
 
         ;; Vertical separator

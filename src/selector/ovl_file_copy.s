@@ -341,13 +341,14 @@ nextwinfo:      .addr   0
         DEFINE_LABEL download, res_string_label_download, winfo::kWidth / 2, 17
 
         kProgressDialogDefaultX = 18
-        kProgressDialogPathLeft = 100
+        kProgressDialogPathLeft = kProgressDialogDefaultX + kProgressDialogCopyingWidth
         kProgressDialogPathWidth = winfo::kWidth - kProgressDialogPathLeft - kProgressDialogDefaultX
 
-        DEFINE_POINT pos_copying, kProgressDialogDefaultX, 32
         DEFINE_POINT pos_path, kProgressDialogPathLeft, 32
+        DEFINE_POINT pos_copying, kProgressDialogDefaultX, 32
         DEFINE_POINT pos_remaining, kProgressDialogDefaultX, 45
 
+        kProgressDialogCopyingWidth = kSystemFontWidth * .strlen(res_string_label_copying)
 str_copying:
         PASCAL_STRING res_string_label_copying
 
