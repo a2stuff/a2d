@@ -1036,7 +1036,6 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::DrawString, dblclick_shortcut3_label_str
     END_IF
 
-
         jsr     UpdateDblclickButtons
 
         MGTK_CALL MGTK::PaintBits, dblclick_params

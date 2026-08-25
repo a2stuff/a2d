@@ -135,14 +135,17 @@ nextwinfo:      .addr   0
 
         DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kMarginX, kDAHeight - kMarginY - kButtonHeight + 1
 
-        DEFINE_LABEL alert_sound, res_string_label_alert, kMarginX, kMarginY+kTextHeight
+        kLabelLeft = kMarginX
+        kListLeft = kLabelLeft + kLabelWidth
+
+        DEFINE_LABEL alert_sound, res_string_label_alert, kLabelLeft, kMarginY+kTextHeight
         kLabelWidth = 105
 
         kScrollBarWidth = 20
         kListRows = 6
-        kListLeft = kMarginX + kLabelWidth
         kListTop = kMarginY + 1
-        kListRight  = kDAWidth - kMarginX - kScrollBarWidth - 1
+        kListWidth = kDAWidth - kMarginX*2 - kLabelWidth
+        kListInnerWidth = kListWidth - kScrollBarWidth - 1
         kListHeight = kListItemHeight * kListRows - 1
         kListBottom = kListTop + kListHeight
 
@@ -156,7 +159,7 @@ kListBoxWindowId = kDAWindowId + 1
                 kListBoxWindowId, \
                 kListLeft + kDALeft, \
                 kListTop + kDATop, \
-                kListRight - kListLeft, \
+                kListInnerWidth, \
                 kListHeight, \
                 DEFAULT_FONT
         DEFINE_LIST_BOX listbox_rec, winfo_listbox, \

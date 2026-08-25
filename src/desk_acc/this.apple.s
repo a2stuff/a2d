@@ -1361,7 +1361,7 @@ egg:    .byte   0
         lda     slot
         ora     #'0'
         sta     str_slot_n + kStrSlotNOffset
-        CALL    DrawStringRightFromMain, AX=#str_slot_n
+        CALL    DrawStringBackwardFromMain, AX=#str_slot_n
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, 0, slot_pos2
 
         ;; Possibilities:
