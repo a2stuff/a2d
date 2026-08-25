@@ -13,5 +13,5 @@
 .define res_string_label_copying ":dwzrd"
 .define res_string_error_not_enough_room ".meyiid z` wizrdl ick RAMCARD-a mewn witqn oi`"
 .define res_string_error_copy_incomplete ".mlyed `l wzerd .dcxedd jldna d`iby drxi`"
-.define res_string_label_files_to_copy ":dwzrdl mivaw "
-.define res_string_label_files_remaining ":exzepy mivaw "
+.define res_string_label_files_to_copy " :dwzrdl mivaw"
+.define res_string_label_files_remaining " :exzepy mivaw"

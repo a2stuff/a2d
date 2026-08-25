@@ -100,7 +100,8 @@ sub display($$) {
 
   if (dir($lang) eq 'RTL') {
     # Wrap escapes in LRE...PDF
-    $str =~ s/(%\d*[a-z]|\\r|\\x\w\w)/\x{202A}$1\x{202C}/g;
+    # NOTE: Includes '$' as potential prefix to bundle with the embedding
+    $str =~ s/(\$?%\d*[a-z]|\\r|\\x\w\w)/\x{202A}$1\x{202C}/g;
 
     # Convert from logical to visual order
     print $bidi_in $str, "\n";
@@ -155,6 +156,18 @@ sub check($$$$) {
   }
 
   return $t;
+}
+
+# For debugging - print characters (in logical order) from passed
+# string; useful since many terminals have BiDi support.
+sub mydump($) {
+  my ($str) = @_;
+  print ">> ";
+  # Bracket characters with LEFT-TO-RIGHT ISOLATE (LRI) ... POP DIRECTIONAL ISOLATE (PDI)
+  foreach my $c (split('', $str)) {
+    print "\x{2066}$c\x{2069}";
+  }
+  print "\n";
 }
 
 # Slurp in data
@@ -223,7 +236,11 @@ while (<STDIN>) {
     $str = display($lang, $str) if $has_str;
 
     # Match EN leading/trailing whitespace, in visual order.
-    $str = $en_leading_ws . $str . $en_trailing_ws unless $label =~ /^res_char_/;
+    if (dir($lang) eq 'RTL') {
+      $str = $en_trailing_ws . $str . $en_leading_ws unless $label =~ /^res_char_/;
+    } else {
+      $str = $en_leading_ws . $str . $en_trailing_ws unless $label =~ /^res_char_/;
+    }
 
     # Transcode from Unicode to appropriate 7-bit encoding.
     $str = encode($lang, $str);
