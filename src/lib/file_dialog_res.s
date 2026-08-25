@@ -61,8 +61,7 @@ str_vol:
 
 ;;; Separator between Drives / Open / Close and OK / Cancel
         kButtonSepY = kControlsTop + kButtonHeight*3 + kButtonGap*2 + kSepGap
-        DEFINE_POINT button_sep_start, kButtonsLeft, kButtonSepY
-        DEFINE_POINT button_sep_end,   kButtonsLeft + kButtonWidth - 1, kButtonSepY
+        DEFINE_LINE button_sep, kButtonsLeft, kButtonSepY, kButtonsLeft + kButtonWidth - 1, kButtonSepY
 
 pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy

@@ -526,8 +526,7 @@ delta_bits:
         DEFINE_LABEL memory, res_string_memory_prefix, 130, 34, 100
         DEFINE_LABEL cpu, res_string_cpu_prefix, 260, 34, 120
 
-        DEFINE_POINT line1, 0, 37
-        DEFINE_POINT line2, kDAWidth, 37
+        DEFINE_LINE line, 0, 37, kDAWidth, 37
 
 .if kBuildIsRTL
         kSlotPosX = kDAWidth - 100
@@ -1333,8 +1332,8 @@ egg:    .byte   0
 
         ;; Separator
 
-        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::line1
-        JUMP_TABLE_MGTK_CALL MGTK::LineTo, aux::line2
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::line::start
+        JUMP_TABLE_MGTK_CALL MGTK::LineTo, aux::line::end
 
         ;; Aux Slot
 

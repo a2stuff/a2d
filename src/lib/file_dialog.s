@@ -799,8 +799,8 @@ found:  RETURN  A=index
         ;; Separator between button groups
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
         MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
-        MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep::start
+        MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep::end
 
         ;; List box
         lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb

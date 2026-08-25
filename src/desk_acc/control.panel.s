@@ -114,12 +114,9 @@ penwidth:       .byte   4
 penheight:      .byte   2
 .endparams
 
-        DEFINE_POINT frame_l1a, 0, 68
-        DEFINE_POINT frame_l1b, 205, 68
-        DEFINE_POINT frame_l2a, 205, 68
-        DEFINE_POINT frame_l2b, kDAWidth, 68
-        DEFINE_POINT frame_l3a, 205, 0
-        DEFINE_POINT frame_l3b, 205, kDAHeight
+        DEFINE_LINE frame_l1, 0, 68, 205, 68
+        DEFINE_LINE frame_l2, 205, 68, kDAWidth, 68
+        DEFINE_LINE frame_l3, 205, 0, 205, kDAHeight
 
         DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 2, kDAHeight
 
@@ -967,12 +964,12 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; Frame
 
         MGTK_CALL MGTK::SetPenSize, frame_pensize
-        MGTK_CALL MGTK::MoveTo, frame_l1a
-        MGTK_CALL MGTK::LineTo, frame_l1b
-        MGTK_CALL MGTK::MoveTo, frame_l2a
-        MGTK_CALL MGTK::LineTo, frame_l2b
-        MGTK_CALL MGTK::MoveTo, frame_l3a
-        MGTK_CALL MGTK::LineTo, frame_l3b
+        MGTK_CALL MGTK::MoveTo, frame_l1::start
+        MGTK_CALL MGTK::LineTo, frame_l1::end
+        MGTK_CALL MGTK::MoveTo, frame_l2::start
+        MGTK_CALL MGTK::LineTo, frame_l2::end
+        MGTK_CALL MGTK::MoveTo, frame_l3::start
+        MGTK_CALL MGTK::LineTo, frame_l3::end
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, winfo::penwidth
 

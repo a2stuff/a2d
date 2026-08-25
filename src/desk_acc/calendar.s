@@ -129,31 +129,19 @@ day_pos_table:
         kGridDY = kDayDY
 
 grid_lines:
-        DEFINE_POINT gl1a, 0,        kGridYPos + kGridDY * 0
-        DEFINE_POINT gl1b, kDAWidth, kGridYPos + kGridDY * 0
-        DEFINE_POINT gl2a, 0,        kGridYPos + kGridDY * 1
-        DEFINE_POINT gl2b, kDAWidth, kGridYPos + kGridDY * 1
-        DEFINE_POINT gl3a, 0,        kGridYPos + kGridDY * 2
-        DEFINE_POINT gl3b, kDAWidth, kGridYPos + kGridDY * 2
-        DEFINE_POINT gl4a, 0,        kGridYPos + kGridDY * 3
-        DEFINE_POINT gl4b, kDAWidth, kGridYPos + kGridDY * 3
-        DEFINE_POINT gl5a, 0,        kGridYPos + kGridDY * 4
-        DEFINE_POINT gl5b, kDAWidth, kGridYPos + kGridDY * 4
-        DEFINE_POINT gl6a, 0,        kGridYPos + kGridDY * 5
-        DEFINE_POINT gl6b, kDAWidth, kGridYPos + kGridDY * 5
+        DEFINE_LINE gl1, 0, kGridYPos + kGridDY * 0, kDAWidth, kGridYPos + kGridDY * 0
+        DEFINE_LINE gl2, 0, kGridYPos + kGridDY * 1, kDAWidth, kGridYPos + kGridDY * 1
+        DEFINE_LINE gl3, 0, kGridYPos + kGridDY * 2, kDAWidth, kGridYPos + kGridDY * 2
+        DEFINE_LINE gl4, 0, kGridYPos + kGridDY * 3, kDAWidth, kGridYPos + kGridDY * 3
+        DEFINE_LINE gl5, 0, kGridYPos + kGridDY * 4, kDAWidth, kGridYPos + kGridDY * 4
+        DEFINE_LINE gl6, 0, kGridYPos + kGridDY * 5, kDAWidth, kGridYPos + kGridDY * 5
 
-        DEFINE_POINT gl7a,  kGridXPos + kGridDX * 0, kGridYPos
-        DEFINE_POINT gl7b,  kGridXPos + kGridDX * 0, kDAHeight
-        DEFINE_POINT gl8a,  kGridXPos + kGridDX * 1, kGridYPos
-        DEFINE_POINT gl8b,  kGridXPos + kGridDX * 1, kDAHeight
-        DEFINE_POINT gl9a,  kGridXPos + kGridDX * 2, kGridYPos
-        DEFINE_POINT gl9b,  kGridXPos + kGridDX * 2, kDAHeight
-        DEFINE_POINT gl10a, kGridXPos + kGridDX * 3, kGridYPos
-        DEFINE_POINT gl10b, kGridXPos + kGridDX * 3, kDAHeight
-        DEFINE_POINT gl11a, kGridXPos + kGridDX * 4, kGridYPos
-        DEFINE_POINT gl11b, kGridXPos + kGridDX * 4, kDAHeight
-        DEFINE_POINT gl12a, kGridXPos + kGridDX * 5, kGridYPos
-        DEFINE_POINT gl12b, kGridXPos + kGridDX * 5, kDAHeight
+        DEFINE_LINE gl7,  kGridXPos + kGridDX * 0, kGridYPos, kGridXPos + kGridDX * 0, kDAHeight
+        DEFINE_LINE gl8,  kGridXPos + kGridDX * 1, kGridYPos, kGridXPos + kGridDX * 1, kDAHeight
+        DEFINE_LINE gl9,  kGridXPos + kGridDX * 2, kGridYPos, kGridXPos + kGridDX * 2, kDAHeight
+        DEFINE_LINE gl10, kGridXPos + kGridDX * 3, kGridYPos, kGridXPos + kGridDX * 3, kDAHeight
+        DEFINE_LINE gl11, kGridXPos + kGridDX * 4, kGridYPos, kGridXPos + kGridDX * 4, kDAHeight
+        DEFINE_LINE gl12, kGridXPos + kGridDX * 5, kGridYPos, kGridXPos + kGridDX * 5, kDAHeight
         kNumGridLines = 12
 
 grid_pen:

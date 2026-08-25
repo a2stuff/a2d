@@ -548,8 +548,7 @@ nextwinfo:      .addr   0
 .endparams
 
 ;;; Dividing line
-        DEFINE_POINT dialog_sep_start, 315, file_dialog_res::kControlsTop
-        DEFINE_POINT dialog_sep_end,   315, 99+3
+        DEFINE_LINE dialog_sep, 315, file_dialog_res::kControlsTop, 315, 99+3
 
 ;;; Line Edit - Filename (etc)
         kLineEditX = file_dialog_res::kControlsLeft
@@ -1004,8 +1003,7 @@ buflabel:       .res    16, 0
         DEFINE_POINT header_text_pos, 0, 0
         DEFINE_POINT header_text_delta, 0, 0
 
-        DEFINE_POINT header_line_left, 0, 0
-        DEFINE_POINT header_line_right, kMaxResizeWindowWidth, 0
+        DEFINE_LINE header_line, 0, 0, kMaxResizeWindowWidth, 0
 
 str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator

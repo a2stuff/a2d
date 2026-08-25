@@ -205,8 +205,8 @@ consume:
         MGTK_CALL MGTK::FrameRect, shortcut_dialog_res::line_edit_rect
 
         ;; Vertical separator
-        MGTK_CALL MGTK::MoveTo, shortcut_dialog_res::dialog_sep_start
-        MGTK_CALL MGTK::LineTo, shortcut_dialog_res::dialog_sep_end
+        MGTK_CALL MGTK::MoveTo, shortcut_dialog_res::dialog_sep::start
+        MGTK_CALL MGTK::LineTo, shortcut_dialog_res::dialog_sep::end
 
         ;; Radio buttons
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos

@@ -221,10 +221,7 @@ nextwinfo:      .addr   0
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
-        DEFINE_POINT pos_title_string, winfo::kWidth / 2, 17
-
-str_selector_title:
-        PASCAL_STRING res_string_selector_name
+        DEFINE_LABEL title, res_string_selector_name, winfo::kWidth / 2, 17
 
         ;; Options control metrics
         kEntryPickerCols = 3
@@ -1146,8 +1143,8 @@ backup_devlst:
         MGTK_CALL MGTK::FrameRect, rect_frame
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        MGTK_CALL MGTK::MoveTo, pos_title_string
-        MGTK_CALL MGTK::DrawStringCentered, str_selector_title
+        MGTK_CALL MGTK::MoveTo, title_label_pos
+        MGTK_CALL MGTK::DrawStringCentered, title_label_str
 
         MGTK_CALL MGTK::FrameRect, entry_picker_rect
 

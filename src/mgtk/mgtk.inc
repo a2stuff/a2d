@@ -878,6 +878,15 @@ ycoord: .word   AS_WORD(top)
 .endscope ; ident
 .endmacro
 
+;;; Convenience for start/end points of a line
+.macro DEFINE_LINE ident, x1, y1, x2, y2
+        WARN_IF_SHADOWING ident
+.scope ident
+        DEFINE_POINT start, x1, y1
+        DEFINE_POINT end, x2, y2
+.endscope ; ident
+.endmacro
+
 ;;; Menus (common cases; other options are possible)
 
 .macro DEFINE_MENU_BAR ident, count

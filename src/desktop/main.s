@@ -7841,8 +7841,8 @@ END_PARAM_BLOCK
         maprect := window_mapinfo_cache + MGTK::MapInfo::maprect
 
         ;; separator line x/y coords
-        copy16  maprect+MGTK::Rect::x1, header_line_left::xcoord
-        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line_left::ycoord
+        copy16  maprect+MGTK::Rect::x1, header_line::start::xcoord
+        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line::start::ycoord
 
         ;; label x/y coords
         add16_8 maprect+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
@@ -7860,15 +7860,15 @@ END_PARAM_BLOCK
         jsr     SetPenModeNotCopy
 
         ;; Draw top line
-        MGTK_CALL MGTK::MoveTo, header_line_left
-        MGTK_CALL MGTK::Line, header_line_right
+        MGTK_CALL MGTK::MoveTo, header_line::start
+        MGTK_CALL MGTK::Line, header_line::end
 
         ;; Offset down by 2px
-        add16_8 header_line_left::ycoord, #2
+        add16_8 header_line::start::ycoord, #2
 
         ;; Draw bottom line
-        MGTK_CALL MGTK::MoveTo, header_line_left
-        MGTK_CALL MGTK::Line, header_line_right
+        MGTK_CALL MGTK::MoveTo, header_line::start
+        MGTK_CALL MGTK::Line, header_line::end
 
         ;; --------------------------------------------------
         ;; Labels (Items/K in disk/K available)
