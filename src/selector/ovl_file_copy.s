@@ -340,25 +340,21 @@ nextwinfo:      .addr   0
 
         DEFINE_LABEL download, res_string_label_download, winfo::kWidth / 2, 17, kLabelCentered
 
-        kProgressDialogDefaultX = 18
+        kProgressDialogInsetX = 18
+        kProgressDialogCopyingLabelWidth = kSystemFontWidth * .strlen(res_string_label_copying)
+        kProgressDialogPathWidth = winfo::kWidth - kProgressDialogCopyingLabelWidth - kProgressDialogInsetX*2
 .if kBuildIsRTL
-        kProgressDialogPathLeft = kProgressDialogDefaultX
-        kProgressDialogPathWidth = winfo::kWidth - kProgressDialogCopyingWidth - kProgressDialogDefaultX*2
+        kProgressDialogLabelPos = winfo::kWidth - kProgressDialogInsetX
+        kProgressDialogPathLeft = kProgressDialogInsetX
 .else
-        kProgressDialogPathLeft = kProgressDialogDefaultX + kProgressDialogCopyingWidth
-        kProgressDialogPathWidth = winfo::kWidth - kProgressDialogPathLeft - kProgressDialogDefaultX
+        kProgressDialogLabelPos = kProgressDialogInsetX
+        kProgressDialogPathLeft = kProgressDialogInsetX + kProgressDialogCopyingLabelWidth
 .endif
 
         DEFINE_POINT pos_path, kProgressDialogPathLeft, 32
-.if kBuildIsRTL
-        DEFINE_POINT pos_copying, winfo::kWidth - kProgressDialogDefaultX, 32
-        DEFINE_POINT pos_remaining, winfo::kWidth - kProgressDialogDefaultX, 45
-.else
-        DEFINE_POINT pos_copying, kProgressDialogDefaultX, 32
-        DEFINE_POINT pos_remaining, kProgressDialogDefaultX, 45
-.endif
+        DEFINE_POINT pos_copying, kProgressDialogLabelPos, 32
+        DEFINE_POINT pos_remaining, kProgressDialogLabelPos, 45
 
-        kProgressDialogCopyingWidth = kSystemFontWidth * .strlen(res_string_label_copying)
 str_copying:
         PASCAL_STRING res_string_label_copying
 
