@@ -221,7 +221,7 @@ nextwinfo:      .addr   0
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
-        DEFINE_LABEL title, res_string_selector_name, winfo::kWidth / 2, 17
+        DEFINE_LABEL title, res_string_selector_name, winfo::kWidth / 2, 17, kLabelCentered
 
         ;; Options control metrics
         kEntryPickerCols = 3

@@ -409,7 +409,11 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
         WARN_IF_SHADOWING .ident(.sprintf("%s_label_pos", .string(ident)))
         WARN_IF_SHADOWING .ident(.sprintf("%s_label_str", .string(ident)))
 
-    .if kBuildIsRTL && .not(.blank({width}))
+    .ifblank width
+        .error "'width' must not be blank; consider 'kLabelCentered' or 'kLabelManualAlignment'"
+    .endif
+
+    .if kBuildIsRTL
         DEFINE_POINT .ident(.sprintf("%s_label_pos", .string(ident))), ((xpos) + (width)), (ypos)
     .else
         DEFINE_POINT .ident(.sprintf("%s_label_pos", .string(ident))), (xpos), (ypos)
