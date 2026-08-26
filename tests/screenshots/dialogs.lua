@@ -310,6 +310,8 @@ DialogTest(
       shortcut_added = true
     end
 
+    a2d.CloseAllWindows()
+
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut" .. suffix)
     apple2.DownArrowKey()
@@ -351,6 +353,30 @@ if shortcut_added then
   a2d.WaitForDesktopReady()
 end
 
+DialogTest(
+  "Copying to RAMCard",
+  function(suffix)
+    a2d.ToggleOptionCopyToRAMCard()
+    a2d.QuitAndRestart()
+    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
+    a2d.CloseAllWindows()
+
+    a2d.OAShortcut("1") -- run first shortcut
+    util.WaitFor(
+      "progress dialog", function()
+        emu.wait(1)
+        return a2dtest.OCRFrontWindowContent():upper():match("FILES REMAINING")
+    end)
+    test.Snap("Copy to RAMCard Progress" .. suffix)
+    a2d.DialogCancel()
+
+    -- cleanup
+    a2d.DeletePath("/A2.DESKTOP/LOCAL/DESKTOP.CONFIG")
+    a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
+    a2d.Reboot()
+    a2d.WaitForDesktopReady()
+end)
+
 --------------------------------------------------
 -- Disk Copy
 --------------------------------------------------
@@ -379,6 +405,7 @@ DialogTest(
     -- select destination
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
+    emu.wait(1)
     test.Snap("Disk Copy - Select destination" .. suffix)
     a2d.DialogOK()
 
@@ -402,6 +429,7 @@ DialogTest(
     -- formatting
     util.WaitFor(
       "formatting", function()
+        emu.wait(1)
         return a2dtest.OCRFrontWindowContent(bounds):match("Formatting")
     end)
     test.Snap("Disk Copy - Formatting" .. suffix)
@@ -409,6 +437,7 @@ DialogTest(
     -- reading progress
     util.WaitFor(
       "reading", function()
+        emu.wait(1)
         return a2dtest.OCRFrontWindowContent(bounds):match("Reading")
     end)
     emu.wait(10)
@@ -417,6 +446,7 @@ DialogTest(
     -- writing progress
     util.WaitFor(
       "writing", function()
+        emu.wait(1)
         return a2dtest.OCRFrontWindowContent(bounds):match("Writing")
     end)
     emu.wait(10)
@@ -442,8 +472,11 @@ DialogTest(
     a2dtest.WaitForAlert({match="Insert the destination"})
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Are you sure"})
-    a2d.DialogOK()
-    emu.wait(1)
+    a2d.DialogOK({no_wait=true})
+    util.WaitFor(
+      "reading", function()
+        return a2dtest.OCRFrontWindowContent(bounds):match("Reading")
+    end)
     apple2.EscapeKey()
     a2dtest.WaitForAlert({match="not completed"})
     test.Snap("Disk Copy - Failure" .. suffix)
