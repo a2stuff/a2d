@@ -392,12 +392,17 @@ kMoveThresholdY = 5
         DEFINE_POINT pos_l, 0, 0
         DEFINE_POINT pos_r, 0, 0
 
+        DEFINE_POINT last_l, 0, 0
+        DEFINE_POINT last_r, 0, 0
+
 ;;; ============================================================
 
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         RTS_IF A = #MGTK::Error::window_obscured
+
+        CLEAR_BIT7_FLAG skip_erase_flag
 
         ;; Defer until we have mouse coords
         lda     has_last_coords
@@ -406,7 +411,7 @@ kMoveThresholdY = 5
         MGTK_CALL MGTK::SetPort, grafport
 
         lda     has_drawn_outline
-        jne     erase_pupils
+        jne     done_outline
         inc     has_drawn_outline
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -436,17 +441,14 @@ kMoveThresholdY = 5
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
 
         ;; Skip erasing pupils if we're redrawing
-        jmp     draw_pupils
+        SET_BIT7_FLAG skip_erase_flag
+done_outline:
 
-        ;; TODO: Redo this to reduce flicker; compute new pos first,
-        ;; and only erase/redraw one at a time.
+        ;; Save previous coords (for erasing)
+        COPY_STRUCT pos_l, last_l
+        COPY_STRUCT pos_r, last_r
 
-erase_pupils:
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        jsr     _DrawPupils
-
-draw_pupils:
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        ;; Compute new coords
         add16 winfo::maprect::x2, #2, rx ; width / 4
         lsr16 rx
         lsr16 rx
@@ -465,33 +467,60 @@ draw_pupils:
         sub16  ppx, #kPupilW/2, pos_r::xcoord
         sub16  ppy, #kPupilH/2, pos_r::ycoord
 
-        FALL_THROUGH_TO _DrawPupils
+        ;; Do one pupil at a time to minimize flicker
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve ; go fast
 
-.proc _DrawPupils
+    IF bit skip_erase_flag : NC
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        ldax    last_l::xcoord
+        stax    pupil_rect+MGTK::Rect::x1
+        addax   #kPupilW, pupil_rect+MGTK::Rect::x2
+        ldax    last_l::ycoord
+        stax    pupil_rect+MGTK::Rect::y1
+        addax   #kPupilH, pupil_rect+MGTK::Rect::y2
+        jsr     _DrawPupil
+    END_IF
+        MGTK_CALL MGTK::SetPenMode, notpencopy
         ldax    pos_l::xcoord
         stax    pupil_rect+MGTK::Rect::x1
         addax   #kPupilW, pupil_rect+MGTK::Rect::x2
         ldax    pos_l::ycoord
         stax    pupil_rect+MGTK::Rect::y1
         addax   #kPupilH, pupil_rect+MGTK::Rect::y2
-        MGTK_CALL MGTK::ShieldCursor, pupil_rect
-        MGTK_CALL MGTK::PaintRect, pupil_rect
-        MGTK_CALL MGTK::UnshieldCursor
-        MGTK_CALL MGTK::CheckEvents
+        jsr     _DrawPupil
 
+    IF bit skip_erase_flag : NC
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        ldax    last_r::xcoord
+        stax    pupil_rect+MGTK::Rect::x1
+        addax   #kPupilW, pupil_rect+MGTK::Rect::x2
+        ldax    last_r::ycoord
+        stax    pupil_rect+MGTK::Rect::y1
+        addax   #kPupilH, pupil_rect+MGTK::Rect::y2
+        jsr     _DrawPupil
+    END_IF
+        MGTK_CALL MGTK::SetPenMode, notpencopy
         ldax    pos_r::xcoord
         stax    pupil_rect+MGTK::Rect::x1
         addax   #kPupilW, pupil_rect+MGTK::Rect::x2
         ldax    pos_r::ycoord
         stax    pupil_rect+MGTK::Rect::y1
         addax   #kPupilH, pupil_rect+MGTK::Rect::y2
+        jsr     _DrawPupil
+
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
+        rts
+
+;;; Caller must set up `pupil_rect`
+.proc _DrawPupil
         MGTK_CALL MGTK::ShieldCursor, pupil_rect
         MGTK_CALL MGTK::PaintRect, pupil_rect
         MGTK_CALL MGTK::UnshieldCursor
         MGTK_CALL MGTK::CheckEvents
-
         rts
-.endproc ; _DrawPupils
+.endproc ; _DrawPupil
+
+skip_erase_flag:        .byte   0 ; bit7
 
 .endproc ; DrawWindow
 
