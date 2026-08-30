@@ -163,6 +163,8 @@ Project Page: https://github.com/a2stuff/a2d
   * Reduce cursor flickering.
   * Don't show second joystick location on IIc. ([#909](https://github.com/a2stuff/a2d/issues/909))
 * CD Remote: Fix shuffle play randomization.
+* Neko: Pace animation on accelerated systems.
+
 
 ### Misc
 

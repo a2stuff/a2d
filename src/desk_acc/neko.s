@@ -523,6 +523,8 @@ kMove      = 8                   ; scaled 2x in x dimension
 skip:   .word   0
 
 .proc HandleNoEvent
+        JUMP_TABLE_MGTK_CALL MGTK::WaitVBL
+
         ;; Throttle animation
         lda     skip
         ora     skip+1
@@ -531,7 +533,7 @@ skip:   .word   0
         jmp     InputLoop
     END_IF
 
-        copy16  #175, skip
+        copy16  #20, skip
 
         ;; --------------------------------------------------
         ;; Tick once per frame; used to alternate frames
