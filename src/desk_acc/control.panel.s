@@ -214,6 +214,36 @@ rarr_bitmap:
 
         DEFINE_BUTTON rgb_color_button, kDAWindowId, res_string_label_rgb_color, res_string_shortcut_apple_1, kPatternEditX + 46, kPatternEditY + 50, 75
 
+pencil_cursor:
+        PIXELS  ".............."
+        PIXELS  ".......####..."
+        PIXELS  "......##...#.."
+        PIXELS  ".....#..###..."
+        PIXELS  "....#....#...."
+        PIXELS  "...#....#....."
+        PIXELS  "..#....#......"
+        PIXELS  ".#....#......."
+        PIXELS  ".#####........"
+        PIXELS  ".####........."
+        PIXELS  ".##..........."
+        PIXELS  ".............."
+
+        PIXELS  ".......####..."
+        PIXELS  "......######.."
+        PIXELS  ".....########."
+        PIXELS  "....########.."
+        PIXELS  "...########..."
+        PIXELS  "..########...."
+        PIXELS  ".########....."
+        PIXELS  "########......"
+        PIXELS  "#######......."
+        PIXELS  "######. ......"
+        PIXELS  "#####........."
+        PIXELS  "####.........."
+
+        .byte   2,10
+
+
 ;;; ============================================================
 ;;; Double-Click Speed Resources
 
@@ -496,6 +526,17 @@ caret_blink_caret_bitmap:
 .proc HandleMove
         ;; For warping the cursor after scaling change
         COPY_STRUCT event_params::coords, last_mouse_pos
+
+        copy8   #kDAWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+
+        MGTK_CALL MGTK::InRect, fatbits_rect
+    IF NOT_ZERO
+        MGTK_CALL MGTK::SetCursor, pencil_cursor
+    ELSE
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+    END_IF
 
         jmp     InputLoop
 .endproc ; HandleMove

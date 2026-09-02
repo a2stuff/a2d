@@ -146,7 +146,9 @@ Project Page: https://github.com/a2stuff/a2d
 * New Screen Saver: Maze.
 * Text Preview: Show first 64K of larger files correctly.
 * Control Panels: Handle write protected disk when modifying settings.
-* Control Panel: Fix overlapping button labels in some locales.
+* Control Panel
+  * Fix overlapping button labels in some locales.
+  * Show pencil cursor over desktop pattern editor.
 * Map
   * Fix overlapping labels in some locales.
   * Reduce cursor flickering when blinking position indicator.
