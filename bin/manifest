@@ -82,6 +82,7 @@ emit add_file $disposition "out/selector.built" "Modules" "Selector" F10000
 disposition="extra"
 
 # Add "Interpreters"
+emit add_file $disposition "res/package/EXTRAS.READ.ME" "Extras" "Read.Me" 040000
 emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
 emit add_file $disposition "res/package/BINSCII" "Extras" "BinSCII" FF0000
 emit add_file $disposition "res/package/INTBASIC.SYSTEM" "Extras" "IntBASIC.system" FF2000
