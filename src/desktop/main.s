@@ -3737,16 +3737,17 @@ RefreshActiveWindow := RefreshActiveWindowImpl::entry3
         ENTRY_POINTS_FOR_A format, FormatEraseAction::format, erase, FormatEraseAction::erase
         sta     action
 
+        copy8   #0, text_input_buf
+
         jsr     GetSelectedUnitNum
         sta     unit_num
-
-        jsr     GetSingleSelectedIcon
     IF NOT ZERO
+        jsr     GetSingleSelectedIcon
+      IF NOT ZERO
         jsr     GetIconName
         stax    $06
         CALL    CopyPtr1ToBuf, AX=#text_input_buf
-    ELSE
-        copy8   #0, text_input_buf
+      END_IF
     END_IF
 
 exec:

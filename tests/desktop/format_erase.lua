@@ -278,7 +278,9 @@ end)
 
 --[[
   Launch DeskTop. Set selection as specified. Run the command. Verify
-  that the device selector is not skipped.
+  that the device selector is not skipped. Select a device and click OK.
+  Verify that the file icon name is not used as the default volume name.
+
 ]]
 FormatEraseTest(
   "Single file selected",
@@ -287,6 +289,15 @@ FormatEraseTest(
     invoke(false)
     test.ExpectMatch(a2dtest.OCRScreen(), "Select the location of the disk",
                 "should be prompted for device")
+    apple2.DownArrowKey()
+    a2d.WaitForRepaint()
+    test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
+    a2d.DialogOK()
+    a2d.WaitForRepaint()
+    apple2.RightArrowKey()
+    apple2.SpaceKey()
+    a2d.WaitForRepaint()
+    test.ExpectNotIMatch(a2dtest.OCRScreen(), "READ.ME", "file name should not be used as default")
     a2d.DialogCancel()
 end)
 
