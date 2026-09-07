@@ -1733,7 +1733,7 @@ sigtable_ieee488:       .byte   4, $05, $50, $07, $38, $0B, $FF, $0C, $CF
       IF CS
         RETURN  AX=#str_phasor
       END_IF
-      
+
         RETURN  C=1, AX=#str_mockingboard
     END_IF
 
@@ -1798,7 +1798,6 @@ sigtable_ieee488:       .byte   4, $05, $50, $07, $38, $0B, $FF, $0C, $CF
 
         ;; On IIgs, slow mode
         jsr     IsIIgs
-        php
     IF CC
         lda     CYAREG          ; bit=7 = fast mode
         pha                     ; save
@@ -1811,7 +1810,7 @@ sigtable_ieee488:       .byte   4, $05, $50, $07, $38, $0B, $FF, $0C, $CF
         sta     ($06),y
 
         ;; On IIgs, restore mode
-        plp
+        jsr     IsIIgs
     IF CC
         pla
         sta     CYAREG
