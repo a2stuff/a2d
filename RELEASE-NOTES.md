@@ -13,6 +13,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Support dragging files onto ProDOS "interpreter" applications. ([#903](https://github.com/a2stuff/a2d/issues/903))
 * New Toy: Minesweeper.
 * New Screen Saver: Maze.
+* Date & Time: Support setting IIgs clock, No-Slot Clock, ThunderClock, ROMX RTC, and The Cricket! clock. ([#38](https://github.com/a2stuff/a2d/issues/38))
 
 ### General
 
@@ -166,7 +167,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Don't show second joystick location on IIc. ([#909](https://github.com/a2stuff/a2d/issues/909))
 * CD Remote: Fix shuffle play randomization.
 * Neko: Pace animation on accelerated systems.
-
+* Date & Time: Support setting IIgs clock, No-Slot Clock, ThunderClock, ROMX RTC, and The Cricket! clock. ([#38](https://github.com/a2stuff/a2d/issues/38))
 
 ### Misc
 
