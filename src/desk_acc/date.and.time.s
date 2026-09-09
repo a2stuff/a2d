@@ -1142,16 +1142,16 @@ fill_period:
 ;;; Delay
 
 .proc Delay
-        lda     #255
-        sec
+
+        ldx     #5
     DO
+        txa
         pha
-      DO
-        sbc     #1
-      WHILE NOT_ZERO
+        MGTK_CALL MGTK::WaitVBL
         pla
-        sbc     #1
-    WHILE NOT_ZERO
+        tax
+    WHILE dex : POS
+
         rts
 .endproc ; Delay
 
