@@ -1814,6 +1814,9 @@ fail:   rts
 
 ;;; ============================================================
 
+;;; Clip `left`, `top`, `right`, `bottom` against `current_maprect`
+;;; Output: C=0 if degenerate; Y=clipped edge flags
+
 .proc ClipRect
         lda     current_maprect_x2+1
         cmp     left+1
@@ -1852,7 +1855,7 @@ in_bottom:
         cmp     current_maprect_y1
         bcc     fail2
 
-in_top: ldy     #0
+in_top: ldy     #0              ; clip flags
         lda     left
         sec
         sbc     current_maprect_x1
@@ -1864,7 +1867,7 @@ in_top: ldy     #0
         stx     clipped_left
         sta     clipped_left+1
         copy16  current_maprect_x1, left
-        iny
+        iny                     ; ORA %0001
 
 :       lda     current_maprect_x2
         sec
@@ -1876,7 +1879,7 @@ in_top: ldy     #0
 
         copy16  current_maprect_x2, right
         tya
-        ora     #$04
+        ora     #%0100
         tay
 
 :       lda     top
@@ -1890,7 +1893,7 @@ in_top: ldy     #0
         stx     clipped_top
         sta     clipped_top+1
         copy16  current_maprect_y1, top
-        iny
+        iny                     ; ORA %0010
         iny
 
 :       lda     current_maprect_y2
@@ -1902,7 +1905,7 @@ in_top: ldy     #0
         bpl     :+
         copy16  current_maprect_y2, bottom
         tya
-        ora     #$08
+        ora     #%1000
         tay
 
 :       sty     $9A
@@ -2139,8 +2142,8 @@ shift_bits_table:
         poly_oper        := $BA       ; positive = paint; negative = test
         start_index      := $AE
 
-        poly_oper_paint  := $00
-        poly_oper_test   := $80
+        kPolyOperPaint   := $00
+        kPolyOperTest    := $80
 
 
 .proc LoadPoly
@@ -2292,7 +2295,7 @@ orts:   rts
 ;;; InPoly
 
 InPolyImpl:
-        lda     #poly_oper_test
+        lda     #kPolyOperTest
         bne     PaintPolyImpl_entry2
 
 ;;; ============================================================
@@ -2308,7 +2311,7 @@ InPolyImpl:
 
 .proc PaintPolyImpl
 
-        lda     #poly_oper_paint
+        lda     #kPolyOperPaint
 entry2: sta     poly_oper
         ldx     #0
         stx     num_maxima
@@ -3474,7 +3477,7 @@ do_draw:
         sta     clipped_top
         tay
 
-        ldx     #(kMaxFontHeight-1)*shifted_draw_line_size
+        ldx     #(kMaxFontHeight-1)*kShiftedDrawLineSize
         sec
 
 :       lda     glyph_row_lo,y
@@ -3482,21 +3485,21 @@ do_draw:
         lda     glyph_row_hi,y
         sta     shifted_draw_linemax+2,x
         txa
-        sbc     #shifted_draw_line_size
+        sbc     #kShiftedDrawLineSize
         tax
         iny
         dec     $80
         bpl     :-
 
         ldy     clipped_top
-        ldx     #(kMaxFontHeight-1)*unshifted_draw_line_size
+        ldx     #(kMaxFontHeight-1)*kUnshiftedDrawLineSize
         sec
 :       lda     glyph_row_lo,y
         sta     unshifted_draw_linemax+1,x
         lda     glyph_row_hi,y
         sta     unshifted_draw_linemax+2,x
         txa
-        sbc     #unshifted_draw_line_size
+        sbc     #kUnshiftedDrawLineSize
         tax
         iny
         dec     $81
@@ -3582,10 +3585,10 @@ unshifted_draw_linemax:
 :       lda     $FFFF,x
         sta     text_bits_buf+kMaxFontHeight-line-1
 
-        .ifndef unshifted_draw_line_size
-        unshifted_draw_line_size := * - :-
+        .ifndef kUnshiftedDrawLineSize
+        kUnshiftedDrawLineSize := * - :-
         .else
-        .assert unshifted_draw_line_size = * - :-, error, "unshifted_draw_line_size inconsistent"
+        .assert kUnshiftedDrawLineSize = * - :-, error, "kUnshiftedDrawLineSize inconsistent"
         .endif
 
         .endrepeat
@@ -3618,10 +3621,10 @@ shifted_draw_linemax:
         ora     text_bits_buf+kMaxFontHeight-line-1
         sta     text_bits_buf+kMaxFontHeight-line-1
 
-        .ifndef shifted_draw_line_size
-        shifted_draw_line_size := * - :-
+        .ifndef kShiftedDrawLineSize
+        kShiftedDrawLineSize := * - :-
         .else
-        .assert shifted_draw_line_size = * - :-, error, "shifted_draw_line_size inconsistent"
+        .assert kShiftedDrawLineSize = * - :-, error, "kShiftedDrawLineSize inconsistent"
         .endif
 
         .endrepeat
@@ -3690,10 +3693,10 @@ unmasked_blit_linemax:
         eor     current_textback
         sta     (vid_addrs_table + 2*(kMaxFontHeight-line-1)),y
 
-        .ifndef unmasked_blit_line_size
-        unmasked_blit_line_size := * - :-
+        .ifndef kUnmaskedBlitLineSize
+        kUnmaskedBlitLineSize := * - :-
         .else
-        .assert unmasked_blit_line_size = * - :-, error, "unmasked_blit_line_size inconsistent"
+        .assert kUnmaskedBlitLineSize = * - :-, error, "kUnmaskedBlitLineSize inconsistent"
         .endif
 
         .endrepeat
@@ -3758,10 +3761,10 @@ masked_blit_linemax:
         eor     (vid_addrs_table + 2*(kMaxFontHeight-line-1)),y
         sta     (vid_addrs_table + 2*(kMaxFontHeight-line-1)),y
 
-        .ifndef masked_blit_line_size
-        masked_blit_line_size := * - :-
+        .ifndef kMaskedBlitLineSize
+        kMaskedBlitLineSize := * - :-
         .else
-        .assert masked_blit_line_size = * - :-, error, "masked_blit_line_size inconsistent"
+        .assert kMaskedBlitLineSize = * - :-, error, "kMaskedBlitLineSize inconsistent"
         .endif
 
         .endrepeat
@@ -6157,20 +6160,20 @@ filler: ldx     menu_item_index
 
         find_mode             := $C6
 
-        find_mode_by_id       := $00        ; find menu/menu item by id
+        kFindModeByID         := $00        ; find menu/menu item by id
         find_menu_id          := $C7
         find_menu_item_id     := $C8
 
-        find_mode_by_coord    := $80        ; find menu by x-coord/menu item by y-coord
+        kFindModeByCoord      := $80        ; find menu by x-coord/menu item by y-coord
                                             ; coordinate is in `cursor_pos`
 
-        find_mode_by_shortcut := $C0        ; find menu and menu item by shortcut key
+        kFindModeByShortcut   := $C0        ; find menu and menu item by shortcut key
         find_shortcut         := $C9
         find_options          := $CA
 
 
 .proc FindMenuById
-        FALL_THROUGH_TO FindMenu, A=#find_mode_by_id
+        FALL_THROUGH_TO FindMenu, A=#kFindModeByID
 .endproc ; FindMenuById
 
 .proc FindMenu
@@ -6330,7 +6333,7 @@ key_mods   .byte
       END_IF
     END_IF
 
-        CALL    FindMenu, A=#find_mode_by_shortcut
+        CALL    FindMenu, A=#kFindModeByShortcut
         beq     not_found
 
         lda     curmenu::disabled
@@ -6619,7 +6622,7 @@ restore:
 in_menu_bar:
         jsr     UnhiliteCurMenuItem
 
-        CALL    FindMenu, A=#find_mode_by_coord
+        CALL    FindMenu, A=#kFindModeByCoord
 
         cmp     cur_open_menu_id
         jeq     event_loop
@@ -6636,7 +6639,7 @@ imb_change:
         ;; --------------------------------------------------
         ;; Over an item the current menu
 in_menu_item:
-        lda     #find_mode_by_coord
+        lda     #kFindModeByCoord
         sta     was_in_menu_flag
         sta     find_mode
         jsr     FindMenuItem
@@ -6795,7 +6798,7 @@ finish: rts
         lda     cur_hilited_menu_item
         pha
 
-        CALL    FindMenu, A=#find_mode_by_shortcut
+        CALL    FindMenu, A=#kFindModeByShortcut
         beq     fail
 
         stx     sel_menu_item_index
@@ -7411,8 +7414,8 @@ root_window := current_window - MGTK::Winfo::nextwinfo
 
 
         which_control        := $8C
-        which_control_horiz  := $00
-        which_control_vert   := $80
+        kWhichControlHoriz   := $00
+        kWhichControlVert    := $80
 
         previous_window      := $A7
         window               := $A9
@@ -7573,11 +7576,21 @@ end:    rts
 return_winrect:
         RETURN  AX=#winrect
 
+kVScrollBarWidth  = 20
+kHScrollBarHeight = 10
+kVScrollArrowHeight = 11
+kHScrollArrowWidth  = 21
+
         ;; Return the window's rect including framing: title bar and scroll
         ;; bars.
 .proc GetWinFrameRect
         jsr     GetWinRect
-        dec16   winrect
+
+        ;; Left
+
+        dec16   winrect::x1     ; left border
+
+        ;; Right
 
         bit     current_winfo::vscroll
         bmi     vert_scroll
@@ -7585,28 +7598,33 @@ return_winrect:
         lda     current_winfo::options
         and     #MGTK::Option::grow_box
         bne     vert_scroll
-        lda     #$01
-        bne     :+
+        lda     #1              ; only right border
+        bne     :+              ; always
 
 vert_scroll:
-        lda     #$15
+        lda     #kVScrollBarWidth + 1 ; including right border
 :       clc
         adc     winrect::x2
         sta     winrect::x2
         bcc     :+
         inc     winrect::x2+1
-:       lda     #1
+:
+        ;; Bottom
+
+        lda     #1              ; only bottom border
 
         bit     current_winfo::hscroll
         bpl     :+
 
-        lda     #$0B
+        lda     #kHScrollBarHeight + 1 ; including bottom border
 :       clc
         adc     winrect::y2
         sta     winrect::y2
         bcc     :+
         inc     winrect::y2+1
 :
+        ;; Top
+
         lda     #MGTK::Option::dialog_box
         and     current_winfo::options
         bne     :+
@@ -7626,7 +7644,7 @@ vert_scroll:
 .proc GetWinVertScrollRect
         jsr     GetWinFrameRect
         ldax    winrect::x2
-        subax8  #$14
+        subax8  #kVScrollBarWidth
         stax    winrect::x1
 
         lda     current_winfo::options
@@ -7650,7 +7668,7 @@ vert_scroll:
         jsr     GetWinFrameRect
 get_rect:
         ldax    winrect::y2
-        subax8  #$0A
+        subax8  #kHScrollBarHeight
         stax    winrect::y1
         jmp     return_winrect
 .endproc ; GetWinHorizScrollRect
@@ -7919,7 +7937,7 @@ no_titlebar:
 
         inc     up_scroll_params::ycoord
         ldax    winrect::y2
-        subax8  #$0A
+        subax8  #kHScrollBarHeight
         tay
         lda     current_winfo::options
         and     #MGTK::Option::grow_box
@@ -7929,7 +7947,7 @@ no_titlebar:
         bpl     no_hscroll
 
 :       tya
-        subax8  #$0B
+        subax8  #kHScrollBarHeight+1
         tay
 
 no_hscroll:
@@ -7943,7 +7961,7 @@ no_vscroll:
         bpl     no_hscrollbar
 
         jsr     GetWinHorizScrollRect
-        ldx     #3
+        ldx     #.sizeof(MGTK::Point)-1
 :       lda     winrect,x
         sta     left_scroll_params,x
         sta     right_scroll_params,x
@@ -7951,7 +7969,7 @@ no_vscroll:
         bpl     :-
 
         ldax    winrect::x2
-        subax8  #$14
+        subax8  #kVScrollBarWidth
         tay
         lda     current_winfo::options
         and     #MGTK::Option::grow_box
@@ -7961,7 +7979,7 @@ no_vscroll:
         bpl     no_vscroll2
 
 :       tya
-        subax8  #$15
+        subax8  #kVScrollBarWidth+1
         tay
 
 no_vscroll2:
@@ -7978,7 +7996,7 @@ no_hscrollbar:
         lsr
         bcc     :+
 
-        lda     #which_control_vert
+        lda     #kWhichControlVert
         sta     which_control
         lda     draw_erase_mode
         jsr     DrawOrEraseScrollbar
@@ -7988,7 +8006,7 @@ no_hscrollbar:
         lsr
         bcc     :+
 
-        lda     #which_control_horiz
+        lda     #kWhichControlHoriz
         sta     which_control
         lda     draw_erase_mode
         jsr     DrawOrEraseScrollbar
@@ -8670,6 +8688,7 @@ maxheight  .word
         cpx     #4
         bne     :-
 
+        ;; TODO: menu bar height? `hilite_menu_rect::y2`
         lda     #$12
         cmp     current_winport::viewloc + MGTK::Point::ycoord
         bcc     :+
@@ -9029,14 +9048,14 @@ activate   .byte
         END_PARAM_BLOCK
 
 
-        lda     #which_control_vert
+        lda     #kWhichControlVert
         ldx     which_control
         cpx     #MGTK::Ctl::vertical_scroll_bar
         beq     activate
 
-        ;;lda     #which_control_horiz
-        .assert which_control_vert = $80, error, "which_control_vert must be $80"
-        .assert which_control_horiz = 0, error, "which_control_horiz must be 0"
+        ;;lda     #kWhichControlHoriz
+        .assert kWhichControlVert = $80, error, "kWhichControlVert must be $80"
+        .assert kWhichControlHoriz = 0, error, "kWhichControlHoriz must be 0"
         asl
         cpx     #MGTK::Ctl::horizontal_scroll_bar
         beq     activate
@@ -9134,8 +9153,8 @@ light_speckles_pattern:
 
         jsr     GetWinVertScrollRect
 
-        add16_8 winrect::y1, #$0C
-        sub16_8 winrect::y2, #$0B
+        add16_8 winrect::y1, #kVScrollArrowHeight+1
+        sub16_8 winrect::y2, #kVScrollArrowHeight
 
         lda     current_winfo::options
         and     #MGTK::Option::grow_box
@@ -9145,7 +9164,7 @@ light_speckles_pattern:
         bpl     v_noscroll
 
 :
-        sub16_8 winrect::y2, #$0B
+        sub16_8 winrect::y2, #kHScrollBarHeight+1
 
 v_noscroll:
         inc16   winrect::x1
@@ -9154,8 +9173,8 @@ v_noscroll:
 
 
 horiz:  jsr     GetWinHorizScrollRect
-        add16_8 winrect::x1, #$15
-        sub16_8 winrect::x2, #$15
+        add16_8 winrect::x1, #kHScrollArrowWidth ; TODO: Fix asymmetry (1px narrower)
+        sub16_8 winrect::x2, #kHScrollArrowWidth
 
         lda     current_winfo::options
         and     #MGTK::Option::grow_box
@@ -9164,7 +9183,7 @@ horiz:  jsr     GetWinHorizScrollRect
         bit     current_winfo::vscroll
         bpl     h_novscroll
 
-:       sub16_8 winrect::x2, #$15
+:       sub16_8 winrect::x2, #kVScrollBarWidth+1
 
 h_novscroll:
         inc16   winrect::y1
@@ -9256,7 +9275,7 @@ ep:
         lsr
         bcc     vscrollbar
 
-        lda     #which_control_vert
+        lda     #kWhichControlVert
         sta     which_control
 
         jsr     GetScrollbarScrollArea
@@ -9305,7 +9324,7 @@ no_vscroll:
         lsr
         bcc     hscrollbar
 
-        lda     #which_control_horiz
+        lda     #kWhichControlHoriz
         sta     which_control
 
         jsr     GetScrollbarScrollArea
@@ -9389,12 +9408,13 @@ ctlmax     .byte
         lda     params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     :+
-        lda     #$80
+        lda     #kWhichControlVert
         sta     params::which_ctl
         bne     got_ctl        ; always
 
 :       eor     #MGTK::Ctl::horizontal_scroll_bar
         bne     :+
+        .assert kWhichControlHoriz = 0, error, "bad constant"
         sta     params::which_ctl
         beq     got_ctl        ; always
 
@@ -9437,15 +9457,15 @@ thumbmoved  .byte
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     :+
 
-        lda     #which_control_vert
+        lda     #kWhichControlVert
         sta     params::which_ctl
         bne     got_ctl                    ; always
 
 :       eor     #MGTK::Ctl::horizontal_scroll_bar
         bne     :+
 
-        ;;lda     #which_control_horiz
-        .assert which_control_horiz = 0, error, "which_control_horiz must be 0"
+        ;;lda     #kWhichControlHoriz
+        .assert kWhichControlHoriz = 0, error, "kWhichControlHoriz must be 0"
         sta     params::which_ctl
         beq     got_ctl                    ; always
 
@@ -9713,15 +9733,15 @@ thumbpos    .byte
 
         lda     which_control
     IF A = #MGTK::Ctl::vertical_scroll_bar
-        lda     #which_control_vert
+        lda     #kWhichControlVert
         sta     which_control
         bne     check_win       ; always
     END_IF
 
         eor     #MGTK::Ctl::horizontal_scroll_bar
     IF ZERO
-        ;;lda     #which_control_horiz
-        .assert which_control_horiz = 0, error, "which_control_horiz must be 0"
+        ;;lda     #kWhichControlHoriz
+        .assert kWhichControlHoriz = 0, error, "kWhichControlHoriz must be 0"
         sta     which_control
         beq     check_win       ; always
     END_IF
