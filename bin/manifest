@@ -61,12 +61,13 @@ emit add_file $disposition "res/package/CLOCK.SYSTEM" "" "Clock.system" FF0000
 # Part 2: The bare minimum for a DeskTop.
 disposition="required"
 
+# Add Launcher
+emit add_file $disposition "out/desktop.system.SYS" "" "DeskTop.system" FF0000
+
 # Add READ.ME
 emit add_file $disposition "res/package/READ.ME" "" "Read.Me" 040000
 
-# Add Launcher, DeskTop, and Disk Copy
-emit add_file $disposition "out/desktop.system.SYS" "" "DeskTop.system" FF0000
-
+# Add DeskTop and Disk Copy
 emit add_file $disposition "out/desktop.built" "Modules" "DeskTop" F10000
 emit add_file $disposition "out/disk_copy.built" "Modules" "Disk.Copy" F10000
 
