@@ -89,9 +89,7 @@ Open the containing window for the specified file and select the file icon. Path
 
 #### `JUMP_TABLE_RESTORE_OVL` *
 
-Restore from overlay routine
-
-Routines are defined in `desktop/desktop.inc`.
+Restore DeskTop after using `OVERLAY_BUFFER`.
 
 #### `JUMP_TABLE_COLOR_MODE` *
 #### `JUMP_TABLE_MONO_MODE` *

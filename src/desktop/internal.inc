@@ -186,6 +186,17 @@ DIR_READ_DATA_BUFFER := $C00
 kDirReadDataBufferSize = $200
 
 ;;; ============================================================
+;;; Overlay routines, for `LoadDynamicRoutine`/`RestoreDynamicRoutine`
+
+kDynamicRoutineFormatErase      = 0 ; restoration not needed
+kDynamicRoutineShortcutPick     = 1 ; restoration required
+kDynamicRoutineFileDialog       = 2 ; restoration not needed
+kDynamicRoutineFileCopy         = 3 ; restoration not needed
+kDynamicRoutineShortcutEdit     = 4 ; restoration not needed
+kDynamicRoutineRestoreSP        = 5
+kDynamicRoutineRestoreBuffer    = 6
+
+;;; ============================================================
 ;;; Menu Constants
 
 kMenuNumItems = 7

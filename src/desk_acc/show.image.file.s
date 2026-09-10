@@ -261,7 +261,7 @@ restore_buffer_overlay_flag:
         jsr     MaybeCallExitHook
 
     IF bit restore_buffer_overlay_flag : NS
-        CALL    JUMP_TABLE_RESTORE_OVL, A=#kDynamicRoutineRestoreBuffer
+        CALL    JUMP_TABLE_RESTORE_OVL
     END_IF
 
         jsr     JUMP_TABLE_RGB_MODE

@@ -37,7 +37,7 @@ JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_PARAMS:   jmp     ShowAlertStruct         ; *
 JT_LAUNCH_FILE:         jmp     LaunchFileByPath
 JT_SHOW_FILE:           jmp     ShowFileIconForPath     ; *
-JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
+JT_RESTORE_OVL:         jmp     RestoreOverlayBuffer    ; *
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
 JT_RGB_MODE:            jmp     SetRGBMode              ; *
@@ -13411,6 +13411,9 @@ load:   pha
         copy8   #AlertButtonOptions::TryAgainCancel, button_options
         bne     :+              ; always
 
+buffer:
+        FALL_THROUGH_TO restore, A=#kDynamicRoutineRestoreBuffer
+
 restore:
         pha
         copy8   #AlertButtonOptions::OK, button_options
@@ -13451,6 +13454,7 @@ retry:  MLI_CALL OPEN, open_params
 .endproc ; LoadDynamicRoutineImpl
 LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
 RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
+RestoreOverlayBuffer    := LoadDynamicRoutineImpl::buffer
 
 ;;; ============================================================
 ;;; Remove segment from path at A,X

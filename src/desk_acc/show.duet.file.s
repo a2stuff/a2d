@@ -265,7 +265,7 @@ ret:    rts
         JSR_TO_AUX aux::Init
 
         ;; Page DeskTop's code back in.
-        CALL    JUMP_TABLE_RESTORE_OVL, A=#kDynamicRoutineRestoreBuffer
+        CALL    JUMP_TABLE_RESTORE_OVL
 
         jsr     JUMP_TABLE_CLEAR_UPDATES
 

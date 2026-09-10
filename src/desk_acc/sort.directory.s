@@ -115,7 +115,7 @@ start:  tsx
         TAIL_CALL JUMP_TABLE_SHOW_ALERT_PARAMS, AX=#aux::AlertNoWindowsOpen
     END_IF
 
-        CALL    JUMP_TABLE_RESTORE_OVL, A=#kDynamicRoutineRestoreBuffer
+        CALL    JUMP_TABLE_RESTORE_OVL
 
         TAIL_CALL JUMP_TABLE_ACTIVATE_WINDOW, A=window_id
 .endproc ; Exit
