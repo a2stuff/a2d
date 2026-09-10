@@ -815,7 +815,7 @@ Parameters:
 
 _DA specific:_
 
-* Call `JUMP_TABLE_YIELD_LOOP` to allow DeskTop to do periodic tasks.
+* Call `JUMP_TABLE_SYSTEM_TASK` to allow DeskTop to do periodic tasks.
 
 #### FlushEvents ($2B)
 Drop any pending events from the queue.

@@ -13354,16 +13354,16 @@ get_case_bits_per_option_and_adjust_string:
 
 ;;; Routines are:
 ;;;  0 = format/erase disk        - A$ 800,L$1000 call w/ A = 4 = format, A = 5 = erase
-;;;  1 = shortcut picker          - A$5000,L$0800
+;;;  1 = shortcut picker          - A$5000,L$0700
 ;;;  2 = common file dialog       - A$B600,L$0900
 ;;;  3 = file copy dialog         - A$B500,L$0100
-;;;  4 = shortcut editor          - L$5800,L$0400
+;;;  4 = shortcut editor          - L$B200,L$0400
 ;;;  5 = restore shortcut (1/4)   - A$5000,L$1000 (restore $5000...$5FFF)
 ;;;  6 = restore buffer           - A$5000,L$4000 (restore $5000...$9FFF)
 ;;;
-;;; `desktop.s` has the definitions for segment locations/sizes
+;;; `desktop.s` has the canonical definitions for segment locations/sizes
 ;;;
-;;; Routines 1-5 need appropriate "restore routines" applied when complete.
+;;; Routine 1 needs routine 5 applied when complete to swap back in desktop code.
 
         PROC_USED_IN_OVERLAY
 

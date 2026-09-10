@@ -89,9 +89,6 @@ Note that these are for inspiration, not to be dutifully followed.
 ## Keyboard
 
 * For Apple+letter combinations, Open-Apple or Solid-Apple should be equivalent.
-
 * Apple+M is reserved for: move the active window with the keyboard.
-* Apple+X is reserved for: scroll the active window with the keyboard.
-* Apple+G is reserved for: grow the active window with the keyboard.
-
+* Apple+G is reserved for: grow (resize) the active window with the keyboard.
 * In modal dialogs with only a single action, Return and Escape should both dismiss.

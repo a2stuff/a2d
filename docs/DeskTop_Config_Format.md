@@ -41,7 +41,8 @@ File offset +$0001. The remaining 128 bytes the file are defined by the
 |  +$0013  |  byte (1)  | decimal separator    |
 |  +$0014  |  byte (1)  | date order           |
 |  +$0015  |  byte (1)  | default view         |
-|  +$0016  |  107       | reserved             |
+|  +$0016  |  byte (1)  | first day of week    |
+|  +$0017  |  104       | reserved             |
 
 * **pattern**
 
@@ -96,19 +97,19 @@ File offset +$0001. The remaining 128 bytes the file are defined by the
 
 * **date separator**
 
-   The separator used in dates, e.g. 1/2/34.
+   The separator character used in dates, e.g. 1/2/34.
 
 * **time separator**
 
-   The separator used in times, e.g. 12:34
+   The separator character used in times, e.g. 12:34
 
 * **thousands separator**
 
-   The separator used in thousand groups, e.g. 1,234
+   The separator character used in thousand groups, e.g. 1,234
 
 * **decimal separator**
 
-   The separator used for decimals, e.g. 3.14
+   The separator character used for decimals, e.g. 3.14
 
 * **date order**
 

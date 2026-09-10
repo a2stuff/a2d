@@ -11,8 +11,7 @@ Desk Accessories:
   * [Button ToolKit](../toolkits/BTK.md)
   * [ListBox ToolKit](../toolkits/LBTK.md)
   * [Option Picker ToolKit](../toolkits/OPTK.md)
-* DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
-* Aux Entry Points
+* DeskTop Jump Table - JSR calls to entry points starting at $4003 MAIN
 
 <!-- ============================================================ -->
 
@@ -52,7 +51,7 @@ Use the `JUMP_TABLE_MLI_CALL` macro (yes, same name) for convenience.
 
 Tell DeskTop to process update events - i.e. redraw the desktop (volume icons) and directory windows as needed after move/resize/close. DeskTop will only redraw its own windows; Desk Accessories must redraw their own window.
 
-#### `JUMP_TABLE_YIELD_LOOP` *
+#### `JUMP_TABLE_SYSTEM_TASK` *
 
 Yield during an event loop for DeskTop to run tasks. This allows the menu bar clock to be updated and similar infrequent operations.
 

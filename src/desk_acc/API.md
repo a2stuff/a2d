@@ -131,7 +131,7 @@ See [Creating Applications and DeskTop Desk Accessories](../mgtk/MGTK.md#creatin
 * Draw everything
 * Flush event queue (`FlushEvents`)
 * Run an event Loop (`GetEvent`, and subsequent processing, per MGTK)
-  * Call `JUMP_TABLE_YIELD_LOOP` in the loop so DeskTop can update the clock, etc.
+  * Call `JUMP_TABLE_SYSTEM_TASK` in the loop so DeskTop can update the clock, etc.
   * Normal event processing per MGTK
   * Following a window drag/resize, a DeskTop call *must* be made:
     * `JUMP_TABLE_CLEAR_UPDATES` - redraw needed parts of windows and desktop (volume) icons.

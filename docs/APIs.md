@@ -14,7 +14,7 @@ Commands include housekeeping (create, destroy, rename, get/set info), filing (r
 
 ## MouseGraphics ToolKit (MGTK)
 
-[MGTK Documentation](../mgtk/MGTK.md)
+[MGTK Documentation](../src/mgtk/MGTK.md)
 
 This is a complex API library written by Apple circa 1985. It consists of two layers:
 
@@ -30,7 +30,7 @@ The interface is similar to the ProDOS MLI, with JSR to a known address, with a 
 
 ## Icon ToolKit (IconTK)
 
-[IconTK Documentation](../toolkits/IconTK.md)
+[IconTK Documentation](../src/toolkits/IconTK.md)
 
 This library was written specifically for DeskTop, but is isolated from the rest of the application logic, depending only on MGTK. It is used to manage, draw, and perform actions like drag and drop on file/volume icons.
 
@@ -39,7 +39,7 @@ The interface is similar to the ProDOS MLI, with JSR to a known address, with a 
 
 ## Button ToolKit (BTK)
 
-[BTK Documentation](../toolkits/BTK.md)
+[BTK Documentation](../src/toolkits/BTK.md)
 
 This library was written specifically for DeskTop, but is isolated from the rest of the application logic, depending only on MGTK. It provides operations to draw and interact with button controls, including push buttons, radio buttons, and check boxes.
 
@@ -50,7 +50,7 @@ The interface is similar to the ProDOS MLI, with JSR to a known address, with a 
 
 ## LineEdit ToolKit (LETK)
 
-[LETK Documentation](../toolkits/LETK.md)
+[LETK Documentation](../src/toolkits/LETK.md)
 
 This library was written specifically for DeskTop, but is isolated from the rest of the application logic, depending only on MGTK. It provides operations to draw and interact with "line edit" (text entry) controls.
 
@@ -61,7 +61,7 @@ The interface is similar to the ProDOS MLI, with JSR to a known address, with a 
 
 ## ListBox ToolKit (LBTK)
 
-[LBTK Documentation](../toolkits/LBTK.md)
+[LBTK Documentation](../src/toolkits/LBTK.md)
 
 This library was written specifically for DeskTop, but is isolated from the rest of the application logic, depending only on MGTK. It provides operations to draw and interact with list box controls.
 
@@ -71,7 +71,7 @@ The interface is similar to the ProDOS MLI, with JSR to a known address, with a 
 
 ## Option Picker ToolKit (OPTK)
 
-[OPTK Documentation](../toolkits/OPTK.md)
+[OPTK Documentation](../src/toolkits/OPTK.md)
 
 This library was written specifically for DeskTop, but is isolated from the rest of the application logic, depending only on MGTK. It provides operations to draw and interact with a controls that present a 2-D grid of options.
 
@@ -80,18 +80,18 @@ The interface is similar to the ProDOS MLI, with JSR to a known address, with a 
 
 ## Libraries
 
-A handful of re-usable libraries that don't have fancy MLI-style interfaces are provided in the [`lib`](../lib) directory. Ones that are important to understand for building DeskTop and other applications are:
+A handful of re-usable libraries that don't have fancy MLI-style interfaces are provided in the [`lib`](../src/lib) directory. Ones that are important to understand for building DeskTop and other applications are:
 
-* [Alert Dialog](../lib/alert_dialog.s) - simple error and prompt dialogs
-* [File Dialog](../lib/file_dialog.s) - file open / save
-* [Get Next Event](../lib/get_next_event.s) - helper to detect no-ops and moves
-* [Detect Double Click](../lib/doubleclick.s) - helper to detect double clicks
-* [Read/Write Settings](../lib/readwrite_settings.s) - access/modify options
+* [Alert Dialog](../src/lib/alert_dialog.s) - simple error and prompt dialogs
+* [File Dialog](../src/lib/file_dialog.s) - file open / save
+* [Get Next Event](../src/lib/get_next_event.s) - helper to detect no-ops and moves
+* [Detect Double Click](../src/lib/doubleclick.s) - helper to detect double clicks
+* [Read/Write Settings](../src/lib/readwrite_settings.s) - access/modify options
 
 
 ## Desk Accessories
 
-* [Desk Accessory APIs](../desk_acc/API.md)
-* [DeskTop APIs](../desktop/APIs.md)
+* [Desk Accessory APIs](../src/desk_acc/API.md)
+* [DeskTop APIs](../src/desktop/APIs.md)
 
 Desk Accessories are small applications that run within DeskTop. They are constructed using the above APIs/libraries, and integrate into the hosting application using APIs specific to DeskTop - provided as jump table entries.
