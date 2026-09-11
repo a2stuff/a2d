@@ -6360,16 +6360,10 @@ found:
 .endproc ; MenuKeyImpl
 
 
-.proc FindMenuAndMenuItem
+.proc FindMenuItemOrFail
         jsr     FindMenuByIdOrFail
         jsr     FindMenuItem
-        cpx     #0
-.endproc ; FindMenuAndMenuItem
-rrts:   rts
-
-.proc FindMenuItemOrFail
-        jsr     FindMenuAndMenuItem
-        bne     rrts
+        RTS_IF X <> #0
         EXIT_CALL MGTK::Error::menu_item_not_found
 .endproc ; FindMenuItemOrFail
 
