@@ -956,6 +956,7 @@ function a2d.MouseKeysMoveByApproximately(x,y)
   elseif y < 0 then
     a2d.MouseKeysUp(round(-y / MOUSE_KEYS_DELTA_Y))
   end
+  a2d.WaitForRepaint()
 end
 
 function a2d.MoveWindowBy(x, y, options)

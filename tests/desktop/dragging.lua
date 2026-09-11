@@ -110,6 +110,7 @@ test.Step(
         m.MoveToApproximately(src_x, src_y)
         m.ButtonDown()
         m.MoveToApproximately(dst_x, dst_y)
+        a2d.WaitForRepaint()
         test.Snap("verify folder highlighted")
         m.ButtonUp()
     end)
@@ -139,8 +140,10 @@ test.Step(
     -- Determine deltas
     a2d.OpenPath("/RAM1")
     apple2.DownArrowKey() -- F1
+    a2d.WaitForRepaint()
     local f1_x, f1_y = a2dtest.GetSelectedIconCoords()
     apple2.DownArrowKey() -- F6
+    a2d.WaitForRepaint()
     local f6_x, f6_y = a2dtest.GetSelectedIconCoords()
     local delta_x, delta_y = f1_x - f6_x, f1_y - f6_y
 
@@ -191,8 +194,10 @@ test.Step(
     -- Determine deltas
     a2d.OpenPath("/RAM1")
     apple2.DownArrowKey() -- F1
+    a2d.WaitForRepaint()
     local f1_x, f1_y = a2dtest.GetSelectedIconCoords()
     apple2.DownArrowKey() -- F6
+    a2d.WaitForRepaint()
     local f6_x, f6_y = a2dtest.GetSelectedIconCoords()
     local delta_x, delta_y = f1_x - f6_x, f1_y - f6_y
 
@@ -207,6 +212,7 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
     a2d.MoveWindowBy(0, 80)
+    emu.wait(1)
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.InMouseKeysMode(function(m)
