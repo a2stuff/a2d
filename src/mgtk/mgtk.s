@@ -7799,13 +7799,14 @@ stripes_pattern_alt := *+1
 .endproc ; SetStripesPattern
 
 
-.proc EraseWinframe
+.proc DrawOrEraseWinFrameImpl
+
+erase:
         lda     #MGTK::penOR
         ldx     #0
         beq     :+              ; always
-.endproc ; EraseWinframe
 
-.proc DrawWinframe
+draw:
         lda     #MGTK::penBIC
         ldx     #1
 
@@ -8029,7 +8030,9 @@ draw_resize:
         jsr     SetFillMode
         TAIL_CALL DrawIcon, AX=#resize_box_params
 ret:    rts
-.endproc ; DrawWinframe
+.endproc ; DrawOrEraseWinFrameImpl
+EraseWinframe := DrawOrEraseWinFrameImpl::erase
+DrawWinframe := DrawOrEraseWinFrameImpl::draw
 
 
 .proc CenterTitleText
