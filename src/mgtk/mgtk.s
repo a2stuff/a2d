@@ -1174,7 +1174,7 @@ offset2_addr := *+1
 .endproc ; DHGRShiftLine
 
 
-        ;; Entry point to start bit blit kOperation.
+        ;; Entry point to start bit blit operation.
 
 .proc BitBlit
         ldx     top
@@ -1188,7 +1188,7 @@ offset2_addr := *+1
 
 .proc DoFill
         ldx     no_srcbits_addr                         ; Disable srcbits fetching
-        stx     FillNextLine::get_srcbits_jmp_addr    ; for fill kOperation.
+        stx     FillNextLine::get_srcbits_jmp_addr    ; for fill operation.
         ldx     no_srcbits_addr+1
         stx     FillNextLine::get_srcbits_jmp_addr+1
 
@@ -4816,7 +4816,7 @@ rts4:   rts
 
 ;;; ============================================================
 
-        ;; Call mouse firmware, kOperation in Y, param in A
+        ;; Call mouse firmware, operation in Y, param in A
 .proc CallMouse
         proc_ptr          := $88
 
@@ -10367,7 +10367,7 @@ menu_key_modifiers:
         .byte   0
 
         ;; Set to true to force the return value of CheckIfChanged to true
-        ;; during a tracking kOperation.
+        ;; during a tracking operation.
 force_tracking_change:
         .byte   0
 

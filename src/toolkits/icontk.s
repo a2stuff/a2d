@@ -275,7 +275,7 @@ header_height:  .byte   0
 
 ;;; Polygon holding the composite outlines of all icons being dragged.
 ;;; Re-use the "save area" ($800-$1AFF) since menus won't show during
-;;; this kOperation.
+;;; this operation.
 polybuf_addr:           .addr   0
 max_draggable_icons:    .byte   0
 

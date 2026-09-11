@@ -81,7 +81,7 @@
         lastchar        .byte   ; char code of last character (usually $7F)
         height          .byte   ; pixels (1-16)
         charwidth       .byte   ; pixels, for each char
-        ;; kRow0        .res N    bits
+        ;; row0         .res N    bits
         ;; row0right    .res N    bits (double-width only)
 .endstruct
 
@@ -234,7 +234,7 @@ ScaleMouse      = $21           ; Set mouse/screen scaling
 ;;; .byte       x_exponent      x-scale factor for mouse, 0...3
 ;;; .byte       y_exponent      y-scale factor for mouse, 0...3
 
-KeyboardMouse   = $22           ; Next kOperation will be performed by keyboard
+KeyboardMouse   = $22           ; Next operation will be performed by keyboard
 ;;; (no parameters)
 
 GetIntHandler   = $23           ; Get address of interrupt handler
