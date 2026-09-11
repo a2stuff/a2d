@@ -443,8 +443,6 @@ textlen:        .byte   15
 text_buffer2:
         .res    kTextBufferSize+2, 0
 
-spaces_string:
-        PASCAL_STRING "          "
 error_string:
         PASCAL_STRING res_string_error_string
 
@@ -1424,9 +1422,7 @@ invert_rect:
 
 .proc PreDisplayBuffer
         MGTK_CALL MGTK::ShieldCursor, clear_display_params
-
-        MGTK_CALL MGTK::MoveTo, text_pos_params ; clear with spaces
-        MGTK_CALL MGTK::DrawStringRight, spaces_string
+        MGTK_CALL MGTK::PaintRect, clear_display_params
         MGTK_CALL MGTK::MoveTo, text_pos_params ; set up for display
         rts
 .endproc ; PreDisplayBuffer

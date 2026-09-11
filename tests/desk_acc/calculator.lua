@@ -160,6 +160,12 @@ test.Variants(
     ExpectExpression("6/2", "2")
     ExpectExpression("6/2=", "3")
 
+    ExpectExpression("1/1234=", "8.10372772E-04")
+    a2d.WaitForRepaint()
+    local ocr = OCRDisplay()
+    test.ExpectEquals(OCRDisplay(), "0", "display should be cleared")
+    apple2.EscapeKey()
+
     a2d.CloseWindow()
 end)
 
