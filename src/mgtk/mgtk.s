@@ -7113,8 +7113,11 @@ oa_sa:  cmp     #MGTK::MenuOpt::open_apple | MGTK::MenuOpt::solid_apple
         lda     curmenuitem::shortcut1
 sst:    sta     shortcut_text+2
 
-offset: lda     offset_shortcut
-        jsr     MoveToFromRight
+offset:
+        ;; Move to the given distance from the right side of the menu.
+        ldax    curmenuinfo::x_max
+        subax8  offset_shortcut
+        jsr     SetPenloc::set_x
 
         CALL    DrawText, AX=#shortcut_text
         jsr     GetMenuAndMenuItem ; restore state
@@ -7180,14 +7183,6 @@ ep2:    jsr     SetFillMode
         lda     #MGTK::pencopy
         beq     DimMenuItem::ep2 ; always
 .endproc ; DrawFiller
-
-        ;; Move to the given distance from the right side of the menu.
-.proc MoveToFromRight
-        sta     $82
-        ldax    curmenuinfo::x_max
-        subax8  $82
-        jmp     SetPenloc::set_x
-.endproc ; MoveToFromRight
 
 .proc UnhiliteCurMenuItem
         jsr     HiliteMenuItem
