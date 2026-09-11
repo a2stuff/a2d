@@ -10000,7 +10000,10 @@ stashed_addr:  .addr     0
     END_IF
 
     IF A = #CHAR_ESCAPE
-        jmp     EndMouseKeys
+        jsr     PlayTone2
+        jsr     PlayTone1
+        copy8   #kKeyboardMouseStateInactive, kbd_mouse_state
+        rts
     END_IF
 
     IF A = #' '
@@ -10081,15 +10084,6 @@ ignore:
         RETURN  C=1
 
 .endproc ; CheckActivateMouseKeys
-
-.proc EndMouseKeys
-        jsr     PlayTone2
-        jsr     PlayTone1
-        lda     #kKeyboardMouseStateInactive
-        sta     kbd_mouse_state
-
-        RETURN  C=0
-.endproc ; EndMouseKeys
 
 .proc PlayTone1
         lda     #$00            ; pitch = 256
