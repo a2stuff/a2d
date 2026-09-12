@@ -96,6 +96,7 @@ test.Variants(
     a2d.SelectPath("/A2.DESKTOP/EXTRAS")
 
     a2d.OASAShortcut(key)
+    a2d.WaitForRepaint()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")

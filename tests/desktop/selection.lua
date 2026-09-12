@@ -28,7 +28,7 @@ test.Step(
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Select("PRODOS")
 
-    a2d.Drag(x-30, y-5, x+30, y+20)
+    a2d.Drag(x-25, y-5, x+25, y+20)
     a2d.WaitForRepaint()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "only new icon should be selected")

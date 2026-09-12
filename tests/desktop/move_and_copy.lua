@@ -776,10 +776,10 @@ end)
 test.Step(
   "Copy actually copies",
   function()
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A2.DESKTOP/EXTRAS")
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS/READ.ME")
-    a2d.DeletePath("/A2.DESKTOP/EXTRAS/READ.ME")
+    a2d.CopyPath("/A2.DESKTOP/PRODOS", "/A2.DESKTOP/EXTRAS")
+    a2d.SelectPath("/A2.DESKTOP/PRODOS")
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS/PRODOS")
+    a2d.DeletePath("/A2.DESKTOP/EXTRAS/PRODOS")
 end)
 
 --[[
@@ -802,10 +802,10 @@ test.Step(
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "file should have moved")
 
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A2.DESKTOP/EXTRAS")
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS/READ.ME")
-    a2d.DeletePath("/A2.DESKTOP/EXTRAS/READ.ME")
+    a2d.CopyPath("/A2.DESKTOP/PRODOS", "/A2.DESKTOP/EXTRAS")
+    a2d.SelectPath("/A2.DESKTOP/PRODOS")
+    a2d.SelectPath("/A2.DESKTOP/EXTRAS/PRODOS")
+    a2d.DeletePath("/A2.DESKTOP/EXTRAS/PRODOS")
 
     -- cleanup
     a2d.EraseVolume("RAM1")

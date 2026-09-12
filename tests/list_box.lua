@@ -472,8 +472,8 @@ ListBoxTest(
   {
     first = "ProDOS",
     second = "Clock.system",
-    last = "Message",
-    second_last = "Melt",
+    last = "Melt",
+    second_last = "Maze",
   },
   function()
     a2d.OpenPath("/A2.DESKTOP")
