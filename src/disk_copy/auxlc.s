@@ -203,8 +203,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT rect_erase_dialog_upper, kEraseLeft, 20, kEraseRight, 103 ; under title to bottom of buttons
         DEFINE_RECT rect_erase_dialog_lower, kEraseLeft, 103, kEraseRight, kDialogHeight-4 ; top of buttons to bottom of dialog
 
-        kButtonsLeft = 210
-        kButtonsRight = 440
+        kButtonsLeft = 240
+        kButtonsRight = 450
 
         DEFINE_BUTTON dialog_ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, kButtonsRight-90, 90
 
@@ -393,7 +393,7 @@ kListBoxOffsetLeft = 20
 kListBoxOffsetTop = 30
 kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
 kListBoxTop = kDialogTop + kListBoxOffsetTop
-kListBoxWidth = 150
+kListBoxWidth = 170
 kListBoxHeight = kListItemHeight*kListRows-1
 
         kListBoxWindowId = 2

@@ -114,6 +114,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix overlapping labels during copy in some locales.
 * Fix crash on Apple IIc/IIc+ on mouse activity after some copies. ([#900](https://github.com/a2stuff/a2d/issues/900))
 * Rename "Quick Copy" to "Smart Block Copy" and "Disk Copy" to "Full Disk Copy".
+* Adjust drive list box size to ensure long volume names fit.
 
 ### Desk Accessories
 
