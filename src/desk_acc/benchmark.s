@@ -108,7 +108,7 @@ counter:        .word   0       ; set by `ProbeSpeed`
 
         kSpeedDefault60Hz = 97  ; Measured
         kSpeedDefault50Hz = kSpeedDefault60Hz * 60 / 50 ; TODO: Validate on real hardware
-        kSpeedMax = 16          ; MHz
+        kSpeedMax = 128         ; MHz
 
         kMeterTop = 24
         kMeterHeight = 9
@@ -118,17 +118,37 @@ counter:        .word   0       ; set by `ProbeSpeed`
         DEFINE_RECT_SZ meter_left, kMeterLeft, kMeterTop, kMeterWidth, kMeterHeight
         DEFINE_RECT_SZ meter_right, kMeterLeft, kMeterTop, kMeterWidth, kMeterHeight
 
-.params ticks_muldiv_params
-number:         .word   kMeterWidth ; (in) constant
-numerator:      .word   0           ; (in) populated dynamically
-denominator:    .word   kSpeedMax   ; (in) constant
-result:         .word   0           ; (out)
-remainder:      .word   0           ; (out)
-        REF_MULDIV_MEMBERS
-.endparams
+        ;; Space doubled speeds equally, with a linear interval
+        ;; below 1 MHz. Labels and interpolation use the same breakpoints.
+.struct SpeedTick
+mhz             .byte
+count_60hz      .word
+count_50hz      .word
+.endstruct
+
+.macro SPEED_TICK mhz
+        .byte   mhz
+        .word   mhz * kSpeedDefault60Hz, mhz * kSpeedDefault50Hz
+.endmacro
+
+speed_ticks:
+        SPEED_TICK 0
+        SPEED_TICK 1
+        SPEED_TICK 2
+        SPEED_TICK 4
+        SPEED_TICK 8
+        SPEED_TICK 16
+        SPEED_TICK 32
+        SPEED_TICK 64
+        SPEED_TICK kSpeedMax
+
+        kSpeedTickCount = (* - speed_ticks) / .sizeof(SpeedTick)
+        kSpeedTickLast = (kSpeedTickCount - 1) * .sizeof(SpeedTick)
+        kMeterIntervalWidth = kMeterWidth / (kSpeedTickCount - 1)
+        .assert kMeterIntervalWidth * (kSpeedTickCount - 1) = kMeterWidth, error, "Meter intervals must fill the scale"
 
 .params progress_muldiv_params
-number:         .word   kMeterWidth ; (in) constant
+number:         .word   kMeterIntervalWidth ; (in) constant
 numerator:      .word   0           ; (in) populated dynamically
 denominator:    .word   0           ; (in) populated dynamically
 result:         .word   0           ; (out)
@@ -187,25 +207,24 @@ pattern_plaid:
 
         MGTK_CALL MGTK::FrameRect, meter_frame
 
+        copy16  #kMeterLeft, pt_tick::xcoord
         lda     #0
     DO
         pha
-        sta     ticks_muldiv_params::numerator
-        MGTK_CALL MGTK::MulDiv, ticks_muldiv_params
-        add16   meter_left::x1, ticks_muldiv_params::result, pt_tick::xcoord
-        MGTK_CALL MGTK::MoveTo, pt_tick
-        MGTK_CALL MGTK::Line, pt_tickdelta
-        pla
-        pha
+        tax
+        lda     speed_ticks + SpeedTick::mhz,x
         ldx     #0
         jsr     IntToString
+        MGTK_CALL MGTK::MoveTo, pt_tick
+        MGTK_CALL MGTK::Line, pt_tickdelta
         MGTK_CALL MGTK::Move, pt_labeldelta
         MGTK_CALL MGTK::DrawStringCentered, str_from_int
 
+        add16   pt_tick::xcoord, #kMeterIntervalWidth, pt_tick::xcoord
         pla
         clc
-        adc     #1
-    WHILE A < #kSpeedMax+1
+        adc     #.sizeof(SpeedTick)
+    WHILE A < #kSpeedTickCount * .sizeof(SpeedTick)
 
         lda     #BTK::kButtonStateChecked
         sta     radio_60hz_button::state
@@ -360,15 +379,7 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::SetPattern, pattern_left
 
         jsr     ProbeSpeed
-
-        copy16  counter, progress_muldiv_params::numerator
-    IF bit radio_60hz_button::state : NS
-        copy16  #kSpeedMax * kSpeedDefault60Hz, progress_muldiv_params::denominator
-    ELSE
-        copy16  #kSpeedMax * kSpeedDefault50Hz, progress_muldiv_params::denominator
-    END_IF
-
-        MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+        jsr     ScaleSpeed
 
         ;; Max out the meter
     IF cmp16 progress_muldiv_params::result, #kMeterWidth : GE
@@ -388,6 +399,51 @@ hit:    lda     winfo::window_id
 
         rts
 .endproc ; UpdateMeter
+
+;;; ============================================================
+
+;;; Convert the measured count to a position on the nonlinear scale.
+;;; Interpolate within an interval without rounding to whole MHz first.
+.proc ScaleSpeed
+        copy16  #0, lower_bound
+        copy16  #0, base_position
+    IF bit radio_60hz_button::state : NS
+        ldx     #SpeedTick::count_60hz
+    ELSE
+        ldx     #SpeedTick::count_50hz
+    END_IF
+
+    DO
+        lda     speed_ticks + .sizeof(SpeedTick),x
+        sta     upper_bound
+        lda     speed_ticks + .sizeof(SpeedTick) + 1,x
+        sta     upper_bound+1
+    IF cmp16 counter, upper_bound : LT
+        jmp     interpolate
+    END_IF
+
+        copy16  upper_bound, lower_bound
+        add16   base_position, #kMeterIntervalWidth, base_position
+        txa
+        clc
+        adc     #.sizeof(SpeedTick)
+        tax
+    WHILE A < #kSpeedTickLast
+
+        copy16  #kMeterWidth, progress_muldiv_params::result
+        rts
+
+interpolate:
+        sub16   counter, lower_bound, progress_muldiv_params::numerator
+        sub16   upper_bound, lower_bound, progress_muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+        add16   base_position, progress_muldiv_params::result, progress_muldiv_params::result
+        rts
+
+lower_bound:    .word   0
+upper_bound:    .word   0
+base_position:  .word   0
+.endproc ; ScaleSpeed
 
 ;;; ============================================================
 
