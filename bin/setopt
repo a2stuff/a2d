@@ -9,14 +9,20 @@
 #
 # Options:
 #
-#   sel     - run Selector on startup
-#   nosel   - skip Selector on startup
-#   ram     - copy to RAMCard on starutp
-#   noram   - skip RAMCard on startup
-#   short   - show shortcuts in dialogs
-#   noshort - hide shortcuts in dialogs
-#   case    - preserve case in names
-#   nocase  - don't preserve case in name
+#   mono     - run in monochrome mode
+#   color    - run in color mode
+#   sel      - run Selector on startup
+#   nosel    - skip Selector on startup
+#   ram      - copy to RAMCard on starutp
+#   noram    - skip RAMCard on startup
+#   short    - show shortcuts in dialogs
+#   noshort  - hide shortcuts in dialogs
+#   case     - preserve case in names
+#   nocase   - don't preserve case in name
+#   show     - show invisible files
+#   noshow   - don't show invisible files
+#   check525 - check 5.25" drives on startup
+#   skip525  - skip checking 5.25" drives on startup
 #
 
 set -e
@@ -124,6 +130,30 @@ for var in "$@"; do
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
             printf "\x$(printf %x $((0x${a} | 0x08)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "noshow")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$(printf %x $((0x${a} & ~0x10)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "show")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$(printf %x $((0x${a} | 0x10)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "check525")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$(printf %x $((0x${a} & ~0x20)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "skip525")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$(printf %x $((0x${a} | 0x20)))" | \
                 dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
             ;;
        *)
