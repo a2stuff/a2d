@@ -89,6 +89,8 @@ elseif machine.system.name:match("^las.*128") then
 
   keyboard["Open Apple"].field = "Open Triangle"
   keyboard["Solid Apple"].field = "Solid Triangle"
+  keyboard["Control"].field = { "Control", "Ctrl" } -- Updated in MAME 0.290
+  keyboard["Reset"].field = { "RESET", "Reset" } -- Updated in MAME 0.290
 
 elseif machine.system.name:match("^apple2gs") then
   -- Apple IIgs
