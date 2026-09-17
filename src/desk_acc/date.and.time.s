@@ -2245,6 +2245,13 @@ kSecondOffset = 9               ; Offset in `time_seq`
         CALL    _SendByte, A=time_seq,x
     WHILE inx : A <> #CHAR_RETURN|$80
 
+        lda     #$8d            ;Carriage Return
+        jsr     _SendByte
+        lda     #$8d            ;Carriage Return
+        jsr     _SendByte
+        lda     #$a1            ;"!" = Reset Cricket
+        jsr     _SendByte
+
         ;; Restore ACIA state
         pla
         sta     CONTROL
