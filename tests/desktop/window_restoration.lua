@@ -121,6 +121,7 @@ test.Variants(
   function(idx, name)
     desktop.OpenWindow("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, idx)
+    a2dtest.WaitForSystemTask()
     desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(desktop.QuitAndRestart)
     a2d.OpenMenu(desktop.VIEW_MENU)

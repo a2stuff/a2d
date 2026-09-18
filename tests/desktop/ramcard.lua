@@ -104,6 +104,7 @@ RenameTest(
     -- File > Copy To...
     desktop.SelectPath(dtpath.."/DESKTOP.SYSTEM")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "window and dialog+listbox should be open")
     a2d.DialogCancel()
 end)

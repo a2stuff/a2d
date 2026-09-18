@@ -8,10 +8,12 @@ test.Step(
     -- Create a shortcut
     desktop.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)
@@ -37,6 +39,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK-2)
+    a2dtest.WaitForSystemTask()
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)

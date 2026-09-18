@@ -26,16 +26,19 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(desktop.APPLE_MENU, 3)
+    emu.wait(10) -- image load
     test.Snap("verify image preview")
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(desktop.APPLE_MENU, 4)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify text preview")
     desktop.CloseWindow()
     a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(desktop.APPLE_MENU, 5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify font preview")
     desktop.CloseWindow()
     a2dtest.WaitForSystemTask()
@@ -136,7 +139,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
-    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN, {no_wait=true})
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
     a2dtest.MultiSnap(30,"verify launches from menu")
     emu.wait(2) -- finish launching
     a2d.WaitForDesktopReady()

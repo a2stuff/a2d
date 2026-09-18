@@ -50,8 +50,10 @@ function FormatEraseTest(name, func)
         function(vol_selected)
           if vol_selected then
             a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK+idx-1)
+            a2dtest.WaitForSystemTask()
           else
             a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2+idx-1)
+            a2dtest.WaitForSystemTask()
           end
       end)
   end)

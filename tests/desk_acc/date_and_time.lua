@@ -27,7 +27,9 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
     a2dtest.ExpectFullRepaint(function()
@@ -71,6 +73,7 @@ test.DISABLED_Step(
   "no configuration w/ driver but no writing logic",
   function()
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("DATE.AND.TIME")
     for i=1, 5 do
       apple2.UpArrowKey()
@@ -96,6 +99,7 @@ test.Step(
   "12-hour",
   function()
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
     test.Snap("verify 12-hour, no leading 0 on hours")
@@ -113,6 +117,7 @@ test.Step(
   "24-hour",
   function()
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
     test.Snap("verify 24-hour, leading 0 on hours")

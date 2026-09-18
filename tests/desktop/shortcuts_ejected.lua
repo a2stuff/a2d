@@ -32,7 +32,6 @@ test.Variants(
     drive:unload()
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, item)
-
     a2dtest.WaitForAlert({match="insert the system disk"})
     a2d.DialogCancel()
 

@@ -16,6 +16,7 @@ test.Step(
 
     desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     local recognized = a2dtest.OCRScreen({invert=true})
     test.ExpectMatch(recognized, "File", "screen should contain inverted File")
 
@@ -60,6 +61,7 @@ test.Step(
   function()
     desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
 
     if false then
     local recognized = a2dtest.OCRScreen()

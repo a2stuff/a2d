@@ -18,6 +18,7 @@ test.Step(
     desktop.CopyPath("/TESTS/DRIVERS/RAM.DRV.SYSTEM", "/A2.DESKTOP")
     desktop.SelectPath("/A2.DESKTOP/RAM.DRV.SYSTEM")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.SORT_DIRECTORY)
+    a2dtest.WaitForSystemTask()
 
     desktop.Reboot()
     a2d.WaitForDesktopReady()
@@ -43,7 +44,7 @@ test.Step(
     desktop.CopyPath("/TESTS/DRIVERS/RAMAUX.SYSTEM", "/A2.DESKTOP")
     desktop.SelectPath("/A2.DESKTOP/RAMAUX.SYSTEM")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.SORT_DIRECTORY)
-    desktop.Reboot()
+    a2dtest.WaitForSystemTask()
 
     -- In Bitsy Bye (since RAMAUX doesn't chain, it QUITs)
     desktop.Reboot()

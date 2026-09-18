@@ -14,9 +14,6 @@ test.Step(
   function()
     apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
 
-    -- TODO: This was hanging
-
-
     desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.LeftArrowKey() -- change pattern
     apple2.ControlKey("D") -- Set Desktop Pattern

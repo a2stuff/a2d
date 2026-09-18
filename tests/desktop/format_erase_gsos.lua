@@ -18,6 +18,7 @@ test.Variants(
   }, function(idx)
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2+idx-1)
+    a2dtest.WaitForSystemTask()
 
     -- Select drive (S6D1)
     desktop.FormatEraseSelectSlotDrive(6, 1)

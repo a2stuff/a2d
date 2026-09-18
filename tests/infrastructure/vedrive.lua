@@ -63,11 +63,12 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     --------------------------------------------------
-    -- Launch VEDrive
+    -- Verify
     --------------------------------------------------
+
     desktop.CloseAllWindows()
     desktop.ClearSelection()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify VEDrives have File Share icons")
 
     desktop.OpenWindow("WITH.FILES")
@@ -76,6 +77,6 @@ test.Step(
     desktop.ClearSelection()
 
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify VEDrives listed")
 end)

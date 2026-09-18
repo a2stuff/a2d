@@ -126,11 +126,6 @@ test.Variants(
         else
           m.ButtonUp() -- move or delete
         end
-
-        -- Bypass normal exiting delays
-        -- TODO: Figure out why this is necessary
-        a2d.ExitMouseKeysMode()
-        return false
     end)
 
     if what == "delete" and when == "after" then

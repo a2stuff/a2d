@@ -22,6 +22,7 @@ test.Step(
 
     -- Use Disk Copy so all memory blocks are used.
     a2d.InvokeMenuItem(3, 2) -- Options > Disk Copy
+    a2dtest.WaitForSystemTask()
 
     apple2.DownArrowKey() -- S5,D1
     apple2.DownArrowKey() -- S6,D1

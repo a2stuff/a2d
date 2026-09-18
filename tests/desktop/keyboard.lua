@@ -1197,6 +1197,7 @@ test.Step(
     desktop.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
     a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     desktop.Select("C")
     local x1, y1 = a2dtest.GetSelectedIconCoords()

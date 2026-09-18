@@ -4,6 +4,9 @@
 
   ============================================================]]
 
+-- May need tweaking between MAME releases
+local TIME_SCALE = 2
+
 local a2d = {}
 
 local util = require("util")
@@ -13,9 +16,6 @@ local mgtk = require("mgtk")
 --------------------------------------------------
 -- Reset configuration
 --------------------------------------------------
-
--- May need tweaking between MAME releases
-a2d.TIME_SCALE = 2
 
 function a2d.InitSystem()
 
@@ -59,7 +59,7 @@ function a2d.InitSystem()
     apple2.SetSystemConfig(":a2_config", "CPU type", 0xFF, 1 | (3 << 1))
 
     -- Address general apple2gs emulation slowness
-    a2d.TIME_SCALE = a2d.TIME_SCALE / 4
+    TIME_SCALE = TIME_SCALE / 4
 
   elseif system.name:match("^apple2e")
     or system.name:match("^tk3000")
@@ -110,7 +110,7 @@ local repaint_time = 0.25
 -- Prefer a2dtest.WaitForSystemTask() when possible, as this
 -- is just a heuristic.
 function a2d.WaitForRepaint()
-  emu.wait(repaint_time * a2d.TIME_SCALE) -- heuristic
+  emu.wait(repaint_time * TIME_SCALE) -- heuristic
 end
 
 --------------------------------------------------
@@ -132,9 +132,7 @@ end
 
 -- Invoke nth item on mth menu (1-based)
 -- (if nth is negative, from the bottom of menu)
-function a2d.InvokeMenuItem(mth, nth, options)
-  options = util.default_options(options)
-
+function a2d.InvokeMenuItem(mth, nth)
   a2d.OpenMenu(mth)
   if nth > 0 then
     -- down to nth item
@@ -150,10 +148,6 @@ function a2d.InvokeMenuItem(mth, nth, options)
   end
   -- invoke
   apple2.ReturnKey()
-
-  if not options.no_wait then
-    emu.wait(5 * a2d.TIME_SCALE) -- used across modules; may not return to loop
-  end
 end
 
 function a2d.OAShortcut(key, options)
@@ -223,7 +217,7 @@ end
 -- NOTE: Used outside of DeskTop module
 function a2d.NavigateFilePickerTo(path, opt_file, options)
   apple2.ControlKey("D") -- Drives
-  emu.wait(2 * a2d.TIME_SCALE)
+  emu.wait(2 * TIME_SCALE)
   for segment in path:gmatch("([^/]+)") do
     apple2.PressOA()
     apple2.Type(segment)
@@ -276,9 +270,9 @@ end
 
 -- NOTE: Used outside of DeskTop module (despite the name)
 function a2d.WaitForDesktopReady(options)
-  emu.wait(1 * a2d.TIME_SCALE) -- Don't check too soon and see old module
+  emu.wait(1 * TIME_SCALE) -- Don't check too soon and see old module
   a2d.WaitForDesktopShowing(options, 1)
-  emu.wait(5 * a2d.TIME_SCALE) -- TODO: Something better here
+  emu.wait(5 * TIME_SCALE) -- TODO: Something better here
   -- TODO: Some sort of assertion here
 end
 

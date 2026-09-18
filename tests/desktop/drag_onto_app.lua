@@ -48,6 +48,7 @@ test.Step(
   function()
     desktop.OpenWindow("/A2.DESKTOP/EXTRAS")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.GrowWindowBy(-600,-200)
     desktop.MoveWindowBy(300, 100)
     desktop.Select("TTS.SYSTEM")
@@ -193,6 +194,7 @@ test.Step(
     ]]
     desktop.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.GrowWindowBy(-600,-200)
     desktop.MoveWindowBy(300, 100)
     desktop.Select("PRODOS")

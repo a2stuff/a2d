@@ -383,7 +383,7 @@ end
 
 function desktop.FormatVolume(name, opt_new_name)
   desktop.SelectPath("/"..name)
-  a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK, {no_wait=true})
+  a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK)
   WaitForDesktopSystemTask()
   if opt_new_name then
     a2d.ClearTextField()
@@ -398,7 +398,7 @@ end
 function desktop.EraseVolume(name, opt_new_name, options)
   options = util.default_options(options)
   desktop.SelectPath("/"..name, options)
-  a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK, {no_wait=true})
+  a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK)
   WaitForDesktopSystemTask()
   if opt_new_name then
     a2d.ClearTextField()
@@ -414,11 +414,12 @@ function desktop.CopyDisk(opt_path)
   if opt_path == nil then
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_COPY_DISK-2)
+    a2d.WaitForDesktopReady()
   else
     desktop.SelectPath(opt_path)
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_COPY_DISK)
+    a2d.WaitForDesktopReady()
   end
-  a2d.WaitForDesktopReady()
 end
 
 function desktop.CycleWindows()
@@ -433,8 +434,7 @@ function desktop.AddShortcut(path, options)
   options = util.default_options(options)
 
   desktop.SelectPath(path, options)
-  a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT, {no_wait=true})
-
+  a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
   -- TODO: Workaround for https://github.com/mamedev/mame/issues/16167
   if manager.machine.system.name:match("^apple2gs") then
     emu.wait(1)
@@ -468,6 +468,7 @@ function desktop.CopySelectionTo(path, is_volume, options)
     TODO: Make this less hacky
   ]]
   a2d.InvokeMenuItem(desktop.FILE_MENU, is_volume and -2 or -3)
+  WaitForDesktopSystemTask()
 
   a2d.NavigateFilePickerTo(path)
 

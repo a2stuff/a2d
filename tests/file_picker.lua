@@ -287,8 +287,12 @@ function FilePickerTest(
       s6d2:unload()
 
       apple2.ControlKey("D") -- Drives
-      emu.wait(1) -- TODO: Hangs without this
-      --  a2dtest.WaitForSystemTask() TODO: Hangs with this
+
+      -- TODO: Remove this workaround for "Shortcuts - Run a Program - disks"
+      -- Other instances of this test case are fine
+      emu.wait(1) -- Hangs *without* this
+      --a2dtest.WaitForSystemTask() -- Hangs *with* this
+
       test.ExpectEquals(a2d.GetFilePickerCurrentPath(), "/", "should be at root")
       test.Snap("verify A is no longer present")
 
@@ -539,6 +543,7 @@ FilePickerTest(
   function()
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()
@@ -556,6 +561,7 @@ FilePickerTest(
   function()
     desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()
@@ -596,6 +602,7 @@ test.Step(
   function()
     desktop.AddShortcut("/TESTS/FILE.TYPES/ROOM.A2FC")
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -606,6 +613,7 @@ test.Step(
     a2d.DialogCancel()
     a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -629,6 +637,7 @@ test.Step(
     s6d2:unload()
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -636,6 +645,7 @@ test.Step(
     test.Snap("verify dialog shows drives list")
     a2d.DialogCancel()
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -655,6 +665,7 @@ test.Step(
     desktop.AddShortcut("/RAM1")
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.UpArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -673,6 +684,7 @@ test.Step(
     -- cleanup
     a2d.DialogCancel()
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.UpArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()

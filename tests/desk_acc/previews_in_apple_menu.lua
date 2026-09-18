@@ -32,23 +32,27 @@ test.Step(
     desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- volume icon
     desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- file icon
     desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- image file
     desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+    emu.wait(10) -- image load
     test.Snap("verify preview shown")
     desktop.CloseWindow()
 
@@ -82,23 +86,27 @@ test.Step(
     desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- volume icon
     desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- file icon
     desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- text file
     desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify preview shown")
     desktop.CloseWindow()
 
@@ -132,23 +140,27 @@ test.Step(
     desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- volume icon
     desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- file icon
     desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- font file
     desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS/ATHENS")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify preview shown")
     desktop.CloseWindow()
 
@@ -182,23 +194,27 @@ test.Step(
     desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- volume icon
     desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- file icon
     desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
         a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+        a2dtest.WaitForSystemTask()
     end)
 
     -- duet file
     desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/JESU.JOY")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
+    emu.wait(5) -- duet playback
     test.Snap("verify preview shown")
     apple2.EscapeKey()
 

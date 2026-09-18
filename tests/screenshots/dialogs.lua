@@ -41,6 +41,7 @@ DialogTest(
   "Apple > About Apple II DeskTop",
   function(suffix)
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_APPLE_II_DESKTOP)
+    a2dtest.WaitForSystemTask()
     test.Snap("Apple > About Apple II DeskTop" .. suffix)
     desktop.CloseWindow()
 end)
@@ -49,6 +50,7 @@ DialogTest(
   "Apple > About This Apple II",
   function(suffix)
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_THIS_APPLE_II)
+    a2dtest.WaitForSystemTask()
     test.Snap("Apple > About This Apple II" .. suffix)
     desktop.CloseWindow()
 end)
@@ -82,6 +84,7 @@ DialogTest(
   function(suffix)
     desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
+    a2dtest.WaitForSystemTask()
     test.Snap("File > Copy To..." .. suffix)
     a2d.DialogCancel()
     desktop.CloseAllWindows()
@@ -184,6 +187,7 @@ DialogTest(
 
     -- show dialog
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK - 2)
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Format Disk... - Prompt for drive" .. suffix)
 
     -- select RAMFactor
@@ -217,6 +221,7 @@ DialogTest(
     -- Formatting error
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK - 2)
+    a2dtest.WaitForSystemTask()
     local disk = s6d1.filename
     s6d1:unload()
     desktop.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
@@ -244,6 +249,7 @@ DialogTest(
 
     -- show dialog
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK - 2)
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Erase Disk... - Prompt for drive" .. suffix)
 
     -- select RAMFactor
@@ -277,6 +283,7 @@ DialogTest(
     -- Erasing error
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK - 2)
+    a2dtest.WaitForSystemTask()
     local disk = s6d1.filename
     s6d1:unload()
     desktop.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
@@ -308,6 +315,7 @@ DialogTest(
   function(suffix)
     desktop.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     test.Snap("Shortcuts > Add a Shortcut..." .. suffix)
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -325,6 +333,7 @@ DialogTest(
     desktop.CloseAllWindows()
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut" .. suffix)
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -343,6 +352,7 @@ DialogTest(
     end
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     test.Snap("Shortcuts > Delete a Shortcut..." .. suffix)
     a2d.DialogCancel()
 end)
@@ -356,6 +366,7 @@ DialogTest(
     end
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_RUN_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     test.Snap("Shortcuts > Run a Shortcut..." .. suffix)
     a2d.DialogCancel()
 end)
@@ -402,14 +413,17 @@ DialogTest(
 
     -- "Full Disk Copy"
     a2d.InvokeMenuItem(3, 2)
+    a2dtest.WaitForSystemTask()
     test.Snap("Disk Copy - \"Full Disk Copy\" option" .. suffix)
 
     -- "Smart Block Copy" / select source
     a2d.InvokeMenuItem(3, 1)
+    a2dtest.WaitForSystemTask()
     test.Snap("Disk Copy - \"Smart Block Copy\" option" .. suffix)
 
     -- Use "Full Disk Copy" so we get Formatting in there
     a2d.InvokeMenuItem(3, 2)
+    a2dtest.WaitForSystemTask()
 
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S1,D1
@@ -476,6 +490,7 @@ DialogTest(
 
     -- "Smart Block Copy"
     a2d.InvokeMenuItem(3, 1) -- Options > Smart Block Copy
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S1,D1
     apple2.DownArrowKey() -- S6,D1

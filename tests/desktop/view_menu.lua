@@ -110,6 +110,7 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS/VIEW/BY.NAME")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("LONG.MONTHS")
     a2dtest.WaitForSystemTask()
     test.Snap("verify no horizontal scrollbar")
@@ -130,6 +131,7 @@ test.Step(
 
     desktop.OpenWindow("/TESTS")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon_x, vol_icon_y)
@@ -138,6 +140,7 @@ test.Step(
     desktop.SelectAndOpen("APPLE.MENU")
     desktop.SelectAndOpen("CONTROL.PANELS")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.CloseWindow()
     a2dtest.ExpectNotHanging()
     desktop.CloseAllWindows()
@@ -154,6 +157,7 @@ test.Step(
     desktop.OpenWindow("/A2.DESKTOP")
     desktop.SelectAndOpen("APPLE.MENU")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.MoveWindowBy(0,100)
     test.Snap("verify selection still in volume window")
     desktop.CloseAllWindows()
@@ -171,6 +175,7 @@ test.Step(
     desktop.SelectAndOpen("APPLE.MENU")
     apple2.DownArrowKey()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.MoveWindowBy(0,100)
     test.Snap("verify selection still in folder window")
     desktop.CloseAllWindows()
@@ -197,7 +202,9 @@ test.Variants(
   function(idx)
     desktop.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, idx)
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
     test.Snap("verify window correctly repaints")
     desktop.CloseAllWindows()
@@ -213,6 +220,7 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS/VIEW/BY.NAME/A1.B1.A.B")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.GrowWindowBy(100,20)
     test.Snap("verify order is A, A1, B, B1")
     desktop.CloseAllWindows()
@@ -228,6 +236,7 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_TYPE)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify sorted by type alpha then $XX")
     for i=1,20 do
       apple2.DownArrowKey()
@@ -247,6 +256,7 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_SIZE)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify sorted large to small then dirs")
     for i=1,20 do
       apple2.DownArrowKey()
@@ -279,6 +289,7 @@ test.Step(
 
     desktop.OpenWindow("/TESTS/VIEW/DRAGGING")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     local window_x,window_y = a2dtest.GetFrontWindowContentRect()
 
@@ -346,6 +357,7 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS/VIEW/DRAGGING")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     apple2.DownArrowKey() -- select first item
     util.WaitFor(
@@ -384,6 +396,7 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS/VIEW/RENAME.REFRESH")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.Select("ANTEATER")
     desktop.RenameSelection("YAK")
     test.Snap("verify selection retained, in order, and in view")
@@ -404,6 +417,7 @@ test.Step(
     desktop.OpenWindow("/TESTS/VIEW")
     desktop.SelectAndOpen("RENAME.REFRESH")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.Select("BUNYIP")
     desktop.CycleWindows()
     desktop.MoveWindowBy(0,100)
@@ -426,12 +440,14 @@ test.Step(
     desktop.SelectAndOpen("ALIASES")
     desktop.CycleWindows()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
     test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "ALIASES", "clicked icon should be selected")
     test.Expect(desktop.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
 
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_AS_ICONS)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
     test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "ALIASES", "clicked icon should be selected")
@@ -450,12 +466,14 @@ test.Step(
   function()
     desktop.OpenWindow("/TESTS")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
     test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "TESTS", "volume icon should be selected")
     test.Expect(desktop.GetSelectedIcons()[1].dimmed, "selected icon should be dimmed")
 
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_AS_ICONS)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
     test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "TESTS", "volume icon should be selected")
@@ -479,6 +497,7 @@ test.Step(
     desktop.OpenWindow("/TESTS")
     test.Snap("verify icon view")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("FILE.TYPES")
     test.Snap("verify name view")
     a2d.InMouseKeysMode(function(m)
@@ -502,11 +521,13 @@ test.Step(
   function()
     desktop.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_AS_SMALL_ICONS)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("APPLE.MENU")
     desktop.SelectAndOpen("CONTROL.PANELS")
     test.Snap("verify small icon view")
     desktop.CycleWindows()
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify small icon view")
     desktop.CloseAllWindows()
 end)
@@ -561,6 +582,7 @@ test.Step(
     desktop.SelectAll()
     local count = #desktop.GetSelectedIcons()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(#desktop.GetSelectedIcons(), count, "icons should still be selected")
     desktop.CloseAllWindows()
 end)
@@ -606,8 +628,11 @@ test.Step(
         m.OAClick()
     end)
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.SORT_DIRECTORY)
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_AS_ICONS)
+    a2dtest.WaitForSystemTask()
 
     desktop.SelectAll()
     local icons = desktop.GetSelectedIcons()
@@ -639,6 +664,7 @@ test.Step(
         m.Click()
     end)
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
     test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "A2.DESKTOP", "clicked icon should be selected")

@@ -1525,6 +1525,7 @@ test.Step(
 
     desktop.SelectPath("/RAM1/PRODOS")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     apple2.ControlKey("L")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()

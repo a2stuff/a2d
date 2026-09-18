@@ -19,6 +19,7 @@ test.Step(
     desktop.CloseAllWindows()
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
+    a2dtest.WaitForSystemTask()
     desktop.FormatEraseSelectSlotDrive(5, 1)
     apple2.Type("A") -- same name
     a2d.DialogOK()

@@ -25,6 +25,7 @@ function CopyBlocksTests(blocks, src_img, dst_img)
       a2dtest.ConfigureForDiskCopy()
 
       a2d.InvokeMenuItem(3, idx) -- Options > Smart Block Copy or Full Disk Copy
+      a2dtest.WaitForSystemTask()
 
       -- select source
       apple2.UpArrowKey() -- S5D2

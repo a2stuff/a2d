@@ -24,6 +24,7 @@ test.Step(
     desktop.CreateFolder("/RAM1/FOLDER")
     desktop.SelectPath("/RAM1/FOLDER")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     local created_date, modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -41,6 +42,7 @@ test.Step(
 
     desktop.SelectPath("/RAM1/FOLDER")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
 
     local new_created_date, new_modified_date = GetCreatedModifiedDates()
     test.ExpectEquals(new_created_date, created_date, "creation date should be unchanged")
@@ -64,6 +66,7 @@ test.Step(
   function()
     desktop.SelectPath("/TESTS/COPYING/DATES/C.92.M.93")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     local created_date, modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -71,6 +74,7 @@ test.Step(
     desktop.CopyPath("/TESTS/COPYING/DATES", "/RAM1")
     desktop.SelectPath("/RAM1/DATES/C.92.M.93")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
 
     local new_created_date, new_modified_date = GetCreatedModifiedDates()
     test.ExpectEquals(new_created_date, created_date, "creation date should match original")
@@ -95,12 +99,14 @@ test.Step(
   function()
     desktop.SelectPath("/TESTS/COPYING/DATES")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     local folder_created_date, folder_modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
     desktop.SelectPath("/TESTS/COPYING/DATES/C.16.M.16")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     local file_created_date, file_modified_date = GetCreatedModifiedDates()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -109,6 +115,7 @@ test.Step(
 
     desktop.SelectPath("/RAM1/DATES")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     local new_created_date, new_modified_date = GetCreatedModifiedDates()
     test.ExpectEquals(new_created_date, folder_created_date, "creation date should match original")
     test.ExpectEquals(new_modified_date, folder_modified_date, "modification date should match original")
@@ -117,6 +124,7 @@ test.Step(
 
     desktop.SelectPath("/RAM1/DATES/C.16.M.16")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_GET_INFO)
+    a2dtest.WaitForSystemTask()
     local new_created_date, new_modified_date = GetCreatedModifiedDates()
     test.ExpectEquals(new_created_date, file_created_date, "creation date should match original")
     test.ExpectEquals(new_modified_date, file_modified_date, "modification date should match original")

@@ -48,6 +48,7 @@ test.Variants(
     desktop.CloseAllWindows()
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
+    a2dtest.WaitForSystemTask()
 
     local ocr = a2dtest.OCRScreen()
     test.ExpectIMatch(ocr, "S7,D1: Compact Flash", "S7,D1 HD should be present")

@@ -5,6 +5,14 @@ source "bin/util.sh"
 
 START="$(date)"
 
+FLAGS="--nosnaps"
+for arg in "$@"; do
+  case $1 in
+    --visible)   shift; FLAGS="$FLAGS --visible" ;;
+    *)           break ;;
+  esac
+done
+
 if [ $# -gt 0 ]; then
   FILES="$@"
 else
@@ -35,7 +43,7 @@ do
   SCRIPT="$(realpath "$i")"
   SCRIPTDIR="$(dirname "$SCRIPT")"
 
-  bin/mametest --nosnaps "$SCRIPT"
+  bin/mametest $FLAGS "$SCRIPT"
 
   relpath="${SCRIPT#$(pwd)/tests/}"
   resdir="$(dirname "$relpath")"

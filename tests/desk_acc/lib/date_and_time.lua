@@ -95,6 +95,7 @@ function ClockTests(name)
       local hh, mm = apple2.GetProDOSTime()
       local initial_time = string.format("%02d:%02d", hh, mm)
 
+      print("letting time advance 2 minutes...")
       emu.wait(120) -- wait for time to advance
 
       local hh, mm = apple2.GetProDOSTime()

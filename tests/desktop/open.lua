@@ -103,6 +103,7 @@ test.Step(
   function()
     desktop.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN-1)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be on top")
@@ -131,6 +132,7 @@ test.Step(
     desktop.SelectPath("/A2.DESKTOP/EXTRAS")
     desktop.MoveWindowBy(0,80) -- ensure icon remains visible
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be on top")
@@ -150,6 +152,7 @@ test.Step(
   function()
     desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "READ.ME", "folder window should be on top")
@@ -235,10 +238,12 @@ test.Step(
     desktop.OpenWindow("/A2.DESKTOP")
     desktop.Select("EXTRAS")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
+    a2dtest.WaitForSystemTask()
     desktop.CycleWindows()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "2 windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be on top")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_CLOSE)
+    a2dtest.WaitForSystemTask()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(vol_icon2_x, vol_icon2_y)
@@ -246,6 +251,7 @@ test.Step(
     end)
 
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "2 windows should be open")
 
     a2d.InMouseKeysMode(function(m)
@@ -254,10 +260,12 @@ test.Step(
     end)
 
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
 
     desktop.Select("EXTRAS")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "previously open window should be activated")

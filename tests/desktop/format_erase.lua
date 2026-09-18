@@ -19,11 +19,12 @@ function FormatEraseTest(name, func)
       func(
         function(vol_selected)
           if vol_selected then
-            a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK+idx-1, {no_wait=true})
+            a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK+idx-1)
+            a2dtest.WaitForSystemTask()
           else
-            a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2+idx-1, {no_wait=true})
+            a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2+idx-1)
+            a2dtest.WaitForSystemTask()
           end
-          a2dtest.WaitForSystemTask()
       end)
   end)
 end
@@ -105,8 +106,9 @@ FormatEraseTest(
 
     -- confirmation
     a2dtest.WaitForAlert({match="That name already exists%. Please use another name%."})
-    a2d.DialogCancel()
-    a2d.DialogCancel() -- TODO: Intentional?
+    a2d.DialogCancel() -- cancel alert
+
+    a2d.DialogCancel() -- cancel format/erase dialog
 end)
 
 --[[

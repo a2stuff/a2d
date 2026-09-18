@@ -13,6 +13,7 @@ test.Step(
   function()
     desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("INTERNATIONAL")
     a2d.OAShortcut("2") -- D/M/Y
     a2dtest.ExpectFullRepaint(function()
@@ -32,6 +33,7 @@ test.Step(
   function()
     desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     desktop.SelectAndOpen("INTERNATIONAL")
     -- don't change anything
     a2dtest.ExpectMinimalRepaint(function()

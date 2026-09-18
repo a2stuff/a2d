@@ -42,6 +42,7 @@ test.Variants(
     a2dtest.ConfigureForDiskCopy()
 
     a2d.InvokeMenuItem(3, idx) -- Smart Block Copy or Full Disk Copy
+    a2dtest.WaitForSystemTask()
 
     -- select source
     apple2.UpArrowKey() -- S6D2

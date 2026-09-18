@@ -119,6 +119,7 @@ test.Step(
     drive:unload()
 
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()

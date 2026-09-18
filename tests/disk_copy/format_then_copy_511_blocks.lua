@@ -22,6 +22,7 @@ test.Variants(
     desktop.CloseAllWindows()
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
+    a2dtest.WaitForSystemTask()
 
     desktop.FormatEraseSelectSlotDrive(6, 1)
     a2d.ClearTextField()
@@ -42,6 +43,7 @@ test.Variants(
     a2dtest.ConfigureForDiskCopy()
 
     a2d.InvokeMenuItem(3, idx) -- Options > Smart Block Copy or Full Disk Copy
+    a2dtest.WaitForSystemTask()
 
     -- select source
     apple2.UpArrowKey() -- S6D2

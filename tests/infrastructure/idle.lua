@@ -7,7 +7,6 @@ test.Step(
   function()
     desktop.CloseAllWindows()
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_APPLE_II_DESKTOP)
-
     a2dtest.WaitForSystemTask()
 
     a2d.InMouseKeysMode(function(m)

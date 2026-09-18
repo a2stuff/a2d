@@ -20,7 +20,6 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(3, 2) -- Startup, Slot 6
-
     apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
 

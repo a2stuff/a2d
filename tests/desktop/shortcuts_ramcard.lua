@@ -261,6 +261,7 @@ test.Variants(
       a2d.OAShortcut("1")
     else
       a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_RUN_A_SHORTCUT)
+      a2dtest.WaitForSystemTask()
       apple2.RightArrowKey()
       a2d.DialogOK()
       a2dtest.WaitForSystemTask()
@@ -300,6 +301,7 @@ test.Variants(
       a2d.OAShortcut("1")
     else
       a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_RUN_A_SHORTCUT)
+      a2dtest.WaitForSystemTask()
       apple2.RightArrowKey()
       a2d.DialogOK()
       a2dtest.WaitForSystemTask()

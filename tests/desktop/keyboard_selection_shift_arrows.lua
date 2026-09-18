@@ -72,6 +72,7 @@ test.Step(
     desktop.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
     a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     desktop.ClearSelection()
     ShiftDown()
@@ -120,6 +121,7 @@ test.Step(
     desktop.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
     a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     desktop.SelectAll()
     local count = #desktop.GetSelectedIcons()
@@ -263,6 +265,7 @@ test.Step(
     desktop.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
     a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     -- Top down
     desktop.ClearSelection()
@@ -314,6 +317,7 @@ test.Step(
     desktop.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
     a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
 
     desktop.Select("C")
     local c_x, c_y = a2dtest.GetSelectedIconCoords()

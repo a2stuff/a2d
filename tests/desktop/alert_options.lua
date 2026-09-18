@@ -96,7 +96,6 @@ test.Step(
     s6d1:unload()
 
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, -1) -- Special > Make Alias
-
     a2dtest.WaitForAlert({match="volume cannot be found"})
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotMatch(ocr, "Try Again", "no Try Again button should be present")

@@ -373,6 +373,7 @@ ObscuredWindowTest(
   function()
     desktop.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_AS_ICONS)
@@ -595,6 +596,7 @@ ObscuredWindowTest(
     desktop.OpenWindow("/A2.DESKTOP")
     desktop.OpenWindow("/TESTS", {keep_windows=true})
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     local id1 = mgtk.FrontWindow()
@@ -1361,6 +1363,7 @@ test.Step(
     desktop.OpenWindow("/A2.DESKTOP")
     desktop.MoveWindowBy(0, 55)
     a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2dtest.WaitForSystemTask()
     for i = 1, 20 do
       apple2.DownArrowKey()
       a2dtest.WaitForSystemTask()

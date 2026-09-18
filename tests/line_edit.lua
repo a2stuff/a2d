@@ -527,6 +527,7 @@ LineEditTest(
   function()
     desktop.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK)
+    a2dtest.WaitForSystemTask()
     a2d.ClearTextField()
   end,
   function()
@@ -547,6 +548,7 @@ LineEditTest(
   function()
     desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_RENAME)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()

@@ -27,6 +27,7 @@ test.Step(
     local dst_x, dst_y = x + w - 5, y + h - 5
 
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    a2dtest.WaitForSystemTask()
     desktop.MoveWindowBy(0, 100)
     desktop.Select("CONTROL.PANEL")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()

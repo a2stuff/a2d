@@ -400,6 +400,7 @@ ListBoxTest(
   function()
     desktop.ClearSelection()
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
+    a2dtest.WaitForSystemTask()
     apple2.ControlKey("D") -- Drives
     a2dtest.WaitForSystemTask()
   end,
@@ -476,6 +477,7 @@ ListBoxTest(
   function()
     desktop.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
+    a2dtest.WaitForSystemTask()
     apple2.Type("*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -510,6 +512,7 @@ ListBoxTest(
   function()
     desktop.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
+    a2dtest.WaitForSystemTask()
     apple2.Type("CA*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
