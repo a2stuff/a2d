@@ -240,6 +240,9 @@ ClearUpdatesSkipGet := ClearUpdates::skip_get
         PROC_USED_IN_OVERLAY
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc SystemTask
+
+TestInterceptSystemTask:
+
         inc24   tick_counter
 
         inc     loop_counter

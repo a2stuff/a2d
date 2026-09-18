@@ -35,8 +35,6 @@ DISKARGS="\
   "
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Configure a system with 14 devices. Launch and then exit DeskTop.
   Load another ProDOS app that enumerates devices. Verify that all

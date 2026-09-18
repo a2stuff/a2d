@@ -8,8 +8,6 @@ CHECKAUXMEMORY="false"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Configure an Apple IIe system with no card in the Aux slot. Invoke
   `DESKTOP.SYSTEM` from a launcher (e.g. Bitsy Bye). Verify the
@@ -20,9 +18,10 @@ test.Step(
   function()
     apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP.1/DESKTOP.SYSTEM")
-    while not apple2.GrabTextScreen():match("PRESS A KEY TO QUIT") do
-      emu.wait(0.25)
-    end
+    util.WaitFor(
+      "prompt", function()
+        return apple2.GrabTextScreen():match("PRESS A KEY TO QUIT")
+      end, {wait=0.25})
     apple2.Type("A") -- too literal?
     apple2.WaitForBitsy()
 end)

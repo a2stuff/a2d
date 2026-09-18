@@ -8,8 +8,6 @@ DISKARGS="-flop3 $HARDIMG"
 
 local s5d1 = manager.machine.images[":fdc:2:35dd"]
 
-a2d.ConfigureRepaintTime(5)
-
 --[[
   Launch DeskTop. Manually (not via DeskTop) eject the startup disk.
   Select the startup disk icon. File > Open. Verify that the alert

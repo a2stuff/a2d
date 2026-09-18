@@ -7,8 +7,6 @@ DISKARGS="-flop1 $HARDIMG"
 
 local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Select a volume or folder containing multiple files. File > Get
   Info. During the count of the files, eject the disk. Verify that an
@@ -25,14 +23,15 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I", {no_wait=true})
-    emu.wait(0.5)
+    emu.wait(0.5) -- cancel enumeration
     drive:unload()
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     drive:load(current)
     apple2.Type("A") -- Try Again
-    emu.wait(20) -- floppies are slow
+    a2dtest.WaitForSystemTask()
     test.Snap("verify enumeration completed and no mispaints")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 

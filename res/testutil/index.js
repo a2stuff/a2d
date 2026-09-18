@@ -54,7 +54,7 @@ window.addEventListener('DOMContentLoaded', async e => {
       return;
     const option = list.selectedOptions[0];
     review(option);
-  });
+  }, {passive: true});
 
   list.focus();
 

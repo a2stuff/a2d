@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Select a folder. Apple > Change Type. Modify only the type (e.g.
   `06`). Verify that an error is shown.
@@ -21,6 +19,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Modifying directories is not supported"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -39,6 +38,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("8000")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 end)
 
@@ -50,9 +50,9 @@ end)
 test.Step(
   "Change file types of folder and non-folder leaves folders alone",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES")
+    a2d.OpenWindow("/TESTS/FILE.TYPES")
     a2d.SelectAll()
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CHANGE_TYPE)
     apple2.DeleteKey()
     apple2.DeleteKey()
@@ -60,7 +60,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Modifying directories is not supported"})
     a2d.DialogOK()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify only non-folders are modified")
 end)
 
@@ -71,9 +71,9 @@ end)
 test.Step(
   "Change aux types of folder and non-folders",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES")
+    a2d.OpenWindow("/TESTS/FILE.TYPES")
     a2d.SelectAll()
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CHANGE_TYPE)
     apple2.TabKey()
     apple2.DeleteKey()
@@ -82,6 +82,7 @@ test.Step(
     apple2.DeleteKey()
     apple2.Type("8000")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 end)
 
@@ -100,6 +101,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Modifying directories is not supported"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -109,7 +111,7 @@ end)
 test.Step(
   "Single alert when modifying folder types",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/FOLDER")
+    a2d.OpenWindow("/TESTS/FILE.TYPES/FOLDER")
     a2d.SelectAll()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CHANGE_TYPE)
     apple2.DeleteKey()
@@ -118,5 +120,6 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Modifying directories is not supported"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 end)

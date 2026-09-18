@@ -6,13 +6,11 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "Slot 3 - Uthernet II",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Slot 3: .* Uthernet II",
                 "Slot 3: Uthernet II should be detected")
 end)

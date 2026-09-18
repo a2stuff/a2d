@@ -26,8 +26,6 @@ DISKARGS="\
   * aplcdsc is: "SONYCD-ROMCDU-80" (Sony CD-ROM CDU-8002)
 ]]
 
-a2d.ConfigureRepaintTime(5)
-
 -- Callback called with func to invoke menu item; pass false if
 -- no volumes selected, true if volumes selected (affects menu item)
 function FormatEraseTest(name, func)
@@ -63,6 +61,8 @@ FormatEraseTest(
     end
     test.Snap("verify selection rect covers name, doesn't overlap border")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
+
     test.Snap("verify long names erased after device selection")
 
     test.ExpectIMatch(a2dtest.OCRScreen(), "SONYCD%-ROMCDU%-80",

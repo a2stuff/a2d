@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 gsos_800k.2mg"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.5)
-
 -- Helpers, since we can only toggle the flag
 local preserve_flag = true -- default state in config
 function EnablePreserve()
@@ -28,7 +26,7 @@ end
 test.Step(
   "GS/OS volume name cases show correctly",
   function()
-    a2d.OpenPath("/GS.OS.MIXED")
+    a2d.OpenWindow("/GS.OS.MIXED")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "GS.OS.mixed", "case should be shown")
 end)
 
@@ -39,7 +37,7 @@ end)
 test.Step(
   "GS/OS file name cases show correctly",
   function()
-    a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.NAMES")
+    a2d.OpenWindow("/TESTS/PROPERTIES/GS.OS.NAMES")
     a2d.SelectAll()
     local icons = a2d.GetSelectedIcons()
     test.ExpectEquals(#icons, 3, "3 files should be present")
@@ -55,7 +53,7 @@ end)
 test.Step(
   "AppleWorks file name cases show correctly",
   function()
-    a2d.OpenPath("/TESTS/PROPERTIES/AW.NAMES")
+    a2d.OpenWindow("/TESTS/PROPERTIES/AW.NAMES")
     a2d.SelectAll()
     local icons = a2d.GetSelectedIcons()
     test.ExpectEquals(#icons, 3, "3 files should be present")
@@ -238,7 +236,7 @@ test.Variants(
     func()
 
     a2d.FormatVolume("RAM1", "lower.UPPER.MiX")
-    a2d.OpenPath("/LOWER.UPPER.MIX")
+    a2d.OpenWindow("/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), expected, "volume name should be " .. expected)
 
     -- cleanup
@@ -266,7 +264,7 @@ test.Variants(
     func()
 
     a2d.EraseVolume("RAM1", "lower.UPPER.MiX")
-    a2d.OpenPath("/LOWER.UPPER.MIX")
+    a2d.OpenWindow("/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), expected, "volume name should be " .. expected)
 
     -- cleanup
@@ -295,9 +293,9 @@ test.Step(
         m.MoveToApproximately(0,0)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/RAM1/LOWER.UPPER.MIX")
+    a2d.OpenWindow("/RAM1/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Lower.Upper.Mix", "rename should use heuristic case")
 
     a2d.EraseVolume("RAM1")
@@ -344,13 +342,13 @@ test.Variants(
       local x,y = a2dtest.GetSelectedIconCoords()
 
       a2d.Drag(x, y, other_vol_4_x, other_vol_4_y)
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif action == "move" and disk == "same" then
       -- Move on same volume
       a2d.CreateFolder("ANOTHER.FOLDER")
-      a2d.OpenPath("/RAM1")
+      a2d.OpenWindow("/RAM1")
 
       a2d.Select("LOWER.UPPER.MIX")
       local x1, y1 = a2dtest.GetSelectedIconCoords()
@@ -359,7 +357,7 @@ test.Variants(
       local x2, y2 = a2dtest.GetSelectedIconCoords()
 
       a2d.Drag(x1, y1, x2, y2)
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"
     elseif action == "move" and disk == "other" then
@@ -375,13 +373,13 @@ test.Variants(
           m.ButtonUp()
           apple2.ReleaseSA()
       end)
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif action == "copy" and disk == "same" then
       -- Copy on same volume
       a2d.CreateFolder("ANOTHER.FOLDER")
-      a2d.OpenPath("/RAM1")
+      a2d.OpenWindow("/RAM1")
 
       a2d.Select("LOWER.UPPER.MIX")
       local x1,y1 = a2dtest.GetSelectedIconCoords()
@@ -397,13 +395,13 @@ test.Variants(
           m.ButtonUp()
           apple2.ReleaseSA()
       end)
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"
     end
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath(path)
+    a2d.OpenWindow(path)
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "lower.UPPER.MiX", "move should retain case")
     a2d.DeletePath(path)
     a2d.EraseVolume("RAM1")
@@ -431,10 +429,10 @@ test.Step(
     a2d.ClearSelection()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(10) -- let copy to floppy complete
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
-    a2d.OpenPath("/VOL2.MIXED/VOL1.MIXED")
+    a2d.OpenWindow("/VOL2.MIXED/VOL1.MIXED")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "vol1.MIXED", "vol copy should retain case")
 end)
 

@@ -222,7 +222,7 @@ SUPEREXP_BANK   := $C071        ; select aux bank (Oxen Super Expander E)
 RAMWORKS_BANK   := $C073        ; select aux bank (Applied Engineering RamWorks)
 LASER128EX_CFG  := $C074        ; high two bits control speed
 
-ROMIN2          := $C082        ; (W) Read ROM; no write
+ROMIN2          := $C082        ; (R/W) Read ROM; no write
 
 ;;; Le Chat Mauve Eve registers
 HR1_OFF         := $C0B2

@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv "
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Open a folder with no items. Verify window header says "0 Items"
 
@@ -23,18 +21,18 @@ a2d.ConfigureRepaintTime(1)
 test.Step(
   "Item counts",
   function()
-    a2d.OpenPath("/TESTS/WINDOWS/HEADERS/EMPTY")
+    a2d.OpenWindow("/TESTS/WINDOWS/HEADERS/EMPTY")
     test.ExpectMatch(a2dtest.OCRScreen(), "0 Items", "header should say '0 Items'")
-    a2d.OpenPath("/TESTS/WINDOWS/HEADERS/ONE.ITEM")
+    a2d.OpenWindow("/TESTS/WINDOWS/HEADERS/ONE.ITEM")
     test.ExpectMatch(a2dtest.OCRScreen(), "1 Item", "header should say '1 Item'")
-    a2d.OpenPath("/TESTS/WINDOWS/HEADERS/TWO.ITEMS")
+    a2d.OpenWindow("/TESTS/WINDOWS/HEADERS/TWO.ITEMS")
     test.ExpectMatch(a2dtest.OCRScreen(), "2 Items", "header should say '2 Items'")
 
-    a2d.OpenPath("/TESTS/WINDOWS/HEADERS/EMPTY")
+    a2d.OpenWindow("/TESTS/WINDOWS/HEADERS/EMPTY")
     a2d.CreateFolder("NEW")
     test.ExpectMatch(a2dtest.OCRScreen(), "1 Item", "header should say '1 Item'")
 
-    a2d.OpenPath("/TESTS/WINDOWS/HEADERS/ONE.ITEM")
+    a2d.OpenWindow("/TESTS/WINDOWS/HEADERS/ONE.ITEM")
     a2d.CreateFolder("NEW")
     test.ExpectMatch(a2dtest.OCRScreen(), "2 Items", "header should say '2 Items'")
 end)
@@ -62,7 +60,7 @@ test.Step(
         "used/free ready", function()
           ocr = a2dtest.OCRFrontWindowContent()
           return ocr:match("Item.*available")
-      end)
+        end, {wait=1})
 
       local _, _, used, free = ocr:find(
         "Items? +(%d+[,.]?%d*)K in disk + (%d+[,.]?%d*)K available")
@@ -71,7 +69,7 @@ test.Step(
       return tonumber(used), tonumber(free)
     end
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.GrowWindowBy(100, 0)
     local used, free = GetUsedFree()
 
@@ -90,7 +88,7 @@ test.Step(
     a2d.SelectAll()
     a2d.OAShortcut("O") -- File > Open
     a2d.CycleWindows()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     local used, free = GetUsedFree()
 
     a2d.CreateFolder("NEW3")
@@ -117,7 +115,7 @@ end)
 test.Step(
   "Header clipping",
   function()
-    a2d.OpenPath("/TESTS")
+    a2d.OpenWindow("/TESTS")
     a2d.MoveWindowBy(-150, 0)
 
     local ocr = a2dtest.OCRScreen()

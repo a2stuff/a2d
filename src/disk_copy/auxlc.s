@@ -2194,6 +2194,9 @@ Alert := alert_dialog::Alert
 ;;; Returns 0 if the periodic tasks were run.
 
 .proc SystemTask
+
+TestInterceptSystemTask:
+
         kMaxCounter = $E0       ; arbitrary
 
         inc     loop_counter

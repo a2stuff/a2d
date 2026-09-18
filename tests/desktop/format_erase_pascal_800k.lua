@@ -5,8 +5,6 @@ DISKARGS="-flop1 $HARDIMG -flop2 pascal_800k.woz"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Launch DeskTop. Run the command. Select a slot/drive containing a
   Pascal disk. Enter a new name and click OK. Verify that the

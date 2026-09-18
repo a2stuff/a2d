@@ -6,8 +6,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Boot to `BASIC.SYSTEM` (without going through `DESKTOP.SYSTEM`
   first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE

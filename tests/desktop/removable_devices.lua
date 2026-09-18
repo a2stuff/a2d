@@ -5,7 +5,6 @@ DISKARGS="-flop1 $HARDIMG -flop2 disk_a.2mg"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
 local s7d2 = manager.machine.images[":sl7:superdrive:fdc:1:35hd"]
 
 --[[
@@ -19,7 +18,7 @@ test.Step(
 
     a2d.SelectPath("/A")
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_EJECT_DISK)
-    emu.wait(10)
+    emu.wait(10) -- async drive validation
 
     test.Expect(not s7d2.image, "image should be unloaded")
     a2d.CloseAllWindows()

@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(1)
 
 -- Remove clock driver (to avoid build-relative dates)
 a2d.RemoveClockDriverAndReboot()
@@ -12,11 +11,14 @@ a2d.RemoveClockDriverAndReboot()
 test.Step(
   "International - full repaint",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
+    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.SelectAndOpen("INTERNATIONAL")
     a2d.OAShortcut("2") -- D/M/Y
-    a2dtest.ExpectFullRepaint(a2d.DialogOK)
+    a2dtest.ExpectFullRepaint(function()
+        a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
+    end)
     test.Snap("verify D/M/Y format")
 end)
 
@@ -28,9 +30,12 @@ end)
 test.Step(
   "International - minimal repaint",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
+    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.SelectAndOpen("INTERNATIONAL")
     -- don't change anything
-    a2dtest.ExpectMinimalRepaint(a2d.DialogOK)
+    a2dtest.ExpectMinimalRepaint(function()
+        a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
+    end)
 end)

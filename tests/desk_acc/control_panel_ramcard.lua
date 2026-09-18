@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Configure a system with a RAMCard, and ensure DeskTop is configured
   to copy to RAMCard on startup. Launch DeskTop. Apple Menu > Control
@@ -21,11 +19,11 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.RightArrowKey()
     apple2.RightArrowKey()
     apple2.ControlKey("D") -- Set Desktop Pattern
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.CloseWindow()
     a2d.CloseAllWindows()
     a2d.ClearSelection()

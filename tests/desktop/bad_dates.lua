@@ -3,15 +3,14 @@
 DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
-a2d.ConfigureRepaintTime(2)
 
 test.Step(
   "bad file date in list view",
   function()
-    a2d.OpenPath("/TESTS/DATES/BAD.DATE")
+    a2d.OpenWindow("/TESTS/DATES/BAD.DATE")
     a2d.GrowWindowBy(200, 0)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_DATE)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "no date", "file should have no date")
     a2d.CloseAllWindows()
 end)
@@ -21,7 +20,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS/DATES/BAD.DATE/BAD")
     a2d.OAShortcut("I") -- File > Get Info
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "no date", "file should have no date")
     a2d.DialogCancel()
     a2d.CloseAllWindows()

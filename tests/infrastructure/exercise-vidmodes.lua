@@ -1,16 +1,13 @@
-
 --[[============================================================
 
   Test Script
 
   ============================================================]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "Cycle video modes",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS/EYES", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/EYES")
     apple2.SetMonitorType(apple2.MONITOR_TYPE_COLOR)
     test.Snap("Color")
     apple2.SetMonitorType(apple2.MONITOR_TYPE_AMBER)

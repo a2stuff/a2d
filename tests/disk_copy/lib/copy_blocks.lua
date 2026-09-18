@@ -17,21 +17,24 @@ function CopyBlocksTests(blocks, src_img, dst_img)
     function(idx, name, what)
       if a2dtest.IsAlertShowing() then  -- duplicate volume
         a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
       end
 
       a2d.CopyDisk()
+      a2dtest.ConfigureForDiskCopy()
 
       a2d.InvokeMenuItem(3, idx) -- Options > Smart Block Copy or Full Disk Copy
 
       -- select source
       apple2.UpArrowKey() -- S5D2
       apple2.UpArrowKey() -- S5D1
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
 
       -- select destination
       apple2.UpArrowKey() -- S5D2
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       a2d.DialogOK()
 
       -- insert source
@@ -57,6 +60,7 @@ function CopyBlocksTests(blocks, src_img, dst_img)
         test.ExpectEquals(transfer, blocks, "block counts should be total blocks")
       end
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
 
       if what == "full" then
         local src = util.SlurpFile(src_img.filename)
@@ -66,8 +70,10 @@ function CopyBlocksTests(blocks, src_img, dst_img)
 
       -- cleanup
       a2d.OAShortcut("Q") -- File > Quit
+      a2dtest.ConfigureForDeskTop()
       a2d.WaitForDesktopReady()
       a2dtest.WaitForAlert({match="2 volumes with the same name"})
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
   end)
 end

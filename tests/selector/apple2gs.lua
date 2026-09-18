@@ -7,8 +7,6 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Use the Options control panel (in DeskTop) to show Shortcuts on
   startup. Launch Shortcuts. File > Run a Program.... Select

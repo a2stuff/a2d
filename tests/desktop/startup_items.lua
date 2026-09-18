@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Create a Startup.Items folder, verify items execute sequentially.
 ]]
@@ -16,19 +14,19 @@ test.Step(
     util.WaitFor(
       "expected Lorem Ipsum text showing", function()
         return a2dtest.HasOpenWindow() and a2dtest.OCRFrontWindowContent():match("Lorem ipsum dolor sit amet")
-    end)
-    emu.wait(2)
+      end, {wait=1})
+    a2dtest.WaitForSystemTask()
     a2d.CloseWindow()
 
     util.WaitFor(
       "expected Hamlet text showing", function()
         return a2dtest.HasOpenWindow() and a2dtest.OCRFrontWindowContent():match("To be, or not to be, that is the question")
-    end)
-    emu.wait(2)
+      end, {wait=1})
+    a2dtest.WaitForSystemTask()
     a2d.CloseWindow()
 
     -- cleanup
-    a2d.OpenPath("/A2.DESKTOP/STARTUP.ITEMS")
+    a2d.OpenWindow("/A2.DESKTOP/STARTUP.ITEMS")
     a2d.SelectAll()
     a2d.DeleteSelection()
     a2d.CloseAllWindows()
@@ -73,7 +71,7 @@ test.Step(
     test.ExpectNotMatch(a2dtest.OCRScreen(), "Lorem ipsum dolor sit amet", "Text preview should not be showing")
 
     -- cleanup
-    a2d.OpenPath("/A2.DESKTOP/STARTUP.ITEMS")
+    a2d.OpenWindow("/A2.DESKTOP/STARTUP.ITEMS")
     a2d.SelectAll()
     a2d.DeleteSelection()
     a2d.CloseAllWindows()

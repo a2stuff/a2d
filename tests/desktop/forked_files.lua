@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 gsos_800k.2mg"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.5)
-
 --[[
   Launch DeskTop. Try to copy files including a GS/OS forked file in
   the selection. Verify that an alert is shown, with the filename
@@ -20,7 +18,7 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
     end)
 
-    a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.FILES")
+    a2d.OpenWindow("/TESTS/PROPERTIES/GS.OS.FILES")
     a2d.SelectAll()
     a2d.CopySelectionTo("/RAM1")
     a2dtest.WaitForAlert({match="Unsupported file type"})
@@ -29,8 +27,9 @@ test.Step(
     a2dtest.MultiSnap(10, "verify watch cursor during remaining copy")
     a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 3, "3 files should be copied")
 
@@ -50,14 +49,14 @@ end)
 test.Step(
   "copy selected GS/OS forked files - cancel",
   function()
-    a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.FILES")
+    a2d.OpenWindow("/TESTS/PROPERTIES/GS.OS.FILES")
     a2d.SelectAll()
     a2d.CopySelectionTo("/RAM1")
     a2dtest.WaitForAlert({match="Unsupported file type"})
     test.ExpectMatch(a2dtest.OCRScreen(), "from: .*/Installer", "filename 'Installer' should be visible")
     a2d.DialogCancel()
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "1 file should be copied")
 
@@ -83,7 +82,7 @@ test.Step(
     test.ExpectMatch(a2dtest.OCRScreen(), "from: .*/Read.Me", "filename 'Read.Me' should be visible")
     a2d.DialogCancel()
 
-    a2d.OpenPath("/RAM1/GS.OS.FILES")
+    a2d.OpenWindow("/RAM1/GS.OS.FILES")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "2 files should be copied")
 
@@ -101,7 +100,7 @@ end)
 test.Step(
   "delete selected GS/OS forked files - continue",
   function()
-    a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.FILES")
+    a2d.OpenWindow("/TESTS/PROPERTIES/GS.OS.FILES")
 
     -- initially cancel
     a2d.SelectAll()
@@ -142,8 +141,9 @@ test.Step(
 
     a2dtest.WaitForAlert({match="unknown error occurred"}) -- error since directory not empty
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/TESTS/PROPERTIES/GS.OS.FILES")
+    a2d.OpenWindow("/TESTS/PROPERTIES/GS.OS.FILES")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "GS.OS.FILES", "directory should still exist")
 end)
 
@@ -188,7 +188,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify RAM1 window updated")
 
     -- cleanup
@@ -207,7 +207,7 @@ test.Step(
     a2d.SelectPath("/GS.OS.MIXED")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     local dst_x, dst_y = GetFrontWindowCenter()
 
     a2d.Drag(
@@ -218,7 +218,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify RAM1 window updated")
 
     -- cleanup
@@ -262,7 +262,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Unsupported file type"})
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify RAM1 window activated and updated")
 
     -- cleanup
@@ -293,7 +293,7 @@ test.Step(
     a2dtest.WaitForAlert({match="Unsupported file type"})
     a2dtest.DHRDarkness()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify window does not fully repaint")
     -- BUG: This is failing - the window does fully repaint
 
@@ -325,7 +325,7 @@ test.Step(
     a2dtest.WaitForAlert({match="Unsupported file type"})
     a2dtest.DHRDarkness()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify window does fully repaint")
 
     a2d.Reboot()
@@ -349,7 +349,7 @@ test.Step(
     a2dtest.WaitForAlert({match="Unsupported file type"})
     a2dtest.DHRDarkness()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify window does fully repaint")
 
     a2d.Reboot()

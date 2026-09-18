@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 cpm_floppy.dsk -flop2 prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Launch DeskTop. Special > Copy Disk.... Select a CP/M disk as a
   source disk. Verify that after the "Insert source disk" prompt is
@@ -17,11 +15,13 @@ test.Step(
   "CP/M Pascal disk names in source label",
   function()
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S6,D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     apple2.DownArrowKey() -- S6,D1
@@ -45,6 +45,7 @@ test.Step(
     a2d.DialogCancel()
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)
 
 --[[
@@ -57,12 +58,14 @@ test.Step(
   "CP/M disk names in overwrite prompt",
   function()
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     apple2.DownArrowKey() -- S6,D1
@@ -83,4 +86,5 @@ test.Step(
     a2d.DialogCancel()
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)

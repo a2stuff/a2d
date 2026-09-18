@@ -35,8 +35,6 @@ DISKARGS="\
   "
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
-
 -- Callback called with func to invoke menu item; pass false if
 -- no volumes selected, true if volumes selected (affects menu item)
 function FormatEraseTest(name, func)
@@ -86,7 +84,7 @@ FormatEraseTest(
     local last_x, last_y
     for i=1, #apple2.GetProDOSDeviceList() do
       apple2.RightArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       local x, y = coords()
       if i >= 2 then
         test.Expect(x > last_x or y > last_y, "selection should move right then down")
@@ -108,7 +106,7 @@ FormatEraseTest(
     local last_x, last_y
     for i=1,#apple2.GetProDOSDeviceList() do
       apple2.LeftArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       local x, y = coords()
       if i >= 2 then
         test.Expect(x < last_x or y < last_y, "selection should move left then up")
@@ -125,7 +123,7 @@ FormatEraseTest(
     local last_x, last_y
     for i=1,#apple2.GetProDOSDeviceList() do
       apple2.DownArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       local x, y = coords()
       if i >= 2 then
         test.Expect(y > last_y or x > last_x, "selection should move down then right")
@@ -142,7 +140,7 @@ FormatEraseTest(
     local last_x, last_y
     for i=1,#apple2.GetProDOSDeviceList() do
       apple2.UpArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       local x, y = coords()
       if i >= 2 then
         test.Expect(y < last_y or x < last_x, "selection should move up then left")
@@ -186,9 +184,10 @@ FormatEraseTest(
     apple2.RightArrowKey()
     apple2.RightArrowKey()
     apple2.RightArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify selection in third column")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify selection erased completely")
     a2d.DialogCancel()
 end)

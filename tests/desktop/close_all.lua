@@ -1,6 +1,4 @@
 
-a2d.ConfigureRepaintTime(0.5)
-
 --[[
   Repeat the following case with these modifiers: Open-Apple,
   Solid-Apple:
@@ -15,7 +13,7 @@ test.Variants(
   },
   function(idx, name, press, release)
     a2d.ClearSelection()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -23,7 +21,7 @@ test.Variants(
         m.Click()
         release()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 
@@ -38,9 +36,9 @@ test.Variants(
   },
   function(idx, name, key)
     a2d.ClearSelection()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     a2d.OASAShortcut(key)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 
@@ -57,7 +55,7 @@ test.Variants(
     {"Close all using menu and Open Apple", apple2.PressOA, apple2.ReleaseOA},
   },
   function(idx, name, press, release)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
     local file_menu_x, file_menu_y
     a2dtest.OCRIterate(function(run, x, y)
@@ -77,7 +75,7 @@ test.Variants(
 
         release()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
     a2d.InMouseKeysMode(function(m)
@@ -96,10 +94,10 @@ test.Variants(
     {"Close all using Open Apple + Solid Apple + w, with File menu open", "w"},
   },
   function(idx, name, key)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS") -- leave parent open
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS") -- leave parent open
     a2d.OpenMenu(a2d.FILE_MENU)
     a2d.OASAShortcut(key)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
 end)
 
@@ -114,7 +112,7 @@ test.Variants(
     {"Holding SA open menu, then OA+SA+w", "w"},
   },
   function(idx, name, key)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
     local file_menu_x, file_menu_y
     a2dtest.OCRIterate(function(run, x, y)
@@ -131,7 +129,7 @@ test.Variants(
     end)
 
     a2d.OASAShortcut(key)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "all windows should be closed")
     a2d.InMouseKeysMode(function(m)

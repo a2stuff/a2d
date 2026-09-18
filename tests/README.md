@@ -57,14 +57,14 @@ Tests can define custom MAME configurations. The contents of an optional config 
 Example:
 
 ```lua
---[[ BEGINCONFIG ==================================================
+--[[ BEGINCONFIG ========================================
 
 MODEL="apple2ee"
 MODELARGS="-sl1 ssc -sl2 mouse -sl5 ramfactor -sl7 scsi -aux rw3"
 DISKARGS="-hard1 out/a2d_800k.2mg -flop1 res/FLOPPY1.dsk"
 RESOLUTION="560x384"
 
-================================================== ENDCONFIG ]]
+======================================== ENDCONFIG ]]
 ```
 
 ## ADTPro VEDrive
@@ -121,11 +121,16 @@ Tests specific to various components of the application.
 * Controlling the mouse precisely with MAME is elusive, so MouseKeys mode is used in most tests. Is it most convenient with the `a2d.InMouseKeys()` helper. This works great with some exceptions:
   * Since it is quantized (and differently for x/y), errors creep in over time. Add an `m.Home()` if this happens.
   * You can't press shortcut keys or <kbd>Esc</kbd> in MouseKeys mode. This makes testing edge cases challenging.
-* The API in `a2d` is limited to driving the UI primarily through the keyboard. For example, `a2d.OpenPath()` works by closing all windows, then using type-down selection on each path segment followed by the OA+SA+Down shortcut to open the selection while closing the current window. This is generally sufficient but some things require creativity:
-  * As noted, methods like `a2d.SelectPath()` and `a2d.OpenPath()` by default close all windows first. If you need multiple windows open for an operation you need get creative.
-    * Add a shortcut (e.g. via `a2d.AddShortcut()`) for a dependent window, use `a2d.OpenPath()` to open the initial window, then `a2d.OAShortcut("1")` (etc) to open the second window.
+* The API in `a2d` is limited to driving the UI primarily through the keyboard. For example, `a2d.OpenWindow()` works by closing all windows, then using type-down selection on each path segment followed by the OA+SA+Down shortcut to open the selection while closing the current window. This is generally sufficient but some things require creativity:
+  * As noted, methods like `a2d.SelectPath()` and `a2d.OpenWindow()` by default close all windows first. If you need multiple windows open for an operation you need get creative.
+    * Add a shortcut (e.g. via `a2d.AddShortcut()`) for a dependent window, use `a2d.OpenWindow()` to open the initial window, then `a2d.OAShortcut("1")` (etc) to open the second window.
     * Use the `{keep_windows=true}` option to override the default. But note that this works by setting focus to the desktop and opening windows via typing. If you open "/DISK1" and then try to open "/DISK1/FOLDER1" the second "hijacks" the window of the first. Re-ordering the actions is usually sufficient.
-* The `a2d` library implicitly has short waits after each action using `a2d.WaitForRepaint()`. The duration of this delay can (and should) be changed by calling `a2d.ConfigureRepaintTiming()`. While this is convenient, experience has shown that manual delays using `emu.wait(N)` after an action that "takes too long" are more maintainable; adding a single extra wait is better than trying to tweak the global settings. Even better, of course, are using functions that delay until a milestone has been reached (the desktop is visible, an alert is showing, etc), e.g. using `util.WaitFor()`
+* When a delay is needed within a test, approaches include:
+  * `a2dtest.WaitForAlert()` and similar functions that wait for specific states.
+  * `util.WaitFor()` which takes a lambda evaluating to `true` when done, e.g. inspecting the screen.
+  * `a2dtest.WaitForSystemTask()` uses hooks to wait for event loops to run "system tasks" (e.g. update the clock); for example, after executing a keyboard shortcut, this can be used to wait for a dialog to open and its event loop to be running.
+  * As a last resort, `a2d.WaitForRepaint()` which uses a heuristic and can be tweaked. While this is convenient, experience has shown that manual delays using `emu.wait(N)` after an action that "takes too long" are more maintainable. If either of these are used, leave a comment indicating the intent and why one of the preceding functions is inadequate.
+
 * Access to virtual disk drives is via the `manager.machine.images` collection.
   * The accessed objects provide:
     * `drive.filename` - get the current image path

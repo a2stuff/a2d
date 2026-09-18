@@ -5,7 +5,6 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
 a2d.RemoveClockDriverAndReboot()
 local s7d1 = manager.machine.images[":sl7:superdrive:fdc:0:35hd"]
 
@@ -66,10 +65,10 @@ function SaveSettingsTest(name, filename, toggle_func)
         drive = s7d1
         current = drive.filename
         drive:unload()
-        emu.wait(5)
+        emu.wait(5) -- async drive validation
       end
 
-      a2d.OpenPath("/RAM4/DESKTOP/APPLE.MENU/CONTROL.PANELS/" .. da, {no_validate=true})
+      a2d.InvokePath("/RAM4/DESKTOP/APPLE.MENU/CONTROL.PANELS/" .. da)
       toggle_func()
       a2d.CloseWindow()
 
@@ -83,8 +82,8 @@ function SaveSettingsTest(name, filename, toggle_func)
 
         drive:load(current)
         a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
       end
-      emu.wait(5) -- time for writing
 
       a2dtest.ExpectAlertNotShowing()
 
@@ -113,9 +112,9 @@ function SaveSettingsTest(name, filename, toggle_func)
 
       if rename then
         a2d.RenamePath("/A2.DESKTOP", "A2D")
-        a2d.OpenPath("/A2D/APPLE.MENU/CONTROL.PANELS/" .. da, {no_validate=true})
+        a2d.InvokePath("/A2D/APPLE.MENU/CONTROL.PANELS/" .. da)
       else
-        a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/" .. da, {no_validate=true})
+        a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/" .. da)
       end
 
       toggle_func()
@@ -140,8 +139,8 @@ function SaveSettingsTest(name, filename, toggle_func)
 
         drive:load(current)
         a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
       end
-      emu.wait(5) -- time for writing
 
       a2dtest.ExpectAlertNotShowing()
 
@@ -178,9 +177,9 @@ end)
 
 SaveSettingsTest("Sounds", "SOUNDS", function()
                    apple2.DownArrowKey() -- change listbox index
-                   emu.wait(2)
+                   a2dtest.WaitForSystemTask()
                    apple2.UpArrowKey()
-                   emu.wait(2)
+                   a2dtest.WaitForSystemTask()
 end)
 
 SaveSettingsTest("Date & Time", "DATE.AND.TIME", function()

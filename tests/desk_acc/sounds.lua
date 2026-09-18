@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Open the Sounds DA. Select one of the "Obnoxious" sounds. Exit the
@@ -15,9 +14,11 @@ test.Step(
 
     for i = 1, NUM_SOUNDS do
       a2d.OAShortcut("1")
+      a2dtest.WaitForSystemTask()
       apple2.DownArrowKey()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
 
       a2d.OAShortcut("2")
       apple2.WaitForBasicSystem()
@@ -41,17 +42,17 @@ test.Step(
       " * IIgs Bonk\n" ..
       " * MouseKeys exit sound (hi-lo)\n")
 
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w / 2, y + 15)
         m.Click()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
         m.Click()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
         m.Click()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
 
     a2d.DialogCancel()

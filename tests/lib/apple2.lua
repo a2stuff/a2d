@@ -924,7 +924,7 @@ local ssw_definitions = {
   { "IOUDISOFF"      , "..C.",  0xC07F },        -- (W) Enable IOU access           (IIc)
   { "RDDHIRES"       , "..C.",  0xC07F },        -- (R7) Read DHIRES switch (0=on)  (IIc)
 
-  { "ROMIN2"         , "OECG",  0xC082 },        -- (W) Read ROM; no write
+  { "ROMIN2"         , "OECG",  0xC082 },        -- (R/W) Read ROM; no write
 }
 
 local ssw = {}
@@ -938,18 +938,139 @@ for _, entry in ipairs(ssw_definitions) do
   end
 end
 
-function apple2.ReadSSW(symbol)
+function apple2.GetSSW(symbol)
   if ssw[symbol] == nil then
     error(string.format("No softswitch %q on system %q", symbol, machine.system.name))
   end
-  return apple2.ReadMemory(ssw[symbol])
+  return ssw[symbol]
+end
+function apple2.ReadSSW(symbol)
+  return apple2.ReadMemory(apple2.GetSSW(symbol))
 end
 function apple2.WriteSSW(symbol, value)
-  if ssw[symbol] == nil then
-    error(string.format("No softswitch %q on system %q", symbol, machine.system.name))
-  end
-  apple2.WriteMemory(ssw[symbol], value)
+  apple2.WriteMemory(apple2.GetSSW(symbol), value)
 end
+
+  -- TODO: Support 80STORE/PAGE2 banking
+function apple2.WaitForMemoryRead(addr, bank_options)
+
+  --------------------------------------------------
+  -- Initially: don't care about banking
+
+  local want_RAMRD = nil
+  local want_ALTZP = nil
+  local want_LCRAM = nil
+  local want_BANK2 = nil
+
+  --------------------------------------------------
+  -- Init banking based on 24-bit address
+
+  -- zero page
+  if 0x000000 <= addr and addr <= 0x0001FF then want_ALTZP=false end
+  if 0x010000 <= addr and addr <= 0x0101FF then want_ALTZP=true end
+
+  -- main memory
+  if 0x000200 <= addr and addr <= 0x00BFFF then want_RAMRD=false end
+  if 0x010200 <= addr and addr <= 0x01BFFF then want_RAMRD=true end
+
+  -- language card bank(s)
+  if 0x00D000 <= addr and addr <= 0x00FFFF then want_ALTZP=false want_LCRAM=true want_BANK2=false end
+  if 0x01D000 <= addr and addr <= 0x01FFFF then want_ALTZP=true want_LCRAM=true want_BANK2=false end
+
+  addr = addr & 0xFFFF
+
+  if 0x400 <= addr and addr <= 0x7FF
+    or 0x2000 <= addr and addr <= 0x3FFF then
+    error("80STORE / PAGE2 not supported")
+  end
+
+  --------------------------------------------------
+  -- If explicitly passed, use that
+
+  if bank_options ~= nil then
+    want_RAMRD = bank_options["aux"]
+    want_ALTZP = bank_options["altzp"]
+    want_LCRAM = bank_options["lcram"]
+    want_BANK2 = bank_options["bank2"]
+  end
+
+  --------------------------------------------------
+  -- Model the MMU
+
+  -- Snapshot initial state
+  local RAMRD = apple2.ReadSSW("RDRAMRD") > 127
+  local ALTZP = apple2.ReadSSW("RDALTZP") > 127
+  local LCRAM = apple2.ReadSSW("RDLCRAM") > 127
+  local BANK2 = apple2.ReadSSW("RDLCBNK2") > 127
+
+  -- Watch for changes
+  local function access_tap(offset)
+    if offset & 0xF0 == 0x80 then
+      local A0 = (offset & 0x01) ~= 0
+      local A1 = (offset & 0x02) ~= 0
+      local A3 = (offset & 0x08) ~= 0
+      LCRAM = (A0 == A1)
+      BANK2 = not A3
+    end
+  end
+  local mmu_wtap = mem:install_write_tap(
+    0xC000, 0xC08F, "mmu_write_tap",
+    function(offset, value, mask)
+      if offset == apple2.GetSSW("RAMRDOFF") then RAMRD = false end
+      if offset == apple2.GetSSW("RAMRDON") then RAMRD = true end
+      if offset == apple2.GetSSW("ALTZPOFF") then ALTZP = false end
+      if offset == apple2.GetSSW("ALTZPON") then ALTZP = true end
+      access_tap(offset)
+  end)
+  local mmu_rtap = mem:install_read_tap(
+    0xC000, 0xC08F, "mmu_read_tap",
+    function(offset, value, mask)
+      access_tap(offset)
+  end)
+
+  --------------------------------------------------
+  -- Watch for requested access
+
+  local saw = false
+  local err = false
+
+  local range_lo, range_hi = addr, addr
+
+  --[[
+    Workaround for https://github.com/mamedev/mame/issues/16167
+    TODO: Remove range_lo/range_hi usage when fixed.
+  ]]
+  if machine.system.name:match("^apple2gs") then
+    range_lo = addr - 0x1000
+    range_hi = addr + 0x1000
+    if range_lo < 0x000 then range_lo = 0x0000 end
+    if range_hi > 0xFFFF then range_lo = 0xFFFF end
+  end
+
+  local tap = mem:install_read_tap(
+    range_lo, range_hi, "tap",
+    function(offset, read, mask)
+      -- TODO: Remove if apple2gs issue noted above is solved.
+      if offset ~= addr then return end
+
+      if saw then return end
+
+      if want_RAMRD ~= nil and RAMRD ~= want_RAMRD then return end
+      if want_ALTZP ~= nil and ALTZP ~= want_ALTZP then return end
+      if want_LCRAM ~= nil and LCRAM ~= want_LCRAM then return end
+      if want_BANK2 ~= nil and BANK2 ~= want_BANK2 then return end
+
+      saw = true
+      tap:remove()
+      mmu_rtap:remove()
+      mmu_wtap:remove()
+  end)
+
+  while not saw and not err do
+    emu.wait_next_frame()
+  end
+end
+
 
 --------------------------------------------------
 -- Misc Utilities
@@ -1171,6 +1292,12 @@ end
 --------------------------------------------------
 
 function apple2.WaitForBasicSystem(options)
+  if options == nil then
+    options = {}
+  end
+  if options.wait == nil then
+    options.wait = 0.5
+  end
   util.WaitFor(
     "Basic System",
     function()

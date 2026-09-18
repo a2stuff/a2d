@@ -6,8 +6,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Open a window. Position two icons so one overlaps another. Select
   both. Drag both to a new location. Verify that the icons are
@@ -19,7 +17,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.SelectPath("/RAM1/READ.ME")
     a2d.DuplicateSelection("DUPE")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.Select("READ.ME")
     local x1, y1 = a2dtest.GetSelectedIconCoords()
     a2d.Select("DUPE")
@@ -28,7 +26,7 @@ test.Step(
     a2d.SelectAll()
     test.Snap("note previous location")
     a2d.Drag(x1, y1, x2, y2)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify both icons moved")
 
     -- cleanup
@@ -46,7 +44,7 @@ test.Step(
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.SelectPath("/RAM1/READ.ME")
     a2d.DuplicateSelection("DUPE")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.Select("READ.ME")
     local x1, y1 = a2dtest.GetSelectedIconCoords()
     a2d.Select("DUPE")
@@ -55,7 +53,7 @@ test.Step(
     a2d.Select("DUPE")
     test.Snap("note previous location")
     a2d.Drag(x1, y1, x2, y2)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify one icon moved, both repaint correctly")
 
     -- cleanup
@@ -75,7 +73,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(dst_x, dst_y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.InMouseKeysMode(function(m)
         m.Home()
     end)
@@ -148,7 +146,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(300, 0)
     a2d.ClearSelectionAndFocusDesktop()
     a2d.SelectAll()
@@ -204,7 +202,7 @@ end)
 test.Step(
   "drag select on desktop doesn't select file icons - after header click",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.MoveWindowBy(40, 30)
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
@@ -252,7 +250,7 @@ end)
 test.Step(
   "drag select on desktop doesn't select file icons - after scroll",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.GrowWindowBy(-50, -50)
     a2d.MoveWindowBy(40, 30)
 
@@ -289,9 +287,9 @@ end)
 test.Step(
   "rename in inactive window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
 
-    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.OpenWindow("/RAM1", {keep_windows=true})
     a2d.CreateFolder("FOLDER")
     local x, y = a2dtest.GetSelectedIconCoords()
 
@@ -313,9 +311,9 @@ end)
 test.Step(
   "closing top window repaints correctly",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/TOYS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/TOYS", {leave_parent=true})
     a2d.CloseWindow()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify no mispaint")
 end)
 
@@ -327,11 +325,11 @@ test.Step(
   "arrow key doesn't select multiple volumes",
   function()
     a2d.CloseAllWindows()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.ClearSelection()
     for i = 1, 4 do
       apple2.DownArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       test.Snap("verify only one volume selected")
     end
 end)
@@ -344,22 +342,22 @@ function ObscuredWindowTest(name, pre_func, mid_func, post_func)
     "obscured window - " .. name,
     function()
       pre_func()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       local x, y = a2dtest.GetFrontWindowDragCoords()
       a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       mid_func()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       if post_func then
         local x2, y2 = a2dtest.GetFrontWindowDragCoords()
         a2d.Drag(x2, y2, x, y)
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
 
         post_func()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
       end
   end)
 end
@@ -373,12 +371,12 @@ end
 ObscuredWindowTest(
   "View by name, then as icons",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
   end,
   function()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_AS_ICONS)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify file icons don't mispaint on desktop")
   end,
   function()
@@ -395,11 +393,11 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "View by name while obscured",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
   end,
   function()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify contents don't mispaint on desktop")
   end,
   function()
@@ -415,7 +413,7 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "Arrow navigation",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     apple2.RightArrowKey()
   end,
   function()
@@ -431,7 +429,7 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "Select All",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
   end,
   function()
     a2d.SelectAll()
@@ -447,7 +445,7 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "Clearing selection",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.SelectAll()
   end,
   function()
@@ -465,9 +463,9 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "Un-dimming",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     a2d.MoveWindowBy(0, 100)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify EXTRAS is dimmed")
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be active")
@@ -477,7 +475,7 @@ ObscuredWindowTest(
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "window should be active")
     a2d.CloseWindow()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify EXTRAS icon doesn't mispaint on desktop")
   end
 )
@@ -494,7 +492,6 @@ ObscuredWindowTest(
   end,
   function()
     a2d.OpenSelection()
-    emu.wait(5)
     test.Snap("verify EXTRAS icon doesn't mispaint on desktop")
   end
 )
@@ -513,7 +510,7 @@ ObscuredWindowTest(
     a2d.OpenSelection()
     a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify TOO.MANY.FILES icon doesn't mispaint on desktop")
   end
 )
@@ -526,11 +523,11 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "new folder",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
   end,
   function()
     a2d.CreateFolder("NEW.NAME")
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify folder icon doesn't mispaint on desktop")
   end,
   function()
@@ -547,7 +544,7 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "window restoration",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
   end,
   function()
     a2d.Quit()
@@ -566,8 +563,8 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "activating window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.OpenPath("/TESTS", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP")
+    a2d.OpenWindow("/TESTS", {keep_windows=true})
   end,
   function()
     local id1 = mgtk.FrontWindow()
@@ -595,8 +592,8 @@ ObscuredWindowTest(
 ObscuredWindowTest(
   "activating window with list view",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.OpenPath("/TESTS", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP")
+    a2d.OpenWindow("/TESTS", {keep_windows=true})
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
   end,
   function()
@@ -645,10 +642,10 @@ ObscuredWindowTest(
 test.Step(
   "window clipped by menu bar",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify window title bars positioned behind menu bar")
 end)
 
@@ -660,15 +657,15 @@ end)
 test.Step(
   "windows clipped by menu bar",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH*1/3, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH*2/3, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.CycleWindows()
     a2d.CycleWindows()
@@ -690,7 +687,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y+5, apple2.SCREEN_WIDTH/2, 15)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify that icon doesn't paint on top of menu bar")
 
@@ -711,19 +708,19 @@ end)
 test.Step(
   "selected folders are clipped as windows open",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     for i = 1, 7 do
       a2d.CreateFolder("F" .. i)
     end
     a2d.CloseWindow()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     a2d.OpenSelection({no_wait=true})
     a2dtest.MultiSnap(360, "verify no mispainted icons")
 
     -- cleanup
     a2d.CloseAllWindows()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.EraseVolume("RAM1")
 end)
 
@@ -739,7 +736,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.Drag(x + 5, y + 15, x + w - 5, y + h - 5)
     a2d.InMouseKeysMode(function(m)
@@ -756,7 +753,7 @@ test.Step(
         m.MoveToApproximately(0, apple2.SCREEN_HEIGHT)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify no mispaint")
 end)
@@ -773,7 +770,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.Drag(x + 5, y + 15, x + w - 5, y + h - 5)
     a2d.InMouseKeysMode(function(m)
@@ -786,10 +783,10 @@ test.Step(
         m.MoveToApproximately(vol_x, vol_y)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.RenameSelection("NEW.NAME")
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
     -- cleanup
@@ -807,13 +804,13 @@ test.Step(
   "dimmed folder partial repaint",
   function()
     a2d.CreateFolder("/RAM1/FOLDER")
-    a2d.OpenPath("/RAM1/FOLDER", {leave_parent=true})
+    a2d.OpenWindow("/RAM1/FOLDER", {leave_parent=true})
     a2d.ClearSelection()
     a2d.MoveWindowBy(15, 30)
     a2d.MoveWindowBy(50, 50)
     test.Snap("verify dimmed folder pattern painted perfectly")
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(10, 10)
     a2d.Select("FOLDER")
     a2d.OpenSelection()
@@ -839,13 +836,13 @@ test.Step(
   function()
     a2d.CreateFolder("/RAM1/F1")
     a2d.CreateFolder("/RAM1/F2")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     a2d.OpenSelection()
     a2d.MoveWindowBy(200, 100)
     while a2dtest.GetFrontWindowTitle():upper() ~= "F1" do
       a2d.CycleWindows()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
     a2d.MoveWindowBy(0, 30)
     test.Snap("verify window F1 overlaps both folder icons")
@@ -867,12 +864,12 @@ test.Step(
   "dimming effect",
   function()
     -- Disable ZIP Chip
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("N") -- Normal Speed
     a2d.CloseWindow()
 
     a2d.CreateFolder("/RAM1/MMMMMMMMMMMMMMM")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(0, 80)
     a2d.Select("MMMMMMMMMMMMMMM")
     local x, y = a2dtest.GetSelectedIconCoords()
@@ -883,13 +880,11 @@ test.Step(
         m.DoubleClick()
         a2dtest.MultiSnap(30, "verify dimming doesn't extend past icon bounding box")
     end)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     -- Enable ZIP Chip
-    a2d.ConfigureRepaintTime(1)
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED", {no_validate=true})
-    a2d.ConfigureRepaintTime(0.25)
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("F") -- Fast Speed
     a2d.CloseWindow()
 
@@ -905,13 +900,13 @@ test.Step(
   function()
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify no garbage")
 end)
 
@@ -930,7 +925,7 @@ test.Step(
   "header partial repaint doesn't glitch",
   function()
     a2d.CreateFolder("/RAM1/FOLDER")
-    a2d.OpenPath("/RAM1/FOLDER", {leave_parent=true})
+    a2d.OpenWindow("/RAM1/FOLDER", {leave_parent=true})
     a2d.MoveWindowBy(0, 10)
     test.Snap("verify FOLDER partially covers RAM1's header")
 
@@ -940,11 +935,11 @@ test.Step(
 
     test.Snap("verify FOLDER header updated")
     a2d.MoveWindowBy(0, 50)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify RAM1 header repainted with old values (and no glitches)")
     while a2dtest.GetFrontWindowTitle():upper() ~= "RAM1" do
       a2d.CycleWindows()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
     test.Snap("verify RAM1 header repainted with new values")
 
@@ -960,7 +955,7 @@ end)
 test.Step(
   "header painting and content obscured",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -968,7 +963,7 @@ test.Step(
         m.MoveToApproximately(200, apple2.SCREEN_HEIGHT - 20)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectNotHanging()
     test.Snap("verify no garbage")
 end)
@@ -981,8 +976,8 @@ end)
 test.Step(
   "header painting and activation",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.OpenPath("/TESTS", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP")
+    a2d.OpenWindow("/TESTS", {keep_windows=true})
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -990,7 +985,7 @@ test.Step(
         m.MoveToApproximately(200, apple2.SCREEN_HEIGHT - 20)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.CycleWindows()
     test.Snap("verify window headers render correctly")
 end)
@@ -1009,11 +1004,11 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(dst_x, dst_y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/3)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify icon in middle of screen repainted")
 
     -- cleanup
@@ -1036,7 +1031,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/3)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.OpenSelection()
     a2d.MoveWindowBy(0, 100)
@@ -1044,7 +1039,7 @@ test.Step(
     local dst_x, dst_y = x + w / 2, y + h / 2
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify icon in middle of screen repainted")
 
     -- cleanup
@@ -1068,7 +1063,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/3)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.OpenSelection()
     a2d.MoveWindowBy(0, 100)
@@ -1076,12 +1071,12 @@ test.Step(
     local dst_x, dst_y = x + w / 2, y + h / 2
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert({match="folder cannot be replaced"})
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify icon in middle of screen repainted")
 
@@ -1103,16 +1098,16 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/3)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
     a2d.Select("READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify icon in middle of screen repainted")
 
     -- cleanup
@@ -1134,18 +1129,18 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/3)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.OpenSelection()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
     a2d.Select("READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify icon in middle of screen repainted")
 
     -- cleanup
@@ -1168,18 +1163,18 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/3)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.OpenSelection()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
     a2d.Select("READ.ME")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert({match="file already exists"})
@@ -1208,7 +1203,7 @@ test.Step(
     a2d.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/3)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.SelectPath("/RAM1/READ.ME")
     a2d.MoveWindowBy(0, 80)
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
@@ -1216,7 +1211,7 @@ test.Step(
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify icon in middle of screen repainted")
 
@@ -1244,7 +1239,7 @@ test.Step(
     a2d.DuplicatePath("/RAM1/READ.ME", "BBBBBBBBBBBBBBB")
     a2d.RenamePath("/RAM1/READ.ME", "AAAAAAAAAAAAAAA")
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
 
     a2d.Select("AAAAAAAAAAAAAAA")
     local x1, y1 = a2dtest.GetSelectedIconCoords()
@@ -1258,7 +1253,7 @@ test.Step(
     test.Snap("verify AAAAAAAAAAAAAAA is on top")
 
     -- Just open/close rather than activating/dragging over/dragging off
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     a2d.CloseWindow()
     test.Snap("verify AAAAAAAAAAAAAAA is on top")
 
@@ -1268,7 +1263,7 @@ test.Step(
     end)
     test.Snap("verify AAAAAAAAAAAAAAA is on top")
 
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     a2d.CloseWindow()
     test.Snap("verify AAAAAAAAAAAAAAA is on top")
 
@@ -1278,7 +1273,7 @@ test.Step(
     test.Snap("verify BBBBBBBBBBBBBBB is on top")
 
     -- Just open/close rather than activating/dragging over/dragging off
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     a2d.CloseWindow()
     test.Snap("verify BBBBBBBBBBBBBBB is on top")
 
@@ -1288,7 +1283,7 @@ test.Step(
     end)
     test.Snap("verify BBBBBBBBBBBBBBB is on top")
 
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     a2d.CloseWindow()
     test.Snap("verify BBBBBBBBBBBBBBB is on top")
 
@@ -1305,7 +1300,7 @@ end)
 test.Step(
   "Check All Drives and icon repaint",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     a2d.CycleWindows()
     a2d.CheckAllDrives()
     a2dtest.ExpectNotHanging()
@@ -1321,7 +1316,7 @@ end)
 test.Step(
   "volume icon repaint after obscured window",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(330, 0)
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.InMouseKeysMode(function(m)
@@ -1330,7 +1325,7 @@ test.Step(
         m.MoveToApproximately(200, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify volume icons repaint correctly")
 end)
 
@@ -1351,7 +1346,7 @@ test.Step(
         m.MoveToApproximately(200, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify no file icons mispaint onto desktop")
 end)
 
@@ -1363,16 +1358,16 @@ end)
 test.Step(
   "degenerate entry update rect",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.MoveWindowBy(0, 55)
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     for i = 1, 20 do
       apple2.DownArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
     end
-    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.OpenWindow("/RAM1", {keep_windows=true})
     a2d.CloseWindow()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2dtest.ExpectNotHanging()
 end)

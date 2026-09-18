@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 disk_c.2mg -flop2 disk_d.2mg -flop3 disk_a.2mg 
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
 
@@ -39,10 +37,10 @@ a2d.CheckAllDrives()
 test.Step(
   "windows close on Check Drive",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     a2d.SelectPath("/A2.DESKTOP", {keep_windows=true})
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_DRIVE)
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "both windows should close")
 end)
 
@@ -54,7 +52,7 @@ end)
 test.Step(
   "window close on Check All Drives",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.CheckAllDrives()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "window should close")
 end)
@@ -108,7 +106,7 @@ test.Step(
 
     a2d.SelectPath("/A")
     a2d.OAShortcut("E") -- Special > Eject Disk
-    emu.wait(10)
+    emu.wait(10) -- async drive validation
     a2d.CheckAllDrives()
     a2dtest.ExpectNotHanging()
 
@@ -186,7 +184,8 @@ test.Step(
     a2d.OpenSelection()
     a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK() -- OK
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
+    emu.wait(5) -- async drive validation
     test.ExpectNotIMatch(a2dtest.OCRScreen(), "FLOPPY1", "floppy icon should be gone")
 end)
 
@@ -211,18 +210,18 @@ test.Step(
     a2d.WaitForDesktopReady()
     test.Snap("verify volume icons are positioned without gaps")
     s5d2:unload()
-    emu.wait(10)
+    emu.wait(10) -- async drive validation
     test.Snap("verify volume 'B' icon disappeared")
     s5d2:load(disk_d)
-    emu.wait(30)
+    emu.wait(30) -- async drive validation
     test.Snap("verify gap was filled by volume 'D'")
     s5d2:unload()
     s4d1:unload()
-    emu.wait(30)
+    emu.wait(30) -- async drive validation
     test.Snap("verify volume 'D' and 'C' icons disappeared")
     s5d2:load(disk_b)
     s4d1:load(disk_c)
-    emu.wait(30)
+    emu.wait(30) -- async drive validation
     test.Snap("verify gap was filled by volumes 'B' and 'C'")
 
     -- cleanup
@@ -246,11 +245,11 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     a2d.CreateFolder("/A/FOLDER")
-    a2d.OpenPath("/A/FOLDER", {leave_parent=true})
+    a2d.OpenWindow("/A/FOLDER", {leave_parent=true})
 
-    emu.wait(10)
+    emu.wait(10) -- async drive validation
     s5d1:unload()
-    emu.wait(10)
+    emu.wait(10) -- async drive validation
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "both windows should close")
 end)
@@ -347,7 +346,8 @@ test.Step(
     s5d1:load(emu.subst_env("$UNFORMATTED_IMG"))
     a2dtest.WaitForAlert({match="disk could not be read"})
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
+    emu.wait(5) -- async drive validation
     test.ExpectMatch(a2dtest.OCRScreen(), "S5,D1", "S5,D1 should be specified")
     a2d.DialogCancel()
     s5d1:unload()
@@ -362,7 +362,7 @@ test.Step(
   "failed window restore does not consume a window",
   function()
     s5d1:load(disk_a)
-    emu.wait(10)
+    emu.wait(10) -- async drive validation
     a2d.Quit()
     s5d1:unload()
 
@@ -373,9 +373,9 @@ test.Step(
     for i = 1, 7 do
       a2d.CreateFolder("/RAM1/F" .. i)
     end
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     a2d.OpenSelection({leave_parent=true})
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 8, "8 windows should be open")
 end)

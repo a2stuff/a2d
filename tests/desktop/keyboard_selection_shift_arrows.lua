@@ -6,46 +6,44 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 function ShiftRight()
   apple2.PressShift()
-  emu.wait(0.25)
+  emu.wait(0.25) -- during keyboard sequence
   apple2.RightArrowKey()
-  emu.wait(0.25)
+  emu.wait(0.25) -- during keyboard sequence
   apple2.ReleaseShift()
-  emu.wait(0.5)
+  a2dtest.WaitForSystemTask()
 end
 function ShiftLeft()
   apple2.PressShift()
-  emu.wait(0.25)
+  emu.wait(0.25) -- during keyboard sequence
   apple2.LeftArrowKey()
-  emu.wait(0.25)
+  emu.wait(0.25) -- during keyboard sequence
   apple2.ReleaseShift()
-  emu.wait(0.5)
+  a2dtest.WaitForSystemTask()
 end
 function ShiftUp()
   apple2.PressShift()
-  emu.wait(0.25)
+  emu.wait(0.25) -- during keyboard sequence
   apple2.UpArrowKey()
-  emu.wait(0.5)
+  emu.wait(0.5) -- during keyboard sequence
   apple2.ReleaseShift()
-  emu.wait(0.5)
+  a2dtest.WaitForSystemTask()
 end
 function ShiftDown()
   apple2.PressShift()
-  emu.wait(0.25)
+  emu.wait(0.25) -- during keyboard sequence
   apple2.DownArrowKey()
-  emu.wait(0.5)
+  emu.wait(0.5) -- during keyboard sequence
   apple2.ReleaseShift()
-  emu.wait(0.5)
+  a2dtest.WaitForSystemTask()
 end
 
 test.Step(
   "Icon view - Shift+Arrow selection - starting with no selection",
   function()
-    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
-    emu.wait(5) -- full windows can take a bit
+    a2d.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
+    a2dtest.WaitForSystemTask()
 
     a2d.ClearSelection()
     ShiftDown()
@@ -71,8 +69,8 @@ end)
 test.Step(
   "List view - Shift+Arrow selection - starting with no selection",
   function()
-    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
-    emu.wait(5) -- full windows can take a bit
+    a2d.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
     a2d.ClearSelection()
@@ -97,8 +95,8 @@ end)
 test.Step(
   "Icon view - Shift+Arrow selection - starting with everything selected",
   function()
-    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
-    emu.wait(5) -- full windows can take a bit
+    a2d.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
+    a2dtest.WaitForSystemTask()
 
     a2d.SelectAll()
     local count = #a2d.GetSelectedIcons()
@@ -119,8 +117,8 @@ end)
 test.Step(
   "List view - Shift+Arrow selection - starting with everything selected",
   function()
-    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
-    emu.wait(5) -- full windows can take a bit
+    a2d.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
     a2d.SelectAll()
@@ -142,8 +140,8 @@ end)
 test.Step(
   "Icon view - Shift+Arrow selection - incremental selection",
   function()
-    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
-    emu.wait(5) -- full windows can take a bit
+    a2d.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
+    a2dtest.WaitForSystemTask()
 
     --  A  B  C  D  E
     --  F  G  H  I  J
@@ -262,8 +260,8 @@ end)
 test.Step(
   "List view - Shift+Arrow selection - incremental selection",
   function()
-    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
-    emu.wait(5) -- full windows can take a bit
+    a2d.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
     -- Top down
@@ -293,7 +291,7 @@ test.Step(
     -- Middle up then down
     a2d.ClearSelection()
     apple2.Type("M")
-    emu.wait(0.5)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "single icon should be selected")
     count = 1
 
@@ -313,8 +311,8 @@ end)
 test.Step(
   "List view - Shift+Arrow selection - with gaps",
   function()
-    a2d.OpenPath("/TESTS/SELECTION/SHIFT.ARROWS")
-    emu.wait(5) -- full windows can take a bit
+    a2d.OpenWindow("/TESTS/SELECTION/SHIFT.ARROWS")
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
 
     a2d.Select("C")

@@ -141,26 +141,32 @@ end
 
 local bank_offset
 
-local DESKTOP_SYMBOLS = {}
-for pair in emu.subst_env("$DESKTOP_SYMBOLS"):gmatch("([^ ]+)") do
-  local k,v = pair:match("^(.+)=(.+)$")
-  DESKTOP_SYMBOLS[k] = tonumber(v, 16)
-end
-local SELECTOR_SYMBOLS = {}
-for pair in emu.subst_env("$SELECTOR_SYMBOLS"):gmatch("([^ ]+)") do
-  local k,v = pair:match("^(.+)=(.+)$")
-  SELECTOR_SYMBOLS[k] = tonumber(v, 16)
-end
+local DESKTOP_SYMBOLS = util.GetSymbols("DESKTOP_SYMBOLS")
+local DISKCOPY_SYMBOLS = util.GetSymbols("DISKCOPY_SYMBOLS")
+local SELECTOR_SYMBOLS = util.GetSymbols("SELECTOR_SYMBOLS")
+
+local system_task_intercept_addr
 
 function a2dtest.ConfigureForDeskTop()
   bank_offset = 0x10000
   mgtk.Configure(bank_offset, DESKTOP_SYMBOLS["current_window"])
+  system_task_intercept_addr = DESKTOP_SYMBOLS["TestInterceptSystemTask"] -- in main
 end
-a2dtest.ConfigureForDiskCopy = a2dtest.ConfigureForDeskTop
+
+function a2dtest.ConfigureForDiskCopy()
+  bank_offset = 0x10000
+  mgtk.Configure(bank_offset, DESKTOP_SYMBOLS["current_window"]) -- inherits MGTK from DeskTop
+  system_task_intercept_addr = DISKCOPY_SYMBOLS["TestInterceptSystemTask"] + bank_offset -- auxlc
+end
 
 function a2dtest.ConfigureForSelector()
   bank_offset = 0x00000
   mgtk.Configure(bank_offset, SELECTOR_SYMBOLS["current_window"])
+  system_task_intercept_addr = SELECTOR_SYMBOLS["TestInterceptSystemTask"] -- in main
+end
+
+function a2dtest.WaitForSystemTask()
+  apple2.WaitForMemoryRead(system_task_intercept_addr)
 end
 
 local function ram_u8(addr)

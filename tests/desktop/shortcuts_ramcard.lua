@@ -5,7 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
 a2d.ToggleOptionCopyToRAMCard()
 a2d.Reboot()
 a2d.WaitForDesktopReady()
@@ -24,9 +23,10 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
     a2d.EraseVolume("RAM1")
     a2d.Reboot({no_wait=true})
-    while not apple2.GrabTextScreen():match("Esc to cancel") do
-      emu.wait(0.25)
-    end
+    util.WaitFor(
+      "Copying to RAMCard on boot", function()
+        return apple2.GrabTextScreen():match("Esc to cancel")
+      end, {wait=0.25})
     apple2.EscapeKey()
     a2d.WaitForDesktopReady()
 
@@ -50,21 +50,22 @@ end)
 test.Step(
   "aborted copy of shortcut on boot does not prevent it from running",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS")
-    emu.wait(1)
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
+    a2dtest.WaitForSystemTask()
     a2d.SelectAll()
     local count = #a2d.GetSelectedIcons()
     a2d.CloseAllWindows()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
     a2d.Reboot({no_wait=true})
-    while not apple2.GrabTextScreen():upper():match("EXTRAS") do
-      emu.wait(0.25)
-    end
+    util.WaitFor(
+      "EXTRAS to be copying", function()
+        return apple2.GrabTextScreen():upper():match("EXTRAS")
+      end, {wait=0.25})
     apple2.EscapeKey()
     a2d.WaitForDesktopReady()
 
-    a2d.OpenPath("/RAM1/EXTRAS")
+    a2d.OpenWindow("/RAM1/EXTRAS")
     a2d.SelectAll()
     test.ExpectLessThan(#a2d.GetSelectedIcons(), count, "not all files should have been copied")
     a2d.CloseAllWindows()
@@ -91,8 +92,8 @@ end)
 test.Step(
   "aborted copy of shortcut on use does not prevent it from running",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS")
-    emu.wait(1)
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
+    a2dtest.WaitForSystemTask()
     a2d.SelectAll()
     local count = #a2d.GetSelectedIcons()
     a2d.CloseAllWindows()
@@ -101,11 +102,14 @@ test.Step(
     a2d.CloseAllWindows()
 
     a2d.OAShortcut("1")
-    emu.wait(1)
+    util.WaitFor(
+      "mid-copying", function()
+        return a2dtest.OCRFrontWindowContent():match("Files remaining")
+    end)
     apple2.EscapeKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/RAM1/EXTRAS")
+    a2d.OpenWindow("/RAM1/EXTRAS")
     a2d.SelectAll()
     test.ExpectLessThan(#a2d.GetSelectedIcons(), count, "not all files should have been copied")
     a2d.CloseAllWindows()
@@ -118,7 +122,7 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
-    a2d.OpenPath("/RAM1/EXTRAS")
+    a2d.OpenWindow("/RAM1/EXTRAS")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have been copied")
     a2d.CloseAllWindows()
@@ -142,16 +146,19 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2d.CloseAllWindows()
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(0, 100)
 
     a2dtest.DHRDarkness()
 
     a2d.OAShortcut("1", {no_wait=true})
-    emu.wait(0.1)
+    util.WaitFor(
+      "copying", function()
+        return a2dtest.OCRFrontWindowContent():match("Copying")
+    end)
     test.ExpectNotMatch(a2dtest.OCRScreen(), "Files remaining:", "should still be enumerating")
     apple2.EscapeKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify RAM1 window did not refresh")
 
@@ -174,7 +181,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2d.CloseAllWindows()
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(0, 100)
 
     a2dtest.DHRDarkness()
@@ -185,7 +192,7 @@ test.Step(
         return a2dtest.OCRFrontWindowContent():match("Files remaining")
     end)
     apple2.EscapeKey()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify RAM1 window did refresh")
 
@@ -256,6 +263,7 @@ test.Variants(
       a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
       apple2.RightArrowKey()
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
     end
 
     apple2.WaitForBasicSystem()
@@ -294,6 +302,7 @@ test.Variants(
       a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
       apple2.RightArrowKey()
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
     end
 
     apple2.WaitForBasicSystem()

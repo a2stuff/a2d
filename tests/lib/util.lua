@@ -9,8 +9,12 @@ local util = {}
 function util.WaitFor(message, func, options, level)
   local timeout = 60
   local scale = 20
+  local wait = 1 / scale
   if options and options.timeout then
     timeout = options.timeout
+  end
+  if options and options.wait then
+    wait = options.wait
   end
   if level == nil then
     level = 1
@@ -19,7 +23,7 @@ function util.WaitFor(message, func, options, level)
     if func() then
       return
     end
-    emu.wait(1/scale)
+    emu.wait(wait)
   end
   error(string.format("Timeout (%ds) waiting for %s", timeout, message), level + 2)
 end
@@ -56,6 +60,15 @@ function util.CaseInsensitivePattern(p)
       return escape .. char
     end
   end))
+end
+
+function util.GetSymbols(envar)
+  local symbols = {}
+  for pair in emu.subst_env("$" .. envar):gmatch("([^ ]+)") do
+    local k,v = pair:match("^(.+)=(.+)$")
+    symbols[k] = tonumber(v, 16)
+  end
+  return symbols
 end
 
 return util

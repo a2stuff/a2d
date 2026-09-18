@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 a2d.SelectPath("/A2.DESKTOP")
 local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
 a2d.ClearSelection()
@@ -64,7 +62,7 @@ end)
 test.Step(
   "No selection, open window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.ClearSelection()
     a2d.OpenMenu(a2d.FILE_MENU)
     local ocr = a2dtest.OCRScreen()
@@ -154,7 +152,7 @@ end)
 test.Step(
   "Trash selected, open window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.SelectPath("/Trash", {keep_windows=true})
     a2d.OpenMenu(a2d.FILE_MENU)
     local ocr = a2dtest.OCRScreen()
@@ -244,7 +242,7 @@ end)
 test.Step(
   "Volume selected, open window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.SelectPath("/A2.DESKTOP", {keep_windows=true})
     a2d.OpenMenu(a2d.FILE_MENU)
     local ocr = a2dtest.OCRScreen()
@@ -334,7 +332,7 @@ end)
 test.Step(
   "Multiple volumes selected, open window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.DragSelectMultipleVolumes()
     a2d.OpenMenu(a2d.FILE_MENU)
     local ocr = a2dtest.OCRScreen()
@@ -424,7 +422,7 @@ end)
 test.Step(
   "Volumes and Trash selected, open window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.ClearSelectionAndFocusDesktop()
     a2d.SelectAll()
     a2d.OpenMenu(a2d.FILE_MENU)
@@ -559,7 +557,7 @@ end)
 test.Step(
   "Multiple files, open window",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES")
+    a2d.OpenWindow("/TESTS/FILE.TYPES")
     a2d.SelectAll()
     a2d.OpenMenu(a2d.FILE_MENU)
     local ocr = a2dtest.OCRScreen()
@@ -609,14 +607,14 @@ end)
 test.Step(
   "File menu options needing window are correct",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.OpenMenu(a2d.FILE_MENU)
     local ocr = a2dtest.OCRScreen()
     enabled(ocr, "New Folder")
     enabled(ocr, "Close  ")
     enabled(ocr, "Close All")
     apple2.EscapeKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 end)
 
 test.Step(
@@ -624,7 +622,7 @@ test.Step(
   function()
     a2dtest.ExpectNothingChanged(function()
         apple2.ControlKey("@")
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
     end)
 end)
 
@@ -644,7 +642,7 @@ test.Step(
         m.MoveToApproximately(400, 0)
     end)
     apple2.EscapeKey()
-    emu.wait(5)
+    emu.wait(5) -- during menu loop
     test.ExpectMatch(a2dtest.OCRScreen(), "About This Apple II", "menu should still be showing")
     apple2.EscapeKey()
 end)

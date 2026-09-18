@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
 
 -- Does an OCR pass on the calculator display; works for both versions.
 function OCRDisplay()
@@ -15,7 +14,7 @@ end
 
 function ExpectExpression(expr, result)
   apple2.Type(expr)
-  a2d.WaitForRepaint()
+  a2dtest.WaitForSystemTask()
   local ocr = OCRDisplay()
   test.ExpectEquals(ocr, result, string.format("result of %q", expr), {}, 1)
   apple2.EscapeKey()
@@ -32,7 +31,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(apple2.SCREEN_WIDTH*3/4, apple2.SCREEN_HEIGHT/2)
     end)
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     test.Snap("verify cursor not at 0,0")
     a2d.CloseWindow()
 end)
@@ -44,7 +43,7 @@ end)
 test.Step(
   "Move window and mouse cursor",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -53,7 +52,7 @@ test.Step(
         m.MoveToApproximately(400, 100)
         m.ButtonUp()
     end)
-    emu.wait(5) -- slow repaint
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify mouse cursor painted correctly")
     a2d.CloseWindow()
@@ -68,7 +67,7 @@ end)
 test.Step(
   "Window and volume icons",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
     local drop_x, drop_y = 500, 20
@@ -79,7 +78,7 @@ test.Step(
         m.MoveToApproximately(drop_x, drop_y)
         m.ButtonUp()
     end)
-    emu.wait(5) -- slow repaint
+    a2dtest.WaitForSystemTask()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(drop_x, drop_y)
@@ -87,7 +86,7 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
-    emu.wait(5) -- slow repaint
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify volume icons repaint correctly")
     a2d.CloseWindow()
@@ -102,7 +101,7 @@ end)
 test.Step(
   "Obscured window",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -111,7 +110,7 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT)
         m.ButtonUp()
     end)
-    emu.wait(5) -- slow repaint
+    a2dtest.WaitForSystemTask()
 
     a2dtest.ExpectNothingChanged(function()
         apple2.Type("123.456")
@@ -123,7 +122,7 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, 30)
         m.ButtonUp()
     end)
-    emu.wait(5) -- slow repaint
+    a2dtest.WaitForSystemTask()
 
     test.ExpectMatch(OCRDisplay(), "123%.456", "result should be 123.456")
     a2d.CloseWindow()
@@ -146,8 +145,8 @@ test.Variants(
     {"Sci.Calc - misc", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
   function(idx, name, path)
-    a2d.OpenPath(path, {no_validate=true})
-    a2d.WaitForRepaint()
+    a2d.InvokePath(path)
+    a2dtest.WaitForSystemTask()
 
     ExpectExpression("1-2=", "-1")
     -- should not hang
@@ -161,7 +160,7 @@ test.Variants(
     ExpectExpression("6/2=", "3")
 
     ExpectExpression("1/1234=", "8.10372772E-04")
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     local ocr = OCRDisplay()
     test.ExpectEquals(OCRDisplay(), "0", "display should be cleared")
     apple2.EscapeKey()
@@ -187,8 +186,8 @@ test.Variants(
     { "Sci.Calc - decimal separator", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
   function(idx, name, path)
-    a2d.OpenPath(path, {no_validate=true})
-    a2d.WaitForRepaint()
+    a2d.InvokePath(path)
+    a2dtest.WaitForSystemTask()
 
     ExpectExpression("12.34", "12.34")
     apple2.EscapeKey()
@@ -196,20 +195,21 @@ test.Variants(
     a2d.CloseWindow()
 
     function SetNumberFormat(decimal_separator, thousands_separator)
-      a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/INTERNATIONAL", {no_validate=true})
+      a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/INTERNATIONAL")
       apple2.TabKey() -- focus date > time
       apple2.TabKey() -- focus time > decimal
       apple2.Type(decimal_separator)
       apple2.TabKey() -- focus decimal > thousands
       apple2.Type(thousands_separator)
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
     end
 
     -- Change decimal separator
     SetNumberFormat(",", ".")
 
-    a2d.OpenPath(path, {no_validate=true})
-    a2d.WaitForRepaint()
+    a2d.InvokePath(path)
+    a2dtest.WaitForSystemTask()
 
     ExpectExpression("12,34", "12,34")
     ExpectExpression("12.34", "12,34")
@@ -251,13 +251,13 @@ end)
 test.Step(
   "Sci.Calc - functions",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/SCI.CALC", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/SCI.CALC")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
     -- Pattern - '.' and '-' do not need escaping
     function ExpectMatch(pattern)
       local p2 = "^" .. pattern:gsub("%.", "%%."):gsub("%-", "%%-") .. "$"
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       local ocr = OCRDisplay()
       test.ExpectMatch(ocr, p2, "result", {}, 1)
       apple2.EscapeKey()
@@ -343,8 +343,8 @@ test.Variants(
     {"Sci.Calc - repeated operations", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
   function(idx, name, path)
-    a2d.OpenPath(path, {no_validate=true})
-    a2d.WaitForRepaint()
+    a2d.InvokePath(path)
+    a2dtest.WaitForSystemTask()
 
     ExpectExpression("2+3=", "5")
     ExpectExpression("2+3==", "8")

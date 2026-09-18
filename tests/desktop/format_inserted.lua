@@ -5,7 +5,6 @@ DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
 local s7d2 = manager.machine.images[":sl7:superdrive:fdc:1:35hd"]
 
 --[[
@@ -22,6 +21,7 @@ test.Step(
 
     -- respond to alert
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- name
     apple2.Type("NEW.NAME")
@@ -29,6 +29,7 @@ test.Step(
 
     a2dtest.WaitForAlert({match="slot.*7.*drive.*2%?"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     util.WaitFor(
       "selection",

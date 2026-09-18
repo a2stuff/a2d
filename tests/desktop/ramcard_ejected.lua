@@ -5,7 +5,6 @@ DISKARGS="-flop1 prodos_floppy1.dsk -flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
 local s7d1 = manager.machine.images[":sl7:superdrive:fdc:0:35hd"]
 
 --[[
@@ -26,9 +25,9 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     apple2.ControlKey("D") -- Drives
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify A2.DESKTOP volume is first")
     a2d.DialogCancel()
 end)
@@ -59,13 +58,13 @@ test.Step(
 
     a2d.SelectPath("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     apple2.ControlKey("D") -- Drives
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify A2.DESKTOP volume is first")
     a2d.DialogCancel()
 
-    a2d.OpenPath("/RAM4/DESKTOP/EXTRAS/BASIC.SYSTEM", {no_validate=true})
+    a2d.InvokePath("/RAM4/DESKTOP/EXTRAS/BASIC.SYSTEM")
     local drive = s7d1
     local current = drive.filename
     drive:unload()
@@ -122,10 +121,11 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.ClearTextField()
     apple2.Type("New Name")
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     a2d.DialogCancel()
     drive:load(current)
@@ -161,11 +161,11 @@ test.Step(
     drive:unload()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     a2d.DialogCancel()
     drive:load(current)
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
 
     -- cleanup
     a2d.DeletePath("/A2.DESKTOP/LOCAL")

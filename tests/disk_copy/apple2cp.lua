@@ -6,8 +6,6 @@ DISKARGS="-flop1 prodos_floppy1.dsk -flop2 prodos_floppy2.dsk -flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(2)
-
 --[[
   On an Apple IIc, copy a 140k disk from one to another. Before the
   copy starts, move the mouse. Verify no hang after the copy is
@@ -20,18 +18,20 @@ test.Step(
   "no hang after 140k disk copy",
   function()
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- Use Disk Copy so all memory blocks are used.
     a2d.InvokeMenuItem(3, 2) -- Options > Disk Copy
 
     apple2.DownArrowKey() -- S5,D1
     apple2.DownArrowKey() -- S6,D1
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK()
 
     -- insert source
@@ -50,7 +50,7 @@ test.Step(
     util.WaitFor(
       "formatting complete", function()
         return a2dtest.OCRFrontWindowContent():match("Reading%.%.%.")
-    end)
+      end, {wait=1})
 
     -- Generate some mouse activity, which should fire interrupts
     for i = 1, 10 do
@@ -69,8 +69,8 @@ test.Step(
     end
 
     -- verify no hang
+    a2dtest.WaitForSystemTask()
     a2d.OpenMenu(1) -- Apple
     apple2.DownArrowKey()
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "Apple II DeskTop Version")
 end)
-

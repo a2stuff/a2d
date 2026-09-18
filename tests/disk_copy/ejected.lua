@@ -9,8 +9,6 @@ local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 local s5d1 = manager.machine.images[":sl5:superdrive:fdc:0:35hd"]
 local s5d2 = manager.machine.images[":sl5:superdrive:fdc:1:35hd"]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Launch DeskTop. Eject the startup disk. Special > Copy Disk....
   Verify that an alert is shown. Cancel the alert. Verify that DeskTop
@@ -22,7 +20,7 @@ test.Step(
 
     local image = s6d1.filename
     s6d1:unload()
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
 
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
@@ -31,7 +29,7 @@ test.Step(
 
     -- cleanup
     s6d1:load(image)
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
 
 end)
 
@@ -46,14 +44,14 @@ test.Step(
 
     local image = s6d1.filename
     s6d1:unload()
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
 
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
     a2dtest.WaitForAlert({match="insert the system disk"})
 
     s6d1:load(image)
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
 
     a2d.DialogOK()
     a2d.WaitForDesktopReady()
@@ -83,9 +81,10 @@ test.Step(
 
     local image = s5d2.filename
     s5d2:unload()
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
 
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     test.ExpectMatch(a2dtest.OCRScreen(), "5 +2 +Unknown",
                 "S5D2 should show 'Unknown' in source list")
@@ -94,7 +93,7 @@ test.Step(
     apple2.UpArrowKey() -- S5D2
     apple2.UpArrowKey() -- S5D1
     apple2.ReturnKey()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectNotMatch(a2dtest.OCRScreen(), "5 +2 +Unknown",
                 "S5D2 should not be in destination list")
@@ -102,7 +101,7 @@ test.Step(
     s5d2:load(image)
 
     apple2.Type("R")
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectMatch(a2dtest.OCRScreen(), "5 +2 +EMPTY",
                 "S5D2 should show a disk in source list")
@@ -110,13 +109,14 @@ test.Step(
     apple2.UpArrowKey() -- S5D2
     apple2.UpArrowKey() -- S5D1
     apple2.ReturnKey()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectMatch(a2dtest.OCRScreen(), "5 +2 +EMPTY",
                 "S5D2 should show a disk in destination list")
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
 end)
 
@@ -130,12 +130,18 @@ end)
 test.Step(
   "errors if destination disk ejected",
   function()
+
+
+    -- TODO: HANG in here
+
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     apple2.UpArrowKey() -- S5D2
     apple2.UpArrowKey() -- S5D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     apple2.UpArrowKey() -- S5D2
@@ -153,14 +159,14 @@ test.Step(
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
-    emu.wait(5)
+    emu.wait(5) -- eject during copy
     local image = s5d2.filename
     s5d2:unload()
 
     util.WaitFor(
       "error seen", function()
         return a2dtest.OCRFrontWindowContent():match("Error when writing block")
-    end)
+      end, {wait=0.25})
 
     -- cleanup
     apple2.EscapeKey() -- abort the copy
@@ -169,10 +175,12 @@ test.Step(
     test.ExpectNotMatch(a2dtest.OCRScreen(), "Press Esc to stop copying",
                 "tip should be erased")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     s5d2:load(image)
 
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)
 
 --[[
@@ -189,11 +197,13 @@ test.DISABLED_Step(
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     apple2.UpArrowKey() -- S5D2
     apple2.UpArrowKey() -- S5D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     apple2.UpArrowKey() -- S5D2
@@ -211,11 +221,11 @@ test.DISABLED_Step(
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
-    emu.wait(5)
+    emu.wait(5) -- eject during copy
     local image = s5d1.filename
     s5d1:unload()
 
-    emu.wait(5)
+    emu.wait(5) -- eject during copy
     test.Snap("verify block errors reading")
 
     -- cleanup
@@ -226,4 +236,5 @@ test.DISABLED_Step(
     s5d1:load(image)
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)

@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Ensure the startup disk has a name that would be case-adjusted by
   DeskTop, e.g. `/HD` but that shows as "Hd". Launch DeskTop. Open the
@@ -24,7 +22,7 @@ test.Step(
     a2d.SelectPath("/HARD.DISK")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "Hard.Disk", "Name should be case adjusted")
 
-    a2d.OpenPath("/HARD.DISK")
+    a2d.OpenWindow("/HARD.DISK")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w - 5, y + h - 5
 
@@ -34,7 +32,7 @@ test.Step(
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.SelectPath("/HARD.DISK/CONTROL.PANEL")
     test.ExpectError(

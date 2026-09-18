@@ -31,6 +31,20 @@ local function default_options(o)
 end
 
 --------------------------------------------------
+-- Symbol usage
+--------------------------------------------------
+
+--[[
+  NOTE: Only DeskTop's are pulled in, although this library spans use
+  of the Selector and Disk Copy modules. TODO: Better layering.
+]]
+
+local DESKTOP_SYMBOLS = util.GetSymbols("DESKTOP_SYMBOLS")
+function WaitForDesktopSystemTask()
+  apple2.WaitForMemoryRead(DESKTOP_SYMBOLS["TestInterceptSystemTask"])
+end
+
+--------------------------------------------------
 -- Reset configuration
 --------------------------------------------------
 
@@ -74,6 +88,9 @@ function a2d.InitSystem()
     -- bit0 = ZIP, bits 1-7=speed (0-3):
     -- "CPU type": "Standard", "7MHz ZipGS", "8MHz ZipGS", "12MHz ZipGS", "16MHz ZipGS"
     apple2.SetSystemConfig(":a2_config", "CPU type", 0xFF, 1 | (3 << 1))
+
+    -- Address general apple2gs emulation slowness
+    TIME_SCALE = TIME_SCALE / 4
 
   elseif system.name:match("^apple2e")
     or system.name:match("^tk3000")
@@ -119,20 +136,12 @@ function a2d.WaitForCopyToRAMCard()
   a2d.WaitForDesktopReady()
 end
 
-local repaint_time = 5
+local repaint_time = 0.25
 
-function a2d.WaitForRepaint(opt_multiplier)
-  if opt_multiplier == nul then
-    opt_multiplier = 1
-  end
-  emu.wait(opt_multiplier * repaint_time * TIME_SCALE)
-end
-
-function a2d.ConfigureRepaintTime(s)
-  if s == nil or s == 0 then
-    error("specify a non-zero time", 2)
-  end
-  repaint_time = s
+-- Prefer a2dtest.WaitForSystemTask() when possible, as this
+-- is just a heuristic.
+function a2d.WaitForRepaint()
+  emu.wait(repaint_time * TIME_SCALE) -- heuristic
 end
 
 --------------------------------------------------
@@ -206,14 +215,14 @@ for k,v in pairs({
 function a2d.OpenMenu(mth)
   -- activate menu
   apple2.EscapeKey()
-  emu.wait(MINIMAL_REPAINT)
+  a2d.WaitForRepaint() -- in menu loop
   local i
   -- over to mth menu
   for i=2,mth do
     apple2.RightArrowKey()
-    emu.wait(MINIMAL_REPAINT)
+    a2d.WaitForRepaint() -- in menu loop
   end
-  a2d.WaitForRepaint()
+  a2d.WaitForRepaint() -- in menu loop
 end
 
 -- Invoke nth item on mth menu (1-based)
@@ -226,19 +235,19 @@ function a2d.InvokeMenuItem(mth, nth, options)
     -- down to nth item
     for i=1,nth do
       apple2.DownArrowKey()
-      emu.wait(2/60)
+      emu.wait(2/60) -- in menu loop
     end
   else
     for i=1,-nth do
       apple2.UpArrowKey()
-      emu.wait(2/60)
+      emu.wait(2/60) -- in menu loop
     end
   end
   -- invoke
   apple2.ReturnKey()
 
   if not options.no_wait then
-    emu.wait(5 * TIME_SCALE)
+    emu.wait(5 * TIME_SCALE) -- used across modules; may not return to loop
   end
 end
 
@@ -247,7 +256,7 @@ function a2d.OAShortcut(key, options)
 
   apple2.OAKey(key)
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    a2d.WaitForRepaint() -- used across modules; may not return to loop
   end
 end
 
@@ -256,7 +265,7 @@ function a2d.SAShortcut(key, options)
 
   apple2.SAKey(key)
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    a2d.WaitForRepaint() -- used across modules; may not return to loop
   end
 end
 
@@ -265,7 +274,7 @@ function a2d.OASAShortcut(key, options)
 
   apple2.OASAKey(key)
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    a2d.WaitForRepaint() -- used across modules; may not return to loop
   end
 end
 
@@ -281,14 +290,22 @@ end
 -- Automations
 --------------------------------------------------
 
-function a2d.OpenSelection()
+--[[
+  Assumes a window will be opened (directory window or DA); use
+  {no_wait=true} to skip waiting for a system task afterwards.
+]]
+function a2d.OpenSelection(options)
+  options = default_options(options)
   a2d.OAShortcut("O")
-  a2d.WaitForRepaint(4) -- TODO: This is an extra wait - is it needed?
+
+  if not options.no_wait then
+    WaitForDesktopSystemTask()
+  end
 end
 
 function a2d.OpenSelectionAndCloseCurrent()
   a2d.OASADown()
-  a2d.WaitForRepaint(4)
+  WaitForDesktopSystemTask()
 end
 
 local function CheckSelectionName(name, options)
@@ -338,44 +355,72 @@ function a2d.Select(name, options)
     a2d.ClearSelection()
   end
   apple2.Type(name)
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask()
   WaitForSelectionName(name, options)
 end
 
--- additional option: {close_current=true}
+--[[
+  additional option: {close_current=true} otherwise, {no_wait=true} to
+  skip waiting for system task afterwards (e.g. if opening a
+  screensaver)
+]]
 function a2d.SelectAndOpen(name, options)
   options = default_options(options)
 
   a2d.Select(name, options)
   if options.close_current then
-    a2d.OpenSelectionAndCloseCurrent()
+    a2d.OpenSelectionAndCloseCurrent(options)
   else
-    a2d.OpenSelection()
+    a2d.OpenSelection(options)
   end
 end
 
 function a2d.SelectAll()
   a2d.OAShortcut("A")
-  emu.wait(2 * TIME_SCALE)
+  WaitForDesktopSystemTask()
 end
 
 function a2d.CloseWindow(options)
   options = default_options(options)
   a2d.OAShortcut("W", options)
   if not options.no_wait then
-    emu.wait(2 * TIME_SCALE)
+    WaitForDesktopSystemTask()
   end
 end
 
 function a2d.CloseAllWindows()
   a2d.OASAShortcut("W")
-  util.WaitFor("all windows to close",
-               function() return mgtk.FrontWindow() == 0 end)
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask()
 end
 
--- additional option: {leave_parent=true}
-function a2d.OpenPath(path, options)
+--[[
+  There are separate InvokePath() and OpenWindow() rather than a
+  unified OpenPath() because if we are opening a window we want to
+  perform extra validation at the end and know that we will remain in
+  the DeskTop module, whereas invoking an arbitrary target may exit
+  the module.
+]]
+
+function a2d.InvokePath(path, options)
+  options = default_options(options)
+
+  a2d.SelectPath(path, options)
+  WaitForDesktopSystemTask()
+
+  a2d.OAShortcut("O") -- open
+  if not options.no_wait then
+    emu.wait(1 * TIME_SCALE) -- may not return to loop
+  end
+end
+
+--[[
+  Pass {no_validate=true} to skip validating the last segment, e.g. for
+  when it is expected to fail.
+
+  Pass {no_wait=true} to skip waiting after the last segment, e.g. to
+  inspect the scrollbars as they are drawn.
+]]
+function a2d.OpenWindow(path, options)
   options = default_options(options)
 
   if options.leave_parent then
@@ -390,24 +435,26 @@ function a2d.OpenPath(path, options)
   else
     a2d.CloseAllWindows()
   end
+
   local segments = {}
   for segment in path:gmatch("([^/]+)") do
     table.insert(segments, segment)
   end
   for index,segment in ipairs(segments) do
     a2d.SelectAndOpen(segment, options)
-    emu.wait(1 * TIME_SCALE)
 
-    if index ~= #segments or not options.no_validate then
+    --[[
+      For any intermediate steps, or for the final step if not
+      requested otherwise, validate that the expected window opened.
+      This helps detect bugs in tests.
+    ]]
+    if index ~= #segments or not (options.no_validate or options.no_wait) then
       local top = mgtk.GetWindowName(assert(mgtk.FrontWindow()))
       if top:lower() ~= segment:lower() then
         error(string.format("%s: failed to open %q, top window is %q",
                             debug.getinfo(1,"n").name, segment, top), options.level)
       end
     end
-  end
-  if not options.no_wait then
-    emu.wait(1 * TIME_SCALE)
   end
 end
 
@@ -419,7 +466,7 @@ function a2d.SelectPath(path, options)
   options = default_options(options)
   local base, name = a2d.SplitPath(path)
   if base ~= "" then
-    a2d.OpenPath(base, options)
+    a2d.OpenWindow(base, options)
   elseif options.keep_windows then
     a2d.ClearSelectionAndFocusDesktop()
     options.no_clear_selection = true
@@ -433,7 +480,7 @@ function a2d.ClearSelection()
   apple2.PressOA()
   apple2.EscapeKey()
   apple2.ReleaseOA()
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask()
 end
 
 function a2d.ClearSelectionAndFocusDesktop()
@@ -442,15 +489,16 @@ function a2d.ClearSelectionAndFocusDesktop()
   apple2.EscapeKey()
   apple2.ReleaseSA()
   apple2.ReleaseOA()
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask()
 end
 
 function a2d.DialogOK(options)
   options = default_options(options)
 
   apple2.ReturnKey()
+
   if not options.no_wait then
-    a2d.WaitForRepaint(4)
+    a2d.WaitForRepaint() -- used outside DeskTop module
   end
 end
 
@@ -458,8 +506,9 @@ function a2d.DialogCancel(options)
   options = default_options(options)
 
   apple2.EscapeKey()
+
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    a2d.WaitForRepaint() -- used outside DeskTop module
   end
 end
 
@@ -473,7 +522,7 @@ function a2d.RenameSelection(newname, options)
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask()
   WaitForSelectionName(newname, options)
 end
 
@@ -493,11 +542,11 @@ function a2d.DuplicateSelection(newname, options)
     error("DuplicateSelection: nil passed as newname", options.level)
   end
   a2d.OAShortcut("D")
-  emu.wait(10 * TIME_SCALE) -- same as CopySelectionTo
+  WaitForDesktopSystemTask()
   a2d.ClearTextField()
   apple2.Type(newname)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask()
   WaitForSelectionName(newname, options)
 end
 
@@ -512,10 +561,9 @@ end
 
 function a2d.DeleteSelection()
   a2d.OADelete()
-  -- TODO: Wait for alert
-  emu.wait(5 * TIME_SCALE) -- wait for enumeration
+  WaitForDesktopSystemTask()
   a2d.DialogOK() -- confirm delete
-  emu.wait(5 * TIME_SCALE) -- wait for delete
+  WaitForDesktopSystemTask()
 end
 
 function a2d.DeletePath(path, options)
@@ -531,45 +579,45 @@ function a2d.CreateFolder(path, options)
     local base
     base, name = a2d.SplitPath(path)
     if base ~= "" then
-      a2d.OpenPath(base, options)
+      a2d.OpenWindow(base, options)
     end
   end
-  emu.wait(1 * TIME_SCALE) -- flaky without this
+  WaitForDesktopSystemTask()
   a2d.OAShortcut("N") -- File > New Folder
   a2d.ClearTextField()
   apple2.Type(name)
   apple2.ReturnKey()
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask()
   WaitForSelectionName(name, options)
 end
 
 function a2d.FormatVolume(name, opt_new_name)
   a2d.SelectPath("/"..name)
-  a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK)
+  a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK, {no_wait=true})
+  WaitForDesktopSystemTask()
   if opt_new_name then
     a2d.ClearTextField()
     apple2.Type(opt_new_name)
   end
   a2d.DialogOK()
-  -- TODO: WaitForAlert here (layering violation!)
-  a2d.WaitForRepaint()
+  a2d.WaitForRepaint() -- TODO: WaitForAlert here (layering violation!)
   a2d.DialogOK() -- confirm overwrite
-  emu.wait(5 * TIME_SCALE) -- I/O
+  WaitForDesktopSystemTask()
 end
 
 function a2d.EraseVolume(name, opt_new_name, options)
   options = default_options(options)
   a2d.SelectPath("/"..name, options)
-  a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK)
+  a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK, {no_wait=true})
+  WaitForDesktopSystemTask()
   if opt_new_name then
     a2d.ClearTextField()
     apple2.Type(opt_new_name)
   end
   a2d.DialogOK()
-  -- TODO: WaitForAlert here (layering violation!)
-  a2d.WaitForRepaint()
+  a2d.WaitForRepaint() -- TODO: WaitForAlert here (layering violation!)
   a2d.DialogOK() -- confirm overwrite
-  emu.wait(5 * TIME_SCALE) -- I/O
+  WaitForDesktopSystemTask()
 end
 
 function a2d.CopyDisk(opt_path)
@@ -587,15 +635,22 @@ function a2d.CycleWindows()
   apple2.PressOA()
   apple2.TabKey()
   apple2.ReleaseOA()
-  a2d.WaitForRepaint()
+  WaitForDesktopSystemTask() -- updates
+  WaitForDesktopSystemTask() -- idle
 end
 
 function a2d.AddShortcut(path, options)
   options = default_options(options)
 
   a2d.SelectPath(path, options)
-  a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-  a2d.WaitForRepaint() -- extra, for I/O
+  a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT, {no_wait=true})
+
+  -- TODO: Workaround for https://github.com/mamedev/mame/issues/16167
+  if manager.machine.system.name:match("^apple2gs") then
+    emu.wait(1)
+  else
+    WaitForDesktopSystemTask()
+  end
 
   if options then
     if options.list_only == true then
@@ -610,13 +665,14 @@ function a2d.AddShortcut(path, options)
   end
 
   a2d.DialogOK()
-  emu.wait(5 * TIME_SCALE) -- I/O
+  WaitForDesktopSystemTask()
 end
 
 function a2d.GetFilePickerCurrentPath()
   return apple2.GetPascalString(0x1620)
 end
 
+-- NOTE: Used outside of DeskTop module
 function a2d.NavigateFilePickerTo(path, opt_file, options)
   apple2.ControlKey("D") -- Drives
   emu.wait(2 * TIME_SCALE)
@@ -635,7 +691,7 @@ function a2d.NavigateFilePickerTo(path, opt_file, options)
 
   if opt_file then
     apple2.Type(opt_file)
-    a2d.WaitForRepaint()
+    a2d.WaitForRepaint() -- used outside of DeskTop module
   end
 end
 
@@ -655,7 +711,7 @@ function a2d.CopySelectionTo(path, is_volume, options)
   a2d.DialogOK(options)
 
   if not options.no_wait then
-    emu.wait(10 * TIME_SCALE)
+    WaitForDesktopSystemTask()
   end
 end
 
@@ -669,7 +725,7 @@ function a2d.CheckAllDrives(options)
   options = default_options(options)
   a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_ALL_DRIVES, options)
   if not options.no_wait then
-    emu.wait(10 * TIME_SCALE)
+    WaitForDesktopSystemTask()
   end
 end
 
@@ -704,37 +760,37 @@ function a2d.RemoveClockDriverAndReboot()
 end
 
 function a2d.ToggleOptionCopyToRAMCard()
-  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"), {no_validate=true})
+  a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("1") -- Toggle "Copy to RAMCard"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionShowShortcutsOnStartup()
-  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"), {no_validate=true})
+  a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("2") -- Toggle "Show shortcuts on startup"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionShowKeyboardShortcuts()
-  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"), {no_validate=true})
+  a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("3") -- Toggle "Show keyboard shortcuts in dialogs"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionPreserveCase()
-  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"), {no_validate=true})
+  a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("4") -- Toggle "Preserve uppercase and lowercase in names"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionShowInvisible()
-  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"), {no_validate=true})
+  a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("5") -- Toggle "Show invisible files"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
 end
 function a2d.ToggleOptionSkipChecking525Drives()
-  a2d.OpenPath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"), {no_validate=true})
+  a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS"))
   a2d.OAShortcut("6") -- Toggle "Check 5.25" drives on startup"
   a2d.CloseWindow()
   a2d.CloseAllWindows()
@@ -789,6 +845,7 @@ function a2d.WaitForDesktopShowing(options, level)
   util.WaitFor("desktop", IsDesktopShowing, options, level+1)
 end
 
+-- NOTE: Used outside of DeskTop module (despite the name)
 function a2d.WaitForDesktopReady(options)
   emu.wait(1 * TIME_SCALE) -- Don't check too soon and see old module
   a2d.WaitForDesktopShowing(options, 1)
@@ -965,7 +1022,8 @@ function a2d.MoveWindowBy(x, y, options)
   a2d.MouseKeysMoveByApproximately(x,y)
   apple2.ReturnKey()
   if not options.no_wait then
-    a2d.WaitForRepaint(2)
+    WaitForDesktopSystemTask() -- pick up update event
+    WaitForDesktopSystemTask() -- idle after that
   end
 end
 
@@ -975,7 +1033,8 @@ function a2d.GrowWindowBy(x, y, options)
   a2d.MouseKeysMoveByApproximately(x,y)
   apple2.ReturnKey()
   if not options.no_wait then
-    a2d.WaitForRepaint()
+    WaitForDesktopSystemTask() -- pick up update event
+    WaitForDesktopSystemTask() -- idle after that
   end
 end
 
@@ -985,8 +1044,8 @@ function a2d.DragSelectMultipleVolumes()
       m.ButtonDown()
       m.MoveByApproximately(-80, 130)
       m.ButtonUp()
-      a2d.WaitForRepaint()
   end)
+  WaitForDesktopSystemTask()
 end
 
 function a2d.Drag(src_x, src_y, dst_x, dst_y, options)
@@ -1160,12 +1219,6 @@ end
 --------------------------------------------------
 -- Icons
 --------------------------------------------------
-
-local DESKTOP_SYMBOLS = {}
-for pair in emu.subst_env("$DESKTOP_SYMBOLS"):gmatch("([^ ]+)") do
-  local k,v = pair:match("^(.+)=(.+)$")
-  DESKTOP_SYMBOLS[k] = tonumber(v, 16)
-end
 
 local function ReadIcon(id)
   local icon = {}

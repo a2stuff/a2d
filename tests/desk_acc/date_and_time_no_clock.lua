@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(2)
-
 --[[
   Run these tests on a system without a real-time clock.
 
@@ -37,10 +35,16 @@ test.Step(
     test.ExpectNotMatch(a2dtest.OCRFrontWindowContent(), "Today", "dates should not say Today")
     a2d.SelectAndOpen("DATE.AND.TIME")
     test.Snap("verify dialog date matches packaged file dates")
-    a2dtest.ExpectFullRepaint(a2d.DialogOK)
+    a2dtest.ExpectFullRepaint(function()
+        a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
+    end)
     test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Today", "dates should now say Today")
     a2d.SelectAndOpen("DATE.AND.TIME")
-    a2dtest.ExpectMinimalRepaint(a2d.DialogOK)
+    a2dtest.ExpectMinimalRepaint(function()
+        a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
+    end)
     a2d.Reboot()
     a2d.WaitForDesktopReady()
 end)
@@ -62,6 +66,7 @@ test.Step(
     apple2.UpArrowKey() -- change year
     test.Snap("verify date is modified")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     -- Should write timestamp to DESKTOP.SYSTEM. Restart to verify.
     a2d.Reboot()
     a2d.WaitForDesktopReady()
@@ -77,6 +82,7 @@ test.Step(
     a2d.OAShortcut("I") -- File > Get Info
     test.Snap("verify date matches set previously set date")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.DeletePath("/RAM1/NOT.TODAY")
     a2d.CloseAllWindows()
 end)
@@ -107,7 +113,7 @@ test.Step(
     test.Expect(ocr:find("AM") or ocr:find("PM"), "period field should be enabled")
 
     apple2.UpArrowKey()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     local ocr2 = a2dtest.OCRFrontWindowContent({invert=true})
     test.Expect(
       (ocr:find("AM") and ocr2:find("PM")) or
@@ -118,12 +124,13 @@ test.Step(
     apple2.LeftArrowKey() -- to hour
     for i = 1, 24 do
       apple2.UpArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       local expect = ((i - 1) % 12) + 1
       test.ExpectMatch(a2dtest.OCRFrontWindowContent({invert=true}), tostring(expect),
                   "should be 12 hour cycle")
     end
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -155,11 +162,12 @@ test.Step(
     apple2.TabKey() -- to hour
     for i = 1, 24 do
       apple2.UpArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       test.ExpectMatch(a2dtest.OCRFrontWindowContent({invert=true}), string.format("%02d", i % 24),
                   "should be 24 hour cycle")
     end
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -178,6 +186,7 @@ test.Step(
       a2d.SelectAndOpen("DATE.AND.TIME")
       apple2.UpArrowKey()
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
       local y,m,d = apple2.GetProDOSDate()
       test.ExpectEquals(
         y, y2,
@@ -196,6 +205,7 @@ test.Step(
       a2d.SelectAndOpen("DATE.AND.TIME")
       apple2.DownArrowKey()
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
       local y,m,d = apple2.GetProDOSDate()
       test.ExpectEquals(
         y, y2,
@@ -266,13 +276,13 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + incr_x, dialog_y + incr_y)
         m.ButtonDown()
-        emu.wait(10/60)
+        emu.wait(10/60) -- mouse sequence
         test.Snap("verify up button inverted")
         m.ButtonUp()
 
         m.MoveToApproximately(dialog_x + decr_x, dialog_y + decr_y)
         m.ButtonDown()
-        emu.wait(10/60)
+        emu.wait(10/60) -- mouse sequence
         test.Snap("verify down button inverted")
         m.ButtonUp()
 
@@ -296,6 +306,7 @@ test.Step(
         test.Snap("verify period focused")
     end)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -318,6 +329,7 @@ test.Step(
         test.Snap("verify period not focused")
     end)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -343,21 +355,22 @@ test.Step(
 
         m.MoveToApproximately(dialog_x+incr_x, dialog_y+incr_y) -- up arrow
         m.ButtonDown()
-        emu.wait(2/60)
+        emu.wait(2/60) -- mouse sequence
         test.Snap("verify up button inverted")
         m.ButtonUp()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.Snap("verify year increments")
 
         m.MoveToApproximately(dialog_x+decr_x, dialog_y+decr_y) -- down arrow
         m.ButtonDown()
-        emu.wait(2/60)
+        emu.wait(2/60) -- mouse sequence
         test.Snap("verify down button inverted")
         m.ButtonUp()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.Snap("verify year decrements")
     end)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -377,7 +390,7 @@ test.Step(
     apple2.SetProDOSDate(y, m, d)
 
     -- Show window and resize/move it
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.GrowWindowBy(250, 0)
     a2d.MoveWindowBy(0, 100)
@@ -393,6 +406,9 @@ test.Step(
         m.Click()
     end)
     apple2.UpArrowKey()
-    a2dtest.ExpectFullRepaint(a2d.DialogOK)
+    a2dtest.ExpectFullRepaint(function()
+        a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
+    end)
     test.ExpectMatch(a2dtest.OCRScreen(), "Today", "bottom date should show Today")
 end)

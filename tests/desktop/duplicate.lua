@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Attempt to duplicate a file without sufficient space. Verifies
   that the copy fails and there is no prompt to rename.
@@ -29,7 +27,7 @@ test.Step(
     test.ExpectMatch(ocr, "OK", "OK button should be showing")
     test.ExpectNotMatch(ocr, "Cancel", "Cancel button should not be showing")
     a2d.DialogOK() -- dismiss with OK (should be same as cancel)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(mgtk.FrontWindow(), id, "rename prompt should not be showing")
     a2d.EraseVolume("RAM1")
 end)
@@ -50,6 +48,6 @@ test.Step(
     test.ExpectMatch(ocr, "OK", "OK button should be showing")
     test.ExpectNotMatch(ocr, "Cancel", "Cancel button should not be showing")
     a2d.DialogOK() -- dismiss with OK (should be same as cancel)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(mgtk.FrontWindow(), id, "rename prompt should not be showing")
 end)

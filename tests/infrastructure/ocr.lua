@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "Basic OCR",
   function()
@@ -47,7 +45,7 @@ test.Step(
     test.ExpectMatch(recognized, "Quit", "Quit should not be dimmed")
     apple2.EscapeKey()
 
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.OpenMenu(a2d.FILE_MENU)
     local recognized = a2dtest.OCRScreen()
     test.ExpectMatch(recognized, "New Folder", "New Folder should not be dimmed")

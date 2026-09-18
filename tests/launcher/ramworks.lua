@@ -4,9 +4,7 @@ MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl7 cffa2 -aux rw3"
 DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
-  ======================================== ENDCONFIG ]]
-
-a2d.ConfigureRepaintTime(1)
+======================================== ENDCONFIG ]]
 
 --[[
   Run DeskTop on a system with RAMWorks and using `RAM.DRV.SYSTEM`.
@@ -25,7 +23,7 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady({timeout=120})
 
-    a2d.OpenPath("/RAM/DESKTOP/APPLE.MENU/TOYS")
+    a2d.OpenWindow("/RAM/DESKTOP/APPLE.MENU/TOYS")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "TOYS", "should be copied to RAMCard")
 
     a2d.DeletePath("/A2.DESKTOP/RAM.DRV.SYSTEM")
@@ -51,7 +49,7 @@ test.Step(
 
     a2d.WaitForCopyToRAMCard()
 
-    a2d.OpenPath("/RAMA/DESKTOP/APPLE.MENU/TOYS")
+    a2d.OpenWindow("/RAMA/DESKTOP/APPLE.MENU/TOYS")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "TOYS", "should be copied to RAMCard")
 
     a2d.DeletePath("/A2.DESKTOP/RAMAUX.SYSTEM")

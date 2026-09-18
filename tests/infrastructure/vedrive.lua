@@ -8,12 +8,10 @@ VEDISK2=disk_b.2mg
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "VEDRIVE",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX /TESTS/DRIVERS")
     emu.wait(10)
@@ -72,7 +70,7 @@ test.Step(
     emu.wait(5)
     test.Snap("verify VEDrives have File Share icons")
 
-    a2d.OpenPath("WITH.FILES")
+    a2d.OpenWindow("WITH.FILES")
     test.Snap("verify files present")
     a2d.CloseAllWindows()
     a2d.ClearSelection()

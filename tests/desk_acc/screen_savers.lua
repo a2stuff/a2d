@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(1)
 
 --[[
   Launch DeskTop. Apple Menu > Screen Savers. Select Melt. File > Open
@@ -13,7 +12,7 @@ test.Variants(
   function(idx, name, func)
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MELT")
     func()
-    emu.wait(1)
+    emu.wait(1) -- screen saver
 
     a2d.InMouseKeysMode(function(m)
         -- Move cursor away from origin so menu bar is not obscured
@@ -22,7 +21,7 @@ test.Variants(
         m.Click()
     end)
 
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2dtest.ExpectMenuNotHighlighted()
     a2d.CloseAllWindows()
@@ -39,10 +38,10 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MELT")
     a2d.OAShortcut("O")
-    emu.wait(1)
+    emu.wait(1) -- screen saver
 
     apple2.EscapeKey()
-    apple2.Type('@') -- no-op, wait for key to be consumed
+    a2dtest.WaitForSystemTask()
 
     a2dtest.ExpectClockVisible()
 
@@ -60,12 +59,12 @@ test.Variants(
     {"Matrix exits on key", apple2.ReturnKey },
   },
   function(idx, name, func)
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MATRIX", {no_validate=true})
-    emu.wait(1)
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MATRIX")
+    emu.wait(1) -- screen saver
 
     func()
 
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
     test.ExpectEquals(mgtk.FrontWindow(), 0, "all windows should be closed")
 end)
@@ -81,9 +80,10 @@ a2d.RemoveClockDriverAndReboot()
 test.Step(
   "Analog Clock shows alert if there is no system clock",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/ANALOG.CLOCK", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/ANALOG.CLOCK")
     a2dtest.WaitForAlert({match="Device not connected"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)
 
@@ -95,8 +95,9 @@ end)
 test.Step(
   "Digital Clock shows alert if there is no system clock",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/DIGITAL.CLOCK", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/DIGITAL.CLOCK")
     a2dtest.WaitForAlert({match="Device not connected"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)

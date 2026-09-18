@@ -5,7 +5,6 @@ DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
 local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[
@@ -18,7 +17,7 @@ local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 test.Step(
   "custom and default pattern",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x+66, dialog_y+24)
@@ -30,14 +29,14 @@ test.Step(
         m.ButtonUp()
     end)
     apple2.ControlKey("D") -- Set Desktop Pattern
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.CloseWindow()
 
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.RightArrowKey()
     test.Snap("verify default checkerboard is shown in preview")
     apple2.ControlKey("D") -- Set Desktop Pattern
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.CloseWindow()
 end)
 
@@ -50,17 +49,17 @@ test.Step(
   "No prompt if no change",
   function()
     local drive = s6d1
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
 
     local current = drive.filename
     drive:unload()
 
     a2d.CloseWindow()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
     drive:load(current)
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
     a2d.CloseAllWindows()
 end)
 
@@ -72,7 +71,7 @@ test.Step(
   "Prompt if changed",
   function()
     local drive = s6d1
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("9") -- caret blink speed
 
     local current = drive.filename
@@ -83,7 +82,7 @@ test.Step(
     a2d.DialogCancel()
 
     drive:load(current)
-    emu.wait(5)
+    emu.wait(5) -- async drive validation
     a2d.CloseAllWindows()
 end)
 
@@ -96,7 +95,7 @@ end)
 test.Step(
   "Mouse tracking",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.MoveMouse(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
     a2d.OAShortcut("2", {no_wait=true})
     -- NOTE: Mouse shouldn't move at all, but POSMOUSE in emulators is sketch

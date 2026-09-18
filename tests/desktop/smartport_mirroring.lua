@@ -1,4 +1,4 @@
---[[ BEGINCONFIG ==================================================
+--[[ BEGINCONFIG ========================================
 
 MODELARGS="-sl2 mouse -sl6 '' -sl7 superdrive \
   -sl5 scsi \
@@ -33,9 +33,7 @@ DISKARGS="\
   -flop2 empty_800k.2mg \
   "
 
-================================================== ENDCONFIG ]]
-
-a2d.ConfigureRepaintTime(0.25)
+======================================== ENDCONFIG ]]
 
 --[[
   This is very dependent on ProDOS 2.0.x and 2.4.x mirroring logic.
@@ -99,13 +97,13 @@ test.Step(
       drive:load(empty)
 
       a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
 
       -- Device prompt
       a2d.FormatEraseSelectSlotDrive(entry.slot, entry.drive)
 
       -- Name prompt
-      emu.wait(2)
+      a2dtest.WaitForSystemTask()
       a2d.ClearTextField()
       apple2.Type("X")
       a2d.DialogOK()
@@ -113,7 +111,7 @@ test.Step(
       -- Confirmation
       a2dtest.WaitForAlert({match="Are you sure.*\"EMPTY\""})
       a2d.DialogCancel()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
 
       drive:load(image)
 
@@ -129,13 +127,13 @@ test.Step(
 
     for index, device in ipairs(alpha_order) do
       a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
 
       -- Device prompt
       a2d.FormatEraseSelectSlotDrive(device.slot, device.drive)
 
       -- Name prompt
-      emu.wait(2)
+      a2dtest.WaitForSystemTask()
       a2d.ClearTextField()
       apple2.Type("X")
       a2d.DialogOK()
@@ -144,6 +142,6 @@ test.Step(
       local disk = string.format("%c", string.byte("A")+index-1)
       a2dtest.WaitForAlert({match="Are you sure.*\""..disk.."\""})
       a2d.DialogCancel()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
 end)

@@ -17,7 +17,6 @@ MODELARGS="\
 
 -- Config produces 9 devices + Trash, so 117 file icons should be supported
 
-a2d.ConfigureRepaintTime(0.25)
 a2d.AddShortcut("/TESTS/HUNDRED.FILES")
 a2d.CloseAllWindows()
 
@@ -32,11 +31,12 @@ test.Step(
   "icon limit can be hit before window limit",
   function()
     a2d.OAShortcut("1") -- Open HUNDRED.FILES
-    emu.wait(5)
-    a2d.OpenPath("/TESTS", {keep_windows=true, no_validate=true})
+    a2dtest.WaitForSystemTask()
+    a2d.OpenWindow("/TESTS", {keep_windows=true, no_validate=true})
     a2dtest.WaitForAlert({match="window must be closed"})
     test.ExpectNotMatch(a2dtest.OCRScreen(), "Cancel", "alert should have no Cancel button")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)
 
@@ -52,14 +52,14 @@ function MaxIconsTest(name, func)
       test.ExpectEquals(count, 10, "should have 9 volumes + Trash")
 
       a2d.OAShortcut("1") -- Open HUNDRED.FILES
-      emu.wait(5)
+      a2dtest.WaitForSystemTask()
       a2d.GrowWindowBy(0, -50)
       a2d.SelectAll()
-      emu.wait(5)
+      a2dtest.WaitForSystemTask()
       count = count + #a2d.GetSelectedIcons()
       test.ExpectEquals(count, 110, "should have 9 volumes + Trash + 100 files")
 
-      a2d.OpenPath("/RAM1", {keep_windows=true})
+      a2d.OpenWindow("/RAM1", {keep_windows=true})
       a2d.MoveWindowBy(0, 100)
       a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
       apple2.WaitForBasicSystem()
@@ -76,6 +76,7 @@ function MaxIconsTest(name, func)
       ]]
 
       a2d.SelectAll()
+      a2dtest.WaitForSystemTask()
       count = count + #a2d.GetSelectedIcons()
       test.ExpectEquals(count, 127, "127 icons should be supported")
 
@@ -108,7 +109,7 @@ MaxIconsTest(
     a2d.OAShortcut("N") -- File > CreateFolder
     a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify repaint is correct")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "window should have closed")
 end)
@@ -128,10 +129,11 @@ MaxIconsTest(
     a2d.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "HUNDRED.FILES", "window should be active")
     apple2.DownArrowKey() -- select first
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.CopySelectionTo("/RAM1", nil, {no_wait=true})
     a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify repaint is correct")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "window should have closed")
 end)
@@ -152,14 +154,16 @@ MaxIconsTest(
     local dst_x, dst_y = x + 10, y + 5
 
     a2d.CycleWindows()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "HUNDRED.FILES", "window should be active")
     apple2.DownArrowKey() -- select first
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(src_x, src_y, dst_x, dst_y)
+
     a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify repaint is correct")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "window should have closed")
 end)
@@ -183,7 +187,7 @@ MaxIconsTest(
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify repaint is correct")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "window should have closed")
 end)
@@ -191,12 +195,12 @@ end)
 test.Step(
   "File menu doesn't remain highlighted after failed open",
   function()
-    a2d.OpenPath("/TESTS")
+    a2d.OpenWindow("/TESTS")
     a2d.Select("HUNDRED.FILES")
     a2d.OAShortcut("O") -- File > Open
     a2dtest.WaitForAlert({match="window must be closed"})
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "File", "file menu should be highlighted")
     a2d.DialogOK()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectNotMatch(a2dtest.OCRScreen({invert=true}), "File", "file menu should not be highlighted")
 end)

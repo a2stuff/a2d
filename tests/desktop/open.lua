@@ -7,8 +7,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 -- SCSI card required for CD Remote DA (default is CD-ROM at ID1)
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Open a volume with double-click.
 
@@ -25,7 +23,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
     end)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
@@ -60,7 +58,7 @@ test.Step(
         m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be on top")
@@ -85,7 +83,7 @@ test.Step(
         m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "READ.ME", "folder window should be on top")
@@ -185,20 +183,19 @@ end)
 test.Step(
   "Open multiple",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     for i = 1, 7 do
       a2d.OAShortcut("N") -- File > New Folder
       apple2.ReturnKey() -- accept default name
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
     end
 
     -- Close and re-open so they are visible
     a2d.CloseWindow()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(0,80)
     a2d.SelectAll()
     a2d.OpenSelection()
-    emu.wait(5)
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 8, "8 windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "NEW.FOLDER.7", "folder name should be New.Folder.7")
@@ -209,9 +206,9 @@ test.Step(
     end
 
     a2d.CloseAllWindows()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     a2d.DeleteSelection()
     a2d.CloseAllWindows()
@@ -235,7 +232,7 @@ test.Step(
     local vol_icon2_x, vol_icon2_y = a2dtest.GetSelectedIconCoords()
     a2d.ClearSelection()
 
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("EXTRAS")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN)
     a2d.CycleWindows()
@@ -277,21 +274,21 @@ end)
 test.Step(
   "Open multiple - menu",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
 
     a2d.OAShortcut("N") -- File > New Folder
     apple2.ReturnKey() -- accept default name
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.OAShortcut("N") -- File > New Folder
     apple2.ReturnKey() -- accept default name
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.MoveWindowBy(0,80)
 
     -- Select multiple and File > Open
     a2d.SelectAll()
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "two icons should be selected")
@@ -300,7 +297,7 @@ test.Step(
     end
 
     a2d.CloseAllWindows()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     a2d.DeleteSelection()
     a2d.CloseAllWindows()
@@ -334,7 +331,7 @@ test.Step(
         m.MoveToApproximately(icon1_x, icon1_y)
         m.DoubleClick()
     end)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "2 windows should be open")
 end)
@@ -346,15 +343,15 @@ end)
 test.Step(
   "Open multiple - double-click",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
 
     a2d.OAShortcut("N") -- File > New Folder
     apple2.ReturnKey() -- accept default name
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.OAShortcut("N") -- File > New Folder
     apple2.ReturnKey() -- accept default name
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.MoveWindowBy(0,80)
 
     -- Select multiple and double-click
@@ -365,7 +362,7 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "3 windows should be open")
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "two icons should be selected")
@@ -374,7 +371,7 @@ test.Step(
     end
 
     a2d.CloseAllWindows()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     a2d.DeleteSelection()
     a2d.CloseAllWindows()
@@ -414,7 +411,7 @@ test.Variants(
     end)
 
     func(key)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "folder window should be open")

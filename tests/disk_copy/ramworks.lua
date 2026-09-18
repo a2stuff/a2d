@@ -6,8 +6,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Configure a system with a RAMDisk in Slot 3, e.g. using
   `RAM.DRV.SYSTEM` or `RAMAUX.SYSTEM`. Launch DeskTop. Special > Copy

@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Configure a system with a single joystick. Run the DA. Move the
   joystick to the right and bottom extremes. Verify that the indicator
@@ -15,7 +13,7 @@ a2d.ConfigureRepaintTime(1)
 test.Step(
   "Joystick Limits",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
 
     apple2.SetJoy1(0,0)
     test.Snap("verify indicator in top left")
@@ -42,7 +40,7 @@ end)
 test.Step(
   "Second Joystick",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
 
     apple2.SetJoy1(64,64)
     test.Snap("verify single indicator")
@@ -59,7 +57,7 @@ end)
 test.Step(
   "Cursor visibility",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
@@ -67,9 +65,9 @@ test.Step(
     end)
     a2dtest.ExpectNothingChanged(function()
         apple2.PressOA()
-        emu.wait(1)
+        emu.wait(1) -- non-MGTK input
         apple2.ReleaseOA()
-        emu.wait(1)
+        emu.wait(1) -- non-MGTK input
     end)
 
     a2d.CloseWindow()

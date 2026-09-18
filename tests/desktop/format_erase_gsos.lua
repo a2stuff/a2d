@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 gsos_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
-
 --[[
   Launch DeskTop. Run the command. Select a slot/drive containing an
   existing volume with a GS/OS-cased name and click OK. Enter a new

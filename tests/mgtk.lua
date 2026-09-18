@@ -6,8 +6,6 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "Verify IOUDIS is on normally",
   function()

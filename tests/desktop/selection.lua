@@ -6,13 +6,11 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 a2d.AddShortcut("/A2.DESKTOP")
-function OpenVolumeWindow() a2d.OAShortcut("1") emu.wait(1) end
+function OpenVolumeWindow() a2d.OAShortcut("1") a2dtest.WaitForSystemTask() end
 
 a2d.AddShortcut("/A2.DESKTOP/EXTRAS")
-function OpenFolderWindow() a2d.OAShortcut("2") emu.wait(1) end
+function OpenFolderWindow() a2d.OAShortcut("2") a2dtest.WaitForSystemTask() end
 
 --[[
   Launch DeskTop. Open a window. Select a file icon. Drag a selection
@@ -23,13 +21,13 @@ function OpenFolderWindow() a2d.OAShortcut("2") emu.wait(1) end
 test.Step(
   "selection rectangle around file icons",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Select("PRODOS")
 
     a2d.Drag(x-25, y-5, x+25, y+20)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "only new icon should be selected")
 end)
@@ -49,7 +47,7 @@ test.Step(
     a2d.Select("A2.DESKTOP")
 
     a2d.Drag(x-30, y-5, x+30, y+20)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "only new icon should be selected")
 end)
@@ -89,9 +87,9 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should be extended")
 end)
@@ -110,9 +108,9 @@ ModifierTest(
         m.MoveToApproximately(0, apple2.SCREEN_HEIGHT)
         Press()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not be cleared")
 end)
@@ -133,9 +131,9 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), count-1, "clicked icon should be de-selected")
 end)
@@ -156,13 +154,13 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
@@ -184,13 +182,13 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
@@ -215,8 +213,9 @@ ModifierTest(
         m.ButtonDown()
         m.MoveByApproximately(40, 30)
         m.ButtonUp()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have been extended")
 end)
@@ -229,7 +228,7 @@ end)
 ModifierTest(
   "click second file icon",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
 
     a2d.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
@@ -240,9 +239,9 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should be extended")
 end)
@@ -255,7 +254,7 @@ end)
 ModifierTest(
   "with file icons selected, modifier-click window",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
     a2d.SelectAll()
@@ -264,9 +263,9 @@ ModifierTest(
         m.MoveToApproximately(x + w - 5, y + h - 5)
         Press()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not be cleared")
 end)
@@ -279,7 +278,7 @@ end)
 ModifierTest(
   "with file icon selected, modifier-double-click window",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
     a2d.SelectAll()
@@ -288,9 +287,9 @@ ModifierTest(
         m.MoveToApproximately(x + w - 5, y + h - 5)
         Press()
         m.DoubleClick()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not be cleared")
 end)
@@ -303,7 +302,7 @@ end)
 ModifierTest(
   "mod-drag-select a second file icon",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
 
     a2d.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
@@ -317,7 +316,7 @@ ModifierTest(
         m.MoveByApproximately(40, 30)
         m.ButtonUp()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have been extended")
 end)
@@ -330,7 +329,7 @@ end)
 ModifierTest(
   "mod-click one of many selected file icons",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
 
     a2d.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
@@ -342,9 +341,9 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), count - 1, "clicked icon should be de-selected")
 end)
@@ -357,7 +356,7 @@ end)
 ModifierTest(
   "mod-click a single selected file icon",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
 
     a2d.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
@@ -367,9 +366,9 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "clicked icon should be de-selected")
 end)
@@ -382,7 +381,7 @@ end)
 ModifierTest(
   "mod-double-click a non-selected file icon",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.ClearSelection()
@@ -391,13 +390,13 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "no new windows should be open")
@@ -412,7 +411,7 @@ end)
 ModifierTest(
   "mod-double-click a selected file icon",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
 
@@ -420,13 +419,13 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "no new windows should be open")
@@ -442,7 +441,7 @@ end)
 ModifierTest(
   "drag selection in window with modifier",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.ClearSelection()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
@@ -453,14 +452,14 @@ ModifierTest(
         m.ButtonUp()
         Release()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectGreaterThan(#a2d.GetSelectedIcons(), 1, "selection should have changed")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w - 5, y + h - 5)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 end)
 
@@ -472,7 +471,7 @@ end)
 ModifierTest(
   "mod-double-click a folder icon with another folder selected",
   function(Press, Release)
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
 
@@ -482,13 +481,13 @@ ModifierTest(
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have toggled")
         m.Click()
-        emu.wait(2/60)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
         Release()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "no new windows should be open")
@@ -517,7 +516,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1)
+        emu.wait(1) -- during mouse operation
         local icons = a2d.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
@@ -547,7 +546,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1)
+        emu.wait(1) -- during mouse operation
 
         local icons = a2d.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
@@ -555,7 +554,7 @@ test.Step(
 
         m.MoveByApproximately(20, 10)
         m.ButtonUp()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "window should be active")
 end)
@@ -584,7 +583,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1)
+        emu.wait(1) -- during mouse operation
 
         local icons = a2d.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
@@ -592,7 +591,7 @@ test.Step(
 
         m.MoveToApproximately(vol_x, vol_y)
         m.ButtonUp()
-        emu.wait(5)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should remain active")
 
@@ -633,7 +632,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1)
+        emu.wait(1) -- during mouse operation
 
         local icons = a2d.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
@@ -641,7 +640,7 @@ test.Step(
 
         m.MoveToApproximately(vol_x, vol_y)
         m.ButtonUp()
-        emu.wait(5)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "volume window should be activated")
 
@@ -694,7 +693,7 @@ ModifierTest(
         m.MoveToApproximately(file_x, file_y)
         Press()
         m.ButtonDown()
-        emu.wait(1)
+        emu.wait(1) -- during mouse operation
 
         local icons = a2d.GetSelectedIcons()
         test.ExpectEquals(#icons, 2, "icons should be selected")
@@ -703,7 +702,7 @@ ModifierTest(
 
         Release()
         m.ButtonUp()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
         test.ExpectEquals(a2dtest.GetFrontWindowID(), window_id, "window should be active")
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "both icons should be selected")
@@ -723,14 +722,14 @@ ModifierTest(
         m.MoveToApproximately(file_x, file_y)
         Press()
         m.ButtonDown()
-        emu.wait(1)
+        emu.wait(1) -- during mouse operation
 
         test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "icons should be deselected")
         test.ExpectEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be active")
 
         Release()
         m.ButtonUp()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "icon should be deselected")
 
@@ -746,7 +745,7 @@ ModifierTest(
         m.MoveToApproximately(file_x, file_y)
         Press()
         m.ButtonDown()
-        emu.wait(1)
+        emu.wait(1) -- during mouse operation
 
         icons_before = a2d.GetSelectedIcons()
         test.ExpectEquals(#icons_before, 2, "both icons should be selected")
@@ -755,7 +754,7 @@ ModifierTest(
         Release()
         m.MoveByApproximately(20, 20)
         m.ButtonUp()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
 
         test.ExpectEquals(a2dtest.GetFrontWindowID(), icons_before[1].window, "window should be active")
     end)
@@ -785,7 +784,7 @@ test.Step(
         m.Click()
         apple2.ReleaseSA()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "icon should be selected")
 end)
 
@@ -797,7 +796,7 @@ end)
 test.Step(
   "SA+Click changes file selection",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Select("PRODOS")
@@ -807,7 +806,7 @@ test.Step(
         m.Click()
         apple2.ReleaseSA()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "icon should be selected")
 end)
 
@@ -825,7 +824,7 @@ test.Step(
         m.MoveToApproximately(x + w / 2, y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "icon should be selected")
 end)
 
@@ -840,7 +839,7 @@ end)
 test.Step(
   "drag selection fixed point",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(150, 40)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
@@ -876,7 +875,7 @@ end)
 test.Step(
   "clicking non-content area doesn't change selection",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     local ram_id = a2dtest.GetFrontWindowID()
     a2d.MoveWindowBy(0, 100)
 
@@ -891,7 +890,7 @@ test.Step(
         m.MoveToApproximately(x + w / 2, y - 5)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "selection should not change")
 
     -- click scroll bar
@@ -899,7 +898,7 @@ test.Step(
         m.MoveToApproximately(x + w / 2, y + h + 5)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "selection should not change")
 
     -- click header
@@ -907,7 +906,7 @@ test.Step(
         m.MoveToApproximately(x + w / 2, y + 5)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "selection should not change")
 
     -- click content area
@@ -915,7 +914,7 @@ test.Step(
         m.MoveToApproximately(x + w - 5, y + h - 5)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "RAM1", "volume should be selected")
 end)
 
@@ -943,7 +942,7 @@ test.Step(
         m.MoveToApproximately(x + w - 5, y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 
@@ -952,7 +951,7 @@ test.Step(
         m.MoveToApproximately(x + w - 5, y + h - 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "EXTRAS", "folder icon should be selected")
 end)
@@ -978,7 +977,7 @@ test.Step(
         m.MoveToApproximately(x + w - 5, y + h - 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 end)
 
@@ -992,7 +991,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Expect(#a2d.GetSelectedIcons(), 0, "no icons should be selected")
 end)
 
@@ -1008,7 +1007,7 @@ test.Step(
 
     -- Edit > Select All
     a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local icons = a2d.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
@@ -1028,7 +1027,7 @@ test.Step(
     local x, y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.ClearSelection()
 
     -- click volume icon
@@ -1036,12 +1035,12 @@ test.Step(
         m.MoveToApproximately(x + 5, y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be clicked")
 
     -- Edit > Select All
     a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local icons = a2d.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
@@ -1067,7 +1066,7 @@ test.Variants(
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.ClearSelection()
 
     -- click volume icon
@@ -1075,13 +1074,13 @@ test.Variants(
         m.MoveToApproximately(vol_x + 5, vol_y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be clicked")
 
     -- click target
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
-        if where == "title" then
+        if where == "titlebar" then
           m.MoveToApproximately(x + w / 2, y - 5)
         elseif where == "header" then
           m.MoveToApproximately(x + w / 2, y + 5)
@@ -1090,11 +1089,11 @@ test.Variants(
         end
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     -- Edit > Select All
     a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local icons = a2d.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
@@ -1115,7 +1114,7 @@ test.Step(
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("READ.ME")
     a2d.ClearSelection()
 
@@ -1124,7 +1123,7 @@ test.Step(
         m.MoveToApproximately(vol_x + 5, vol_y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be clicked")
 
     -- click window
@@ -1133,11 +1132,11 @@ test.Step(
         m.MoveToApproximately(x + w - 5, y + h - 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     -- Edit > Select All
     a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local icons = a2d.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
@@ -1158,7 +1157,7 @@ test.Step(
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("READ.ME")
     local file_x, file_y = a2dtest.GetSelectedIconCoords()
     a2d.ClearSelection()
@@ -1168,7 +1167,7 @@ test.Step(
         m.MoveToApproximately(vol_x + 5, vol_y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be clicked")
 
     -- click file icon
@@ -1176,12 +1175,12 @@ test.Step(
         m.MoveToApproximately(file_x + 5, file_y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file icon should be clicked")
 
     -- Edit > Select All
     a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local icons = a2d.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
@@ -1202,7 +1201,7 @@ test.Step(
     local x, y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.ClearSelection()
 
     -- click volume icon
@@ -1210,7 +1209,7 @@ test.Step(
         m.MoveToApproximately(x + 5, y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be clicked")
 
     -- click empty space
@@ -1221,7 +1220,7 @@ test.Step(
 
     -- Edit > Select All
     a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local icons = a2d.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
@@ -1239,7 +1238,7 @@ test.Step(
     a2d.CloseAllWindows()
 
     -- open a window
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.ClearSelection()
@@ -1249,7 +1248,7 @@ test.Step(
         m.MoveToApproximately(x + 5, y + 5)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file icon should be clicked")
 
     -- click empty space
@@ -1260,7 +1259,7 @@ test.Step(
 
     -- Edit > Select All
     a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local icons = a2d.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
@@ -1275,7 +1274,7 @@ end)
 test.Step(
   "drag selection and icon bounds",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.Select("CLOCK.SYSTEM")
     local icon = a2d.GetSelectedIcons()[1]
     a2d.ClearSelection()
@@ -1286,6 +1285,6 @@ test.Step(
         test.Snap("verify only top pixel of icon is in rect")
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "CLOCK.SYSTEM", "icon should be selected")
 end)

@@ -1,6 +1,3 @@
-
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Launch DeskTop, File > Quit, run `BASIC.SYSTEM`. Ensure `/RAM`
   exists.
@@ -16,7 +13,7 @@ test.Step(
     util.WaitFor(
       "CAT output", function()
         return apple2.GrabTextScreen():match("BLOCKS FREE")
-    end)
+      end, {wait=1})
     apple2.TypeLine("BYE")
     apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
@@ -46,13 +43,13 @@ test.Step(
     a2d.CopyDisk()
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
     util.WaitFor(
       "CAT output", function()
         return apple2.GrabTextScreen():match("BLOCKS FREE")
-    end)
+      end, {wait=1})
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 end)
@@ -64,13 +61,13 @@ end)
 test.Step(
   "text screen not truncated launching BINSCII",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/BINSCII", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BINSCII")
 
     util.WaitFor(
       "BINSCII", function()
         local text = apple2.GrabTextScreen()
         return text:match("BinSCII") and text:match("Which")
-    end)
+      end, {wait=1})
 
     apple2.Type("Q")
     a2d.WaitForDesktopReady()
@@ -85,12 +82,12 @@ end)
 test.Step(
   "Invoking files after previewing",
   function()
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     apple2.RightArrowKey()
-    emu.wait(10)
+    emu.wait(10) -- full-screen DA
     apple2.EscapeKey()
-    emu.wait(10)
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL", {no_validate=true})
+    a2dtest.WaitForSystemTask()
+    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.WaitForDesktopReady()
     a2dtest.ExpectNotHanging()
 end)
@@ -104,11 +101,11 @@ end)
 test.Step(
   "Invoking PT3PLR",
   function()
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/AUTUMN.PT3", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/AUTUMN.PT3")
     util.WaitFor(
       "Song title", function()
         return apple2.GrabTextScreen():match("AuTumn")
-    end)
+      end, {wait=1})
     apple2.EscapeKey()
     a2d.WaitForDesktopReady()
 end)

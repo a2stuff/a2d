@@ -1,12 +1,10 @@
---[[ BEGINCONFIG ==================================================
+--[[ BEGINCONFIG ========================================
 
 MODEL="apple2ee"
 MODELARGS="-sl1 cffa2 -sl2 mouse -sl7 cffa2"
 DISKARGS="-hard1 disk_b.2mg -hard3 $HARDIMG -hard4 disk_a.2mg"
 
-================================================== ENDCONFIG ]]
-
-a2d.ConfigureRepaintTime(0.25)
+======================================== ENDCONFIG ]]
 
 --[[
   Configure multiple drives connected to a SmartPort controller on a
@@ -19,6 +17,6 @@ test.Step(
   "SmartPort labeling",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify slot 1 reports cleanly")
 end)

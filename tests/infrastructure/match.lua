@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "Case-sensitive",
   function()

@@ -5,7 +5,6 @@ DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
 local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[
@@ -24,7 +23,7 @@ test.Step(
     a2dtest.WaitForAlert({match="insert the system disk"})
     drive:load(current)
     a2d.DialogOK()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should be open")
     a2d.CloseWindow()
 end)
@@ -45,7 +44,7 @@ test.Step(
     a2dtest.WaitForAlert({match="insert the system disk"})
     drive:load(current)
     a2d.DialogOK()
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels window should be open")
     a2d.CloseWindow()
 end)

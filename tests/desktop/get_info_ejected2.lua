@@ -6,8 +6,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 floppy_with_files.dsk"
 
 local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 
-a2d.ConfigureRepaintTime(2)
-
 --[[
   Launch DeskTop. Select a 5.25 disk volume. Remove the disk. File >
   Get Info. Verify that an alert is shown. Click OK. Verify that
@@ -59,18 +57,18 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
 
-    a2d.OpenPath("/WITH.FILES")
+    a2d.OpenWindow("/WITH.FILES")
     a2d.SelectAll()
     drive:unload()
     a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})
     drive:load(current)
     apple2.Type("A") -- Try Again
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectIMatch(a2dtest.OCRScreen(), "LOREM%.IPSUM",
                 "details should be shown for second file")
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -84,7 +82,7 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
 
-    a2d.OpenPath("/WITH.FILES")
+    a2d.OpenWindow("/WITH.FILES")
     a2d.SelectAll()
     drive:unload()
     a2d.OAShortcut("I") -- File > Get Info
@@ -93,9 +91,10 @@ test.Step(
 
     -- Cancel attempt to show info on first file, proceed wth second
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectIMatch(a2dtest.OCRScreen(), "SHAKESPEARE",
                 "details should be shown for second file")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 

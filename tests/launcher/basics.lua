@@ -6,15 +6,9 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 -- Speed up the rest of these tests
 a2d.DeletePath("/A2.DESKTOP/SAMPLE.MEDIA")
-util.WaitFor(
-  "done deleting", function()
-    emu.wait(5)
-    return not a2dtest.OCRFrontWindowContent():match("Deleting")
-end)
+a2dtest.WaitForSystemTask()
 
 --[[
   Without starting DeskTop, launch `BASIC.SYSTEM`. Set a prefix (e.g.
@@ -116,7 +110,7 @@ test.Step(
     apple2.BitsyInvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
-    emu.wait(5)
+    emu.wait(5) -- automatic BASIC prompt
     test.ExpectMatch(apple2.GrabTextScreen(), "HELLO", "file should be present")
     apple2.TypeLine("DELETE /RAM/HELLO")
     apple2.TypeLine("-/A2.DESKTOP/DESKTOP.SYSTEM")
@@ -142,7 +136,7 @@ test.Step(
     a2d.Quit()
     apple2.BitsyInvokePath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     for i,icon in ipairs(a2d.GetSelectedIcons()) do
       test.ExpectNotEquals(icon.name:upper(), "DESKTOP", "should not be copied")

@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 dos33_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 -- Callback called with func to invoke menu item; pass false if
 -- no volumes selected, true if volumes selected (affects menu item)
 function FormatEraseTest(name, func)
@@ -21,10 +19,11 @@ function FormatEraseTest(name, func)
       func(
         function(vol_selected)
           if vol_selected then
-            a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK+idx-1)
+            a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK+idx-1, {no_wait=true})
           else
-            a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2+idx-1)
+            a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2+idx-1, {no_wait=true})
           end
+          a2dtest.WaitForSystemTask()
       end)
   end)
 end
@@ -54,7 +53,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- command
-    emu.wait(5) -- slow
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     test.ExpectNotIMatch(a2dtest.OCRScreen(), "RAM1", "RAM1 should not exist")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should be selected")
@@ -107,7 +106,7 @@ FormatEraseTest(
     -- confirmation
     a2dtest.WaitForAlert({match="That name already exists%. Please use another name%."})
     a2d.DialogCancel()
-    a2d.DialogCancel()
+    a2d.DialogCancel() -- TODO: Intentional?
 end)
 
 --[[
@@ -158,7 +157,7 @@ FormatEraseTest(
     -- confirmation
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
-    emu.wait(5) -- slow
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "WHOLE.NAME.USED", "volume should be selected")
 
@@ -213,7 +212,7 @@ FormatEraseTest(
     a2d.DialogOK()
 
     -- successful
-    emu.wait(5) -- slow
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should be selected")
 
@@ -238,14 +237,14 @@ FormatEraseTest(
     -- name
     apple2.Type("NEW.NAME")
     a2d.DialogOK()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     -- confirmation prompt
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
 
     -- successful
-    emu.wait(5) -- slow
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should be selected")
 
@@ -290,13 +289,13 @@ FormatEraseTest(
     test.ExpectMatch(a2dtest.OCRScreen(), "Select the location of the disk",
                 "should be prompted for device")
     apple2.DownArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
     a2d.DialogOK()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     apple2.RightArrowKey()
     apple2.SpaceKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectNotIMatch(a2dtest.OCRScreen(), "READ.ME", "file name should not be used as default")
     a2d.DialogCancel()
 end)
@@ -390,9 +389,10 @@ FormatEraseTest(
     end)
     test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
     apple2.DownArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- name
     test.ExpectMatch(a2dtest.OCRScreen(), "Location:", "device location should be shown")

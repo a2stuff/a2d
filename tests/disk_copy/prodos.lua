@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk -flop2 prodos_floppy2.dsk"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Launch DeskTop. Special > Copy Disk.... Verify that ProDOS disk
   names in the device list have adjusted case (e.g. "Volume" not
@@ -35,16 +33,19 @@ test.Step(
   "ProDOS disk names in source label",
   function()
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S6,D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- insert source
     a2dtest.WaitForAlert({match="Insert the source disk"})
@@ -62,6 +63,7 @@ test.Step(
     a2d.DialogCancel()
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)
 
 --[[
@@ -74,16 +76,19 @@ test.Step(
   "ProDOS disk names in overwrite prompt",
   function()
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     apple2.DownArrowKey() -- S7,D1
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     apple2.DownArrowKey() -- S6,D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- insert source
     a2dtest.WaitForAlert({match="Insert the source disk"})
@@ -100,4 +105,5 @@ test.Step(
     a2d.DialogCancel()
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)

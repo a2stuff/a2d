@@ -7,8 +7,6 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "Caps lock on non-IIgs model",
   function()

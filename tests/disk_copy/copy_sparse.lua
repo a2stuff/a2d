@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 sparse_800k.2mg -flop2 empty_800k.2mg"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 local s6d2 = manager.machine.images[":sl6:superdrive:fdc:1:35hd"]
 
@@ -34,12 +32,14 @@ test.Variants(
   function(idx, name, what)
     if a2dtest.IsAlertShowing() then  -- duplicate volume
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
     end
 
     local image1 = s6d1.filename
     local image2 = s6d2.filename
 
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     a2d.InvokeMenuItem(3, idx) -- Smart Block Copy or Full Disk Copy
 
@@ -47,6 +47,7 @@ test.Variants(
     apple2.UpArrowKey() -- S6D2
     apple2.UpArrowKey() -- S6D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- select destination
     apple2.UpArrowKey() -- S6D2
@@ -76,6 +77,7 @@ test.Variants(
       test.ExpectEquals(transfer, total, "block counts should be total blocks")
     end
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     if what == "full" then
       local src = util.SlurpFile(s6d1.filename)
@@ -90,6 +92,8 @@ test.Variants(
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
     a2dtest.WaitForAlert({match="2 volumes with the same name"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)

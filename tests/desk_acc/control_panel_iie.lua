@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(2)
-
 --[[
   Configure a system with a color display. Open the Control Panel DA.
   Check "RGB Color" if needed to ensure the display is in color.
@@ -13,7 +11,7 @@ test.Step(
   function()
     apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
 
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- check RGB Color
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.InMouseKeysMode(function(m)
@@ -23,16 +21,17 @@ test.Step(
     for i=1, 14 do
       apple2.LeftArrowKey() -- change pattern
       apple2.ControlKey("D") -- Set Desktop Pattern
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       test.Snap("verify preview color matches desktop color")
 
       a2d.InMouseKeysMode(function(m)
           m.ButtonDown()
           m.MoveByApproximately(8, 0)
           m.ButtonUp()
-          a2d.WaitForRepaint()
-          test.Snap("verify preview color matches desktop color")
       end)
+
+      a2dtest.WaitForSystemTask()
+      test.Snap("verify preview color matches desktop color")
     end
 
     a2d.CloseWindow()

@@ -6,9 +6,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Launch DeskTop. Open the APPLE.MENU folder. Select a desk accessory
   icon. File > Open. Verify that the desk accessory launches.
@@ -16,10 +13,10 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "File > Open works",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU")
+    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU")
     a2d.Select("CALCULATOR")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "DA should be open")
     a2d.CloseWindow()
 end)
@@ -53,14 +50,14 @@ function MoveDoesntRepaintTest(name, path, opt_threshold)
 
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(x, y)
-          emu.wait(2/60)
+          emu.wait(2/60) -- in mouse loop
       end)
 
       expectfunc(function()
           a2d.InMouseKeysMode(function(m)
-              emu.wait(2/60)
+              emu.wait(2/60) -- in mouse loop
               m.ButtonDown()
-              emu.wait(10/60)
+              emu.wait(10/60) -- in mouse loop
               m.ButtonUp()
           end)
       end)
@@ -90,7 +87,6 @@ MoveDoesntRepaintTest("Scientific Calculator", "/A2.DESKTOP/EXTRAS/SCI.CALC")
 
 -- ============================================================
 
-a2d.ConfigureRepaintTime(1)
 
 --[[
   Repeat for every desk accessory that runs in a window.
@@ -107,14 +103,14 @@ function CloseWindowTest(name, path, x, y)
       a2dtest.ExpectNothingChanged(function()
           a2d.OpenSelection()
           a2d.OAShortcut("W")
-          a2d.WaitForRepaint()
+          a2dtest.WaitForSystemTask()
       end)
 
       a2d.SelectPath(path)
       a2dtest.ExpectNothingChanged(function()
           a2d.OpenSelection()
-          a2d.WaitForRepaint()
           a2d.OAShortcut("w")
+          a2dtest.WaitForSystemTask()
       end)
   end)
 end

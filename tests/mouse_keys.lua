@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
-
 local file_menu_x, file_menu_y
 a2dtest.OCRIterate(function(run, x, y)
     if run == "File" then
@@ -22,7 +20,7 @@ test.Step(
         m.ButtonDown()
         m.MoveByApproximately(0, 25) -- File > Open
         m.ButtonUp()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
         test.Snap("verify cursor at center of screen")
     end)
@@ -45,7 +43,7 @@ test.Step(
         m.Click()
         m.MoveByApproximately(0, 25) -- File > Open
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
         test.Snap("verify cursor at center of screen")
     end)
@@ -145,7 +143,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(a2dtest.GetWindowCount(), count+1, "window should have opened")
     a2d.ClearSelection()

@@ -6,8 +6,6 @@ DISKARGS="-flop3 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(5)
-
 --[[
   Configure a disk with ProDOS 2.4.3. Run DeskTop on a IIc+. Create a
   shortcut to launch `BASIC.SYSTEM`. Use Control Panel > Options to
@@ -28,7 +26,6 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
     apple2.Type("D")
-    a2d.WaitForRepaint()
     a2d.WaitForDesktopReady()
     a2dtest.ExpectNotHanging()
 end)

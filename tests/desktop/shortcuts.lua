@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Delete the `LOCAL/SELECTOR.LIST` file from the startup disk, if it
   was present. Launch DeskTop. Verify that DeskTop does not hang.
@@ -13,7 +11,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "Starting without SELECTOR.LIST present",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("DELETE /A2.DESKTOP/EXTRAS/SELECTOR.LIST")
     apple2.TypeLine("PR#7")
@@ -55,6 +53,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.OpenMenu(a2d.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
@@ -99,6 +98,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.OpenMenu(a2d.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
@@ -125,7 +125,7 @@ test.Step(
     a2d.OAShortcut("3") -- at boot
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'at boot' not checked")
     a2d.DialogCancel()
 end)
@@ -142,7 +142,7 @@ test.Step(
     a2d.OAShortcut("4") -- at first use
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'at first use' not checked")
     a2d.DialogCancel()
 end)
@@ -159,7 +159,7 @@ test.Step(
     a2d.OAShortcut("2") -- list only
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only' not checked")
     a2d.DialogCancel()
 end)
@@ -183,10 +183,10 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only' and 'at first use' are not checked")
     a2d.DialogCancel()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -210,12 +210,12 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'menu and list' and 'at first use' are checked")
     a2d.DialogCancel()
 
@@ -223,7 +223,7 @@ test.Step(
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'menu and list' and 'never' are checked")
     a2d.DialogCancel()
 
@@ -248,12 +248,12 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only' and 'at first use' are checked")
     a2d.DialogCancel()
 
@@ -261,7 +261,7 @@ test.Step(
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only' and 'never' are checked")
     a2d.DialogCancel()
 
@@ -279,7 +279,7 @@ end)
 test.Step(
   "editing list vs. menu",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("DELETE /A2.DESKTOP/EXTRAS/SELECTOR.LIST")
     apple2.TypeLine("PR#7")
@@ -289,11 +289,11 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only', 'never' are checked")
     a2d.OAShortcut("1") -- menu and list
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.OpenMenu(a2d.SHORTCUTS_MENU)
     test.ExpectIMatch(a2dtest.OCRScreen(), "READ.ME", "READ.ME shortcut should appear")
@@ -315,7 +315,7 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS")
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     a2d.MoveWindowBy(0,100)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.OAShortcut("1")
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should be cleared")
 
@@ -342,6 +342,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="list is full"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
 
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -368,6 +369,7 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="list is full"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
 
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -394,11 +396,13 @@ test.Step(
       apple2.DownArrowKey()
     end
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.OAShortcut("1") -- menu and list
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="list is full"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
 
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -420,7 +424,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "TESTS",
                      "TESTS volume should be selected")
@@ -456,11 +460,13 @@ test.Step(
 
     a2d.OAShortcut("5")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -475,7 +481,7 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, -1) -- Make Alias
     apple2.ReturnKey()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
 
@@ -491,12 +497,13 @@ test.Step(
 
     a2d.OAShortcut("5")
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.DeletePath("/A2.DESKTOP/READ.ME.ALIAS")
 end)
@@ -511,7 +518,7 @@ test.Step(
   function()
     a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectIMatch(a2dtest.OCRScreen(), "SAMPLE%.MEDIA.*A2.DESKTOP",
                       "should be in SAMPLE.MEDIA")
@@ -532,7 +539,7 @@ test.Step(
   function()
     a2d.SelectPath("/TESTS")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "TESTS",
                      "TESTS volume should be selected")
@@ -550,7 +557,7 @@ test.Step(
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.Snap("verify no selection, showing A2.DESKTOP")
     a2d.DialogCancel()
@@ -568,7 +575,7 @@ test.Step(
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectNotHanging()
 
     -- cleanup
@@ -597,18 +604,18 @@ test.Step(
         m.MoveToApproximately(dialog_x + 60, dialog_y + 30)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + 300, dialog_y + 90)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
 
     apple2.DownArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "OK", "OK button should be enabled")
 
     a2d.DialogCancel()
@@ -637,9 +644,9 @@ test.Step(
       apple2.DownArrowKey()
     end
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectNotHanging()
 
     -- cleanup
@@ -662,6 +669,7 @@ test.Step(
     a2d.OAShortcut("1")
     a2dtest.WaitForAlert({match="file cannot be found"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
@@ -677,7 +685,7 @@ test.Step(
   function()
     a2d.AddShortcut("/A2.DESKTOP")
     a2d.OAShortcut("1")
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle():upper(), "A2.DESKTOP", "shortcut should have opened window")
 
@@ -710,6 +718,7 @@ test.Variants(
     apple2.DownArrowKey() -- READ.ME
     apple2.DownArrowKey() -- PRODOS
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     local ocr = a2dtest.OCRScreen()
@@ -718,6 +727,7 @@ test.Variants(
     test.ExpectIMatch(ocr, "BASIC%.SYSTEM", "shortcut should be present")
     apple2.DownArrowKey() -- READ.ME
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     local ocr = a2dtest.OCRScreen()
@@ -726,6 +736,7 @@ test.Variants(
     test.ExpectIMatch(ocr, "BASIC%.SYSTEM", "shortcut should be present")
     apple2.DownArrowKey() -- BASIC.SYSTEM
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     local ocr = a2dtest.OCRScreen()
@@ -733,6 +744,7 @@ test.Variants(
     test.ExpectNotIMatch(ocr, "PRODOS", "shortcut should be removed")
     test.ExpectNotIMatch(ocr, "BASIC%.SYSTEM", "shortcut should be removed")
     a2d.DialogCancel()
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     a2d.DeletePath("/A2.DESKTOP/LOCAL")

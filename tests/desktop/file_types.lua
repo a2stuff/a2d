@@ -4,8 +4,6 @@ MODELARGS="-sl1 ramfactor -sl2 mouse -sl7 cffa2"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(2)
-
 --[[
   Put image file in `APPLE.MENU`, start DeskTop. Select it from the
   Apple menu. Verify image is shown.
@@ -30,17 +28,17 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
     test.Snap("verify image preview")
     apple2.EscapeKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 4)
     test.Snap("verify text preview")
     a2d.CloseWindow()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 5)
     test.Snap("verify font preview")
     a2d.CloseWindow()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.DeletePath("/A2.DESKTOP/APPLE.MENU")
     a2d.RenamePath("/A2.DESKTOP/AM", "APPLE.MENU")
@@ -68,7 +66,7 @@ test.Step(
     util.WaitFor(
       "hello world", function()
         return apple2.GrabTextScreen():match("Hello world!")
-    end)
+      end, {wait=1})
     apple2.ReturnKey()
     a2d.WaitForDesktopReady()
 

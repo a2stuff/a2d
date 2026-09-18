@@ -4,7 +4,7 @@ MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl7 cffa2 -debug -debugger none"
 DISKARGS="-hard1 $HARDIMG"
 
-======================================== ENDCONFIG ]]--
+======================================== ENDCONFIG ]]
 
 --[[
   Notes:

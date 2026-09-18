@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 disk_a.2mg"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Launch DeskTop, ensure it copies itself to RAMCard. Configure a
   shortcut with the target in the root of a volume, and to Copy to
@@ -24,7 +22,7 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     -- Copy to RAMDisk, (shortcut in root directory)
-    a2d.OpenPath("/A")
+    a2d.OpenWindow("/A")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CREATE DUMMY,T$01")
@@ -62,7 +60,7 @@ test.Step(
 
     -- Copy to RAMDisk, (shortcut in non-root directory)
     a2d.CreateFolder("/A/F")
-    a2d.OpenPath("/A/F")
+    a2d.OpenWindow("/A/F")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CREATE DUMMY,T$01")

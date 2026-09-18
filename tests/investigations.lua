@@ -11,16 +11,13 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk"
 
   ============================================================]]
 
-a2d.ConfigureRepaintTime(0.25)
-
-
 test.Step(
   "clicking title bar in inactive window treated as drag",
   function()
     a2d.AddShortcut("/A2.DESKTOP")
     function OpenVolumeWindow() a2d.OAShortcut("1") end
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     local ram_id = a2dtest.GetFrontWindowID()
 
     OpenVolumeWindow()

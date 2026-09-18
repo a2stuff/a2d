@@ -10,8 +10,6 @@ DISKARGS="-flop1 $HARDIMG -hard1 tests.hdv -hard2 empty_32mb.hdv"
   causes MAME/CFFA2 driver to return $0000 as the block count.
 ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 local s5d1 = manager.machine.images[":sl5:cffa2:cffa2_ata:0:hdd:image"]
 local s5d2 = manager.machine.images[":sl5:cffa2:cffa2_ata:1:hdd:image"]
 
@@ -34,21 +32,24 @@ test.Variants(
   function(idx, name, what)
     if a2dtest.IsAlertShowing() then  -- duplicate volume
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
     end
 
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     a2d.InvokeMenuItem(3, idx) -- Options > Smart Block Copy or Full Disk Copy
 
     -- select source
     apple2.UpArrowKey() -- S5D2
     apple2.UpArrowKey() -- S5D1
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- select destination
     apple2.UpArrowKey() -- S5D2
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK()
 
     -- insert source
@@ -84,7 +85,9 @@ test.Variants(
 
     -- cleanup
     a2d.OAShortcut("Q") -- File > Quit
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
     a2dtest.WaitForAlert({match="2 volumes with the same name"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 end)

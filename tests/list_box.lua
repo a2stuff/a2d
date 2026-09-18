@@ -7,8 +7,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 dos33_floppy.dsk"
 
 -- Multiple ramfactors just to flesh out drives list. Not actually used.
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
 This covers:
 * File Pickers
@@ -67,16 +65,16 @@ function ListBoxTest(
 
       if not options.starts_with_selection then
         apple2.UpArrowKey()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.last,
                     "last item should be selected")
         apple2.UpArrowKey()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.second_last,
                     "next-to-last item should be selected")
       else
         apple2.UpArrowKey()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.first,
                     "first item should still be selected")
       end
@@ -86,12 +84,12 @@ function ListBoxTest(
       activation_func()
       if not options.starts_with_selection then
         apple2.DownArrowKey()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.first,
                     "first item should be selected")
       end
       apple2.DownArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
       test.ExpectMatch(a2dtest.OCRScreen({invert=true}), options.second,
                   "second item should be selected")
       cleanup_func()
@@ -103,14 +101,14 @@ function ListBoxTest(
         -- Apple+Down Arrow
         activation_func()
         a2d.OADown()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         if not options.starts_with_selection then
           test.Snap("verify scrolled down a page, no selection")
         else
           test.Snap("verify first item still selected")
         end
         a2d.OAUp()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         if not options.starts_with_selection then
           test.Snap("verify scrolled up a page, no selection")
         else
@@ -123,10 +121,10 @@ function ListBoxTest(
           apple2.DownArrowKey()
         end
         a2d.OADown()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.Snap("verify scrolled down a page, first item selected (not visible)")
         a2d.OAUp()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.Snap("verify scrolled up a page, first item selected")
         cleanup_func()
 
@@ -134,10 +132,10 @@ function ListBoxTest(
         -- OA+SA+Down Arrow
         activation_func()
         a2d.OASADown()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.Snap("verify last item selected and scrolled to bottom")
         a2d.OASAUp()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.Snap("verify first item selected and scrolled to top")
         cleanup_func()
 
@@ -168,10 +166,10 @@ function ListBoxTest(
         -- OA+SA+Down Arrow
         activation_func()
         a2d.OASADown()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.Snap("verify last item selected")
         a2d.OASAUp()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         test.Snap("verify first item selected")
         cleanup_func()
       end
@@ -203,7 +201,7 @@ function ListBoxTest(
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + h - 5)
             m.ButtonDown()
-            emu.wait(10)
+            emu.wait(10) -- scrollbar loop
             m.ButtonUp()
         end)
         test.ExpectMatch(a2dtest.OCRScreen(), options.last, "should be scrolled to bottom")
@@ -211,7 +209,7 @@ function ListBoxTest(
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + 5)
             m.ButtonDown()
-            emu.wait(10)
+            emu.wait(10) -- scrollbar loop
             m.ButtonUp()
         end)
         test.ExpectMatch(a2dtest.OCRScreen({invert=options.starts_with_selection}), options.first, "should be scrolled to top")
@@ -288,7 +286,7 @@ function ListBoxTest(
         end)
         -- scroll down by one row
         apple2.DownArrowKey()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
 
         repopulate_inactive_func()
 
@@ -367,11 +365,11 @@ ListBoxTest(
   function()
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     -- repopulate_active_func
@@ -379,12 +377,12 @@ ListBoxTest(
     apple2.Type("SAMPLE.MEDIA")
     apple2.ReleaseOA()
     apple2.ControlKey("O")
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     -- repopulate_inactive_func
     apple2.ControlKey("D") -- Drives
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end
   -- no double_click_func, redundant & hard to get predictable item first
 )
@@ -403,19 +401,19 @@ ListBoxTest(
     a2d.ClearSelection()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     apple2.ControlKey("D") -- Drives
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   nil, -- no repopulate_active proc, redundant
   nil, -- no repopulate_inactive proc, redundant
   function()
     -- double_click_func
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end
 )
 
@@ -432,7 +430,7 @@ ListBoxTest(
   function()
     a2d.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.OAShortcut("Q")
@@ -460,7 +458,7 @@ ListBoxTest(
     action = "OK",
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
   end,
   function()
     a2d.DialogCancel()
@@ -476,27 +474,27 @@ ListBoxTest(
     second_last = "Maze",
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     -- repopulate_active_func
     apple2.Type("*")
     a2d.DialogOK()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     -- repopulate_inactive_func
     apple2.Type("CA*")
     a2d.DialogOK()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
   end
   -- no double_click_proc since it doesn't flash a button
 )
@@ -510,15 +508,15 @@ ListBoxTest(
     second_last = "Calendar",
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
     apple2.Type("CA*")
     a2d.DialogOK()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end
   -- no repopulate_active proc, redundant
   -- no repopulate_inactive proc, redundant
@@ -536,9 +534,9 @@ ListBoxTest(
     action = "OK",
   },
   function()
-    emu.wait(5)
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT", {no_validate=true})
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()
@@ -547,7 +545,7 @@ ListBoxTest(
   nil, -- no repopulate_inactive proc, tricky
   function()
     -- double_click_func
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
   end
 )
@@ -563,11 +561,11 @@ ListBoxTest(
     action = "Import",
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT", {no_validate=true})
-    emu.wait(5)
+    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey()
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     a2d.DialogCancel()

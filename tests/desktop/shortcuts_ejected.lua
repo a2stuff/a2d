@@ -5,7 +5,6 @@ DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
 local s5d1 = manager.machine.images[":sl5:superdrive:fdc:0:35hd"]
 
 --[[
@@ -26,7 +25,7 @@ test.Variants(
   },
   function(idx, name, item)
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    emu.wait(5) -- floppy needs a little extra time
+    a2dtest.WaitForSystemTask()
 
     local drive = s5d1
     local image = drive.filename
@@ -38,12 +37,15 @@ test.Variants(
     a2d.DialogCancel()
 
     drive:load(image)
+    emu.wait(5) -- async drive validation (so it doesn't interrupt menu action)
 
+    a2dtest.WaitForSystemTask()
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, item)
+    a2dtest.WaitForSystemTask()
 
     a2dtest.ExpectAlertNotShowing()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
     a2d.Reboot()
@@ -62,18 +64,18 @@ test.Step(
   function()
     a2d.ToggleOptionCopyToRAMCard()
 
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS")
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
     a2d.SelectAll()
     local count = #a2d.GetSelectedIcons()
     a2d.CloseAllWindows()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
-    emu.wait(5) -- floppy needs a little extra time
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
     a2d.Reboot()
     a2d.WaitForDesktopReady({timeout=360})
 
-    a2d.OpenPath("/RAM4/EXTRAS")
+    a2d.OpenWindow("/RAM4/EXTRAS")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have copied")
     a2d.CloseAllWindows()
@@ -111,20 +113,20 @@ test.Step(
     a2d.Reboot()
     a2d.WaitForDesktopReady({timeout=240})
 
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS")
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
     a2d.SelectAll()
     local count = #a2d.GetSelectedIcons()
     a2d.CloseAllWindows()
 
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
-    emu.wait(5) -- floppy needs a little extra time
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
     a2d.OAShortcut("1")
     apple2.WaitForBasicSystem({timeout=120})
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
-    a2d.OpenPath("/RAM4/EXTRAS")
+    a2d.OpenWindow("/RAM4/EXTRAS")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have copied")
     a2d.CloseAllWindows()

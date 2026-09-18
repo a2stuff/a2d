@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Double-click an item. Verify that the appropriate action button
   flashes.
@@ -11,6 +9,7 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
@@ -22,7 +21,7 @@ test.Step(
           "button flash", function()
             return a2dtest.OCRScreen({invert=true}):match("OK")
         end)
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
     end)
     a2d.CloseAllWindows()
 end)
@@ -35,6 +34,7 @@ test.Step(
   "Format/Erase dialog (in DeskTop)",
   function()
     a2d.ClearSelection()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK-2)
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
@@ -46,7 +46,7 @@ test.Step(
           "button flash", function()
             return a2dtest.OCRScreen({invert=true}):match("OK")
         end)
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         a2d.DialogCancel()
     end)
 end)
@@ -71,6 +71,6 @@ test.Step(
           "button flash", function()
             return a2dtest.OCRScreen({invert=true}):match("OK")
         end)
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
     end)
 end)

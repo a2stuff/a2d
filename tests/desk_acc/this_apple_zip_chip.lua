@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Run DeskTop on a IIe with a ZIP CHIP installed.. Apple Menu > About
@@ -9,7 +8,7 @@ test.Step(
   function()
     apple2.SetSystemConfig(":a2_config", "CPU type", 1 << 4, 1 << 4)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectIMatch(a2dtest.OCRFrontWindowContent(), "ZIP CHIP",
                 "a ZIP CHIP should be detected")
 end)

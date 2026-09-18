@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Launch DeskTop. Drag a volume icon onto another volume icon where
   there is not enough capacity for all of the files but there is
@@ -52,7 +50,7 @@ test.Step(
 
     a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1") -- 1000k
     a2d.CreateFolder("/RAM1/FOLDER")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
 
     a2d.Select("IS.200K")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
@@ -61,7 +59,7 @@ test.Step(
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
     a2d.SelectPath("/RAM1/FOLDER/IS.200K") -- verify file was moved
@@ -89,6 +87,7 @@ test.Step(
     a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1")
     a2dtest.WaitForAlert({match="file is too large"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -112,11 +111,12 @@ test.Step(
     a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
     a2d.CopyPath("/TESTS/COPYING/SIZES/IS.16K", "/RAM1/CONSUMED") -- 200k
 
-    a2d.OpenPath("/TESTS/COPYING/SIZES")
+    a2d.OpenWindow("/TESTS/COPYING/SIZES")
     a2d.SelectAll()
     a2d.CopySelectionTo("/RAM1")
     a2dtest.WaitForAlert({match="file is too large"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -143,9 +143,9 @@ test.Step(
     a2d.CopyPath("/TESTS/COPYING/SIZES", "/RAM1")
     a2dtest.WaitForAlert({match="file is too large"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
-    emu.wait(5)
-    a2d.OpenPath("/RAM1/SIZES")
+    a2d.OpenWindow("/RAM1/SIZES")
     a2d.SelectAll()
     test.Expect(#a2d.GetSelectedIcons(), 2, "2 files should have fit")
 

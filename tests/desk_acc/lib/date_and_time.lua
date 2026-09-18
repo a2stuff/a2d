@@ -28,7 +28,7 @@ function SetDateTime(y,m,d,hh,mm)
 
   function NextValue()
     apple2.UpArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
   end
 
   while GetValue() ~= d do
@@ -61,9 +61,9 @@ function ClockTests(name)
   test.Step(
     "Set " .. name,
     function()
-      a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME", {no_validate=true})
+      a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
       a2d.OAShortcut('2') -- 24-hour
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
 
       local set_y, set_m, set_d = 27, 4, 13
       local set_hh, set_mm = 12, 34
@@ -71,7 +71,8 @@ function ClockTests(name)
       SetDateTime(set_y, set_m, set_d, set_hh, set_mm)
 
       a2d.DialogOK()
-      emu.wait(10)
+      a2dtest.WaitForSystemTask()
+      emu.wait(10) -- wait for clock driver to be sampled
 
       local y,m,d = apple2.GetProDOSDate()
       local hh,mm = apple2.GetProDOSTime()
@@ -88,13 +89,12 @@ function ClockTests(name)
   test.Step(
     name .. " only set if dirty",
     function()
-      a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME", {no_validate=true})
+      a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
 
       local hh, mm = apple2.GetProDOSTime()
       local initial_time = string.format("%02d:%02d", hh, mm)
 
-      -- Let time advance
-      emu.wait(120)
+      emu.wait(120) -- wait for time to advance
 
       local hh, mm = apple2.GetProDOSTime()
       local current_time = string.format("%02d:%02d", hh, mm)
@@ -102,7 +102,7 @@ function ClockTests(name)
       test.ExpectNotEquals(current_time, initial_time, "time should have advanced")
 
       a2d.DialogCancel()
-      emu.wait(10)
+      emu.wait(10) -- wait for clock driver to be sampled
 
       local hh, mm = apple2.GetProDOSTime()
       local new_time = string.format("%02d:%02d", hh, mm)

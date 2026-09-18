@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
 This covers:
  * DeskTop's modal name dialog, used in:
@@ -481,7 +479,7 @@ function LineEditTest(name, limits, activation_func, rect_func, cleanup_func)
               m.MoveToApproximately(x, y)
               a2dtest.MultiSnap(60, message)
               m.Click()
-              emu.wait(1)
+              a2dtest.WaitForSystemTask()
               a2dtest.MultiSnap(60, "verify cursor not obscured")
           end)
         end
@@ -537,7 +535,7 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 end)
 
 LineEditTest(
@@ -556,7 +554,7 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 end)
 
 LineEditTest(
@@ -568,7 +566,7 @@ LineEditTest(
   function()
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     local id = a2dtest.GetNextWindowID(mgtk.FrontWindow())
@@ -577,7 +575,7 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 end)
 
 LineEditTest(
@@ -588,7 +586,7 @@ LineEditTest(
   },
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
   end,
   function()
     local id = a2dtest.GetNextWindowID(mgtk.FrontWindow())
@@ -597,7 +595,7 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 end)
 
 LineEditTest(
@@ -607,7 +605,7 @@ LineEditTest(
     chars = printable_chars,
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
   end,
   function()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
@@ -615,7 +613,7 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)
 
@@ -626,7 +624,7 @@ LineEditTest(
     chars = printable_chars,
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(x, y, x, apple2.SCREEN_HEIGHT - 80)
   end,
@@ -636,7 +634,7 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)
 
@@ -647,7 +645,7 @@ LineEditTest(
     chars = printable_chars,
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(x, y, x, apple2.SCREEN_HEIGHT - 50)
   end,
@@ -657,7 +655,7 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)
 
@@ -668,7 +666,7 @@ LineEditTest(
     chars = printable_chars,
   },
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(x, y, x, apple2.SCREEN_HEIGHT)
   end,
@@ -677,6 +675,6 @@ LineEditTest(
   end,
   function()
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)

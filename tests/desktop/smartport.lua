@@ -1,4 +1,4 @@
---[[ BEGINCONFIG ==================================================
+--[[ BEGINCONFIG ========================================
 
 MODEL="apple2ee"
   MODELARGS="-sl2 mouse -sl5 scsi -sl6 '' -sl7 cffa2 \
@@ -17,9 +17,7 @@ DISKARGS="\
   -hard6 tests.hdv \
   "
 
-================================================== ENDCONFIG ]]
-
-a2d.ConfigureRepaintTime(0.25)
+======================================== ENDCONFIG ]]
 
 --[[
   Configure a system with more than 2 drives on a SmartPort
@@ -70,12 +68,14 @@ test.Variants(
         apple2.DownArrowKey()
       end
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
       apple2.Type(name) -- should match existing, so no alert
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
       a2dtest.WaitForAlert({match="Are you sure"})
       a2d.DialogOK()
-      emu.wait(5)
-      a2d.OpenPath("/"..name)
+      a2dtest.WaitForSystemTask()
+      a2d.OpenWindow("/"..name)
       a2d.SelectAll()
       test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "should have been formatted")
     end

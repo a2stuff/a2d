@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Launch DeskTop. Apple Menu > About Apple II DeskTop. Click anywhere
@@ -12,7 +11,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "dialog should have dismissed")
 end)
 
@@ -26,7 +25,7 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
     apple2.Type("A")
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "dialog should have dismissed")
 end)
 

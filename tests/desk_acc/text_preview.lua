@@ -6,7 +6,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 ======================================== ENDCONFIG ]]
 
 a2d.RemoveClockDriverAndReboot() -- to avoid clock repaints
-a2d.ConfigureRepaintTime(4)
 
 --[[
   Verify that Escape key exits.
@@ -14,10 +13,11 @@ a2d.ConfigureRepaintTime(4)
 test.Step(
   "Escape exits text preview",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME", {no_validate=true})
+    a2d.InvokePath("/TESTS/FILE.TYPES/TOGGLE.ME")
+    a2dtest.WaitForSystemTask()
     local window_id = a2dtest.GetFrontWindowID()
     apple2.EscapeKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectNotEquals(a2dtest.GetFrontWindowID(), window_id, "preview should have exited")
 end)
 
@@ -27,14 +27,14 @@ end)
 test.Step(
   "Space toggles modes",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME", {no_validate=true})
+    a2d.InvokePath("/TESTS/FILE.TYPES/TOGGLE.ME")
 
     apple2.SpaceKey() -- toggle modes
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Fixed", "should be in Fixed mode")
 
     apple2.SpaceKey() -- toggle modes
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Proportional", "should be in Proportional mode")
 
     a2d.CloseWindow()
@@ -51,7 +51,7 @@ end)
 test.Step(
   "Click toggles modes",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME", {no_validate=true})
+    a2d.InvokePath("/TESTS/FILE.TYPES/TOGGLE.ME")
     test.ExpectMatch(a2dtest.OCRScreen(), "TOGGLE%.ME .* Proportional",
                 "Proportional label baseline should align with window title")
 
@@ -66,14 +66,14 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "TOGGLE%.ME .* Fixed",
                 "Fixed label baseline should align with window title")
 
     a2d.InMouseKeysMode(function(m)
         m.Click()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have toggled back to Proportional")
 
     a2d.CloseWindow()
@@ -89,6 +89,7 @@ test.Step(
     a2dtest.ExpectNothingChanged(function()
         a2d.OpenSelection()
         a2d.CloseWindow()
+        a2dtest.WaitForSystemTask()
     end)
 end)
 
@@ -104,11 +105,11 @@ end)
 test.Step(
   "Short file keeps scrollbar inactive",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/SHORT.TEXT", {no_validate=true})
+    a2d.InvokePath("/TESTS/FILE.TYPES/SHORT.TEXT")
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
     apple2.SpaceKey() -- toggle modes
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
     a2d.CloseWindow()
@@ -134,62 +135,62 @@ end)
 test.Step(
   "Long file and scrolling",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT", {no_validate=true})
-    emu.wait(10)
+    a2d.InvokePath("/TESTS/FILE.TYPES/LONG.TEXT")
+    a2dtest.WaitForSystemTask()
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectNotEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
 
     local dhr = a2dtest.SnapshotDHRWithoutClock()
     apple2.DownArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("THIS IS LINE 2") and
                 ocr:find("THIS IS LINE 16"), "should have scrolled down by one line")
 
     apple2.UpArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("THIS IS LINE 1") and
                 ocr:find("THIS IS LINE 15"), "should have scrolled back up by one line")
 
     -- Page Down/Up using OA
     a2d.OADown()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
     test.Expect(ocr:find("THIS IS LINE 15") and
                 ocr:find("THIS IS LINE 29"), "should have scrolled down by one page")
     local dhr2 = a2dtest.SnapshotDHRWithoutClock()
 
     a2d.OAUp()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
     -- Page Down/Up using SA
     a2d.SADown()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectUnchangedExceptClock(dhr2, "should have scrolled down by one page")
 
     a2d.SAUp()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back up by one page")
 
     -- Home/End using OA+SA
     a2d.OASADown()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "THIS IS LINE 2000",
                 "should have scrolled to end")
 
     a2d.OASAUp()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectUnchangedExceptClock(dhr, "should have scrolled back to start")
 
     a2d.OASADown()
     apple2.SpaceKey() -- toggle mode
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify scrolled to top and Fixed mode")
 
     a2d.CloseWindow()
-    emu.wait(10)
+    a2dtest.WaitForSystemTask()
 end)
 
 --[[
@@ -202,26 +203,27 @@ end)
 test.Step(
   "Touching thumb doesn't cause repaint",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT", {no_validate=true})
-    emu.wait(10)
+    a2d.InvokePath("/TESTS/FILE.TYPES/LONG.TEXT")
+    a2dtest.WaitForSystemTask()
 
     local up_x, up_y = a2dtest.GetFrontWindowUpScrollArrowCoords()
 
     apple2.PressSA()
     for i = 1, 70 do
       apple2.DownArrowKey()
-      emu.wait(0.25)
+      a2dtest.WaitForSystemTask()
     end
     apple2.ReleaseSA()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
+
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(up_x, up_y + 70)
         a2dtest.ExpectNoRepaint(function()
             m.ButtonDown()
-            emu.wait(1)
+            emu.wait(1) -- scroll bar loop
             test.Snap("verify thumb highlighted")
             m.ButtonUp()
-            a2d.WaitForRepaint()
+            a2dtest.WaitForSystemTask()
         end)
     end)
     a2d.CloseWindow()
@@ -240,8 +242,8 @@ end)
 test.Step(
   "Scroll is proportional",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/LONG.TEXT", {no_validate=true})
-    emu.wait(10)
+    a2d.InvokePath("/TESTS/FILE.TYPES/LONG.TEXT")
+    a2dtest.WaitForSystemTask()
 
     local up_x, up_y = a2dtest.GetFrontWindowUpScrollArrowCoords()
 
@@ -251,16 +253,16 @@ test.Step(
         m.MoveByApproximately(0, 60)
         m.ButtonUp()
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify scrolled to about halfway through file")
 
     local dhr = a2dtest.SnapshotDHRWithoutClock()
     apple2.UpArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify scrolled up one line")
 
     apple2.DownArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify scrolled down one line")
 
     a2d.CloseWindow()
@@ -283,19 +285,19 @@ test.Step(
     end)
 
     -- Disable ZIP Chip
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("N") -- Normal Speed
     a2d.CloseWindow()
 
     a2d.SelectPath("/TESTS/FILE.TYPES/LONG.TEXT")
     a2d.OADown()
-    emu.wait(3)
+    emu.wait(3) -- wall-clock test
     test.Snap("verify text is displayed within 3s")
-    emu.wait(15) -- let loading finish
+    a2dtest.WaitForSystemTask()
     a2d.CloseWindow()
 
     -- Enable ZIP Chip
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("F") -- Fast Speed
     a2d.CloseWindow()
 end)
@@ -307,7 +309,7 @@ end)
 test.Step(
   "Tabs",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/TABS", {no_validate=true})
+    a2d.InvokePath("/TESTS/FILE.TYPES/TABS")
     test.Snap("verify all lines displayed correctly")
     a2d.CloseWindow()
 end)
@@ -322,19 +324,19 @@ end)
 test.Step(
   "Scroll edge case",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/SUDOKU.STORY", {no_validate=true})
+    a2d.InvokePath("/TESTS/FILE.TYPES/SUDOKU.STORY")
     apple2.SpaceKey() -- toggle to Fixed
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     for i = 1, 15 do
       apple2.DownArrowKey()
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
     end
     test.Snap("verify 'with' on last line")
     apple2.DownArrowKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify scrolled down one line")
     a2d.OASADown()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify scrolled to bottom of file")
     a2d.CloseWindow()
 end)
@@ -348,9 +350,9 @@ end)
 test.Step(
   "Toggling and scrollbar",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/TOGGLE.ME", {no_validate=true})
+    a2d.InvokePath("/TESTS/FILE.TYPES/TOGGLE.ME")
     apple2.SpaceKey() -- toggle to Fixed
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectNotEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
     local hthumbpos, vthumbpos = a2dtest.GetFrontWindowScrollPos()
@@ -358,7 +360,7 @@ test.Step(
 
     a2d.OASADown()
     apple2.SpaceKey() -- toggle to Proportional
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
@@ -373,10 +375,10 @@ end)
 test.Step(
   "File bigger than 64K",
   function()
-    a2d.OpenPath("/TESTS/PREVIEW/TEXT/MORE.THAN.64K", {no_validate=true})
-    emu.wait(20)
+    a2d.InvokePath("/TESTS/PREVIEW/TEXT/MORE.THAN.64K")
+    a2dtest.WaitForSystemTask()
     a2d.OASADown()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local ocr = a2dtest.OCRScreen();
     test.ExpectNotMatch(ocr, "L 283", "file should not be truncated to about 200 lines")

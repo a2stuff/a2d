@@ -23,8 +23,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 pascal_800k.woz -flop2 empty_800k.2mg -flop3 pa
   * S6,D2 - Floppy1     (ProDOS 140K)
 ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Launch DeskTop. Special > Copy Disk.... Verify that Pascal disk
   names in the device list do not have adjusted case (e.g. "TGP:" not
@@ -58,18 +56,21 @@ test.Variants(
   },
   function(idx, name, source_index, dest_index, disk_name)
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     for i = 1, source_index do
       apple2.DownArrowKey()
     end
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     for i = 1, dest_index do
       apple2.DownArrowKey()
     end
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- insert source
     a2dtest.WaitForAlert({match="Insert the source disk"})
@@ -85,6 +86,7 @@ test.Variants(
     a2d.DialogCancel()
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)
 
 
@@ -101,12 +103,14 @@ test.Variants(
   },
   function(idx, name, source_index, dest_index, disk_name)
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- source
     for i = 1, source_index do
       apple2.DownArrowKey()
     end
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- destination
     for i = 1, dest_index do
@@ -129,4 +133,5 @@ test.Variants(
     a2d.DialogCancel()
     a2d.OAShortcut("Q") -- File > Quit
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
 end)

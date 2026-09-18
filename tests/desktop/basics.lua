@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Open a volume, open a folder, close just the volume window; re-open
   the volume, re-open the folder, ensure the previous window is
@@ -15,11 +13,11 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "child windows should be re-activated not duplicated",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     local window_id = mgtk.FrontWindow()
     a2d.CycleWindows()
     a2d.CloseWindow()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     test.ExpectEquals(mgtk.FrontWindow(), window_id, "window should be re-activated")
 end)
 
@@ -32,7 +30,7 @@ test.Step(
   "volume table shouldn't leak",
   function()
     for i = 1, 10 do
-      a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+      a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
       a2d.CycleWindows()
       a2d.CloseWindow()
       a2d.CloseWindow()
@@ -52,7 +50,7 @@ test.Step(
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(icon_x, icon_y, x+5, icon_y)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify icon name is clipped on left but renders")
 
     -- cleanup
@@ -83,7 +81,7 @@ test.Step(
           m.Click()
           m.Click()
       end)
-      a2d.WaitForRepaint()
+      a2dtest.WaitForSystemTask()
     end
     test.Snap("verify icon renders")
 end)
@@ -125,7 +123,7 @@ test.Step(
   function()
     a2d.CloseAllWindows()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
 
     local ocr = a2dtest.OCRFrontWindowContent()
     test.ExpectMatch(ocr, " %d+K in disk", "should see window used number")
@@ -146,7 +144,7 @@ end)
 test.Step(
   "Correct selection when child window is closed",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU")
+    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU")
     a2d.Select("CONTROL.PANELS")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.SelectAll()
@@ -155,17 +153,17 @@ test.Step(
         m.MoveToApproximately(x, y)
         m.DoubleClick()
     end)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not have changed")
     while a2dtest.GetFrontWindowTitle():upper() ~= "APPLE.MENU" do
       a2d.CycleWindows()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
     test.Snap("verify selected folder icons are dimmed")
     a2d.CycleWindows()
     local name = a2dtest.GetFrontWindowTitle()
     a2d.CloseWindow()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), name, "only closed window should be selected")
 end)
 
@@ -179,7 +177,7 @@ test.Step(
   "Duplicate activates window",
   function()
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.SelectPath("/RAM1/READ.ME", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
     a2d.CycleWindows()
@@ -198,7 +196,7 @@ test.Step(
   "Rename activates window",
   function()
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.SelectPath("/RAM1/READ.ME", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
     a2d.CycleWindows()
@@ -218,7 +216,7 @@ test.Step(
   "Alerts repaint correctly after file fails to open",
   function()
     a2d.CopyPath("/TESTS/FILE.TYPES/TEST01", "/RAM1")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.Select("TEST01")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.InMouseKeysMode(function(m)
@@ -227,6 +225,7 @@ test.Step(
     end)
     a2dtest.WaitForAlert({match="file cannot be opened"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.DoubleClick()
@@ -234,6 +233,7 @@ test.Step(
     a2dtest.WaitForAlert({match="file cannot be opened"})
     test.Snap("verify alert renders with opaque background")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     a2d.EraseVolume("RAM1")
@@ -250,7 +250,7 @@ end)
 test.Step(
   "Re-using reparented windows",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
 
     -- Create folders A, B, C
     a2d.CreateFolder("A")
@@ -281,7 +281,7 @@ test.Step(
     -- Drag A and B onto C
     while a2dtest.GetFrontWindowTitle():upper() ~= "RAM1" do
       a2d.CycleWindows()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
     a2d.Select("A")
     local a_x, a_y = a2dtest.GetSelectedIconCoords()
@@ -300,14 +300,14 @@ test.Step(
         m.MoveToApproximately(c_x, c_y)
         m.ButtonUp()
     end)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     -- Double-click on X
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x_x, x_y)
         m.DoubleClick()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "X", "X should open")
 
     -- Double-click on Y
@@ -315,13 +315,13 @@ test.Step(
         m.MoveToApproximately(y_x, y_y)
         m.DoubleClick()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "Y", "Y should open")
 
     -- Open C
     while a2dtest.GetFrontWindowTitle():upper() ~= "RAM1" do
       a2d.CycleWindows()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
     a2d.Select("C")
     a2d.OpenSelection()
@@ -337,7 +337,7 @@ test.Step(
 
     while a2dtest.GetFrontWindowTitle():upper() ~= "C" do
       a2d.CycleWindows()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
 
     -- Double-click on B
@@ -363,13 +363,13 @@ end)
 test.Step(
   "folder icon in new window dimmed on creation if it's window is already open",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     a2d.MoveWindowBy(0, 100)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.Snap("note EXTRAS is dimmed")
     a2d.CycleWindows()
     a2d.CloseWindow()
-    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
     test.Snap("verify EXTRAS is still dimmed")
 end)
 
@@ -382,11 +382,11 @@ end)
 test.Step(
   "folder icon stays dimmed when window is refreshed",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.CreateFolder("F1")
     a2d.OpenSelection()
     a2d.MoveWindowBy(0, 100)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.Snap("note F1 is dimmed")
     a2d.CycleWindows()
     a2d.CreateFolder("F2")
@@ -407,7 +407,7 @@ test.Step(
   function()
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2d.CreateFolder("/RAM1/FOLDER")
-    a2d.OpenPath("/RAM1/FOLDER", {leave_parent=true})
+    a2d.OpenWindow("/RAM1/FOLDER", {leave_parent=true})
     a2d.MoveWindowBy(0, 100)
     a2d.CycleWindows()
     a2d.Select("FOLDER")
@@ -417,7 +417,7 @@ test.Step(
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "window should be activated")
     a2d.Select("READ.ME")
@@ -434,7 +434,7 @@ end)
 test.Step(
   "empty window default size",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     local x, w, w, h = a2dtest.GetFrontWindowContentRect()
     test.ExpectGreaterThan(w, 150, "window should be ~170px wide")
     test.ExpectLessThan(w, 200, "window should be ~170px wide")
@@ -451,14 +451,14 @@ end)
 test.Step(
   "drag inactive window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
-    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.OpenWindow("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
 
     a2d.Drag(x, y, x + 20, y + 20)
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
     local new_x, new_y = a2dtest.GetFrontWindowDragCoords()
     test.ExpectNotEquals(x, new_x, "window should have moved")
@@ -475,14 +475,14 @@ test.Step(
     a2d.SelectPath("/A2.DESKTOP/READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.OpenWindow("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.Click()
     end)
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file icon should be selected")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
 end)
@@ -496,11 +496,11 @@ end)
 test.Step(
   "volume icon selected after drag in inactive window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local click_x, click_y = x + w - 5, y + h - 5
 
-    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.OpenWindow("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
 
     a2d.InMouseKeysMode(function(m)
@@ -510,7 +510,7 @@ test.Step(
         test.Snap("verify window activates and drag rectangle appears")
         m.ButtonUp()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
 end)
@@ -523,18 +523,18 @@ end)
 test.Step(
   "volume icon selected after window click - inactive window",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local click_x, click_y = x + w - 5, y + h - 5
 
-    a2d.OpenPath("/RAM1", {keep_windows=true})
+    a2d.OpenWindow("/RAM1", {keep_windows=true})
     a2d.MoveWindowBy(0, 100)
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(click_x, click_y)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should be activated")
 end)
@@ -547,7 +547,7 @@ end)
 test.Step(
   "volume icon selected after window click - no selection",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local click_x, click_y = x + w - 5, y + h - 5
 
@@ -556,7 +556,7 @@ test.Step(
         m.MoveToApproximately(click_x, click_y)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 end)
 
@@ -568,7 +568,7 @@ end)
 test.Step(
   "volume icon selected after window click - file selection",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local click_x, click_y = x + w - 5, y + h - 5
 
@@ -577,7 +577,7 @@ test.Step(
         m.MoveToApproximately(click_x, click_y)
         m.Click()
     end)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 end)
 
@@ -589,12 +589,13 @@ end)
 test.Step(
   "DA launches after image preview",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES/ROOM.A2FC", {no_validate=true})
-    emu.wait(5)
+    a2d.InvokePath("/TESTS/FILE.TYPES/ROOM.A2FC")
+    emu.wait(5) -- invoking full-screen DA
     apple2.EscapeKey()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     a2d.CloseWindow()
     a2d.CloseAllWindows()
@@ -612,12 +613,12 @@ test.Step(
   function()
     a2d.CreateFolder("/RAM1/A")
     a2d.CreateFolder("/RAM1/A/B")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAndOpen("A", {close_current=false})
     a2d.MoveWindowBy(0, 100)
     a2d.CycleWindows()
     a2d.CloseWindow()
-    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
     a2d.CycleWindows()
     a2d.MoveWindowBy(20, 0)
     test.Snap("verify icon B rendered correctly")
@@ -659,6 +660,6 @@ test.Step(
   function()
     a2d.CloseAllWindows()
     a2d.Reboot()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     a2dtest.MultiSnap(240, "verify RAMCard icon doesn't flicker")
 end)

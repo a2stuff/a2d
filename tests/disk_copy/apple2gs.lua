@@ -7,8 +7,6 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   On a IIgs, go to Control Panel, check RGB Color. Verify that the
   display shows in color. Special > Copy Disk.... Enter the IIgs
@@ -18,7 +16,7 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "RGB Color vs. IIgs Control Panel",
   function()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- check RGB Color
     a2d.CloseWindow()
 
@@ -32,17 +30,17 @@ test.Step(
     apple2.ReleaseShift()
     apple2.ReleaseControl()
     apple2.ReleaseOA()
-    emu.wait(5)
+    emu.wait(5) -- automating IIgs control panel
     apple2.EscapeKey() -- to Quit
     apple2.ReturnKey()
-    emu.wait(5)
+    emu.wait(5) -- automating IIgs control panel
 
     test.Expect(apple2.IsColor(), "desktop should be in color")
 
     -- cleanup
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
-    a2d.OpenPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- uncheck RGB Color
     a2d.CloseWindow()
 end)
@@ -66,10 +64,10 @@ test.Step(
     apple2.ReleaseShift()
     apple2.ReleaseControl()
     apple2.ReleaseOA()
-    emu.wait(5)
+    emu.wait(5) -- automating IIgs control panel
     apple2.EscapeKey() -- to Quit
     apple2.ReturnKey()
-    emu.wait(5)
+    emu.wait(5) -- automating IIgs control panel
 
     test.Expect(apple2.IsMono(), "desktop should be in monochrome")
 

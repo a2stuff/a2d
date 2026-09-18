@@ -10,12 +10,10 @@ DISKARGS="-hard1 $HARDIMG"
 -- monitor. Low stack being a problem is not specific to the CFFA,
 -- however.
 
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "Restarting launcher (about 36s)",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
 
     -- Prior to fix, crashes around iteration 40
     local cpu = manager.machine.devices[":maincpu"]
@@ -33,12 +31,12 @@ end)
 test.Step(
   "Running external programs - DeskTop (about 50s)",
   function()
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA")
+    a2d.OpenWindow("/A2.DESKTOP/SAMPLE.MEDIA")
 
     -- Prior to fix, hangs around iteration 60 (but doesn't crash to monitor)
     local cpu = manager.machine.devices[":maincpu"]
     for i = 1, 70 do
-      a2d.SelectAndOpen("KARATEKA.YELL")
+      a2d.SelectAndOpen("KARATEKA.YELL", {no_wait=true})
       a2d.WaitForDesktopReady()
       --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")

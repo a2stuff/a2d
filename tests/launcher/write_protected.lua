@@ -5,8 +5,6 @@ DISKARGS="-flop1 $ROHARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Boot with an 800K image that is write protected. Make sure DeskTop
   starts.
@@ -22,7 +20,7 @@ test.Step(
         return a2dtest.OCRFrontWindowContent():match("Write protected: +Yes")
     end)
     apple2.EscapeKey() -- cancel enumeration
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
 end)
 

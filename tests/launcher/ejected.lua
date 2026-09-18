@@ -5,7 +5,6 @@ DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
 local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[
@@ -25,7 +24,7 @@ test.Step(
     a2d.WaitForDesktopReady({timeout=360})
 
     -- Verify copied to RAMCard
-    a2d.OpenPath("/RAM4/EXTRAS")
+    a2d.OpenWindow("/RAM4/EXTRAS")
 
     -- Quit
     a2d.CloseAllWindows()
@@ -71,7 +70,7 @@ test.Step(
       "progress bar", function()
         return apple2.GrabTextScreen():match("Esc to cancel")
     end)
-    emu.wait(20)
+    emu.wait(20) -- interrupting copy
     test.Snap("verify progress bar not more than halfway")
     apple2.EscapeKey()
 
@@ -81,7 +80,7 @@ test.Step(
     -- Re-launch from original startup disk
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady({timeout=360})
-    a2d.OpenPath("/A2.DESKTOP/SAMPLE.MEDIA/APPLEVISION", {no_validate=true})
+    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/APPLEVISION")
     util.WaitFor(
       "APPLE-VISION", function()
         return apple2.GrabTextScreen():match("APPLE%-VISION")

@@ -174,13 +174,19 @@ fi
 # Symbols
 
 DESKTOP_SYMBOLS=""
-for sym in selected_icon_count selected_icon_list icon_entries current_window; do
+for sym in TestInterceptSystemTask selected_icon_count selected_icon_list icon_entries current_window; do
   addr="$(grep -E $sym: out/desktop.list | cut -d' ' -f1)"
   DESKTOP_SYMBOLS="${DESKTOP_SYMBOLS} ${sym}=${addr}"
 done
 export DESKTOP_SYMBOLS
+DISKCOPY_SYMBOLS=""
+for sym in TestInterceptSystemTask; do
+  addr="$(grep -E $sym: out/disk_copy.list | cut -d' ' -f1)"
+  DISKCOPY_SYMBOLS="${DISKCOPY_SYMBOLS} ${sym}=${addr}"
+done
+export DISKCOPY_SYMBOLS
 SELECTOR_SYMBOLS=""
-for sym in current_window; do
+for sym in TestInterceptSystemTask current_window; do
   addr="$(grep -E $sym: out/selector.list | cut -d' ' -f1)"
   SELECTOR_SYMBOLS="${SELECTOR_SYMBOLS} ${sym}=${addr}"
 done

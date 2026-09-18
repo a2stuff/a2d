@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Launch DeskTop. Open
   `/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF123`.
@@ -16,17 +14,17 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "Copy file into folder with overlong path",
   function()
-    a2d.OpenPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF123")
+    a2d.OpenWindow("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF123")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
     a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
     a2d.MoveWindowBy(0, 80)
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(src_x, src_y, x+w/2, y+h/2)
-    emu.wait(1)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     local dhr = apple2.SnapshotDHR()
     for i = 0, apple2.SCREEN_COLUMNS-1 do
@@ -53,8 +51,8 @@ test.Variants(
     {"overlong paths - file", "file"},
   },
   function(idx, name, which)
-    a2d.OpenPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
-    emu.wait(1)
+    a2d.OpenWindow("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
+    a2dtest.WaitForSystemTask()
     a2d.SelectPath("/TESTS", {keep_windows=true})
     a2d.RenameSelection("TESTSXXXXXXXXXX")
     if which == "folder" then
@@ -67,22 +65,27 @@ test.Variants(
     a2d.OAShortcut("O") -- File > Open
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     apple2.ReturnKey() -- File > Rename
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.CopySelectionTo("/RAM1") -- File > Copy To...
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- Drag file to folder
     if which == "folder" then
@@ -91,6 +94,7 @@ test.Variants(
       a2d.Drag(src_x, src_y, target_x, target_y)
       a2dtest.WaitForAlert({match="pathname is too long"})
       a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     end
 
     -- Drag to volume
@@ -99,6 +103,7 @@ test.Variants(
     a2d.Drag(target_x, target_y, vol_x, vol_y)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- Drag folder to Trash
     a2d.SelectPath("/Trash", {keep_windows=true})
@@ -106,6 +111,7 @@ test.Variants(
     a2d.Drag(target_x, target_y, trash_x, trash_y)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
 end)
@@ -136,6 +142,7 @@ test.Step(
     a2d.InvokeMenuItem(a2d.APPLE_MENU, -1)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
     a2d.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.IMAGE.FILE")
@@ -166,5 +173,6 @@ test.Step(
     end)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
 end)

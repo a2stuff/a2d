@@ -11,8 +11,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 floppy_with_files.dsk"
   this may not be possible with MouseKeys based movement.
 ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 function GetWinFrameRect(window_id)
   local x, y, w, h = a2dtest.GetFrontWindowContentRect()
   return { x - 1, y - 13, x + w + 21, y + h + 11 }
@@ -29,16 +27,16 @@ end
 test.Step(
   "windows with aligned right edges",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 55)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     test.ExpectEquals(rect1[3], rect2[3], "right edges should align")
@@ -67,16 +65,16 @@ end)
 test.Step(
   "windows with aligned left edges",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(300, 55)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     test.ExpectEquals(rect1[1], rect2[1], "left edges should align")
@@ -104,16 +102,16 @@ end)
 test.Step(
   "icon clipped into two parts",
   function()
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(200, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(380, 60)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     a2d.CycleWindows()
@@ -145,35 +143,35 @@ end)
 test.Step(
   "window right edges vs. volume icons",
   function()
-    a2d.OpenPath("/RAM1")
-    a2d.OpenPath("/RAM5", {keep_windows=true})
+    a2d.OpenWindow("/RAM1")
+    a2d.OpenWindow("/RAM5", {keep_windows=true})
 
-    a2d.OpenPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(510, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenPath("/TESTS", {keep_windows=true})
+    a2d.OpenWindow("/TESTS", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.MoveWindowBy(500, 00)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenPath("/WITH.FILES", {keep_windows=true})
+    a2d.OpenWindow("/WITH.FILES", {keep_windows=true})
     a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
     a2d.GrowWindowBy(0, 60)
     a2d.MoveWindowBy(500, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local rect3 = GetWinFrameRect(mgtk.FrontWindow())
 
     while a2dtest.GetFrontWindowTitle():upper() ~= "A2.DESKTOP" do
       a2d.CycleWindows()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
     end
 
     a2d.MoveWindowBy(-10, 0)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.Snap("verify volume icons repainted correctly")
     a2dtest.ExpectNotHanging()
 
@@ -196,7 +194,7 @@ test.Step(
   "reveal left/right/top edges of dimmed icon",
   function()
     a2d.CreateFolder("/RAM1/A")
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.MoveWindowBy(100, 80)
     a2d.Select("A")
     a2d.OpenSelection()

@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk -flop2 prodos_floppy2.dsk"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
 
@@ -64,7 +62,7 @@ DialogTest(
   function(suffix)
     a2d.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I")
-    emu.wait(10) -- enumerating takes a bit
+    a2dtest.WaitForSystemTask()
     test.Snap("File > Get Info (volume)" .. suffix)
     a2d.DialogCancel()
 end)
@@ -97,7 +95,7 @@ DialogTest(
   "Copy Progress",
   function(suffix)
     a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1", {no_wait=true})
-    emu.wait(5)
+    emu.wait(5) -- during copy
     test.Snap("Copy Progress" .. suffix)
     a2d.DialogCancel()
     a2d.CloseAllWindows()
@@ -108,19 +106,19 @@ DialogTest(
   "Move Progress",
   function(suffix)
     a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
-    emu.wait(5)
+    emu.wait(5) -- during move
     a2d.CreateFolder("/RAM1/DESTINATION")
-    a2d.OpenPath("/RAM1/DESTINATION")
+    a2d.OpenWindow("/RAM1/DESTINATION")
     a2d.MoveWindowBy(300, 100)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w/2, y + h/2
 
-    a2d.OpenPath("/RAM1/APPLE.MENU", {keep_windows=true})
+    a2d.OpenWindow("/RAM1/APPLE.MENU", {keep_windows=true})
     a2d.SelectAll()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
-    emu.wait(1)
+    emu.wait(1) -- during move
     test.Snap("Move Progress" .. suffix)
     a2d.DialogCancel()
     a2d.CloseAllWindows()
@@ -144,25 +142,28 @@ DialogTest(
   function(suffix)
     -- Copy files, so we get a good progress bar
     a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     -- Copy a file and lock it
     a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
+
     a2d.SelectPath("/RAM1/READ.ME")
     a2d.OAShortcut("I") -- File > Get Info
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     apple2.ControlKey("L")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/RAM1")
+    a2d.OpenWindow("/RAM1")
     a2d.SelectAll()
     a2d.OADelete() -- File > Delete
     a2dtest.WaitForAlert({match="Are you sure"})
     test.Snap("Delete Confirm" .. suffix)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
-    emu.wait(1)
+    emu.wait(1) -- during delete
     test.Snap("Delete Progress" .. suffix)
     a2dtest.WaitForAlert({match="file is locked"})
     test.Snap("Delete Confirm Locked" .. suffix)
@@ -187,10 +188,12 @@ DialogTest(
 
     -- select RAMFactor
     a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Format Disk... - Drive selected" .. suffix)
 
     -- accept selection
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Format Disk... - Prompt for name" .. suffix)
 
     -- type new name
@@ -199,15 +202,16 @@ DialogTest(
 
     -- accept typed name
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Format Disk... - Confirm erase" .. suffix)
 
     -- confirm format
     a2d.DialogOK({no_wait=true})
-    emu.wait(0.2)
+    emu.wait(0.2) -- during format
     test.Snap("Special > Format Disk... - Format in progress" .. suffix)
 
     -- cleanup
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.RenamePath("/NEWNAME", "RAM1")
 
     -- Formatting error
@@ -217,18 +221,20 @@ DialogTest(
     s6d1:unload()
     a2d.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
     a2d.DialogOK() -- accept device selection
+    a2dtest.WaitForSystemTask()
     apple2.Type("NEWNAME")
     a2d.DialogOK() -- accept name
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK() -- confirm erase
     a2dtest.WaitForAlert({match="error"})
     test.Snap("Special > Format Disk... - Format Error" .. suffix)
     s6d1:load(disk)
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     a2d.CheckAllDrives()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 end)
 
 DialogTest(
@@ -242,10 +248,12 @@ DialogTest(
 
     -- select RAMFactor
     a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Erase Disk... - Drive selected" .. suffix)
 
     -- accept selection
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Erase Disk... - Prompt for name" .. suffix)
 
     -- type new name
@@ -254,15 +262,16 @@ DialogTest(
 
     -- accept typed name
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.Snap("Special > Erase Disk... - Confirm erase" .. suffix)
 
     -- confirm erase
     a2d.DialogOK({no_wait=true})
-    emu.wait(0.15)
+    emu.wait(0.15) -- during erase
     test.Snap("Special > Erase Disk... - Erase in progress" .. suffix)
 
     -- cleanup
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     a2d.RenamePath("/NEWNAME", "RAM1")
 
     -- Erasing error
@@ -272,18 +281,20 @@ DialogTest(
     s6d1:unload()
     a2d.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
     a2d.DialogOK() -- accept device selection
+    a2dtest.WaitForSystemTask()
     apple2.Type("NEWNAME")
     a2d.DialogOK() -- accept name
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK() -- confirm erase
     a2dtest.WaitForAlert({match="error"})
     test.Snap("Special > Erase Disk... - Erase Error" .. suffix)
     s6d1:load(disk)
     a2d.DialogCancel()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     a2d.CheckAllDrives()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 end)
 
 --------------------------------------------------
@@ -299,6 +310,7 @@ DialogTest(
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("Shortcuts > Add a Shortcut..." .. suffix)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     shortcut_added = true
 end)
 
@@ -316,6 +328,7 @@ DialogTest(
     test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut" .. suffix)
     apple2.DownArrowKey()
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.Snap("Shortcuts > Edit a Shortcut... - Editing" .. suffix)
     a2d.DialogCancel()
     a2d.CloseAllWindows()
@@ -364,13 +377,13 @@ DialogTest(
     a2d.OAShortcut("1") -- run first shortcut
     util.WaitFor(
       "progress dialog", function()
-        emu.wait(1)
         return a2dtest.OCRFrontWindowContent():upper():match("FILES REMAINING")
-    end)
+      end, {wait=1})
     test.Snap("Copy to RAMCard Progress" .. suffix)
     a2d.DialogCancel()
 
     -- cleanup
+    a2d.EraseVolume("RAM1")
     a2d.DeletePath("/A2.DESKTOP/LOCAL/DESKTOP.CONFIG")
     a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
     a2d.Reboot()
@@ -385,6 +398,7 @@ DialogTest(
   "Special > Copy Disk...",
   function(suffix)
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
 
     -- "Full Disk Copy"
     a2d.InvokeMenuItem(3, 2)
@@ -401,11 +415,12 @@ DialogTest(
     apple2.DownArrowKey() -- S1,D1
     apple2.DownArrowKey() -- S6,D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- select destination
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
     test.Snap("Disk Copy - Select destination" .. suffix)
     a2d.DialogOK()
 
@@ -429,34 +444,35 @@ DialogTest(
     -- formatting
     util.WaitFor(
       "formatting", function()
-        emu.wait(1)
         return a2dtest.OCRFrontWindowContent(bounds):match("Formatting")
-    end)
+      end, {wait=1})
     test.Snap("Disk Copy - Formatting" .. suffix)
+    util.WaitFor(
+      "done formatting", function()
+        return a2dtest.OCRFrontWindowContent(bounds):match("Reading")
+      end, {wait=1})
+
+    emu.wait(10) -- let progress bar advance
 
     -- reading progress
     util.WaitFor(
       "reading", function()
-        emu.wait(1)
         return a2dtest.OCRFrontWindowContent(bounds):match("Reading")
-    end)
-    emu.wait(10)
+      end, {wait=1})
     test.Snap("Disk Copy - Reading progress" .. suffix)
 
     -- writing progress
     util.WaitFor(
       "writing", function()
-        emu.wait(1)
         return a2dtest.OCRFrontWindowContent(bounds):match("Writing")
-    end)
-    emu.wait(10)
+      end, {wait=1})
     test.Snap("Disk Copy - Writing progress" .. suffix)
 
     -- success
     a2dtest.WaitForAlert({match="successful", timeout=3600})
     test.Snap("Disk Copy - Success" .. suffix)
     a2d.DialogOK()
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     -- "Smart Block Copy"
     a2d.InvokeMenuItem(3, 1) -- Options > Smart Block Copy
@@ -464,6 +480,7 @@ DialogTest(
     apple2.DownArrowKey() -- S1,D1
     apple2.DownArrowKey() -- S6,D1
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey() -- S6,D1
     apple2.DownArrowKey() -- S6,D2
     a2d.DialogOK()
@@ -481,17 +498,20 @@ DialogTest(
     a2dtest.WaitForAlert({match="not completed"})
     test.Snap("Disk Copy - Failure" .. suffix)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- cleanup
     emu.wait(10) -- scanning drives
     a2d.OAShortcut('Q') -- back to DeskTop
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
     a2dtest.WaitForAlert() -- 2 volumes with the same name (not 'match' for running localized)
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     local image1 = s6d1.filename
     s6d1:unload()
     a2d.CheckAllDrives()
-    emu.wait(15)
+    a2dtest.WaitForSystemTask()
     a2d.RenamePath("/FLOPPY1", "FLOPPY2")
     s6d1:load(image1)
     a2d.Reboot()
@@ -505,26 +525,27 @@ DialogTest(
     a2d.ToggleOptionShowShortcutsOnStartup()
     a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2d.Reboot()
+    a2dtest.ConfigureForSelector()
 
     -- Launcher: Copying to RAMCard...
-    emu.wait(5)
+    emu.wait(5) -- let copy progress
     test.Snap("Selector - Copying app to RAMCard..." .. suffix)
     a2d.WaitForDesktopReady()
 
     -- Shortcuts dialog
-    emu.wait(10) -- let copying finish
+    a2dtest.WaitForSystemTask()
     test.Snap("Selector - Shortcuts dialog" .. suffix)
 
     -- File > Run a Program...
     a2d.OAShortcut('R')
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("Selector - Run a Program..." .. suffix)
     a2d.DialogCancel()
 
     -- Copy to RAMCard...
     apple2.DownArrowKey()
     apple2.ReturnKey()
-    emu.wait(2)
+    emu.wait(2) -- let copy progress
     test.Snap("Selector - Copying shortcut to RAMCard..." .. suffix)
 
     -- cleanup
@@ -532,6 +553,7 @@ DialogTest(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady() -- back to Shortcuts
     apple2.Type("D")
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady() -- back to DeskTop
     a2d.ToggleOptionCopyToRAMCard()
     a2d.ToggleOptionShowShortcutsOnStartup()

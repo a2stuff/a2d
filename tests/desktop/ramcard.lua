@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Repeat the following for these permutations:
 
@@ -55,9 +53,9 @@ function RenameTest(name, proc)
          -- Copy to /RAM1
          a2d.SelectPath("/A2.DESKTOP")
          a2d.CopySelectionTo("/RAM1", true)
-         emu.wait(80) -- copy is slow
+         a2dtest.WaitForSystemTask()
          -- Switch to copy
-         a2d.OpenPath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM", {no_validate=true})
+         a2d.InvokePath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
          a2d.WaitForDesktopReady()
 
          a2d.RenamePath("/RAM1/A2.DESKTOP", "NEWNAME")
@@ -134,7 +132,7 @@ RenameTest(
   function(dtpath)
     -- Apple Menu > Calculator
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should have run")
     a2d.CloseWindow()
 end)
@@ -147,7 +145,7 @@ RenameTest(
   function(dtpath)
     -- Apple Menu > Control Panels
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels should have run")
     a2d.CloseWindow()
 
@@ -161,13 +159,13 @@ RenameTest(
   "settings",
   function(dtpath)
     -- Control Panel, change desktop pattern, close, quit, restart
-    a2d.OpenPath(dtpath.."/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL", {no_validate=true})
+    a2d.InvokePath(dtpath.."/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.LeftArrowKey()
     apple2.ControlKey("D")
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.CloseWindow()
 
-    a2d.OpenPath(dtpath.."/DESKTOP.SYSTEM", {no_validate=true})
+    a2d.InvokePath(dtpath.."/DESKTOP.SYSTEM")
     a2d.WaitForCopyToRAMCard()
 
     test.Snap("verify desktop pattern changed")
@@ -182,7 +180,7 @@ RenameTest(
     -- Windows are saved on exit/restored on restart
     a2d.SelectPath(dtpath.."/DESKTOP.SYSTEM")
     local count = a2dtest.GetWindowCount()
-    a2d.OpenSelection()
+    a2d.OpenSelection({no_wait=true})
     a2d.WaitForDesktopReady()
     test.ExpectEquals(a2dtest.GetWindowCount(), count, "windows should be restored")
 end)
@@ -196,7 +194,7 @@ RenameTest(
   function(dtpath)
     -- Invoking another application (e.g. `BASIC.SYSTEM`)
     -- then quitting back to DeskTop (quit handler)
-    a2d.OpenPath(dtpath.."/EXTRAS/BASIC.SYSTEM", {no_validate=true})
+    a2d.InvokePath(dtpath.."/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
@@ -211,16 +209,16 @@ RenameTest(
     -- Modifying shortcuts (selector)
     a2d.SelectPath(dtpath.."/EXTRAS/BASIC.SYSTEM")
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     a2d.DialogOK()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath(dtpath.."/DESKTOP.SYSTEM", {no_validate=true})
+    a2d.InvokePath(dtpath.."/DESKTOP.SYSTEM")
     a2d.WaitForCopyToRAMCard()
 
     a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify shortcut persisted")
     a2d.DialogCancel()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 end)

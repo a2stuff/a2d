@@ -7,8 +7,6 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 -- Smoke tests for verifying shift works as a modifier on the IIgs
 
 --[[
@@ -27,9 +25,8 @@ test.Step(
         m.MoveToApproximately(x, y)
         apple2.PressShift()
         m.Click()
-        a2d.WaitForRepaint()
+        a2dtest.WaitForSystemTask()
         apple2.ReleaseShift()
-        emu.wait(1)
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should be extended")
 end)
@@ -55,7 +52,7 @@ test.Step(
         m.MoveByApproximately(40, 30)
         m.ButtonUp()
         apple2.ReleaseShift()
-        emu.wait(1)
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have been extended")
 end)

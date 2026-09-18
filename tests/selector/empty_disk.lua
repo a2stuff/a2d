@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Configure a system with DeskTop booting from slot 7 and a floppy
   drive in slot 6. Place a ProDOS formatted disk without `PRODOS` in

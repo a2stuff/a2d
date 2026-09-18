@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Rename the `APPLE.MENU` directory. Launch DeskTop. Verify that the
@@ -44,11 +43,12 @@ test.Step(
     -- Folder, single item but auxtype $8642
     a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CHANGE.TYPE")
     a2d.InvokeMenuItem(a2d.APPLE_MENU, 3)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     apple2.TabKey() -- focus on auxtype
     a2d.ClearTextField()
     apple2.Type("8642")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.Reboot()
     a2d.WaitForDesktopReady()
     a2d.OpenMenu(a2d.APPLE_MENU)

@@ -7,8 +7,6 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 require("lib/date_and_time")
 
 ClockTests("IIgs Clock")

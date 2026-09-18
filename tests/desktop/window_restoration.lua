@@ -6,8 +6,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 prodos_floppy1.dsk"
 
 local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 
-a2d.ConfigureRepaintTime(2)
-
 -- Need to ensure DESKTOP.FILE gets written out or window headers
 -- will change
 
@@ -21,7 +19,7 @@ a2d.QuitAndRestart()
 test.Step(
   "Subdirectory header values",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS")
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.CloseAllWindows()
@@ -39,17 +37,25 @@ test.Step(
   function()
     a2d.SelectAll()
     a2d.OAShortcut("O") -- File > Open
+    a2dtest.WaitForSystemTask()
     a2d.ClearSelection()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectNothingChanged(function()
         a2d.CopyDisk()
+        a2d.WaitForDesktopReady()
+
         a2d.OAShortcut("Q") -- File > Quit
         a2d.WaitForDesktopReady()
     end)
 
     a2d.CloseAllWindows()
+    a2dtest.WaitForSystemTask()
+    a2dtest.WaitForSystemTask()
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.CopyDisk()
+        a2d.WaitForDesktopReady()
+
         a2d.OAShortcut("Q") -- File > Quit
         a2d.WaitForDesktopReady()
     end)
@@ -65,13 +71,15 @@ end)
 test.Step(
   "Window geometry and scroll position",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES")
+    a2d.OpenWindow("/TESTS/FILE.TYPES")
     a2d.GrowWindowBy(-40, -20)
     for i = 1,10 do
       apple2.RightArrowKey()
       apple2.DownArrowKey()
+      a2dtest.WaitForSystemTask()
     end
     a2d.ClearSelection()
+    a2dtest.WaitForSystemTask()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.CloseAllWindows()
 end)
@@ -85,7 +93,7 @@ end)
 test.Step(
   "Parent icon of restored window undims",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
+    a2d.OpenWindow("/A2.DESKTOP")
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.CloseAllWindows()
@@ -111,7 +119,7 @@ test.Variants(
     "By Type",
   },
   function(idx, name)
-    a2d.OpenPath("/TESTS/FILE.TYPES")
+    a2d.OpenWindow("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, idx)
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
@@ -130,7 +138,7 @@ end)
 test.Step(
   "Disk II Drive polling",
   function()
-    a2d.OpenPath("/FLOPPY1")
+    a2d.OpenWindow("/FLOPPY1")
     a2d.Quit() -- to Bitsy Bye
 
     local drive = s6d1
@@ -156,7 +164,7 @@ end)
 test.Step(
   "Drag selection still functions",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES")
+    a2d.OpenWindow("/TESTS/FILE.TYPES")
     a2d.ClearSelection()
     a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
     a2d.DragSelectMultipleVolumes()
@@ -172,7 +180,7 @@ end)
 test.Step(
   "Trash name",
   function()
-    a2d.OpenPath("/TESTS")
+    a2d.OpenWindow("/TESTS")
     a2d.RenameSelection("TRASH")
     a2d.QuitAndRestart()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "TRASH", "Case is retained")
@@ -186,7 +194,7 @@ end)
 test.Step(
   "Holding OA+SA skips restoration",
   function()
-    a2d.OpenPath("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
     a2d.Quit()
     apple2.BitsyInvokeFile("PRODOS")

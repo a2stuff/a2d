@@ -7,8 +7,6 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
 
@@ -23,7 +21,7 @@ test.Variants(
   },
   function(idx, name, press, release)
     a2d.CreateFolder("/A2.DESKTOP/TMP")
-    a2d.OpenPath("/A2.DESKTOP/TMP")
+    a2d.OpenWindow("/A2.DESKTOP/TMP")
     a2d.CreateFolder("A")
     a2d.CreateFolder("B")
     a2d.CreateFolder("C")
@@ -37,10 +35,8 @@ test.Variants(
 
       apple2.PressShift()
       apple2.TabKey()
-      emu.wait(1)
+      a2dtest.WaitForSystemTask()
       apple2.ReleaseShift()
-
-      a2d.WaitForRepaint()
 
       release()
 

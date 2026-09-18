@@ -1,6 +1,3 @@
-
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow
   keys to move the window outline. Press Escape. Verify that the
@@ -9,8 +6,8 @@ a2d.ConfigureRepaintTime(0.25)
 test.Step(
   "Move window with keyboard - cancelled",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.WaitForRepaint()
+    a2d.OpenWindow("/A2.DESKTOP")
+    a2dtest.WaitForSystemTask()
 
     local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
@@ -35,8 +32,8 @@ end)
 test.Step(
   "Move window with keyboard",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.WaitForRepaint()
+    a2d.OpenWindow("/A2.DESKTOP")
+    a2dtest.WaitForSystemTask()
 
     local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
@@ -46,7 +43,7 @@ test.Step(
       apple2.DownArrowKey()
     end
     apple2.ReturnKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local ax, ay, aw, ah = a2dtest.GetFrontWindowContentRect()
 
@@ -62,8 +59,8 @@ end)
 test.Step(
   "Resize window with keyboard - cancelled",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.WaitForRepaint()
+    a2d.OpenWindow("/A2.DESKTOP")
+    a2dtest.WaitForSystemTask()
 
     local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
@@ -88,8 +85,8 @@ end)
 test.Step(
   "Resize window with keyboard",
   function()
-    a2d.OpenPath("/A2.DESKTOP")
-    a2d.WaitForRepaint()
+    a2d.OpenWindow("/A2.DESKTOP")
+    a2dtest.WaitForSystemTask()
 
     local bx, by, bw, bh = a2dtest.GetFrontWindowContentRect()
 
@@ -99,7 +96,7 @@ test.Step(
       apple2.DownArrowKey()
     end
     apple2.ReturnKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     local ax, ay, aw, ah = a2dtest.GetFrontWindowContentRect()
 

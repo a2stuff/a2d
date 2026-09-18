@@ -1,4 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
 
 --[[
   Configure a system with a Mockingboard and a Zip Chip, with
@@ -10,7 +9,7 @@ test.Step(
   function()
     apple2.SetSystemConfig(":a2_config", "CPU type", 1 << 4, 1 << 4)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRFrontWindowContent()
     test.ExpectMatch(ocr, "Mockingboard", "a Mockingboard should be detected")
     test.ExpectIMatch(ocr, "ZIP CHIP", "a ZIP CHIP should be detected")

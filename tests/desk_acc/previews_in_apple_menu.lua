@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(2)
-
 --[[
   Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
 

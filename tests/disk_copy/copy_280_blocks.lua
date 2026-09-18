@@ -5,8 +5,6 @@ DISKARGS="-hard3 $HARDIMG -hard1 sizes/image_280_blocks.hdv -hard2 sizes/image_2
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 local s6d1 = manager.machine.images[":sl6:cffa2:cffa2_ata:0:hdd:image"]
 local s6d2 = manager.machine.images[":sl6:cffa2:cffa2_ata:1:hdd:image"]
 

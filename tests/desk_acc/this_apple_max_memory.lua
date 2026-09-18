@@ -6,14 +6,12 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 -- TODO: See if we can get MAME to support 16MB RamWorks and RamFactor
 
 test.Step(
   "Lots and lots of memory",
   function()
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Memory: 49,216K", "memory count should be 49,216K")
 end)

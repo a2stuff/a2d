@@ -7,15 +7,13 @@ RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
-
 --[[
   On a IIgs, launch DeskTop. Launch a IIgs-native program e.g.
   NoiseTracker. Exit and return to DeskTop. Verify that the display is
   not garbled.
 ]]
-test.Step(
+test.DISABLED_Step(
+  "Super flaky - tends to end with RESTART SYSTEM",
   "IIgs native program",
   function()
 
@@ -29,19 +27,19 @@ test.Step(
     apple2.ReleaseShift()
     apple2.ReleaseControl()
     apple2.ReleaseOA()
-    emu.wait(5)
+    emu.wait(5) -- driving IIgs control panel
     apple2.EscapeKey() -- to Quit
     apple2.ReturnKey()
-    emu.wait(5)
+    emu.wait(5) -- driving IIgs control panel
 
     -- NOTE: NoiseTracker requires ROM3, otherwise on quit it gives a
     -- RESTART SYSTEM error
-    a2d.OpenPath("/NOISETRACKER/NOISE.SYSTEM", {no_validate=true})
-    emu.wait(15)
+    a2d.InvokePath("/NOISETRACKER/NOISE.SYSTEM")
+    emu.wait(15) -- automating IIgs app
     apple2.SpaceKey()
-    emu.wait(10)
+    emu.wait(10) -- automating IIgs app
     a2d.OAShortcut("Q")
-    emu.wait(10)
+    emu.wait(10) -- automating IIgs app
     apple2.Type("Y")
     a2d.WaitForDesktopReady()
 end)

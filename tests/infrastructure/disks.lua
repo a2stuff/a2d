@@ -10,8 +10,6 @@ local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
 local s7d1 = manager.machine.images[":sl7:scsi:scsibus:6:harddisk:image"]
 
-a2d.ConfigureRepaintTime(0.25)
-
 test.Step(
   "swap images",
   function()

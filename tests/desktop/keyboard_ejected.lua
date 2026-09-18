@@ -5,7 +5,6 @@ DISKARGS="-flop1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
 local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 
 --[[

@@ -1,13 +1,11 @@
---[[ BEGINCONFIG ==================================================
+--[[ BEGINCONFIG ========================================
 
 MODEL="apple2ee"
 MODELARGS="-sl2 mouse -sl1 cffa2 -sl6 '' -sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG -hard3 disk_a.2mg"
 WAITFORDESKTOP="false"
 
-================================================== ENDCONFIG ]]
-
-a2d.ConfigureRepaintTime(0.25)
+======================================== ENDCONFIG ]]
 
 --[[
   Configure a system with a SmartPort controller in slot 1 and one
@@ -21,7 +19,7 @@ test.Step(
     util.WaitFor(
       "error", function()
         return apple2.GrabTextScreen():match("UNABLE TO LOAD PRODOS")
-    end)
+      end, {wait=1})
     apple2.ControlReset()
     apple2.TypeLine("PR#1")
     a2d.WaitForDesktopReady()
@@ -35,8 +33,8 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
-    emu.wait(5)
-    a2d.OpenPath("/A")
+    a2dtest.WaitForSystemTask()
+    a2d.OpenWindow("/A")
     a2d.SelectAll()
     test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "volume should have formatted")
 end)

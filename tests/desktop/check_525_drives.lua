@@ -8,8 +8,6 @@ DISKARGS="\
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Start desktop. Verify 5 volumes are present. Toggle option to not
   check 5.25" volumes on startup. Restart. Verify 3 volumes are

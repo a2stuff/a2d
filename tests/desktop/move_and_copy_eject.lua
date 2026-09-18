@@ -8,8 +8,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 floppy_with_files.dsk -flop2 prodos_floppy2.dsk
 local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 local s6d2 = manager.machine.images[":sl6:diskiing:1:525"]
 
-a2d.ConfigureRepaintTime(1)
-
 --[[
   Configure a system with removable disks, e.g. Disk II in S6D1, and
   prepare two ProDOS disks with volume names `SRC` and `DST`, and a
@@ -34,13 +32,14 @@ test.Step(
 
     a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
     a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     drive:unload()
     drive:load(dst)
     apple2.ControlKey("D") -- Drives
-    emu.wait(2)
+    a2dtest.WaitForSystemTask()
     apple2.Type("FLOPPY2")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
 
     -- This count can change if DeskTop's copy buffer changes size.
     -- TODO: Make this dynamic somehow?
@@ -54,14 +53,14 @@ test.Step(
       drive:unload()
       drive:load(dst)
       a2d.DialogOK()
+      a2dtest.WaitForSystemTask()
     end
 
-    emu.wait(8)
     a2d.CheckAllDrives()
 
-    a2d.OpenPath("/FLOPPY2/LOREM.IPSUM", {no_validate=true})
+    a2d.InvokePath("/FLOPPY2/LOREM.IPSUM")
 
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Lorem ipsum.*hac habitasse", "file contents should be the same")
 
     -- cleanup
@@ -96,7 +95,7 @@ test.Step(
     a2dtest.WaitForAlert({match="Insert the disk: WITH%.FILES"})
     a2d.DialogCancel()
 
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
     test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "LOREM.IPSUM", "clicked icon should be selected")
@@ -130,11 +129,10 @@ test.Step(
 
     a2dtest.WaitForAlert({match="Insert the disk: WITH%.FILES"})
     a2d.DialogCancel()
-    a2d.WaitForRepaint()
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK() -- OK
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
     test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
@@ -156,10 +154,10 @@ test.Step(
     local src = drive.filename
 
     a2d.CreateFolder("/WITH.FILES/FOLDER")
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
 
-    a2d.OpenPath("/WITH.FILES")
-    emu.wait(1)
+    a2d.OpenWindow("/WITH.FILES")
+    a2dtest.WaitForSystemTask()
 
     a2d.Select("FOLDER")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
@@ -172,7 +170,7 @@ test.Step(
 
     a2dtest.WaitForAlert({match="Insert the disk: WITH%.FILES"})
     a2d.DialogCancel()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
 
     a2dtest.ExpectNotHanging()
 

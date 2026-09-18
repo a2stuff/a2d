@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(2)
-
 --[[
   NOTE: Currently MAME does not allow configuring a system without
   a No-Slot Clock so testing is limited:
@@ -27,12 +25,15 @@ a2d.ConfigureRepaintTime(2)
 test.Step(
   "Time format repaint",
   function()
-    a2d.OpenPath("/TESTS/FILE.TYPES")
+    a2d.OpenWindow("/TESTS/FILE.TYPES")
     a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
     a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
     a2d.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
-    a2dtest.ExpectFullRepaint(a2d.DialogOK)
+    a2dtest.ExpectFullRepaint(function()
+        a2d.DialogOK()
+        a2dtest.WaitForSystemTask()
+    end)
     test.Snap("verify 24-hour format shown")
     a2d.CloseAllWindows()
     a2d.Reboot()
@@ -50,12 +51,12 @@ test.Step(
     local count = a2dtest.GetWindowCount()
     a2d.OpenSelection()
     apple2.ReturnKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), count, "expect window closed")
 
     a2d.OpenSelection()
     apple2.EscapeKey()
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), count, "expect window closed")
 
     a2d.CloseAllWindows()
@@ -80,7 +81,7 @@ test.DISABLED_Step(
       apple2.DownArrowKey()
       apple2.TabKey()
     end
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify fields are read-only")
     a2d.DialogCancel()
     a2d.CloseAllWindows()
@@ -99,6 +100,7 @@ test.Step(
     a2d.OAShortcut("1") -- 12-hour
     test.Snap("verify 12-hour, no leading 0 on hours")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)
 
@@ -115,6 +117,7 @@ test.Step(
     a2d.OAShortcut("2") -- 24-hour
     test.Snap("verify 24-hour, leading 0 on hours")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     a2d.CloseAllWindows()
 end)
 

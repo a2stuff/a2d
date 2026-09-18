@@ -1,5 +1,3 @@
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Run on system with real-time clock; verify that time shows in
   top-right of menu.
@@ -18,7 +16,7 @@ test.Step(
   "Clock paints correctly after volume selected",
   function()
     a2d.SelectPath("/A2.DESKTOP")
-    emu.wait(10)
+    emu.wait(10) -- let menu clock refresh
     test.Snap("verify clock is in top-right of screen")
 end)
 

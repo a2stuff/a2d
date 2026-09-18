@@ -5,8 +5,6 @@ DISKARGS="-hard1 $HARDIMG"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Configure a system with a RAMCard, and set DeskTop to copy itself to
   the RAMCard on startup. Launch Shortcuts. File > Run a Program....
@@ -21,18 +19,20 @@ test.Step(
     a2d.ToggleOptionShowShortcutsOnStartup() -- enable
     a2d.ToggleOptionCopyToRAMCard() -- enable
     a2d.Reboot()
+    a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
     -- test
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop%s.*\n.*%sRam1",
                 "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
     -- cleanup
     apple2.Type("D")
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM1")
@@ -53,18 +53,20 @@ test.Step(
     a2d.AddShortcut("/A2.DESKTOP/READ.ME")
     a2d.ToggleOptionShowShortcutsOnStartup() -- enable
     a2d.Reboot()
+    a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
     -- test
     a2d.OAShortcut("R")
     apple2.ControlKey("D") -- Drives
-    emu.wait(5)
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "A2%.DeskTop%s.*\n.*%sRam1",
                 "A2.DESKTOP should be first")
     a2d.DialogCancel()
 
     -- cleanup
     apple2.Type("D")
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.Reboot()
@@ -127,6 +129,7 @@ test.Step(
     a2d.CloseAllWindows()
     a2d.Reboot()
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForSelector()
 
     apple2.Type("1")
     a2d.DialogOK()
@@ -134,12 +137,14 @@ test.Step(
     test.ExpectMatch(a2dtest.OCRScreen(), "Shortcuts%s.*1%s.*Monarch",
                 "shortcuts list should render correctly")
     a2d.DialogOK()
+    a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Shortcuts%s.*1%s.*Monarch",
                 "shortcuts list should render correctly")
 
     -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
+    a2dtest.ConfigureForDeskTop()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM1")
     a2d.Reboot()
@@ -162,19 +167,20 @@ test.Step(
     a2d.ToggleOptionCopyToRAMCard() -- enable
     a2d.CloseAllWindows()
     a2d.Reboot()
+    a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
     apple2.Type("1")
     a2d.DialogOK({no_wait=true})
-    emu.wait(1)
+    emu.wait(1) -- abort copy
     apple2.EscapeKey()
-    emu.wait(1)
+    a2dtest.WaitForSystemTask()
 
     apple2.Type("1")
     a2d.DialogOK()
     apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX")
-    emu.wait(1)
+    emu.wait(1) -- automating BASIC prompt
     test.ExpectMatch(apple2.GrabTextScreen(), "/RAM1/EXTRAS/", "prefix should be set")
 
     apple2.TypeLine("BYE")
@@ -182,6 +188,7 @@ test.Step(
 
     -- cleanup
     apple2.Type("D")
+    a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
     a2d.DeletePath("/A2.DESKTOP/LOCAL")
     a2d.EraseVolume("RAM1")
@@ -210,7 +217,7 @@ test.Step(
     apple2.Type("1")
     a2d.DialogOK()
     a2dtest.MultiSnap(20, "long path does not render over frame")
-    emu.wait(5)
+    emu.wait(5) -- finish copy and invoke external app
     a2d.WaitForDesktopReady()
 
     -- cleanup

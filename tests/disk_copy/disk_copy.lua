@@ -4,8 +4,6 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk -flop2 dos33_floppy.dsk"
 
 ======================================== ENDCONFIG ]]
 
-a2d.ConfigureRepaintTime(0.25)
-
 --[[
   Double-click an item. Verify that the corresponding action button
   flashes
@@ -14,6 +12,8 @@ test.Step(
   "Disk Selection - Double-click",
   function()
     a2d.CopyDisk()
+    a2dtest.ConfigureForDiskCopy()
+
     local listbox_x, listbox_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)
@@ -24,7 +24,7 @@ test.Step(
             return a2dtest.OCRScreen({invert=true}):match("OK")
           end)
     end)
-    a2d.WaitForRepaint()
+    a2dtest.WaitForSystemTask()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(listbox_x+130, listbox_y+15)
