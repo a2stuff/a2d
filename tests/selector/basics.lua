@@ -14,9 +14,9 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 ProDOS_2_4_3.po"
 test.Step(
   "Startup menu",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     a2d.InvokeMenuItem(3, 2) -- Startup, Slot 6
@@ -27,8 +27,8 @@ test.Step(
     a2d.WaitForDesktopReady()
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -38,9 +38,9 @@ end)
 test.Step(
   "/RAM exists",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     apple2.Type("1")
@@ -56,8 +56,8 @@ test.Step(
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -68,14 +68,14 @@ end)
 test.Step(
   "/RAM exists after Shortcuts and DeskTop",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.Quit()
+    desktop.Quit()
 
     apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
@@ -91,8 +91,8 @@ test.Step(
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -104,9 +104,9 @@ end)
 test.Step(
   "BIN goes black",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     apple2.Type("1")
     a2d.DialogOK({no_wait=true})
@@ -117,8 +117,8 @@ test.Step(
     a2d.WaitForDesktopReady()
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -135,9 +135,9 @@ test.Variants(
     {"SA+R shortcut", a2d.SAShortcut},
   },
   function(idx, name, func)
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -149,8 +149,8 @@ test.Variants(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -168,9 +168,9 @@ test.Variants(
     {"SA+6 shortcut", a2d.SAShortcut},
   },
   function(idx, name, func)
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     func("6")
@@ -181,8 +181,8 @@ test.Variants(
     a2d.WaitForDesktopReady()
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -194,9 +194,9 @@ end)
 test.Step(
   "no ramcard, volume order",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -211,8 +211,8 @@ test.Step(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -224,16 +224,16 @@ end)
 test.Step(
   "no shortcuts",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     a2dtest.ExpectNotHanging()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -244,9 +244,9 @@ end)
 test.Step(
   "text screen not truncated launching BINSCII",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BINSCII")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BINSCII")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     apple2.Type("1")
@@ -263,8 +263,8 @@ test.Step(
     a2d.WaitForDesktopReady()
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -277,9 +277,9 @@ end)
 test.Step(
   "button states",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForSelector()
 
@@ -308,8 +308,8 @@ test.Step(
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForDeskTop()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -321,9 +321,9 @@ end)
 test.Step(
   "button states after Run a Program",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -342,8 +342,8 @@ test.Step(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -354,9 +354,9 @@ end)
 test.Step(
   "Run a Program - can't select a folder",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     a2d.OAShortcut("R")
@@ -366,8 +366,8 @@ test.Step(
     a2d.DialogCancel()
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -378,9 +378,9 @@ end)
 test.Step(
   "Run an alias",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     a2d.OAShortcut("R")
@@ -392,8 +392,8 @@ test.Step(
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -404,9 +404,9 @@ end)
 test.Step(
   "Run an alias for a deleted target",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForSelector()
 
@@ -421,8 +421,8 @@ test.Step(
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForDeskTop()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -434,9 +434,9 @@ end)
 test.Step(
   "Run an alias via a shortcut",
   function()
-    a2d.AddShortcut("/TESTS/ALIASES/BASIC.ALIAS")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/TESTS/ALIASES/BASIC.ALIAS")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     apple2.Type("1")
@@ -448,8 +448,8 @@ test.Step(
 
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -461,10 +461,10 @@ end)
 test.Step(
   "Run an alias for a deleted target via a shortcut",
   function()
-    a2d.AddShortcut("/TESTS/ALIASES/DELETED.ALIAS")
+    desktop.AddShortcut("/TESTS/ALIASES/DELETED.ALIAS")
 
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForSelector()
 
@@ -478,8 +478,8 @@ test.Step(
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForDeskTop()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -491,11 +491,11 @@ end)
 test.Step(
   "Run a deleted alias via a shortcut",
   function()
-    a2d.AddShortcut("/TESTS/ALIASES/BASIC.ALIAS")
+    desktop.AddShortcut("/TESTS/ALIASES/BASIC.ALIAS")
     -- Rename instead of delete; same effect, but lets us restore state
-    a2d.RenamePath("/TESTS/ALIASES/BASIC.ALIAS", "RENAMED")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.RenamePath("/TESTS/ALIASES/BASIC.ALIAS", "RENAMED")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForSelector()
 
@@ -508,8 +508,8 @@ test.Step(
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForDeskTop()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
-    a2d.RenamePath("/TESTS/ALIASES/RENAMED", "BASIC.ALIAS")
+    desktop.RenamePath("/TESTS/ALIASES/RENAMED", "BASIC.ALIAS")
 end)

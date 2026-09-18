@@ -16,9 +16,9 @@ DISKARGS="-flop3 $HARDIMG"
 test.Step(
   "Regression test for #789",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     apple2.Type("1")
     a2d.DialogOK()

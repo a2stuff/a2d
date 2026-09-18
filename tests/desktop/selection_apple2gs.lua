@@ -16,11 +16,11 @@ RESOLUTION="704x462"
 test.Step(
   "click second volume icon",
   function()
-    a2d.Select("A")
+    desktop.Select("A")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "single icon selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "single icon selected")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         apple2.PressShift()
@@ -28,7 +28,7 @@ test.Step(
         a2dtest.WaitForSystemTask()
         apple2.ReleaseShift()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should be extended")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "selection should be extended")
 end)
 
 
@@ -40,10 +40,10 @@ end)
 test.Step(
   "mod-drag-select a second volume icon",
   function()
-    a2d.Select("A")
+    desktop.Select("A")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x-20, y-10)
@@ -54,5 +54,5 @@ test.Step(
         apple2.ReleaseShift()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have been extended")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "selection should have been extended")
 end)

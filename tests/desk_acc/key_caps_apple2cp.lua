@@ -13,7 +13,6 @@ DISKARGS="-flop3 $HARDIMG"
 test.Step(
   "Key Caps - Apple IIc+",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
     test.Snap("verify the keyboard layout is \"extended\"")
 end)

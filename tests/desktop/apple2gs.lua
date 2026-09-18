@@ -34,7 +34,7 @@ test.DISABLED_Step(
 
     -- NOTE: NoiseTracker requires ROM3, otherwise on quit it gives a
     -- RESTART SYSTEM error
-    a2d.InvokePath("/NOISETRACKER/NOISE.SYSTEM")
+    desktop.InvokePath("/NOISETRACKER/NOISE.SYSTEM", {no_wait=true})
     emu.wait(15) -- automating IIgs app
     apple2.SpaceKey()
     emu.wait(10) -- automating IIgs app

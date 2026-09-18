@@ -13,7 +13,6 @@ DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 test.Step(
   "Key Caps - Apple IIc",
   function()
-    a2d.InvokePath("/A2.DESKTOP.2/APPLE.MENU/KEY.CAPS")
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/A2.DESKTOP.2/APPLE.MENU/KEY.CAPS")
     test.Snap("verify the keyboard layout is \"original\"")
 end)

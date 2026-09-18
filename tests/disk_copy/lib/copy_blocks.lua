@@ -1,6 +1,7 @@
 
 apple2 = require("apple2")
 a2d = require("a2d")
+desktop = require("desktop")
 test = require("test")
 a2dtest = require("a2dtest")
 util = require("util")
@@ -20,7 +21,7 @@ function CopyBlocksTests(blocks, src_img, dst_img)
         a2dtest.WaitForSystemTask()
       end
 
-      a2d.CopyDisk()
+      desktop.CopyDisk()
       a2dtest.ConfigureForDiskCopy()
 
       a2d.InvokeMenuItem(3, idx) -- Options > Smart Block Copy or Full Disk Copy

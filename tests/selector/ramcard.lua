@@ -15,10 +15,10 @@ test.Step(
   "Drive order when copied to RAMCard",
   function()
     -- configure
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup() -- enable
+    desktop.ToggleOptionCopyToRAMCard() -- enable
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -34,9 +34,9 @@ test.Step(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -50,9 +50,9 @@ test.Step(
   "Drive order when not copied to RAMCard",
   function()
     -- configure
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionShowShortcutsOnStartup() -- enable
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -68,8 +68,8 @@ test.Step(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -84,11 +84,11 @@ end)
 test.Step(
   "Aborted copy on boot",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
-    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
+    desktop.ToggleOptionShowShortcutsOnStartup() -- enable
+    desktop.ToggleOptionCopyToRAMCard() -- enable
+    desktop.CloseAllWindows()
+    desktop.Reboot()
 
     util.WaitFor(
       "shortcut copying", function()
@@ -106,9 +106,9 @@ test.Step(
     -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -123,11 +123,11 @@ end)
 test.Step(
   "Copy on use for unsupported type",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH", {copy="use"})
-    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH", {copy="use"})
+    desktop.ToggleOptionShowShortcutsOnStartup() -- enable
+    desktop.ToggleOptionCopyToRAMCard() -- enable
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForSelector()
 
@@ -145,9 +145,9 @@ test.Step(
     apple2.Type("D")
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForDeskTop()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -162,11 +162,11 @@ end)
 test.Step(
   "Aborted copy on use, retried",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
-    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
+    desktop.ToggleOptionShowShortcutsOnStartup() -- enable
+    desktop.ToggleOptionCopyToRAMCard() -- enable
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -190,9 +190,9 @@ test.Step(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -204,14 +204,14 @@ end)
 test.Step(
   "Long path in progress dialog",
   function()
-    a2d.CreateFolder("/RAM1/ABCDEF123456789")
-    a2d.CreateFolder("/RAM1/ABCDEF123456789/ABCDEF123456789")
-    a2d.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL", "/RAM1/ABCDEF123456789/ABCDEF123456789")
-    a2d.AddShortcut("/RAM1/ABCDEF123456789/ABCDEF123456789/KARATEKA.YELL", {copy="use"})
-    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CreateFolder("/RAM1/ABCDEF123456789")
+    desktop.CreateFolder("/RAM1/ABCDEF123456789/ABCDEF123456789")
+    desktop.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL", "/RAM1/ABCDEF123456789/ABCDEF123456789")
+    desktop.AddShortcut("/RAM1/ABCDEF123456789/ABCDEF123456789/KARATEKA.YELL", {copy="use"})
+    desktop.ToggleOptionShowShortcutsOnStartup() -- enable
+    desktop.ToggleOptionCopyToRAMCard() -- enable
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     apple2.Type("1")
@@ -223,8 +223,8 @@ test.Step(
     -- cleanup
     apple2.Type("D")
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

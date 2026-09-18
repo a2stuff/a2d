@@ -12,8 +12,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "Search all volumes",
   function()
-    a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.CloseAllWindows()
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("PRODOS")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -29,8 +29,8 @@ end)
 test.Step(
   "Search open volume",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("PRODOS")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -46,8 +46,8 @@ end)
 test.Step(
   "Search open volume",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("PRODOS")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -64,8 +64,8 @@ end)
 test.Step(
   "OA+O on selection",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("CAL*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -84,8 +84,8 @@ end)
 test.Step(
   "SA+O on selection",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("CAL*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -110,9 +110,9 @@ end)
 test.Step(
   "Double-click on selection in inactive window",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
-    a2d.CycleWindows() -- put volume in foreground
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
+    desktop.CycleWindows() -- put volume in foreground
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("CAL*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -134,13 +134,13 @@ end)
 test.Step(
   "Deeply nested",
   function()
-    a2d.OpenWindow("/TESTS/FIND.FILES")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/TESTS/FIND.FILES")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.Snap("verify no crash")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -150,15 +150,15 @@ end)
 test.Step(
   "Long pathnames",
   function()
-    a2d.RenamePath("/TESTS", "ABCDEF123456789")
-    a2d.OpenWindow("/ABCDEF123456789")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.RenamePath("/TESTS", "ABCDEF123456789")
+    desktop.OpenWindow("/ABCDEF123456789")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.Snap("verify no crash")
-    a2d.CloseWindow()
-    a2d.RenamePath("/ABCDEF123456789", "TESTS")
+    desktop.CloseWindow()
+    desktop.RenamePath("/ABCDEF123456789", "TESTS")
 end)
 
 --[[
@@ -169,8 +169,8 @@ end)
 test.Step(
   "Selection",
   function()
-    a2d.OpenWindow("/TESTS/FOLDER")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/TESTS/FOLDER")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()

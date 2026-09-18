@@ -11,6 +11,7 @@ local c = coroutine.create(function()
     a2d = require("a2d")
     a2dtest = require("a2dtest")
     mgtk = require("mgtk")
+    desktop = require("desktop")
     a2d.InitSystem() -- async; outside require
 
     a2dtest.ConfigureForDeskTop()

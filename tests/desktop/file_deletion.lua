@@ -16,12 +16,12 @@ test.Step(
   "Window with deleted file refreshes",
   function()
     -- Create file to delete, and remember icon position
-    a2d.SelectPath("/RAM1")
+    desktop.SelectPath("/RAM1")
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
-    a2d.CreateFolder("/RAM1/FILE")
+    desktop.CreateFolder("/RAM1/FILE")
 
     -- Open other window, remember coords
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
     local click_x, click_y = a2dtest.GetFrontWindowDragCoords()
 
     -- Get second window open and visible
@@ -29,8 +29,8 @@ test.Step(
         m.MoveToApproximately(icon_x, icon_y)
         m.DoubleClick()
     end)
-    a2d.MoveWindowBy(0,100)
-    a2d.SelectAll()
+    desktop.MoveWindowBy(0,100)
+    desktop.SelectAll()
 
     -- Activate other window by clicking on title bar
     a2d.InMouseKeysMode(function(m)
@@ -40,7 +40,7 @@ test.Step(
     end)
 
     a2dtest.DHRDarkness()
-    a2d.DeleteSelection()
+    desktop.DeleteSelection()
     test.Snap("verify RAM1 window refreshes")
 end)
 
@@ -53,26 +53,26 @@ end)
 test.Step(
   "Volume selection after deletion",
   function()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.SelectPath("/Trash")
+    desktop.SelectPath("/Trash")
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenWindow("/RAM1")
-    a2d.GrowWindowBy(200, 0)
-    a2d.CreateFolder("A")
-    a2d.CreateFolder("B")
-    a2d.CreateFolder("C")
+    desktop.OpenWindow("/RAM1")
+    desktop.GrowWindowBy(200, 0)
+    desktop.CreateFolder("A")
+    desktop.CreateFolder("B")
+    desktop.CreateFolder("C")
 
-    a2d.Select("A")
+    desktop.Select("A")
     local a_x, a_y = a2dtest.GetSelectedIconCoords()
-    a2d.Select("B")
+    desktop.Select("B")
     local b_x, b_y = a2dtest.GetSelectedIconCoords()
-    a2d.Select("C")
+    desktop.Select("C")
     local c_x, c_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     a2d.Drag(b_x, b_y, c_x, c_y)
     a2dtest.WaitForSystemTask()
@@ -91,7 +91,7 @@ test.Step(
     test.ExpectEquals(x, vol_x, "vol icon should be selected")
     test.ExpectEquals(y, vol_y, "vol icon should be selected")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -103,17 +103,17 @@ end)
 test.Step(
   "Deletion count",
   function()
-    a2d.SelectPath("/Trash")
+    desktop.SelectPath("/Trash")
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenWindow("/RAM1")
-    a2d.GrowWindowBy(200, 0)
-    a2d.CreateFolder("A")
-    a2d.CreateFolder("B")
+    desktop.OpenWindow("/RAM1")
+    desktop.GrowWindowBy(200, 0)
+    desktop.CreateFolder("A")
+    desktop.CreateFolder("B")
 
-    a2d.Select("A")
+    desktop.Select("A")
     local a_x, a_y = a2dtest.GetSelectedIconCoords()
-    a2d.Select("B")
+    desktop.Select("B")
     local b_x, b_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(b_x, b_y, a_x, a_y)
@@ -123,7 +123,7 @@ test.Step(
     a2d.DialogOK({no_wait=true})
     a2dtest.VerifyFilesRemainingCountdown(30, "deletion")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 
@@ -136,14 +136,14 @@ end)
 test.Step(
   "Window closed if folder deleted via trash",
   function()
-    a2d.SelectPath("/Trash")
+    desktop.SelectPath("/Trash")
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenWindow("/RAM1")
-    a2d.CreateFolder("F")
-    a2d.SelectAndOpen("F")
+    desktop.OpenWindow("/RAM1")
+    desktop.CreateFolder("F")
+    desktop.SelectAndOpen("F")
 
-    a2d.CycleWindows()
+    desktop.CycleWindows()
 
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, trash_x, trash_y)
@@ -163,14 +163,14 @@ end)
 test.Step(
   "Window closed if folder deleted via menu",
   function()
-    a2d.SelectPath("/Trash")
+    desktop.SelectPath("/Trash")
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.OpenWindow("/RAM1")
-    a2d.CreateFolder("F")
-    a2d.SelectAndOpen("F")
+    desktop.OpenWindow("/RAM1")
+    desktop.CreateFolder("F")
+    desktop.SelectAndOpen("F")
 
-    a2d.CycleWindows()
+    desktop.CycleWindows()
 
     a2d.OADelete()
     a2dtest.WaitForAlert({match="Are you sure"})
@@ -189,7 +189,7 @@ end)
 test.Step(
   "Nested file prompts",
   function()
-    a2d.SelectPath("/TESTS/DELETION/X")
+    desktop.SelectPath("/TESTS/DELETION/X")
     a2d.OADelete()
     a2dtest.WaitForAlert({match="Are you sure"})
     a2d.DialogOK()
@@ -214,8 +214,8 @@ test.Step(
     apple2.Type("Y")
     a2dtest.WaitForSystemTask()
 
-    a2d.SelectAll()
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "all files should be deleted")
+    desktop.SelectAll()
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "all files should be deleted")
 end)
 
 --[[
@@ -227,11 +227,11 @@ end)
 test.Step(
   "Ejected disk - before enumeration",
   function()
-    a2d.SelectPath("/Trash")
+    desktop.SelectPath("/Trash")
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
 
     -- Open window
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
 
     -- Eject disk
@@ -244,8 +244,8 @@ test.Step(
     a2d.DialogCancel() -- insert disk
     a2dtest.WaitForSystemTask()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "LOREM.IPSUM", "clicked icon should be selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "LOREM.IPSUM", "clicked icon should be selected")
 
     s6d1:load(current)
 end)
@@ -259,11 +259,11 @@ end)
 test.Step(
   "Ejected disk - after enumeration",
   function()
-    a2d.SelectPath("/Trash")
+    desktop.SelectPath("/Trash")
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
 
     -- Open window
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
 
     -- Drag to trash
@@ -285,9 +285,9 @@ test.Step(
     a2d.DialogOK() -- OK
     a2dtest.WaitForSystemTask()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
-    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
+    test.Expect(not desktop.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
     s6d1:load(current)
 end)

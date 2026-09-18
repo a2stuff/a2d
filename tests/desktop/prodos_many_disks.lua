@@ -44,7 +44,7 @@ DISKARGS="\
 test.Step(
   "No S0,D1 device gets created",
   function()
-    a2d.Quit()
+    desktop.Quit()
     apple2.WaitForBitsy()
 
     local list = apple2.GetProDOSDeviceList()

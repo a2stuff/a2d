@@ -25,18 +25,18 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "Time format repaint",
   function()
-    a2d.OpenWindow("/TESTS/FILE.TYPES")
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    desktop.OpenWindow("/TESTS/FILE.TYPES")
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
     a2dtest.ExpectFullRepaint(function()
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
     end)
     test.Snap("verify 24-hour format shown")
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -47,19 +47,19 @@ end)
 test.Step(
   "Escape and Return",
   function()
-    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
+    desktop.SelectPath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
     local count = a2dtest.GetWindowCount()
-    a2d.OpenSelection()
+    desktop.OpenSelection()
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), count, "expect window closed")
 
-    a2d.OpenSelection()
+    desktop.OpenSelection()
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), count, "expect window closed")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -70,8 +70,8 @@ test.DISABLED_Step(
   "Read only",
   "no configuration w/ driver but no writing logic",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     for i=1, 5 do
       apple2.UpArrowKey()
       apple2.UpArrowKey()
@@ -84,7 +84,7 @@ test.DISABLED_Step(
     a2dtest.WaitForSystemTask()
     test.Snap("verify fields are read-only")
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -95,13 +95,13 @@ end)
 test.Step(
   "12-hour",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
     test.Snap("verify 12-hour, no leading 0 on hours")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -112,12 +112,12 @@ end)
 test.Step(
   "24-hour",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
     test.Snap("verify 24-hour, leading 0 on hours")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 

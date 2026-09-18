@@ -15,9 +15,9 @@ local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 test.Step(
   "Solid Apple Double-Click",
   function()
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     -- Over "Extras"
     a2d.InMouseKeysMode(function(m)
@@ -40,7 +40,7 @@ end)
 test.Step(
   "Solid Apple File > Open",
   function()
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(30, 5)
@@ -64,7 +64,7 @@ end)
 test.Step(
   "Open Apple File > Open",
   function()
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(30, 5)
@@ -91,7 +91,7 @@ test.Variants(
     {"Open Apple + Solid Apple + o", "o"},
   },
   function(idx, name, key)
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
 
     a2d.OASAShortcut(key)
     a2dtest.WaitForSystemTask()
@@ -108,7 +108,7 @@ end)
 test.Step(
   "Open Apple + Solid Apple + Down",
   function()
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.OASADown()
     a2dtest.WaitForSystemTask()
 
@@ -127,7 +127,7 @@ test.Variants(
     {"With menu showing, Open Apple + Solid Apple + o", "o"},
   },
   function(idx, name, key)
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(30, 5)
         m.Click()
@@ -151,7 +151,7 @@ test.Variants(
     {"No selection, OA+SA+o", "o"},
   },
   function(idx, name, key)
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.OASAShortcut(key)
         a2dtest.WaitForSystemTask()
@@ -165,7 +165,7 @@ end)
 test.Step(
   "No selection, OA+SA+Down",
   function()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
         a2d.OASADown()
         a2dtest.WaitForSystemTask()
@@ -183,7 +183,7 @@ test.Step(
     local current = drive.filename
     drive:unload()
 
-    a2d.SelectPath("/FLOPPY1")
+    desktop.SelectPath("/FLOPPY1")
     a2d.OASADown()
     a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK() -- OK

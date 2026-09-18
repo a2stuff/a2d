@@ -1,6 +1,6 @@
 
 -- Remove clock driver (to avoid build-relative dates)
-a2d.RemoveClockDriverAndReboot()
+desktop.RemoveClockDriverAndReboot()
 
 --[[
   Open the Control Panels folder. View > by Name. Open International.
@@ -11,9 +11,9 @@ a2d.RemoveClockDriverAndReboot()
 test.Step(
   "International - full repaint",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.SelectAndOpen("INTERNATIONAL")
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    desktop.SelectAndOpen("INTERNATIONAL")
     a2d.OAShortcut("2") -- D/M/Y
     a2dtest.ExpectFullRepaint(function()
         a2d.DialogOK()
@@ -30,9 +30,9 @@ end)
 test.Step(
   "International - minimal repaint",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.SelectAndOpen("INTERNATIONAL")
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS")
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    desktop.SelectAndOpen("INTERNATIONAL")
     -- don't change anything
     a2dtest.ExpectMinimalRepaint(function()
         a2d.DialogOK()

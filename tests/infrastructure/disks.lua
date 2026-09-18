@@ -15,14 +15,14 @@ test.Step(
   function()
 
     s7d1:load("/Users/josh/dev/a2d/tests.hdv")
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     test.Snap("swapped hard1")
 
     s6d1:unload()
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     test.Snap("flop1 ejected")
 
     s6d2:unload() -- harmless if already empty
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     test.Snap("flop2 ejected")
 end)

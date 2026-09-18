@@ -16,16 +16,16 @@ test.Step(
   function()
     local image = s7d2.filename
 
-    a2d.SelectPath("/A")
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_EJECT_DISK)
+    desktop.SelectPath("/A")
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_EJECT_DISK)
     emu.wait(10) -- async drive validation
 
     test.Expect(not s7d2.image, "image should be unloaded")
-    a2d.CloseAllWindows()
-    a2d.SelectAll()
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "should be A2.DESKTOP and Trash")
+    desktop.CloseAllWindows()
+    desktop.SelectAll()
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "should be A2.DESKTOP and Trash")
 
     s7d2:load(image)
-    a2d.CheckAllDrives({no_wait=true})
+    desktop.CheckAllDrives({no_wait=true})
     a2dtest.MultiSnap(360, "verify A doesn't flicker on/off/on")
 end)

@@ -13,7 +13,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 full_800k.2mg -flop2 empty_800k.2mg"
 test.Step(
   "OK button resets after cancel",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- select source
@@ -65,7 +65,7 @@ end)
 test.Step(
   "OK button reset after success",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- select source

@@ -28,10 +28,10 @@ test.Step(
     local drive = s6d1
     local src = drive.filename
 
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
     a2dtest.WaitForSystemTask()
     drive:unload()
     drive:load(dst)
@@ -56,18 +56,16 @@ test.Step(
       a2dtest.WaitForSystemTask()
     end
 
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 
-    a2d.InvokePath("/FLOPPY2/LOREM.IPSUM")
-
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/FLOPPY2/LOREM.IPSUM")
     test.ExpectMatch(a2dtest.OCRScreen(), "Lorem ipsum.*hac habitasse", "file contents should be the same")
 
     -- cleanup
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     drive:unload()
     drive:load(src)
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 
@@ -83,10 +81,10 @@ test.Step(
     local drive = s6d1
     local src = drive.filename
 
-    a2d.SelectPath("/RAM1")
+    desktop.SelectPath("/RAM1")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     drive:unload()
@@ -97,8 +95,8 @@ test.Step(
 
     a2dtest.WaitForSystemTask()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "LOREM.IPSUM", "clicked icon should be selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "LOREM.IPSUM", "clicked icon should be selected")
 
     -- cleanup
     drive:load(src)
@@ -118,10 +116,10 @@ test.Step(
     local drive = s6d1
     local src = drive.filename
 
-    a2d.SelectPath("/RAM1")
+    desktop.SelectPath("/RAM1")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y, {sa_drop=true})
@@ -134,9 +132,9 @@ test.Step(
     a2d.DialogOK() -- OK
     a2dtest.WaitForSystemTask()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
-    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "WITH.FILES", "clicked icon should be selected")
+    test.Expect(not desktop.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
     -- cleanup
     drive:load(src)
@@ -153,16 +151,16 @@ test.Step(
     local drive = s6d1
     local src = drive.filename
 
-    a2d.CreateFolder("/WITH.FILES/FOLDER")
+    desktop.CreateFolder("/WITH.FILES/FOLDER")
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenWindow("/WITH.FILES")
+    desktop.OpenWindow("/WITH.FILES")
     a2dtest.WaitForSystemTask()
 
-    a2d.Select("FOLDER")
+    desktop.Select("FOLDER")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.Select("LOREM.IPSUM")
+    desktop.Select("LOREM.IPSUM")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     drive:unload()
@@ -176,5 +174,5 @@ test.Step(
 
     -- cleanup
     drive:load(src)
-    a2d.DeletePath("/WITH.FILES/FOLDER")
+    desktop.DeletePath("/WITH.FILES/FOLDER")
 end)

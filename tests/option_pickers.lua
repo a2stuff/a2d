@@ -6,12 +6,12 @@ test.Step(
   "Shortcuts picker (in DeskTop)",
   function()
     -- Create a shortcut
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)
@@ -23,7 +23,7 @@ test.Step(
         end)
         a2dtest.WaitForSystemTask()
     end)
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -33,10 +33,10 @@ end)
 test.Step(
   "Format/Erase dialog (in DeskTop)",
   function()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK-2)
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK-2)
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)
@@ -58,9 +58,9 @@ end)
 test.Step(
   "Selector (module)",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.ToggleOptionShowShortcutsOnStartup() -- enable
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.ToggleOptionShowShortcutsOnStartup() -- enable
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForSelector()
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()

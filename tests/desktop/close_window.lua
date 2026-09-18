@@ -11,8 +11,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "Close box normally closes only one window",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.SelectAndOpen("EXTRAS")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.SelectAndOpen("EXTRAS")
     local count = a2dtest.GetWindowCount()
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
@@ -21,7 +21,7 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), count - 1, "one window should have closed")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -39,14 +39,14 @@ test.Variants(
       { "Close shortcut with File menu open (Solid Apple, caps lock off)", a2d.SAShortcut, "W"},
   },
   function(idx, name, func, arg)
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.SelectAndOpen("EXTRAS")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.SelectAndOpen("EXTRAS")
     local count = a2dtest.GetWindowCount()
-    a2d.OpenMenu(a2d.FILE_MENU)
+    a2d.OpenMenu(desktop.FILE_MENU)
     func(arg)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), count - 1, "one window should have closed")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -56,14 +56,14 @@ end)
 test.Step(
   "Close box - animation runs",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.Click()
         a2dtest.MultiSnap(120, "verify close animation ran")
     end)
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -72,13 +72,13 @@ end)
 test.Step(
   "Close shortcut - animation runs",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
 
     -- NOTE: This is extremely timing-sensitive
     a2d.OAShortcut("W", {no_wait=true})
     a2dtest.MultiSnap(120, "verify close animation ran")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -89,8 +89,8 @@ end)
 test.Step(
   "Close animation doesn't dirty menu bar",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.SelectAndOpen("EXTRAS")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.SelectAndOpen("EXTRAS")
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -98,7 +98,7 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.Snap("verify menu bar is not dirty")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -108,7 +108,7 @@ end)
 test.Step(
   "Close animation doesn't leave stray rectangle",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
     local x, y = a2dtest.GetFrontWindowCloseBoxCoords()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -116,7 +116,7 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.Snap("verify desktop is not dirty")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -127,10 +127,10 @@ end)
 test.Step(
   "Close animates into volume icon if parent not available",
   function()
-    a2d.OpenWindow("/TESTS")
-    a2d.SelectAndOpen("FOLDER")
-    a2d.CycleWindows()
-    a2d.CloseWindow()
+    desktop.OpenWindow("/TESTS")
+    desktop.SelectAndOpen("FOLDER")
+    desktop.CycleWindows()
+    desktop.CloseWindow()
 
     -- NOTE: This is extremely timing-sensitive
     a2d.OAShortcut("W", {no_wait=true})
@@ -138,11 +138,11 @@ test.Step(
 
     a2dtest.WaitForSystemTask()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "TESTS", "clicked icon should be selected")
-    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "TESTS", "clicked icon should be selected")
+    test.Expect(not desktop.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -153,9 +153,9 @@ end)
 test.Step(
   "Close animates into parent icon if available",
   function()
-    a2d.OpenWindow("/TESTS")
-    a2d.SelectAndOpen("FOLDER")
-    a2d.SelectAndOpen("SUBFOLDER")
+    desktop.OpenWindow("/TESTS")
+    desktop.SelectAndOpen("FOLDER")
+    desktop.SelectAndOpen("SUBFOLDER")
 
     -- NOTE: This is extremely timing-sensitive
     a2d.OAShortcut("W", {no_wait=true})
@@ -163,11 +163,11 @@ test.Step(
 
     a2dtest.WaitForSystemTask()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "SUBFOLDER", "clicked icon should be selected")
-    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "SUBFOLDER", "clicked icon should be selected")
+    test.Expect(not desktop.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -178,12 +178,12 @@ end)
 test.Step(
   "Close animates into volume icon if not available but with other windows",
   function()
-    a2d.OpenWindow("/TESTS")
-    a2d.SelectAndOpen("FOLDER")
-    a2d.SelectAndOpen("SUBFOLDER")
-    a2d.CycleWindows() -- put TESTS on top
-    a2d.CloseWindow()
-    a2d.CycleWindows() -- put FOLDER on top
+    desktop.OpenWindow("/TESTS")
+    desktop.SelectAndOpen("FOLDER")
+    desktop.SelectAndOpen("SUBFOLDER")
+    desktop.CycleWindows() -- put TESTS on top
+    desktop.CloseWindow()
+    desktop.CycleWindows() -- put FOLDER on top
 
     -- NOTE: This is extremely timing-sensitive
     a2d.OAShortcut("W", {no_wait=true})
@@ -191,10 +191,10 @@ test.Step(
 
     a2dtest.WaitForSystemTask()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "TESTS", "clicked icon should be selected")
-    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "TESTS", "clicked icon should be selected")
+    test.Expect(not desktop.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 

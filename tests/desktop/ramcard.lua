@@ -19,50 +19,50 @@ function RenameTest(name, proc)
     {
       {name .. " - Not copied to RAMCard, rename load volume", false,
        function() -- setup
-         a2d.RenamePath("/A2.DESKTOP", "NEWNAME")
+         desktop.RenamePath("/A2.DESKTOP", "NEWNAME")
          return "/NEWNAME"
        end,
        function() -- cleanup
-         a2d.RenamePath("/NEWNAME", "A2.DESKTOP")
+         desktop.RenamePath("/NEWNAME", "A2.DESKTOP")
        end,
       },
 
       {name .. " - Copied to RAMCard, rename load volume", true,
        function() -- setup
-         a2d.RenamePath("/RAM1", "NEWNAME")
+         desktop.RenamePath("/RAM1", "NEWNAME")
          return "/NEWNAME/DESKTOP"
        end,
        function() -- cleanup
-         a2d.RenamePath("/NEWNAME", "RAM1")
-         a2d.EraseVolume("RAM1")
+         desktop.RenamePath("/NEWNAME", "RAM1")
+         desktop.EraseVolume("RAM1")
        end,
       },
 
       {name .. " - Copied to RAMCard, rename load folder", true,
        function() -- setup
-         a2d.RenamePath("/RAM1/DESKTOP", "NEWNAME")
+         desktop.RenamePath("/RAM1/DESKTOP", "NEWNAME")
          return "/RAM1/NEWNAME"
        end,
        function() -- cleanup
-         a2d.EraseVolume("RAM1")
+         desktop.EraseVolume("RAM1")
        end,
       },
 
       {name .. " - Not copied to RAMCard, rename load folder", false,
        function() -- setup
          -- Copy to /RAM1
-         a2d.SelectPath("/A2.DESKTOP")
-         a2d.CopySelectionTo("/RAM1", true)
+         desktop.SelectPath("/A2.DESKTOP")
+         desktop.CopySelectionTo("/RAM1", true)
          a2dtest.WaitForSystemTask()
          -- Switch to copy
-         a2d.InvokePath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM")
+         desktop.InvokePath("/RAM1/A2.DESKTOP/DESKTOP.SYSTEM", {no_wait=true})
          a2d.WaitForDesktopReady()
 
-         a2d.RenamePath("/RAM1/A2.DESKTOP", "NEWNAME")
+         desktop.RenamePath("/RAM1/A2.DESKTOP", "NEWNAME")
          return "/RAM1/NEWNAME"
        end,
        function() -- cleanup
-         a2d.EraseVolume("RAM1")
+         desktop.EraseVolume("RAM1")
        end,
       },
     },
@@ -70,27 +70,27 @@ function RenameTest(name, proc)
 
       -- configure
       if copied then
-        a2d.ToggleOptionCopyToRAMCard()
-        a2d.CloseAllWindows()
-        a2d.Reboot()
+        desktop.ToggleOptionCopyToRAMCard()
+        desktop.CloseAllWindows()
+        desktop.Reboot()
         a2d.WaitForDesktopReady()
       end
 
       -- setup
       local dtpath = setup()
 
-      a2d.CloseAllWindows()
-      a2d.ClearSelection()
+      desktop.CloseAllWindows()
+      desktop.ClearSelection()
 
       proc(dtpath)
 
-      a2d.CloseAllWindows()
-      a2d.ClearSelection()
+      desktop.CloseAllWindows()
+      desktop.ClearSelection()
 
       -- cleanup
       cleanup()
-      a2d.DeletePath("/A2.DESKTOP/LOCAL")
-      a2d.Reboot()
+      desktop.DeletePath("/A2.DESKTOP/LOCAL")
+      desktop.Reboot()
       a2d.WaitForDesktopReady()
   end)
 end
@@ -102,8 +102,8 @@ RenameTest(
   "overlays",
   function(dtpath)
     -- File > Copy To...
-    a2d.SelectPath(dtpath.."/DESKTOP.SYSTEM")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    desktop.SelectPath(dtpath.."/DESKTOP.SYSTEM")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "window and dialog+listbox should be open")
     a2d.DialogCancel()
 end)
@@ -116,8 +116,8 @@ RenameTest(
   "overlay + quit handler",
   function(dtpath)
     -- Special > Copy Disk
-    a2d.CloseAllWindows()
-    a2d.CopyDisk()
+    desktop.CloseAllWindows()
+    desktop.CopyDisk()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "dialog+listbox should be open")
     -- File > Quit returns to DeskTop
     a2d.OAShortcut("Q")
@@ -131,10 +131,10 @@ RenameTest(
   "desk accessories",
   function(dtpath)
     -- Apple Menu > Calculator
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CALCULATOR)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should have run")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -144,10 +144,10 @@ RenameTest(
   "relative folders",
   function(dtpath)
     -- Apple Menu > Control Panels
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels should have run")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
 end)
 
@@ -159,13 +159,13 @@ RenameTest(
   "settings",
   function(dtpath)
     -- Control Panel, change desktop pattern, close, quit, restart
-    a2d.InvokePath(dtpath.."/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath(dtpath.."/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.LeftArrowKey()
     apple2.ControlKey("D")
     a2dtest.WaitForSystemTask()
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
-    a2d.InvokePath(dtpath.."/DESKTOP.SYSTEM")
+    desktop.InvokePath(dtpath.."/DESKTOP.SYSTEM", {no_wait=true})
     a2d.WaitForCopyToRAMCard()
 
     test.Snap("verify desktop pattern changed")
@@ -178,9 +178,9 @@ RenameTest(
   "configuration",
   function(dtpath)
     -- Windows are saved on exit/restored on restart
-    a2d.SelectPath(dtpath.."/DESKTOP.SYSTEM")
+    desktop.SelectPath(dtpath.."/DESKTOP.SYSTEM")
     local count = a2dtest.GetWindowCount()
-    a2d.OpenSelection({no_wait=true})
+    desktop.OpenSelection({no_wait=true})
     a2d.WaitForDesktopReady()
     test.ExpectEquals(a2dtest.GetWindowCount(), count, "windows should be restored")
 end)
@@ -194,7 +194,7 @@ RenameTest(
   function(dtpath)
     -- Invoking another application (e.g. `BASIC.SYSTEM`)
     -- then quitting back to DeskTop (quit handler)
-    a2d.InvokePath(dtpath.."/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath(dtpath.."/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     apple2.WaitForBasicSystem()
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
@@ -207,16 +207,16 @@ RenameTest(
   "selector file",
   function(dtpath)
     -- Modifying shortcuts (selector)
-    a2d.SelectPath(dtpath.."/EXTRAS/BASIC.SYSTEM")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath(dtpath.."/EXTRAS/BASIC.SYSTEM")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokePath(dtpath.."/DESKTOP.SYSTEM")
+    desktop.InvokePath(dtpath.."/DESKTOP.SYSTEM", {no_wait=true})
     a2d.WaitForCopyToRAMCard()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_RUN_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     test.Snap("verify shortcut persisted")
     a2d.DialogCancel()

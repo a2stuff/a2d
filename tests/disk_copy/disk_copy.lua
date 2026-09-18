@@ -11,7 +11,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk -flop2 dos33_floppy.dsk"
 test.Step(
   "Disk Selection - Double-click",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     local listbox_x, listbox_y = a2dtest.GetFrontWindowContentRect()

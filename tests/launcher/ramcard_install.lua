@@ -17,12 +17,12 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "Copy to RAMCard fails gracefully",
   function()
-    a2d.CopyPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", "/A2.DESKTOP")
-    a2d.SelectPath("/A2.DESKTOP/BASIC.SYSTEM")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
+    desktop.CopyPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", "/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP/BASIC.SYSTEM")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.SORT_DIRECTORY)
     emu.wait(5) -- sort operation
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     apple2.WaitForBasicSystem()
 
     apple2.TypeLine("CREATE /RAM1/DESKTOP")
@@ -31,14 +31,14 @@ test.Step(
     apple2.TypeLine("-/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
-    a2d.ToggleOptionCopyToRAMCard() -- Enable
-    a2d.DeletePath("/A2.DESKTOP/BASIC.SYSTEM")
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard() -- Enable
+    desktop.DeletePath("/A2.DESKTOP/BASIC.SYSTEM")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     a2dtest.ExpectNotHanging()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

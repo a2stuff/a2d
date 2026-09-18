@@ -27,23 +27,23 @@ end
 test.Step(
   "windows with aligned right edges",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(300, 0)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(300, 0)
     a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenWindow("/RAM5", {keep_windows=true})
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(300, 55)
+    desktop.OpenWindow("/RAM5", {keep_windows=true})
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(300, 55)
     a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     test.ExpectEquals(rect1[3], rect2[3], "right edges should align")
     test.ExpectGreaterThan(rect1[4], rect2[2], "windows should overlap vertically")
-    a2d.CycleWindows()
+    desktop.CycleWindows()
 
-    a2d.SelectPath("/WITH.FILES", {keep_windows=true})
+    desktop.SelectPath("/WITH.FILES", {keep_windows=true})
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, rect1[3]+5, rect1[4]-5)
     a2d.InMouseKeysMode(function(m) m.Home() end)
@@ -51,7 +51,7 @@ test.Step(
     a2dtest.ExpectNotHanging()
 
     -- cleanup
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -65,23 +65,23 @@ end)
 test.Step(
   "windows with aligned left edges",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(300, 0)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(300, 0)
     a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenWindow("/RAM5", {keep_windows=true})
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(300, 55)
+    desktop.OpenWindow("/RAM5", {keep_windows=true})
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(300, 55)
     a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
     test.ExpectEquals(rect1[1], rect2[1], "left edges should align")
     test.ExpectGreaterThan(rect1[4], rect2[2], "windows should overlap vertically")
-    a2d.CycleWindows()
+    desktop.CycleWindows()
 
-    a2d.SelectPath("/WITH.FILES", {keep_windows=true})
+    desktop.SelectPath("/WITH.FILES", {keep_windows=true})
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x, y, rect1[1]-5, rect1[4]-5)
     a2d.InMouseKeysMode(function(m) m.Home() end)
@@ -89,7 +89,7 @@ test.Step(
     a2dtest.ExpectNotHanging()
 
     -- cleanup
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -102,26 +102,26 @@ end)
 test.Step(
   "icon clipped into two parts",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(200, 0)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(200, 0)
     a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenWindow("/RAM5", {keep_windows=true})
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(380, 60)
+    desktop.OpenWindow("/RAM5", {keep_windows=true})
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(380, 60)
     a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.CycleWindows()
+    desktop.CycleWindows()
 
     test.ExpectGreaterThan(rect1[3] - rect2[1], 0, "windows should just overlap")
     test.ExpectLessThan(rect1[3] - rect2[1], 10, "windows should just overlap")
     test.ExpectGreaterThan(rect1[4] - rect2[2], 0, "windows should just overlap")
     test.ExpectLessThan(rect1[4] - rect2[2], 10, "windows should just overlap")
 
-    a2d.SelectPath("/WITH.FILES", {keep_windows=true})
+    desktop.SelectPath("/WITH.FILES", {keep_windows=true})
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x-10, y+10, rect2[1]-5, rect1[4]+5)
     a2d.InMouseKeysMode(function(m) m.Home() end)
@@ -129,7 +129,7 @@ test.Step(
     a2dtest.ExpectNotHanging()
 
     -- cleanup
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -143,40 +143,40 @@ end)
 test.Step(
   "window right edges vs. volume icons",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.OpenWindow("/RAM5", {keep_windows=true})
+    desktop.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM5", {keep_windows=true})
 
-    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(510, 0)
+    desktop.OpenWindow("/A2.DESKTOP", {keep_windows=true})
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(510, 0)
     a2dtest.WaitForSystemTask()
     local rect1 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenWindow("/TESTS", {keep_windows=true})
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.MoveWindowBy(500, 00)
+    desktop.OpenWindow("/TESTS", {keep_windows=true})
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.MoveWindowBy(500, 00)
     a2dtest.WaitForSystemTask()
     local rect2 = GetWinFrameRect(mgtk.FrontWindow())
 
-    a2d.OpenWindow("/WITH.FILES", {keep_windows=true})
-    a2d.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
-    a2d.GrowWindowBy(0, 60)
-    a2d.MoveWindowBy(500, 0)
+    desktop.OpenWindow("/WITH.FILES", {keep_windows=true})
+    desktop.MoveWindowBy(-apple2.SCREEN_WIDTH, 0)
+    desktop.GrowWindowBy(0, 60)
+    desktop.MoveWindowBy(500, 0)
     a2dtest.WaitForSystemTask()
     local rect3 = GetWinFrameRect(mgtk.FrontWindow())
 
     while a2dtest.GetFrontWindowTitle():upper() ~= "A2.DESKTOP" do
-      a2d.CycleWindows()
+      desktop.CycleWindows()
       a2dtest.WaitForSystemTask()
     end
 
-    a2d.MoveWindowBy(-10, 0)
+    desktop.MoveWindowBy(-10, 0)
     a2dtest.WaitForSystemTask()
     test.Snap("verify volume icons repainted correctly")
     a2dtest.ExpectNotHanging()
 
     -- cleanup
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -193,23 +193,23 @@ end)
 test.Step(
   "reveal left/right/top edges of dimmed icon",
   function()
-    a2d.CreateFolder("/RAM1/A")
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(100, 80)
-    a2d.Select("A")
-    a2d.OpenSelection()
-    a2d.ClearSelection()
+    desktop.CreateFolder("/RAM1/A")
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(100, 80)
+    desktop.Select("A")
+    desktop.OpenSelection()
+    desktop.ClearSelection()
 
-    a2d.MoveWindowBy(-95, 70)
+    desktop.MoveWindowBy(-95, 70)
     test.Snap("verify top window covers just left edge of folder")
-    a2d.MoveWindowBy(210, 0)
+    desktop.MoveWindowBy(210, 0)
     test.Snap("verify top window covers just right edge of folder")
 
-    a2d.MoveWindowBy(-100, -35)
+    desktop.MoveWindowBy(-100, -35)
     test.Snap("verify top window covers just top edge of folder")
-    a2d.MoveWindowBy(200, 0)
+    desktop.MoveWindowBy(200, 0)
     test.Snap("verify folder repaints correctly")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)

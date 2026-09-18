@@ -35,14 +35,14 @@ function FormatEraseTest(name, func)
       name .. " - Erase",
     },
     function(idx)
-      a2d.CloseAllWindows()
-      a2d.ClearSelection()
+      desktop.CloseAllWindows()
+      desktop.ClearSelection()
       func(
         function(vol_selected)
           if vol_selected then
-            a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK+idx-1)
+            a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK+idx-1)
           else
-            a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2+idx-1)
+            a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2+idx-1)
           end
       end)
   end)

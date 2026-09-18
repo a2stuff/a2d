@@ -6,8 +6,8 @@
 test.Step(
   "About dialog closes on click",
   function()
-    a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
+    desktop.CloseAllWindows()
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_APPLE_II_DESKTOP)
     a2d.InMouseKeysMode(function(m)
         m.Click()
     end)
@@ -22,8 +22,8 @@ end)
 test.Step(
   "About dialog closes on key",
   function()
-    a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
+    desktop.CloseAllWindows()
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_APPLE_II_DESKTOP)
     apple2.Type("A")
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "dialog should have dismissed")

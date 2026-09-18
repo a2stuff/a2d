@@ -7,7 +7,7 @@
 test.Step(
   "Applesoft BASIC",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/HELLO.WORLD")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/HELLO.WORLD", {no_wait=true})
     util.WaitFor(
       "hello world", function()
         return apple2.GrabTextScreen():match("Hello world!")
@@ -20,7 +20,7 @@ end)
 test.Step(
   "Integer BASIC",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/APPLEVISION")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/APPLEVISION", {no_wait=true})
     util.WaitFor(
       "APPLE-VISION", function()
         return apple2.GrabTextScreen():match("APPLE%-VISION")
@@ -35,7 +35,7 @@ end)
 test.Step(
   "S.A.M.",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/EMERGENCY")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/EMERGENCY", {no_wait=true})
     util.WaitFor(
       "message", function()
         return apple2.GrabTextScreen():match("This is only a test")
@@ -48,7 +48,7 @@ end)
 test.Step(
   "PT3",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/AUTUMN.PT3")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/AUTUMN.PT3", {no_wait=true})
     util.WaitFor(
       "lores mixed",
       function()
@@ -64,7 +64,7 @@ end)
 test.Step(
   "CHIP-8",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/BLINKY.CH8")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/BLINKY.CH8", {no_wait=true})
     util.WaitFor(
       "lores full",
       function()

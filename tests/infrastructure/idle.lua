@@ -5,8 +5,8 @@ end
 test.Step(
   "About dialog closes on click",
   function()
-    a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
+    desktop.CloseAllWindows()
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_APPLE_II_DESKTOP)
 
     a2dtest.WaitForSystemTask()
 

@@ -13,7 +13,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
   operations are time-stamped.
 ]]
 
-a2d.RemoveClockDriverAndReboot()
+desktop.RemoveClockDriverAndReboot()
 
 --[[
   Start with a fresh disk image. Run DeskTop. Apple Menu > Control
@@ -30,22 +30,22 @@ a2d.RemoveClockDriverAndReboot()
 test.Step(
   "Fresh disk image",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
     test.ExpectNotMatch(a2dtest.OCRFrontWindowContent(), "Today", "dates should not say Today")
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    desktop.SelectAndOpen("DATE.AND.TIME")
     test.Snap("verify dialog date matches packaged file dates")
     a2dtest.ExpectFullRepaint(function()
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
     end)
     test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Today", "dates should now say Today")
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2dtest.ExpectMinimalRepaint(function()
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
     end)
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -57,8 +57,8 @@ end)
 test.Step(
   "Change date - persisted",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     apple2.UpArrowKey() -- change day
     apple2.TabKey()
     apple2.UpArrowKey() -- change month
@@ -68,23 +68,23 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     -- Should write timestamp to DESKTOP.SYSTEM. Restart to verify.
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     -- Create new folder
-    a2d.CreateFolder("/RAM1/NOT.TODAY")
+    desktop.CreateFolder("/RAM1/NOT.TODAY")
 
     -- Change date again to avoid "Today"
     apple2.SetProDOSDate(1999, 9, 13)
 
     -- Inspect file
-    a2d.SelectPath("/RAM1/NOT.TODAY")
+    desktop.SelectPath("/RAM1/NOT.TODAY")
     a2d.OAShortcut("I") -- File > Get Info
     test.Snap("verify date matches set previously set date")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.DeletePath("/RAM1/NOT.TODAY")
-    a2d.CloseAllWindows()
+    desktop.DeletePath("/RAM1/NOT.TODAY")
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -101,8 +101,8 @@ test.Step(
   "12-hour field behavior",
   function()
     apple2.SetProDOSTime(0, 0)
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
     apple2.TabKey() -- to month
     apple2.TabKey() -- to year
@@ -145,8 +145,8 @@ test.Step(
   "24-hour field behavior",
   function()
     apple2.SetProDOSTime(0, 0)
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 12-hour
     apple2.TabKey() -- to month
     apple2.TabKey() -- to year
@@ -178,12 +178,12 @@ end)
 test.Step(
   "Day ranges",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
 
     function IncDate(y1, m1, d1, y2, m2, d2)
       apple2.SetProDOSDate(y1, m1, d1)
       local yy,mm,dd = apple2.GetProDOSDate()
-      a2d.SelectAndOpen("DATE.AND.TIME")
+      desktop.SelectAndOpen("DATE.AND.TIME")
       apple2.UpArrowKey()
       a2d.DialogOK()
       a2dtest.WaitForSystemTask()
@@ -202,7 +202,7 @@ test.Step(
     function DecDate(y1, m1, d1, y2, m2, d2)
       apple2.SetProDOSDate(y1, m1, d1)
       local yy,mm,dd = apple2.GetProDOSDate()
-      a2d.SelectAndOpen("DATE.AND.TIME")
+      desktop.SelectAndOpen("DATE.AND.TIME")
       apple2.DownArrowKey()
       a2d.DialogOK()
       a2dtest.WaitForSystemTask()
@@ -267,8 +267,8 @@ local period_x = minute_x + 20
 test.Step(
   "Clicking fields",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
 
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
@@ -317,8 +317,8 @@ end)
 test.Step(
   "Clicking 24-hour",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("2") -- 24-hour
 
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
@@ -342,8 +342,8 @@ end)
 test.Step(
   "Arrows",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.SelectAndOpen("DATE.AND.TIME")
     a2d.OAShortcut("1") -- 12-hour
 
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
@@ -385,21 +385,21 @@ test.Step(
     -- Create file with known date
     local y, m, d = apple2.GetProDOSDate()
     apple2.SetProDOSDate(1999, 9, 13)
-    a2d.CreateFolder("/RAM1/WILL.BE.TODAY")
+    desktop.CreateFolder("/RAM1/WILL.BE.TODAY")
     -- Change the date so it's not current
     apple2.SetProDOSDate(y, m, d)
 
     -- Show window and resize/move it
-    a2d.OpenWindow("/RAM1")
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.GrowWindowBy(250, 0)
-    a2d.MoveWindowBy(0, 100)
+    desktop.OpenWindow("/RAM1")
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    desktop.GrowWindowBy(250, 0)
+    desktop.MoveWindowBy(0, 100)
     test.ExpectMatch(a2dtest.OCRScreen(), "September 13, 1999", "date should be shown in full")
 
     -- Use Date & Time to set date
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
     apple2.SetProDOSDate(1998, 9, 13) -- so we know the delta
-    a2d.SelectAndOpen("DATE.AND.TIME")
+    desktop.SelectAndOpen("DATE.AND.TIME")
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + year_x, dialog_y+field_y) -- year

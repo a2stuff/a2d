@@ -70,10 +70,10 @@ end)
 test.Step(
   "mouse, pull down",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Pull down, release on item
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.ButtonDown()
@@ -83,10 +83,10 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Pull down, release on separator
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.ButtonDown()
@@ -95,10 +95,10 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Pull down, release outside menu
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.ButtonDown()
@@ -107,7 +107,7 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -128,10 +128,10 @@ end)
 test.Step(
   "mouse, drop down",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Drop down, click on item
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
@@ -140,10 +140,10 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Drop down, click on separator
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
@@ -152,10 +152,10 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Drop down, click outside menu
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
@@ -164,7 +164,7 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -186,8 +186,8 @@ keyboard:
 test.Step(
   "keyboard",
   function()
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/A2.DESKTOP")
 
     -- Show but do nothing
     apple2.EscapeKey()
@@ -232,7 +232,7 @@ test.Step(
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -251,10 +251,10 @@ end)
 test.Step(
   "mouse, then keyboard",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Drop down, release on item
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
@@ -265,10 +265,10 @@ test.Step(
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Drop down, release on item
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
@@ -279,7 +279,7 @@ test.Step(
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -299,10 +299,10 @@ end)
 test.Step(
   "keyboard, then mouse",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Show using keyboard, then click on item
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
     end)
@@ -316,10 +316,10 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- Show using keyboard, then click on separator
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
     end)
@@ -335,7 +335,7 @@ test.Step(
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
 
     -- Show using keyboard, then click outside menu
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
     end)
@@ -359,8 +359,8 @@ end)
 test.Step(
   "Menu shortcut while menu is open",
   function()
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/A2.DESKTOP")
 
     -- Open menu with click
     a2d.InMouseKeysMode(function(m)
@@ -372,7 +372,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -383,17 +383,17 @@ end)
 test.Step(
   "Menu shortcut while menu is open",
   function()
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/A2.DESKTOP")
 
     -- Open menu with keyboard
-    a2d.OpenMenu(a2d.APPLE_MENU)
+    a2d.OpenMenu(desktop.APPLE_MENU)
 
     a2d.OAShortcut("O") -- File > Open
     a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -404,9 +404,9 @@ end)
 test.Step(
   "Non-arrow, non-shortcut keys are ignored",
   function()
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/A2.DESKTOP")
-    a2d.OpenMenu(a2d.FILE_MENU)
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/A2.DESKTOP")
+    a2d.OpenMenu(desktop.FILE_MENU)
 
     apple2.DownArrowKey() -- to File > Open
 
@@ -416,7 +416,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -428,8 +428,8 @@ end)
 test.Step(
   "View menu items disabled",
   function()
-    a2d.CloseAllWindows()
-    a2d.OpenMenu(a2d.VIEW_MENU)
+    desktop.CloseAllWindows()
+    a2d.OpenMenu(desktop.VIEW_MENU)
 
     test.Snap("note cursor position")
 

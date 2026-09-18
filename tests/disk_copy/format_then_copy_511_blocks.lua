@@ -19,11 +19,11 @@ test.Variants(
       a2dtest.WaitForSystemTask()
     end
 
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
 
-    a2d.FormatEraseSelectSlotDrive(6, 1)
+    desktop.FormatEraseSelectSlotDrive(6, 1)
     a2d.ClearTextField()
     apple2.Type("NEW.NAME" .. idx)
     a2d.DialogOK()
@@ -37,8 +37,8 @@ test.Variants(
 
     a2dtest.WaitForSystemTask()
 
-    a2d.ClearSelection()
-    a2d.CopyDisk()
+    desktop.ClearSelection()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     a2d.InvokeMenuItem(3, idx) -- Options > Smart Block Copy or Full Disk Copy

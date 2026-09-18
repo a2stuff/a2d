@@ -13,45 +13,45 @@ DISKARGS="-hard1 $HARDIMG"
 test.Step(
   "Restarting launcher (about 36s)",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
 
     -- Prior to fix, crashes around iteration 40
     local cpu = manager.machine.devices[":maincpu"]
     for i = 1, 50 do
-      a2d.SelectAndOpen("DESKTOP.SYSTEM")
+      desktop.SelectAndOpen("DESKTOP.SYSTEM")
       a2d.WaitForDesktopReady()
       --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
     end
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 test.Step(
   "Running external programs - DeskTop (about 50s)",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/SAMPLE.MEDIA")
+    desktop.OpenWindow("/A2.DESKTOP/SAMPLE.MEDIA")
 
     -- Prior to fix, hangs around iteration 60 (but doesn't crash to monitor)
     local cpu = manager.machine.devices[":maincpu"]
     for i = 1, 70 do
-      a2d.SelectAndOpen("KARATEKA.YELL", {no_wait=true})
+      desktop.SelectAndOpen("KARATEKA.YELL", {no_wait=true})
       a2d.WaitForDesktopReady()
       --print(string.format("i=%d SP=%02X", i, cpu.state.SP.value))
       test.Expect(not apple2.IsCrashedToMonitor(), "should not have crashed to monitor")
       test.ExpectGreaterThan(cpu.state.SP.value, 0x120, "stack should not be exausted")
     end
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 test.Step(
   "Running external programs - Selector (about 25s)",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     -- Prior to fix, runs out of stack around iteration 30 (but doesn't crash!)
@@ -67,7 +67,7 @@ test.Step(
 
     apple2.Type("D") -- Desktop
     a2d.WaitForDesktopReady()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

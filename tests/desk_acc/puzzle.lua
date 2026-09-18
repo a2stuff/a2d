@@ -8,14 +8,14 @@
 test.Step(
   "Puzzle not initially scrambled, and scrambles differently",
   function()
-    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE", {no_validate=true})
-    a2d.OpenSelection()
+    desktop.SelectPath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE", {no_validate=true})
+    desktop.OpenSelection()
     a2dtest.ExpectNothingChanged(function()
         -- close without scrambling
         apple2.EscapeKey()
         a2dtest.WaitForSystemTask()
         -- re-launches not scrambled
-        a2d.OpenSelection()
+        desktop.OpenSelection()
     end)
 
     a2dtest.ExpectRepaintFraction(
@@ -26,8 +26,8 @@ test.Step(
       end,
       "should scramble on key")
 
-    a2d.CloseWindow()
-    a2d.OpenSelection()
+    desktop.CloseWindow()
+    desktop.OpenSelection()
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
@@ -42,8 +42,8 @@ test.Step(
       end,
       "should scramble on click")
 
-    a2d.CloseWindow()
-    a2d.Reboot()
+    desktop.CloseWindow()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -54,7 +54,7 @@ end)
 test.Step(
   "Puzzle can be moved and closed with mouse without having to scramble first",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
 
     local id = mgtk.FrontWindow()
     local x1, y1 = a2dtest.GetFrontWindowDragCoords()
@@ -84,13 +84,13 @@ end)
 test.Step(
   "Puzzle can be closed with keyboard without having to scramble first",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
     local id = mgtk.FrontWindow()
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
     test.ExpectNotEquals(mgtk.FrontWindow(), id, "window should have closed")
 
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
     local id = mgtk.FrontWindow()
     a2d.OAShortcut("W")
     a2dtest.WaitForSystemTask()
@@ -106,7 +106,7 @@ end)
 test.Step(
   "Obscured window does not mispaint",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/PUZZLE")
 
     -- scramble
     apple2.SpaceKey()

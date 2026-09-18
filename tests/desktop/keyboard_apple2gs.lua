@@ -20,13 +20,13 @@ test.Variants(
     {"cycle - SA + shift-tab", apple2.PressSA, apple2.ReleaseSA},
   },
   function(idx, name, press, release)
-    a2d.CreateFolder("/A2.DESKTOP/TMP")
-    a2d.OpenWindow("/A2.DESKTOP/TMP")
-    a2d.CreateFolder("A")
-    a2d.CreateFolder("B")
-    a2d.CreateFolder("C")
-    a2d.SelectAll()
-    a2d.OpenSelectionAndCloseCurrent()
+    desktop.CreateFolder("/A2.DESKTOP/TMP")
+    desktop.OpenWindow("/A2.DESKTOP/TMP")
+    desktop.CreateFolder("A")
+    desktop.CreateFolder("B")
+    desktop.CreateFolder("C")
+    desktop.SelectAll()
+    desktop.OpenSelectionAndCloseCurrent()
     test.ExpectEquals(a2dtest.GetWindowCount(), 3, "A, B, C should be open")
 
     local sequence = ""
@@ -45,5 +45,5 @@ test.Variants(
 
     test.ExpectEquals(sequence, "BACBAC", "should cycle backwards")
 
-    a2d.DeletePath("/A2.DESKTOP/TMP")
+    desktop.DeletePath("/A2.DESKTOP/TMP")
 end)

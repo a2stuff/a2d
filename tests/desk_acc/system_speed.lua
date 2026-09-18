@@ -9,19 +9,19 @@
 test.Step(
   "Normal + OK / Fast + OK doesn't crash",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("N") -- Normal Speed
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNotHanging()
 
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     apple2.Type("F") -- Fast Speed
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     a2dtest.ExpectNotHanging()
 end)
 
@@ -33,7 +33,7 @@ end)
 test.Step(
   "Animation shields cursor correctly",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
 
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
 
@@ -50,5 +50,5 @@ test.Step(
     end)
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)

@@ -12,16 +12,16 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "New folders are scrolled into view",
   function()
-    a2d.OpenWindow("/TESTS")
+    desktop.OpenWindow("/TESTS")
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_NEW_FOLDER)
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_NEW_FOLDER)
     a2dtest.WaitForSystemTask()
     apple2.ReturnKey() -- default name
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.FOLDER", "new folder should be selected")
     test.Snap("verify scrolled into view")
     a2dtest.WaitForSystemTask()
-    a2d.DeletePath("/TESTS/NEW.FOLDER")
+    desktop.DeletePath("/TESTS/NEW.FOLDER")
 end)
 
 --[[
@@ -31,8 +31,8 @@ end)
 test.Step(
   "Duplicates are scrolled into view",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_DUPLICATE)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_DUPLICATE)
     a2dtest.WaitForSystemTask()
     a2d.ClearTextField()
     apple2.Type("DUPE")
@@ -40,7 +40,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "DUPE", "duplicate should be selected")
     test.Snap("verify scrolled into view")
-    a2d.DeletePath("/A2.DESKTOP/DUPE")
+    desktop.DeletePath("/A2.DESKTOP/DUPE")
 end)
 
 --[[
@@ -52,8 +52,8 @@ end)
 test.Step(
   "Duplicates updates selection correctly",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_DUPLICATE)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_DUPLICATE)
     a2dtest.WaitForSystemTask()
     a2d.ClearTextField()
     apple2.Type("DUPE")
@@ -61,7 +61,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "DUPE", "duplicate should be selected")
     test.Snap("verify only one icon appears selected")
-    a2d.DeletePath("/A2.DESKTOP/DUPE")
+    desktop.DeletePath("/A2.DESKTOP/DUPE")
 end)
 
 --[[
@@ -71,15 +71,15 @@ end)
 test.Step(
   "Rename works",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_RENAME)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_RENAME)
     a2dtest.WaitForSystemTask()
     a2d.ClearTextField()
     apple2.Type("NEW.NAME")
     apple2.ReturnKey() -- commit
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "file should have new name")
-    a2d.RenamePath("/A2.DESKTOP/NEW.NAME", "READ.ME")
+    desktop.RenamePath("/A2.DESKTOP/NEW.NAME", "READ.ME")
 end)
 
 --[[
@@ -89,7 +89,7 @@ end)
 test.Step(
   "Aborting rename works",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey() -- File > Rename
     a2d.ClearTextField()
     apple2.Type("NEW.NAME")
@@ -105,7 +105,7 @@ end)
 test.Step(
   "Clicking away to commit works",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey() -- File > Rename
     a2d.ClearTextField()
     apple2.Type("NEW.NAME")
@@ -117,7 +117,7 @@ test.Step(
 
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "file should have new name")
-    a2d.RenamePath("/A2.DESKTOP/NEW.NAME", "READ.ME")
+    desktop.RenamePath("/A2.DESKTOP/NEW.NAME", "READ.ME")
 end)
 
 --[[
@@ -127,7 +127,7 @@ end)
 test.Step(
   "Trying to commit rename while empty is no-op",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey() -- File > Rename
     a2d.ClearTextField()
     apple2.ReturnKey() -- commit
@@ -142,7 +142,7 @@ end)
 test.Step(
   "Trying to abort rename while empty is no-op",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey() -- File > Rename
     a2d.ClearTextField()
     apple2.EscapeKey()
@@ -157,7 +157,7 @@ end)
 test.Step(
   "Clicking away while empty is no-op",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey() -- File > Rename
     a2d.ClearTextField()
 
@@ -177,14 +177,14 @@ end)
 test.Step(
   "Rename file icon works",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey() -- File > Rename
     a2d.ClearTextField()
     apple2.Type("NEW.NAME")
     apple2.ReturnKey() -- commit
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "file should have new name")
-    a2d.RenamePath("/A2.DESKTOP/NEW.NAME", "READ.ME")
+    desktop.RenamePath("/A2.DESKTOP/NEW.NAME", "READ.ME")
 end)
 
 --[[
@@ -194,7 +194,7 @@ end)
 test.Step(
   "Clicking away without changing file icon name is okay",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey() -- File > Rename
 
     a2d.InMouseKeysMode(function(m)
@@ -214,7 +214,7 @@ end)
 test.Step(
   "Rename volume icon works",
   function()
-    a2d.SelectPath("/TESTS")
+    desktop.SelectPath("/TESTS")
     apple2.ReturnKey() -- File > Rename
 
     a2d.ClearTextField()
@@ -222,7 +222,7 @@ test.Step(
     apple2.ReturnKey() -- commit
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NEW.NAME", "volume should have new name")
-    a2d.RenamePath("/NEW.NAME", "TESTS")
+    desktop.RenamePath("/NEW.NAME", "TESTS")
 end)
 
 --[[
@@ -232,7 +232,7 @@ end)
 test.Step(
   "Clicking away without changing volume icon name is okay",
   function()
-    a2d.SelectPath("/TESTS")
+    desktop.SelectPath("/TESTS")
     apple2.ReturnKey() -- File > Rename
     a2dtest.WaitForSystemTask()
 
@@ -266,8 +266,8 @@ test.Variants(
     {"volume icon hit testing", "/A2.DESKTOP"},
   },
   function(idx, name, path)
-    a2d.SelectPath(path)
-    local icons = a2d.GetSelectedIcons()
+    desktop.SelectPath(path)
+    local icons = desktop.GetSelectedIcons()
     test.Expect(#icons, 1, "only one icon should be selected")
     local icon = icons[1]
 
@@ -289,7 +289,7 @@ test.Variants(
     test.Snap("verify no rename prompt is visible")
 
     -- with no selection, click icon's name
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon.x+15, icon.y+22)
         m.Click()
@@ -298,7 +298,7 @@ test.Variants(
     test.Snap("verify no rename prompt is visible")
 
     -- with many icons selected, click icon's name
-    a2d.SelectAll()
+    desktop.SelectAll()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon.x+15, icon.y+22)
         m.Click()
@@ -314,8 +314,8 @@ end)
 test.Step(
   "can't rename Trash",
   function()
-    a2d.SelectPath("/Trash")
-    local icons = a2d.GetSelectedIcons()
+    desktop.SelectPath("/Trash")
+    local icons = desktop.GetSelectedIcons()
     test.Expect(#icons, 1, "only one icon should be selected")
     local icon = icons[1]
     a2d.InMouseKeysMode(function(m)
@@ -335,10 +335,10 @@ end)
 test.Step(
   "rename obscured icon",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.MoveWindowBy(0, 190)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.MoveWindowBy(0, 190)
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_RENAME)
+        a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_RENAME)
         a2dtest.WaitForSystemTask()
         apple2.EscapeKey()
         a2dtest.WaitForSystemTask()
@@ -353,8 +353,8 @@ end)
 test.Step(
   "renaming an offscreen volume icon, no window open",
   function()
-    a2d.SelectPath("/TESTS")
-    local icons = a2d.GetSelectedIcons()
+    desktop.SelectPath("/TESTS")
+    local icons = desktop.GetSelectedIcons()
     test.Expect(#icons, 1, "only one icon should be selected")
     local icon = icons[1]
     a2d.Drag(icon.x+5, icon.y+5, 100, apple2.SCREEN_HEIGHT)
@@ -366,7 +366,7 @@ test.Step(
         apple2.EscapeKey() -- abort
     end)
 
-    a2d.Reboot() -- get icon back where it belongs
+    desktop.Reboot() -- get icon back where it belongs
     a2d.WaitForDesktopReady()
 end)
 
@@ -379,12 +379,12 @@ end)
 test.Step(
   "renaming an offscreen volume icon, window open",
   function()
-    a2d.SelectPath("/TESTS")
-    local icons = a2d.GetSelectedIcons()
+    desktop.SelectPath("/TESTS")
+    local icons = desktop.GetSelectedIcons()
     test.Expect(#icons, 1, "only one icon should be selected")
     local icon = icons[1]
 
-    a2d.OpenSelection()
+    desktop.OpenSelection()
 
     a2d.Drag(icon.x+5, icon.y+5, 100, apple2.SCREEN_HEIGHT)
     a2dtest.WaitForSystemTask()
@@ -396,7 +396,7 @@ test.Step(
         a2dtest.WaitForSystemTask()
     end)
 
-    a2d.Reboot() -- get icon back where it belongs
+    desktop.Reboot() -- get icon back where it belongs
     a2d.WaitForDesktopReady()
 end)
 
@@ -409,15 +409,15 @@ end)
 test.Step(
   "renaming an offscreen volume icon, window open",
   function()
-    a2d.SelectPath("/TESTS")
-    local icons = a2d.GetSelectedIcons()
+    desktop.SelectPath("/TESTS")
+    local icons = desktop.GetSelectedIcons()
     test.Expect(#icons, 1, "only one icon should be selected")
     local icon = icons[1]
 
-    a2d.CloseAllWindows()
-    a2d.SelectAll()
-    a2d.OpenSelection()
-    a2d.ClearSelection()
+    desktop.CloseAllWindows()
+    desktop.SelectAll()
+    desktop.OpenSelection()
+    desktop.ClearSelection()
 
     a2d.Drag(icon.x+5, icon.y+5, 100, apple2.SCREEN_HEIGHT)
     a2dtest.WaitForSystemTask()
@@ -429,7 +429,7 @@ test.Step(
         a2dtest.WaitForSystemTask()
     end)
 
-    a2d.Reboot() -- get icon back where it belongs
+    desktop.Reboot() -- get icon back where it belongs
     a2d.WaitForDesktopReady()
 end)
 
@@ -445,7 +445,7 @@ end)
 test.Step(
   "caret in middle of name",
   function()
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
 
     -- New Folder
     a2d.OAShortcut("N") -- File > New Folder
@@ -486,7 +486,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "GAMMA.DELTA", "whole name should be used")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -501,10 +501,10 @@ end)
 test.Step(
   "overlong path",
   function()
-    a2d.CreateFolder("/RAM1/ABDEF123456789")
-    a2d.CreateFolder("/RAM1/ABDEF123456789/ABDEF123456789")
-    a2d.CreateFolder("/RAM1/ABDEF123456789/ABDEF123456789/ABDEF123456789")
-    a2d.OpenWindow("/RAM1/ABDEF123456789/ABDEF123456789/ABDEF123456789")
+    desktop.CreateFolder("/RAM1/ABDEF123456789")
+    desktop.CreateFolder("/RAM1/ABDEF123456789/ABDEF123456789")
+    desktop.CreateFolder("/RAM1/ABDEF123456789/ABDEF123456789/ABDEF123456789")
+    desktop.OpenWindow("/RAM1/ABDEF123456789/ABDEF123456789/ABDEF123456789")
     a2dtest.WaitForSystemTask()
 
     -- New Folder
@@ -549,7 +549,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "NAME2ISOK", "shorter name should work")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -560,7 +560,7 @@ end)
 test.Step(
   "dragging folders",
   function()
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
 
     a2d.OAShortcut("N") -- File > New Folder
     apple2.ControlKey("X")
@@ -574,10 +574,10 @@ test.Step(
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
 
-    a2d.Select("A")
+    desktop.Select("A")
     local a_x, a_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.Select("B")
+    desktop.Select("B")
     local b_x, b_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(b_x, b_y, a_x, a_y)
@@ -588,7 +588,7 @@ test.Step(
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNotHanging()
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -598,7 +598,7 @@ end)
 test.Step(
   "colliding volume names",
   function()
-    a2d.SelectPath("/RAM1")
+    desktop.SelectPath("/RAM1")
     apple2.ReturnKey()
     a2d.ClearTextField()
     apple2.Type("TESTS")
@@ -619,7 +619,7 @@ end)
 test.Step(
   "colliding volume names - still editable",
   function()
-    a2d.SelectPath("/RAM1")
+    desktop.SelectPath("/RAM1")
     apple2.ReturnKey()
     a2d.ClearTextField()
     apple2.Type("TESTS")
@@ -633,7 +633,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "TESTS2", "name should be accepted")
 
-    a2d.RenamePath("/TESTS2", "RAM1")
+    desktop.RenamePath("/TESTS2", "RAM1")
 end)
 
 --[[
@@ -646,7 +646,7 @@ end)
 test.Step(
   "colliding file names - still editable",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     apple2.ReturnKey()
     a2d.ClearTextField()
     apple2.Type("PRODOS")
@@ -660,7 +660,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS2", "name should be accepted")
 
-    a2d.RenamePath("/A2.DESKTOP/PRODOS2", "READ.ME")
+    desktop.RenamePath("/A2.DESKTOP/PRODOS2", "READ.ME")
 end)
 
 --[[
@@ -671,9 +671,9 @@ end)
 test.Step(
   "windows renamed",
   function()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x+5, y+5)
         m.Click()
@@ -689,11 +689,11 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "both windows should still be open")
-    a2d.CycleWindows()
+    desktop.CycleWindows()
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "NEW.NAME", "volume window should be renamed")
 
-    a2d.RenamePath("/NEW.NAME", "A2.DESKTOP")
+    desktop.RenamePath("/NEW.NAME", "A2.DESKTOP")
 end)
 
 --[[
@@ -704,21 +704,21 @@ end)
 test.Step(
   "windows renamed, with a view switch",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
-    a2d.CycleWindows()
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    desktop.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be active")
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
     a2dtest.WaitForSystemTask()
-    a2d.Select("EXTRAS")
+    desktop.Select("EXTRAS")
     apple2.ReturnKey() -- File > Rename
     a2d.ClearTextField()
     apple2.Type("NEW.NAME")
     apple2.ReturnKey() -- commit
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "both windows should still be open")
-    a2d.CycleWindows()
+    desktop.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "NEW.NAME", "folder window should be renamed")
-    a2d.RenamePath("/A2.DESKTOP/NEW.NAME", "EXTRAS")
+    desktop.RenamePath("/A2.DESKTOP/NEW.NAME", "EXTRAS")
 end)
 
 --[[
@@ -735,24 +735,24 @@ end)
 test.Step(
   "renaming can activate/deactivate scrollbars",
   function()
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
 
-    a2d.CreateFolder("SHORT")
+    desktop.CreateFolder("SHORT")
 
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
 
-    a2d.RenameSelection("LONG.FILE.NAME")
+    desktop.RenameSelection("LONG.FILE.NAME")
 
     hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectNotEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be active")
 
-    a2d.RenameSelection("SHORT")
+    desktop.RenameSelection("SHORT")
 
     hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -763,12 +763,12 @@ end)
 test.Step(
   "renaming volume doesn't mis-paint",
   function()
-    a2d.RenamePath("/RAM1", "RAM1") -- avoid case issues
-    a2d.ClearSelection()
+    desktop.RenamePath("/RAM1", "RAM1") -- avoid case issues
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.RenamePath("/RAM1", "NEW.NAME")
-        a2d.RenamePath("/NEW.NAME", "RAM1")
-        a2d.ClearSelection()
+        desktop.RenamePath("/RAM1", "NEW.NAME")
+        desktop.RenamePath("/NEW.NAME", "RAM1")
+        desktop.ClearSelection()
     end)
 end)
 
@@ -785,21 +785,21 @@ end)
 test.Step(
   "icon painting with long renames",
   function()
-    a2d.RenamePath("/RAM1", "MMMMMMMMMMMMMMM")
+    desktop.RenamePath("/RAM1", "MMMMMMMMMMMMMMM")
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(x+5, y+5, apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
     a2dtest.WaitForSystemTask()
     test.Snap("verify no mispaint on left edge of screen")
 
-    a2d.OpenSelection()
+    desktop.OpenSelection()
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.Drag(x+5, y+5, apple2.SCREEN_WIDTH, apple2.SCREEN_HEIGHT/6)
     a2dtest.WaitForSystemTask()
     test.Snap("verify no mispaint on left edge of screen")
 
-    a2d.CloseAllWindows()
-    a2d.RenamePath("/MMMMMMMMMMMMMMM", "RAM1")
-    a2d.Reboot() -- put icon back where it belongs
+    desktop.CloseAllWindows()
+    desktop.RenamePath("/MMMMMMMMMMMMMMM", "RAM1")
+    desktop.Reboot() -- put icon back where it belongs
     a2d.WaitForDesktopReady()
 end)
 
@@ -813,7 +813,7 @@ end)
 test.Step(
   "new folder name collision retains what is typed",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
     a2d.OAShortcut("N") -- File > New Folder
     a2d.ClearTextField()
     apple2.Type("PRODOS")
@@ -826,7 +826,7 @@ test.Step(
     apple2.ReturnKey() -- commit
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "PRODOS2", "previous typing should be retained")
-    a2d.DeletePath("/A2.DESKTOP/PRODOS2")
+    desktop.DeletePath("/A2.DESKTOP/PRODOS2")
 end)
 
 --[[
@@ -839,7 +839,7 @@ end)
 test.Step(
   "new folder after collision doesn't end up as child",
   function()
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
 
     a2d.OAShortcut("N") -- File > New Folder
     a2d.ClearTextField()
@@ -860,10 +860,10 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     -- Verify that they end up as siblings
-    a2d.OpenWindow("/RAM1/NEW1")
-    a2d.OpenWindow("/RAM1/NEW2")
+    desktop.OpenWindow("/RAM1/NEW1")
+    desktop.OpenWindow("/RAM1/NEW2")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -879,7 +879,7 @@ test.Step(
   function()
     local hscroll, vscroll, hthumbpos, vthumbpos
 
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
     a2d.OAShortcut("N") -- File > New Folder
     a2dtest.WaitForSystemTask()
     apple2.ReturnKey() -- accept default name
@@ -922,7 +922,7 @@ test.Step(
       (vscroll & mgtk.scroll.option_active) == 0 or (vthumbpos == 0),
       "vertical scrollbar should be inactive or at top")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -934,16 +934,16 @@ end)
 test.Step(
   "no name prompt and no refresh after early aborted duplicate",
   function()
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.OAShortcut("D", {no_wait=true})
     emu.wait(0.1) -- cancel operation
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
     test.ExpectError(
       "Failed to select",
-      function() a2d.SelectPath("/A2.DESKTOP/EXTRAS.2") end,
+      function() desktop.SelectPath("/A2.DESKTOP/EXTRAS.2") end,
       "should not have created file")
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -957,13 +957,13 @@ end)
 test.Step(
   "refresh but no name prompt after late aborted duplicate",
   function()
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
     a2d.OAShortcut("D", {no_wait=true})
     emu.wait(2) -- cancel operation
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
-    a2d.Select("EXTRAS.2") -- ensure it was created and window refreshed
-    a2d.DeletePath("/A2.DESKTOP/EXTRAS.2")
+    desktop.Select("EXTRAS.2") -- ensure it was created and window refreshed
+    desktop.DeletePath("/A2.DESKTOP/EXTRAS.2")
 end)
 
 --[[
@@ -976,13 +976,13 @@ end)
 test.Step(
   "renaming SYS file doesn't move it",
   function()
-    a2d.CopyPath("/A2.DESKTOP/PRODOS", "/RAM1")
-    a2d.SelectPath("/RAM1/PRODOS")
-    a2d.RenameSelection("PRODOS") -- avoid case changing
+    desktop.CopyPath("/A2.DESKTOP/PRODOS", "/RAM1")
+    desktop.SelectPath("/RAM1/PRODOS")
+    desktop.RenameSelection("PRODOS") -- avoid case changing
     a2dtest.ExpectNothingChanged(function()
         for i = 1, 10 do
-          a2d.RenameSelection("PRODOS.SYSTEM")
-          a2d.RenameSelection("PRODOS")
+          desktop.RenameSelection("PRODOS.SYSTEM")
+          desktop.RenameSelection("PRODOS")
         end
     end)
 end)

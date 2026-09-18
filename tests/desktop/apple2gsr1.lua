@@ -18,7 +18,7 @@ test.Step(
   "Mono in DeskTop, color outside",
   function()
     test.Expect(apple2.IsMono(), "DeskTop should run in monochrome")
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     apple2.WaitForBasicSystem()
     apple2.TypeLine("10 HGR2")
     apple2.TypeLine("20 FOR C = 0 to 7")
@@ -41,9 +41,9 @@ end)
 test.Step(
   "RGB Color vs. IIgs Control Panel",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- check RGB Color
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     test.Expect(apple2.IsColor(), "desktop should be in color")
 
     apple2.PressOA()
@@ -59,9 +59,9 @@ test.Step(
     emu.wait(5) -- automating IIgs control panel
 
     test.Expect(apple2.IsColor(), "desktop should be in color")
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- uncheck RGB Color
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -101,14 +101,14 @@ test.Step(
     local drive = s5d1
     local image = drive.filename
 
-    a2d.SelectPath("/A")
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_EJECT_DISK)
+    desktop.SelectPath("/A")
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_EJECT_DISK)
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
     -- cleanup
     drive:load(image)
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -159,11 +159,11 @@ test.Step(
     apple2.ControlOAReset()
     a2d.WaitForDesktopReady()
 
-    a2d.OpenWindow("/RAM5")
+    desktop.OpenWindow("/RAM5")
     test.Snap("RAM5 has a RAMCard icon")
 
-    a2d.ToggleOptionCopyToRAMCard()
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
-    a2d.SelectPath("/RAM5/DESKTOP/DESKTOP.SYSTEM")
+    desktop.SelectPath("/RAM5/DESKTOP/DESKTOP.SYSTEM")
 end)

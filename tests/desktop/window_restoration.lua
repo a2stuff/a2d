@@ -9,7 +9,7 @@ local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 -- Need to ensure DESKTOP.FILE gets written out or window headers
 -- will change
 
-a2d.QuitAndRestart()
+desktop.QuitAndRestart()
 
 --[[
   Launch DeskTop. Open a subdirectory folder. Quit and relaunch
@@ -19,10 +19,10 @@ a2d.QuitAndRestart()
 test.Step(
   "Subdirectory header values",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
-    a2d.ClearSelection()
-    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
-    a2d.CloseAllWindows()
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS")
+    desktop.ClearSelection()
+    a2dtest.ExpectNothingChanged(desktop.QuitAndRestart)
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -35,31 +35,31 @@ end)
 test.Step(
   "Launching Disk Copy",
   function()
-    a2d.SelectAll()
+    desktop.SelectAll()
     a2d.OAShortcut("O") -- File > Open
     a2dtest.WaitForSystemTask()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNothingChanged(function()
-        a2d.CopyDisk()
+        desktop.CopyDisk()
         a2d.WaitForDesktopReady()
 
         a2d.OAShortcut("Q") -- File > Quit
         a2d.WaitForDesktopReady()
     end)
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     a2dtest.WaitForSystemTask()
     a2dtest.WaitForSystemTask()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.CopyDisk()
+        desktop.CopyDisk()
         a2d.WaitForDesktopReady()
 
         a2d.OAShortcut("Q") -- File > Quit
         a2d.WaitForDesktopReady()
     end)
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -71,17 +71,17 @@ end)
 test.Step(
   "Window geometry and scroll position",
   function()
-    a2d.OpenWindow("/TESTS/FILE.TYPES")
-    a2d.GrowWindowBy(-40, -20)
+    desktop.OpenWindow("/TESTS/FILE.TYPES")
+    desktop.GrowWindowBy(-40, -20)
     for i = 1,10 do
       apple2.RightArrowKey()
       apple2.DownArrowKey()
       a2dtest.WaitForSystemTask()
     end
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.WaitForSystemTask()
-    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
-    a2d.CloseAllWindows()
+    a2dtest.ExpectNothingChanged(desktop.QuitAndRestart)
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -93,14 +93,14 @@ end)
 test.Step(
   "Parent icon of restored window undims",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.ClearSelection()
-    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
-    a2d.CloseAllWindows()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.ClearSelection()
+    a2dtest.ExpectNothingChanged(desktop.QuitAndRestart)
+    desktop.CloseAllWindows()
 
-    a2d.SelectPath("/A2.DESKTOP")
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-    test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+    desktop.SelectPath("/A2.DESKTOP")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+    test.Expect(not desktop.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 end)
 
 --[[
@@ -119,14 +119,14 @@ test.Variants(
     "By Type",
   },
   function(idx, name)
-    a2d.OpenWindow("/TESTS/FILE.TYPES")
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, idx)
-    a2d.ClearSelection()
-    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
-    a2d.OpenMenu(a2d.VIEW_MENU)
+    desktop.OpenWindow("/TESTS/FILE.TYPES")
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, idx)
+    desktop.ClearSelection()
+    a2dtest.ExpectNothingChanged(desktop.QuitAndRestart)
+    a2d.OpenMenu(desktop.VIEW_MENU)
     test.Snap("verify "..name.." is checked")
     apple2.EscapeKey()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -138,8 +138,8 @@ end)
 test.Step(
   "Disk II Drive polling",
   function()
-    a2d.OpenWindow("/FLOPPY1")
-    a2d.Quit() -- to Bitsy Bye
+    desktop.OpenWindow("/FLOPPY1")
+    desktop.Quit() -- to Bitsy Bye
 
     local drive = s6d1
     local image = drive.filename
@@ -153,7 +153,7 @@ test.Step(
 
     -- cleanup
     drive:load(image)
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -164,12 +164,12 @@ end)
 test.Step(
   "Drag selection still functions",
   function()
-    a2d.OpenWindow("/TESTS/FILE.TYPES")
-    a2d.ClearSelection()
-    a2dtest.ExpectNothingChanged(a2d.QuitAndRestart)
-    a2d.DragSelectMultipleVolumes()
+    desktop.OpenWindow("/TESTS/FILE.TYPES")
+    desktop.ClearSelection()
+    a2dtest.ExpectNothingChanged(desktop.QuitAndRestart)
+    desktop.DragSelectMultipleVolumes()
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 3, "volume icons should be selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 3, "volume icons should be selected")
 end)
 
 --[[
@@ -180,9 +180,9 @@ end)
 test.Step(
   "Trash name",
   function()
-    a2d.OpenWindow("/TESTS")
-    a2d.RenameSelection("TRASH")
-    a2d.QuitAndRestart()
+    desktop.OpenWindow("/TESTS")
+    desktop.RenameSelection("TRASH")
+    desktop.QuitAndRestart()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "TRASH", "Case is retained")
 end)
 
@@ -194,15 +194,15 @@ end)
 test.Step(
   "Holding OA+SA skips restoration",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
 
-    a2d.Quit()
+    desktop.Quit()
     apple2.BitsyInvokeFile("PRODOS")
 
     a2d.WaitForDesktopReady()
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "windows should have restored")
 
-    a2d.Quit()
+    desktop.Quit()
     apple2.BitsyInvokeFile("PRODOS")
 
     apple2.PressOA()

@@ -9,6 +9,7 @@ local a2dtest = {}
 local util = require("util")
 local apple2 = require("apple2")
 local a2d = require("a2d")
+local desktop = require("desktop")
 local mgtk = require("mgtk")
 local test = require("test")
 
@@ -329,7 +330,7 @@ end
 --------------------------------------------------
 
 function a2dtest.ExpectNotHanging()
-  a2d.OpenMenu(a2d.APPLE_MENU)
+  a2d.OpenMenu(desktop.APPLE_MENU)
   test.ExpectMatch(a2dtest.OCRScreen(), "About Apple II DeskTop", "Apple menu should have shown")
   apple2.EscapeKey()
   a2d.WaitForRepaint()
@@ -353,7 +354,7 @@ end
 --------------------------------------------------
 
 function a2dtest.GetSelectedIconName()
-  local icons = a2d.GetSelectedIcons()
+  local icons = desktop.GetSelectedIcons()
   if #icons == 0 then
     error("Selection is empty", 2)
   end
@@ -362,7 +363,7 @@ function a2dtest.GetSelectedIconName()
 end
 
 function a2dtest.GetSelectedIconCoords()
-  local icons = a2d.GetSelectedIcons()
+  local icons = desktop.GetSelectedIcons()
   if #icons == 0 then
     error("Selection is empty", 2)
   end
@@ -371,7 +372,7 @@ function a2dtest.GetSelectedIconCoords()
 end
 
 function a2dtest.GetSelectedIconWindowID()
-  local icons = a2d.GetSelectedIcons()
+  local icons = desktop.GetSelectedIcons()
   if #icons == 0 then
     error("Selection is empty", 2)
   end
@@ -380,7 +381,7 @@ function a2dtest.GetSelectedIconWindowID()
 end
 
 function a2dtest.IsSelectionInFrontWindow()
-  local icons = a2d.GetSelectedIcons()
+  local icons = desktop.GetSelectedIcons()
   if #icons == 0 then
     error("Selection is empty", 2)
   end

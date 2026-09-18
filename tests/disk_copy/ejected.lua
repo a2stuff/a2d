@@ -22,8 +22,8 @@ test.Step(
     s6d1:unload()
     emu.wait(5) -- async drive validation
 
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_COPY_DISK-2)
     a2dtest.WaitForAlert({match="insert the system disk"})
     a2d.DialogCancel()
 
@@ -46,8 +46,8 @@ test.Step(
     s6d1:unload()
     emu.wait(5) -- async drive validation
 
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_COPY_DISK-2)
     a2dtest.WaitForAlert({match="insert the system disk"})
 
     s6d1:load(image)
@@ -83,7 +83,7 @@ test.Step(
     s5d2:unload()
     emu.wait(5) -- async drive validation
 
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     test.ExpectMatch(a2dtest.OCRScreen(), "5 +2 +Unknown",
@@ -134,7 +134,7 @@ test.Step(
 
     -- TODO: HANG in here
 
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source
@@ -194,8 +194,8 @@ test.DISABLED_Step(
   "errors if source disk ejected",
   "hangs in the device firmware if unloaded when reading",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_COPY_DISK-2)
     a2d.WaitForDesktopReady()
     a2dtest.ConfigureForDiskCopy()
 

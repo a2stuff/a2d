@@ -12,7 +12,7 @@ DISKARGS="-flop1 $ROHARDIMG"
 test.Step(
   "Launcher - write protected",
   function()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I") -- File > Get Info
     util.WaitFor(
       "write protected label",

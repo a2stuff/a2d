@@ -17,7 +17,7 @@ DISKARGS="-flop1 prodos_floppy1.dsk -flop2 prodos_floppy2.dsk -flop3 $HARDIMG"
 test.Step(
   "no hang after 140k disk copy",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- Use Disk Copy so all memory blocks are used.

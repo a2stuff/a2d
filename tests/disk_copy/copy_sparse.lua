@@ -38,7 +38,7 @@ test.Variants(
     local image1 = s6d1.filename
     local image2 = s6d2.filename
 
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     a2d.InvokeMenuItem(3, idx) -- Smart Block Copy or Full Disk Copy

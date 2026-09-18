@@ -19,19 +19,19 @@ local s5d1 = manager.machine.images[":sl5:superdrive:fdc:0:35hd"]
 ]]
 test.Variants(
   {
-    {"Edit a Shortcut, startup disk ejected", a2d.SHORTCUTS_EDIT_A_SHORTCUT},
-    {"Delete a Shortcut, startup disk ejected", a2d.SHORTCUTS_DELETE_A_SHORTCUT},
-    {"Run a Shortcut, startup disk ejected", a2d.SHORTCUTS_RUN_A_SHORTCUT},
+    {"Edit a Shortcut, startup disk ejected", desktop.SHORTCUTS_EDIT_A_SHORTCUT},
+    {"Delete a Shortcut, startup disk ejected", desktop.SHORTCUTS_DELETE_A_SHORTCUT},
+    {"Run a Shortcut, startup disk ejected", desktop.SHORTCUTS_RUN_A_SHORTCUT},
   },
   function(idx, name, item)
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     a2dtest.WaitForSystemTask()
 
     local drive = s5d1
     local image = drive.filename
     drive:unload()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, item)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, item)
 
     a2dtest.WaitForAlert({match="insert the system disk"})
     a2d.DialogCancel()
@@ -40,15 +40,15 @@ test.Variants(
     emu.wait(5) -- async drive validation (so it doesn't interrupt menu action)
 
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, item)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, item)
     a2dtest.WaitForSystemTask()
 
     a2dtest.ExpectAlertNotShowing()
     a2d.DialogCancel()
     a2dtest.WaitForSystemTask()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -62,23 +62,23 @@ end)
 test.Step(
   "shortcut copied on boot does not rely on original disk",
   function()
-    a2d.ToggleOptionCopyToRAMCard()
+    desktop.ToggleOptionCopyToRAMCard()
 
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
-    a2d.SelectAll()
-    local count = #a2d.GetSelectedIcons()
-    a2d.CloseAllWindows()
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS")
+    desktop.SelectAll()
+    local count = #desktop.GetSelectedIcons()
+    desktop.CloseAllWindows()
 
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady({timeout=360})
 
-    a2d.OpenWindow("/RAM4/EXTRAS")
-    a2d.SelectAll()
-    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have copied")
-    a2d.CloseAllWindows()
+    desktop.OpenWindow("/RAM4/EXTRAS")
+    desktop.SelectAll()
+    test.ExpectEquals(#desktop.GetSelectedIcons(), count, "all files should have copied")
+    desktop.CloseAllWindows()
 
     local drive = s5d1
     local image = drive.filename
@@ -92,9 +92,9 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -109,27 +109,27 @@ end)
 test.Step(
   "shortcut copied on use does not rely on original disk",
   function()
-    a2d.ToggleOptionCopyToRAMCard()
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard()
+    desktop.Reboot()
     a2d.WaitForDesktopReady({timeout=240})
 
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
-    a2d.SelectAll()
-    local count = #a2d.GetSelectedIcons()
-    a2d.CloseAllWindows()
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS")
+    desktop.SelectAll()
+    local count = #desktop.GetSelectedIcons()
+    desktop.CloseAllWindows()
 
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     a2d.OAShortcut("1")
     apple2.WaitForBasicSystem({timeout=120})
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
-    a2d.OpenWindow("/RAM4/EXTRAS")
-    a2d.SelectAll()
-    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "all files should have copied")
-    a2d.CloseAllWindows()
+    desktop.OpenWindow("/RAM4/EXTRAS")
+    desktop.SelectAll()
+    test.ExpectEquals(#desktop.GetSelectedIcons(), count, "all files should have copied")
+    desktop.CloseAllWindows()
 
     local drive = s5d1
     local image = drive.filename
@@ -143,8 +143,8 @@ test.Step(
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

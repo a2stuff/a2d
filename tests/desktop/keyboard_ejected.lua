@@ -16,21 +16,21 @@ test.Step(
   "Arrows with no volumes",
   function()
     s6d1:unload()
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     apple2.RightArrowKey()
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "Trash", "trash should be selected")
 
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     apple2.LeftArrowKey()
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "Trash", "trash should be selected")
 
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     apple2.UpArrowKey()
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "Trash", "trash should be selected")
 
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     apple2.DownArrowKey()
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "Trash", "trash should be selected")
 end)

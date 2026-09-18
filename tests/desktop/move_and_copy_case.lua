@@ -14,30 +14,30 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "Move/Copy detection vs. case sensitivity",
   function()
-    a2d.ToggleOptionPreserveCase() -- disable
-    a2d.RenamePath("/A2.DESKTOP", "HARD.DISK")
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.ToggleOptionPreserveCase() -- disable
+    desktop.RenamePath("/A2.DESKTOP", "HARD.DISK")
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
-    a2d.SelectPath("/HARD.DISK")
+    desktop.SelectPath("/HARD.DISK")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "Hard.Disk", "Name should be case adjusted")
 
-    a2d.OpenWindow("/HARD.DISK")
+    desktop.OpenWindow("/HARD.DISK")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w - 5, y + h - 5
 
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
-    a2d.MoveWindowBy(0, 100)
-    a2d.Select("CONTROL.PANEL")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
+    desktop.MoveWindowBy(0, 100)
+    desktop.Select("CONTROL.PANEL")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForSystemTask()
 
-    a2d.SelectPath("/HARD.DISK/CONTROL.PANEL")
+    desktop.SelectPath("/HARD.DISK/CONTROL.PANEL")
     test.ExpectError(
       "Failed to select",
-      function() a2d.SelectPath("/HARD.DISK/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL") end,
+      function() desktop.SelectPath("/HARD.DISK/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL") end,
       "should have moved not copied file")
 end)
 

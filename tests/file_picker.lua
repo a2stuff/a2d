@@ -19,7 +19,7 @@ This covers:
 
 ]]
 
-a2d.AddShortcut("/A2.DESKTOP/READ.ME")
+desktop.AddShortcut("/A2.DESKTOP/READ.ME")
 
 function FilePickerTest(
     name,
@@ -245,14 +245,14 @@ function FilePickerTest(
     test.Step(
       name .. " - invisible files",
       function()
-        a2d.ToggleOptionShowInvisible() -- enable
+        desktop.ToggleOptionShowInvisible() -- enable
 
         activation_func()
         a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
         test.ExpectIMatch(a2dtest.OCRScreen(), "INVISIBLE", "INVISIBLE should be in list")
         cleanup_func()
 
-        a2d.ToggleOptionShowInvisible() -- disable
+        desktop.ToggleOptionShowInvisible() -- disable
 
         activation_func()
         a2d.NavigateFilePickerTo("/TESTS/PROPERTIES/VISIBLE.HIDDEN")
@@ -537,8 +537,8 @@ FilePickerTest(
     folder_ok = true,
   },
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
   end,
   function()
     a2d.DialogCancel()
@@ -554,8 +554,8 @@ FilePickerTest(
     no_sel_ok = true,
   },
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
   end,
   function()
     a2d.DialogCancel()
@@ -567,8 +567,8 @@ FilePickerTest(
   {
   },
   function()
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.Reboot()
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -580,7 +580,7 @@ FilePickerTest(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.ToggleOptionShowShortcutsOnStartup()
+    desktop.ToggleOptionShowShortcutsOnStartup()
   end
 )
 
@@ -594,8 +594,8 @@ FilePickerTest(
 test.Step(
   "Edit a Shortcut - navigates to shortcut target",
   function()
-    a2d.AddShortcut("/TESTS/FILE.TYPES/ROOM.A2FC")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    desktop.AddShortcut("/TESTS/FILE.TYPES/ROOM.A2FC")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -605,7 +605,7 @@ test.Step(
     test.Snap("verify selection is ROOM.A2FC")
     a2d.DialogCancel()
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -622,20 +622,20 @@ end)
 test.Step(
   "Edit a Shortcut - ejected volume",
   function()
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/A")
-    a2d.AddShortcut("/A/READ.ME")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/A")
+    desktop.AddShortcut("/A/READ.ME")
 
     local image = s6d2.filename
     s6d2:unload()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.Snap("verify dialog shows drives list")
     a2d.DialogCancel()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -652,9 +652,9 @@ test.Step(
   "Dir and Disk names when path is empty",
   function()
     -- Navigated to empty path
-    a2d.AddShortcut("/RAM1")
+    desktop.AddShortcut("/RAM1")
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.UpArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -672,7 +672,7 @@ test.Step(
 
     -- cleanup
     a2d.DialogCancel()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.UpArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -685,8 +685,8 @@ end)
 test.Step(
   "Verify non-modified keys work as type-down selection",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
     a2dtest.WaitForSystemTask()
     apple2.ControlKey("D") -- Drives
     a2dtest.WaitForSystemTask()

@@ -17,24 +17,24 @@ test.Step(
     -- TODO: This was hanging
 
 
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.LeftArrowKey() -- change pattern
     apple2.ControlKey("D") -- Set Desktop Pattern
     a2d.OAShortcut("1") -- check RGB Color
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     test.Expect(apple2.IsColor(), "desktop should be in color")
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", {no_wait=true})
     emu.wait(5) -- loading time for fullscreen DA
     test.Expect(apple2.IsColor(), "image should be in in color")
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
     test.Expect(apple2.IsColor(), "desktop should still be in color")
 
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- uncheck RGB Color
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     test.Expect(apple2.IsMono(), "image should be in in monochrome")
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", {no_wait=true})
     emu.wait(5) -- loading time for fullscreen DA
     test.Expect(apple2.IsColor(), "image should be in in color")
     apple2.EscapeKey()
@@ -52,8 +52,8 @@ test.Step(
   "Mode on exit",
   function()
     apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    desktop.OpenWindow("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("HGR : HCOLOR=3 : HPLOT 0,0 TO 100,100")
     emu.wait(5) -- automating BASIC prompt

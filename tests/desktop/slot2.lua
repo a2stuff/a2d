@@ -12,6 +12,6 @@ MODELARGS="-sl1 mouse -sl2 diskiing -sl7 cffa2"
 test.Step(
   "Slot 2 can have drive controller",
   function()
-    a2d.OpenMenu(a2d.STARTUP_MENU)
+    a2d.OpenMenu(desktop.STARTUP_MENU)
     test.ExpectMatch(a2dtest.OCRScreen(), "Slot 2", "Slot 2 should be listed")
 end)

@@ -13,7 +13,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 gsos_floppy.dsk -flop2 prodos_floppy1.dsk"
 test.Step(
   "GS/OS disk names in list",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
 
     test.ExpectMatch(a2dtest.OCRScreen(), "GS%.OS%.mixed",
                 "GS/OS disk names in list should have assigned case")
@@ -33,7 +33,7 @@ end)
 test.Step(
   "GS/OS disk names in source label",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source
@@ -75,7 +75,7 @@ end)
 test.Step(
   "GS/OS disk names in overwrite prompt",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source

@@ -13,12 +13,12 @@ DISKARGS="-hard1 $HARDIMG"
 test.Step(
   "File > Open works",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU")
-    a2d.Select("CALCULATOR")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN)
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU")
+    desktop.Select("CALCULATOR")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN)
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "DA should be open")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -43,8 +43,8 @@ function MoveDoesntRepaintTest(name, path, opt_threshold)
         end
       end
 
-      a2d.SelectPath(path)
-      a2d.OpenSelection()
+      desktop.SelectPath(path)
+      desktop.OpenSelection()
 
       local x, y = a2dtest.GetFrontWindowDragCoords()
 
@@ -62,9 +62,9 @@ function MoveDoesntRepaintTest(name, path, opt_threshold)
           end)
       end)
 
-      a2d.CloseWindow()
-      a2d.CloseAllWindows()
-      a2d.Reboot()
+      desktop.CloseWindow()
+      desktop.CloseAllWindows()
+      desktop.Reboot()
       a2d.WaitForDesktopReady()
   end)
 end
@@ -99,16 +99,16 @@ function CloseWindowTest(name, path, x, y)
   test.Step(
     name .. " closes on OA+W",
     function()
-      a2d.SelectPath(path)
+      desktop.SelectPath(path)
       a2dtest.ExpectNothingChanged(function()
-          a2d.OpenSelection()
+          desktop.OpenSelection()
           a2d.OAShortcut("W")
           a2dtest.WaitForSystemTask()
       end)
 
-      a2d.SelectPath(path)
+      desktop.SelectPath(path)
       a2dtest.ExpectNothingChanged(function()
-          a2d.OpenSelection()
+          desktop.OpenSelection()
           a2d.OAShortcut("w")
           a2dtest.WaitForSystemTask()
       end)

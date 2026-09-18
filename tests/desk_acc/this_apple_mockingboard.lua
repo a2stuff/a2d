@@ -8,7 +8,7 @@ test.Step(
   "Mockingboard and ZIP",
   function()
     apple2.SetSystemConfig(":a2_config", "CPU type", 1 << 4, 1 << 4)
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_THIS_APPLE_II)
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRFrontWindowContent()
     test.ExpectMatch(ocr, "Mockingboard", "a Mockingboard should be detected")

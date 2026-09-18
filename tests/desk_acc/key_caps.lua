@@ -7,7 +7,7 @@
 test.Step(
   "Key Caps - Quit",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
     local count = a2dtest.GetWindowCount()
     a2d.OAShortcut("q")
     test.Expect(a2dtest.GetWindowCount(), count-1, "the desk accessory should have closed")
@@ -33,11 +33,11 @@ test.Step(
   "Key Caps - Semicolon",
   function()
     local field = find_field(";  :")
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
     field:set_value(1)
     emu.wait(0.25) -- heuristic
     test.Snap("verify that the semicolon key is correctly highlighted")
     field:clear_value()
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 

@@ -27,7 +27,7 @@ s4d1:unload()
 local disk_d = s4d2.filename
 s4d2:unload()
 
-a2d.CheckAllDrives()
+desktop.CheckAllDrives()
 
 --[[
   Launch DeskTop. Open a window for a volume icon. Open a folder
@@ -37,9 +37,9 @@ a2d.CheckAllDrives()
 test.Step(
   "windows close on Check Drive",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
-    a2d.SelectPath("/A2.DESKTOP", {keep_windows=true})
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_DRIVE)
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS", {leave_parent=true})
+    desktop.SelectPath("/A2.DESKTOP", {keep_windows=true})
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_CHECK_DRIVE)
     emu.wait(5) -- async drive validation
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "both windows should close")
 end)
@@ -52,8 +52,8 @@ end)
 test.Step(
   "window close on Check All Drives",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.CheckAllDrives()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.CheckAllDrives()
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "window should close")
 end)
 
@@ -64,11 +64,11 @@ end)
 test.Step(
   "Check All Drives works",
   function()
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
-    a2d.Reboot()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     a2dtest.ExpectAlertNotShowing()
 end)
 
@@ -80,17 +80,17 @@ end)
 test.Step(
   "new drive does not overdraw old volumes",
   function()
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     test.Snap("note volume icon positions")
     s5d1:load(disk_a)
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     test.Snap("verify new icon does not overlap old icons")
 
     -- cleanup
     s5d1:unload()
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -102,18 +102,18 @@ test.Step(
   "Eject then Check All Drives works",
   function()
     s5d1:load(disk_a)
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 
-    a2d.SelectPath("/A")
+    desktop.SelectPath("/A")
     a2d.OAShortcut("E") -- Special > Eject Disk
     emu.wait(10) -- async drive validation
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     a2dtest.ExpectNotHanging()
 
     test.ExpectError(
       "Failed to select",
       function()
-        a2d.SelectPath("/A")
+        desktop.SelectPath("/A")
       end,
       "disk should be ejected")
 end)
@@ -129,22 +129,22 @@ test.Step(
   "format floppy prompt - Check Drive",
   function()
     s6d1:load(prodos_image)
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.SelectPath("/FLOPPY1")
+    desktop.SelectPath("/FLOPPY1")
 
     s6d1:load(pascal_image)
 
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_CHECK_DRIVE)
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_CHECK_DRIVE)
     a2dtest.WaitForAlert({match="disk could not be read"})
     a2d.DialogCancel()
-    a2d.SelectAll()
+    desktop.SelectAll()
     a2dtest.ExpectNotHanging()
 
     -- cleanup
     s6d1:unload()
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -156,12 +156,12 @@ test.Step(
   "format floppy prompt - Check All Drives",
   function()
     s6d1:load(pascal_image)
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     a2d.DialogCancel()
 
     -- cleanup
     s6d1:unload()
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -174,14 +174,14 @@ test.Step(
   "Open ejected floppy",
   function()
     s6d1:load(prodos_image)
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     test.ExpectIMatch(a2dtest.OCRScreen(), "FLOPPY1", "floppy icon should be present")
 
-    a2d.SelectPath("/FLOPPY1")
+    desktop.SelectPath("/FLOPPY1")
     s6d1:unload()
-    a2d.OpenSelection()
+    desktop.OpenSelection()
     a2dtest.WaitForAlert({match="volume cannot be found"})
     a2d.DialogOK() -- OK
     a2dtest.WaitForSystemTask()
@@ -206,7 +206,7 @@ test.Step(
     s5d2:load(disk_b)
     s4d1:load(disk_c)
 
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
     test.Snap("verify volume icons are positioned without gaps")
     s5d2:unload()
@@ -241,11 +241,11 @@ test.Step(
   "volume and folder window close when disk ejected",
   function()
     s5d1:load(disk_a)
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.CreateFolder("/A/FOLDER")
-    a2d.OpenWindow("/A/FOLDER", {leave_parent=true})
+    desktop.CreateFolder("/A/FOLDER")
+    desktop.OpenWindow("/A/FOLDER", {leave_parent=true})
 
     emu.wait(10) -- async drive validation
     s5d1:unload()
@@ -273,16 +273,16 @@ test.Step(
     s5d2:load(disk_b)
     s4d1:load(disk_c)
     s4d2:load(disk_d)
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.RenamePath("/A", "DISK.A")
-    a2d.RenamePath("/B", "DISK.B")
-    a2d.RenamePath("/C", "DISK.C")
-    a2d.RenamePath("/D", "DISK.D")
+    desktop.RenamePath("/A", "DISK.A")
+    desktop.RenamePath("/B", "DISK.B")
+    desktop.RenamePath("/C", "DISK.C")
+    desktop.RenamePath("/D", "DISK.D")
 
     function GetDiskOrder()
-      a2d.ClearSelection()
+      desktop.ClearSelection()
       local order = ""
       a2dtest.OCRIterate(function(run, x, y)
           local _, _, d = run:upper():find("DISK%.([ABCD])")
@@ -321,15 +321,15 @@ test.Step(
     test.Expect(GetDiskOrder(), "DCBA", "disks should appear in order D/C/B/A")
 
     -- cleanup
-    a2d.RenamePath("/DISK.A", "A")
-    a2d.RenamePath("/DISK.B", "B")
-    a2d.RenamePath("/DISK.C", "C")
-    a2d.RenamePath("/DISK.D", "D")
+    desktop.RenamePath("/DISK.A", "A")
+    desktop.RenamePath("/DISK.B", "B")
+    desktop.RenamePath("/DISK.C", "C")
+    desktop.RenamePath("/DISK.D", "D")
     s5d1:unload()
     s5d2:unload()
     s4d1:unload()
     s4d2:unload()
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -363,7 +363,7 @@ test.Step(
   function()
     s5d1:load(disk_a)
     emu.wait(10) -- async drive validation
-    a2d.Quit()
+    desktop.Quit()
     s5d1:unload()
 
     apple2.WaitForBitsy()
@@ -371,11 +371,11 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     for i = 1, 7 do
-      a2d.CreateFolder("/RAM1/F" .. i)
+      desktop.CreateFolder("/RAM1/F" .. i)
     end
-    a2d.OpenWindow("/RAM1")
-    a2d.SelectAll()
-    a2d.OpenSelection({leave_parent=true})
+    desktop.OpenWindow("/RAM1")
+    desktop.SelectAll()
+    desktop.OpenSelection({leave_parent=true})
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetWindowCount(), 8, "8 windows should be open")
 end)

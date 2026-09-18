@@ -14,8 +14,8 @@ DISKARGS="-flop1 $ROHARDIMG"
 test.Step(
   "Add a shortcut - write protected - Cancel",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     a2d.ClearTextField()
     apple2.Type("Shortcut~Name")
@@ -25,7 +25,7 @@ test.Step(
     a2d.DialogCancel()
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "Edit a Shortcut", "menu item should be disabled")
     test.ExpectMatch(ocr, "Delete a Shortcut", "menu item should be disabled")
@@ -34,7 +34,7 @@ test.Step(
     apple2.EscapeKey()
 
     -- cleanup
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -47,8 +47,8 @@ end)
 test.Step(
   "Add a shortcut - write protected - OK, Try Again, Cancel",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     a2d.ClearTextField()
     apple2.Type("Shortcut~Name")
@@ -69,6 +69,6 @@ test.Step(
     a2dtest.ExpectNotHanging()
 
     -- cleanup
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

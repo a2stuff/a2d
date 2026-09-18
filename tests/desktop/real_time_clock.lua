@@ -15,7 +15,7 @@ end)
 test.Step(
   "Clock paints correctly after volume selected",
   function()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     emu.wait(10) -- let menu clock refresh
     test.Snap("verify clock is in top-right of screen")
 end)

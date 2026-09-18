@@ -16,7 +16,7 @@ DISKARGS="-hard1 disk_b.2mg -hard3 $HARDIMG -hard4 disk_a.2mg"
 test.Step(
   "SmartPort labeling",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_THIS_APPLE_II)
     a2dtest.WaitForSystemTask()
     test.Snap("verify slot 1 reports cleanly")
 end)

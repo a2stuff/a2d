@@ -13,8 +13,8 @@ DISKARGS="-flop1 $FLOP1IMG"
 test.Step(
   "Does not hang probing slot 2",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_THIS_APPLE_II)
     a2dtest.WaitForSystemTask()
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     a2dtest.ExpectNotHanging()
 end)

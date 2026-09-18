@@ -14,7 +14,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 cpm_floppy.dsk -flop2 prodos_floppy1.dsk"
 test.Step(
   "CP/M Pascal disk names in source label",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source
@@ -57,7 +57,7 @@ end)
 test.Step(
   "CP/M disk names in overwrite prompt",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source

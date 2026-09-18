@@ -19,8 +19,8 @@ test.Step(
     local drive = s5d1
     drive:unload()
 
-    a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_OPEN-1)
+    desktop.SelectPath("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_OPEN-1)
     a2dtest.WaitForAlert({match="volume cannot be found"})
 end)
 

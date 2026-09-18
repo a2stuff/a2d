@@ -18,7 +18,7 @@ test.Step(
     local disk = s6d1.filename
     s6d1:unload()
 
-    a2d.InvokePath("/WITH.FILES")
+    desktop.InvokePath("/WITH.FILES")
 
     a2d.OAShortcut("O") -- File > Open
 
@@ -30,7 +30,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     s6d1:load(disk)
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
 end)
 
 --[[
@@ -41,7 +41,7 @@ test.Step(
   "Alert after New Folder on ejected disk has no Try Again option",
   function()
     local disk = s6d1.filename
-    a2d.OpenWindow("/WITH.FILES")
+    desktop.OpenWindow("/WITH.FILES")
 
     s6d1:unload()
 
@@ -66,7 +66,7 @@ test.Step(
   "Alert after Duplicate on ejected disk has no Try Again option",
   function()
     local disk = s6d1.filename
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
 
     s6d1:unload()
 
@@ -91,11 +91,11 @@ test.Step(
   "Alert after Make Alias on ejected disk has no Try Again option",
   function()
     local disk = s6d1.filename
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
 
     s6d1:unload()
 
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, -1) -- Special > Make Alias
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, -1) -- Special > Make Alias
 
     a2dtest.WaitForAlert({match="volume cannot be found"})
     local ocr = a2dtest.OCRScreen()
@@ -117,7 +117,7 @@ test.Step(
     local disk = s7d1.filename
     s7d1:unload()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForAlert({match="insert the system disk"})
 
     local ocr = a2dtest.OCRScreen()
@@ -139,7 +139,7 @@ test.Step(
   function()
     local disk = s7d1.filename
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
 
     s7d1:unload()

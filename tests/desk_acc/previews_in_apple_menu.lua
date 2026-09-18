@@ -23,36 +23,36 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "SHOW.IMAGE.FILE in Apple Menu",
   function()
-    a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.IMAGE.FILE", "/A2.DESKTOP/APPLE.MENU")
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CopyPath("/A2.DESKTOP/MODULES/SHOW.IMAGE.FILE", "/A2.DESKTOP/APPLE.MENU")
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     -- no icon
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
-    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
+    desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- image file
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     test.Snap("verify preview shown")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
-    a2d.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.IMAGE.FILE")
+    desktop.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.IMAGE.FILE")
 end)
 
 --[[
@@ -73,36 +73,36 @@ end)
 test.Step(
   "SHOW.TEXT.FILE in Apple Menu",
   function()
-    a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.TEXT.FILE", "/A2.DESKTOP/APPLE.MENU")
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CopyPath("/A2.DESKTOP/MODULES/SHOW.TEXT.FILE", "/A2.DESKTOP/APPLE.MENU")
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     -- no icon
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
-    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
+    desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- text file
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     test.Snap("verify preview shown")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
-    a2d.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.TEXT.FILE")
+    desktop.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.TEXT.FILE")
 end)
 
 --[[
@@ -123,36 +123,36 @@ end)
 test.Step(
   "SHOW.FONT.FILE in Apple Menu",
   function()
-    a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.FONT.FILE", "/A2.DESKTOP/APPLE.MENU")
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CopyPath("/A2.DESKTOP/MODULES/SHOW.FONT.FILE", "/A2.DESKTOP/APPLE.MENU")
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     -- no icon
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
-    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
+    desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- font file
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS/ATHENS")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS/ATHENS")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     test.Snap("verify preview shown")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
-    a2d.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.FONT.FILE")
+    desktop.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.FONT.FILE")
 end)
 
 --[[
@@ -173,35 +173,35 @@ end)
 test.Step(
   "SHOW.DUET.FILE in Apple Menu",
   function()
-    a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.DUET.FILE", "/A2.DESKTOP/APPLE.MENU")
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CopyPath("/A2.DESKTOP/MODULES/SHOW.DUET.FILE", "/A2.DESKTOP/APPLE.MENU")
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
     -- no icon
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- volume icon
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- file icon
-    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU")
+    desktop.SelectPath("/A2.DESKTOP/APPLE.MENU")
     a2dtest.ExpectNothingChanged(function()
-        a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+        a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     end)
 
     -- duet file
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/JESU.JOY")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.APPLE_EMPTY_SLOT)
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/JESU.JOY")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.APPLE_EMPTY_SLOT)
     test.Snap("verify preview shown")
     apple2.EscapeKey()
 
-    a2d.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.DUET.FILE")
+    desktop.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.DUET.FILE")
 end)
 

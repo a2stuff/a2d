@@ -82,8 +82,8 @@ test.Step(
   "DEVLST order",
   function()
 
-    a2d.CheckAllDrives()
-    a2d.ClearSelection()
+    desktop.CheckAllDrives()
+    desktop.ClearSelection()
 
     local devlst = apple2.GetProDOSDeviceList()
 
@@ -96,11 +96,11 @@ test.Step(
       local image = drive.filename
       drive:load(empty)
 
-      a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
+      a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
       a2dtest.WaitForSystemTask()
 
       -- Device prompt
-      a2d.FormatEraseSelectSlotDrive(entry.slot, entry.drive)
+      desktop.FormatEraseSelectSlotDrive(entry.slot, entry.drive)
 
       -- Name prompt
       a2dtest.WaitForSystemTask()
@@ -122,15 +122,15 @@ end)
 test.Step(
   "Alpha order",
   function()
-    a2d.CheckAllDrives()
-    a2d.ClearSelection()
+    desktop.CheckAllDrives()
+    desktop.ClearSelection()
 
     for index, device in ipairs(alpha_order) do
-      a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
+      a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
       a2dtest.WaitForSystemTask()
 
       -- Device prompt
-      a2d.FormatEraseSelectSlotDrive(device.slot, device.drive)
+      desktop.FormatEraseSelectSlotDrive(device.slot, device.drive)
 
       -- Name prompt
       a2dtest.WaitForSystemTask()

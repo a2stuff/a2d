@@ -13,7 +13,7 @@ DISKARGS="-hard1 $HARDIMG"
 test.Step(
   "Joystick Limits",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
 
     apple2.SetJoy1(0,0)
     test.Snap("verify indicator in top left")
@@ -26,7 +26,7 @@ test.Step(
     apple2.SetJoy1(128,128,0)
     test.Snap("verify indicator in center")
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -40,14 +40,14 @@ end)
 test.Step(
   "Second Joystick",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
 
     apple2.SetJoy1(64,64)
     test.Snap("verify single indicator")
     apple2.SetJoy2(192, 192)
     test.Snap("verify second indicator")
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -57,7 +57,7 @@ end)
 test.Step(
   "Cursor visibility",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/JOYSTICK")
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
@@ -70,5 +70,5 @@ test.Step(
         emu.wait(1) -- non-MGTK input
     end)
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)

@@ -5,14 +5,14 @@
 test.Step(
   "drive list not corrupted on re-launch",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     a2d.OAShortcut("Q") -- File > Quit
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
 
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
     test.ExpectMatch(a2dtest.OCRScreen(),
                      "7  1  A2%.DeskTop.*\n" ..
@@ -33,7 +33,7 @@ end)
 test.Step(
   "escape key works to control menu",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     apple2.EscapeKey()
@@ -55,7 +55,7 @@ end)
 test.Step(
   "OA+Q returns to DeskTop",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     a2d.OAShortcut("Q")
@@ -71,7 +71,7 @@ end)
 test.Step(
   "SA+Q returns to DeskTop",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     a2d.SAShortcut("Q")
@@ -87,7 +87,7 @@ end)
 test.Step(
   "Invoke with no selection",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     test.ExpectNotMatch(a2dtest.OCRScreen({invert=true}), "A2.DeskTop",
@@ -109,7 +109,7 @@ end)
 test.Step(
   "Invoke with selection",
   function()
-    a2d.CopyDisk("/A2.DESKTOP")
+    desktop.CopyDisk("/A2.DESKTOP")
     a2dtest.ConfigureForDiskCopy()
 
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "A2.DeskTop",
@@ -138,7 +138,7 @@ end)
 test.Step(
   "Using menu with keyboard doesn't commit selection",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- make selection
@@ -168,7 +168,7 @@ end)
 test.Step(
   "Double-clicking selected item commits",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- select first item
@@ -200,7 +200,7 @@ end)
 test.Step(
   "Double-clicking other item commits",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- select second first item
@@ -232,12 +232,12 @@ end)
 test.Step(
   "Graceful failure if module not present",
   function()
-    a2d.RenamePath("/A2.DESKTOP/MODULES/DISK.COPY", "TEMP")
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_COPY_DISK-2)
+    desktop.RenamePath("/A2.DESKTOP/MODULES/DISK.COPY", "TEMP")
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_COPY_DISK-2)
     a2dtest.WaitForAlert({match="insert the system disk"})
     a2d.DialogCancel()
-    a2d.RenamePath("/A2.DESKTOP/MODULES/TEMP", "DISK.COPY")
+    desktop.RenamePath("/A2.DESKTOP/MODULES/TEMP", "DISK.COPY")
 end)
 
 --[[
@@ -247,18 +247,18 @@ end)
 test.Step(
   "window restoration",
   function()
-    a2d.Reboot() -- Ensure LOCAL/DESKTOP.FILE is written out
+    desktop.Reboot() -- Ensure LOCAL/DESKTOP.FILE is written out
     a2d.WaitForDesktopReady()
 
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.ClearSelection()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.CopyDisk()
+        desktop.CopyDisk()
         a2dtest.ConfigureForDiskCopy()
         a2d.OAShortcut("Q")
         a2dtest.ConfigureForDeskTop()
         a2d.WaitForDesktopReady()
-        a2d.ClearSelection()
+        desktop.ClearSelection()
     end)
 end)
 
@@ -269,7 +269,7 @@ end)
 test.Step(
   "scrollbar disabled with 8 or fewer drives",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
@@ -293,7 +293,7 @@ end)
 test.Step(
   "OK button disabled when selection cleared",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
@@ -374,7 +374,7 @@ end)
 test.Step(
   "Read Drives resets OK button state",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)

@@ -22,7 +22,7 @@ test.Variants(
       a2dtest.WaitForSystemTask()
     end
 
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     a2d.InvokeMenuItem(3, idx) -- Smart Block Copy or Full Disk Copy

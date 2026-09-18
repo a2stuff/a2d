@@ -14,11 +14,11 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "Copy file into folder with overlong path",
   function()
-    a2d.OpenWindow("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF123")
+    desktop.OpenWindow("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF123")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
-    a2d.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
-    a2d.MoveWindowBy(0, 80)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME", {keep_windows=true})
+    desktop.MoveWindowBy(0, 80)
     a2dtest.WaitForSystemTask()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(src_x, src_y, x+w/2, y+h/2)
@@ -51,14 +51,14 @@ test.Variants(
     {"overlong paths - file", "file"},
   },
   function(idx, name, which)
-    a2d.OpenWindow("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
+    desktop.OpenWindow("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
     a2dtest.WaitForSystemTask()
-    a2d.SelectPath("/TESTS", {keep_windows=true})
-    a2d.RenameSelection("TESTSXXXXXXXXXX")
+    desktop.SelectPath("/TESTS", {keep_windows=true})
+    desktop.RenameSelection("TESTSXXXXXXXXXX")
     if which == "folder" then
-      a2d.Select("ABCDEF123")
+      desktop.Select("ABCDEF123")
     else
-      a2d.Select("LONGIMAGE")
+      desktop.Select("LONGIMAGE")
     end
     local target_x, target_y = a2dtest.GetSelectedIconCoords()
 
@@ -77,19 +77,19 @@ test.Variants(
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.CopySelectionTo("/RAM1") -- File > Copy To...
+    desktop.CopySelectionTo("/RAM1") -- File > Copy To...
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
     -- Drag file to folder
     if which == "folder" then
-      a2d.Select("LONGIMAGE")
+      desktop.Select("LONGIMAGE")
       local src_x, src_y = a2dtest.GetSelectedIconCoords()
       a2d.Drag(src_x, src_y, target_x, target_y)
       a2dtest.WaitForAlert({match="pathname is too long"})
@@ -98,7 +98,7 @@ test.Variants(
     end
 
     -- Drag to volume
-    a2d.SelectPath("/RAM1", {keep_windows=true})
+    desktop.SelectPath("/RAM1", {keep_windows=true})
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(target_x, target_y, vol_x, vol_y)
     a2dtest.WaitForAlert({match="pathname is too long"})
@@ -106,14 +106,14 @@ test.Variants(
     a2dtest.WaitForSystemTask()
 
     -- Drag folder to Trash
-    a2d.SelectPath("/Trash", {keep_windows=true})
+    desktop.SelectPath("/Trash", {keep_windows=true})
     local trash_x, trash_y = a2dtest.GetSelectedIconCoords()
     a2d.Drag(target_x, target_y, trash_x, trash_y)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
+    desktop.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
 end)
 
 --[[
@@ -126,27 +126,27 @@ end)
 test.Step(
   "overlong paths - launching DAs with selection",
   function()
-    a2d.CopyPath("/A2.DESKTOP/MODULES/SHOW.IMAGE.FILE", "/A2.DESKTOP/APPLE.MENU")
-    a2d.Reboot()
+    desktop.CopyPath("/A2.DESKTOP/MODULES/SHOW.IMAGE.FILE", "/A2.DESKTOP/APPLE.MENU")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.SelectPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/LONGIMAGE")
+    desktop.SelectPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/LONGIMAGE")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.SelectPath("/TESTS", {keep_windows=true})
-    a2d.RenameSelection("TESTSXXXXXXXXXX")
+    desktop.SelectPath("/TESTS", {keep_windows=true})
+    desktop.RenameSelection("TESTSXXXXXXXXXX")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.Click()
     end)
 
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, -1)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, -1)
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
-    a2d.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.IMAGE.FILE")
-    a2d.Reboot()
+    desktop.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
+    desktop.DeletePath("/A2.DESKTOP/APPLE.MENU/SHOW.IMAGE.FILE")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -159,13 +159,13 @@ end)
 test.Step(
   "overlong paths - launching DAs",
   function()
-    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS",
+    desktop.CopyPath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS",
                  "/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789")
-    a2d.SelectPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/KEY.CAPS")
+    desktop.SelectPath("/TESTS/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/KEY.CAPS")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.SelectPath("/TESTS", {keep_windows=true})
-    a2d.RenameSelection("TESTSXXXXXXXXXX")
+    desktop.SelectPath("/TESTS", {keep_windows=true})
+    desktop.RenameSelection("TESTSXXXXXXXXXX")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
@@ -174,5 +174,5 @@ test.Step(
     a2dtest.WaitForAlert({match="pathname is too long"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
+    desktop.RenamePath("/TESTSXXXXXXXXXX", "TESTS")
 end)

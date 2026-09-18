@@ -13,7 +13,7 @@ DISKARGS="-hard1 $HARDIMG"
 test.Step(
   "IEEE-488 detection",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_THIS_APPLE_II)
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRFrontWindowContent()
     test.ExpectMatch(ocr, "IEEE%-488", "IEEE-488 card should be detected")

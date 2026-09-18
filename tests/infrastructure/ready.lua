@@ -3,7 +3,7 @@ test.Step(
   function()
     a2d.WaitForDesktopShowing()
 
-    a2d.Quit()
+    desktop.Quit()
 
     test.ExpectError(
       "Timeout %(60s%) waiting for desktop",
@@ -26,7 +26,7 @@ test.Step(
   function()
     a2d.WaitForDesktopReady()
 
-    a2d.Quit()
+    desktop.Quit()
 
     test.ExpectError(
       "Timeout %(60s%) waiting for desktop",

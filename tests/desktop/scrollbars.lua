@@ -5,8 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.AddShortcut("/TESTS/HUNDRED.FILES")
-a2d.CloseAllWindows()
+desktop.AddShortcut("/TESTS/HUNDRED.FILES")
+desktop.CloseAllWindows()
 
 --[[
   Launch DeskTop. Open a volume window with many items. Adjust the
@@ -17,8 +17,8 @@ a2d.CloseAllWindows()
 test.Step(
   "moving an icon doesn't always cause scrollbars to repaint",
   function()
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
-    a2d.GrowWindowBy(-100, -50)
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/MONARCH")
+    desktop.GrowWindowBy(-100, -50)
     a2dtest.WaitForSystemTask()
     local x, y = a2dtest.GetSelectedIconCoords()
     a2d.InMouseKeysMode(function(m)
@@ -48,9 +48,9 @@ test.Variants(
     {"scrollbar with clipped thumb still works - right pager", "page"},
   },
   function(idx, name, where)
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.GrowWindowBy(-50, 0)
-    a2d.MoveWindowBy(-40, 0)
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.GrowWindowBy(-50, 0)
+    desktop.MoveWindowBy(-40, 0)
     a2dtest.WaitForSystemTask()
     test.Snap("verify thumb cut off on left")
 
@@ -76,8 +76,8 @@ end)
 test.Step(
   "scrollbar deactivates when not needed",
   function()
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.SelectPath("/RAM1/READ.ME")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.SelectPath("/RAM1/READ.ME")
 
     -- Left
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
@@ -118,7 +118,7 @@ test.Step(
     test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -128,20 +128,20 @@ end)
 test.Step(
   "No scrollbars for 11-15 icons",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    desktop.OpenWindow("/RAM1")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("10 FOR I = 1 TO 15 : ?CHR$(4)\"CREATE F\"I : NEXT")
     apple2.TypeLine("RUN")
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "h scrollbar should be inactive")
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "v scrollbar should be inactive")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -151,7 +151,7 @@ end)
 test.Step(
   "Scrollbars in new window paint before items",
   function()
-    a2d.OpenWindow("/TESTS", {no_wait=true})
+    desktop.OpenWindow("/TESTS", {no_wait=true})
     a2dtest.MultiSnap(60, "verify scrollbars paint before items")
 end)
 
@@ -162,8 +162,8 @@ end)
 test.Step(
   "No scrollbars when file added to empty directory outside DeskTop",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    desktop.OpenWindow("/RAM1")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("10 NEW")
     apple2.TypeLine("SAVE MMMMMMMMMMMMMMM")
@@ -174,7 +174,7 @@ test.Step(
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "v scrollbar should be inactive")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -186,7 +186,7 @@ end)
 test.Step(
   "scrollbar activates even for first icon if on right",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/EXTRAS")
+    desktop.OpenWindow("/A2.DESKTOP/EXTRAS")
     a2dtest.WaitForSystemTask()
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "scrollbar should be inactive")
@@ -211,14 +211,14 @@ end)
 test.Step(
   "Dragging file to empty window doesn't activate scrollbars",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(0, 90)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(0, 90)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.OpenWindow("/A2.DESKTOP", {keep_windows=true})
-    a2d.GrowWindowBy(0, -40)
-    a2d.Select("READ.ME")
+    desktop.OpenWindow("/A2.DESKTOP", {keep_windows=true})
+    desktop.GrowWindowBy(0, -40)
+    desktop.Select("READ.ME")
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(icon_x, icon_y, dst_x, dst_y)
@@ -230,7 +230,7 @@ test.Step(
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "v scrollbar should be inactive")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -241,33 +241,33 @@ end)
 test.Step(
   "Moving file doesn't activate source window scrollbars",
   function()
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.CreateFolder("/RAM1/FOLDER")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.CreateFolder("/RAM1/FOLDER")
 
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(0, 90)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(0, 90)
 
-    a2d.SelectAndOpen("FOLDER", {leave_parent=true})
+    desktop.SelectAndOpen("FOLDER", {leave_parent=true})
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.CycleWindows()
+    desktop.CycleWindows()
 
-    a2d.Select("READ.ME")
+    desktop.Select("READ.ME")
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(icon_x, icon_y, dst_x, dst_y)
     a2dtest.WaitForSystemTask()
 
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "FOLDER", "window should be activated")
-    a2d.CycleWindows()
+    desktop.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "window should be activated")
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectEquals(hscroll & mgtk.scroll.option_active, 0, "h scrollbar should be inactive")
     test.ExpectEquals(vscroll & mgtk.scroll.option_active, 0, "v scrollbar should be inactive")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -280,7 +280,7 @@ end)
 test.Step(
   "Default scrolling is by integral number of icons",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     a2d.OAShortcut("1") -- Open /TESTS/HUNDRED.FILES
     a2dtest.WaitForSystemTask()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
@@ -341,7 +341,7 @@ end)
 test.Step(
   "Active scrollbars respond immediately",
   function()
-    a2d.OpenWindow("/TESTS")
+    desktop.OpenWindow("/TESTS")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w + 5, y + h / 2)
@@ -358,7 +358,7 @@ end)
 test.Step(
   "Inactive scrollbar are inactive",
   function()
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m) m.Home() end)
     a2dtest.ExpectNothingChanged(function()

@@ -13,7 +13,7 @@ DISKARGS="-flop3 $HARDIMG"
 test.Step(
   "No ZIP on IIc+",
   function()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_THIS_APPLE_II)
     a2dtest.WaitForSystemTask()
     test.ExpectNotIMatch(a2dtest.OCRFrontWindowContent(), "ZIP CHIP",
                 "a ZIP CHIP should not be not reported")

@@ -14,7 +14,7 @@ DISKARGS="-flop3 $HARDIMG"
 test.Step(
   "80-col firmware mode byte is reset on startup",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     apple2.WaitForBasicSystem()
     apple2.TypeLine("POKE 1275,0") -- mess up screen hole
     apple2.TypeLine("BYE")

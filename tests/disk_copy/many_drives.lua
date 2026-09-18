@@ -42,7 +42,7 @@ DISKARGS="\
 test.Step(
   "scrollbar enabled with 9 or more drives",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
 
     local hscroll, vscroll = a2dtest.GetFrontWindowScrollOptions()
     test.ExpectNotEquals(vscroll & mgtk.scroll.option_active, 0, "v scrollbar should be active")

@@ -22,13 +22,13 @@ local function DialogTest(name, func)
     },
     function(idx, name, suffix, flags)
       if flags.shortcuts then
-        a2d.ToggleOptionShowKeyboardShortcuts()
+        desktop.ToggleOptionShowKeyboardShortcuts()
       end
 
       func(suffix)
 
       if flags.shortcuts then
-        a2d.ToggleOptionShowKeyboardShortcuts()
+        desktop.ToggleOptionShowKeyboardShortcuts()
       end
   end)
 end
@@ -40,17 +40,17 @@ end
 DialogTest(
   "Apple > About Apple II DeskTop",
   function(suffix)
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_APPLE_II_DESKTOP)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_APPLE_II_DESKTOP)
     test.Snap("Apple > About Apple II DeskTop" .. suffix)
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 DialogTest(
   "Apple > About This Apple II",
   function(suffix)
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.ABOUT_THIS_APPLE_II)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.ABOUT_THIS_APPLE_II)
     test.Snap("Apple > About This Apple II" .. suffix)
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --------------------------------------------------
@@ -60,7 +60,7 @@ end)
 DialogTest(
   "File > Get Info (volume)",
   function(suffix)
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     test.Snap("File > Get Info (volume)" .. suffix)
@@ -70,21 +70,21 @@ end)
 DialogTest(
   "File > Get Info (file)",
   function(suffix)
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.OAShortcut("I")
     test.Snap("File > Get Info (file)" .. suffix)
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 DialogTest(
   "File > Copy To...",
   function(suffix)
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
     test.Snap("File > Copy To..." .. suffix)
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --------------------------------------------------
@@ -94,69 +94,69 @@ end)
 DialogTest(
   "Copy Progress",
   function(suffix)
-    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1", {no_wait=true})
+    desktop.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1", {no_wait=true})
     emu.wait(5) -- during copy
     test.Snap("Copy Progress" .. suffix)
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
-    a2d.EraseVolume("RAM1")
+    desktop.CloseAllWindows()
+    desktop.EraseVolume("RAM1")
 end)
 
 DialogTest(
   "Move Progress",
   function(suffix)
-    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
+    desktop.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
     emu.wait(5) -- during move
-    a2d.CreateFolder("/RAM1/DESTINATION")
-    a2d.OpenWindow("/RAM1/DESTINATION")
-    a2d.MoveWindowBy(300, 100)
+    desktop.CreateFolder("/RAM1/DESTINATION")
+    desktop.OpenWindow("/RAM1/DESTINATION")
+    desktop.MoveWindowBy(300, 100)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w/2, y + h/2
 
-    a2d.OpenWindow("/RAM1/APPLE.MENU", {keep_windows=true})
-    a2d.SelectAll()
+    desktop.OpenWindow("/RAM1/APPLE.MENU", {keep_windows=true})
+    desktop.SelectAll()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     emu.wait(1) -- during move
     test.Snap("Move Progress" .. suffix)
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
-    a2d.EraseVolume("RAM1")
+    desktop.CloseAllWindows()
+    desktop.EraseVolume("RAM1")
 end)
 
 DialogTest(
   "Copy Overwrite Prompt",
   function(suffix)
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2dtest.WaitForAlert({match="already exists"})
     test.Snap("Copy Overwrite Prompt" .. suffix)
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
-    a2d.EraseVolume("RAM1")
+    desktop.CloseAllWindows()
+    desktop.EraseVolume("RAM1")
 end)
 
 DialogTest(
   "Delete",
   function(suffix)
     -- Copy files, so we get a good progress bar
-    a2d.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
+    desktop.CopyPath("/A2.DESKTOP/APPLE.MENU", "/RAM1")
     a2dtest.WaitForSystemTask()
 
     -- Copy a file and lock it
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
     a2dtest.WaitForSystemTask()
 
-    a2d.SelectPath("/RAM1/READ.ME")
+    desktop.SelectPath("/RAM1/READ.ME")
     a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForSystemTask()
     apple2.ControlKey("L")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenWindow("/RAM1")
-    a2d.SelectAll()
+    desktop.OpenWindow("/RAM1")
+    desktop.SelectAll()
     a2d.OADelete() -- File > Delete
     a2dtest.WaitForAlert({match="Are you sure"})
     test.Snap("Delete Confirm" .. suffix)
@@ -169,8 +169,8 @@ DialogTest(
     test.Snap("Delete Confirm Locked" .. suffix)
 
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
-    a2d.EraseVolume("RAM1")
+    desktop.CloseAllWindows()
+    desktop.EraseVolume("RAM1")
 end)
 
 --------------------------------------------------
@@ -180,14 +180,14 @@ end)
 DialogTest(
   "Special > Format Disk...",
   function(suffix)
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     -- show dialog
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK - 2)
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK - 2)
     test.Snap("Special > Format Disk... - Prompt for drive" .. suffix)
 
     -- select RAMFactor
-    a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
+    desktop.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
     a2dtest.WaitForSystemTask()
     test.Snap("Special > Format Disk... - Drive selected" .. suffix)
 
@@ -212,14 +212,14 @@ DialogTest(
 
     -- cleanup
     a2dtest.WaitForSystemTask()
-    a2d.RenamePath("/NEWNAME", "RAM1")
+    desktop.RenamePath("/NEWNAME", "RAM1")
 
     -- Formatting error
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK - 2)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK - 2)
     local disk = s6d1.filename
     s6d1:unload()
-    a2d.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
+    desktop.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
     a2d.DialogOK() -- accept device selection
     a2dtest.WaitForSystemTask()
     apple2.Type("NEWNAME")
@@ -233,21 +233,21 @@ DialogTest(
     a2dtest.WaitForSystemTask()
 
     -- cleanup
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     a2dtest.WaitForSystemTask()
 end)
 
 DialogTest(
   "Special > Erase Disk...",
   function(suffix)
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     -- show dialog
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK - 2)
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK - 2)
     test.Snap("Special > Erase Disk... - Prompt for drive" .. suffix)
 
     -- select RAMFactor
-    a2d.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
+    desktop.FormatEraseSelectSlotDrive(1, 1, {no_ok=true})
     a2dtest.WaitForSystemTask()
     test.Snap("Special > Erase Disk... - Drive selected" .. suffix)
 
@@ -272,14 +272,14 @@ DialogTest(
 
     -- cleanup
     a2dtest.WaitForSystemTask()
-    a2d.RenamePath("/NEWNAME", "RAM1")
+    desktop.RenamePath("/NEWNAME", "RAM1")
 
     -- Erasing error
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_ERASE_DISK - 2)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_ERASE_DISK - 2)
     local disk = s6d1.filename
     s6d1:unload()
-    a2d.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
+    desktop.FormatEraseSelectSlotDrive(6, 1, {no_ok=true})
     a2d.DialogOK() -- accept device selection
     a2dtest.WaitForSystemTask()
     apple2.Type("NEWNAME")
@@ -293,7 +293,7 @@ DialogTest(
     a2dtest.WaitForSystemTask()
 
     -- cleanup
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     a2dtest.WaitForSystemTask()
 end)
 
@@ -306,8 +306,8 @@ local shortcut_added = false
 DialogTest(
   "Shortcuts > Add a Shortcut...",
   function(suffix)
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     test.Snap("Shortcuts > Add a Shortcut..." .. suffix)
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -318,31 +318,31 @@ DialogTest(
   "Shortcuts > Edit a Shortcut...",
   function(suffix)
     if not shortcut_added then
-      a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+      desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
       shortcut_added = true
     end
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     test.Snap("Shortcuts > Edit a Shortcut... - Select shortcut" .. suffix)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.Snap("Shortcuts > Edit a Shortcut... - Editing" .. suffix)
     a2d.DialogCancel()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 DialogTest(
   "Shortcuts > Delete a Shortcut...",
   function(suffix)
     if not shortcut_added then
-      a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+      desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
       shortcut_added = true
     end
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     test.Snap("Shortcuts > Delete a Shortcut..." .. suffix)
     a2d.DialogCancel()
 end)
@@ -351,28 +351,28 @@ DialogTest(
   "Shortcuts > Run a Shortcut...",
   function(suffix)
     if not shortcut_added then
-      a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+      desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
       shortcut_added = true
     end
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_RUN_A_SHORTCUT)
     test.Snap("Shortcuts > Run a Shortcut..." .. suffix)
     a2d.DialogCancel()
 end)
 
 if shortcut_added then
-  a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
-  a2d.Reboot()
+  desktop.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
+  desktop.Reboot()
   a2d.WaitForDesktopReady()
 end
 
 DialogTest(
   "Copying to RAMCard",
   function(suffix)
-    a2d.ToggleOptionCopyToRAMCard()
-    a2d.QuitAndRestart()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
-    a2d.CloseAllWindows()
+    desktop.ToggleOptionCopyToRAMCard()
+    desktop.QuitAndRestart()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
+    desktop.CloseAllWindows()
 
     a2d.OAShortcut("1") -- run first shortcut
     util.WaitFor(
@@ -383,10 +383,10 @@ DialogTest(
     a2d.DialogCancel()
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
-    a2d.DeletePath("/A2.DESKTOP/LOCAL/DESKTOP.CONFIG")
-    a2d.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
-    a2d.Reboot()
+    desktop.EraseVolume("RAM1")
+    desktop.DeletePath("/A2.DESKTOP/LOCAL/DESKTOP.CONFIG")
+    desktop.DeletePath("/A2.DESKTOP/LOCAL/SELECTOR.LIST")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -397,7 +397,7 @@ end)
 DialogTest(
   "Special > Copy Disk...",
   function(suffix)
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- "Full Disk Copy"
@@ -510,21 +510,21 @@ DialogTest(
     a2dtest.WaitForSystemTask()
     local image1 = s6d1.filename
     s6d1:unload()
-    a2d.CheckAllDrives()
+    desktop.CheckAllDrives()
     a2dtest.WaitForSystemTask()
-    a2d.RenamePath("/FLOPPY1", "FLOPPY2")
+    desktop.RenamePath("/FLOPPY1", "FLOPPY2")
     s6d1:load(image1)
-    a2d.Reboot()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
 DialogTest(
   "Selector",
   function(suffix)
-    a2d.ToggleOptionCopyToRAMCard()
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard()
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="use"})
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
 
     -- Launcher: Copying to RAMCard...
@@ -555,9 +555,9 @@ DialogTest(
     apple2.Type("D")
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady() -- back to DeskTop
-    a2d.ToggleOptionCopyToRAMCard()
-    a2d.ToggleOptionShowShortcutsOnStartup()
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard()
+    desktop.ToggleOptionShowShortcutsOnStartup()
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

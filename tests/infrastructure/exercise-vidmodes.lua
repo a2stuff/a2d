@@ -7,7 +7,7 @@
 test.Step(
   "Cycle video modes",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/EYES")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/TOYS/EYES")
     apple2.SetMonitorType(apple2.MONITOR_TYPE_COLOR)
     test.Snap("Color")
     apple2.SetMonitorType(apple2.MONITOR_TYPE_AMBER)

@@ -31,9 +31,9 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(apple2.SCREEN_WIDTH*3/4, apple2.SCREEN_HEIGHT/2)
     end)
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     test.Snap("verify cursor not at 0,0")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -43,7 +43,7 @@ end)
 test.Step(
   "Move window and mouse cursor",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -55,7 +55,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     test.Snap("verify mouse cursor painted correctly")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -67,7 +67,7 @@ end)
 test.Step(
   "Window and volume icons",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
     local drop_x, drop_y = 500, 20
@@ -89,7 +89,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     test.Snap("verify volume icons repaint correctly")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -101,7 +101,7 @@ end)
 test.Step(
   "Obscured window",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -125,7 +125,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     test.ExpectMatch(OCRDisplay(), "123%.456", "result should be 123.456")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -145,8 +145,7 @@ test.Variants(
     {"Sci.Calc - misc", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
   function(idx, name, path)
-    a2d.InvokePath(path)
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath(path)
 
     ExpectExpression("1-2=", "-1")
     -- should not hang
@@ -165,7 +164,7 @@ test.Variants(
     test.ExpectEquals(OCRDisplay(), "0", "display should be cleared")
     apple2.EscapeKey()
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -186,16 +185,15 @@ test.Variants(
     { "Sci.Calc - decimal separator", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
   function(idx, name, path)
-    a2d.InvokePath(path)
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath(path)
 
     ExpectExpression("12.34", "12.34")
     apple2.EscapeKey()
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
     function SetNumberFormat(decimal_separator, thousands_separator)
-      a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/INTERNATIONAL")
+      desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/INTERNATIONAL")
       apple2.TabKey() -- focus date > time
       apple2.TabKey() -- focus time > decimal
       apple2.Type(decimal_separator)
@@ -208,13 +206,12 @@ test.Variants(
     -- Change decimal separator
     SetNumberFormat(",", ".")
 
-    a2d.InvokePath(path)
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath(path)
 
     ExpectExpression("12,34", "12,34")
     ExpectExpression("12.34", "12,34")
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
     -- Restore decimal separator
     SetNumberFormat(".", ",")
@@ -251,7 +248,7 @@ end)
 test.Step(
   "Sci.Calc - functions",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/SCI.CALC")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/SCI.CALC")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
     -- Pattern - '.' and '-' do not need escaping
@@ -331,7 +328,7 @@ test.Step(
     apple2.Type("1") Neg() ACos()
     ExpectMatch("180")
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -343,8 +340,7 @@ test.Variants(
     {"Sci.Calc - repeated operations", "/A2.DESKTOP/EXTRAS/SCI.CALC"},
   },
   function(idx, name, path)
-    a2d.InvokePath(path)
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath(path)
 
     ExpectExpression("2+3=", "5")
     ExpectExpression("2+3==", "8")
@@ -391,5 +387,5 @@ test.Variants(
       ExpectExpression("1+2=++", "6")
     end
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)

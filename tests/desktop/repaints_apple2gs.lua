@@ -14,10 +14,10 @@ RESOLUTION="704x462"
 test.Variants(
   {
     {"modifier de-select - Shift (Apple IIgs)", function() end},
-    {"modifier select - Shift (Apple IIgs)", a2d.ClearSelection},
+    {"modifier select - Shift (Apple IIgs)", desktop.ClearSelection},
   },
   function(idx, name, func)
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
 
     func()

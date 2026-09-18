@@ -14,14 +14,14 @@ local s6d1 = manager.machine.images[":sl6:diskiing:0:525"]
 test.Step(
   "move - failure during enumeration does not repaint window",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(280, 80)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(280, 80)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     local dst_x, dst_y = x + w / 2, y + h / 2
 
-    a2d.OpenWindow("/WITH.FILES", {keep_windows=true})
-    a2d.MoveWindowBy(0, 80)
-    a2d.SelectAll()
+    desktop.OpenWindow("/WITH.FILES", {keep_windows=true})
+    desktop.MoveWindowBy(0, 80)
+    desktop.SelectAll()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2dtest.DHRDarkness()
@@ -37,8 +37,8 @@ test.Step(
     test.Snap("verify WITH.FILES window did not repaint")
 
     -- cleanup
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -49,9 +49,9 @@ end)
 test.Step(
   "delete - failure during enumeration does not repaint window",
   function()
-    a2d.OpenWindow("/WITH.FILES")
-    a2d.MoveWindowBy(0, 80)
-    a2d.SelectAll()
+    desktop.OpenWindow("/WITH.FILES")
+    desktop.MoveWindowBy(0, 80)
+    desktop.SelectAll()
 
     a2dtest.DHRDarkness()
 
@@ -66,8 +66,8 @@ test.Step(
     test.Snap("verify WITH.FILES window did not repaint")
 
     -- cleanup
-    a2d.CloseAllWindows()
-    a2d.Reboot()
+    desktop.CloseAllWindows()
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -89,27 +89,27 @@ test.Variants(
     local dst_x, dst_y
 
     if what == "delete" then
-      a2d.SelectPath("/Trash")
+      desktop.SelectPath("/Trash")
       dst_x, dst_y = a2dtest.GetSelectedIconCoords()
     end
 
-    a2d.CopyPath("/A2.DESKTOP/EXTRAS", "/RAM1")
-    a2d.CloseAllWindows()
+    desktop.CopyPath("/A2.DESKTOP/EXTRAS", "/RAM1")
+    desktop.CloseAllWindows()
 
     if what == "copy" or what == "move" then
-      a2d.CreateFolder("/RAM1/FOLDER")
-      a2d.OpenWindow("/RAM1/FOLDER")
-      a2d.MoveWindowBy(300, 60)
+      desktop.CreateFolder("/RAM1/FOLDER")
+      desktop.OpenWindow("/RAM1/FOLDER")
+      desktop.MoveWindowBy(300, 60)
       local x, y, w, h = a2dtest.GetFrontWindowContentRect()
       dst_x, dst_y = x + w / 2, y + h / 2
     end
 
-    a2d.OpenWindow("/RAM1/EXTRAS", {keep_windows=true})
+    desktop.OpenWindow("/RAM1/EXTRAS", {keep_windows=true})
     a2dtest.WaitForSystemTask()
-    a2d.GrowWindowBy(-200, -200)
-    a2d.MoveWindowBy(0, 60)
+    desktop.GrowWindowBy(-200, -200)
+    desktop.MoveWindowBy(0, 60)
     a2dtest.WaitForSystemTask()
-    a2d.SelectAll()
+    desktop.SelectAll()
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -172,8 +172,8 @@ test.Variants(
     end
 
     -- cleanup (and repaint screen)
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -188,21 +188,21 @@ end)
 test.Step(
   "copy aborted during enumeration doesn't refresh target window",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(0, 100)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(0, 100)
 
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/TOYS", {keep_windows=true})
-    a2d.SelectAll()
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU/TOYS", {keep_windows=true})
+    desktop.SelectAll()
     a2dtest.DHRDarkness()
-    a2d.CopySelectionTo("/RAM1", false, {no_wait=true})
+    desktop.CopySelectionTo("/RAM1", false, {no_wait=true})
     emu.wait(0.25) -- during copy
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
     test.Snap("verify RAM1 window did not refresh")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -217,13 +217,13 @@ end)
 test.Step(
   "copy aborted after enumeration does refresh target window",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(0, 100)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(0, 100)
 
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/TOYS", {keep_windows=true})
-    a2d.SelectAll()
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU/TOYS", {keep_windows=true})
+    desktop.SelectAll()
     a2dtest.DHRDarkness()
-    a2d.CopySelectionTo("/RAM1", false, {no_wait=true})
+    desktop.CopySelectionTo("/RAM1", false, {no_wait=true})
     emu.wait(2) -- during copy
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
@@ -231,7 +231,7 @@ test.Step(
     test.Snap("verify RAM1 window did refresh")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
-    a2d.Reboot()
+    desktop.EraseVolume("RAM1")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

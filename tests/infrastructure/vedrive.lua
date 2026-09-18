@@ -11,7 +11,7 @@ VEDISK2=disk_b.2mg
 test.Step(
   "VEDRIVE",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     apple2.WaitForBasicSystem()
     apple2.TypeLine("PREFIX /TESTS/DRIVERS")
     emu.wait(10)
@@ -65,17 +65,17 @@ test.Step(
     --------------------------------------------------
     -- Launch VEDrive
     --------------------------------------------------
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
     emu.wait(5)
     test.Snap("verify VEDrives have File Share icons")
 
-    a2d.OpenWindow("WITH.FILES")
+    desktop.OpenWindow("WITH.FILES")
     test.Snap("verify files present")
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
 
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
     emu.wait(10)
     test.Snap("verify VEDrives listed")
 end)

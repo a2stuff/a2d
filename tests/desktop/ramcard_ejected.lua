@@ -17,14 +17,14 @@ local s7d1 = manager.machine.images[":sl7:superdrive:fdc:0:35hd"]
 test.Step(
   "Volume order",
   function()
-    a2d.SelectAll()
-    local icons = a2d.GetSelectedIcons()
+    desktop.SelectAll()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
     test.ExpectEqualsIgnoreCase(icons[2].name, "A2.DESKTOP", "boot disk should be first")
     test.ExpectEqualsIgnoreCase(icons[3].name, "RAM4", "ramdisk should be next")
 
-    a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
+    desktop.SelectPath("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO-4)
     a2dtest.WaitForSystemTask()
     apple2.ControlKey("D") -- Drives
     a2dtest.WaitForSystemTask()
@@ -45,48 +45,48 @@ end)
 test.Step(
   "Volume order when copied to RAMCard, ejected",
   function()
-    a2d.ToggleOptionCopyToRAMCard() -- Enable
-    a2d.CloseAllWindows()
-    a2d.InvokeMenuItem(a2d.STARTUP_MENU, 1)
+    desktop.ToggleOptionCopyToRAMCard() -- Enable
+    desktop.CloseAllWindows()
+    a2d.InvokeMenuItem(desktop.STARTUP_MENU, 1)
     a2d.WaitForDesktopReady({timeout=240})
 
-    a2d.SelectAll()
-    local icons = a2d.GetSelectedIcons()
+    desktop.SelectAll()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
     test.ExpectEqualsIgnoreCase(icons[2].name, "A2.DESKTOP", "boot disk should be first")
     test.ExpectEqualsIgnoreCase(icons[3].name, "RAM4", "ramdisk should be next")
 
-    a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO-4)
+    desktop.SelectPath("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO-4)
     a2dtest.WaitForSystemTask()
     apple2.ControlKey("D") -- Drives
     a2dtest.WaitForSystemTask()
     test.Snap("verify A2.DESKTOP volume is first")
     a2d.DialogCancel()
 
-    a2d.InvokePath("/RAM4/DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath("/RAM4/DESKTOP/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     local drive = s7d1
     local current = drive.filename
     drive:unload()
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
 
-    a2d.CloseAllWindows()
-    a2d.SelectAll()
-    icons = a2d.GetSelectedIcons()
+    desktop.CloseAllWindows()
+    desktop.SelectAll()
+    icons = desktop.GetSelectedIcons()
     test.ExpectEquals(#icons, 3, "should have trash + 2 volumes")
     test.ExpectEqualsIgnoreCase(icons[2].name, "RAM4", "ramdisk should be first")
 
     drive:load(current)
-    a2d.CheckAllDrives()
-    a2d.SelectAll()
-    icons = a2d.GetSelectedIcons()
+    desktop.CheckAllDrives()
+    desktop.SelectAll()
+    icons = desktop.GetSelectedIcons()
     test.ExpectEquals(#icons, 4, "should have trash + 3 volumes")
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -101,12 +101,12 @@ test.Step(
   "No prompt for selector entry if startup disk ejected when running from RAMCard",
   function()
     --setup
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.ToggleOptionCopyToRAMCard() -- Enable
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.ToggleOptionCopyToRAMCard() -- Enable
+    desktop.Reboot()
     a2d.WaitForDesktopReady({timeout=240})
 
-    a2d.Quit()
+    desktop.Quit()
 
     -- Restart DESKTOP.SYSTEM
 
@@ -118,7 +118,7 @@ test.Step(
     local current = drive.filename
     drive:unload()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -131,9 +131,9 @@ test.Step(
     drive:load(current)
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -147,11 +147,11 @@ test.Step(
   "No prompt for overlay if startup disk ejected when running from RAMCard",
   function()
     --setup
-    a2d.ToggleOptionCopyToRAMCard() -- Enable
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard() -- Enable
+    desktop.Reboot()
     a2d.WaitForDesktopReady({timeout=240})
 
-    a2d.Quit()
+    desktop.Quit()
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
 
@@ -159,8 +159,8 @@ test.Step(
     local drive = s7d1
     local current = drive.filename
     drive:unload()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     a2d.DialogCancel()
@@ -168,9 +168,9 @@ test.Step(
     emu.wait(5) -- async drive validation
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -183,10 +183,10 @@ test.Step(
   "Aborted copy to RAMCard correctly prompts for overlays",
   function()
     --setup
-    a2d.ToggleOptionCopyToRAMCard() -- Enable
+    desktop.ToggleOptionCopyToRAMCard() -- Enable
 
     -- Cancel copy
-    a2d.Reboot({no_wait=true})
+    desktop.Reboot({no_wait=true})
     util.WaitFor(
       "cancel message", function()
         return apple2.GrabTextScreen():match("Press Esc to cancel")
@@ -198,16 +198,16 @@ test.Step(
     local drive = s7d1
     local current = drive.filename
     drive:unload()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2)
     a2dtest.WaitForAlert({match="insert the system disk"})
     drive:load(current)
     a2d.DialogCancel()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 

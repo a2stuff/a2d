@@ -14,8 +14,8 @@ test.Step(
   "no ramcard, boot volume appears first",
   function()
     test.Snap("verify boot volume is in top right")
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.FILE_MENU, a2d.FILE_COPY_TO)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.FILE_MENU, desktop.FILE_COPY_TO)
     a2dtest.WaitForSystemTask()
     apple2.ControlKey("D") -- Drives
     a2dtest.WaitForSystemTask()

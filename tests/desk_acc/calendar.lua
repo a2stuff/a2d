@@ -6,9 +6,9 @@
 test.Step(
   "Calendar - with real-time clock",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALENDAR")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CALENDAR")
     test.Snap("verify current month and year")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -19,9 +19,9 @@ end)
 test.Step(
   "Calendar - without real-time clock",
   function()
-    a2d.RemoveClockDriverAndReboot()
+    desktop.RemoveClockDriverAndReboot()
 
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CALENDAR")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CALENDAR")
     test.Snap("verify month and year match build")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)

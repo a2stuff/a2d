@@ -71,4 +71,21 @@ function util.GetSymbols(envar)
   return symbols
 end
 
+function util.default_options(o)
+  local options = {}
+  if o then
+    for k, v in pairs(o) do
+      options[k] = v
+    end
+  end
+
+  if options.level == nil then
+    options.level = 1
+  end
+
+  options.level = options.level + 1
+  return options
+end
+
+
 return util

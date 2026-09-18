@@ -17,7 +17,7 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
 
-    a2d.SelectPath("/WITH.FILES")
+    desktop.SelectPath("/WITH.FILES")
     drive:unload()
     a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})
@@ -37,7 +37,7 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
 
-    a2d.SelectPath("/WITH.FILES/LOREM.IPSUM")
+    desktop.SelectPath("/WITH.FILES/LOREM.IPSUM")
     drive:unload()
     a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})
@@ -57,8 +57,8 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
 
-    a2d.OpenWindow("/WITH.FILES")
-    a2d.SelectAll()
+    desktop.OpenWindow("/WITH.FILES")
+    desktop.SelectAll()
     drive:unload()
     a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})
@@ -82,8 +82,8 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
 
-    a2d.OpenWindow("/WITH.FILES")
-    a2d.SelectAll()
+    desktop.OpenWindow("/WITH.FILES")
+    desktop.SelectAll()
     drive:unload()
     a2d.OAShortcut("I") -- File > Get Info
     a2dtest.WaitForAlert({match="volume cannot be found"})

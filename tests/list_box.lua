@@ -315,7 +315,7 @@ function ListBoxTest(
         -- BUG: They do seem to be repainting!
 
         cleanup_func()
-        a2d.Reboot()
+        desktop.Reboot()
         a2d.WaitForDesktopReady()
     end)
   end
@@ -363,8 +363,8 @@ ListBoxTest(
     action = "Open",
   },
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
   end,
   function()
@@ -398,8 +398,8 @@ ListBoxTest(
     action = "Open",
   },
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     apple2.ControlKey("D") -- Drives
     a2dtest.WaitForSystemTask()
   end,
@@ -428,7 +428,7 @@ ListBoxTest(
     action = "OK",
   },
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
     a2dtest.WaitForSystemTask()
   end,
@@ -458,7 +458,7 @@ ListBoxTest(
     action = "OK",
   },
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
   end,
   function()
     a2d.DialogCancel()
@@ -474,8 +474,8 @@ ListBoxTest(
     second_last = "Maze",
   },
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -508,8 +508,8 @@ ListBoxTest(
     second_last = "Calendar",
   },
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.FIND_FILES)
+    desktop.OpenWindow("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.FIND_FILES)
     apple2.Type("CA*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -535,8 +535,7 @@ ListBoxTest(
   },
   function()
     a2dtest.WaitForSystemTask()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
   end,
   function()
     a2d.DialogCancel()
@@ -561,8 +560,7 @@ ListBoxTest(
     action = "Import",
   },
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()

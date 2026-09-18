@@ -14,7 +14,7 @@ end)
 test.Step(
   "Mouse Keys - Pull down menu",
   function()
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.ButtonDown()
@@ -25,8 +25,8 @@ test.Step(
         test.Snap("verify cursor at center of screen")
     end)
     test.Expect(a2dtest.GetWindowCount(), 1, "window should have opened")
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
 end)
 
 --[[
@@ -37,7 +37,7 @@ end)
 test.Step(
   "Mouse Keys - Drop down menu",
   function()
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
@@ -48,8 +48,8 @@ test.Step(
         test.Snap("verify cursor at center of screen")
     end)
     test.Expect(a2dtest.GetWindowCount(), 1, "window should have opened")
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
 end)
 
 --[[
@@ -89,24 +89,24 @@ end)
 test.Step(
   "Mouse Keys - stay in mousekeys mode",
   function()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon_x, icon_y)
         m.Click()
 
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "one icon should be selected")
-        test.ExpectEqualsIgnoreCase(a2d.GetSelectedIcons()[1].name, "A2.DESKTOP", "clicked icon should be selected")
-        test.Expect(not a2d.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "one icon should be selected")
+        test.ExpectEqualsIgnoreCase(desktop.GetSelectedIcons()[1].name, "A2.DESKTOP", "clicked icon should be selected")
+        test.Expect(not desktop.GetSelectedIcons()[1].dimmed, "selected icon should not be dimmed")
 
         apple2.ReturnKey()
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
         test.Snap("verify cursor at screen center")
         m.Click()
     end)
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 end)
 
 --[[
@@ -117,7 +117,7 @@ end)
 test.Step(
   "Mouse Keys - Menu items",
   function()
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
@@ -125,8 +125,8 @@ test.Step(
         test.Snap("verify menu still open")
         m.Click()
     end)
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
 end)
 
 --[[
@@ -135,9 +135,9 @@ end)
 test.Step(
   "Mouse Keys - double-click",
   function()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     local icon_x, icon_y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     local count = a2dtest.GetWindowCount()
     a2d.InMouseKeysMode(function(m)
@@ -146,5 +146,5 @@ test.Step(
         a2dtest.WaitForSystemTask()
     end)
     test.ExpectEquals(a2dtest.GetWindowCount(), count+1, "window should have opened")
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 end)

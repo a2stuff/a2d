@@ -8,9 +8,9 @@ test.Step(
   "Sounds do not crash",
   function()
     local NUM_SOUNDS = 21
-    a2d.AddShortcut("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.CloseAllWindows()
+    desktop.AddShortcut("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.CloseAllWindows()
 
     for i = 1, NUM_SOUNDS do
       a2d.OAShortcut("1")
@@ -42,7 +42,7 @@ test.Step(
       " * IIgs Bonk\n" ..
       " * MouseKeys exit sound (hi-lo)\n")
 
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/SOUNDS")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
     a2d.InMouseKeysMode(function(m)

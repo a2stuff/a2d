@@ -14,13 +14,13 @@ DISKARGS="-flop1 $FLOP1IMG -flop2 $FLOP2IMG"
 test.Step(
   "IIc - speed doesn't affect DHR display",
   function()
-    a2d.InvokePath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
+    desktop.InvokePath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
     emu.wait(5) -- floppy drives are slow
     apple2.Type("N") -- Normal Speed
     apple2.Type("F") -- Fast Speed
     test.Expect(apple2.ReadSSW("RDDHIRES") < 128, "Should still be in DHR mode")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 

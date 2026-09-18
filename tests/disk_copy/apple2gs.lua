@@ -16,11 +16,11 @@ RESOLUTION="704x462"
 test.Step(
   "RGB Color vs. IIgs Control Panel",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- check RGB Color
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     test.Expect(apple2.IsColor(), "desktop should be in color")
 
     apple2.PressOA()
@@ -40,9 +40,9 @@ test.Step(
     -- cleanup
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     a2d.OAShortcut("1") -- uncheck RGB Color
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -54,7 +54,7 @@ end)
 test.Step(
   "RGB Monochrome vs. IIgs Control Panel",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     test.Expect(apple2.IsMono(), "desktop should be in monochrome")
 
     apple2.PressOA()

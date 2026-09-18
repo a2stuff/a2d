@@ -8,7 +8,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 apple2.SetMonitorType(apple2.MONITOR_TYPE_VIDEO7)
 
 function WaitForImage()
-  emu.wait(5) -- heuristic
+  emu.wait(10) -- heuristic
 end
 
 --[[
@@ -17,9 +17,9 @@ end
 test.Step(
   "Escape exits",
   function()
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     a2dtest.ExpectNothingChanged(function()
-        a2d.OpenSelection({no_wait=true})
+        desktop.OpenSelection({no_wait=true})
         WaitForImage()
         apple2.EscapeKey()
         a2dtest.WaitForSystemTask()
@@ -32,9 +32,9 @@ end)
 test.Step(
   "OA+W exits",
   function()
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", {no_validate=true})
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
     a2dtest.ExpectNothingChanged(function()
-        a2d.OpenSelection({no_wait=true})
+        desktop.OpenSelection({no_wait=true})
         WaitForImage()
         a2d.OAShortcut("W")
         a2dtest.WaitForSystemTask()
@@ -47,14 +47,15 @@ end)
 test.Step(
   "Space toggles color/mono",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", {no_wait=true})
+    WaitForImage()
     apple2.SpaceKey()
     WaitForImage()
     test.Expect(apple2.IsMono(), "should be mono")
     apple2.SpaceKey()
     WaitForImage()
     test.Expect(apple2.IsColor(), "should be color")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -64,9 +65,10 @@ end)
 test.Step(
   ".A2HR opens in mono",
   function()
-    a2d.InvokePath("/TESTS/FILE.TYPES/HRMONO.A2HR")
+    desktop.InvokePath("/TESTS/FILE.TYPES/HRMONO.A2HR", {no_wait=true})
+    WaitForImage()
     test.Expect(apple2.IsMono(), "should be mono")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -76,25 +78,28 @@ end)
 test.Step(
   ".A2LC opens in color",
   function()
-    a2d.InvokePath("/TESTS/FILE.TYPES/HRCOLOR.A2LC")
+    desktop.InvokePath("/TESTS/FILE.TYPES/HRCOLOR.A2LC", {no_wait=true})
+    WaitForImage()
     test.Expect(apple2.IsColor(), "should be color")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 test.Step(
   ".A2FM opens in mono",
   function()
-    a2d.InvokePath("/TESTS/FILE.TYPES/DHRMONO.A2FM")
+    desktop.InvokePath("/TESTS/FILE.TYPES/DHRMONO.A2FM", {no_wait=true})
+    WaitForImage()
     test.Expect(apple2.IsMono(), "should be mono")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 test.Step(
   ".A2FC opens in color",
   function()
-    a2d.InvokePath("/TESTS/FILE.TYPES/DHRCOLOR.A2FC")
+    desktop.InvokePath("/TESTS/FILE.TYPES/DHRCOLOR.A2FC", {no_wait=true})
+    WaitForImage()
     test.Expect(apple2.IsColor(), "should be color")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -105,7 +110,8 @@ end)
 test.Step(
   "Clock appears immediately",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", {no_wait=true})
+    WaitForImage()
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectClockVisible()
@@ -123,9 +129,9 @@ test.Step(
   "Arrow keys",
   function()
     local pics = {}
-    a2d.OpenWindow("/TESTS/PREVIEW/IMAGE")
+    desktop.OpenWindow("/TESTS/PREVIEW/IMAGE")
     for i = 1, 5 do
-      a2d.SelectAndOpen("PICTURE" .. i, {no_wait=true})
+      desktop.SelectAndOpen("PICTURE" .. i, {no_wait=true})
       WaitForImage()
       pics[i] = apple2.SnapshotDHR()
       apple2.EscapeKey()
@@ -137,7 +143,8 @@ test.Step(
         "should be picture " .. n, {}, 1)
     end
 
-    a2d.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1")
+    desktop.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1", {no_wait=true})
+    WaitForImage()
     ExpectPicture(1)
     apple2.RightArrowKey()
     WaitForImage()
@@ -172,7 +179,7 @@ test.Step(
     WaitForImage()
     ExpectPicture(5)
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -182,10 +189,10 @@ end)
 test.Step(
   "Packed images",
   function()
-    a2d.InvokePath("/TESTS/FILE.TYPES/PACKED.FOT")
-    emu.wait(10)
+    desktop.InvokePath("/TESTS/FILE.TYPES/PACKED.FOT", {no_wait=true})
+    WaitForImage()
     test.Snap("verify preview still showing")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -196,11 +203,12 @@ end)
 test.Step(
   "Slideshow - S starts and stops",
   function()
-    a2d.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1")
+    desktop.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1", {no_wait=true})
+    WaitForImage()
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(10)
+      WaitForImage()
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -208,11 +216,11 @@ test.Step(
     apple2.Type("S") -- anything (including S) stops
     dhr = apple2.SnapshotDHR()
     for i=1,3 do
-      emu.wait(10)
+      WaitForImage()
       local new = apple2.SnapshotDHR()
       test.Expect(a2dtest.CompareDHR(dhr, new), "slideshow should be stopped", {snap=true})
     end
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -224,7 +232,8 @@ end)
 test.Step(
   "Slideshow - S starts and anything stops and S restarts",
   function()
-    a2d.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1")
+    desktop.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1", {no_wait=true})
+    WaitForImage()
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
@@ -248,7 +257,7 @@ test.Step(
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
     end
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -260,7 +269,8 @@ end)
 test.Step(
   "Slideshow - arrow keys work and abort slideshow",
   function()
-    a2d.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1")
+    desktop.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1", {no_wait=true})
+    WaitForImage()
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
@@ -285,7 +295,7 @@ test.Step(
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
     end
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -296,11 +306,11 @@ end)
 test.Step(
   "Menus not highlighted after exit",
   function()
-    a2d.OpenWindow("/TESTS/PREVIEW/IMAGE")
+    desktop.OpenWindow("/TESTS/PREVIEW/IMAGE")
 
-    a2d.Select("PICTURE1")
+    desktop.Select("PICTURE1")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     local file_menu_x, file_menu_y
     a2dtest.OCRIterate(function(run, x, y)
@@ -344,10 +354,11 @@ test.Step(
         m.MoveToApproximately(apple2.SCREEN_WIDTH/2, apple2.SCREEN_HEIGHT/2)
     end)
 
-    a2d.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1")
+    desktop.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1", {no_wait=true})
+    WaitForImage()
     test.Snap("verify cursor is hidden")
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     test.Snap("verify cursor is visible")
 end)
 

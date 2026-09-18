@@ -15,20 +15,20 @@ DISKARGS="-hard1 $HARDIMG"
 test.Step(
   "Settings saved back to boot volume",
   function()
-    a2d.ToggleOptionCopyToRAMCard() -- enable
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard() -- enable
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/CONTROL.PANEL")
     apple2.RightArrowKey()
     apple2.RightArrowKey()
     apple2.ControlKey("D") -- Set Desktop Pattern
     a2dtest.WaitForSystemTask()
-    a2d.CloseWindow()
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
+    desktop.CloseWindow()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
     a2dtest.ExpectNothingChanged(function()
-        a2d.Reboot()
+        desktop.Reboot()
         a2d.WaitForDesktopReady()
     end)
 end)

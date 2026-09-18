@@ -12,7 +12,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "non-folder file",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Size: +.*%dK", "size should be in K")
@@ -27,7 +27,7 @@ end)
 test.Step(
   "empty folder",
   function()
-    a2d.SelectPath("/TESTS/VIEW/BY.NAME/EMPTY")
+    desktop.SelectPath("/TESTS/VIEW/BY.NAME/EMPTY")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
@@ -44,7 +44,7 @@ end)
 test.Step(
   "one item in folder",
   function()
-    a2d.SelectPath("/TESTS/VIEW/BY.NAME/ONE.FILE")
+    desktop.SelectPath("/TESTS/VIEW/BY.NAME/ONE.FILE")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
@@ -62,7 +62,7 @@ end)
 test.Step(
   "many items in folder",
   function()
-    a2d.SelectPath("/TESTS/VIEW/BY.NAME/A1.B1.A.B")
+    desktop.SelectPath("/TESTS/VIEW/BY.NAME/A1.B1.A.B")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
@@ -83,7 +83,7 @@ end)
 test.Step(
   "empty volume",
   function()
-    a2d.SelectPath("/RAM1")
+    desktop.SelectPath("/RAM1")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
@@ -99,15 +99,15 @@ end)
 test.Step(
   "volume with 1 file",
   function()
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.SelectPath("/RAM1")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.SelectPath("/RAM1")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "Size used/total: +.*K for 1 item / .*K", "size should be _K for 1 item / %d+K")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -117,15 +117,15 @@ end)
 test.Step(
   "volume with 2 or more files",
   function()
-    a2d.CopyPath("/TESTS/VIEW/BY.NAME/A1.B1.A.B", "/RAM1")
-    a2d.SelectPath("/RAM1")
+    desktop.CopyPath("/TESTS/VIEW/BY.NAME/A1.B1.A.B", "/RAM1")
+    desktop.SelectPath("/RAM1")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "Size used/total: +.*K for 5 items / .*K", "size should be _K for 5 items / %d+K")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -135,7 +135,7 @@ end)
 test.Step(
   "new file dates",
   function()
-    a2d.SelectPath("/TESTS/FILE.TYPES/IIGS.50")
+    desktop.SelectPath("/TESTS/FILE.TYPES/IIGS.50")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Created: .* 20%d%d ", "date after 1999 should show correctly")
@@ -150,7 +150,7 @@ end)
 test.Step(
   "32MB volume",
   function()
-    a2d.SelectPath("/TESTS")
+    desktop.SelectPath("/TESTS")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Size used/total: .* 32,768K", "total size should be 32,768K, not 0K")
@@ -167,18 +167,18 @@ end)
 test.Step(
   "file, folder, file",
   function()
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNothingChanged(function()
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
-        a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS")
+        desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/FONTS")
         a2d.OAShortcut("I")
         a2dtest.WaitForSystemTask()
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
-        a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
+        desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/LOREM.IPSUM")
         a2d.OAShortcut("I")
         a2dtest.WaitForSystemTask()
     end)
@@ -203,7 +203,7 @@ end)
 test.Step(
   "more than 255 files",
   function()
-    a2d.SelectPath("/TESTS/RAMCARD/SHORTCUT/HAS.256.FILES")
+    desktop.SelectPath("/TESTS/RAMCARD/SHORTCUT/HAS.256.FILES")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     local ocr = a2dtest.OCRScreen()
@@ -220,7 +220,7 @@ end)
 test.Step(
   "known size",
   function()
-    a2d.SelectPath("/TESTS/PROPERTIES/KNOWN.SIZE")
+    desktop.SelectPath("/TESTS/PROPERTIES/KNOWN.SIZE")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Size: +17K for 2 items", "size should be 17K for 2 items")
@@ -236,7 +236,7 @@ end)
 test.Step(
   "cancel enumeration",
   function()
-    a2d.SelectPath("/TESTS")
+    desktop.SelectPath("/TESTS")
     a2d.OAShortcut("I", {no_wait=true})
     emu.wait(5) -- cancel enumeration
     apple2.EscapeKey()
@@ -256,14 +256,14 @@ end)
 test.Step(
   "auxtype",
   function()
-    a2d.SelectPath("/TESTS/FILE.TYPES/PACKED.FOT")
+    desktop.SelectPath("/TESTS/FILE.TYPES/PACKED.FOT")
     a2d.OAShortcut("I")
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNothingChanged(function()
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
-        a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-        a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_AS_ICONS)
+        a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+        a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_AS_ICONS)
         a2d.OAShortcut("I")
     end)
     a2d.DialogOK()
@@ -278,7 +278,7 @@ end)
 test.Step(
   "locking folder",
   function()
-    a2d.SelectPath("/TESTS/FILE.TYPES/FOLDER")
+    desktop.SelectPath("/TESTS/FILE.TYPES/FOLDER")
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNothingChanged(function()
         a2d.OAShortcut("I")
@@ -286,7 +286,7 @@ test.Step(
         apple2.ControlKey("L") -- Toggle Locked
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
-        a2d.SelectPath("/TESTS/FILE.TYPES/FOLDER")
+        desktop.SelectPath("/TESTS/FILE.TYPES/FOLDER")
         a2dtest.WaitForSystemTask()
     end)
 end)

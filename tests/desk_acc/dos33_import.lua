@@ -18,7 +18,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 dos33_floppy.dsk -flop2 SD073c.dsk"
 test.Step(
   "Drive selection - OK button - Shortcut",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled ")
 
     a2dtest.ExpectNothingChanged(apple2.ReturnKey)
@@ -31,7 +31,7 @@ test.Step(
 
     a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Disk Volume 254", "catalog screen should be shown")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -41,7 +41,7 @@ end)
 test.Step(
   "Drive selection - OK button - Click",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
@@ -50,7 +50,7 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
     test.ExpectMatch(a2dtest.OCRScreen(), "Disk Volume 254", "catalog screen should be shown")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -60,7 +60,7 @@ end)
 test.Step(
   "Drive selection - Cancel button - Shortcut",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
 
     local count = a2dtest.GetWindowCount()
@@ -76,7 +76,7 @@ end)
 test.Step(
   "Drive selection - Cancel button - Click",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
 
     local count = a2dtest.GetWindowCount()
@@ -96,7 +96,7 @@ end)
 test.Step(
   "File selection - Import button - Shortcut",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
@@ -105,7 +105,7 @@ test.Step(
     apple2.ReturnKey()
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "Import", "Import button should flash")
     a2dtest.WaitForSystemTask()
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -115,7 +115,7 @@ end)
 test.Step(
   "File selection - Cancel button - Shortcut",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
@@ -133,12 +133,12 @@ end)
 test.Step(
   "Too many icons after import",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
-    a2d.CreateFolder("/RAM1/DIR")
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.CreateFolder("/RAM1/DIR")
 
-    a2d.OpenWindow("/RAM1/DIR")
+    desktop.OpenWindow("/RAM1/DIR")
 
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("10 FOR I = 1 TO "..(127-#apple2.GetProDOSDeviceList()))
     apple2.TypeLine("20 PRINT CHR$(4)\"CREATE F\"I")
@@ -155,7 +155,7 @@ test.Step(
     apple2.DownArrowKey() -- select file
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 
     a2dtest.WaitForAlert({match="window must be closed"})
     a2d.DialogOK()
@@ -170,7 +170,7 @@ end)
 test.Step(
   "Non-DOS 3.3 VTOC",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT")
     apple2.DownArrowKey() -- select drive
     apple2.DownArrowKey() -- select drive
     apple2.ReturnKey()

@@ -15,17 +15,17 @@ test.Step(
   "No prompt if no change",
   function()
     local drive = s6d1
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
 
     local current = drive.filename
     drive:unload()
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
     drive:load(current)
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     emu.wait(5) -- async drive validation
 end)
 
@@ -37,18 +37,18 @@ test.Step(
   "Prompt if changed",
   function()
     local drive = s6d1
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
     a2d.OAShortcut("5") -- show invisible files (something harmless)
 
     local current = drive.filename
     drive:unload()
 
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     a2dtest.WaitForAlert({match="want to save"})
     a2d.DialogCancel()
 
     drive:load(current)
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     emu.wait(5) -- async drive validation
 end)
 
@@ -61,7 +61,7 @@ end)
 test.Step(
   "Repaints when obscured",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
     local x, y = a2dtest.GetFrontWindowDragCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -76,8 +76,8 @@ test.Step(
         a2d.OAShortcut("2")
         a2d.OAShortcut("3")
     end)
-    a2d.CloseWindow()
-    a2d.CloseAllWindows()
+    desktop.CloseWindow()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -87,9 +87,9 @@ end)
 test.Step(
   "No crash after running",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
-    a2d.CloseWindow()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/OPTIONS")
+    desktop.CloseWindow()
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
     apple2.TypeLine("REM *** Did not crash ***")
     test.ExpectMatch(apple2.GrabTextScreen(), "Did not crash", "should not crash")

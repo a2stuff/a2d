@@ -34,7 +34,7 @@ test.Step(
     util.WaitFor(
       "selection",
       function() return
-          #a2d.GetSelectedIcons() == 1 and
+          #desktop.GetSelectedIcons() == 1 and
           a2dtest.GetSelectedIconName():upper() == "NEW.NAME" end,
       {timeout=120})
 end)

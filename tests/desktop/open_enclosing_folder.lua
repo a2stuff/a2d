@@ -7,10 +7,10 @@
 test.Step(
   "Open enclosing folder",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
-    a2d.CycleWindows()
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
+    desktop.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be on top")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "one window should be open")
 
     a2d.OAUp()
@@ -24,7 +24,7 @@ test.Step(
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -36,7 +36,7 @@ end)
 test.Step(
   "Reactivate existing window",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
 
     a2d.OAUp()
@@ -50,7 +50,7 @@ test.Step(
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -63,11 +63,11 @@ end)
 test.Step(
   "View change",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
-    a2d.CycleWindows()
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
+    desktop.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "volume window should be on top")
-    a2d.InvokeMenuItem(a2d.VIEW_MENU, a2d.VIEW_BY_NAME)
-    a2d.CycleWindows()
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, desktop.VIEW_BY_NAME)
+    desktop.CycleWindows()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "APPLE.MENU", "folder window should be on top")
 
     a2d.OAUp()
@@ -81,7 +81,7 @@ test.Step(
     test.ExpectEquals(a2dtest.GetWindowCount(), 2, "two windows should be open")
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be selected")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -93,7 +93,7 @@ end)
 test.Step(
   "Icon selection with keyboard",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU", {leave_parent=true})
 
     a2d.OAUp()
     a2dtest.WaitForSystemTask()
@@ -103,9 +103,9 @@ test.Step(
 
     apple2.RightArrowKey()
     a2dtest.WaitForSystemTask()
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "single icon should be selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "single icon should be selected")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 
 --[[
@@ -117,7 +117,7 @@ end)
 test.Step(
   "Icon selection with keyboard with window cycling",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU")
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU")
 
     a2d.OAUp()
     a2dtest.WaitForSystemTask()
@@ -127,8 +127,8 @@ test.Step(
 
     apple2.RightArrowKey()
     a2dtest.WaitForSystemTask()
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "single icon should be selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "single icon should be selected")
 
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 end)
 

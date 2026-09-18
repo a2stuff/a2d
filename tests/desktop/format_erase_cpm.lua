@@ -15,11 +15,11 @@ test.Variants(
     "Format CP/M disk",
     "Erase CP/M disk",
   }, function(idx)
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, a2d.SPECIAL_FORMAT_DISK-2+idx-1)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, desktop.SPECIAL_FORMAT_DISK-2+idx-1)
 
     -- Select drive (S6D1)
-    a2d.FormatEraseSelectSlotDrive(6, 1)
+    desktop.FormatEraseSelectSlotDrive(6, 1)
 
     -- Enter new name
     apple2.Type("NEW.NAME")

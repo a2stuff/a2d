@@ -6,10 +6,10 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.AddShortcut("/A2.DESKTOP")
+desktop.AddShortcut("/A2.DESKTOP")
 function OpenVolumeWindow() a2d.OAShortcut("1") a2dtest.WaitForSystemTask() end
 
-a2d.AddShortcut("/A2.DESKTOP/EXTRAS")
+desktop.AddShortcut("/A2.DESKTOP/EXTRAS")
 function OpenFolderWindow() a2d.OAShortcut("2") a2dtest.WaitForSystemTask() end
 
 --[[
@@ -21,10 +21,10 @@ function OpenFolderWindow() a2d.OAShortcut("2") a2dtest.WaitForSystemTask() end
 test.Step(
   "selection rectangle around file icons",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("READ.ME")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.Select("PRODOS")
+    desktop.Select("PRODOS")
 
     a2d.Drag(x-25, y-5, x+25, y+20)
     a2dtest.WaitForSystemTask()
@@ -40,11 +40,11 @@ end)
 test.Step(
   "selection rectangle around volume icons",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
-    a2d.Select("RAM1")
+    desktop.Select("RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
 
     a2d.Drag(x-30, y-5, x+30, y+20)
     a2dtest.WaitForSystemTask()
@@ -64,8 +64,8 @@ function ModifierTest(name, func)
       -- TODO: Apple IIgs as well
     },
     function(idx, name, press, release)
-      a2d.CloseAllWindows()
-      a2d.ClearSelection()
+      desktop.CloseAllWindows()
+      desktop.ClearSelection()
 
       func(press, release)
   end)
@@ -78,11 +78,11 @@ end
 ModifierTest(
   "click second volume icon",
   function(Press, Release)
-    a2d.Select("RAM1")
+    desktop.Select("RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "single icon selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "single icon selected")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
@@ -91,7 +91,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should be extended")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "selection should be extended")
 end)
 
 --[[
@@ -102,8 +102,8 @@ end)
 ModifierTest(
   "with volume icons selected, modifier-click desktop",
   function(Press, Release)
-    a2d.SelectAll()
-    local count = #a2d.GetSelectedIcons()
+    desktop.SelectAll()
+    local count = #desktop.GetSelectedIcons()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(0, apple2.SCREEN_HEIGHT)
         Press()
@@ -112,7 +112,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not be cleared")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), count, "selection should not be cleared")
 end)
 
 --[[
@@ -122,11 +122,11 @@ end)
 ModifierTest(
   "mod-click a selected volume icon",
   function(Press, Release)
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.SelectAll()
+    desktop.SelectAll()
 
-    local count = #a2d.GetSelectedIcons()
+    local count = #desktop.GetSelectedIcons()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
@@ -135,7 +135,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), count-1, "clicked icon should be de-selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), count-1, "clicked icon should be de-selected")
 end)
 
 --[[
@@ -146,23 +146,23 @@ end)
 ModifierTest(
   "mod-double-click a non-selected volume icon",
   function(Press, Release)
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "selection should have toggled")
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
 end)
 
@@ -175,7 +175,7 @@ end)
 ModifierTest(
   "mod-double-click a selected volume icon",
   function(Press, Release)
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -183,14 +183,14 @@ ModifierTest(
         Press()
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "selection should have toggled")
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 0, "no windows should be open")
 end)
 
@@ -202,10 +202,10 @@ end)
 ModifierTest(
   "mod-drag-select a second volume icon",
   function(Press, Release)
-    a2d.Select("RAM1")
+    desktop.Select("RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x-20, y-10)
@@ -217,7 +217,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have been extended")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "selection should have been extended")
 end)
 
 --[[
@@ -228,13 +228,13 @@ end)
 ModifierTest(
   "click second file icon",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
 
-    a2d.Select("EXTRAS")
+    desktop.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.Select("READ.ME")
+    desktop.Select("READ.ME")
 
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "single icon selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "single icon selected")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
@@ -243,7 +243,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should be extended")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "selection should be extended")
 end)
 
 --[[
@@ -254,11 +254,11 @@ end)
 ModifierTest(
   "with file icons selected, modifier-click window",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
-    a2d.SelectAll()
-    local count = #a2d.GetSelectedIcons()
+    desktop.SelectAll()
+    local count = #desktop.GetSelectedIcons()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w - 5, y + h - 5)
         Press()
@@ -267,7 +267,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not be cleared")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), count, "selection should not be cleared")
 end)
 
 --[[
@@ -278,11 +278,11 @@ end)
 ModifierTest(
   "with file icon selected, modifier-double-click window",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
 
-    a2d.SelectAll()
-    local count = #a2d.GetSelectedIcons()
+    desktop.SelectAll()
+    local count = #desktop.GetSelectedIcons()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w - 5, y + h - 5)
         Press()
@@ -291,7 +291,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), count, "selection should not be cleared")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), count, "selection should not be cleared")
 end)
 
 --[[
@@ -302,12 +302,12 @@ end)
 ModifierTest(
   "mod-drag-select a second file icon",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
 
-    a2d.Select("EXTRAS")
+    desktop.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.Select("READ.ME")
+    desktop.Select("READ.ME")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x-20, y-10)
@@ -318,7 +318,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have been extended")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "selection should have been extended")
 end)
 
 --[[
@@ -329,14 +329,14 @@ end)
 ModifierTest(
   "mod-click one of many selected file icons",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
 
-    a2d.Select("READ.ME")
+    desktop.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.SelectAll()
+    desktop.SelectAll()
 
-    local count = #a2d.GetSelectedIcons()
+    local count = #desktop.GetSelectedIcons()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
@@ -345,7 +345,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), count - 1, "clicked icon should be de-selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), count - 1, "clicked icon should be de-selected")
 end)
 
 --[[
@@ -356,12 +356,12 @@ end)
 ModifierTest(
   "mod-click a single selected file icon",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
+    desktop.OpenWindow("/A2.DESKTOP")
 
-    a2d.Select("READ.ME")
+    desktop.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    local count = #a2d.GetSelectedIcons()
+    local count = #desktop.GetSelectedIcons()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
@@ -370,7 +370,7 @@ ModifierTest(
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "clicked icon should be de-selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "clicked icon should be de-selected")
 end)
 
 --[[
@@ -381,24 +381,24 @@ end)
 ModifierTest(
   "mod-double-click a non-selected file icon",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("EXTRAS")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "selection should have toggled")
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "no new windows should be open")
 end)
 
@@ -411,8 +411,8 @@ end)
 ModifierTest(
   "mod-double-click a selected file icon",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("EXTRAS")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
 
     a2d.InMouseKeysMode(function(m)
@@ -420,14 +420,14 @@ ModifierTest(
         Press()
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "selection should have toggled")
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "no new windows should be open")
 end)
 
@@ -441,8 +441,8 @@ end)
 ModifierTest(
   "drag selection in window with modifier",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.ClearSelection()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.ClearSelection()
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + 5, y + 15)
@@ -453,7 +453,7 @@ ModifierTest(
         Release()
     end)
     a2dtest.WaitForSystemTask()
-    test.ExpectGreaterThan(#a2d.GetSelectedIcons(), 1, "selection should have changed")
+    test.ExpectGreaterThan(#desktop.GetSelectedIcons(), 1, "selection should have changed")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w - 5, y + h - 5)
@@ -471,25 +471,25 @@ end)
 ModifierTest(
   "mod-double-click a folder icon with another folder selected",
   function(Press, Release)
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("EXTRAS")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("EXTRAS")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.Select("APPLE.MENU")
+    desktop.Select("APPLE.MENU")
 
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         Press()
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "selection should have toggled")
         m.Click()
         a2dtest.WaitForSystemTask()
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
         Release()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 1, "selection should have toggled")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 1, "selection should have toggled")
     test.ExpectEquals(a2dtest.GetWindowCount(), 1, "no new windows should be open")
 end)
 
@@ -503,21 +503,21 @@ end)
 test.Step(
   "click icon in inactive window",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     OpenVolumeWindow()
     OpenFolderWindow()
-    a2d.MoveWindowBy(0, 80)
+    desktop.MoveWindowBy(0, 80)
 
-    a2d.Select("BASIC.SYSTEM")
+    desktop.Select("BASIC.SYSTEM")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.ClearSelection()
-    a2d.CycleWindows()
+    desktop.ClearSelection()
+    desktop.CycleWindows()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
         emu.wait(1) -- during mouse operation
-        local icons = a2d.GetSelectedIcons()
+        local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
         m.ButtonUp()
@@ -533,22 +533,22 @@ end)
 test.Step(
   "drag icon in inactive window",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     OpenVolumeWindow()
     OpenFolderWindow()
-    a2d.MoveWindowBy(0, 80)
+    desktop.MoveWindowBy(0, 80)
 
-    a2d.Select("BASIC.SYSTEM")
+    desktop.Select("BASIC.SYSTEM")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.ClearSelection()
-    a2d.CycleWindows()
+    desktop.ClearSelection()
+    desktop.CycleWindows()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
         emu.wait(1) -- during mouse operation
 
-        local icons = a2d.GetSelectedIcons()
+        local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
 
@@ -567,25 +567,25 @@ end)
 test.Step(
   "drag icon in inactive window to volume icon",
   function()
-    a2d.CloseAllWindows()
-    a2d.Select("RAM1")
+    desktop.CloseAllWindows()
+    desktop.Select("RAM1")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     OpenVolumeWindow()
     OpenFolderWindow()
-    a2d.MoveWindowBy(0, 80)
+    desktop.MoveWindowBy(0, 80)
 
-    a2d.Select("BASIC.SYSTEM")
+    desktop.Select("BASIC.SYSTEM")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.ClearSelection()
-    a2d.CycleWindows()
+    desktop.ClearSelection()
+    desktop.CycleWindows()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
         emu.wait(1) -- during mouse operation
 
-        local icons = a2d.GetSelectedIcons()
+        local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
 
@@ -595,7 +595,7 @@ test.Step(
     end)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "A2.DESKTOP", "window should remain active")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -606,8 +606,8 @@ end)
 test.Step(
   "drag icon in inactive window to volume icon with window",
   function()
-    a2d.CloseAllWindows()
-    a2d.Select("RAM1")
+    desktop.CloseAllWindows()
+    desktop.Select("RAM1")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     OpenVolumeWindow()
@@ -617,14 +617,14 @@ test.Step(
         m.MoveToApproximately(vol_x, vol_y)
         m.DoubleClick()
     end)
-    a2d.MoveWindowBy(500, 80)
+    desktop.MoveWindowBy(500, 80)
 
     OpenFolderWindow()
-    a2d.MoveWindowBy(0, 80)
-    a2d.Select("BASIC.SYSTEM")
+    desktop.MoveWindowBy(0, 80)
+    desktop.Select("BASIC.SYSTEM")
     local x, y = a2dtest.GetSelectedIconCoords()
 
-    a2d.ClearSelection()
+    desktop.ClearSelection()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(win_x, win_y)
         m.Click()
@@ -634,7 +634,7 @@ test.Step(
         m.ButtonDown()
         emu.wait(1) -- during mouse operation
 
-        local icons = a2d.GetSelectedIcons()
+        local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
 
@@ -644,7 +644,7 @@ test.Step(
     end)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "RAM1", "volume window should be activated")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 
@@ -676,15 +676,15 @@ ModifierTest(
     OpenVolumeWindow()
     local volume_x, volume_y = a2dtest.GetFrontWindowDragCoords()
     OpenFolderWindow()
-    a2d.MoveWindowBy(0, 80)
+    desktop.MoveWindowBy(0, 80)
     local folder_x, folder_y = a2dtest.GetFrontWindowDragCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
-    a2d.Select("BASIC.SYSTEM")
+    desktop.Select("BASIC.SYSTEM")
     local file_x, file_y = a2dtest.GetSelectedIconCoords()
 
     -- Select an icon
-    a2d.Select("INTBASIC.SYSTEM")
+    desktop.Select("INTBASIC.SYSTEM")
     a2d.InMouseKeysMode(function(m)
         -- Activate other window by clicking in title bar
         m.MoveToApproximately(volume_x, volume_y)
@@ -695,7 +695,7 @@ ModifierTest(
         m.ButtonDown()
         emu.wait(1) -- during mouse operation
 
-        local icons = a2d.GetSelectedIcons()
+        local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 2, "icons should be selected")
         local window_id = icons[1].window
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), window_id, "window should be inactive")
@@ -705,17 +705,17 @@ ModifierTest(
         a2dtest.WaitForSystemTask()
         test.ExpectEquals(a2dtest.GetFrontWindowID(), window_id, "window should be active")
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "both icons should be selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "both icons should be selected")
 
     -- Select an icon
-    a2d.Select("BASIC.SYSTEM")
+    desktop.Select("BASIC.SYSTEM")
     a2d.InMouseKeysMode(function(m)
         -- Activate other window by clicking in title bar
         m.MoveToApproximately(volume_x, volume_y)
         m.Click()
         -- Hold modifier and click selected icon in now inactive window
 
-        local icons = a2d.GetSelectedIcons()
+        local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
 
@@ -724,17 +724,17 @@ ModifierTest(
         m.ButtonDown()
         emu.wait(1) -- during mouse operation
 
-        test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "icons should be deselected")
+        test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "icons should be deselected")
         test.ExpectEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be active")
 
         Release()
         m.ButtonUp()
         a2dtest.WaitForSystemTask()
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "icon should be deselected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "icon should be deselected")
 
     -- Select an icon
-    a2d.Select("INTBASIC.SYSTEM")
+    desktop.Select("INTBASIC.SYSTEM")
 
     local icons_before
     a2d.InMouseKeysMode(function(m)
@@ -747,7 +747,7 @@ ModifierTest(
         m.ButtonDown()
         emu.wait(1) -- during mouse operation
 
-        icons_before = a2d.GetSelectedIcons()
+        icons_before = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons_before, 2, "both icons should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons_before[1].window, "window should be inactive")
 
@@ -758,8 +758,8 @@ ModifierTest(
 
         test.ExpectEquals(a2dtest.GetFrontWindowID(), icons_before[1].window, "window should be active")
     end)
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 2, "both icons should be selected")
-    local icons_after = a2d.GetSelectedIcons()
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 2, "both icons should be selected")
+    local icons_after = desktop.GetSelectedIcons()
     test.ExpectEquals(#icons_before, #icons_after, "same number of icons should be selected")
     test.ExpectEquals(icons_before[1].id, icons_after[1].id, "same icons should be selected")
     test.ExpectEquals(icons_before[2].id, icons_after[2].id, "same icons should be selected")
@@ -775,9 +775,9 @@ end)
 test.Step(
   "SA+Click changes volume selection",
   function()
-    a2d.SelectPath("/RAM1")
+    desktop.SelectPath("/RAM1")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         apple2.PressSA()
@@ -796,10 +796,10 @@ end)
 test.Step(
   "SA+Click changes file selection",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("READ.ME")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.Select("PRODOS")
+    desktop.Select("PRODOS")
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         apple2.PressSA()
@@ -817,7 +817,7 @@ end)
 test.Step(
   "click in header does not change selection",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         -- Click in header
@@ -839,8 +839,8 @@ end)
 test.Step(
   "drag selection fixed point",
   function()
-    a2d.OpenWindow("/RAM1")
-    a2d.MoveWindowBy(150, 40)
+    desktop.OpenWindow("/RAM1")
+    desktop.MoveWindowBy(150, 40)
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w / 2, y + h / 2)
@@ -875,14 +875,14 @@ end)
 test.Step(
   "clicking non-content area doesn't change selection",
   function()
-    a2d.OpenWindow("/RAM1")
+    desktop.OpenWindow("/RAM1")
     local ram_id = a2dtest.GetFrontWindowID()
-    a2d.MoveWindowBy(0, 100)
+    desktop.MoveWindowBy(0, 100)
 
     OpenVolumeWindow()
-    a2d.GrowWindowBy(0, -20)
+    desktop.GrowWindowBy(0, -20)
 
-    a2d.Select("READ.ME")
+    desktop.Select("READ.ME")
 
     local x,y,w,h = a2dtest.GetWindowContentRect(ram_id)
     -- click title bar
@@ -928,14 +928,14 @@ end)
 test.Step(
   "clicking content area",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     OpenVolumeWindow()
     local volume_id = a2dtest.GetFrontWindowID()
 
     OpenFolderWindow()
     local folder_id = a2dtest.GetFrontWindowID()
-    a2d.GrowWindowBy(0, -40)
-    a2d.MoveWindowBy(0, 80)
+    desktop.GrowWindowBy(0, -40)
+    desktop.MoveWindowBy(0, 80)
 
     local x,y,w,h = a2dtest.GetWindowContentRect(volume_id)
     a2d.InMouseKeysMode(function(m)
@@ -966,11 +966,11 @@ end)
 test.Step(
   "volume icon selected when window clicked",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     OpenVolumeWindow()
     OpenFolderWindow()
-    a2d.CycleWindows()
-    a2d.CloseWindow()
+    desktop.CycleWindows()
+    desktop.CloseWindow()
 
     local x, y, w, h = a2dtest.GetFrontWindowContentRect()
     a2d.InMouseKeysMode(function(m)
@@ -989,10 +989,10 @@ end)
 test.Step(
   "selection after window opened from Apple Menu item",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
     a2dtest.WaitForSystemTask()
-    test.Expect(#a2d.GetSelectedIcons(), 0, "no icons should be selected")
+    test.Expect(#desktop.GetSelectedIcons(), 0, "no icons should be selected")
 end)
 
 --[[
@@ -1002,14 +1002,14 @@ end)
 test.Step(
   "focus with no windows",
   function()
-    a2d.CloseAllWindows()
-    a2d.ClearSelection()
+    desktop.CloseAllWindows()
+    desktop.ClearSelection()
 
     -- Edit > Select All
-    a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
+    a2d.InvokeMenuItem(desktop.EDIT_MENU, desktop.EDIT_SELECT_ALL)
     a2dtest.WaitForSystemTask()
 
-    local icons = a2d.GetSelectedIcons()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "Trash", "volume icons should be selected")
 end)
@@ -1021,14 +1021,14 @@ end)
 test.Step(
   "focus after click volume icon",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.ClearSelection()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.ClearSelection()
 
     -- click volume icon
     a2d.InMouseKeysMode(function(m)
@@ -1039,10 +1039,10 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "A2.DESKTOP", "volume icon should be clicked")
 
     -- Edit > Select All
-    a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
+    a2d.InvokeMenuItem(desktop.EDIT_MENU, desktop.EDIT_SELECT_ALL)
     a2dtest.WaitForSystemTask()
 
-    local icons = a2d.GetSelectedIcons()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "Trash", "volume icons should be selected")
 end)
@@ -1060,14 +1060,14 @@ test.Variants(
     {"focus after clicking scroll bar of window", "scrollbar"},
   },
   function(idx, name, where)
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.ClearSelection()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.ClearSelection()
 
     -- click volume icon
     a2d.InMouseKeysMode(function(m)
@@ -1092,10 +1092,10 @@ test.Variants(
     a2dtest.WaitForSystemTask()
 
     -- Edit > Select All
-    a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
+    a2d.InvokeMenuItem(desktop.EDIT_MENU, desktop.EDIT_SELECT_ALL)
     a2dtest.WaitForSystemTask()
 
-    local icons = a2d.GetSelectedIcons()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "PRODOS", "file icons should be selected")
 end)
@@ -1108,15 +1108,15 @@ end)
 test.Step(
   "focus after click volume icon, click window",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("READ.ME")
-    a2d.ClearSelection()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("READ.ME")
+    desktop.ClearSelection()
 
     -- click volume icon
     a2d.InMouseKeysMode(function(m)
@@ -1135,10 +1135,10 @@ test.Step(
     a2dtest.WaitForSystemTask()
 
     -- Edit > Select All
-    a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
+    a2d.InvokeMenuItem(desktop.EDIT_MENU, desktop.EDIT_SELECT_ALL)
     a2dtest.WaitForSystemTask()
 
-    local icons = a2d.GetSelectedIcons()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "PRODOS", "file icons should be selected")
 end)
@@ -1151,16 +1151,16 @@ end)
 test.Step(
   "focus after click volume icon, click file icon",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local vol_x, vol_y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("READ.ME")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("READ.ME")
     local file_x, file_y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     -- click volume icon
     a2d.InMouseKeysMode(function(m)
@@ -1179,10 +1179,10 @@ test.Step(
     test.ExpectEqualsIgnoreCase(a2dtest.GetSelectedIconName(), "READ.ME", "file icon should be clicked")
 
     -- Edit > Select All
-    a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
+    a2d.InvokeMenuItem(desktop.EDIT_MENU, desktop.EDIT_SELECT_ALL)
     a2dtest.WaitForSystemTask()
 
-    local icons = a2d.GetSelectedIcons()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "PRODOS", "file icons should be selected")
 end)
@@ -1195,14 +1195,14 @@ end)
 test.Step(
   "focus after click volume icon, click desktop",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
-    a2d.Select("A2.DESKTOP")
+    desktop.Select("A2.DESKTOP")
     local x, y = a2dtest.GetSelectedIconCoords()
 
     -- open a window
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.ClearSelection()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.ClearSelection()
 
     -- click volume icon
     a2d.InMouseKeysMode(function(m)
@@ -1219,10 +1219,10 @@ test.Step(
     end)
 
     -- Edit > Select All
-    a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
+    a2d.InvokeMenuItem(desktop.EDIT_MENU, desktop.EDIT_SELECT_ALL)
     a2dtest.WaitForSystemTask()
 
-    local icons = a2d.GetSelectedIcons()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "Trash", "volume icons should be selected")
 end)
@@ -1235,13 +1235,13 @@ end)
 test.Step(
   "focus after click file icon, click desktop",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
 
     -- open a window
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("READ.ME")
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("READ.ME")
     local x, y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     -- click file icon
     a2d.InMouseKeysMode(function(m)
@@ -1258,10 +1258,10 @@ test.Step(
     end)
 
     -- Edit > Select All
-    a2d.InvokeMenuItem(a2d.EDIT_MENU, a2d.EDIT_SELECT_ALL)
+    a2d.InvokeMenuItem(desktop.EDIT_MENU, desktop.EDIT_SELECT_ALL)
     a2dtest.WaitForSystemTask()
 
-    local icons = a2d.GetSelectedIcons()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectGreaterThan(#icons, 0, "multiple icons should be selected")
     test.ExpectEqualsIgnoreCase(icons[1].name, "PRODOS", "file icons should be selected")
 end)
@@ -1274,10 +1274,10 @@ end)
 test.Step(
   "drag selection and icon bounds",
   function()
-    a2d.OpenWindow("/A2.DESKTOP")
-    a2d.Select("CLOCK.SYSTEM")
-    local icon = a2d.GetSelectedIcons()[1]
-    a2d.ClearSelection()
+    desktop.OpenWindow("/A2.DESKTOP")
+    desktop.Select("CLOCK.SYSTEM")
+    local icon = desktop.GetSelectedIcons()[1]
+    desktop.ClearSelection()
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(icon.x-5, icon.y)
         m.ButtonDown()

@@ -5,7 +5,7 @@
 test.Step(
   "/RAM exists",
   function()
-    a2d.Quit()
+    desktop.Quit()
     apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
@@ -26,7 +26,7 @@ end)
 test.Step(
   "Can quit without crashing in ProDOS-8",
   function()
-    a2d.Quit()
+    desktop.Quit()
     apple2.WaitForBitsy()
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady()
@@ -39,11 +39,11 @@ end)
 test.Step(
   "/RAM exists after Disk Copy",
   function()
-    a2d.CloseAllWindows()
-    a2d.CopyDisk()
+    desktop.CloseAllWindows()
+    desktop.CopyDisk()
     a2d.OAShortcut("Q")
     a2d.WaitForDesktopReady()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
     util.WaitFor(
@@ -61,7 +61,7 @@ end)
 test.Step(
   "text screen not truncated launching BINSCII",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BINSCII")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/BINSCII", {no_wait=true})
 
     util.WaitFor(
       "BINSCII", function()
@@ -82,12 +82,13 @@ end)
 test.Step(
   "Invoking files after previewing",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/ROOM", {no_wait=true})
+    emu.wait(10) -- full-screen DA
     apple2.RightArrowKey()
     emu.wait(10) -- full-screen DA
     apple2.EscapeKey()
     a2dtest.WaitForSystemTask()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL", {no_wait=true})
     a2d.WaitForDesktopReady()
     a2dtest.ExpectNotHanging()
 end)
@@ -101,7 +102,7 @@ end)
 test.Step(
   "Invoking PT3PLR",
   function()
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/AUTUMN.PT3")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/AUTUMN.PT3", {no_wait=true})
     util.WaitFor(
       "Song title", function()
         return apple2.GrabTextScreen():match("AuTumn")

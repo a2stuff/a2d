@@ -1,6 +1,7 @@
 
 apple2 = require("apple2")
 a2d = require("a2d")
+desktop = require("desktop")
 test = require("test")
 a2dtest = require("a2dtest")
 
@@ -61,7 +62,7 @@ function ClockTests(name)
   test.Step(
     "Set " .. name,
     function()
-      a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
+      desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
       a2d.OAShortcut('2') -- 24-hour
       a2dtest.WaitForSystemTask()
 
@@ -83,13 +84,13 @@ function ClockTests(name)
       test.ExpectEquals(hh, set_hh, "hour")
       test.ExpectEquals(mm, set_mm, "minute")
 
-      a2d.CloseAllWindows()
+      desktop.CloseAllWindows()
   end)
 
   test.Step(
     name .. " only set if dirty",
     function()
-      a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
+      desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/DATE.AND.TIME")
 
       local hh, mm = apple2.GetProDOSTime()
       local initial_time = string.format("%02d:%02d", hh, mm)
@@ -109,6 +110,6 @@ function ClockTests(name)
 
       test.ExpectNotEquals(new_time, initial_time, "time should not have been reset")
 
-      a2d.CloseAllWindows()
+      desktop.CloseAllWindows()
   end)
 end

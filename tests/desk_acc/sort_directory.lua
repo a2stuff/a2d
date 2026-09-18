@@ -5,8 +5,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 
 ======================================== ENDCONFIG ]]
 
-a2d.AddShortcut("/TESTS/HUNDRED.FILES")
-a2d.CloseAllWindows()
+desktop.AddShortcut("/TESTS/HUNDRED.FILES")
+desktop.CloseAllWindows()
 
 -- Parse on-screen output of CAT; returns filenames in array
 function ParseCat()
@@ -40,16 +40,16 @@ test.Variants(
     {"Files sorted - open with click", "click"},
   },
   function(idx, name, which)
-    a2d.OpenWindow("/TESTS/SORT.DIRECTORY")
+    desktop.OpenWindow("/TESTS/SORT.DIRECTORY")
 
     if which == "keyboard" then
       -- keyboard
-      a2d.SelectAndOpen("ORDER")
+      desktop.SelectAndOpen("ORDER")
     else
       -- click
-      a2d.Select("ORDER")
+      desktop.Select("ORDER")
       local x, y = a2dtest.GetSelectedIconCoords()
-      a2d.ClearSelection()
+      desktop.ClearSelection()
 
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(x, y)
@@ -58,9 +58,9 @@ test.Variants(
       a2dtest.WaitForSystemTask()
     end
 
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.SORT_DIRECTORY)
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
 
     function ValidateOrder(filenames)
@@ -97,12 +97,12 @@ end)
 test.Step(
   "Lexicographical sorting",
   function()
-    a2d.CloseAllWindows()
+    desktop.CloseAllWindows()
     a2d.OAShortcut("1") -- Open HUNDRED.FILES
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.SORT_DIRECTORY)
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
 
     apple2.TypeLine("HOME")
@@ -128,11 +128,11 @@ end)
 test.Step(
   "System files sorted",
   function()
-    a2d.OpenWindow("/TESTS/SORT.DIRECTORY/TWO.SYS.FILES")
+    desktop.OpenWindow("/TESTS/SORT.DIRECTORY/TWO.SYS.FILES")
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.SORT_DIRECTORY)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.SORT_DIRECTORY)
     a2dtest.WaitForSystemTask()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.RUN_BASIC_HERE)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
     apple2.WaitForBasicSystem()
 
     apple2.TypeLine("HOME")

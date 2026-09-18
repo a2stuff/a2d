@@ -12,8 +12,8 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 prodos_floppy1.dsk -flop2 prod
 test.Step(
   "DeskTop - Escape closes alert",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.RenamePath("/A2.DESKTOP/READ.ME", "README")
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.RenamePath("/A2.DESKTOP/READ.ME", "README")
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNothingChanged(function()
         a2d.OAShortcut("1")
@@ -23,7 +23,7 @@ test.Step(
     end)
 
     -- cleanup
-    a2d.RenamePath("/A2.DESKTOP/README", "READ.ME")
+    desktop.RenamePath("/A2.DESKTOP/README", "READ.ME")
 end)
 
 --[[
@@ -34,9 +34,9 @@ end)
 test.Step(
   "Shortcuts - Escape closes alert",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    a2d.ToggleOptionShowShortcutsOnStartup() -- Enable
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    desktop.ToggleOptionShowShortcutsOnStartup() -- Enable
+    desktop.Reboot()
     a2dtest.ConfigureForSelector()
     a2d.WaitForDesktopReady()
 
@@ -52,7 +52,7 @@ test.Step(
     apple2.Type("D") -- Desktop
     a2dtest.ConfigureForDeskTop()
     a2d.WaitForDesktopReady()
-    a2d.ToggleOptionShowShortcutsOnStartup() -- Disable
+    desktop.ToggleOptionShowShortcutsOnStartup() -- Disable
 end)
 
 --[[
@@ -63,7 +63,7 @@ end)
 test.Step(
   "Disk Copy - Escape closes alert",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
     a2d.WaitForDesktopReady()
 
@@ -106,11 +106,11 @@ end)
 test.Step(
   "Yes/No/All",
   function()
-    a2d.OpenWindow("/A2.DESKTOP/APPLE.MENU/TOYS")
-    a2d.SelectAll()
-    a2d.CopySelectionTo("/RAM1")
+    desktop.OpenWindow("/A2.DESKTOP/APPLE.MENU/TOYS")
+    desktop.SelectAll()
+    desktop.CopySelectionTo("/RAM1")
     emu.wait(5) -- allow copy to complete
-    a2d.CopySelectionTo("/RAM1")
+    desktop.CopySelectionTo("/RAM1")
 
     local yes_x, yes_y, no_x, no_y, all_x, all_y
     local delta_x, delta_y = 30, 5

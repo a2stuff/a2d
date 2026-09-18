@@ -12,7 +12,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 dos33_floppy.dsk -flop2 prodos_floppy1.dsk"
 test.Step(
   "DOS 3.3 disk names in list",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
 
     test.ExpectMatch(a2dtest.OCRScreen(), "DOS 3%.3",
                 "DOS 3.3 disk in list should be uppercase")
@@ -31,7 +31,7 @@ end)
 test.Step(
   "DOS 3.3 disk names in source label",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source
@@ -73,7 +73,7 @@ end)
 test.Step(
   "DOS 3.3 disk names in overwrite prompt",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source

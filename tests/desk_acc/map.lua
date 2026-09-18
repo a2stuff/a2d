@@ -7,8 +7,7 @@
 test.Step(
   "Map - Search",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
 
     apple2.Type("San Francisco")
     apple2.ReturnKey()
@@ -17,7 +16,7 @@ test.Step(
     test.Expect(ocr:find("Latitude: +37° N"), "latitude should be updated")
     test.Expect(ocr:find("Longitude: +122° W"), "longitude should be updated")
     a2dtest.MultiSnap(60, "verify indicator positioned")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -30,8 +29,7 @@ end)
 test.Step(
   "Map - Indicator",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
 
     local x, y = a2dtest.GetFrontWindowDragCoords()
     a2d.InMouseKeysMode(function(m)
@@ -47,14 +45,13 @@ test.Step(
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
     a2dtest.MultiSnap(60, "verify only single indicator position")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 test.Step(
   "Search is case insensitive",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/CONTROL.PANELS/MAP")
 
     function TryString(search, match)
       a2d.ClearTextField()
@@ -86,5 +83,5 @@ test.Step(
     TryString("vic", "Victoria")
 
     -- clean up
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)

@@ -11,7 +11,7 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv"
 test.Step(
   "Starting without SELECTOR.LIST present",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     apple2.WaitForBasicSystem()
     apple2.TypeLine("DELETE /A2.DESKTOP/EXTRAS/SELECTOR.LIST")
     apple2.TypeLine("PR#7")
@@ -32,7 +32,7 @@ end)
 test.Step(
   "Menu states - menu and list",
   function()
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotMatch(ocr, "Edit a Shortcut...", "Edit should be disabled")
     test.ExpectNotMatch(ocr, "Delete a Shortcut...", "Delete should be disabled")
@@ -40,8 +40,8 @@ test.Step(
     test.Snap("verify no separator present")
     apple2.EscapeKey()
 
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "Edit a Shortcut...", "Edit should be enabled")
     test.ExpectMatch(ocr, "Delete a Shortcut...", "Delete should be enabled")
@@ -50,12 +50,12 @@ test.Step(
     test.ExpectMatch(ocr, "BASIC.system", "Shortcut should be present")
     apple2.EscapeKey()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotMatch(ocr, "Edit a Shortcut...", "Edit should be disabled")
     test.ExpectNotMatch(ocr, "Delete a Shortcut...", "Delete should be disabled")
@@ -78,7 +78,7 @@ end)
 test.Step(
   "Menu states - item in list only",
   function()
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotMatch(ocr, "Edit a Shortcut...", "Edit should be disabled")
     test.ExpectNotMatch(ocr, "Delete a Shortcut...", "Delete should be disabled")
@@ -86,8 +86,8 @@ test.Step(
     test.Snap("verify no separator present")
     apple2.EscapeKey()
 
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {list_only=true})
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {list_only=true})
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "Edit a Shortcut...", "Edit should be enabled")
     test.ExpectMatch(ocr, "Delete a Shortcut...", "Delete should be enabled")
@@ -95,12 +95,12 @@ test.Step(
     test.Snap("verify no separator present")
     apple2.EscapeKey()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotMatch(ocr, "Edit a Shortcut...", "Edit should be disabled")
     test.ExpectNotMatch(ocr, "Delete a Shortcut...", "Delete should be disabled")
@@ -108,8 +108,8 @@ test.Step(
     test.Snap("verify no separator present")
     apple2.EscapeKey()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -121,10 +121,10 @@ end)
 test.Step(
   "radio button state not retained - 'at boot'",
   function()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("3") -- at boot
     a2d.DialogCancel()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     test.Snap("verify 'at boot' not checked")
     a2d.DialogCancel()
@@ -138,10 +138,10 @@ end)
 test.Step(
   "radio button state not retained - 'at first use'",
   function()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("4") -- at first use
     a2d.DialogCancel()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     test.Snap("verify 'at first use' not checked")
     a2d.DialogCancel()
@@ -155,10 +155,10 @@ end)
 test.Step(
   "radio button state not retained - 'list only'",
   function()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("2") -- list only
     a2d.DialogCancel()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only' not checked")
     a2d.DialogCancel()
@@ -174,23 +174,23 @@ end)
 test.Step(
   "radio button state not retained redux - 'list only' and 'at use'",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true, copy="use"})
-    a2d.Reboot()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true, copy="use"})
+    desktop.Reboot()
 
     -- Will time out here waiting for system disk, with skip=0..2
 
     a2d.WaitForDesktopReady()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only' and 'at first use' are not checked")
     a2d.DialogCancel()
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -203,23 +203,23 @@ end)
 test.Step(
   "deleting doesn't mess up shortcut properties, primary",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {copy="boot"})
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {copy="use"})
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {copy="boot"})
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {copy="use"})
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.Snap("verify 'menu and list' and 'at first use' are checked")
     a2d.DialogCancel()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -227,8 +227,8 @@ test.Step(
     test.Snap("verify 'menu and list' and 'never' are checked")
     a2d.DialogCancel()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -241,23 +241,23 @@ end)
 test.Step(
   "deleting doesn't mess up shortcut properties, secondary",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true, copy="boot"})
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true, copy="use"})
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true, copy="boot"})
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true, copy="use"})
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.Snap("verify 'list only' and 'at first use' are checked")
     a2d.DialogCancel()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     apple2.DownArrowKey()
     a2d.DialogOK()
@@ -265,8 +265,8 @@ test.Step(
     test.Snap("verify 'list only' and 'never' are checked")
     a2d.DialogCancel()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -279,14 +279,14 @@ end)
 test.Step(
   "editing list vs. menu",
   function()
-    a2d.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
+    desktop.InvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {no_wait=true})
     apple2.WaitForBasicSystem()
     apple2.TypeLine("DELETE /A2.DESKTOP/EXTRAS/SELECTOR.LIST")
     apple2.TypeLine("PR#7")
     a2d.WaitForDesktopReady()
 
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -295,12 +295,12 @@ test.Step(
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenMenu(a2d.SHORTCUTS_MENU)
+    a2d.OpenMenu(desktop.SHORTCUTS_MENU)
     test.ExpectIMatch(a2dtest.OCRScreen(), "READ.ME", "READ.ME shortcut should appear")
     apple2.EscapeKey()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -312,15 +312,15 @@ end)
 test.Step(
   "shortcut to directory",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS")
-    a2d.SelectPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
-    a2d.MoveWindowBy(0,100)
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS")
+    desktop.SelectPath("/A2.DESKTOP/APPLE.MENU/CALCULATOR")
+    desktop.MoveWindowBy(0,100)
     a2dtest.WaitForSystemTask()
     a2d.OAShortcut("1")
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 0, "selection should be cleared")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "selection should be cleared")
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -333,11 +333,11 @@ test.Step(
   "8 in primary, add one more",
   function()
     for i = 1, 8 do
-      a2d.AddShortcut("/A2.DESKTOP/READ.ME")
+      desktop.AddShortcut("/A2.DESKTOP/READ.ME")
     end
 
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("1") -- menu and list
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="list is full"})
@@ -345,8 +345,8 @@ test.Step(
     a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -360,11 +360,11 @@ test.Step(
   "16 in secondary, add one more",
   function()
     for i = 1, 16 do
-      a2d.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
+      desktop.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
     end
 
-    a2d.SelectPath("/A2.DESKTOP/EXTRAS")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP/EXTRAS")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2d.OAShortcut("2") -- list only
     a2d.DialogOK()
     a2dtest.WaitForAlert({match="list is full"})
@@ -372,8 +372,8 @@ test.Step(
     a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -387,11 +387,11 @@ test.Step(
   "8 in primary, edit one more in",
   function()
     for i = 1, 8 do
-      a2d.AddShortcut("/A2.DESKTOP/READ.ME")
+      desktop.AddShortcut("/A2.DESKTOP/READ.ME")
     end
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", {list_only=true})
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     for i = 1, 9 do
       apple2.DownArrowKey()
     end
@@ -405,8 +405,8 @@ test.Step(
     a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -419,9 +419,9 @@ end)
 test.Step(
   "volume order in file picker",
   function()
-    a2d.AddShortcut("/TESTS")
+    desktop.AddShortcut("/TESTS")
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -431,8 +431,8 @@ test.Step(
 
     a2d.DialogCancel()
 
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -445,8 +445,8 @@ end)
 test.Step(
   "volume shortcuts can't be copied to RAMCard",
   function()
-    a2d.SelectPath("/A2.DESKTOP")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
 
     a2d.OAShortcut("3")
     a2d.DialogOK()
@@ -463,7 +463,7 @@ test.Step(
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
@@ -478,12 +478,12 @@ end)
 test.Step(
   "aliases can't be copied to RAMCard",
   function()
-    a2d.SelectPath("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.SPECIAL_MENU, -1) -- Make Alias
+    desktop.SelectPath("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.SPECIAL_MENU, -1) -- Make Alias
     apple2.ReturnKey()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
 
     a2d.OAShortcut("3")
     a2d.DialogOK()
@@ -500,12 +500,12 @@ test.Step(
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     apple2.DownArrowKey()
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.DeletePath("/A2.DESKTOP/READ.ME.ALIAS")
+    desktop.DeletePath("/A2.DESKTOP/READ.ME.ALIAS")
 end)
 
 --[[
@@ -516,8 +516,8 @@ end)
 test.Step(
   "file picker navigated to selected file",
   function()
-    a2d.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/A2.DESKTOP/SAMPLE.MEDIA/KARATEKA.YELL")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
 
     test.ExpectIMatch(a2dtest.OCRScreen(), "SAMPLE%.MEDIA.*A2.DESKTOP",
@@ -537,8 +537,8 @@ end)
 test.Step(
   "file picker navigated to selected volime",
   function()
-    a2d.SelectPath("/TESTS")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.SelectPath("/TESTS")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
 
     test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "TESTS",
@@ -555,8 +555,8 @@ end)
 test.Step(
   "file picker with no selection",
   function()
-    a2d.ClearSelection()
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_ADD_A_SHORTCUT)
+    desktop.ClearSelection()
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_ADD_A_SHORTCUT)
     a2dtest.WaitForSystemTask()
 
     test.Snap("verify no selection, showing A2.DESKTOP")
@@ -570,17 +570,17 @@ end)
 test.Step(
   "accidental invocation",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_RUN_A_SHORTCUT)
     a2d.DialogCancel()
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectNotHanging()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -594,8 +594,8 @@ end)
 test.Step(
   "shortcut picker button states",
   function()
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME")
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_RUN_A_SHORTCUT)
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME")
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_RUN_A_SHORTCUT)
     local dialog_x, dialog_y = a2dtest.GetFrontWindowContentRect()
 
     test.ExpectNotMatch(a2dtest.OCRScreen(), "OK", "OK button should be disabled")
@@ -621,8 +621,8 @@ test.Step(
     a2d.DialogCancel()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -635,11 +635,11 @@ test.Step(
   "edge case around 8th entry and folders",
   function()
     for i = 1, 7 do
-      a2d.AddShortcut("/A2.DESKTOP/READ.ME")
+      desktop.AddShortcut("/A2.DESKTOP/READ.ME")
     end
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS")
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS")
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_EDIT_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_EDIT_A_SHORTCUT)
     for i = 1, 8 do
       apple2.DownArrowKey()
     end
@@ -650,8 +650,8 @@ test.Step(
     a2dtest.ExpectNotHanging()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -663,17 +663,17 @@ end)
 test.Step(
   "running a deleted shortcut",
   function()
-    a2d.DuplicatePath("/A2.DESKTOP/READ.ME", "DUPE")
-    a2d.AddShortcut("/A2.DESKTOP/DUPE")
-    a2d.DeletePath("/A2.DESKTOP/DUPE")
+    desktop.DuplicatePath("/A2.DESKTOP/READ.ME", "DUPE")
+    desktop.AddShortcut("/A2.DESKTOP/DUPE")
+    desktop.DeletePath("/A2.DESKTOP/DUPE")
     a2d.OAShortcut("1")
     a2dtest.WaitForAlert({match="file cannot be found"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -683,15 +683,15 @@ end)
 test.Step(
   "volume shortcuts are created with correct paths",
   function()
-    a2d.AddShortcut("/A2.DESKTOP")
+    desktop.AddShortcut("/A2.DESKTOP")
     a2d.OAShortcut("1")
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle():upper(), "A2.DESKTOP", "shortcut should have opened window")
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -705,12 +705,12 @@ test.Variants(
     {"Deleting a shortcut removes the right one - list only", {list_only=true}},
   },
   function(idx, name, options)
-    a2d.AddShortcut("/A2.DESKTOP/READ.ME", options)
-    a2d.AddShortcut("/A2.DESKTOP/PRODOS", options)
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", options)
-    a2d.CloseAllWindows()
+    desktop.AddShortcut("/A2.DESKTOP/READ.ME", options)
+    desktop.AddShortcut("/A2.DESKTOP/PRODOS", options)
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", options)
+    desktop.CloseAllWindows()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     local ocr = a2dtest.OCRScreen()
     test.ExpectIMatch(ocr, "READ%.ME", "shortcut should be present")
     test.ExpectIMatch(ocr, "PRODOS", "shortcut should be present")
@@ -720,7 +720,7 @@ test.Variants(
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     local ocr = a2dtest.OCRScreen()
     test.ExpectIMatch(ocr, "READ%.ME", "shortcut should be present")
     test.ExpectNotIMatch(ocr, "PRODOS", "shortcut should be removed")
@@ -729,7 +729,7 @@ test.Variants(
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotIMatch(ocr, "READ%.ME", "shortcut should be removed")
     test.ExpectNotIMatch(ocr, "PRODOS", "shortcut should be removed")
@@ -738,7 +738,7 @@ test.Variants(
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.InvokeMenuItem(a2d.SHORTCUTS_MENU, a2d.SHORTCUTS_DELETE_A_SHORTCUT)
+    a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, desktop.SHORTCUTS_DELETE_A_SHORTCUT)
     local ocr = a2dtest.OCRScreen()
     test.ExpectNotIMatch(ocr, "READ%.ME", "shortcut should be removed")
     test.ExpectNotIMatch(ocr, "PRODOS", "shortcut should be removed")
@@ -747,7 +747,7 @@ test.Variants(
     a2dtest.WaitForSystemTask()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)

@@ -19,13 +19,13 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
     drive:unload()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CALCULATOR)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CALCULATOR)
     a2dtest.WaitForAlert({match="insert the system disk"})
     drive:load(current)
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Calc", "Calculator should be open")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 --[[
@@ -40,11 +40,11 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
     drive:unload()
-    a2d.InvokeMenuItem(a2d.APPLE_MENU, a2d.CONTROL_PANELS)
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
     a2dtest.WaitForAlert({match="insert the system disk"})
     drive:load(current)
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "CONTROL.PANELS", "Control Panels window should be open")
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)

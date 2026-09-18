@@ -19,13 +19,13 @@ local function AccessoryTest(name, func)
     },
     function(idx, name, suffix, flags)
       if flags.shortcuts then
-        a2d.ToggleOptionShowKeyboardShortcuts()
+        desktop.ToggleOptionShowKeyboardShortcuts()
       end
 
       func(suffix)
 
       if flags.shortcuts then
-        a2d.ToggleOptionShowKeyboardShortcuts()
+        desktop.ToggleOptionShowKeyboardShortcuts()
       end
   end)
 end
@@ -34,10 +34,9 @@ local function OpenFileTest(name, path)
   AccessoryTest(
     name,
     function(suffix)
-      a2d.InvokePath(a2d.GetLocalizedPath(path))
-      a2dtest.WaitForSystemTask()
+      desktop.InvokePath(a2d.GetLocalizedPath(path))
       test.Snap(name .. suffix)
-      a2d.CloseWindow()
+      desktop.CloseWindow()
   end)
 end
 
@@ -52,12 +51,12 @@ OpenFileTest("Change Type", "/A2.DESKTOP/APPLE.MENU/CHANGE.TYPE")
 AccessoryTest(
   "Find Files",
   function(suffix)
-    a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/FIND.FILES"))
+    desktop.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/FIND.FILES"))
     apple2.Type("C*")
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
     test.Snap("Find Files" .. suffix)
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 OpenFileTest("Key Caps", "/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
@@ -65,8 +64,7 @@ OpenFileTest("Key Caps", "/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
 AccessoryTest(
   "Run Basic Here",
   function(suffix)
-    a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/RUN.BASIC.HERE"))
-    apple2.WaitForBasicSystem()
+    desktop.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/RUN.BASIC.HERE"))
     test.Snap("Run Basic Here" .. suffix)
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()
@@ -107,8 +105,7 @@ OpenFileTest("CD Remote", "/A2.DESKTOP/EXTRAS/CD.REMOTE")
 AccessoryTest(
   "DOS 3.3 Import",
   function(suffix)
-    a2d.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT"))
-    a2dtest.WaitForSystemTask()
+    desktop.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/EXTRAS/DOS33.IMPORT"))
     apple2.DownArrowKey()
     a2dtest.WaitForSystemTask()
     test.Snap("Drive selection")
@@ -118,7 +115,7 @@ AccessoryTest(
     apple2.DownArrowKey()
     a2dtest.WaitForSystemTask()
     test.Snap("File selection" .. suffix)
-    a2d.CloseWindow()
+    desktop.CloseWindow()
 end)
 
 OpenFileTest("Scientific Calculator", "/A2.DESKTOP/EXTRAS/SCI.CALC")

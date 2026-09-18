@@ -21,7 +21,7 @@ test.Step(
     local drive = s6d1
     local current = drive.filename
 
-    a2d.SelectPath("/A2.DESKTOP")
+    desktop.SelectPath("/A2.DESKTOP")
     a2d.OAShortcut("I", {no_wait=true})
     emu.wait(0.5) -- cancel enumeration
     drive:unload()

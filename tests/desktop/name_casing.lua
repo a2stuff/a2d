@@ -9,13 +9,13 @@ DISKARGS="-hard1 $HARDIMG -hard2 tests.hdv -flop1 gsos_800k.2mg"
 local preserve_flag = true -- default state in config
 function EnablePreserve()
   if not preserve_flag then
-    a2d.ToggleOptionPreserveCase()
+    desktop.ToggleOptionPreserveCase()
     preserve_flag = not preserve_flag
   end
 end
 function DisablePreserve()
   if preserve_flag then
-    a2d.ToggleOptionPreserveCase()
+    desktop.ToggleOptionPreserveCase()
     preserve_flag = not preserve_flag
   end
 end
@@ -26,7 +26,7 @@ end
 test.Step(
   "GS/OS volume name cases show correctly",
   function()
-    a2d.OpenWindow("/GS.OS.MIXED")
+    desktop.OpenWindow("/GS.OS.MIXED")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "GS.OS.mixed", "case should be shown")
 end)
 
@@ -37,9 +37,9 @@ end)
 test.Step(
   "GS/OS file name cases show correctly",
   function()
-    a2d.OpenWindow("/TESTS/PROPERTIES/GS.OS.NAMES")
-    a2d.SelectAll()
-    local icons = a2d.GetSelectedIcons()
+    desktop.OpenWindow("/TESTS/PROPERTIES/GS.OS.NAMES")
+    desktop.SelectAll()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectEquals(#icons, 3, "3 files should be present")
     test.ExpectEquals(icons[1].name, "lower", "case should match")
     test.ExpectEquals(icons[2].name, "UPPER", "case should match")
@@ -53,9 +53,9 @@ end)
 test.Step(
   "AppleWorks file name cases show correctly",
   function()
-    a2d.OpenWindow("/TESTS/PROPERTIES/AW.NAMES")
-    a2d.SelectAll()
-    local icons = a2d.GetSelectedIcons()
+    desktop.OpenWindow("/TESTS/PROPERTIES/AW.NAMES")
+    desktop.SelectAll()
+    local icons = desktop.GetSelectedIcons()
     test.ExpectEquals(#icons, 3, "3 files should be present")
     test.ExpectEquals(icons[1].name, "lower.UPPER.SS", "case should match")
     test.ExpectEquals(icons[2].name, "UPPER.lower.WP", "case should match")
@@ -76,10 +76,10 @@ test.Variants(
   function(idx, name, func)
     func()
 
-    a2d.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
-    a2d.RenamePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/RAM1/UP.LO.MIXED")
+    desktop.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
+    desktop.RenamePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/RAM1/UP.LO.MIXED")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "UP.lo.MiXeD", "name should be cased")
 
     -- Note that behavior is the same regardless of flag state; this
@@ -87,7 +87,7 @@ test.Variants(
     -- which is not optional, unlike GS/OS case bits.
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -104,10 +104,10 @@ test.Variants(
   function(idx, name, func)
     func()
 
-    a2d.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
-    a2d.DuplicatePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/RAM1/UP.LO.MIXED")
+    desktop.CopyPath("/TESTS/PROPERTIES/AW.NAMES/LOWER.UPPER.SS", "/RAM1")
+    desktop.DuplicatePath("/RAM1/LOWER.UPPER.SS", "UP.lo.MiXeD")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/RAM1/UP.LO.MIXED")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), "UP.lo.MiXeD", "name should be cased")
 
     -- Note that behavior is the same regardless of flag state; this
@@ -115,7 +115,7 @@ test.Variants(
     -- which is not optional, unlike GS/OS case bits.
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -145,14 +145,14 @@ test.Variants(
   function(idx, name, func, expected)
     func()
 
-    a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
+    desktop.CreateFolder("/RAM1/lower.UPPER.MiX")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/RAM1/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -174,15 +174,15 @@ test.Variants(
   function(idx, name, func, expected)
     func()
 
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.RenamePath("/RAM1/READ.ME", "lower.UPPER.MiX")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.RenamePath("/RAM1/READ.ME", "lower.UPPER.MiX")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/RAM1/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -204,15 +204,15 @@ test.Variants(
   function(idx, name, func, expected)
     func()
 
-    a2d.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
-    a2d.DuplicatePath("/RAM1/READ.ME", "lower.UPPER.MiX")
+    desktop.CopyPath("/A2.DESKTOP/READ.ME", "/RAM1")
+    desktop.DuplicatePath("/RAM1/READ.ME", "lower.UPPER.MiX")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
-    a2d.CloseAllWindows()
-    a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
+    desktop.CloseAllWindows()
+    desktop.SelectPath("/RAM1/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetSelectedIconName(), expected, "case should match")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -235,12 +235,12 @@ test.Variants(
   function(idx, name, func, expected)
     func()
 
-    a2d.FormatVolume("RAM1", "lower.UPPER.MiX")
-    a2d.OpenWindow("/LOWER.UPPER.MIX")
+    desktop.FormatVolume("RAM1", "lower.UPPER.MiX")
+    desktop.OpenWindow("/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), expected, "volume name should be " .. expected)
 
     -- cleanup
-    a2d.EraseVolume("LOWER.UPPER.MIX", "RAM1")
+    desktop.EraseVolume("LOWER.UPPER.MIX", "RAM1")
 end)
 
 --[[
@@ -263,12 +263,12 @@ test.Variants(
   function(idx, name, func, expected)
     func()
 
-    a2d.EraseVolume("RAM1", "lower.UPPER.MiX")
-    a2d.OpenWindow("/LOWER.UPPER.MIX")
+    desktop.EraseVolume("RAM1", "lower.UPPER.MiX")
+    desktop.OpenWindow("/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), expected, "volume name should be " .. expected)
 
     -- cleanup
-    a2d.EraseVolume("LOWER.UPPER.MIX", "RAM1")
+    desktop.EraseVolume("LOWER.UPPER.MIX", "RAM1")
 end)
 
 --[[
@@ -285,9 +285,9 @@ test.Step(
   "Canceled rename",
   function()
     EnablePreserve()
-    a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
+    desktop.CreateFolder("/RAM1/lower.UPPER.MiX")
     DisablePreserve()
-    a2d.SelectPath("/RAM1/LOWER.UPPER.MIX")
+    desktop.SelectPath("/RAM1/LOWER.UPPER.MIX")
     apple2.ReturnKey() -- File > Rename
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(0,0)
@@ -295,10 +295,10 @@ test.Step(
     end)
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenWindow("/RAM1/LOWER.UPPER.MIX")
+    desktop.OpenWindow("/RAM1/LOWER.UPPER.MIX")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "Lower.Upper.Mix", "rename should use heuristic case")
 
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -330,15 +330,15 @@ test.Variants(
   function(idx, name, action, disk)
     EnablePreserve()
 
-    a2d.SelectPath("/GS.OS.MIXED")
+    desktop.SelectPath("/GS.OS.MIXED")
     local other_vol_4_x, other_vol_4_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.CreateFolder("/RAM1/lower.UPPER.MiX")
+    desktop.CreateFolder("/RAM1/lower.UPPER.MiX")
 
     local path
     if action == "copy" and disk == "other" then
       -- Copy to another volume
-      a2d.Select("LOWER.UPPER.MIX")
+      desktop.Select("LOWER.UPPER.MIX")
       local x,y = a2dtest.GetSelectedIconCoords()
 
       a2d.Drag(x, y, other_vol_4_x, other_vol_4_y)
@@ -347,13 +347,13 @@ test.Variants(
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif action == "move" and disk == "same" then
       -- Move on same volume
-      a2d.CreateFolder("ANOTHER.FOLDER")
-      a2d.OpenWindow("/RAM1")
+      desktop.CreateFolder("ANOTHER.FOLDER")
+      desktop.OpenWindow("/RAM1")
 
-      a2d.Select("LOWER.UPPER.MIX")
+      desktop.Select("LOWER.UPPER.MIX")
       local x1, y1 = a2dtest.GetSelectedIconCoords()
 
-      a2d.Select("ANOTHER.FOLDER")
+      desktop.Select("ANOTHER.FOLDER")
       local x2, y2 = a2dtest.GetSelectedIconCoords()
 
       a2d.Drag(x1, y1, x2, y2)
@@ -362,7 +362,7 @@ test.Variants(
       path = "/RAM1/ANOTHER.FOLDER/LOWER.UPPER.MIX"
     elseif action == "move" and disk == "other" then
       -- Move to another volume
-      a2d.Select("LOWER.UPPER.MIX")
+      desktop.Select("LOWER.UPPER.MIX")
       local x,y = a2dtest.GetSelectedIconCoords()
 
       a2d.InMouseKeysMode(function(m)
@@ -378,13 +378,13 @@ test.Variants(
       path = "/GS.OS.MIXED/LOWER.UPPER.MIX"
     elseif action == "copy" and disk == "same" then
       -- Copy on same volume
-      a2d.CreateFolder("ANOTHER.FOLDER")
-      a2d.OpenWindow("/RAM1")
+      desktop.CreateFolder("ANOTHER.FOLDER")
+      desktop.OpenWindow("/RAM1")
 
-      a2d.Select("LOWER.UPPER.MIX")
+      desktop.Select("LOWER.UPPER.MIX")
       local x1,y1 = a2dtest.GetSelectedIconCoords()
 
-      a2d.Select("ANOTHER.FOLDER")
+      desktop.Select("ANOTHER.FOLDER")
       local x2, y2 = a2dtest.GetSelectedIconCoords()
 
       a2d.InMouseKeysMode(function(m)
@@ -401,10 +401,10 @@ test.Variants(
     end
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenWindow(path)
+    desktop.OpenWindow(path)
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "lower.UPPER.MiX", "move should retain case")
-    a2d.DeletePath(path)
-    a2d.EraseVolume("RAM1")
+    desktop.DeletePath(path)
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -419,20 +419,20 @@ test.Step(
   "Copy one volume to another",
   function()
     EnablePreserve()
-    a2d.RenamePath("/RAM1", "vol1.MIXED")
-    a2d.RenamePath("/GS.OS.MIXED", "VOL2.mixed")
+    desktop.RenamePath("/RAM1", "vol1.MIXED")
+    desktop.RenamePath("/GS.OS.MIXED", "VOL2.mixed")
 
-    a2d.SelectPath("/VOL1.MIXED")
+    desktop.SelectPath("/VOL1.MIXED")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
-    a2d.SelectPath("/VOL2.MIXED")
+    desktop.SelectPath("/VOL2.MIXED")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
-    a2d.ClearSelection()
+    desktop.ClearSelection()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
-    a2d.OpenWindow("/VOL2.MIXED/VOL1.MIXED")
+    desktop.OpenWindow("/VOL2.MIXED/VOL1.MIXED")
     test.ExpectEquals(a2dtest.GetFrontWindowTitle(), "vol1.MIXED", "vol copy should retain case")
 end)
 

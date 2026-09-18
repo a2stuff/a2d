@@ -14,6 +14,6 @@ test.Step(
     a2dtest.WaitForAlert({match="2 volumes with the same name"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
-    a2d.SelectAll()
-    test.ExpectEquals(#a2d.GetSelectedIcons(), 3, "Expect 2 volumes plus trash")
+    desktop.SelectAll()
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 3, "Expect 2 volumes plus trash")
 end)

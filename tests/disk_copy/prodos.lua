@@ -12,7 +12,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 prodos_floppy1.dsk -flop2 prodos_floppy2.dsk"
 test.Step(
   "ProDOS disk names in list",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
 
     test.ExpectMatch(a2dtest.OCRScreen(), "Floppy1",
                 "ProDOS disk names in list should have adjusted case")
@@ -32,7 +32,7 @@ end)
 test.Step(
   "ProDOS disk names in source label",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source
@@ -75,7 +75,7 @@ end)
 test.Step(
   "ProDOS disk names in overwrite prompt",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source

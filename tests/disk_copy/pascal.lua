@@ -31,7 +31,7 @@ DISKARGS="-hard1 $HARDIMG -flop1 pascal_800k.woz -flop2 empty_800k.2mg -flop3 pa
 test.Step(
   "Pascal disk names in list",
   function()
-    a2d.CopyDisk()
+    desktop.CopyDisk()
 
     local ocr = a2dtest.OCRScreen()
     test.ExpectMatch(ocr, "1PASCAL:", "Pascal disk names in list should be in uppercase")
@@ -55,7 +55,7 @@ test.Variants(
     {"Pascal disk names in source label - 800K", 2, 3, "1PASCAL:"},
   },
   function(idx, name, source_index, dest_index, disk_name)
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source
@@ -102,7 +102,7 @@ test.Variants(
     {"Pascal disk names in overwrite prompt - 800K", 3, 2, "1PASCAL:"},
   },
   function(idx, name, source_index, dest_index, disk_name)
-    a2d.CopyDisk()
+    desktop.CopyDisk()
     a2dtest.ConfigureForDiskCopy()
 
     -- source

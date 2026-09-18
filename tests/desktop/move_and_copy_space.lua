@@ -16,20 +16,20 @@ test.Step(
   "Volume copy can partially succeed",
   function()
     -- leave around 200K free
-    a2d.CreateFolder("/RAM1/CONSUMED")
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
+    desktop.CreateFolder("/RAM1/CONSUMED")
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
 
     -- copy volume
-    a2d.CopyPath("/A2.DESKTOP", "/RAM1")
+    desktop.CopyPath("/A2.DESKTOP", "/RAM1")
     a2dtest.WaitForAlert({match="file is too large"})
     test.ExpectIMatch(a2dtest.OCRScreen(), "EXTRAS/BASIC%.SYSTEM", "file name should be visible")
     a2d.DialogCancel()
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -42,30 +42,30 @@ test.Step(
   "Can move file even if there isn't space to copy",
   function()
     -- leave less than 200K free
-    a2d.CreateFolder("/RAM1/CONSUMED")
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
+    desktop.CreateFolder("/RAM1/CONSUMED")
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
 
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1") -- 1000k
-    a2d.CreateFolder("/RAM1/FOLDER")
-    a2d.OpenWindow("/RAM1")
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1") -- 1000k
+    desktop.CreateFolder("/RAM1/FOLDER")
+    desktop.OpenWindow("/RAM1")
 
-    a2d.Select("IS.200K")
+    desktop.Select("IS.200K")
     local src_x, src_y = a2dtest.GetSelectedIconCoords()
 
-    a2d.Select("FOLDER")
+    desktop.Select("FOLDER")
     local dst_x, dst_y = a2dtest.GetSelectedIconCoords()
 
     a2d.Drag(src_x, src_y, dst_x, dst_y)
     a2dtest.WaitForSystemTask()
     a2dtest.ExpectAlertNotShowing()
 
-    a2d.SelectPath("/RAM1/FOLDER/IS.200K") -- verify file was moved
+    desktop.SelectPath("/RAM1/FOLDER/IS.200K") -- verify file was moved
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -77,20 +77,20 @@ test.Step(
   "Copy to folder without capacity",
   function()
     -- leave less than 200K free
-    a2d.CreateFolder("/RAM1/CONSUMED")
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE4") -- 1000k
+    desktop.CreateFolder("/RAM1/CONSUMED")
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE4") -- 1000k
 
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1")
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1")
     a2dtest.WaitForAlert({match="file is too large"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -104,22 +104,22 @@ test.Step(
   "Copy files to volume with capacity for some but not all files",
   function()
     -- leave around 200K free
-    a2d.CreateFolder("/RAM1/CONSUMED")
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.16K", "/RAM1/CONSUMED") -- 200k
+    desktop.CreateFolder("/RAM1/CONSUMED")
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.16K", "/RAM1/CONSUMED") -- 200k
 
-    a2d.OpenWindow("/TESTS/COPYING/SIZES")
-    a2d.SelectAll()
-    a2d.CopySelectionTo("/RAM1")
+    desktop.OpenWindow("/TESTS/COPYING/SIZES")
+    desktop.SelectAll()
+    desktop.CopySelectionTo("/RAM1")
     a2dtest.WaitForAlert({match="file is too large"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)
 
 --[[
@@ -133,22 +133,22 @@ test.Step(
   "Copy folder to volume with capacity for some but not all files",
   function()
     -- leave around 200K free
-    a2d.CreateFolder("/RAM1/CONSUMED")
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
-    a2d.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
-    a2d.CopyPath("/TESTS/COPYING/SIZES/IS.16K", "/RAM1/CONSUMED") -- 200k
+    desktop.CreateFolder("/RAM1/CONSUMED")
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.200K", "/RAM1/CONSUMED") -- 200k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE1") -- 400k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE2") -- 600k
+    desktop.DuplicatePath("/RAM1/CONSUMED/IS.200K", "DUPE3") -- 800k
+    desktop.CopyPath("/TESTS/COPYING/SIZES/IS.16K", "/RAM1/CONSUMED") -- 200k
 
-    a2d.CopyPath("/TESTS/COPYING/SIZES", "/RAM1")
+    desktop.CopyPath("/TESTS/COPYING/SIZES", "/RAM1")
     a2dtest.WaitForAlert({match="file is too large"})
     a2d.DialogOK()
     a2dtest.WaitForSystemTask()
 
-    a2d.OpenWindow("/RAM1/SIZES")
-    a2d.SelectAll()
-    test.Expect(#a2d.GetSelectedIcons(), 2, "2 files should have fit")
+    desktop.OpenWindow("/RAM1/SIZES")
+    desktop.SelectAll()
+    test.Expect(#desktop.GetSelectedIcons(), 2, "2 files should have fit")
 
     -- cleanup
-    a2d.EraseVolume("RAM1")
+    desktop.EraseVolume("RAM1")
 end)

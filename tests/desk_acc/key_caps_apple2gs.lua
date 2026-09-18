@@ -14,7 +14,7 @@ RESOLUTION="704x462"
 test.Step(
   "Key Caps - Apple IIgs",
   function()
-    a2d.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/KEY.CAPS")
     test.Snap("verify the keyboard layout is \"extended\"")
 end)
 

@@ -18,17 +18,17 @@ local s6d1 = manager.machine.images[":sl6:superdrive:fdc:0:35hd"]
 test.Step(
   "Running with a prefix and relative path works",
   function()
-    a2d.ToggleOptionCopyToRAMCard()
-    a2d.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard()
+    desktop.AddShortcut("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM", {copy="boot"})
+    desktop.Reboot()
     a2d.WaitForDesktopReady({timeout=360})
 
     -- Verify copied to RAMCard
-    a2d.OpenWindow("/RAM4/EXTRAS")
+    desktop.OpenWindow("/RAM4/EXTRAS")
 
     -- Quit
-    a2d.CloseAllWindows()
-    a2d.Quit()
+    desktop.CloseAllWindows()
+    desktop.Quit()
 
     -- Re-launch from original startup disk
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
@@ -47,9 +47,9 @@ test.Step(
     a2d.WaitForDesktopReady()
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
@@ -64,8 +64,8 @@ end)
 test.Step(
   "Aborted copy still runs interpreters",
   function()
-    a2d.ToggleOptionCopyToRAMCard()
-    a2d.Reboot()
+    desktop.ToggleOptionCopyToRAMCard()
+    desktop.Reboot()
     util.WaitFor(
       "progress bar", function()
         return apple2.GrabTextScreen():match("Esc to cancel")
@@ -75,12 +75,12 @@ test.Step(
     apple2.EscapeKey()
 
     a2d.WaitForDesktopReady({timeout=240})
-    a2d.Quit()
+    desktop.Quit()
 
     -- Re-launch from original startup disk
     apple2.BitsyInvokePath("/A2.DESKTOP/DESKTOP.SYSTEM")
     a2d.WaitForDesktopReady({timeout=360})
-    a2d.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/APPLEVISION")
+    desktop.InvokePath("/A2.DESKTOP/SAMPLE.MEDIA/APPLEVISION", {no_wait=true})
     util.WaitFor(
       "APPLE-VISION", function()
         return apple2.GrabTextScreen():match("APPLE%-VISION")
@@ -89,9 +89,9 @@ test.Step(
     a2d.WaitForDesktopReady({timeout=360})
 
     -- cleanup
-    a2d.DeletePath("/A2.DESKTOP/LOCAL")
-    a2d.EraseVolume("RAM4")
-    a2d.Reboot()
+    desktop.DeletePath("/A2.DESKTOP/LOCAL")
+    desktop.EraseVolume("RAM4")
+    desktop.Reboot()
     a2d.WaitForDesktopReady()
 end)
 
