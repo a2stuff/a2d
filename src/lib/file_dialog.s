@@ -679,7 +679,7 @@ found:  RETURN  A=index
         tax
         lda     file_types,x
         rts
-.endproc ; _GetFilenameForIndex
+.endproc ; _GetFileTypeForIndex
 
 ;;; ============================================================
 

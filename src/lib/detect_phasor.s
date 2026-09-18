@@ -49,7 +49,7 @@ fail_restore:
         pla
         tax
         RETURN  C=0
-.endproc
+.endproc ; DetectPhasor
 
 .proc ProbeViaTimerPreserveX
         ptr := $06
@@ -84,4 +84,4 @@ next:   dex
 fail:   pla
         tax
         RETURN  C=0
-.endproc
+.endproc ; ProbeViaTimerPreserveX

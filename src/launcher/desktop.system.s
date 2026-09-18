@@ -278,7 +278,7 @@ startupitems_dir:
 .proc CreateStartupItemsDir
         MLI_CALL CREATE, create_startupitemsdir_params
         rts
-.endproc ; CreateLocalDir
+.endproc ; CreateStartupItemsDir
 
 ;;; ============================================================
 

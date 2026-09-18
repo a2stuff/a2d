@@ -1259,7 +1259,7 @@ re_roll:
         inc     count
     END_IF
         rts
-.endproc ;  _Check
+.endproc ; _Check
 
 .endproc ; CountMines
 
@@ -1387,7 +1387,7 @@ re_roll:
         inc     count
     END_IF
         rts
-.endproc ;  _Check
+.endproc ; _Check
 
 .endproc ; CountFlags
 
@@ -1436,7 +1436,7 @@ re_roll:
         PULL_XY
         jsr     PopPointers
         rts
-.endproc ; IsMine
+.endproc ; SetCell
 
 ;;; ============================================================
 ;;; Pushes two words from $6/$8 to stack; preserves A,X,Y

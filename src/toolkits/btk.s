@@ -674,7 +674,7 @@ unchecked_cb_bitmap:
         copy8   rect,x, (params_addr),y
     WHILE dey : dex : POS
         rts
-.endproc ; _WriteRectBackToButtonRecord
+.endproc ; _MeasureAndWriteRectBackToButtonRecord
 
 ;;; ============================================================
 .endif ; BTK_SHORT
