@@ -6022,7 +6022,7 @@ draw_menu:
       DO
         jsr     GetMenuItem
         bit     curmenuitem::options
-        .assert MGTK::MenuOpt::item_is_filler = $40, error, "bad constant"
+        .assert MGTK::MenuOpt::item_is_filler = V_FLAG_MASK, error, "bad constant"
         bvs     filler          ; bit 6 - is filler
 
         ldax    curmenuitem::name
@@ -6032,7 +6032,7 @@ draw_menu:
         lda     curmenuitem::options
         and     #3              ; OA+SA
         ora     curmenuitem::shortcut1
-        .assert MGTK::no_shortcut & $80 = $80, error, "bad constant"
+        .assert MGTK::no_shortcut & N_FLAG_MASK = N_FLAG_MASK, error, "bad constant"
        IF NS
         lda     no_shortcut_width
         bne     got_shortcut_adjust
@@ -7034,9 +7034,9 @@ loop:   jsr     GetMenuItem
 
         ;; ----------------------------------------
         ;; Filler?
-        bit     curmenuitem::options
-        .assert MGTK::MenuOpt::item_is_filler = $40, error, "bad constant"
-    IF VS
+
+        .assert MGTK::MenuOpt::item_is_filler = V_FLAG_MASK, error, "bad constant"
+    IF bit curmenuitem::options : VS
         jsr     DrawFiller
         jmp     next
     END_IF
@@ -7082,7 +7082,7 @@ loop:   jsr     GetMenuItem
         bne     oa_sa
 
         lda     curmenuitem::shortcut1
-        .assert MGTK::no_shortcut & $80 = $80, error, "bad constant"
+        .assert MGTK::no_shortcut & N_FLAG_MASK = N_FLAG_MASK, error, "bad constant"
         bmi     no_shortcut
 
         ;; Special case: if both the same, use glyph at that code point
@@ -7123,7 +7123,7 @@ no_shortcut:
 
         lda     curmenu::disabled
         ora     curmenuitem::options
-        .assert MGTK::MenuOpt::disable_flag = $80, error, "bad constant"
+        .assert MGTK::MenuOpt::disable_flag = N_FLAG_MASK, error, "bad constant"
     IF NS
         jsr     DimMenuItem
     END_IF

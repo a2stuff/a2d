@@ -1128,7 +1128,7 @@ headery:
 
         ;; Highlighted?
         ;;and     #kIconEntryStateHighlighted
-        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, ::N_FLAG_MASK>>1
         asl
         bmi     done            ; Not valid (it's being dragged)
 
@@ -1136,7 +1136,7 @@ headery:
         ldy     #IconEntry::flags
         lda     (icon_ptr),y
         ;;and     #kIconEntryFlagsDropTarget
-        ASSERT_EQUALS ::kIconEntryFlagsDropTarget, $40
+        ASSERT_EQUALS ::kIconEntryFlagsDropTarget, ::N_FLAG_MASK>>1
         asl
         bpl     done
 
@@ -1481,7 +1481,7 @@ ret:    rts
 
         ;; Set text background color
         lda     #MGTK::textbg_white
-        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, ::V_FLAG_MASK
     IF bit win_state : VS       ; highlighted?
         lda     #MGTK::textbg_black
     END_IF
@@ -1492,14 +1492,14 @@ ret:    rts
         ;; Icon
 
         ;; Shade (XORs background)
-        ASSERT_EQUALS ::kIconEntryStateDimmed, $80
+        ASSERT_EQUALS ::kIconEntryStateDimmed, ::N_FLAG_MASK
     IF bit win_state : NS
         MGTK_CALL MGTK::SetPattern, dark_pattern
         jsr     _Shade
     END_IF
 
         ;; Mask (cleared to white or black)
-        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, ::V_FLAG_MASK
     IF bit win_state : VS
         MGTK_CALL MGTK::SetPenMode, penBIC
     ELSE
@@ -1508,13 +1508,13 @@ ret:    rts
         MGTK_CALL MGTK::PaintBits, mask_paintbits_params
 
         ;; Shade again (restores background)
-        ASSERT_EQUALS ::kIconEntryStateDimmed, $80
+        ASSERT_EQUALS ::kIconEntryStateDimmed, ::N_FLAG_MASK
     IF bit win_state : NS
         jsr     _Shade
     END_IF
 
         ;; Icon (drawn in black or white)
-        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, ::V_FLAG_MASK
     IF bit win_state : VS
         MGTK_CALL MGTK::SetPenMode, penOR
     ELSE

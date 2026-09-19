@@ -383,7 +383,7 @@ str_template:
 
 .proc OnSelChange
         lda     listbox_rec::selected_index
-        ASSERT_EQUALS BTK::kButtonStateChecked, %10000000
+        ASSERT_EQUALS BTK::kButtonStateChecked, ::N_FLAG_MASK
         and     #BTK::kButtonStateChecked
         sta     ok_button::state
         BTK_CALL BTK::Hilite, ok_button
@@ -768,7 +768,7 @@ type_table:
 
 .proc OnSelChange
         lda     listbox_rec::selected_index
-        ASSERT_EQUALS BTK::kButtonStateChecked, %10000000
+        ASSERT_EQUALS BTK::kButtonStateChecked, ::N_FLAG_MASK
         and     #BTK::kButtonStateChecked
         sta     import_button::state
         BTK_CALL BTK::Hilite, import_button

@@ -426,18 +426,18 @@ found:  ldx     num_file_names
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc _IsOKAllowed
-        .assert kSelectionOptional           & $80 = $00, error, "enum mismatch"
-        .assert kSelectionOptionalUnlessRoot & $80 = $00, error, "enum mismatch"
-        .assert kSelectionRequiredNoDirs     & $80 = $80, error, "enum mismatch"
-        .assert kSelectionRequiredDirsOK     & $80 = $80, error, "enum mismatch"
+        .assert kSelectionOptional           & N_FLAG_MASK = $00, error, "enum mismatch"
+        .assert kSelectionOptionalUnlessRoot & N_FLAG_MASK = $00, error, "enum mismatch"
+        .assert kSelectionRequiredNoDirs     & N_FLAG_MASK = N_FLAG_MASK, error, "enum mismatch"
+        .assert kSelectionRequiredDirsOK     & N_FLAG_MASK = N_FLAG_MASK, error, "enum mismatch"
 
     IF bit selection_requirement_flags : NS
         ;; Selection required
         bit     selected_index
         bmi     _ReturnNotAllowed ; no selection
 
-        .assert kSelectionRequiredNoDirs & $40 = $00, error, "enum mismatch"
-        .assert kSelectionRequiredDirsOK & $40 = $40, error, "enum mismatch"
+        .assert kSelectionRequiredNoDirs & V_FLAG_MASK = $00, error, "enum mismatch"
+        .assert kSelectionRequiredDirsOK & V_FLAG_MASK = V_FLAG_MASK, error, "enum mismatch"
 
         ;; bit6 = dirs ok?
         bit     selection_requirement_flags
@@ -448,8 +448,8 @@ found:  ldx     num_file_names
     END_IF
 
         ;; No selection required
-        .assert kSelectionOptional           & $40 = $00, error, "enum mismatch"
-        .assert kSelectionOptionalUnlessRoot & $40 = $40, error, "enum mismatch"
+        .assert kSelectionOptional           & V_FLAG_MASK = $00, error, "enum mismatch"
+        .assert kSelectionOptionalUnlessRoot & V_FLAG_MASK = V_FLAG_MASK, error, "enum mismatch"
 
         ;; bit6 = root w/ no selection ok?
         bvc     _ReturnAllowed
@@ -1374,11 +1374,11 @@ ResetTypeDown := file_dialog_impl::ResetTypeDown
 
 ;;; Configuration
 kSelectionOptional           = %00000000 ; unused
-kSelectionOptionalUnlessRoot = %01000000
-kSelectionRequiredNoDirs     = %10000000
-kSelectionRequiredDirsOK     = %11000000
+kSelectionOptionalUnlessRoot = V_FLAG_MASK
+kSelectionRequiredNoDirs     = N_FLAG_MASK
+kSelectionRequiredDirsOK     = N_FLAG_MASK|V_FLAG_MASK
 kShowAllFiles                = %00000000
-kShowOnlyDirectories         = %10000000
+kShowOnlyDirectories         = N_FLAG_MASK
 
 ;;; State
 STATE_START := file_dialog_impl::state_start

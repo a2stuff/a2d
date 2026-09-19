@@ -42,7 +42,7 @@ caret_counter   .word
 .endstruct
 
 kLineEditOptionsNormal   = %00000000
-kLineEditOptionsCentered = %10000000
+kLineEditOptionsCentered = N_FLAG_MASK
 
 ;;; Macro for defining a `LineEditRecord`
 .macro DEFINE_LINE_EDIT name, winid, buf, left, top, width, maxlen, options_param

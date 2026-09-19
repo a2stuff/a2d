@@ -20,8 +20,8 @@ ALERT_DIALOG_INC = 1
 .endenum
 
 .enum AlertOptions
-        Beep       = %10000000  ; N = play beep sound
-        SaveBack   = %01000000  ; V = save/restore background
+        Beep       = N_FLAG_MASK ; N = play beep sound
+        SaveBack   = V_FLAG_MASK ; V = save/restore background
 .endenum
 
 kAlertResultTryAgain    = 0

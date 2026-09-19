@@ -457,7 +457,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         lda     curr+InputState::butn0
         and     #$80
-        ASSERT_EQUALS BTK::kButtonStateChecked, $80
+        ASSERT_EQUALS BTK::kButtonStateChecked, ::N_FLAG_MASK
         eor     joy_btn0_button::state ; changed?
     IF NS
         eor     joy_btn0_button::state ; changed?
@@ -467,7 +467,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         lda     curr+InputState::butn1
         and     #$80
-        ASSERT_EQUALS BTK::kButtonStateChecked, $80
+        ASSERT_EQUALS BTK::kButtonStateChecked, ::N_FLAG_MASK
         eor     joy_btn1_button::state ; changed?
     IF NS
         eor     joy_btn1_button::state
@@ -477,7 +477,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
 
         lda     curr+InputState::butn2
         and     #$80
-        ASSERT_EQUALS BTK::kButtonStateChecked, $80
+        ASSERT_EQUALS BTK::kButtonStateChecked, ::N_FLAG_MASK
         eor     joy_btn2_button::state ; changed?
     IF NS
         eor     joy_btn2_button::state

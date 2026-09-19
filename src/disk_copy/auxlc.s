@@ -690,7 +690,7 @@ do_copy:
         ;; Get actual block count. If source is ProDOS, use volume
         ;; header. Otherwise infer from device details.
         bit     source_disk_format
-        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
+        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & ::N_FLAG_MASK, $00
     IF NC
         ;; ProDOS - use volume header
         ldx     source_drive_index
@@ -1004,8 +1004,7 @@ CmdDiskCopy := SetCopyModeImpl::disk_copy
 
 .proc UpdateOKButton
         lda     current_drive_selection
-        and     #$80
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        and     #BTK::kButtonStateDisabled
 
         cmp     dialog_ok_button::state
         beq     ret
@@ -1686,10 +1685,10 @@ remainder:      .word   0              ; (out)
         MGTK_CALL MGTK::DrawStringForward, str_slot_drive_pattern
 
         bit     source_disk_format
-        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
+        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & ::N_FLAG_MASK, $00
         bpl     show_name       ; ProDOS
 
-        ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
+        ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & ::V_FLAG_MASK, $00
         bvc     ret             ; DOS 3.3
 
         lda     source_disk_format
@@ -1727,13 +1726,13 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, point_disk_copy
 
         bit     source_disk_format
-        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & $80, $00
+        ASSERT_EQUALS auxlc::kSourceDiskFormatProDOS & ::N_FLAG_MASK, $00
     IF NC                       ; ProDOS
         MGTK_CALL MGTK::DrawStringForward, str_prodos_disk_copy
         rts
     END_IF
 
-        ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & $40, $00
+        ASSERT_EQUALS auxlc::kSourceDiskFormatDOS33 & ::V_FLAG_MASK, $00
     IF VC                       ; DOS 3.3
         MGTK_CALL MGTK::DrawStringForward, str_dos33_disk_copy
         rts

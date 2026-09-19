@@ -1202,8 +1202,7 @@ arrow_num:
 
 .proc UpdateRGBCheckbox
         CALL    ReadSetting, X=#DeskTopSettings::rgb_color
-        and     #$80
-        .assert BTK::kButtonStateChecked = $80, error, "const mismatch"
+        and     #BTK::kButtonStateChecked
         sta     rgb_color_button::state
         BTK_CALL BTK::CheckboxUpdate, rgb_color_button
         rts

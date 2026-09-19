@@ -104,8 +104,8 @@ label   := *
 kMaxIconCount   = 127
 
 ;;; Masks for IconEntry::win_state
-kIconEntryStateDimmed      = %10000000
-kIconEntryStateHighlighted = %01000000
+kIconEntryStateDimmed      = %10000000 ; bit7
+kIconEntryStateHighlighted = %01000000 ; bit6
 kIconEntryWinIdMask        = %00001111
 
 ;;; Masks for IconEntry::flags

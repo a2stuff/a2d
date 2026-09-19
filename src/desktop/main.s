@@ -9686,7 +9686,7 @@ iterate_selection:
         ;; run this for copy using paths (i.e. Duplicate, Copy to RAMCard)
        IF bit do_op_flag : NC
         bit     operation_flags
-        ASSERT_EQUALS operations::kOperationFlagsCheckBadCopy, $40
+        ASSERT_EQUALS operations::kOperationFlagsCheckBadCopy, ::V_FLAG_MASK
         IF VS
         jsr     CopyPathsFromBufsToSrcAndDst
 
@@ -10435,7 +10435,7 @@ retry:  jsr     GetSrcFileInfo
 
         ;; If "Copy to RAMCard", make sure there's enough room.
         bit     operations::operation_flags
-        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
+        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, ::N_FLAG_MASK
     IF NS
       IF cmp16 dst_vol_blocks_free, block_count : LT
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_ramcard_full
@@ -10683,7 +10683,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         ;; Check space if we didn't pre-flight via enumeration,
         ;; and we're not just doing a relink.
         bit     operations::operation_flags
-        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, $80
+        ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, ::N_FLAG_MASK
     IF NC
       IF bit move_flags : VC    ; same volume relink move?
         ;; No, verify that there is room.
@@ -13625,7 +13625,7 @@ RestoreOverlayBuffer    := LoadDynamicRoutineImpl::buffer
     END_IF
 
         bit     prompt_button_flags
-        ASSERT_EQUALS ::kPromptButtonsOKCancel & $80, $00
+        ASSERT_EQUALS ::kPromptButtonsOKCancel & ::N_FLAG_MASK, $00
     IF NC
         MGTK_CALL MGTK::InRect, cancel_button::rect
       IF NOT_ZERO
@@ -13678,7 +13678,7 @@ RestoreOverlayBuffer    := LoadDynamicRoutineImpl::buffer
 
       IF A = #CHAR_ESCAPE
         bit     prompt_button_flags
-        ASSERT_EQUALS ::kPromptButtonsOKCancel & $80, $00
+        ASSERT_EQUALS ::kPromptButtonsOKCancel & ::N_FLAG_MASK, $00
         bpl     _HandleKeyCancel
         bmi     _HandleKeyOK    ; always
       END_IF
@@ -14326,7 +14326,7 @@ params:  .res    3
 
         BTK_CALL BTK::Draw, ok_button
         bit     prompt_button_flags
-        ASSERT_EQUALS ::kPromptButtonsOKCancel & $80, $00
+        ASSERT_EQUALS ::kPromptButtonsOKCancel & ::N_FLAG_MASK, $00
     IF NC
         BTK_CALL BTK::Draw, cancel_button
     END_IF
