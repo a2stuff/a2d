@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 
+# Runs mametest over all of the specified files and presents the
+# results in a web browser. If no files are specified, a standard list
+# of directories is used.
+#
+# Syntax:
+#
+# bin/testpass [options] [testfiles]
+#
+# Options
+#
+#    --dirty             Use 'git diff' to select files
+#    --add-if-pass       If a test file passes, 'git add'
+#
+
 cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 START="$(date)"
 
-FLAGS="--nosnaps"
-for arg in "$@"; do
-  case $1 in
-    --visible)   shift; FLAGS="$FLAGS --visible" ;;
-    *)           break ;;
-  esac
-done
-
-if [ $# -gt 0 ]; then
-  FILES="$@"
-else
-  FILES="\
+DEFAULT_FILES="\
     tests/screenshots/*.lua \
     tests/configs/*.lua \
     tests/launcher/*.lua \
@@ -25,6 +28,40 @@ else
     tests/selector/*.lua \
     tests/desk_acc/*.lua \
     tests/*.lua"
+
+FILES=""
+FLAGS="--nosnaps"
+ADD_IF_PASS=""
+for arg in "$@"; do
+  case $1 in
+    --dirty)
+      shift;
+      FILES=$(git diff --name-only $DEFAULT_FILES)
+      if [ -z "$FILES" ]; then
+        echo "No dirty files" 1>&2
+        exit 1
+      fi
+      ;;
+    --visible)
+      shift;
+      FLAGS="$FLAGS --visible"
+      ;;
+    --add-if-pass)
+      shift;
+      ADD_IF_PASS=true
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ -z "$FILES" ]; then
+  if [ $# -gt 0 ]; then
+    FILES="$@"
+  else
+    FILES="$DEFAULT_FILES"
+  fi
 fi
 
 TMPDIR="/tmp/mametest"
@@ -44,6 +81,9 @@ do
   SCRIPTDIR="$(dirname "$SCRIPT")"
 
   bin/mametest $FLAGS "$SCRIPT"
+  if [ $? -eq 0 -a "$ADD_IF_PASS" ]; then
+    git add "$SCRIPT"
+  fi
 
   relpath="${SCRIPT#$(pwd)/tests/}"
   resdir="$(dirname "$relpath")"
