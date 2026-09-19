@@ -51,7 +51,15 @@
 
 ;;; Input: Y = read only flag (zero or non-zero)
 .proc RunDA
-        sty     readonly_flag
+        sty     flags
+
+        .assert kFlagsSetTime = V_FLAG_MASK, error, "bad constant"
+    IF bit flags : VS
+        ;; If the caller wants us to set the time, start off with the
+        ;; dirty flag set.
+        copy8   #kResultDateChanged, dialog_result
+    END_IF
+
         jsr     init_window
         RETURN  A=dialog_result
 .endproc ; RunDA
@@ -142,7 +150,10 @@ selected_field:
 
 ;;; DA is read-only if there is a system clock but we don't know
 ;;; how to update it.
-readonly_flag:                  ; zero (read/write) or non-zero (read-only)
+
+kFlagsReadOnly = N_FLAG_MASK    ; bit7 = read-only
+kFlagsSetTime  = V_FLAG_MASK    ; bit6 = always set ProDOS time
+flags:
         .byte   0
 
 ;;; Originally Feb 26, 1985 (the author date?); now updated by build.
@@ -413,8 +424,9 @@ init_window:
         cmp     #CHAR_ESCAPE
         jeq     OnKeyOK
 
-        ldx     readonly_flag
-        bne     InputLoop
+        .assert kFlagsReadOnly = N_FLAG_MASK, error, "bad constant"
+        bit     flags
+        bmi     InputLoop
 
         ;; All controls are active
         cmp     #CHAR_LEFT
@@ -517,8 +529,9 @@ hit:
 
         ;; ----------------------------------------
 
-        ldx     readonly_flag
-        bne     miss
+        .assert kFlagsReadOnly = N_FLAG_MASK, error, "bad constant"
+        bit     flags
+        bmi     miss
 
         jsr     FindHitTarget
         cpx     #0
@@ -555,11 +568,9 @@ hit_target_jump_table:
 .endproc ; OnKeyOK
 
 .proc OnOK
-        lda     readonly_flag
-    IF ZERO
-      IF bit dialog_result : NS
+        .assert kResultDateChanged = N_FLAG_MASK, error, "bad constant"
+    IF bit dialog_result : NS
         jsr     UpdateProDOS
-      END_IF
     END_IF
         jmp     Destroy
 .endproc ; OnOK
@@ -693,7 +704,7 @@ finish:
 
         ;; Set dirty bit
         lda     dialog_result
-        ora     #$80            ; date changed
+        ora     #kResultDateChanged ; date changed
         sta     dialog_result
 
         rts
@@ -844,8 +855,8 @@ str_pm: PASCAL_STRING "PM"
 ;;; Tear down the window and exit
 
 ;;; Used in Aux to store result during tear-down
-;;; bit7 = time changed
-;;; bit6 = options changed
+kResultDateChanged    = N_FLAG_MASK ; bit7 = date/time changed
+kResultOptionsChanged = V_FLAG_MASK ; bit6 = options changed
 dialog_result:  .byte   0
 
 .proc Destroy
@@ -926,8 +937,9 @@ label_downarrow:
 
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        ldx     readonly_flag
-    IF ZERO
+
+        .assert kFlagsReadOnly = N_FLAG_MASK, error, "bad constant"
+    IF bit flags : NC
         MGTK_CALL MGTK::MoveTo, label_uparrow_pos
         MGTK_CALL MGTK::DrawString, label_uparrow
         MGTK_CALL MGTK::FrameRect, up_arrow_rect
@@ -950,8 +962,8 @@ label_downarrow:
         CALL    DrawField, A=#Field::minute
         CALL    DrawField, A=#Field::period
 
-        ldx     readonly_flag
-    IF ZERO
+        .assert kFlagsReadOnly = N_FLAG_MASK, error, "bad constant"
+    IF bit flags : NC
         CALL    SelectField, A=#Field::day
     END_IF
 
@@ -1210,7 +1222,7 @@ loop:
 
         ;; Set dirty bit
         lda     dialog_result
-        ora     #$40            ; settings changed
+        ora     #kResultOptionsChanged ; settings changed
         sta     dialog_result
 
     IF lda selected_field : A = #Field::period
@@ -1285,12 +1297,13 @@ loop:
         lda     MACHID
         and     #kMachIDHasClock
     IF ZERO
-        ;; no system clock - DA is read/write
-        ldy     #0
+        ;; no system clock - DA is read/write, and we want to
+        ;; set the ProDOS time when the DA is done
+        ldy     #aux::kFlagsSetTime
     ELSE
         jsr     CanSetClock     ; returns C=0 if clock can be set
         lda     #0
-        ror
+        ror                     ; sets `aux::kFlagsReadOnly`
         tay
     END_IF
 

@@ -4,6 +4,10 @@
 ;;;
 ;;; ============================================================
 
+;;; Mostly for asserting that flags match BIT results
+N_FLAG_MASK = %10000000
+V_FLAG_MASK = %01000000
+
 ;;; Zero Page
 
 COUT_HOOK       := $36

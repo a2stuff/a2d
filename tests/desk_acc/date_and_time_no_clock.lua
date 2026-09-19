@@ -43,7 +43,7 @@ test.Step(
     end)
     test.ExpectMatch(a2dtest.OCRFrontWindowContent(), "Today", "dates should now say Today")
     desktop.SelectAndOpen("DATE.AND.TIME")
-    a2dtest.ExpectMinimalRepaint(function()
+    a2dtest.ExpectFullRepaint(function()
         a2d.DialogOK()
         a2dtest.WaitForSystemTask()
     end)
