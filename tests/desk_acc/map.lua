@@ -35,7 +35,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(10/60) -- in mouse loop
+        m.Wait()
         test.Snap("verify indicator visible")
         m.MoveByApproximately(80, 40)
         m.ButtonUp()

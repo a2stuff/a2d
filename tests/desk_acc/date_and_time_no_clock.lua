@@ -284,13 +284,13 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(dialog_x + incr_x, dialog_y + incr_y)
         m.ButtonDown()
-        emu.wait(10/60) -- mouse sequence
+        m.Wait()
         test.Snap("verify up button inverted")
         m.ButtonUp()
 
         m.MoveToApproximately(dialog_x + decr_x, dialog_y + decr_y)
         m.ButtonDown()
-        emu.wait(10/60) -- mouse sequence
+        m.Wait()
         test.Snap("verify down button inverted")
         m.ButtonUp()
 
@@ -367,7 +367,7 @@ test.Step(
 
         m.MoveToApproximately(dialog_x+incr_x, dialog_y+incr_y) -- up arrow
         m.ButtonDown()
-        emu.wait(2/60) -- mouse sequence
+        m.Wait()
         test.Snap("verify up button inverted")
         m.ButtonUp()
         a2dtest.WaitForSystemTask()
@@ -375,7 +375,7 @@ test.Step(
 
         m.MoveToApproximately(dialog_x+decr_x, dialog_y+decr_y) -- down arrow
         m.ButtonDown()
-        emu.wait(2/60) -- mouse sequence
+        m.Wait()
         test.Snap("verify down button inverted")
         m.ButtonUp()
         a2dtest.WaitForSystemTask()

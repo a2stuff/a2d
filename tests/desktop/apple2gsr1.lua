@@ -26,7 +26,7 @@ test.Step(
     apple2.TypeLine("40 HPLOT C * 35, 0 to 279 - C * 35, 191")
     apple2.TypeLine("50 NEXT")
     apple2.TypeLine("RUN")
-    emu.wait(5) -- automating BASIC
+    emu.wait(5) -- automating BASIC prompt
     test.Expect(apple2.IsColor(), "Apps should run in color")
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()

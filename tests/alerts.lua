@@ -128,7 +128,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(yes_x, yes_y)
         m.ButtonDown()
-        emu.wait(2/60) -- in mouse sequence
+        m.Wait()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "Yes", "should be down on Yes")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
@@ -138,7 +138,7 @@ test.Step(
 
         m.MoveToApproximately(no_x, no_y)
         m.ButtonDown()
-        emu.wait(2/60) -- in mouse sequence
+        m.Wait()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "No", "should be down on No")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)
@@ -148,7 +148,7 @@ test.Step(
 
         m.MoveToApproximately(all_x, all_y)
         m.ButtonDown()
-        emu.wait(2/60) -- in mouse sequence
+        m.Wait()
         test.ExpectMatch(a2dtest.OCRScreen({invert=true}), "All", "should be down on All")
         m.MoveByApproximately(20, 20)
         a2dtest.ExpectNothingChanged(m.ButtonUp)

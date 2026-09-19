@@ -516,12 +516,12 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1) -- during mouse operation
+        m.Wait()
         local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
         test.ExpectNotEquals(a2dtest.GetFrontWindowID(), icons[1].window, "window should be inactive")
         m.ButtonUp()
-        emu.wait(5) -- let double-click timer expire
+        a2dtest.WaitForSystemTask()
     end)
     test.ExpectEqualsIgnoreCase(a2dtest.GetFrontWindowTitle(), "EXTRAS", "window should be active")
 end)
@@ -546,7 +546,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1) -- during mouse operation
+        m.Wait()
 
         local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
@@ -583,7 +583,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1) -- during mouse operation
+        m.Wait()
 
         local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")
@@ -632,7 +632,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x, y)
         m.ButtonDown()
-        emu.wait(1) -- during mouse operation
+        m.Wait()
 
         local icons = desktop.GetSelectedIcons()
         test.ExpectEquals(#icons, 1, "icon should be selected")

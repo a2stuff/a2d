@@ -327,6 +327,9 @@ function a2d.InMouseKeysMode(func)
         end
       end,
 
+      Wait = function()
+        emu.wait(10/60)
+      end,
   })
   -- Allow returning false to not explicitly exit, e.g. if we exit
   -- DeskTop by double-clicking an executable.

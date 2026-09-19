@@ -201,7 +201,7 @@ function ListBoxTest(
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + h - 5)
             m.ButtonDown()
-            emu.wait(10) -- scrollbar loop
+            emu.wait(10) -- scroll all the way to the bottom
             m.ButtonUp()
         end)
         test.ExpectMatch(a2dtest.OCRScreen(), options.last, "should be scrolled to bottom")
@@ -209,7 +209,7 @@ function ListBoxTest(
         a2d.InMouseKeysMode(function(m)
             m.MoveToApproximately(x + w + 5, y + 5)
             m.ButtonDown()
-            emu.wait(10) -- scrollbar loop
+            emu.wait(10) -- scroll all the way to the top
             m.ButtonUp()
         end)
         test.ExpectMatch(a2dtest.OCRScreen({invert=options.starts_with_selection}), options.first, "should be scrolled to top")

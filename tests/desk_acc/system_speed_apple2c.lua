@@ -15,7 +15,7 @@ test.Step(
   "IIc - speed doesn't affect DHR display",
   function()
     desktop.InvokePath("/A2.DESKTOP.2/APPLE.MENU/CONTROL.PANELS/SYSTEM.SPEED")
-    emu.wait(5) -- floppy drives are slow
+    a2dtest.WaitForSystemTask()
     apple2.Type("N") -- Normal Speed
     apple2.Type("F") -- Fast Speed
     test.Expect(apple2.ReadSSW("RDDHIRES") < 128, "Should still be in DHR mode")

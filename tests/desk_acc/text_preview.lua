@@ -218,7 +218,7 @@ test.Step(
         m.MoveToApproximately(up_x, up_y + 70)
         a2dtest.ExpectNoRepaint(function()
             m.ButtonDown()
-            emu.wait(1) -- scroll bar loop
+            m.Wait()
             test.Snap("verify thumb highlighted")
             m.ButtonUp()
             a2dtest.WaitForSystemTask()

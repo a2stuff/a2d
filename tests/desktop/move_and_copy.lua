@@ -279,9 +279,9 @@ test.Variants(
           m.ButtonUp()
         else
           apple2.PressSA()
-          emu.wait(1) -- during keyboard/mouse operation
+          m.Wait()
           m.ButtonUp()
-          emu.wait(1) -- during keyboard/mouse operation
+          m.Wait()
           apple2.ReleaseSA()
         end
 

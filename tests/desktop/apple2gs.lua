@@ -27,10 +27,10 @@ test.DISABLED_Step(
     apple2.ReleaseShift()
     apple2.ReleaseControl()
     apple2.ReleaseOA()
-    emu.wait(5) -- driving IIgs control panel
+    emu.wait(5) -- automating IIgs control panel
     apple2.EscapeKey() -- to Quit
     apple2.ReturnKey()
-    emu.wait(5) -- driving IIgs control panel
+    emu.wait(5) -- automating IIgs control panel
 
     -- NOTE: NoiseTracker requires ROM3, otherwise on quit it gives a
     -- RESTART SYSTEM error

@@ -237,7 +237,7 @@ test.Step(
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(10)
+      WaitForImage()
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -245,14 +245,14 @@ test.Step(
     apple2.Type("D") -- anything stops
     dhr = apple2.SnapshotDHR()
     for i=1,3 do
-      emu.wait(10)
+      WaitForImage()
       local new = apple2.SnapshotDHR()
       test.Expect(a2dtest.CompareDHR(dhr, new), "slideshow should be stopped", {snap=true})
     end
     apple2.Type("S") -- start
     dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(10)
+      WaitForImage()
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -274,7 +274,7 @@ test.Step(
     apple2.Type("S") -- start
     local dhr = apple2.SnapshotDHR()
     for i=1,6 do
-      emu.wait(10)
+      WaitForImage()
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -284,13 +284,13 @@ test.Step(
     WaitForImage()
     test.Snap("verify backed up one slide")
     a2dtest.ExpectNothingChanged(function()
-        emu.wait(10)
+        WaitForImage()
     end)
 
     apple2.Type("S") -- start
     dhr = apple2.SnapshotDHR()
     for i=1,3 do
-      emu.wait(10)
+      WaitForImage()
       local new = apple2.SnapshotDHR()
       test.Expect(not a2dtest.CompareDHR(dhr, new), "slideshow should be running", {snap=true})
       dhr = new
@@ -324,7 +324,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(file_menu_x, file_menu_y)
         m.Click()
-        emu.wait(10)
+        emu.wait(5) -- wait for menu to draw
         m.Click()
     end)
 

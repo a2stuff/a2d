@@ -91,7 +91,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + 5, y + h + 5)
         m.ButtonDown()
-        emu.wait(1) -- scrollbar repeat
+        emu.wait(1) -- scroll all the way to the bottom
         m.ButtonUp()
     end)
     a2dtest.WaitForSystemTask()
@@ -110,7 +110,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w - 5, y + h + 5)
         m.ButtonDown()
-        emu.wait(1) -- scrollbar repeat
+        emu.wait(1) -- scroll all the way to the bottom
         m.ButtonUp()
     end)
     a2dtest.WaitForSystemTask()

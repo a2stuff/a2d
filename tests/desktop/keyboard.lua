@@ -1271,7 +1271,7 @@ test.Step(
     a2d.InMouseKeysMode(function(m)
         m.MoveToApproximately(x + w + 5, y + h - 5)
         m.ButtonDown()
-        emu.wait(1) -- during scroll operation
+        emu.wait(1) -- scroll all the way to the bottom
         m.ButtonUp()
     end)
 

@@ -110,7 +110,7 @@ test.Step(
     apple2.BitsyInvokePath("/A2.DESKTOP/EXTRAS/BASIC.SYSTEM")
     apple2.WaitForBasicSystem()
     apple2.TypeLine("CAT /RAM")
-    emu.wait(5) -- automatic BASIC prompt
+    emu.wait(5) -- automating BASIC prompt
     test.ExpectMatch(apple2.GrabTextScreen(), "HELLO", "file should be present")
     apple2.TypeLine("DELETE /RAM/HELLO")
     apple2.TypeLine("-/A2.DESKTOP/DESKTOP.SYSTEM")

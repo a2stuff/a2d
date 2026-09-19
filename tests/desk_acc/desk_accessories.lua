@@ -50,14 +50,14 @@ function MoveDoesntRepaintTest(name, path, opt_threshold)
 
       a2d.InMouseKeysMode(function(m)
           m.MoveToApproximately(x, y)
-          emu.wait(2/60) -- in mouse loop
+          m.Wait()
       end)
 
       expectfunc(function()
           a2d.InMouseKeysMode(function(m)
-              emu.wait(2/60) -- in mouse loop
+              m.Wait()
               m.ButtonDown()
-              emu.wait(10/60) -- in mouse loop
+              m.Wait()
               m.ButtonUp()
           end)
       end)
