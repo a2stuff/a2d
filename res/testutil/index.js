@@ -24,7 +24,8 @@ window.addEventListener('DOMContentLoaded', async e => {
     option.output = await entries['output.txt'].text();
     option.entries = entries;
 
-    if (option.output.match(/Expectation failure|traceback/)) {
+    const status = parseInt(await entries['status.txt'].text());
+    if (status) {
       option.classList.add('failure');
     }
 

@@ -250,6 +250,7 @@ export COLOR_RESET="$(tput sgr0)"
 pushd "$MAMEDIR" > /dev/null
 exec 5>&1 # duplicate stdout filehandle
 set -o pipefail
+set +o errexit
 output=$(
   # eval here to allow configs to specify empty variables e.g. -sl6 ''
   time eval "'$MAMEEXE' \
@@ -269,12 +270,15 @@ output=$(
     tee /dev/fd/5
       )
 status=$?
+set -o errexit
+set +o pipefail
 popd > /dev/null
 
 # --------------------------------------------------
 # Stash output
 
 echo "$output" > "$TMPDIR/output.txt"
+echo "$status" > "$TMPDIR/status.txt"
 
 relpath="${SCRIPT#$(pwd)/tests/}"
 resdir="$TMPDIR/results/$(dirname "$relpath")"
@@ -282,7 +286,7 @@ mkdir -p "$resdir"
 
 zipfile="${resdir}/$(basename "$SCRIPT" .lua).zip"
 rm -f "$zipfile"
-zip --quiet --junk-paths "$zipfile" "$TMPDIR/output.txt"
+zip --quiet --junk-paths "$zipfile" "$TMPDIR/output.txt" "$TMPDIR/status.txt"
 
 # --------------------------------------------------
 # Show snapshots

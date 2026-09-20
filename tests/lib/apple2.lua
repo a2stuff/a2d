@@ -585,7 +585,7 @@ function apple2.PressJoyButton1()
     error("No joystick ports present")
   end
   buttons.fields["P1 Button 1"]:set_value(1)
-emu.wait(1/10)
+  emu.wait(1/10)
 end
 
 function apple2.ReleaseJoyButton1()
