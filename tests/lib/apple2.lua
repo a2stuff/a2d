@@ -97,33 +97,33 @@ elseif machine.system.name:match("^apple2gs") then
   -- * built-in mouse port (ADB)
   -- * aux memory is just exposed as RAM > 0xFFFF
   mouse = {
-    x = { port = ":macadb:MOUSE1", field = "Mouse X" },
-    y = { port = ":macadb:MOUSE2", field = "Mouse Y" },
-    b = { port = ":macadb:MOUSE0", field = "Mouse Button 0" },
+    x = { port = {":macadb:MOUSE1", ":adb:1:apple_mouse:mousex"}, field = "Mouse X" },
+    y = { port = {":macadb:MOUSE2", ":adb:1:apple_mouse:mousey"}, field = "Mouse Y" },
+    b = { port = {":macadb:MOUSE0", ":adb:1:apple_mouse:button"}, field = "Mouse Button 0" },
   }
 
   keyboard = {
-    ["Return"]      = { port = ":macadb:KEY2", field = "Return" },
-    ["Delete"]      = { port = ":macadb:KEY3", field = "Backspace" },
-    ["Escape"]      = { port = ":macadb:KEY3", field = "Esc" },
-    ["Tab"]         = { port = ":macadb:KEY3", field = "Tab" },
+    ["Return"]      = { port = {":macadb:KEY2", ":adb:0:iigs_kbd:ROW6"}, field = "Return" },
+    ["Delete"]      = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:ROW7"}, field = "Backspace" },
+    ["Escape"]      = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:ROW4"}, field = {"Escape", "Esc"} },
+    ["Tab"]         = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:ROW8"}, field = "Tab" },
 
-    ["Up Arrow"]    = { port = ":macadb:KEY3", field = "Up Arrow"    },
-    ["Left Arrow"]  = { port = ":macadb:KEY3", field = "Left Arrow"  },
-    ["Right Arrow"] = { port = ":macadb:KEY3", field = "Right Arrow" },
-    ["Down Arrow"]  = { port = ":macadb:KEY3", field = "Down Arrow"  },
+    ["Up Arrow"]    = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:ROW7"}, field = {"Up Arrow",    "Cursor Up"} },
+    ["Left Arrow"]  = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:ROW2"}, field = {"Left Arrow",  "Cursor Left"} },
+    ["Right Arrow"] = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:ROW2"}, field = {"Right Arrow", "Cursor Right"} },
+    ["Down Arrow"]  = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:ROW2"}, field = {"Down Arrow",  "Cursor Down"} },
 
     -- modifiers
-    ["Control"]     = { port = ":macadb:KEY3", field = "Control"    },
-    ["Shift"]       = { port = ":macadb:KEY3", field = "Shift"      },
+    ["Control"]     = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:P2"}, field = "Control"    },
+    ["Shift"]       = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:P2"}, field = "Shift"      },
     -- Ample MAME builds modify port names for OA/SA, so support both forms
     -- https://github.com/ksherlock/mame/blob/9069cdfc14f0abc9634540bf3d2ebc1d21951a50/src/mame/apple/macadb.cpp#L157-L169
-    ["Open Apple"]  = { port = ":macadb:KEY3", field = { "Command / Open Apple" , "Command" } },
-    ["Solid Apple"] = { port = ":macadb:KEY3", field = { "Option / Solid Apple" , "Option" }    },
+    ["Open Apple"]  = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:P2"}, field = { "Command / Open Apple" , "Command" } },
+    ["Solid Apple"] = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:P2"}, field = { "Option / Solid Apple" , "Option" }    },
 
     -- Other
-    ["Reset"]     = { port = ":macadb:KEY5", field = "Reset / Power" },
-    ["Caps Lock"] = { port = ":macadb:KEY3", field = "Caps Lock", bits = 0x0200 },
+    ["Reset"]     = { port = {":macadb:KEY5", ":adb:0:iigs_kbd:P2"}, field = "Reset / Power" },
+    ["Caps Lock"] = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:CAPSLOCK"}, field = "Caps Lock", bits = 0x0200 },
   }
 elseif machine.system.name:match("^ace500") then
   -- Franklin ACE 500
@@ -236,8 +236,22 @@ end
 -- General System Configuration
 --------------------------------------------------
 
+--[[
+  `port_name` can be an array, in which case each name is tried
+  in turn. This can be used to work around port name changes in MAME, etc.
+]]
 local function get_port(port_name)
-  local port = machine.ioport.ports[port_name]
+  local port
+  if type(port_name) == "table" then
+    for i, v in ipairs(port_name) do
+      port = machine.ioport.ports[v]
+      if port ~= nil then
+        break
+      end
+    end
+  else
+    port = machine.ioport.ports[port_name]
+  end
   if port == nil then
     error("No such port: " .. port_name)
   end
@@ -274,9 +288,9 @@ function apple2.SetSystemConfig(port_name, field_name, mask, value)
   while (port:read() & mask) ~= value do
     -- each field toggle advances to the next setting (or wraps)
     field:clear_value()
-    emu.wait(2/60)
+    emu.wait_next_frame()
     field:set_value(1) -- anything
-    emu.wait(2/60)
+    emu.wait_next_frame()
 
     if port:read() == initial then
       error("Cycled field \"" .. field_name .. "\" on port \"" .. port_name .. "\" without hitting target value")
@@ -327,7 +341,7 @@ end
 
 local function SetVideoConfig(field_name, value, mask, shift)
   apple2.SetSystemConfig(":a2video:a2_video_config", field_name, mask << shift, value << shift)
-  emu.wait(2/60)
+  emu.wait_next_frame()
 end
 
 
@@ -381,8 +395,19 @@ local kbd = machine.natkeyboard
 
 local function wait_for_kbd_strobe_clear()
   while apple2.ReadSSW("KBD") > 127 do
-    emu.wait(1/60)
+    emu.wait_next_frame()
   end
+end
+
+local function wait_key_input()
+  local scale = 1
+
+  -- TODO: Determine why we need extra time. Maybe ADB is slow?
+  if machine.system.name:match("^apple2gs") then
+    scale = 2
+  end
+
+  emu.wait(scale * 2/60)
 end
 
 -- https://docs.mamedev.org/luascript/ref-input.html#natural-keyboard-manager
@@ -390,10 +415,11 @@ function apple2.Type(sequence)
   for i=1,sequence:len() do
     kbd:post(sequence:sub(i,i))
     while kbd.is_posting do
-      emu.wait(1/60)
+      emu.wait_next_frame()
     end
     wait_for_kbd_strobe_clear()
   end
+  wait_key_input()
 end
 
 function apple2.TypeLine(sequence)
@@ -415,9 +441,9 @@ local function release(k)
 end
 local function press_and_release(k)
   press(k)
-  emu.wait(2/60)
+  wait_key_input()
   release(k)
-  emu.wait(2/60)
+  wait_key_input()
 end
 
 function apple2.IsCapsLockOn()
@@ -448,10 +474,10 @@ end
 function apple2.ControlReset()
   apple2.PressControl()
   press("Reset")
-  emu.wait(2/60)
+  wait_key_input()
   release("Reset")
   apple2.ReleaseControl()
-  emu.wait(1/60)
+  wait_key_input()
 end
 
 function apple2.ControlOAReset()
@@ -512,55 +538,53 @@ end
 
 function apple2.PressOA()
   press("Open Apple")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.ReleaseOA()
   release("Open Apple")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.PressSA()
   press("Solid Apple")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.ReleaseSA()
   release("Solid Apple")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.PressControl()
   press("Control")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.ReleaseControl()
   release("Control")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.PressShift()
   press("Shift")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.ReleaseShift()
   release("Shift")
-  emu.wait(1/60)
+  emu.wait_next_frame()
 end
 
 function apple2.OAKey(key)
   apple2.PressOA()
   apple2.Type(key)
-  emu.wait(1/60)
   apple2.ReleaseOA()
 end
 
 function apple2.SAKey(key)
   apple2.PressSA()
   apple2.Type(key)
-  emu.wait(1/60)
   apple2.ReleaseSA()
 end
 
@@ -568,7 +592,6 @@ function apple2.OASAKey(key)
   apple2.PressOA()
   apple2.PressSA()
   apple2.Type(key)
-  emu.wait(1/60)
   apple2.ReleaseSA()
   apple2.ReleaseOA()
 end
