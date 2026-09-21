@@ -1,14 +1,12 @@
 --[[ BEGINCONFIG ========================================
 
-MODEL="apple2gsr0"
-MODELARGS="-sl7 cffa2 -ramsize 8M"
+MODEL="laser128"
+MODELARGS="-sl7 cffa2"
 DISKARGS="-hard1 $HARDIMG"
-RESOLUTION="704x462"
 
 ======================================== ENDCONFIG ]]
-
 test.Step(
-  "Caps lock on IIgs model",
+  "Caps lock on Laser 128 model",
   function()
     apple2.CapsLockOff()
     desktop.RenamePath("/A2.DESKTOP", "MiXeD.CaSe")

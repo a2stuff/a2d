@@ -41,7 +41,7 @@ local keyboard = {
 
   -- Other
   ["Reset"]       = { port = ":keyb_special", field = "RESET"     },
-  ["Caps Lock"]   = { port = ":keyb_special", field = "Caps Lock", bits = 0x01 },
+  ["Caps Lock"]   = { port = ":keyb_special", field = "Caps Lock", bits = 0x01, value = 0x01 },
 }
 
 local function get_device(pattern)
@@ -55,6 +55,34 @@ end
 local system_class = tostring(manager.machine.system.parent)
 if system_class == "0" then
   system_class = manager.machine.system.name
+end
+
+local function stringify(v)
+  if type(v) == "table" then
+    s = "{"
+    for k,v in pairs(v) do
+      s = s .. string.format("%q = %q, ", k, v)
+    end
+    return s .. "}"
+  end
+  return v
+end
+
+local function find_port_and_field(names)
+  if type(names) ~= "table" then
+    names = {names}
+  end
+
+  for i, name in ipairs(names) do
+    for port_name, port in pairs(manager.machine.ioport.ports) do
+      for field_name, field in pairs(port.fields) do
+        if field_name == name then
+          return {port = port_name, field = field_name}
+        end
+      end
+    end
+  end
+  error("Unable to find port and field for " .. stringify(names))
 end
 
 local scan_for_mouse = false
@@ -91,6 +119,22 @@ elseif machine.system.name:match("^las.*128") then
   keyboard["Solid Apple"].field = "Solid Triangle"
   keyboard["Control"].field = { "Control", "Ctrl" } -- Updated in MAME 0.290
   keyboard["Reset"].field = { "RESET", "Reset" } -- Updated in MAME 0.290
+  keyboard["Escape"] = find_port_and_field({"Escape", "Esc"}) -- Updated in MAME 0.290
+  keyboard["Delete"] = find_port_and_field({"Delete"}) -- Updated in MAME 0.290
+  keyboard["Tab"] = find_port_and_field({"Tab"}) -- Updated in MAME 0.290
+
+  keyboard["Up Arrow"]    = find_port_and_field("↑")
+  keyboard["Left Arrow"]  = find_port_and_field("←")
+  keyboard["Right Arrow"] = find_port_and_field("→")
+  keyboard["Down Arrow"]  = find_port_and_field("↓")
+  keyboard["Return"]      = find_port_and_field("Return")
+
+  -- MAME 0.290
+  if manager.machine.devices[":kbdmcu"] ~= nil then
+    keyboard["Caps Lock"].test = function()
+      return manager.machine.devices[":kbdmcu"].state.P2.value < 128
+    end
+  end
 
 elseif machine.system.name:match("^apple2gs") then
   -- Apple IIgs
@@ -123,8 +167,12 @@ elseif machine.system.name:match("^apple2gs") then
 
     -- Other
     ["Reset"]     = { port = {":macadb:KEY5", ":adb:0:iigs_kbd:P2"}, field = "Reset / Power" },
-    ["Caps Lock"] = { port = {":macadb:KEY3", ":adb:0:iigs_kbd:CAPSLOCK"}, field = "Caps Lock", bits = 0x0200 },
   }
+  if manager.machine.ioport.ports[":adb:0:iigs_kbd:CAPSLOCK"] == nil then
+    keyboard["Caps Lock"] = { port = ":macadb:KEY3", field = "Caps Lock", bits = 0x200, value = 0x200 }
+  else
+    keyboard["Caps Lock"] = { port = ":adb:0:iigs_kbd:CAPSLOCK", field = "Caps Lock", bits = 0x1, value = 0x00 }
+  end
 elseif machine.system.name:match("^ace500") then
   -- Franklin ACE 500
   -- * has built-in mouse port
@@ -181,8 +229,8 @@ elseif machine.system.name:match("^prav8c") then
 
     -- Other
     ["Reset"]       = { port = ":kbd:KEY9", field = "Reset"     },
-    ["Caps Lock"]   = { port = ":kbd:KEY6", field = "Caps Lock", bits = 0x01 }, -- TODO: bits?
   }
+  -- TODO: Sort out Caps Lock; field ":kbd:KEY6" / "Caps Lock" but port bits don't toggle
 
 elseif machine.system.name:match("^apple2p") or machine.system.name:match("^apple2$") then
   -- minimal support for launcher testing
@@ -236,49 +284,46 @@ end
 -- General System Configuration
 --------------------------------------------------
 
---[[
-  `port_name` can be an array, in which case each name is tried
-  in turn. This can be used to work around port name changes in MAME, etc.
-]]
 local function get_port(port_name)
-  local port
-  if type(port_name) == "table" then
-    for i, v in ipairs(port_name) do
-      port = machine.ioport.ports[v]
-      if port ~= nil then
-        break
-      end
+  if type(port_name) ~= "table" then
+    port_name = {port_name}
+  end
+  for i, v in ipairs(port_name) do
+    local port = machine.ioport.ports[v]
+    if port ~= nil then
+      return port
     end
-  else
-    port = machine.ioport.ports[port_name]
   end
-  if port == nil then
-    error("No such port: " .. port_name)
-  end
-  return port
+
+  error("No such port: " .. stringify(port_name))
 end
 
 --[[
-  `field_name` can be an array, in which case each name is tried
-  in turn. This can be used to work around field name changes in MAME, etc.
+  `port_name` and `field_name` can be arrays array, in which case each
+  case name is tried in turn. This can be used to work around field
+  name changes in MAME, etc.
 ]]
 local function get_field(port_name, field_name)
-  local port = get_port(port_name)
-  local field
-  if type(field_name) == "table" then
-    for i, v in ipairs(field_name) do
-      field = port.fields[v]
-      if field ~= nil then
-        break
+  if type(port_name) ~= "table" then
+    port_name = {port_name}
+  end
+  if type(field_name) ~= "table" then
+    field_name = {field_name}
+  end
+
+  for pi,pv in ipairs(port_name) do
+    for pi,fv in ipairs(field_name) do
+      local port = manager.machine.ioport.ports[pv]
+      if port ~= nil then
+        local field = port.fields[fv]
+        if field ~= nil then
+          return field
+        end
       end
     end
-  else
-    field = port.fields[field_name]
   end
-  if field == nil then
-    error("No field \"" .. field_name .. "\" for port: " .. port_name)
-  end
-  return field
+
+  error("No field \"" .. stringify(field_name) .. "\" for port: " .. stringify(port_name))
 end
 
 function apple2.SetSystemConfig(port_name, field_name, mask, value)
@@ -289,8 +334,10 @@ function apple2.SetSystemConfig(port_name, field_name, mask, value)
     -- each field toggle advances to the next setting (or wraps)
     field:clear_value()
     emu.wait_next_frame()
+    emu.wait_next_frame() -- second call required on apple2c0, etc.
     field:set_value(1) -- anything
     emu.wait_next_frame()
+    emu.wait_next_frame() -- second call required on apple2c0, etc.
 
     if port:read() == initial then
       error("Cycled field \"" .. field_name .. "\" on port \"" .. port_name .. "\" without hitting target value")
@@ -451,8 +498,14 @@ function apple2.IsCapsLockOn()
   if key == nil then
     return false -- Apple ][+ compat
   end
+
+  -- Allow models to provide a custom hook for testing Caps Lock
+  if key.test then
+    return key.test()
+  end
+
   local bits = get_port(key.port):read()
-  return (bits & key.bits) ~= 0
+  return (bits & key.bits) == key.value
 end
 
 function apple2.ToggleCapsLock()
@@ -538,42 +591,42 @@ end
 
 function apple2.PressOA()
   press("Open Apple")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.ReleaseOA()
   release("Open Apple")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.PressSA()
   press("Solid Apple")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.ReleaseSA()
   release("Solid Apple")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.PressControl()
   press("Control")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.ReleaseControl()
   release("Control")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.PressShift()
   press("Shift")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.ReleaseShift()
   release("Shift")
-  emu.wait_next_frame()
+  wait_key_input()
 end
 
 function apple2.OAKey(key)

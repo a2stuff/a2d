@@ -47,6 +47,7 @@ for k,v in pairs({
     CALCULATOR             = 6,
     CHANGE_TYPE            = 8,
     FIND_FILES             = 9,
+    KEY_CAPS               = 10,
     RUN_BASIC_HERE         = 11,
     SORT_DIRECTORY         = 12,
     APPLE_EMPTY_SLOT       = 13,

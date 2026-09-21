@@ -80,8 +80,12 @@ function a2d.InitSystem()
   elseif system.name:match("^las.*128") then
     -- bit 3 = "Printer Type", 0="Serial", 1="Parallel"
     apple2.SetSystemConfig(":a2_config", "Printer type", 1 << 3, 0 << 3)
-    -- bit 6 = "40/80 Columns", 0="80 columns", 1="40 columns"
-    apple2.SetSystemConfig(":a2_config", "40/80 Columns", 1 << 6, 0 << 6)
+
+    if not system.name:match("^laser128") then
+      -- bit 6 = "40/80 Columns", 0="80 columns", 1="40 columns"
+      apple2.SetSystemConfig(":a2_config", "40/80 Columns", 1 << 6, 0 << 6)
+    end
+
     -- ":kbd_lang_select", mask=$FF="Keyboard", 0="QWERTY", 1="DVORAK"
     apple2.SetSystemConfig(":kbd_lang_select", "Keyboard", 0xFF, 0)
   end
