@@ -1368,9 +1368,8 @@ end
 --------------------------------------------------
 
 function apple2.WaitForBasicSystem(options)
-  if options == nil then
-    options = {}
-  end
+  options = util.default_options(options)
+
   if options.wait == nil then
     options.wait = 0.5
   end

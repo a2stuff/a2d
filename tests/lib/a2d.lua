@@ -247,9 +247,8 @@ end
 
 -- TODO: Use this in Reboot, etc.
 -- TODO: Ensure callers wait until idle, though
-function a2d.WaitForDesktopShowing(options, level)
-  if options == nil then options = {} end
-  if level == nil then level = 0 end
+function a2d.WaitForDesktopShowing(options)
+  options = util.default_options(options)
 
   function IsDesktopShowing()
     -- RDDHIRES is only on the IIc.
@@ -269,13 +268,14 @@ function a2d.WaitForDesktopShowing(options, level)
     return true
   end
 
-  util.WaitFor("desktop", IsDesktopShowing, options, level+1)
+  util.WaitFor("desktop", IsDesktopShowing, options)
 end
 
 -- NOTE: Used outside of DeskTop module (despite the name)
 function a2d.WaitForDesktopReady(options)
+  options = util.default_options(options)
   emu.wait(1 * TIME_SCALE) -- Don't check too soon and see old module
-  a2d.WaitForDesktopShowing(options, 1)
+  a2d.WaitForDesktopShowing(options)
   emu.wait(5 * TIME_SCALE) -- TODO: Something better here
   -- TODO: Some sort of assertion here
 end
@@ -447,16 +447,18 @@ function a2d.MouseKeysMoveByApproximately(x,y)
 end
 
 function a2d.Drag(src_x, src_y, dst_x, dst_y, options)
+  options = util.default_options(options)
+
   a2d.InMouseKeysMode(function(m)
       m.MoveToApproximately(src_x, src_y)
       m.ButtonDown()
       a2d.WaitForRepaint()
       m.MoveToApproximately(dst_x, dst_y)
 
-      if options and options.oa_drop then
+      if options.oa_drop then
         apple2.PressOA()
       end
-      if options and options.sa_drop then
+      if options.sa_drop then
         apple2.PressSA()
       end
 
@@ -464,10 +466,10 @@ function a2d.Drag(src_x, src_y, dst_x, dst_y, options)
       m.ButtonUp()
       emu.wait(1)
 
-      if options and options.oa_drop then
+      if options.oa_drop then
         apple2.ReleaseOA()
       end
-      if options and options.sa_drop then
+      if options.sa_drop then
         apple2.ReleaseSA()
       end
 

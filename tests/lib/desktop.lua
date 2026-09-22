@@ -443,16 +443,14 @@ function desktop.AddShortcut(path, options)
     WaitForDesktopSystemTask()
   end
 
-  if options then
-    if options.list_only == true then
-      a2d.OAShortcut("2")
-    end
+  if options.list_only == true then
+    a2d.OAShortcut("2")
+  end
 
-    if options.copy == "boot" then
-      a2d.OAShortcut("3")
-    elseif options.copy == "use" then
-      a2d.OAShortcut("4")
-    end
+  if options.copy == "boot" then
+    a2d.OAShortcut("3")
+  elseif options.copy == "use" then
+    a2d.OAShortcut("4")
   end
 
   a2d.DialogOK()

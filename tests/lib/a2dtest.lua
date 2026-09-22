@@ -117,13 +117,15 @@ function a2dtest.ExpectNoRepaint(func)
   a2dtest.ExpectRepaintFraction(0, 0.01, func, "should not have repainted", 1)
 end
 
-function a2dtest.ExpectRepaintFraction(min, max, func, message, level)
+function a2dtest.ExpectRepaintFraction(min, max, func, message, options)
+  options = util.default_options(options)
+  options.snap = true
   a2dtest.DHRDarkness()
   func()
   local fraction = RepaintFraction(darkness_ref, apple2.SnapshotDHR())
   test.Expect(min <= fraction and fraction <= max,
               string.format("%s - diff about %d%%", message, math.floor(fraction * 100)),
-              {snap=true}, level and level+1 or 1)
+              options)
 end
 
 function a2dtest.ExpectMenuNotHighlighted()
@@ -315,9 +317,11 @@ function a2dtest.ExpectAlertNotShowing()
 end
 
 function a2dtest.WaitForAlert(options)
+  options = util.default_options(options)
+
   util.WaitFor("alert", a2dtest.IsAlertShowing, options)
   emu.wait(0.5) -- let the alert finish drawing
-  if options and (options.match or options.imatch) then
+  if options.match or options.imatch then
     local ocr = a2dtest.OCRScreen({x1=130, y1=75, x2=470, y2=100})
     if options.imatch then
       ocr = ocr:upper()
@@ -415,7 +419,7 @@ local ocr_table = require("ocr_table")
 
 -- callback is invoked with (run, x, y)
 function a2dtest.OCRIterate(callback, options)
-  if options == nil then options = {} end
+  options = util.default_options(options)
 
   -- Grab screen pixels
   local dhr = apple2.SnapshotDHR()
@@ -496,7 +500,7 @@ function a2dtest.OCRIterate(callback, options)
 end
 
 function a2dtest.OCRScreen(options)
-  if options == nil then options = {} end
+  options = util.default_options(options)
 
   local str = ""
   local line = ""
@@ -542,7 +546,7 @@ function a2dtest.OCRScreen(options)
 end
 
 function a2dtest.OCRFrontWindowContent(options)
-  if options == nil then options = {} end
+  options = util.default_options(options)
 
   local x, y, w, h = a2dtest.GetFrontWindowContentRect()
   options.x1 = x

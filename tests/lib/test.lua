@@ -156,112 +156,117 @@ end
 -- Expectations
 --------------------------------------------------
 
-local function inc(level)
-  if level then
-    return level + 1
-  else
-    return 1
-  end
-end
-
-
-function test.Expect(expr, message, options, level)
+function test.Expect(expr, message, options)
+  options = util.default_options(options)
   if not expr then
-    if options and options.snap then
+    if options.snap then
       test.Snap(string.format("FAILURE - %s", message))
     end
-    error(string.format("Expectation failure: %s", message), inc(inc(level)))
+    error(string.format("Expectation failure: %s", message), options.level)
   end
 end
 
-function test.ExpectEquals(actual, expected, message, options, level)
+function test.ExpectEquals(actual, expected, message, options)
+  options = util.default_options(options)
   test.Expect(actual == expected,
               string.format("%s - actual %q should equal %q", message, actual, expected),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectEqualsIgnoreCase(actual, expected, message, options, level)
+function test.ExpectEqualsIgnoreCase(actual, expected, message, options)
+  options = util.default_options(options)
   test.Expect(actual:lower() == expected:lower(),
               string.format("%s - actual %q should equal %q", message, actual, expected),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectNotEquals(actual, expected, message, options, level)
+function test.ExpectNotEquals(actual, expected, message, options)
+  options = util.default_options(options)
   test.Expect(actual ~= expected,
               string.format("%s - actual %q should not equal %q", message, actual, expected),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectLessThan(a, b, message, options, level)
+function test.ExpectLessThan(a, b, message, options)
+  options = util.default_options(options)
   test.Expect(a < b,
               string.format("%s - actual %q should be < %q", message, a, b),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectLessThanOrEqual(a, b, message, options, level)
+function test.ExpectLessThanOrEqual(a, b, message, options)
+  options = util.default_options(options)
   test.Expect(a <= b,
               string.format("%s - actual %q should be <= %q", message, a, b),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectGreaterThan(a, b, message, options, level)
+function test.ExpectGreaterThan(a, b, message, options)
+  options = util.default_options(options)
   test.Expect(a > b,
               string.format("%s - actual %q should be > %q", message, a, b),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectGreaterThanOrEqual(a, b, message, options, level)
+function test.ExpectGreaterThanOrEqual(a, b, message, options)
+  options = util.default_options(options)
   test.Expect(a >= b,
               string.format("%s - actual %q should be >= %q", message, a, b),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectMatch(actual, pattern, message, options, level)
+function test.ExpectMatch(actual, pattern, message, options)
+  options = util.default_options(options)
   test.Expect(actual:match(pattern),
               string.format("%s - actual %q should match %q", message, actual, pattern),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectNotMatch(actual, pattern, message, options, level)
+function test.ExpectNotMatch(actual, pattern, message, options)
+  options = util.default_options(options)
   test.Expect(not actual:match(pattern),
               string.format("%s - actual %s should not match %q", message, actual, pattern),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectIMatch(actual, pattern, message, options, level)
+function test.ExpectIMatch(actual, pattern, message, options)
+  options = util.default_options(options)
   test.Expect(actual:match(util.CaseInsensitivePattern(pattern)),
               string.format("%s - actual %q should match %q", message, actual, pattern),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectNotIMatch(actual, pattern, message, options, level)
+function test.ExpectNotIMatch(actual, pattern, message, options)
+  options = util.default_options(options)
   test.Expect(not actual:match(util.CaseInsensitivePattern(pattern)),
               string.format("%s - actual %s should not match %q", message, actual, pattern),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectError(pattern, func, message, options, level)
+function test.ExpectError(pattern, func, message, options)
+  options = util.default_options(options)
   local status, err = pcall(func)
   test.Expect(not status,
               string.format("saw no error; %s", message),
-              options, inc(level))
+              options)
   test.Expect(string.match(err, pattern),
               string.format("%s, error was %q", message, err),
-              options, inc(level))
+              options)
 end
 
-function test.ExpectBinaryEquals(a, b, message, options, level)
+function test.ExpectBinaryEquals(a, b, message, options)
+  options = util.default_options(options)
   if a == b then
     return
   end
   test.Expect(#a == #b,
               string.format("%s - sizes differ %d vs. %d", message, #a, #b),
-              options, inc(level))
+              options)
   for i = 1, #a do
-    local ba, bb = a:sub(i,i):byte(), b.sub(i,i):byte()
+    local ba, bb = a:sub(i,i):byte(), b:sub(i,i):byte()
     test.Expect(ba == bb,
                 string.format("%s - bytes differ at index %d - 0x%02X vs. 0x%02X", message, i, ba, bb),
-                options, inc(level))
+                options)
   end
 end
 

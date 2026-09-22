@@ -6,18 +6,16 @@
 
 local util = {}
 
-function util.WaitFor(message, func, options, level)
+function util.WaitFor(message, func, options)
+  options = util.default_options(options)
   local timeout = 60
   local scale = 20
   local wait = 1 / scale
-  if options and options.timeout then
+  if options.timeout then
     timeout = options.timeout
   end
-  if options and options.wait then
+  if options.wait then
     wait = options.wait
-  end
-  if level == nil then
-    level = 1
   end
   for i = 1, timeout*scale do
     if func() then
@@ -25,16 +23,15 @@ function util.WaitFor(message, func, options, level)
     end
     emu.wait(wait)
   end
-  error(string.format("Timeout (%ds) waiting for %s", timeout, message), level + 2)
+  error(string.format("Timeout (%ds) waiting for %s", timeout, message), options.level)
 end
 
 function util.WaitForNoError(func, options)
+  options = util.default_options(options)
+
   local timeout = 60
-  if options and options.timeout then
+  if options.timeout then
     timeout = options.timeout
-  end
-  if level == nil then
-    level = 1
   end
   for i = 1, timeout do
     if func() then
@@ -71,6 +68,28 @@ function util.GetSymbols(envar)
   return symbols
 end
 
+
+--[[
+  Usage:
+
+    function MyExpectFunc(..., options)
+      options = util.default_options(options)
+
+      -- `options` is definitely a table
+      if options.foo then ... end
+
+      -- returns a copy, so this doesn't mutate the caller's copy
+      options.extra = true
+
+      -- options.level automagically set/incremented; will show the
+      -- *caller* of this function as error source.
+      if bad then error("bad", options.level) end
+
+      -- if passed on to other such functions, so the correct caller
+      -- will be shown.
+      OtherExpectFunc(..., options)
+  end
+]]
 function util.default_options(o)
   local options = {}
   if o then
