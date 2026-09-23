@@ -6,6 +6,12 @@ Project Page: https://github.com/a2stuff/a2d
 
 ## 1.6 Alpha
 
+The focus of the v1.6 release has been stability and responsiveness, rather than new features.
+
+Significant work went into an automated test harness utilizing the [MAME](https://www.mamedev.org) emulation framework. Scripts can be written to exercise changes and detect regressions. The extensive list of manual verification test cases has been converted to test scripts. Some manual verification is still required, and even the MAME emulation is not a perfect replica of real hardware, but this effort has led to fewer regressions and more confident improvements. Version 1.6 should be the most stable so far.
+
+An 8-bit Apple II running at 1MHz will never be a perfect platform for a graphical user interface, but two big changes in v1.6 improve the experience. The first is to align redrawing the mouse cursor with “vertical blanking” periods when the display is not updated, to eliminate the cursor flickering when the user moves the mouse. The second is to reduce the times when the cursor is temporarily hidden while other parts of the screen are updated. Neither of these are perfect and there is room for further improvement. Combined with other performance improvements, the overall experience should feel more solid.
+
 ### New Features
 
 * Add "Startup.Items" folder support.
