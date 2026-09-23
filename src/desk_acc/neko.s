@@ -490,10 +490,10 @@ finish: jmp     InputLoop
         jsr     CopyEventDataToMain
         jsr     GetWindowRect
         sub16   win_rect::x2, screentowindow_params::windowx, tmpw
-        cmp16   #aux::kGrowBoxWidth, tmpw
+        ucmp16  #aux::kGrowBoxWidth, tmpw
         bcc     HandleDrag::finish
         sub16   win_rect::y2, screentowindow_params::windowy, tmpw
-        cmp16   #aux::kGrowBoxHeight, tmpw
+        ucmp16  #aux::kGrowBoxHeight, tmpw
         bcc     HandleDrag::finish
 
         ;; Initiate the grow... re-using the drag logic
@@ -806,7 +806,7 @@ set_frame:
         sub16   win_rect::x2, win_rect::x1, tmp16
         sub16_8 tmp16, #kNekoWidth-1, tmp16
 
-    IF cmp16 x_pos, tmp16 : GE
+    IF ucmp16 x_pos, tmp16 : GE
         copy16  tmp16, x_pos
         iny
     END_IF
@@ -814,7 +814,7 @@ set_frame:
         sub16   win_rect::y2, win_rect::y1, tmp16
         sub16_8 tmp16, #kNekoHeight + aux::kGrowBoxHeight, tmp16
 
-    IF cmp16 y_pos, tmp16 : GE
+    IF ucmp16 y_pos, tmp16 : GE
         copy16  tmp16, y_pos
         iny
     END_IF

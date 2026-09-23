@@ -288,7 +288,7 @@ test:
     IF NEG
         sub16   #0, delta, delta ; negate
     END_IF
-        cmp16   delta, #kMoveThresholdX
+        ucmp16  delta, #kMoveThresholdX
         bcs     moved
 
         ;; Compute absolute Y delta
@@ -297,7 +297,7 @@ test:
     IF NEG
         sub16   #0, delta, delta ; negate
     END_IF
-        cmp16   delta, #kMoveThresholdY
+        ucmp16  delta, #kMoveThresholdY
         bcs     moved
 
         ;; Hasn't moved enough
@@ -346,9 +346,9 @@ common:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         sub16   winfo::maprect::x2, mx, tmpw
-    IF cmp16 #kGrowBoxWidth, tmpw : GE
+    IF ucmp16 #kGrowBoxWidth, tmpw : GE
         sub16   winfo::maprect::y2, my, tmpw
-      IF cmp16 #kGrowBoxHeight, tmpw : GE
+      IF ucmp16 #kGrowBoxHeight, tmpw : GE
 
         ;; Initiate the grow... re-using the drag logic
         copy8   #kDAWindowId, dragwindow_params::window_id
@@ -560,9 +560,9 @@ skip_erase_flag:        .byte   0 ; bit7
         copy16  yy, rect+MGTK::Rect::y1
         copy16  yy, rect+MGTK::Rect::y2
 
-        cmp16   yy, inner_oval+OvalRec::top
+        ucmp16  yy, inner_oval+OvalRec::top
         bcc     outer_only
-        cmp16   yy, inner_oval+OvalRec::bottom
+        ucmp16  yy, inner_oval+OvalRec::bottom
         bcs     outer_only
 
         ;; Need to draw the left and right edges
@@ -584,7 +584,7 @@ outer_only:
 
 next:
         inc16   yy
-    WHILE cmp16 yy, outer_oval+OvalRec::bottom : LT
+    WHILE ucmp16 yy, outer_oval+OvalRec::bottom : LT
 
         MGTK_CALL MGTK::UnshieldCursor
         rts
@@ -781,7 +781,7 @@ oval := $50
 
         ;; if (ovalWidth [16.0] > d0 [16.0])
         ;;   ovalWidth [16.0] = d0 [16.0]
-    IF cmp16 ovalWidth, d0 : LT
+    IF ucmp16 ovalWidth, d0 : LT
         copy16  d0, ovalWidth
     END_IF
 
@@ -790,7 +790,7 @@ oval := $50
 
         ;; if (ovalHeight [16.0] > d0 [16.0])
         ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
-    IF cmp16 ovalHeight, d0 : LT
+    IF ucmp16 ovalHeight, d0 : LT
         copy16  d0, ovalHeight
     END_IF
 
@@ -980,11 +980,11 @@ rotate:
 
         ;; if (vert [16.0] < oval.top [16.0])
         ;;   return;
-        RTS_IF cmp16 vert, oval+OvalRec::top : LT
+        RTS_IF ucmp16 vert, oval+OvalRec::top : LT
 
         ;; if (vert [16.0] >= oval.bottom [16.0])
         ;;   return;
-        RTS_IF cmp16 vert, oval+OvalRec::bottom : GE
+        RTS_IF ucmp16 vert, oval+OvalRec::bottom : GE
 
         ;; d0 [16.0] = oval.y [16.0];
         copy16  oval+OvalRec::yy, d0
@@ -997,7 +997,7 @@ rotate:
 
 loop1:
         ;; while (oval.square [16.16] < oval.rSqYSq [32.0] ) {
-        cmp16   oval+OvalRec::square+2, oval+OvalRec::rSqYSq
+        ucmp16  oval+OvalRec::square+2, oval+OvalRec::rSqYSq
         jcs     endloop1
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16];
@@ -1021,7 +1021,7 @@ endloop1:
 
 loop2:
         ;; while (oval.square [16.16] > oval.rSqYSq [32.0]) {
-        cmp16   oval+OvalRec::square+2, oval+OvalRec::rSqYSq
+        ucmp16  oval+OvalRec::square+2, oval+OvalRec::rSqYSq
         jcc     endloop2
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] - oval.oneHalf [16.16];

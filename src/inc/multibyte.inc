@@ -750,16 +750,16 @@
 
 ;;; Unsigned compare 16-bit values - test C (BCC/BCS) for ordering
 ;;; WARNING: Z (for equality) is NOT set per CMP; use ecmp16 if needed.
-;;;    cmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
-;;;    cmp16 #$1111, $2222     ; immediate, absolute
-;;;    cmp16 $1111, #$2222     ; absolute, immediate
-;;;    cmp16 $1111, $2222      ; absolute, absolute
-;;;    cmp16 $1111,x, $2222    ; indexed, absolute
-;;;    cmp16 $1111, $2222,x    ; absolute, indexed
-;;;    cmp16 $1111,x, #$2222   ; indexed, immediate
-;;;    cmp16 #$1111, $2222,x   ; immediate, indexed
-;;;    cmp16 $1111,x, $2222,x  ; indexed, indexed
-.macro cmp16 arg1, arg2, arg3, arg4
+;;;    ucmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
+;;;    ucmp16 #$1111, $2222     ; immediate, absolute
+;;;    ucmp16 $1111, #$2222     ; absolute, immediate
+;;;    ucmp16 $1111, $2222      ; absolute, absolute
+;;;    ucmp16 $1111,x, $2222    ; indexed, absolute
+;;;    ucmp16 $1111, $2222,x    ; absolute, indexed
+;;;    ucmp16 $1111,x, #$2222   ; indexed, immediate
+;;;    ucmp16 #$1111, $2222,x   ; immediate, indexed
+;;;    ucmp16 $1111,x, $2222,x  ; indexed, indexed
+.macro ucmp16 arg1, arg2, arg3, arg4
     .if (_is_register {arg2}) && (_is_register {arg4})
         ;; indexed, indexed
         lda     arg1,arg2
@@ -800,14 +800,14 @@
 ;;; NOTE: Some callers rely on A's bit7 implicitly matching result in N.
 .macro scmp16 arg1, arg2, arg3, arg4
         .local @skip
-        cmp16 arg1,arg2,arg3,arg4
+        ucmp16 arg1,arg2,arg3,arg4
         bvc     @skip
         eor     #$80
 @skip:
 .endmacro
 
 ;;; Equality compare 16-bit values - test Z (BEQ/BNE) for equality, or C (BCC/BCS) for ordering.
-;;; NOTE: Use cmp16 (smaller code) if Z is not needed.
+;;; NOTE: Use ucmp16 (smaller code) if Z is not needed.
 ;;;    ecmp16 #$1111, #$2222   ; immediate, immediate (silly, but supported)
 ;;;    ecmp16 #$1111, $2222    ; immediate, absolute
 ;;;    ecmp16 $1111, #$2222    ; absolute, immediate

@@ -86,7 +86,7 @@ END_PARAM_BLOCK
 
 .ifdef DEBUG
         ;; Bad if param block overlaps our zero page useage
-    IF cmp16 params_addr, #zp_end : LT
+    IF ucmp16 params_addr, #zp_end : LT
         brk
     END_IF
 .endif ; DEBUG
@@ -1107,7 +1107,7 @@ find_icon:
         lda     (win_ptr),y
         copy16in (win_ptr),y, headery
         add16_8 headery, header_height
-    IF cmp16 findwindow_params::mousey, headery : GE
+    IF ucmp16 findwindow_params::mousey, headery : GE
         RETURN  C=0
     END_IF
 

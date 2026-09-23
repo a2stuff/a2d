@@ -991,7 +991,7 @@ noop:
         ;; ... and get info
         MLI_CALL GET_FILE_INFO, get_file_info_params4
     IF CC
-        cmp16   #2, get_file_info_params4::blocks_used
+        ucmp16  #2, get_file_info_params4::blocks_used
         ;; Ensure at least something was written to the file
         ;; (uses 1 block at creation)
     END_IF

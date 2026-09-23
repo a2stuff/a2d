@@ -261,7 +261,9 @@ SomeRoutine := SomeRoutineImpl::start
 The following macros should be used to improve code readability by eliminating repetition:
 
 * pseudo-ops:
-  * `add16`/`sub16`/`cmp16`/`lsr16`/`asl16`/`inc16`/`dec16` for 16-bit operations
+  * `add16`/`sub16`/`lsr16`/`asl16`/`inc16`/`dec16` for 16-bit operations
+  * `ucmp16`/`scmp16`/`ecmp16` for unsigned/signed/equality 16-bit comparisons
+  * `ucmp8` for consistency
   * `ldax`/`ldxy`/`stax`/`stxy` for 16-bit load/stores
   * `copy8`/`copy16` for load-then-store
   * `jcc`/`jeq`/etc for long branches

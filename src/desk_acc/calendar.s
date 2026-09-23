@@ -326,7 +326,7 @@ first_dow:
 
         copy8   #12, datetime + ParsedDateTime::month
 year:   dec16   datetime + ParsedDateTime::year
-check:  cmp16   datetime + ParsedDateTime::year, #1901
+check:  ucmp16  datetime + ParsedDateTime::year, #1901
         bcs     fin
         copy16  #2155, datetime + ParsedDateTime::year
 
@@ -354,7 +354,7 @@ fin:    jsr     UpdateWindow
 
         copy8   #1, datetime + ParsedDateTime::month
 year:   inc16   datetime + ParsedDateTime::year
-check:  cmp16   datetime + ParsedDateTime::year, #2155
+check:  ucmp16  datetime + ParsedDateTime::year, #2155
         bcc     fin
         copy16  #1901, datetime + ParsedDateTime::year
 

@@ -522,7 +522,7 @@ offset_table:
         and     #kMachIDHasClock
       IF NOT_ZERO
 
-       IF cmp16 event_params::xcoord, rect_clock::x1 : GE
+       IF ucmp16 event_params::xcoord, rect_clock::x1 : GE
         TAIL_CALL LaunchPassedPathOnSystemDisk, AX=#str_date_and_time
        END_IF
       END_IF
@@ -4984,7 +4984,7 @@ _PreamblePreCached:
         jsr     UpdateViewportAndRedrawActiveWindowEntriesAfterScroll
 
         ;; Handle offset case - may be able to deactivate scrollbar now
-      IF cmp16 width, bbox_w : GE
+      IF ucmp16 width, bbox_w : GE
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
         CALL    _CheckDeactivate, X=#MGTK::Point::xcoord
        IF POS
@@ -5001,7 +5001,7 @@ _PreamblePreCached:
         jsr     UpdateViewportAndRedrawActiveWindowEntriesAfterScroll
 
         ;; Handle offset case - may be able to deactivate scrollbar now
-      IF cmp16 height, bbox_h : GE
+      IF ucmp16 height, bbox_h : GE
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
         CALL    _CheckDeactivate, X=#MGTK::Point::ycoord
        IF POS
@@ -6326,9 +6326,9 @@ no_win:
         beq     use_minw        ; `iconbb_rect` is bogus if there are no icons
 
         ;; Check if width is < min or > max
-        cmp16   bbox_dx, #kMinWindowWidth
+        ucmp16  bbox_dx, #kMinWindowWidth
         bcc     use_minw
-        cmp16   bbox_dx, #kMaxWindowWidth
+        ucmp16  bbox_dx, #kMaxWindowWidth
         bcs     use_maxw
         ldax    bbox_dx
         bcc     assign_width    ; always
@@ -6355,9 +6355,9 @@ assign_width:
         beq     use_minh        ; `iconbb_rect` is bogus if there are no icons
 
         ;; Check if height is < min or > max
-        cmp16   bbox_dy, #kMinWindowHeight
+        ucmp16  bbox_dy, #kMinWindowHeight
         bcc     use_minh
-        cmp16   bbox_dy, #kMaxWindowHeight
+        ucmp16  bbox_dy, #kMaxWindowHeight
         bcs     use_maxh
         ldax    bbox_dy
         bcc     assign_height   ; always
@@ -6699,7 +6699,7 @@ set_pos:
 
         CLEAR_BIT7_FLAG frac_flag
 
-    IF cmp16 value, #20 : LT
+    IF ucmp16 value, #20 : LT
         lsr16   value           ; Convert blocks to K, rounding up
         ror     frac_flag       ; If < 10k and odd, show ".5" suffix"
     ELSE
@@ -9007,9 +9007,9 @@ test_size:
         CALL    GetBlockCount, A=block_params::unit_num
     IF CC
         stax    blocks
-        cmp16   blocks, #kMax525FloppyBlocks+1
+        ucmp16  blocks, #kMax525FloppyBlocks+1
         bcc     f525
-        cmp16   blocks, #kMax35FloppyBlocks+1
+        ucmp16  blocks, #kMax35FloppyBlocks+1
         bcc     f35
     END_IF
 
@@ -10165,7 +10165,7 @@ eof:    RETURN  A=#$FF
         jsr     _OpenSrcDir
 
 :
-    IF cmp16 entry_index_in_dir, target_index : LT
+    IF ucmp16 entry_index_in_dir, target_index : LT
         jsr     _ReadFileEntry
         jmp     :-
     END_IF
@@ -10416,7 +10416,7 @@ retry:  jsr     GetSrcFileInfo
         bit     operations::operation_flags
         ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, ::N_FLAG_MASK
     IF NS
-      IF cmp16 dst_vol_blocks_free, block_count : LT
+      IF ucmp16 dst_vol_blocks_free, block_count : LT
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_ramcard_full
         jmp     CloseFilesCancelDialogWithFailedResult
       END_IF
@@ -10591,7 +10591,7 @@ retry:  jsr     GetDstFileInfo
 
         add16   dst_vol_blocks_free, dst_file_info_params::blocks_used, blocks_free
 
-    IF cmp16 blocks_free, src_file_info_params::blocks_used : GE
+    IF ucmp16 blocks_free, src_file_info_params::blocks_used : GE
         ;; Assume those blocks will be used
         sub16   blocks_free, src_file_info_params::blocks_used, dst_vol_blocks_free
         RETURN  C=0

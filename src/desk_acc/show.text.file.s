@@ -452,7 +452,7 @@ ret:    rts
         jsr     IsAtTop
         beq     ret
 
-        cmp16   first_visible_line, #kLineScrollDelta ; would be too far?
+        ucmp16  first_visible_line, #kLineScrollDelta ; would be too far?
         bcc     ForceScrollTop                        ; yes, clamp to top
         sub16   first_visible_line, #kLineScrollDelta, first_visible_line
         jsr     UpdateScrollPos
@@ -464,7 +464,7 @@ ret:    rts
         jsr     IsAtTop
         beq     ret
 
-        cmp16   first_visible_line, #kPageScrollDelta ; would be too far?
+        ucmp16  first_visible_line, #kPageScrollDelta ; would be too far?
         bcc     ForceScrollTop                        ; yes, clamp to top
         sub16   first_visible_line, #kPageScrollDelta, first_visible_line
         jsr     UpdateScrollPos
@@ -488,7 +488,7 @@ ForceScrollTop := ScrollTop::force
         beq     ret
 
         add16   first_visible_line, #kLineScrollDelta, first_visible_line
-        cmp16   first_visible_line, max_visible_line ; too far down?
+        ucmp16  first_visible_line, max_visible_line ; too far down?
         bcs     ForceScrollBottom                    ; yes, clamp to bottom
         jsr     UpdateScrollPos
 
@@ -500,7 +500,7 @@ ret:    rts
         beq     ret
 
         add16   first_visible_line, #kPageScrollDelta, first_visible_line
-        cmp16   first_visible_line, max_visible_line ; too far down?
+        ucmp16  first_visible_line, max_visible_line ; too far down?
         bcs     ForceScrollBottom                    ; yes, clamp to bottom
         jsr     UpdateScrollPos
 
@@ -658,8 +658,8 @@ end:    rts
         copy8   #0, tab_flag
 
         ldx     #0
-      IF cmp16 current_line, first_visible_line : GE
-       IF cmp16 last_visible_line, current_line : GE
+      IF ucmp16 current_line, first_visible_line : GE
+       IF ucmp16 last_visible_line, current_line : GE
         inx
        END_IF
       END_IF
@@ -706,7 +706,7 @@ end:    rts
        END_IF
 
         ;; EOF? If so, stop!
-        cmp16   cur_offset, get_eof_params::eof
+        ucmp16  cur_offset, get_eof_params::eof
         bcs     done
       ELSE
         ;; Just rendering what's visible. Are we done?
@@ -802,7 +802,7 @@ loop:
         inc     run_width+1
 :
         ;; Is there room?
-    IF cmp16 remaining_width, run_width : GE
+    IF ucmp16 remaining_width, run_width : GE
         inc     drawtext_params::textlen
         jmp     loop
     END_IF
@@ -838,7 +838,7 @@ run_width:  .word   0
         add16   run_width, line_pos::left, line_pos::left
         ldx     #0
 loop:
-    IF cmp16 times70,x, line_pos::left : LT
+    IF ucmp16 times70,x, line_pos::left : LT
         inx
         inx
         cpx     #14
@@ -966,7 +966,7 @@ prep:   lda     #$00
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc OnTitleBarClick
-        cmp16   event_params::xcoord, mode_mapinfo_viewloc_xcoord
+        ucmp16  event_params::xcoord, mode_mapinfo_viewloc_xcoord
         bcs     ToggleMode
         RETURN  C=0             ; Click ignored
 .endproc ; OnTitleBarClick

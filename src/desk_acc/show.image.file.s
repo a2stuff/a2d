@@ -356,7 +356,7 @@ exit_hook := MaybeCallExitHook::hook
     END_IF
 
         ;; If bigger than 576, assume HR
-    IF cmp16 get_eof_params::eof, #kMinipixSrcSize+1 : GE
+    IF ucmp16 get_eof_params::eof, #kMinipixSrcSize+1 : GE
         TAIL_CALL ShowHRFile
     END_IF
 

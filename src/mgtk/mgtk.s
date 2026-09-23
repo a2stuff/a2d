@@ -7893,7 +7893,7 @@ no_goaway:
         ;; Add padding to left of title
         sub16_8 right, #kTitleXInset
 
-    IF cmp16 right, left : POS  ; skip if degenerate
+    IF ucmp16 right, left : POS  ; skip if degenerate
         jsr     PaintRectImpl
     END_IF
 

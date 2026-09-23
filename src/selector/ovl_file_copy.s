@@ -140,7 +140,7 @@ saved_stack:
 
         blocks := $06
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks
-    IF cmp16 blocks, block_count : LT
+    IF ucmp16 blocks, block_count : LT
         jmp     ShowDiskFullError
     END_IF
 

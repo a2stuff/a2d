@@ -380,7 +380,7 @@ hit:    lda     winfo::window_id
         jsr     ScaleSpeed
 
         ;; Max out the meter
-    IF cmp16 progress_muldiv_params::result, #kMeterWidth : GE
+    IF ucmp16 progress_muldiv_params::result, #kMeterWidth : GE
         copy16  #kMeterWidth, progress_muldiv_params::result
         MGTK_CALL MGTK::SetPattern, pattern_plaid
     END_IF
@@ -416,7 +416,7 @@ hit:    lda     winfo::window_id
         sta     upper_bound
         lda     speed_ticks + .sizeof(SpeedTick) + 1,x
         sta     upper_bound+1
-    IF cmp16 counter, upper_bound : LT
+    IF ucmp16 counter, upper_bound : LT
         jmp     interpolate
     END_IF
 

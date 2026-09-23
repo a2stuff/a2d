@@ -278,10 +278,10 @@ finish:
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         sub16   winfo::maprect::x2, screentowindow_params::windowx, tmpw
-        cmp16   #kGrowBoxWidth, tmpw
+        ucmp16  #kGrowBoxWidth, tmpw
         bcc     HandleDrag::finish
         sub16   winfo::maprect::y2, screentowindow_params::windowy, tmpw
-        cmp16   #kGrowBoxHeight, tmpw
+        ucmp16  #kGrowBoxHeight, tmpw
         bcc     HandleDrag::finish
 
         ;; Initiate the grow... re-using the drag logic

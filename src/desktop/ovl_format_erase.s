@@ -378,7 +378,7 @@ END_PARAM_BLOCK
         copy16  #buf, string_width_params::str
       DO
         MGTK_CALL MGTK::StringWidth, string_width_params
-        BREAK_IF cmp16 string_width_params::width, #kVolPickerItemWidth : LT
+        BREAK_IF ucmp16 string_width_params::width, #kVolPickerItemWidth : LT
         ;; Shrink by one character, replace last 3 with "..."
         dec     buf
         ldy     buf
