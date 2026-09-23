@@ -137,10 +137,11 @@ test.Step(
       apple2.EscapeKey()
       a2dtest.WaitForSystemTask()
     end
-    function ExpectPicture(n)
+    function ExpectPicture(n, options)
+      options = util.default_options(options)
       test.Expect(
         a2dtest.CompareDHR(pics[n], apple2.SnapshotDHR()),
-        "should be picture " .. n, {}, 1)
+        "should be picture " .. n, options)
     end
 
     desktop.InvokePath("/TESTS/PREVIEW/IMAGE/PICTURE1", {no_wait=true})

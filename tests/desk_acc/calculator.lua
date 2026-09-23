@@ -12,11 +12,12 @@ function OCRDisplay()
   return ocr:gsub("%s", "")
 end
 
-function ExpectExpression(expr, result)
+function ExpectExpression(expr, result, options)
+  options = util.default_options(options)
   apple2.Type(expr)
   a2dtest.WaitForSystemTask()
   local ocr = OCRDisplay()
-  test.ExpectEquals(ocr, result, string.format("result of %q", expr), {}, 1)
+  test.ExpectEquals(ocr, result, string.format("result of %q", expr), options)
   apple2.EscapeKey()
 end
 
@@ -256,7 +257,7 @@ test.Step(
       local p2 = "^" .. pattern:gsub("%.", "%%."):gsub("%-", "%%-") .. "$"
       a2dtest.WaitForSystemTask()
       local ocr = OCRDisplay()
-      test.ExpectMatch(ocr, p2, "result", {}, 1)
+      test.ExpectMatch(ocr, p2, "result", util.default_options())
       apple2.EscapeKey()
     end
 

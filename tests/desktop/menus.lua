@@ -9,10 +9,10 @@ local vol_icon_x, vol_icon_y = a2dtest.GetSelectedIconCoords()
 desktop.ClearSelection()
 
 function disabled(r, str)
-  test.ExpectNotMatch(r, str, str .. " should be disabled", {}, 1)
+  test.ExpectNotMatch(r, str, str .. " should be disabled", util.default_options())
 end
 function enabled(r, str)
-  test.ExpectMatch(r, str, str .. " should be enabled", {}, 1)
+  test.ExpectMatch(r, str, str .. " should be enabled", util.default_options())
 end
 
 test.Step(

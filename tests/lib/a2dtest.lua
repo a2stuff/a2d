@@ -65,17 +65,21 @@ function a2dtest.SnapshotDHRWithoutClock()
   end
   return dhr
 end
-function a2dtest.ExpectUnchangedExceptClock(dhr, message)
+function a2dtest.ExpectUnchangedExceptClock(dhr, message, options)
+  options = util.default_options(options)
+  options.snap = true
   local new = a2dtest.SnapshotDHRWithoutClock()
-  test.Expect(a2dtest.CompareDHR(dhr, new, true), message, {snap=true}, 1)
+  test.Expect(a2dtest.CompareDHR(dhr, new, true), message, options)
 end
 
 -- The above, wrapped into a helper that takes a callback
-function a2dtest.ExpectNothingChanged(func)
+function a2dtest.ExpectNothingChanged(func, options)
+  options = util.default_options(options)
+  options.snap = true
   local dhr = a2dtest.SnapshotDHRWithoutClock()
   func()
   local new = a2dtest.SnapshotDHRWithoutClock()
-  test.Expect(a2dtest.CompareDHR(dhr, new, true), "nothing should have changed", {snap=true}, 1)
+  test.Expect(a2dtest.CompareDHR(dhr, new, true), "nothing should have changed", options)
 end
 
 --------------------------------------------------
@@ -105,16 +109,19 @@ end
 
 --------------------------------------------------
 
-function a2dtest.ExpectFullRepaint(func)
-  a2dtest.ExpectRepaintFraction(0.9, 1.0, func, "should be full repaint", 1)
+function a2dtest.ExpectFullRepaint(func, options)
+  options = util.default_options(options)
+  a2dtest.ExpectRepaintFraction(0.9, 1.0, func, "should be full repaint", options)
 end
 
-function a2dtest.ExpectMinimalRepaint(func)
-  a2dtest.ExpectRepaintFraction(0, 0.5, func, "should be minimal repaint", 1)
+function a2dtest.ExpectMinimalRepaint(func, options)
+  options = util.default_options(options)
+  a2dtest.ExpectRepaintFraction(0, 0.5, func, "should be minimal repaint", options)
 end
 
-function a2dtest.ExpectNoRepaint(func)
-  a2dtest.ExpectRepaintFraction(0, 0.01, func, "should not have repainted", 1)
+function a2dtest.ExpectNoRepaint(func, options)
+  options = util.default_options(options)
+  a2dtest.ExpectRepaintFraction(0, 0.01, func, "should not have repainted", options)
 end
 
 function a2dtest.ExpectRepaintFraction(min, max, func, message, options)
@@ -128,14 +135,16 @@ function a2dtest.ExpectRepaintFraction(min, max, func, message, options)
               options)
 end
 
-function a2dtest.ExpectMenuNotHighlighted()
+function a2dtest.ExpectMenuNotHighlighted(options)
+  options = util.default_options(options)
   for col = 0,apple2.SCREEN_COLUMNS-1 do
-    test.ExpectEquals(apple2.GetDHRByte(0, col), 0x7F, "Menu should not be highlighted", {}, 1)
+    test.ExpectEquals(apple2.GetDHRByte(0, col), 0x7F, "Menu should not be highlighted", options)
   end
 end
 
-function a2dtest.ExpectClockVisible()
-  test.ExpectNotEquals(apple2.GetDHRByte(4, 78), 0x7F, "Clock should be visible", {}, 1)
+function a2dtest.ExpectClockVisible(options)
+  options = util.default_options(options)
+  test.ExpectNotEquals(apple2.GetDHRByte(4, 78), 0x7F, "Clock should be visible", options)
 end
 
 --------------------------------------------------
@@ -312,12 +321,14 @@ function a2dtest.IsAlertShowing()
   return true
 end
 
-function a2dtest.ExpectAlertNotShowing()
-  test.Expect(not a2dtest.IsAlertShowing(), "an alert should not be showing", nil, 1)
+function a2dtest.ExpectAlertNotShowing(options)
+  options = util.default_options(options)
+  test.Expect(not a2dtest.IsAlertShowing(), "an alert should not be showing", options)
 end
 
 function a2dtest.WaitForAlert(options)
   options = util.default_options(options)
+  options.snap = true
 
   util.WaitFor("alert", a2dtest.IsAlertShowing, options)
   emu.wait(0.5) -- let the alert finish drawing
@@ -327,7 +338,7 @@ function a2dtest.WaitForAlert(options)
       ocr = ocr:upper()
       options.match = options.imatch:upper()
     end
-    test.ExpectMatch(ocr, options.match, "alert should match " .. options.match, {snap=true}, 1)
+    test.ExpectMatch(ocr, options.match, "alert should match " .. options.match, options)
   end
 end
 
@@ -586,13 +597,14 @@ end
 
 function a2dtest.VerifyFilesRemainingCountdown(frames, message)
   local last = nil
+  options = util.default_options()
 
   for i = 1, frames/2 do
     local count = a2dtest.GetFilesRemainingCount()
     if count then
       test.Expect(not last or count <= last,
                   string.format("%s - should only count down, saw %q -> %q", message, last, count),
-                  {}, 1)
+                  options)
 
       last = count
     elseif last then
@@ -605,7 +617,7 @@ function a2dtest.VerifyFilesRemainingCountdown(frames, message)
 
   test.ExpectEquals(last, 0,
               string.format("%s - progress should bottom out at 0", message),
-              {}, 1)
+              options)
 end
 
 --------------------------------------------------
