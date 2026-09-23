@@ -20,15 +20,11 @@
 PREDEFINE_SCOPE UpdateProgress
 
 .proc InitProgress
-        lda     #0
-        sta     UpdateProgress::count
+        copy8   #0, UpdateProgress::count
 
-        bit     supports_mousetext
-        bpl     done
-
+    IF bit supports_mousetext : NS
         CALL    VTABZ, A=#kProgressVtab
-        lda     #kProgressHtab
-        sta     OURCH
+        copy8   #kProgressHtab, OURCH
 
         ;; Enable MouseText
         CALL    COUT, A=#$0F|$80
@@ -36,26 +32,25 @@ PREDEFINE_SCOPE UpdateProgress
 
         ;; Draw progress track (alternating checkerboards)
         ldx     #kProgressWidth
-    DO
+      DO
         CALL    COUT, A=#'V'|$80
         dex
         BREAK_IF ZERO
 
         CALL    COUT, A=#'W'|$80
         dex
-    WHILE NOT_ZERO
+      WHILE NOT_ZERO
 
         ;; Disable MouseText
         CALL    COUT, A=#$18|$80
         CALL    COUT, A=#$0E|$80
-
-done:   rts
+    END_IF
+        rts
 .endproc ; InitProgress
 
 .proc UpdateProgress
         CALL    VTABZ, A=#kProgressVtab
-        lda     #kProgressHtab
-        sta     OURCH
+        copy8   #kProgressHtab, OURCH
 
         count := *+1
         lda     #0              ; must start as 0
@@ -67,8 +62,7 @@ done:   rts
         lda     #' '            ; inverse
     DO
         jsr     COUT
-        dex
-    WHILE NOT_ZERO
+    WHILE dex : NOT_ZERO
 
         rts
 .endproc ; UpdateProgress
@@ -80,14 +74,12 @@ done:   rts
 ;;; Output: Sets `supports_mousetext` to $80.
 
 .proc DetectMousetext
-        lda     ZIDBYTE
-        beq     enh    ; IIc/IIc+ have $00
-        cmp     #$E0   ; IIe original has $EA, Enh. IIe, IIgs have $E0
-        bne     done
-
-enh:    copy8   #$80, supports_mousetext
-
-done:   rts
+        ;; IIc/IIc+ have $00
+        ;; IIe original has $EA, Enh. IIe, IIgs have $E0
+    IF lda ZIDBYTE : ZERO OR A = #$E0
+        copy8   #$80, supports_mousetext
+    END_IF
+        rts
 .endproc ; DetectMousetext
 
 supports_mousetext:
