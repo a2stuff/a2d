@@ -13,8 +13,7 @@
         ldx     #kSigSize-1
     DO
         ldy     sig_offset,x
-        lda     (ptr),y
-        cmp     sig_value,x
+        ucmp8   (ptr),y, sig_value,x
         bne     not_found
     WHILE dex : POS
 

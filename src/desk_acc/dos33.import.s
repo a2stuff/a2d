@@ -280,8 +280,7 @@ port:           .addr   grafport_win
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
+        ucmp8   findwindow_params::which_area, #MGTK::Area::content
         bne     done
 
         lda     findwindow_params::window_id
@@ -598,8 +597,7 @@ remainder:      .word   0                 ; (out)
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
+        ucmp8   findwindow_params::which_area, #MGTK::Area::content
         bne     done
 
         lda     findwindow_params::window_id
@@ -947,11 +945,9 @@ index:  .byte   0
         ;; Read VTOC
         CALL    do_read, A=#dos33::VTOCTrack, X=#dos33::VTOCSector
         jcs     exit_error
-        lda     RWTS_SECTOR_BUF + dos33::VTOC::NumTracks
-        cmp     #35
+        ucmp8   RWTS_SECTOR_BUF + dos33::VTOC::NumTracks, #35
         jne     exit_error
-        lda     RWTS_SECTOR_BUF + dos33::VTOC::NumSectors
-        cmp     #16
+        ucmp8   RWTS_SECTOR_BUF + dos33::VTOC::NumSectors, #16
         jne     exit_error
 
         copy8   RWTS_SECTOR_BUF + dos33::VTOC::VolumeNumber, control_block+ControlBlock::volume_number
@@ -1422,11 +1418,9 @@ start:
         sta     read_block_params::unit_num
         JUMP_TABLE_MLI_CALL READ_BLOCK, read_block_params
     IF ZERO
-        lda     RWTS_BLOCK_BUF+1
-        cmp     #$A5
+        ucmp8   RWTS_BLOCK_BUF+1, #$A5
       IF EQ
-        lda     RWTS_BLOCK_BUF+2
-        cmp     #$27
+        ucmp8   RWTS_BLOCK_BUF+2, #$27
       END_IF
     END_IF
         rts

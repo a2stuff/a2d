@@ -112,8 +112,7 @@ parsed: .tag    ParsedDateTime
         ;; Compare
         ldx     #.sizeof(DateTime)-1
     DO
-        lda     datetime,x
-        cmp     last,x
+        ucmp8   datetime,x, last,x
         bne     diff
     WHILE dex : POS
         rts                     ; no change

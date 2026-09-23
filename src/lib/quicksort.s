@@ -134,8 +134,7 @@ tc2:    dey                     ; Y = lt - 1
 
         ;; while eq <= gt do
 loop:
-        lda     gt
-        cmp     eq
+        ucmp8   gt, eq
         RTS_IF LT
 
         lda     eq

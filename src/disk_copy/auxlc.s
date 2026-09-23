@@ -590,8 +590,7 @@ check_source_finish:
         lda     main::on_line_buffer2
         and     #NAME_LENGTH_MASK
     IF ZERO                     ; 0 signals error
-        lda     main::on_line_buffer2+1
-        cmp     #ERR_NOT_PRODOS_VOLUME
+        ucmp8   main::on_line_buffer2+1, #ERR_NOT_PRODOS_VOLUME
         jne     try_format      ; Some other error - proceed with format
     END_IF
 
@@ -1135,8 +1134,7 @@ params: .res    3
 ;;; Output: C=0 if Pascal volume, C=1 otherwise
 
 .proc IsPascalBootBlock
-        lda     default_block_buffer+1
-        cmp     #$E0
+        ucmp8   default_block_buffer+1, #$E0
         bne     fail
 
         lda     default_block_buffer+2
@@ -1155,11 +1153,9 @@ match:  RETURN  C=0
 ;;; Output: C=0 if DOS 3.3 volume, C=1 otherwise
 
 .proc IsDOS33BootBlock
-        lda     default_block_buffer+1
-        cmp     #$A5
+        ucmp8   default_block_buffer+1, #$A5
         bne     fail
-        lda     default_block_buffer+2
-        cmp     #$27
+        ucmp8   default_block_buffer+2, #$27
         beq     match
 
 fail:   RETURN  C=1
@@ -2167,18 +2163,15 @@ ShowAlertDialog := ShowAlertDialogImpl::start
         lda     main::on_line_buffer
         and     #NAME_LENGTH_MASK
         bne     done
-        lda     main::on_line_buffer+1
-        cmp     #ERR_NOT_PRODOS_VOLUME
+        ucmp8   main::on_line_buffer+1, #ERR_NOT_PRODOS_VOLUME
         beq     done
 
         jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, Alert::event_params
-        lda     Alert::event_kind
-        cmp     #MGTK::EventKind::key_down
+        ucmp8   Alert::event_kind, #MGTK::EventKind::key_down
         bne     @retry
 
-        lda     Alert::event_key
-        cmp     #CHAR_ESCAPE
+        ucmp8   Alert::event_key, #CHAR_ESCAPE
         bne     @retry
         RETURN  A=#$80
 

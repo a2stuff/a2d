@@ -601,8 +601,7 @@ append:
         .byte   SPCall::Status
         .addr   status_params
         bcs     next            ; call failed - skip it!
-        lda     dib_buffer+SPDIB::Device_Type_Code
-        cmp     #SPDeviceType::Disk525
+        ucmp8   dib_buffer+SPDIB::Device_Type_Code, #SPDeviceType::Disk525
         beq     next            ; is 5.25 - skip it!
 
         ;; Append the device
@@ -750,8 +749,7 @@ not_found:
         MLI_CALL GET_FILE_INFO, get_file_info_params
         jcs     end
 
-        lda     get_file_info_params::file_type
-        cmp     #FT_DIRECTORY
+        ucmp8   get_file_info_params::file_type, #FT_DIRECTORY
         jne     end
 
         MLI_CALL OPEN, open_params
@@ -798,12 +796,10 @@ process_block:
         lda     (dir_ptr),y
     IF A = #kDAFileType         ; DA? (must match type/auxtype)
         ldy     #FileEntry::aux_type
-        lda     (dir_ptr),y
-        cmp     #<kDAFileAuxType
+        ucmp8   (dir_ptr),y, #<kDAFileAuxType
         bne     next_entry
         iny
-        lda     (dir_ptr),y
-        cmp     #>kDAFileAuxType
+        ucmp8   (dir_ptr),y, #>kDAFileAuxType
         bne     next_entry
     END_IF
 
@@ -857,13 +853,11 @@ process_block:
 
 next_entry:
         ;; Room for more DAs?
-        lda     desk_acc_num
-        cmp     #kMaxDeskAccCount
+        ucmp8   desk_acc_num, #kMaxDeskAccCount
         bcs     close_dir
 
         ;; Any more entries in dir?
-        lda     entry_num
-        cmp     file_count
+        ucmp8   entry_num, file_count
         beq     close_dir
 
         ;; Any more entries in block?
@@ -1029,8 +1023,7 @@ pending_alert := FinalSetup::pending_alert
         jsr     main::save_restore_windows::Close
 
         ;; Validate file format version byte
-        lda     main::save_restore_windows::desktop_file_data_buf
-        cmp     #kDeskTopFileVersion
+        ucmp8   main::save_restore_windows::desktop_file_data_buf, #kDeskTopFileVersion
         jne     exit
 
         copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr

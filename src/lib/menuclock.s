@@ -27,8 +27,7 @@
         ;; Time changed?
         ldx     #.sizeof(DateTime)-1
     DO
-        lda     DATELO,x
-        cmp     last_dt,x
+        ucmp8   DATELO,x, last_dt,x
         bne     update
     WHILE dex : POS
 

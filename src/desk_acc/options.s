@@ -254,9 +254,9 @@ button_eor_table:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         bne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose

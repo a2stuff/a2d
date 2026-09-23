@@ -387,8 +387,7 @@ found:  ldx     num_file_names
 ;;; Trashes: A
 
 .proc _IsRootPath
-        lda     path_buf
-        cmp     #1
+        ucmp8   path_buf, #1
         rts
 .endproc ; _IsRootPath
 
@@ -1009,8 +1008,7 @@ do_entry:
 
 done_entry:
         inc     entry_in_block
-        lda     entry_index
-        cmp     num_file_names
+        ucmp8   entry_index, num_file_names
         bne     next
 
 close:  MLI_CALL CLOSE, close_params

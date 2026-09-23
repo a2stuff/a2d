@@ -135,18 +135,15 @@ continue:
 .proc _IsDAFile
         ;; Check file type
         ldy     #FileEntry::file_type
-        lda     (entry_ptr),y
-        cmp     #kDAFileType
+        ucmp8   (entry_ptr),y, #kDAFileType
         bne     nope
 
         ;; Check aux type
         ldy     #FileEntry::aux_type
-        lda     (entry_ptr),y
-        cmp     #<kDAFileAuxType
+        ucmp8   (entry_ptr),y, #<kDAFileAuxType
         bne     nope
         iny
-        lda     (entry_ptr),y
-        cmp     #>kDAFileAuxType
+        ucmp8   (entry_ptr),y, #>kDAFileAuxType
         bne     nope
 
         RETURN  C=0
@@ -169,8 +166,7 @@ nope:   RETURN  C=1
         ;; Yes, check characters
         ASSERT_EQUALS FileEntry::file_name, 1
     DO
-        lda     (entry_ptr),y
-        cmp     self_filename,y
+        ucmp8   (entry_ptr),y, self_filename,y
         bne     nope
     WHILE dey : NOT_ZERO
 
@@ -224,8 +220,7 @@ next_block:
 
 next_entry:
         ;; Advance to next entry
-        lda     entry_in_block
-        cmp     #kEntriesPerBlock
+        ucmp8   entry_in_block, #kEntriesPerBlock
         beq     next_block
 
         inc     entry_in_block

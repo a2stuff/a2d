@@ -1145,8 +1145,7 @@ UnpackRead := UnpackReadImpl::start
         pha
 
         inc     ptr+1
-        lda     ptr+1
-        cmp     #$40            ; did we hit page 2?
+        ucmp8   ptr+1, #$40     ; did we hit page 2?
         bne     exit
         copy8   #$20, ptr+1     ; yes, back to page 1
 
@@ -1499,24 +1498,20 @@ END_PARAM_BLOCK
       IF bit flags : NS         ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
         ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
-        lda     aux_type
-        cmp     (ptr),y
+        ucmp8   aux_type, (ptr),y
         bne     next
         iny
-        lda     aux_type+1
-        cmp     (ptr),y
+        ucmp8   aux_type+1, (ptr),y
         bne     next
       END_IF
 
         ;; Does Block Count matter, and if so does it match?
       IF bit flags : VS         ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
-        lda     blocks_used
-        cmp     (ptr),y
+        ucmp8   blocks_used, (ptr),y
         bne     next
         iny
-        lda     blocks_used+1
-        cmp     (ptr),y
+        ucmp8   blocks_used+1, (ptr),y
         bne     next
       END_IF
 
@@ -1646,8 +1641,7 @@ next_block:
 
 next_entry:
         ;; Advance to next entry
-        lda     entry_in_block
-        cmp     #kEntriesPerBlock
+        ucmp8   entry_in_block, #kEntriesPerBlock
         beq     next_block
 
         inc     entry_in_block
@@ -1821,8 +1815,7 @@ fail:   jmp     Init
         cpx     last_filename
         bne     not_cur
     DO
-        lda     cur_filename,x
-        cmp     last_filename,x
+        ucmp8   cur_filename,x, last_filename,x
         bne     not_cur
     WHILE dex : NOT_ZERO
 

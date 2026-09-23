@@ -251,8 +251,7 @@ remainder:      .word   0       ; (out)
 
 .proc OnButtonDown
         MGTK_CALL MGTK::FindWindow, event_params::coords
-        lda     findwindow_params::window_id ; in our window?
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId ; in our window?
         bne     InputLoop
 
         ;; which part of the window?
@@ -1082,8 +1081,7 @@ filename:       .res    16
         ;; Don't show directory files (volumes/subdirectories)
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_info_params
         bcs     ret
-        lda     get_info_params::file_type
-        cmp     #FT_DIRECTORY
+        ucmp8   get_info_params::file_type, #FT_DIRECTORY
         beq     ret
 
         ;; Set window title to filename

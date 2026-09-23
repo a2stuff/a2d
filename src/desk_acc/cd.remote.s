@@ -756,8 +756,7 @@ ExitInitDriveDisc:
     IF NOT_ZERO
         ;; Drive is playing audio, watch for an AudioStatus return code of $03 = "Play operation complete"
         jsr     C24AudioStatus
-        lda     SPBuffer
-        cmp     #$03
+        ucmp8   SPBuffer, #$03
         ;; Audio playback operation is not complete
       IF EQ
         ;; Deal with reaching the end of a playback operation.  It's complicated.  :)
@@ -904,8 +903,7 @@ HandleKey:
 
         ;; Increment the count of how many tracks have been played
         inc     HexPlayedCount0Base
-        lda     HexPlayedCount0Base
-        cmp     HexTrackCount0Base
+        ucmp8   HexPlayedCount0Base, HexTrackCount0Base
         ;; Haven't played all the tracks on the disc, so pick another one
         bne     PlayARandomTrack
 
@@ -1120,14 +1118,12 @@ ExitReReadTOC:
 ;;; * Otherwise, sample until `MGTK::EventKind::button_up`
 
 .proc CheckGestureEnded
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::key_down
+        ucmp8   event_params::kind, #MGTK::EventKind::key_down
         beq     ended
 
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_up
+        ucmp8   event_params::kind, #MGTK::EventKind::button_up
         beq     ended
 
         lda     #$FF            ; N=1
@@ -2051,8 +2047,7 @@ SPBuffer        := DA_IO_BUFFER  ; 1K free to use in Main after loading
         pha
 
         ;; Only update/draw if changed
-        lda     BCDRelTrack
-        cmp     last_track
+        ucmp8   BCDRelTrack, last_track
         beq     skip
 
         txa
@@ -2086,11 +2081,9 @@ skip:
         pha
 
         ;; Only update/draw if changed
-        lda     BCDRelMinutes
-        cmp     last_min
+        ucmp8   BCDRelMinutes, last_min
         bne     :+
-        lda     BCDRelSeconds
-        cmp     last_sec
+        ucmp8   BCDRelSeconds, last_sec
         beq     skip
 :
         txa

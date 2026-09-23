@@ -270,19 +270,16 @@ jt_callbacks:
     END_IF
 
         ;; Disallow copying some types to ramcard
-        lda     copy_when
-        cmp     #kCopyNever
+        ucmp8   copy_when, #kCopyNever
         beq     ok
 
         MLI_CALL GET_FILE_INFO, get_file_info_params
         bcs     alert
         ;; Volume?
-        lda     get_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
+        ucmp8   get_file_info_params::storage_type, #ST_VOLUME_DIRECTORY
         beq     invalid
         ;; Link?
-        lda     get_file_info_params::file_type
-        cmp     #FT_LINK
+        ucmp8   get_file_info_params::file_type, #FT_LINK
         beq     invalid
 
 ok:     jsr     file_dialog::CloseWindow

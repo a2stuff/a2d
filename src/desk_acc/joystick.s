@@ -253,9 +253,9 @@ joystick_bitmap:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         bne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
@@ -385,11 +385,9 @@ num_analog_inputs:
         ;; If last state was valid, see if joystick 2 registered
         ;; a change; if so, set a flag.
     IF bit last+InputState::valid : NS
-        lda     curr+InputState::pdl2
-        cmp     last+InputState::pdl2
+        ucmp8   curr+InputState::pdl2, last+InputState::pdl2
         bne     set
-        lda     curr+InputState::pdl3
-        cmp     last+InputState::pdl3
+        ucmp8   curr+InputState::pdl3, last+InputState::pdl3
         beq     :+
 set:    SET_BIT7_FLAG joy2_valid_flag
 :
@@ -399,8 +397,7 @@ set:    SET_BIT7_FLAG joy2_valid_flag
     IF bit force_draw_flag : NC
         ldx     #.sizeof(InputState)-1
       DO
-        lda     curr,x
-        cmp     last,x
+        ucmp8   curr,x, last,x
         bne     :+              ; changed - draw
       WHILE dex : POS
         rts                     ; no change - skip

@@ -533,8 +533,7 @@ scrambled_flag:                 ; bit7
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         bne     bail
 
         lda     findwindow_params::which_area
@@ -730,18 +729,15 @@ nope:   RETURN  C=0
         clc
         adc     hole_x
         tay
-        lda     click_x
-        cmp     hole_x
+        ucmp8   click_x, hole_x
         beq     ClickInCol
-        lda     click_y
-        cmp     hole_y
+        ucmp8   click_y, hole_y
         beq     ClickInRow
 
 miss:   rts                     ; Click on hole, or not row/col with hole
 
 .proc ClickInRow
-        lda     click_x
-        cmp     hole_x
+        ucmp8   click_x, hole_x
         beq     miss
     IF LT
         lda     hole_x          ; click before of hole
@@ -768,8 +764,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
 .endproc ; ClickInRow
 
 .proc ClickInCol
-        lda     click_y
-        cmp     hole_y
+        ucmp8   click_y, hole_y
         beq     miss
         bcs     after
 
@@ -982,11 +977,9 @@ ret:    rts
     END_IF
 
         ;; Check 7/8
-        lda     position_table+7
-        cmp     #7
+        ucmp8   position_table+7, #7
         bne     nope
-        lda     position_table+8
-        cmp     #8
+        ucmp8   position_table+8, #8
         bne     nope
 
         ;; 9/10 are identical
@@ -1003,8 +996,7 @@ ret:    rts
     END_IF
 
         ;; Check 11
-        lda     position_table+11
-        cmp     #11
+        ucmp8   position_table+11, #11
         bne     nope
 
         ;; 0/12 can be swapped

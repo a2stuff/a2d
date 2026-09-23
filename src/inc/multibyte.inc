@@ -153,6 +153,36 @@
     .endif
 .endmacro
 
+;;; Unsigned compare 8-bit values - C and Z valid
+;;;    ucmp8 #$11, #$22    ; immediate, immediate (silly, but supported)
+;;;    ucmp8 #$11, $22     ; immediate, absolute
+;;;    ucmp8 $11, #$22     ; absolute, immediate
+;;;    ucmp8 $11, $22      ; absolute, absolute
+;;;    ucmp8 $11,x, $22    ; indexed, absolute
+;;;    ucmp8 $11, $22,x    ; absolute, indexed
+;;;    ucmp8 $11,x, #$22   ; indexed, immediate
+;;;    ucmp8 #$11, $22,x   ; immediate, indexed
+;;;    ucmp8 $11,x, $22,x  ; indexed, indexed
+.macro ucmp8 arg1, arg2, arg3, arg4
+    .if (_is_register {arg2}) && (_is_register {arg4})
+        ;; indexed, indexed
+        lda     arg1,arg2
+        cmp     arg3,arg4
+    .elseif _is_register {arg2}
+        ;; indexed, absolute/immediate
+        lda     arg1,arg2
+        cmp     arg3
+    .elseif _is_register {arg3}
+        ;; absolute/immediate, indexed
+        lda     arg1
+        cmp     arg2,arg3
+    .else
+        ;; absolute/immediate, absolute/immediate
+        lda     arg1
+        cmp     arg2
+    .endif
+.endmacro
+
 ;;; ============================================================
 ;;; 16-bit pseudo-ops
 

@@ -1036,8 +1036,7 @@ match:  tya
         ;; Is it a Pravetz 8A/C?
         ldx     #kPravetz8ACSequenceLength-1
       DO
-        lda     PRAVETZ_8AC_ID_ADDR,x
-        cmp     pravetz_8ac_sequence,x
+        ucmp8   PRAVETZ_8AC_ID_ADDR,x, pravetz_8ac_sequence,x
         bne     :+
       WHILE dex : POS
         lda     #model::pravetz
@@ -1073,8 +1072,7 @@ match:  tya
         ;; Is it a TLC?
         ldx     #kTLCSequenceLength-1
       DO
-        lda     TLC_ID_ADDR,x
-        cmp     tlc_sequence,x
+        ucmp8   TLC_ID_ADDR,x, tlc_sequence,x
         bne     :+
       WHILE dex : POS
         lda     #model::tlc
@@ -1083,8 +1081,7 @@ match:  tya
         ;; Is it a TK3000?
         ldx     #kTK3000SequenceLength-1
       DO
-        lda     TK3000_ID_ADDR,x
-        cmp     tk3000_sequence,x
+        ucmp8   TK3000_ID_ADDR,x, tk3000_sequence,x
         bne     :+
       WHILE dex : POS
         lda     #model::tk3000
@@ -1182,6 +1179,7 @@ v_2x:   and     #$0F
         jsr     JUMP_TABLE_SYSTEM_TASK
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
+
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         beq     HandleDown
@@ -1222,9 +1220,9 @@ v_2x:   and     #$0F
 .proc HandleDown
         JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
         jsr     CopyEventDataToMain
-        lda     findwindow_params::window_id
-        cmp     #aux::kDAWindowId
+        ucmp8   findwindow_params::window_id, #aux::kDAWindowId
         bne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
@@ -2137,8 +2135,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         ldx     #3
       DO
         ldy     sig_offsets,x
-        lda     (slot_ptr),y
-        cmp     sig_values,x
+        ucmp8   (slot_ptr),y, sig_values,x
         bne     next
       WHILE dex : POS
 
@@ -2365,8 +2362,7 @@ start:
        DO
         CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y
         IF ZS
-        lda     dib_buffer+SPDIB::Device_Name,y
-        cmp     #'a'           ; guarded by `kBuildSupportsLowercase`
+        ucmp8   dib_buffer+SPDIB::Device_Name,y, #'a' ; guarded by `kBuildSupportsLowercase`
         bcs     done_adjust_case ; is lower case
         END_IF
        WHILE dey : POS

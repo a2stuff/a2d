@@ -342,11 +342,9 @@ ignore: RETURN  C=1
         MGTK_CALL MGTK::PeekEvent, event_params
         MGTK_CALL MGTK::FlushEvents
 
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::key_down
+        ucmp8   event_params::kind, #MGTK::EventKind::key_down
         bne     nope
-        lda     event_params::key
-        cmp     #CHAR_ESCAPE
+        ucmp8   event_params::key, #CHAR_ESCAPE
         bne     nope
         rts
 
@@ -401,8 +399,7 @@ search:
 
         lda     path_length
     IF A = #1
-        lda     num_entries
-        cmp     #kMaxFilePaths
+        ucmp8   num_entries, #kMaxFilePaths
         beq     finish
         JSR_TO_MAIN ::main::NextVolume
         bcc     search
@@ -418,8 +415,7 @@ finish:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
+        ucmp8   findwindow_params::which_area, #MGTK::Area::content
         jne     done
 
         lda     findwindow_params::window_id
@@ -1021,8 +1017,7 @@ OpenDone:
         jsr     DrawNextResultFromMain
 
         ;; If we've hit max number of entries, terminate operation.
-        lda     num_entries
-        cmp     #kMaxFilePaths
+        ucmp8   num_entries, #kMaxFilePaths
         jeq     Terminate
 
 exit:   rts

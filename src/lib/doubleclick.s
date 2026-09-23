@@ -64,14 +64,12 @@ consume:
         sbc     xcoord+1
     IF NEG
         ;; is -delta < x < 0 ?
-        lda     delta
-        cmp     #AS_BYTE(-kDoubleClickDeltaX)
+        ucmp8   delta, #AS_BYTE(-kDoubleClickDeltaX)
         bcs     check_y
 fail:   RETURN  A=#$FF
     END_IF
         ;; is 0 < x < delta ?
-        lda     delta
-        cmp     #kDoubleClickDeltaX
+        ucmp8   delta, #kDoubleClickDeltaX
         bcs     fail
 
         ;; compute y delta
@@ -84,13 +82,11 @@ check_y:
         sbc     ycoord+1
     IF NEG
         ;; is -delta < y < 0 ?
-        lda     delta
-        cmp     #AS_BYTE(-kDoubleClickDeltaY)
+        ucmp8   delta, #AS_BYTE(-kDoubleClickDeltaY)
         bcs     ok
     END_IF
         ;; is 0 < y < delta ?
-        lda     delta
-        cmp     #kDoubleClickDeltaY
+        ucmp8   delta, #kDoubleClickDeltaY
         bcs     fail
 
 ok:     RETURN  A=#0

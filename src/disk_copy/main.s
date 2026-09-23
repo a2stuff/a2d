@@ -609,8 +609,7 @@ ok:     RETURN  C=0
         lda     #7
         sta     auxlc::block_index_shift
         inc     auxlc::block_index_div8
-        lda     auxlc::block_index_div8
-        cmp     #kMemoryBitmapSize
+        ucmp8   auxlc::block_index_div8, #kMemoryBitmapSize
         bcc     ok
 
         RETURN  C=1

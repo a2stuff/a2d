@@ -605,11 +605,9 @@ init:
 
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
+        ucmp8   findwindow_params::which_area, #MGTK::Area::content
         bcc     ret
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId      ; This window?
+        ucmp8   findwindow_params::window_id, #kDAWindowId      ; This window?
         bne     ret
 
         lda     findwindow_params::which_area
@@ -1321,8 +1319,7 @@ invert: jsr     invert_rect
 
 check_button:
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::drag ; Button down?
+        ucmp8   event_params::kind, #MGTK::EventKind::drag ; Button down?
         bne     done            ; Nope, done immediately
 
         copy8   #kDAWindowId, screentowindow_params::window_id

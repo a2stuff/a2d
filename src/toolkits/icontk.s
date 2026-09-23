@@ -778,11 +778,11 @@ is_drag:
         ;; Assert: there are highlighted icons
 
         ;; Make sure there's room
-        lda     highlight_count
-        cmp     max_draggable_icons
-        beq     :+                      ; equal okay
-        jcs     exit_canceled           ; too many
-:
+        ucmp8   highlight_count, max_draggable_icons
+    IF NE AND GE                     ; equal okay
+        jmp    exit_canceled         ; too many
+    END_IF
+
         CALL    GetIconWin, A=last_highlighted_icon
         sta     source_window_id
 
@@ -819,8 +819,7 @@ is_drag:
         jsr     _XDrawOutline
     REPEAT
         MGTK_CALL MGTK::PeekEvent, peekevent_params
-        lda     peekevent_params::kind
-        cmp     #MGTK::EventKind::drag
+        ucmp8   peekevent_params::kind, #MGTK::EventKind::drag
         jne     not_drag
 
         ;; Escape key?
@@ -834,8 +833,7 @@ is_drag:
         ;; Coords changed?
         ldx     #.sizeof(MGTK::Point)-1
       DO
-        lda     findwindow_params,x
-        cmp     last_coords,x
+        ucmp8   findwindow_params,x, last_coords,x
         bne     moved
       WHILE dex : POS
         REDO_IF NEG             ; always
@@ -908,8 +906,7 @@ not_drag:
     END_IF
 
         ;; Drag ended by a keystroke?
-        lda     peekevent_params::kind
-        cmp     #MGTK::EventKind::key_down ; cancel?
+        ucmp8   peekevent_params::kind, #MGTK::EventKind::key_down ; cancel?
         jeq     exit_canceled
 
         ;; Drag ended over an icon?
@@ -2264,8 +2261,7 @@ reclip:
 
 next_pt:
         ;; Done all 4 points?
-        lda     pt_num
-        cmp     #4
+        ucmp8   pt_num, #4
         bne     do_pt
 
         ;; --------------------------------------------------
@@ -2297,8 +2293,7 @@ do_pt:  lda     pt_num
 
         inc     pt_num
         MGTK_CALL MGTK::FindWindow, cwi_findwindow_params
-        lda     cwi_findwindow_params::window_id
-        cmp     clip_window_id
+        ucmp8   cwi_findwindow_params::window_id, clip_window_id
         beq     next_pt
 
         ;; --------------------------------------------------

@@ -247,8 +247,7 @@ auxtype:        .word   SELF_MODIFIED
 
 .proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         jne     InputLoop
 
         copy8   #kDAWindowId, screentowindow_params::window_id

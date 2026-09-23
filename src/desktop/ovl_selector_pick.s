@@ -121,8 +121,7 @@ DoAdd:  ldx     #kRunListPrimary
         copy16  selector_list, num_primary_run_list_entries
 
     IF lda which_run_list : A = #kRunListPrimary
-        lda     num_primary_run_list_entries
-        cmp     #kSelectorListNumPrimaryRunListEntries
+        ucmp8   num_primary_run_list_entries, #kSelectorListNumPrimaryRunListEntries
         beq     ShowFullAlert
         ldy     copy_when       ; Flags
         lda     num_primary_run_list_entries
@@ -277,8 +276,7 @@ copy_when:
         lda     shortcut_picker_record::selected_index
     IF A >= #kSelectorListNumPrimaryRunListEntries
         ;; Was on secondary run list - is it still?
-        lda     which_run_list
-        cmp     #kRunListSecondary
+        ucmp8   which_run_list, #kRunListSecondary
         beq     reuse_same_index
 
         lda     num_primary_run_list_entries
@@ -295,8 +293,7 @@ copy_when:
         txa
     ELSE
         ;; Was on primary run list - is it still?
-        lda     which_run_list
-        cmp     #kRunListPrimary
+        ucmp8   which_run_list, #kRunListPrimary
         beq     reuse_same_index
 
         lda     num_secondary_run_list_entries

@@ -417,14 +417,12 @@ flag:   .byte   0
         bcc     :+
         inc     ptr+1
 
-:       lda     ptr
-        cmp     #$FF
+:       ucmp8   ptr, #$FF
         bne     rtcc
         inc     ptr+1
         copy8   #1, entry_num
         copy8   #4, ptr         ; skip over block header
-        lda     ptr+1
-        cmp     end_block_page
+        ucmp8   ptr+1, end_block_page
         bcs     rtcs
 
 rtcc:   RETURN  C=0
@@ -516,8 +514,7 @@ sys:
 
         ;; Then order by type from $FD down
         ldy     #FileEntry::file_type
-        lda     (ptr1),y
-        cmp     (ptr2),y
+        ucmp8   (ptr1),y, (ptr2),y
         bne     ret
         jmp     CompareEntryTypesAndNames
 
@@ -624,8 +621,7 @@ done2:  stx     match2          ; match, or $FF if none
         and     match2
         cmp     #$FF            ; if either didn't match
         beq     clear
-        lda     match2
-        cmp     match
+        ucmp8   match2, match
         beq     clear           ; if they're the same
         rts                     ; otherwise carry is order
 
@@ -654,18 +650,15 @@ match2: .byte   0
         copy8   (ptr2),y, type2
         copy8   (ptr1),y, type1
 
-        lda     type2
-        cmp     type0
+        ucmp8   type2, type0
     IF NE
-        lda     type1
-        cmp     type0
+        ucmp8   type1, type0
         beq     rtcs
 
         bne     neither         ; always
     END_IF
 
-        lda     type1
-        cmp     type0
+        ucmp8   type1, type0
         bne     rtcc
         jsr     CompareFileEntryNames
         bcc     rtcc
@@ -696,8 +689,7 @@ type0:  .byte   0
         ;; Check for SYS
         stax    ptr
         ldy     #FileEntry::file_type
-        lda     (ptr),y
-        cmp     #FT_SYSTEM
+        ucmp8   (ptr),y, #FT_SYSTEM
         bne     fail
 
         ;; Could name end in .SYSTEM?
@@ -715,8 +707,7 @@ type0:  .byte   0
     DO
         iny
         inx
-        lda     (ptr),y
-        cmp     str_system,x
+        ucmp8   (ptr),y, str_system,x
         bne     fail
     WHILE X <> str_system
 
@@ -751,8 +742,7 @@ str_system:
 
         ldy     #0
 loop:   iny
-        lda     (ptr2),y
-        cmp     (ptr1),y
+        ucmp8   (ptr2),y, (ptr1),y
         beq     next
         bcc     rtcc
 rtcs:   RETURN  C=1
@@ -761,8 +751,7 @@ rtcs:   RETURN  C=1
 next:   cpy     #SELF_MODIFIED_BYTE
 
         bne     loop
-        lda     len2
-        cmp     len1
+        ucmp8   len2, len1
         beq     rtcc
         bcs     rtcs
 rtcc:   RETURN  C=0

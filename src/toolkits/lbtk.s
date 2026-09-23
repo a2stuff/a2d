@@ -627,8 +627,7 @@ new_size        .byte
         ;; Reset thumb pos
         CALL    _UpdateThumb, A=#0
 
-        lda     lbr_copy + LBTK::ListBoxRecord::num_rows
-        cmp     lbr_copy + LBTK::ListBoxRecord::num_items
+        ucmp8   lbr_copy + LBTK::ListBoxRecord::num_rows, lbr_copy + LBTK::ListBoxRecord::num_items
         bcc     greater         ; inverted comparison
 
         ;; Deactivate

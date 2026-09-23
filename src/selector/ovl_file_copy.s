@@ -525,8 +525,7 @@ display_path:
         MGTK_CALL MGTK::GetEvent, app::event_params
         lda     app::event_params::kind
     IF A = #MGTK::EventKind::key_down
-        lda     app::event_params::key
-        cmp     #CHAR_ESCAPE
+        ucmp8   app::event_params::key, #CHAR_ESCAPE
         beq     RestoreStackAndReturn
     END_IF
 

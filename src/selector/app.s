@@ -1513,8 +1513,7 @@ err:
 check_path:
         ldy     INVOKER_PREFIX
     DO
-        lda     INVOKER_PREFIX,y
-        cmp     #'/'
+        ucmp8   INVOKER_PREFIX,y, #'/'
         beq     :+
     WHILE dey : NOT_ZERO
 
@@ -1603,14 +1602,12 @@ check_path:
         plp
         bcs     err
 
-        lda     read_params::trans_count
-        cmp     #kLinkFilePathLengthOffset
+        ucmp8   read_params::trans_count, #kLinkFilePathLengthOffset
         bcc     err
 
         ldx     #kCheckHeaderLength-1
     DO
-        lda     read_buf,x
-        cmp     check_header,x
+        ucmp8   read_buf,x, check_header,x
         bne     err
     WHILE dex : POS
 
@@ -1661,8 +1658,7 @@ str_basix_system:
         path_length := *+1
         ldx     #SELF_MODIFIED_BYTE
       DO
-        lda     interp_path,x
-        cmp     #'/'
+        ucmp8   interp_path,x, #'/'
         beq     found_slash
       WHILE dex : NOT_ZERO
 

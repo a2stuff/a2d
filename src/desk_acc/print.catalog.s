@@ -800,8 +800,7 @@ destPtr:        .res    1
         tay
 ChopLoop:
         dey                     ; bump to previous char
-        lda     (dirName),y
-        cmp     #'/'
+        ucmp8   (dirName),y, #'/'
         bne     ChopLoop
         tya
         ldy     #0

@@ -23,8 +23,7 @@
     IF ZERO
         ldx     #.sizeof(MGTK::Point)-1
       DO
-        lda     event_params+MGTK::Event::coords,x
-        cmp     coords,x
+        ucmp8   event_params+MGTK::Event::coords,x, coords,x
         bne     diff
       WHILE dex : POS
         lda     #MGTK::EventKind::no_event

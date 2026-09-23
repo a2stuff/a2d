@@ -292,9 +292,9 @@ first_dow:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         jne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         jeq     HandleClose
@@ -349,8 +349,7 @@ fin:    jsr     UpdateWindow
         bmi     year
 
         inc     datetime + ParsedDateTime::month
-        lda     datetime + ParsedDateTime::month
-        cmp     #13
+        ucmp8   datetime + ParsedDateTime::month, #13
         bcc     fin
 
         copy8   #1, datetime + ParsedDateTime::month

@@ -355,9 +355,9 @@ buf_search:     .res    kBufSize, 0 ; search term
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         jne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
@@ -413,8 +413,7 @@ buf_search:     .res    kBufSize, 0 ; search term
     REPEAT
         ;; Compare lengths
         ldy     #0
-        lda     (ptr),y
-        cmp     buf_search
+        ucmp8   (ptr),y, buf_search
         bcc     next            ; longer, so no match
 
         ;; Is it a prefix?

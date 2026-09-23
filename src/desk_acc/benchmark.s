@@ -302,12 +302,10 @@ probe_count:
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         bne     miss
 
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
+        ucmp8   findwindow_params::which_area, #MGTK::Area::content
         beq     hit
 
 miss:   jmp     InputLoop

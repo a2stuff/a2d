@@ -672,14 +672,12 @@ got_blocks:
 
         lda     write_block_params::block_num+1 ; Are we at a block >255?
         bne     fail            ; Then something's gone horribly wrong and we need to stop
-        lda     write_block_params::block_num
-        cmp     #6              ; Are we anywhere other than block 6?
+        ucmp8   write_block_params::block_num, #6 ; Are we anywhere other than block 6?
         bne     gowrite         ; Then go ahead and write the bitmap block as-is
 
         ;; Block 6 - Set up the volume bitmap to protect the blocks at the beginning of the volume
         copy8   #$01, block_buffer ; Mark blocks 0-6 in use
-        lda     lastblock       ; What's the last block we need to protect?
-        cmp     #7
+        ucmp8   lastblock, #7   ; What's the last block we need to protect?
         bcc     gowrite         ; If it's less than 7, default to always protecting 0-6
 
         copy8   #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
@@ -743,8 +741,7 @@ lastblock:
         sta     block_buffer+$100,y ; with $FF bytes
     WHILE iny : NOT_ZERO
 
-        lda     write_block_params::block_num
-        cmp     lastblock       ; Is this the last block?
+        ucmp8   write_block_params::block_num, lastblock ; Is this the last block?
         bne     builddone       ; No, then just use the full block of $FF's
 
         ldy     total_blocks    ; Get the offset to the last byte that needs to be updated
@@ -898,8 +895,7 @@ pascal: CALL    pascal_disk, AX=#ovl_string_buf
 maybe_dos:
         cmp     #kDOS33Sig1
         bne     unknown
-        lda     read_buffer + 2
-        cmp     #kDOS33Sig2
+        ucmp8   read_buffer + 2, #kDOS33Sig2
         bne     unknown
 
         ;; DOS 3.3, use slot and drive

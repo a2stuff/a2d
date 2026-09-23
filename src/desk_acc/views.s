@@ -213,8 +213,7 @@ view_by_table:
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
+        ucmp8   event_params::kind, #MGTK::EventKind::button_down
         beq     HandleDown
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
@@ -263,9 +262,9 @@ view_by_table:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         bne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose

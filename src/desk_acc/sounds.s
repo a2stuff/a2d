@@ -309,8 +309,7 @@ grafport_win:       .tag    MGTK::GrafPort
 
         lda     findwindow_params::window_id
     IF A = #kDAWindowId
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
+        ucmp8   findwindow_params::which_area, #MGTK::Area::content
         beq     HandleDialogClick
         jmp     InputLoop
     END_IF
@@ -468,8 +467,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         jmp     finish
 
 next:   inc     index
-        lda     index
-        cmp     listbox_rec::num_items
+        ucmp8   index, listbox_rec::num_items
         bne     loop
 
         ;; Not Found

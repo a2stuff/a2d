@@ -596,9 +596,9 @@ shortcut_table_addr_hi:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         jne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
@@ -806,8 +806,7 @@ shortcut_table_addr_hi:
         ;; Repeat until mouse-up
       DO
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_up
+        ucmp8   event_params::kind, #MGTK::EventKind::button_up
         jeq     InputLoop
 
         copy8   #kDAWindowId, screentowindow_params::window_id

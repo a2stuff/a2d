@@ -48,8 +48,7 @@ sig_bytes:
         ldy     #kSigLen-1
     DO
         ldx     sig_offsets,y
-        lda     SLOT1,x
-        cmp     sig_bytes,y
+        ucmp8   SLOT1,x, sig_bytes,y
         bne     no_device
     WHILE dey : POS
 
@@ -143,10 +142,10 @@ col_loop:
         jsr     COut            ; And actually print
 
         ;; Done all pixels across?
+        ;; TODO: use `ecmp16` here
         lda     x_coord
     IF A = #<(kScreenWidth-1)
-        lda     x_coord+1
-        cmp     #>(kScreenWidth-1)
+        ucmp8   x_coord+1, #>(kScreenWidth-1)
         beq     done
     END_IF
 

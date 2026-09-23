@@ -168,8 +168,7 @@ quit:   MLI_CALL QUIT, quit_params
         ;; Pop off a path segment and try again.
         ldx     path_length
       DO
-        lda     bs_path,x
-        cmp     #'/'
+        ucmp8   bs_path,x, #'/'
         beq     found_slash
       WHILE dex : NOT_ZERO
 

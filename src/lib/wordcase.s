@@ -21,8 +21,7 @@
 done:   rts
       END_IF
 
-        lda     (ptr),y
-        cmp     #'A'
+        ucmp8   (ptr),y, #'A'
         bcs     check_alpha
         dey
         REDO_IF POS             ; always

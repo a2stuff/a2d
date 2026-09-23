@@ -202,8 +202,7 @@ ret:    rts
         ;; Verify type/auxtype
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_info_params
         bcs     ret
-        lda     get_info_params::file_type
-        cmp     #FT_MUSIC
+        ucmp8   get_info_params::file_type, #FT_MUSIC
         bne     ret
         ecmp16  get_info_params::aux_type, #$D0E7
         bne     ret
@@ -822,8 +821,7 @@ probe:  CALL    WithInterruptsDisabled, AX=#DetectMockingboard
     END_IF
 
         dec     ptr+1
-        lda     ptr+1
-        cmp     #$C0
+        ucmp8   ptr+1, #$C0
         bne     probe
 
         RETURN  C=0             ; C=0 is not found

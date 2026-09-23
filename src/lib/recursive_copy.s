@@ -183,8 +183,7 @@ loop:
         bit     entry_err_flag  ; don't recurse if the copy failed
         bmi     loop
 
-        lda     file_entry + FileEntry::file_type
-        cmp     #FT_DIRECTORY
+        ucmp8   file_entry + FileEntry::file_type, #FT_DIRECTORY
         bne     loop            ; and don't recurse unless it's a directory
 
         ;; Recurse into child directory
@@ -478,8 +477,7 @@ eof:    RETURN  A=#$FF
     IF NOT_ZERO
         tay
       DO
-        lda     (path_ptr),y
-        cmp     #'/'
+        ucmp8   (path_ptr),y, #'/'
         beq     :+
       WHILE dey : NOT_ZERO
         iny
@@ -882,8 +880,7 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
 .endif
 
         ;; Is there less than a full block? If so, just write it.
-        lda     read_src_params::trans_count+1
-        cmp     #.hibyte(BLOCK_SIZE)
+        ucmp8   read_src_params::trans_count+1, #.hibyte(BLOCK_SIZE)
         bcc     do_write        ; ...and done!
 
         ;; Otherwise we'll go block-by-block, treating all zeros

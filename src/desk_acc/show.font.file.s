@@ -184,8 +184,7 @@ grafport:       .tag    MGTK::GrafPort
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         jne     InputLoop
 
         lda     findwindow_params::which_area

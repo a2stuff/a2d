@@ -79,8 +79,7 @@ ones:   pla                     ; ones
         iny
         sta     str_time,y
 
-        lda     hour
-        cmp     #12
+        ucmp8   hour, #12
         bcs     :+
         lda     #'A'
         SKIP_NEXT_2_BYTE_INSTRUCTION

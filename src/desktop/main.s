@@ -691,8 +691,7 @@ h_proc_hi:        .hibytes ScrollNoOp, ScrollLeft, ScrollRight, ScrollPageLeft, 
         lda     trackthumb_params::thumbmoved
         RTS_IF ZERO
 
-        lda     trackthumb_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
+        ucmp8   trackthumb_params::which_ctl, #MGTK::Ctl::vertical_scroll_bar
         jeq     ScrollTrackVThumb
         jmp     ScrollTrackHThumb
 .endproc ; _TrackThumb
@@ -1058,8 +1057,7 @@ END_PARAM_BLOCK
 
         ;; --------------------------------------------------
         ;; Prep selection
-        lda     window_id
-        cmp     selected_window_id
+        ucmp8   window_id, selected_window_id
         bne     clear
 
         lda     MainLoop::modifiers
@@ -1169,8 +1167,7 @@ event_loop:
         ;; TODO: Experiment with making this lower.
         kDragBoundThreshold = 5
 
-        lda     delta,x
-        cmp     #kDragBoundThreshold
+        ucmp8   delta,x, #kDragBoundThreshold
         bcs     beyond
 
     WHILE dex : dex : POS       ; next dimension
@@ -1227,8 +1224,7 @@ beyond:
         MLI_CALL CLOSE, close_params
         plp
         bcs     invalid         ; READ failed
-        lda     read_params::trans_count
-        cmp     #5
+        ucmp8   read_params::trans_count, #5
         bne     invalid         ; couldn't read header
 
         ;; Interpreter?
@@ -1237,8 +1233,7 @@ beyond:
         ;; $2000 is a jump instruction. $2003 and $2004 are $EE."
         ;; https://prodos8.com/docs/techref/writing-a-prodos-system-program/
 
-        lda     #OPC_JMP_abs
-        cmp     header_buf
+        ucmp8   #OPC_JMP_abs, header_buf
         bne     invalid
         lda     #$EE
         cmp     header_buf+3
@@ -1379,8 +1374,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
         jsr     CheckDisksInDevices
         ldx     disk_in_device_table
       DO
-        lda     disk_in_device_table,x
-        cmp     last_disk_in_devices_table,x
+        ucmp8   disk_in_device_table,x, last_disk_in_devices_table,x
         bne     changed
       WHILE dex : NOT_ZERO
     END_IF
@@ -2034,8 +2028,7 @@ LaunchFileByPathWithInterpreter := LaunchFileByPathImpl::launch
 
         ldx     #kCheckHeaderLength-1
        DO
-        lda     read_buf,x
-        cmp     check_header,x
+        ucmp8   read_buf,x, check_header,x
         bne     bad
        WHILE dex : POS
 
@@ -2933,8 +2926,7 @@ maybe_open_file:
         pla                     ; A = icon id
         tax                     ; X = icon id
 
-        lda     selected_icon_count
-        cmp     #2              ; multiple files open?
+        ucmp8   selected_icon_count, #2 ; multiple files open?
         bcs     next_icon       ; don't try to invoke
 
         pla                     ; A = index; no longer needed
@@ -3291,8 +3283,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
     DO
       DO
         inc     digits+1,x
-        lda     digits+1,x
-        cmp     #'9'+1
+        ucmp8   digits+1,x, #'9'+1
         bne     concatenate     ; done
         copy8   #'0', digits+1,x
       WHILE inx : X <> digits
@@ -4126,8 +4117,7 @@ END_PARAM_BLOCK
 
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF NS
-        lda     dir
-        cmp     #kDirUp
+        ucmp8   dir, #kDirUp
         beq     KeyboardHighlightPrev
         bcs     KeyboardHighlightNext
         rts                     ; ignore if left/right
@@ -7124,8 +7114,7 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
         lda     (ptr),y
         tay
     DO
-        lda     (ptr),y
-        cmp     #'/'
+        ucmp8   (ptr),y, #'/'
         beq     slash
     WHILE dey : POS
 
@@ -7330,8 +7319,7 @@ enough_room:
 
 do_entry:
         inc     index_in_dir
-        lda     index_in_dir
-        cmp     dir_header::file_count
+        ucmp8   index_in_dir, dir_header::file_count
         jeq     finish
 
 next:   inc     index_in_block
@@ -7709,24 +7697,20 @@ vol_blocks_used:  .word   0
       IF bit flags : NS         ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
         ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
-        lda     aux_type
-        cmp     (ptr),y
+        ucmp8   aux_type, (ptr),y
         bne     next
         iny
-        lda     aux_type+1
-        cmp     (ptr),y
+        ucmp8   aux_type+1, (ptr),y
         bne     next
       END_IF
 
         ;; Does Block Count matter, and if so does it match?
       IF bit flags : VS         ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
-        lda     blocks_used
-        cmp     (ptr),y
+        ucmp8   blocks_used, (ptr),y
         bne     next
         iny
-        lda     blocks_used+1
-        cmp     (ptr),y
+        ucmp8   blocks_used+1, (ptr),y
         bne     next
       END_IF
 
@@ -8166,20 +8150,16 @@ END_PARAM_BLOCK
         ecmp16  scratch::parsed_a + ParsedDateTime::year, scratch::parsed_b + ParsedDateTime::year
         bne     done
 
-        lda     scratch::parsed_a + ParsedDateTime::month
-        cmp     scratch::parsed_b + ParsedDateTime::month
+        ucmp8   scratch::parsed_a + ParsedDateTime::month, scratch::parsed_b + ParsedDateTime::month
         bne     done
 
-        lda     scratch::parsed_a + ParsedDateTime::day
-        cmp     scratch::parsed_b + ParsedDateTime::day
+        ucmp8   scratch::parsed_a + ParsedDateTime::day, scratch::parsed_b + ParsedDateTime::day
         bne     done
 
-        lda     scratch::parsed_a + ParsedDateTime::hour
-        cmp     scratch::parsed_b + ParsedDateTime::hour
+        ucmp8   scratch::parsed_a + ParsedDateTime::hour, scratch::parsed_b + ParsedDateTime::hour
         bne     done
 
-        lda     scratch::parsed_a + ParsedDateTime::minute
-        cmp     scratch::parsed_b + ParsedDateTime::minute
+        ucmp8   scratch::parsed_a + ParsedDateTime::minute, scratch::parsed_b + ParsedDateTime::minute
 
 done:   rts
     END_IF
@@ -9971,8 +9951,7 @@ loop:
         bit     entry_err_flag  ; don't recurse if the copy failed
         bmi     loop
 
-        lda     file_entry + FileEntry::file_type
-        cmp     #FT_DIRECTORY
+        ucmp8   file_entry + FileEntry::file_type, #FT_DIRECTORY
         bne     loop            ; and don't recurse unless it's a directory
 
         ;; Recurse into child directory
@@ -11169,8 +11148,7 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
 .endif
 
         ;; Is there less than a full block? If so, just write it.
-        lda     read_src_params::trans_count+1
-        cmp     #.hibyte(BLOCK_SIZE)
+        ucmp8   read_src_params::trans_count+1, #.hibyte(BLOCK_SIZE)
         bcc     do_write        ; ...and done!
 
         ;; Otherwise we'll go block-by-block, treating all zeros
@@ -11429,7 +11407,7 @@ error:  jsr     ShowErrorAlert  ; arbitrary ProDOS error (except `ERR_ACCESS_ERR
         lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     next_file
-        jsr     ValidateStorageType
+        jsr     ValidateStorageType ; A = storage_type
         bcs     next_file
 
         jsr     DeleteFileCommon
@@ -11668,8 +11646,7 @@ src_path_slash_index:
 .proc CheckCancel
         jsr     GetEvent        ; no need to synthesize events
     IF A = #MGTK::EventKind::key_down
-        lda     event_params::key
-        cmp     #CHAR_ESCAPE
+        ucmp8   event_params::key, #CHAR_ESCAPE
         beq     CloseFilesCancelDialogWithAppropriateResult
     END_IF
         rts
@@ -13475,8 +13452,7 @@ RestoreOverlayBuffer    := LoadDynamicRoutineImpl::buffer
     IF NOT_ZERO
         tay
       DO
-        lda     (path_ptr),y
-        cmp     #'/'
+        ucmp8   (path_ptr),y, #'/'
         beq     :+
       WHILE dey : NOT_ZERO
         iny
@@ -14121,8 +14097,7 @@ next_block:
 
 next_entry:
         ;; Advance to next entry
-        lda     entry_num
-        cmp     #kEntriesPerBlock
+        ucmp8   entry_num, #kEntriesPerBlock
         beq     next_block
 
         inc     entry_num
@@ -14157,8 +14132,7 @@ next_entry:
         tay
         ASSERT_EQUALS FileEntry::file_name, 1
     DO
-        lda     (entry_ptr),y
-        cmp     filename,y
+        ucmp8   (entry_ptr),y, filename,y
         bne     next_entry
     WHILE dey : NOT_ZERO
 

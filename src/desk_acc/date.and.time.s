@@ -495,11 +495,9 @@ init_window:
 
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, event_params::xcoord
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId
+        ucmp8   findwindow_params::window_id, #kDAWindowId
         bne     miss
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
+        ucmp8   findwindow_params::which_area, #MGTK::Area::content
         beq     hit
 miss:   rts
 hit:
@@ -617,8 +615,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         jmp     loop
     END_IF
 
-        lda     hit_rect_index
-        cmp     #kUpRectIndex
+        ucmp8   hit_rect_index, #kUpRectIndex
         jeq     InvertUp
         jmp     InvertDown
 .endproc ; OnUpOrDown
@@ -664,8 +661,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         lda     (ptr),y
         tax                     ; X = value
 
-        lda     hit_rect_index
-        cmp     #kUpRectIndex
+        ucmp8   hit_rect_index, #kUpRectIndex
         beq     incr
 
         ;; Decrement
@@ -2425,14 +2421,11 @@ SEL_MBANK     :=  $F851       ; Select Main bank reg
         bit     $FACA
         bit     $FAFE
 
-        lda     SigCk           ; Check for ROMX signature bytes
-        cmp     #$4A
+        ucmp8   SigCk, #$4A     ; Check for ROMX signature bytes
         bne     nope
-        lda     SigCk+1
-        cmp     #$CD
+        ucmp8   SigCk+1, #$CD
         bne     nope
-        lda     FWReadClock     ; is RTC code there?
-        cmp     #$AD
+        ucmp8   FWReadClock, #$AD ; is RTC code there?
         bne     nope
         clc                     ; found clock!
         bcc     :+

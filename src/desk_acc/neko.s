@@ -434,9 +434,9 @@ ep_size := * - ep_start
 .proc HandleDown
         JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
         jsr     CopyEventDataToMain
-        lda     findwindow_params::window_id
-        cmp     #aux::kDAWindowId
+        ucmp8   findwindow_params::window_id, #aux::kDAWindowId
         bne     InputLoop
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
