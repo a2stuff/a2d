@@ -1625,6 +1625,10 @@ notpas:
     IF CS
         RETURN  AX=#str_clock
     END_IF
+        CALL    SigCheck, AX=#sigtable_clock2
+    IF CS
+        RETURN  AX=#str_clock
+    END_IF
 
 ;;; Communications Card
         CALL    SigCheck, AX=#sigtable_comm
@@ -1704,6 +1708,7 @@ sigtable_workstation:   .byte   4, $0C, $31, $0D, $9D, $0E, $A3, $0F, $24
 
 ;;; Generic signatures (c/o ProDOS BASIC Programming Examples)
 sigtable_clock:         .byte   3, $00, $08, $01, $78, $02, $28
+sigtable_clock2:        .byte   3, $00, $08, $01, $78, $02, $2C ; Mountain Hardware Apple Clock
 sigtable_comm:          .byte   2, $05, $18, $07, $38
 sigtable_serial:        .byte   2, $05, $38, $07, $18
 sigtable_parallel:      .byte   2, $05, $48, $07, $48
