@@ -175,22 +175,22 @@ exit:
         add16   x1pos,x, deltax1, pt1+MGTK::Point::xcoord
         add16   y1pos,x, deltay1, pt1+MGTK::Point::ycoord
 
-    IF scmp16 pt1+MGTK::Point::xcoord, #0 : NEG
+    IF s16 pt1+MGTK::Point::xcoord < #0
         copy16  #0, pt1+MGTK::Point::xcoord
         sub16   #0, deltax1, deltax1
     END_IF
 
-    IF scmp16 pt1+MGTK::Point::xcoord, #kScreenWidth : POS
+    IF s16 pt1+MGTK::Point::xcoord >= #kScreenWidth
         copy16  #kScreenWidth-1, pt1+MGTK::Point::xcoord
         sub16   #0, deltax1, deltax1
     END_IF
 
-    IF scmp16 pt1+MGTK::Point::ycoord, #0 : NEG
+    IF s16 pt1+MGTK::Point::ycoord < #0
         copy16  #0, pt1+MGTK::Point::ycoord
         sub16   #0, deltay1, deltay1
     END_IF
 
-    IF scmp16 pt1+MGTK::Point::ycoord, #kScreenHeight : POS
+    IF s16 pt1+MGTK::Point::ycoord >= #kScreenHeight
         copy16  #kScreenHeight-1, pt1+MGTK::Point::ycoord
         sub16   #0, deltay1, deltay1
     END_IF
@@ -198,22 +198,22 @@ exit:
         add16   x2pos,x, deltax2, pt2+MGTK::Point::xcoord
         add16   y2pos,x, deltay2, pt2+MGTK::Point::ycoord
 
-    IF scmp16 pt2+MGTK::Point::xcoord, #0 : NEG
+    IF s16 pt2+MGTK::Point::xcoord < #0
         copy16  #0, pt2+MGTK::Point::xcoord
         sub16   #0, deltax2, deltax2
     END_IF
 
-    IF scmp16 pt2+MGTK::Point::xcoord, #kScreenWidth : POS
+    IF s16 pt2+MGTK::Point::xcoord >= #kScreenWidth
         copy16  #kScreenWidth-1, pt2+MGTK::Point::xcoord
         sub16   #0, deltax2, deltax2
     END_IF
 
-    IF scmp16 pt2+MGTK::Point::ycoord, #0 : NEG
+    IF s16 pt2+MGTK::Point::ycoord < #0
         copy16  #0, pt2+MGTK::Point::ycoord
         sub16   #0, deltay2, deltay2
     END_IF
 
-    IF scmp16 pt2+MGTK::Point::ycoord, #kScreenHeight : POS
+    IF s16 pt2+MGTK::Point::ycoord >= #kScreenHeight
         copy16  #kScreenHeight-1, pt2+MGTK::Point::ycoord
         sub16   #0, deltay2, deltay2
     END_IF

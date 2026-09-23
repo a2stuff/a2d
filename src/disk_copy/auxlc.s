@@ -1446,7 +1446,7 @@ next_device:
         asl     a
         tax
 
-      IF ecmp16 block_count_table,x, src_block_count : EQ
+      IF u16 block_count_table,x = src_block_count
         ;; Same - add it
         pla                     ; A = index
         pha

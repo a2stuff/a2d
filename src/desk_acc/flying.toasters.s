@@ -133,12 +133,12 @@ exit:
         sub16   xpos, #4, xpos
 
         ;; Wrap Y
-      IF scmp16 ypos, #kScreenHeight : POS
+      IF s16 ypos >= #kScreenHeight
         copy16  #AS_WORD(-kToasterHeight), ypos
       END_IF
 
         ;; Wrap X
-      IF scmp16 xpos, #AS_WORD{-kToasterWidth} : NS
+      IF s16 xpos < #AS_WORD{-kToasterWidth}
         copy16  #kScreenWidth+kToasterWidth, xpos
       END_IF
 

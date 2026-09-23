@@ -650,8 +650,7 @@ match2: .byte   0
         copy8   (ptr2),y, type2
         copy8   (ptr1),y, type1
 
-        ucmp8   type2, type0
-    IF NE
+    IF u8 type2 <> type0
         ucmp8   type1, type0
         beq     rtcs
 

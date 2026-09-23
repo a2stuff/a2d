@@ -652,6 +652,99 @@ table := *
 
         RTS_IF NOT A NOT_BETWEEN #'0', #'9'
 
+;;; --------------------------------------------------
+;;; Typed Comparisons
+;;; --------------------------------------------------
+
+var1 := *
+var2 := *
+
+;;; u8
+    IF u8 var1 = var2
+        nop
+    END_IF
+    IF u8 var1 = #12
+        nop
+    END_IF
+
+    IF u8 var1 <> var2
+        nop
+    END_IF
+    IF u8 var1 <> #12
+        nop
+    END_IF
+
+    IF u8 var1 < var2
+        nop
+    END_IF
+    IF u8 var1 < #12
+        nop
+    END_IF
+
+    IF u8 var1 >= var2
+        nop
+    END_IF
+    IF u8 var1 >= #12
+        nop
+    END_IF
+
+;;; u16
+    IF u16 var1 = var2
+        nop
+    END_IF
+    IF u16 var1 = #1234
+        nop
+    END_IF
+
+    IF u16 var1 <> var2
+        nop
+    END_IF
+    IF u16 var1 <> #1234
+        nop
+    END_IF
+
+    IF u16 var1 < var2
+        nop
+    END_IF
+    IF u16 var1 < #1234
+        nop
+    END_IF
+
+    IF u16 var1 >= var2
+        nop
+    END_IF
+    IF u16 var1 >= #1234
+        nop
+    END_IF
+
+;;; s16
+    IF s16 var1 = var2
+        nop
+    END_IF
+    IF s16 var1 = #1234
+        nop
+    END_IF
+
+    IF s16 var1 <> var2
+        nop
+    END_IF
+    IF s16 var1 <> #1234
+        nop
+    END_IF
+
+    IF s16 var1 < var2
+        nop
+    END_IF
+    IF s16 var1 < #1234
+        nop
+    END_IF
+
+    IF s16 var1 >= var2
+        nop
+    END_IF
+    IF s16 var1 >= #1234
+        nop
+    END_IF
 
 ;;; --------------------------------------------------
 ;;; Cheap Local Label Compatibility
@@ -1092,6 +1185,14 @@ ft21:
         RTS_IF A IN #0 #1          ; Expected 'end-of-line' but found '#'
         RTS_IF BIT var             ; RTS_IF: Expected end-of-statement (':')
 
+        RTS_IF u16                 ; RTS_IF: Expected argument(s) after type 'u16'
+        RTS_IF u16 var             ; RTS_IF: Expected operator (=, <>, <, >=)
+        RTS_IF u16 var <           ; RTS_IF: Expected argument(s) after operator '<'
+        RTS_IF u16 var > #123      ; RTS_IF: Greater-than operator ('>') not supported
+        RTS_IF u16 var <= #123     ; RTS_IF: Less-than-or-equal operator ('<=') not supported
+        RTS_IF u16 var < #123,456  ; RTS_IF: Unexpected non-index-register after comparison '<'
+        RTS_IF u16 var < 123       ; RTS_IF: Numeric literal in '<' comparison; did you mean '#123'?
+
         CALL    target, FOO=        ; CALL: Expected 'reg=...'
         CALL    target, A           ; CALL: Expected 'A=...'
         CALL    target, A=0         ; CALL: Numeric literal in 'A=expr' assignment; did you mean '#0'?
@@ -1101,3 +1202,4 @@ ft21:
 
         FALL_THROUGH_TO target      ; FALL_THROUGH_TO: Target not adjacent: 'target'
 .endif
+

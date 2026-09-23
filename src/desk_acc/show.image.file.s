@@ -339,7 +339,7 @@ exit_hook := MaybeCallExitHook::hook
         JUMP_TABLE_MLI_CALL GET_EOF, get_eof_params
 
         ;; Maybe LR/DLR?
-    IF ecmp16 get_file_info_params::aux_type, #$400 : EQ
+    IF u16 get_file_info_params::aux_type = #$400
       IF ecmp24 get_eof_params::eof, #$400 : EQ
         TAIL_CALL ShowLRFile
       END_IF
@@ -356,7 +356,7 @@ exit_hook := MaybeCallExitHook::hook
     END_IF
 
         ;; If bigger than 576, assume HR
-    IF ucmp16 get_eof_params::eof, #kMinipixSrcSize+1 : GE
+    IF u16 get_eof_params::eof >= #kMinipixSrcSize+1
         TAIL_CALL ShowHRFile
     END_IF
 

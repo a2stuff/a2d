@@ -601,7 +601,7 @@ store_and_redraw:
         ;; ----------------------------------------
         ;; Every non-mine revealed?
 
-        RTS_IF ecmp16 num_hidden, #kNumMines : NE
+        RTS_IF u16 num_hidden <> #kNumMines
 
         jsr     PlaySound
 

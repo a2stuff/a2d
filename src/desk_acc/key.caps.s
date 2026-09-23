@@ -845,12 +845,11 @@ check:
         ldy     #2
     DO
         ;; X?
-        scmp16  tmp_poly,y, tmp_rect::x1
-      IF NEG
+      IF s16 tmp_poly,y < tmp_rect::x1
         copy16  tmp_poly,y, tmp_rect::x1
       END_IF
-        scmp16  tmp_poly,y, tmp_rect::x2
-      IF POS
+
+      IF s16 tmp_poly,y >= tmp_rect::x2
         copy16  tmp_poly,y, tmp_rect::x2
       END_IF
 
@@ -858,12 +857,11 @@ check:
         iny
 
         ;; Y?
-        scmp16  tmp_poly,y, tmp_rect::y1
-      IF NEG
+      IF s16 tmp_poly,y < tmp_rect::y1
         copy16  tmp_poly,y, tmp_rect::y1
       END_IF
-        scmp16  tmp_poly,y, tmp_rect::y2
-      IF POS
+
+      IF s16 tmp_poly,y >= tmp_rect::y2
         copy16  tmp_poly,y, tmp_rect::y2
       END_IF
 

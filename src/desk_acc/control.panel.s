@@ -862,7 +862,7 @@ lasty:  .byte   0
         ;; Find matching index in word table, or 0
         ldx     #kDblClickSpeedTableSize * 2
     DO
-      IF ecmp16 dblclick_speed, dblclick_speed_table-2,x : EQ
+      IF u16 dblclick_speed = dblclick_speed_table-2,x
         ;; Found a match
         txa
         lsr                     ; /= 2
@@ -1575,7 +1575,7 @@ caret_blink_counter:
         ;; Find matching index in word table, or 0
         ldx     #kCaretBlinkSpeedTableSize * 2
     DO
-      IF ecmp16 caret_blink_speed, caret_blink_speed_table-2,x : EQ
+      IF u16 caret_blink_speed = caret_blink_speed_table-2,x
         ;; Found a match
         txa
         lsr                     ; /= 2

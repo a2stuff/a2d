@@ -419,7 +419,7 @@ ycoord  .word
         sta     text_params+MGTK::TextWidthParams::width+1
         sta     text_params+MGTK::TextWidthParams::length
     DO
-        BREAK_IF ucmp16 text_params+MGTK::TextWidthParams::width, params::xcoord : GE
+        BREAK_IF u16 text_params+MGTK::TextWidthParams::width >= params::xcoord
         inc     text_params+MGTK::TextWidthParams::length
         lda     text_params+MGTK::TextWidthParams::length
         BREAK_IF A = len

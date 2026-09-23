@@ -346,9 +346,9 @@ common:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         sub16   winfo::maprect::x2, mx, tmpw
-    IF ucmp16 #kGrowBoxWidth, tmpw : GE
+    IF u16 #kGrowBoxWidth >= tmpw
         sub16   winfo::maprect::y2, my, tmpw
-      IF ucmp16 #kGrowBoxHeight, tmpw : GE
+      IF u16 #kGrowBoxHeight >= tmpw
 
         ;; Initiate the grow... re-using the drag logic
         copy8   #kDAWindowId, dragwindow_params::window_id
@@ -781,7 +781,7 @@ oval := $50
 
         ;; if (ovalWidth [16.0] > d0 [16.0])
         ;;   ovalWidth [16.0] = d0 [16.0]
-    IF ucmp16 ovalWidth, d0 : LT
+    IF u16 ovalWidth < d0
         copy16  d0, ovalWidth
     END_IF
 
@@ -790,7 +790,7 @@ oval := $50
 
         ;; if (ovalHeight [16.0] > d0 [16.0])
         ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
-    IF ucmp16 ovalHeight, d0 : LT
+    IF u16 ovalHeight < d0
         copy16  d0, ovalHeight
     END_IF
 
@@ -980,11 +980,11 @@ rotate:
 
         ;; if (vert [16.0] < oval.top [16.0])
         ;;   return;
-        RTS_IF ucmp16 vert, oval+OvalRec::top : LT
+        RTS_IF u16 vert < oval+OvalRec::top
 
         ;; if (vert [16.0] >= oval.bottom [16.0])
         ;;   return;
-        RTS_IF ucmp16 vert, oval+OvalRec::bottom : GE
+        RTS_IF u16 vert >= oval+OvalRec::bottom
 
         ;; d0 [16.0] = oval.y [16.0];
         copy16  oval+OvalRec::yy, d0

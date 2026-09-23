@@ -522,7 +522,7 @@ offset_table:
         and     #kMachIDHasClock
       IF NOT_ZERO
 
-       IF ucmp16 event_params::xcoord, rect_clock::x1 : GE
+       IF u16 event_params::xcoord >= rect_clock::x1
         TAIL_CALL LaunchPassedPathOnSystemDisk, AX=#str_date_and_time
        END_IF
       END_IF
@@ -1184,7 +1184,7 @@ beyond:
 
         ldx     #2              ; loop over dimensions
     DO
-      IF scmp16 event_params::coords,x, initial_pos,x : NEG
+      IF s16 event_params::coords,x < initial_pos,x
         copy16  event_params::coords,x, tmp_rect::topleft,x
         copy16  initial_pos,x, tmp_rect::bottomright,x
       ELSE
@@ -4928,7 +4928,7 @@ _PreamblePreCached:
 ;;;   3. goto update
 
 .proc _Clamp_hi
-    IF scmp16 viewport+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::bottomright,x : POS
+    IF s16 viewport+MGTK::Rect::bottomright,x >= ubox+MGTK::Rect::bottomright,x
         copy16  ubox+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::bottomright,x
     END_IF
         sub16   viewport+MGTK::Rect::bottomright,x, viewport_size,x, viewport+MGTK::Rect::topleft,x
@@ -4952,7 +4952,7 @@ _PreamblePreCached:
 ;;;   3. goto update
 
 .proc _Clamp_lo
-    IF scmp16 viewport+MGTK::Rect::topleft,x, ubox+MGTK::Rect::topleft,x : NEG
+    IF s16 viewport+MGTK::Rect::topleft,x < ubox+MGTK::Rect::topleft,x
         copy16  ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
     END_IF
         add16   viewport+MGTK::Rect::topleft,x, viewport_size,x, viewport+MGTK::Rect::bottomright,x
@@ -4979,12 +4979,12 @@ _PreamblePreCached:
 ;;;     3. redraw
 
 .proc _MaybeUpdateHThumb
-    IF ecmp16 viewport+MGTK::Rect::x1, old+MGTK::Point::xcoord : NE
+    IF s16 viewport+MGTK::Rect::x1 <> old+MGTK::Point::xcoord
         jsr     _SetHThumbFromViewport
         jsr     UpdateViewportAndRedrawActiveWindowEntriesAfterScroll
 
         ;; Handle offset case - may be able to deactivate scrollbar now
-      IF ucmp16 width, bbox_w : GE
+      IF u16 width >= bbox_w
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
         CALL    _CheckDeactivate, X=#MGTK::Point::xcoord
        IF POS
@@ -4996,12 +4996,12 @@ _PreamblePreCached:
 .endproc ; _MaybeUpdateHThumb
 
 .proc _MaybeUpdateVThumb
-    IF ecmp16 viewport+MGTK::Rect::y1, old+MGTK::Point::ycoord : NE
+    IF s16 viewport+MGTK::Rect::y1 <> old+MGTK::Point::ycoord
         jsr     _SetVThumbFromViewport
         jsr     UpdateViewportAndRedrawActiveWindowEntriesAfterScroll
 
         ;; Handle offset case - may be able to deactivate scrollbar now
-      IF ucmp16 height, bbox_h : GE
+      IF u16 height >= bbox_h
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
         CALL    _CheckDeactivate, X=#MGTK::Point::ycoord
        IF POS
@@ -5015,7 +5015,7 @@ _PreamblePreCached:
 ;;; Input: X=axis (`MGTK::Point::xcoord` or `MGTK::Point::ycoord`)
 ;;; Output: N=0 is scrollbar should be inactive, N=1 if it should be active
 .proc _CheckDeactivate
-    IF scmp16 ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x : POS
+    IF s16 ubox+MGTK::Rect::topleft,x >= viewport+MGTK::Rect::topleft,x
         scmp16  viewport+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::bottomright,x
     END_IF
         rts
@@ -6699,7 +6699,7 @@ set_pos:
 
         CLEAR_BIT7_FLAG frac_flag
 
-    IF ucmp16 value, #20 : LT
+    IF u16 value < #20
         lsr16   value           ; Convert blocks to K, rounding up
         ror     frac_flag       ; If < 10k and odd, show ".5" suffix"
     ELSE
@@ -6754,7 +6754,7 @@ set_pos:
         ;; --------------------------------------------------
         ;; Date
 
-    IF ecmp16 datetime_for_conversion, DATELO : EQ
+    IF u16 datetime_for_conversion = DATELO
         TAIL_CALL finish_date, AX=#str_today
     END_IF
 
@@ -6762,13 +6762,13 @@ set_pos:
 
         copy16  datetime_for_conversion, tmp_date
         jsr     _DecP8Date
-    IF ecmp16 DATELO, tmp_date : EQ
+    IF u16 DATELO = tmp_date
         TAIL_CALL finish_date, AX=#str_tomorrow
     END_IF
 
         copy16  DATELO, tmp_date
         jsr     _DecP8Date
-    IF ecmp16 datetime_for_conversion, tmp_date : EQ
+    IF u16 datetime_for_conversion = tmp_date
         TAIL_CALL finish_date, AX=#str_yesterday
     END_IF
 
@@ -7895,8 +7895,8 @@ END_PARAM_BLOCK
         sub16   gap, width_k_available, gap
         asr16   gap                         ; divided evenly
 
-    IF scmp16 #kWindowHeaderSpacingX, gap : POS ; is it below the minimum?
-        copy16  #kWindowHeaderSpacingX, gap     ; yes, use the minimum
+    IF s16 #kWindowHeaderSpacingX >= gap    ; is it below the minimum?
+        copy16  #kWindowHeaderSpacingX, gap ; yes, use the minimum
     END_IF
         copy16  gap, header_text_delta::xcoord
 
@@ -10165,7 +10165,7 @@ eof:    RETURN  A=#$FF
         jsr     _OpenSrcDir
 
 :
-    IF ucmp16 entry_index_in_dir, target_index : LT
+    IF u16 entry_index_in_dir < target_index
         jsr     _ReadFileEntry
         jmp     :-
     END_IF
@@ -10416,7 +10416,7 @@ retry:  jsr     GetSrcFileInfo
         bit     operations::operation_flags
         ASSERT_EQUALS operations::kOperationFlagsCheckVolFree, ::N_FLAG_MASK
     IF NS
-      IF ucmp16 dst_vol_blocks_free, block_count : LT
+      IF u16 dst_vol_blocks_free < block_count
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_ramcard_full
         jmp     CloseFilesCancelDialogWithFailedResult
       END_IF
@@ -10591,7 +10591,7 @@ retry:  jsr     GetDstFileInfo
 
         add16   dst_vol_blocks_free, dst_file_info_params::blocks_used, blocks_free
 
-    IF ucmp16 blocks_free, src_file_info_params::blocks_used : GE
+    IF u16 blocks_free >= src_file_info_params::blocks_used
         ;; Assume those blocks will be used
         sub16   blocks_free, src_file_info_params::blocks_used, dst_vol_blocks_free
         RETURN  C=0

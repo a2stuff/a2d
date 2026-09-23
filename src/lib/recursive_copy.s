@@ -398,7 +398,7 @@ eof:    RETURN  A=#$FF
         jsr     _OpenSrcDir
 
 :
-    IF ucmp16 entry_index_in_dir, target_index : LT
+    IF u16 entry_index_in_dir < target_index
         jsr     _ReadFileEntry
         jmp     :-
     END_IF
@@ -665,7 +665,7 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
 
         ;; Does it fit? (free >= needed)
 
-    IF ucmp16 dst_vol_blocks_free, src_file_info_params::blocks_used : LT
+    IF u16 dst_vol_blocks_free < src_file_info_params::blocks_used
         ;; Not enough room
         jmp     OpHandleNoSpace
     END_IF

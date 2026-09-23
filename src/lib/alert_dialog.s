@@ -309,7 +309,7 @@ advance:
         add16_8 alert_params::text, #1, textwidth_params::data
 .endif
 
-    IF ucmp16 textwidth_params::width, #kWrapWidth : LT
+    IF u16 textwidth_params::width < #kWrapWidth
         ;; Yes, record possible split position, maybe continue.
         ldy     test_pos
         sty     split_pos

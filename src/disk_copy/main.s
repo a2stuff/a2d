@@ -513,7 +513,7 @@ mem_block_addr:
       END_IF
 
         inc16   block
-      IF ucmp16 block, auxlc::source_block_count : GE
+      IF u16 block >= auxlc::source_block_count
         RETURN  AX=count
       END_IF
     FOREVER

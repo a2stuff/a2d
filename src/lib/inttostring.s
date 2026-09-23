@@ -24,7 +24,7 @@
 
         ;; Keep subtracting/incrementing until zero is hit
       REPEAT
-        BREAK_IF ucmp16 value, powers,x : LT
+        BREAK_IF u16 value < powers,x
         inc     digit
         sub16   value, powers,x, value
       FOREVER

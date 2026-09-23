@@ -20,7 +20,10 @@
 ;;; * DO / DONE for non-looping blocks; useful with REDO_IF / BREAK_IF
 ;;; * RTS_IF cond
 ;;;
-;;; Conditions take the form of flag tests or register comparisons.
+;;; Conditions take the form of:
+;;; * flag tests
+;;; * register comparisons
+;;; * typed comparisons
 ;;;
 ;;; Flag tests: ZS ZC CS CC VS VC NS NC
 ;;; (Aliases: EQ, NE, ZERO, NOT_ZERO, LT, GE, POS, NEG, PLUS, MINUS)
@@ -32,6 +35,10 @@
 ;;; Also: IN, BETWEEN (and NOT_IN, NOT_BETWEEN)
 ;;; e.g. "IF A IN #1, #2, #3"
 ;;; e.g. "IF A BETWEEN #'A', #'Z'"
+;;;
+;;; Typed comparisons: <type> <arg1> <operator> <arg2>
+;;; Types: u8 u16 s16
+;;; e.g. "IF u16 rect::x2 < rect::x1"
 ;;;
 ;;; Conditions can be prepended with NOT to invert meaning.
 ;;; e.g. "IF NOT A = #25"
@@ -94,11 +101,14 @@
 ;;;
 ;;;   cond  = bexpr ( ( "AND" | "OR" ) bexpr )*
 ;;;   bexpr = "NOT" bexpr | comp | test
-;;;   comp  = reg binop rhs | reg "BETWEEN" lo "," hi | reg "IN" arg ( "," arg )*
+;;;   comp  = type cexpr | reg binop rhs | reg "BETWEEN" lo "," hi | reg "IN" arg ( "," arg )*
 ;;;   reg   = "A" | "X" | "Y"
 ;;;   binop = "=" | "<>" | "<" | ">="
 ;;;   rhs   = /* any non-zero sequence of tokens excluding "AND" and "OR" */
 ;;;   test  = "CC" | "CS" | "NC" | "NS" | "VC" | "VS" | "ZC" | "ZS"
+;;;   type  = "u8" "u16" "s16"
+;;;   cexpr = lhs binop rhs
+;;;   lhs   = /* any non-zero sequence of tokens excluding "=" | "<>" | "<" | ">=" */
 
 ;;; '@' is used for numeric variables so they do not interfere with
 ;;; cheap local labels in user code.
@@ -439,12 +449,13 @@
 ;;; --------------------------------------------------
 
 
+.define _f2_is_type(arg) .xmatch({arg}, u8) .or .xmatch({arg}, u16) .or .xmatch({arg}, s16)
 .define _f2_is_register(arg) .xmatch({arg}, A) .or .xmatch({arg}, X) .or .xmatch({arg}, Y)
 .define _f2_is_flag_test(arg) .xmatch({arg}, CC) .or .xmatch({arg}, CS) .or .xmatch({arg}, NC) .or .xmatch({arg}, NS) .or .xmatch({arg}, ZC) .or .xmatch({arg}, ZS) .or .xmatch({arg}, VC) .or .xmatch({arg}, VS)
 .define _f2_is_unary_op(arg) .xmatch({arg}, NOT)
 
-;;; A condition must start with a register, flag test, or unary operator
-.define _f2_is_cond_start(arg) ( _f2_is_register {arg} .or  _f2_is_flag_test {arg} .or  _f2_is_unary_op {arg} )
+;;; A condition must start with a type, register, flag test, or unary operator
+.define _f2_is_cond_start(arg) ( _f2_is_type {arg} .or _f2_is_register {arg} .or  _f2_is_flag_test {arg} .or  _f2_is_unary_op {arg} )
 
 ;;; Consume a single token from `f2_token_list`
 .macro F2_PARSE_CONSUME
@@ -452,6 +463,25 @@
         .undef f2_token_list
         .define f2_token_list f2_tmp
         .undef f2_tmp
+.endmacro
+
+;;; Parse `f2_token_list` up to a comparison operator (=, <>, <, <=, >, >=); defines `f2_lhs` (caller must .undef it)
+.macro F2_PARSE_LHS
+        .define f2_lhs .left(1, {f2_token_list})
+        F2_PARSE_CONSUME
+        F2_PARSE_LHS2
+.endmacro
+.macro F2_PARSE_LHS2
+        .if .tcount({f2_token_list}) > 0
+          .if .not(.xmatch(.left(1, {f2_token_list}), =) .or .xmatch(.left(1, {f2_token_list}), <>) .or .xmatch(.left(1, {f2_token_list}), <) .or .xmatch(.left(1, {f2_token_list}), <=) .or .xmatch(.left(1, {f2_token_list}), >) .or .xmatch(.left(1, {f2_token_list}), >=))
+            .define f2_tmp f2_lhs
+            .undef f2_lhs
+            .define f2_lhs f2_tmp .left(1, {f2_token_list})
+            .undef f2_tmp
+            F2_PARSE_CONSUME
+            F2_PARSE_LHS2
+          .endif
+        .endif
 .endmacro
 
 ;;; Parse `f2_token_list` up to an "AND" or an "OR"; defines `f2_rhs` (caller must .undef it)
@@ -473,13 +503,123 @@
         .endif
 .endmacro
 
-;;; Parse `f2_rhs` up to a ","; defines `f2_first` and `f2_second` (caller must .undef them)
+;;; Parse passed args up to a ","; defines `f2_first` and `f2_second` (caller must .undef them)
 .macro F2_PARSE_PAIR op_str, param1,param2,p3,p4,p5,p6,p7,p8,p9
         .if .paramcount <> 3
           F2_ERR_EXPECTED .sprintf("two arguments for '%s'", op_str)
         .endif
         .define f2_first param1
         .define f2_second param2
+.endmacro
+
+;;; Parse a type-based binary operation, e.g. `u16 var1 < var2`
+.macro F2_PARSE_TYPECOMP
+        .define f2_type .left(1, {f2_token_list})
+        .if _f2_is_type {f2_type}
+        .else
+          F2_ERR_EXPECTED "type (u8,u16,s16)"
+        .endif
+        F2_PARSE_CONSUME
+
+        ;; Parse LHS to the binary operator (=, <>, <, <=, >, >=)
+        .if .tcount({f2_token_list}) = 0
+          F2_ERR_EXPECTED .sprintf("argument(s) after type '%s'", .string(f2_type))
+        .endif
+        F2_PARSE_LHS
+
+        ;; Parse the operator
+        .if .tcount({f2_token_list}) = 0
+          F2_ERR_EXPECTED "operator (=, <>, <, >=)"
+        .endif
+        .define f2_op .left(1, {f2_token_list})
+        .if .xmatch(f2_op, =)
+          .define f2_op_str "="
+        .elseif .xmatch(f2_op, <>)
+          .define f2_op_str "<>"
+        .elseif .xmatch(f2_op, <)
+          .define f2_op_str "<"
+        .elseif .xmatch(f2_op, >=)
+          .define f2_op_str ">="
+        .elseif .xmatch(f2_op, >)
+          F2_ERR "Greater-than operator ('>') not supported"
+        .elseif .xmatch(f2_op, <=)
+          F2_ERR "Less-than-or-equal operator ('<=') not supported"
+        .else
+          F2_ERR_EXPECTED "operator (=, <>, <, >=)"
+        .endif
+
+        F2_PARSE_CONSUME
+
+        ;; Parse the RHS expression
+        .if .tcount({f2_token_list}) = 0
+          F2_ERR_EXPECTED .sprintf("argument(s) after operator '%s'", f2_op_str)
+        .endif
+        F2_PARSE_RHS
+
+        .if .match({f2_rhs}, 1234)
+          F2_ERR .sprintf("Numeric literal in '%s' comparison; did you mean '#%d'?", f2_op_str, f2_rhs)
+        .endif
+
+        F2_VALIDATE_COMPARE_RHS f2_op_str, f2_rhs
+
+        ;; Code generation
+        .if .xmatch(f2_type, u16)
+          .if .xmatch(f2_op, =)
+            ecmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
+          .elseif .xmatch(f2_op, <>)
+            ecmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
+          .elseif .xmatch(f2_op, <)
+            ucmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
+          .elseif .xmatch(f2_op, >=)
+            ucmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
+          .else
+            F2_ERR_UNREACHED
+          .endif
+        .elseif .xmatch(f2_type, s16)
+          .if .xmatch(f2_op, =)
+            ecmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
+          .elseif .xmatch(f2_op, <>)
+            ecmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
+          .elseif .xmatch(f2_op, <)
+            scmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
+          .elseif .xmatch(f2_op, >=)
+            scmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
+          .else
+            F2_ERR_UNREACHED
+          .endif
+        .elseif .xmatch(f2_type, u8)
+          .if .xmatch(f2_op, =)
+            ucmp8 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
+          .elseif .xmatch(f2_op, <>)
+            ucmp8 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
+          .elseif .xmatch(f2_op, <)
+            ucmp8 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
+          .elseif .xmatch(f2_op, >=)
+            ucmp8 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
+          .else
+            F2_ERR_UNREACHED
+          .endif
+        .else
+          F2_ERR_UNREACHED
+        .endif
+
+        .undef f2_type
+        .undef f2_lhs
+        .undef f2_op
+        .undef f2_op_str
+        .undef f2_rhs
 .endmacro
 
 ;;; Parse a relational expression / binary operation (e.g. `A = #7`)
@@ -662,6 +802,12 @@
           F2_PARSE_CONSUME
           @f2_negate_flag .set .not(@f2_negate_flag)
           F2_PARSE_BEXPR
+
+        .elseif _f2_is_type {f2_tok}
+          .undef f2_tok
+
+          ;; type - start of a type-based binary operation (e.g. `u16 var1 < var2`)
+          F2_PARSE_TYPECOMP
 
         .elseif _f2_is_register {f2_tok}
           .undef f2_tok

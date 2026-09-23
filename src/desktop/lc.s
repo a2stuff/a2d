@@ -153,14 +153,13 @@ params: .res    3
         ;; icons from drawing over the header when vertically scrolled.
         sub16   desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, tmpw
 
-    IF scmp16 tmpw, #kWindowHeaderHeight : NEG
+    IF s16 tmpw < #kWindowHeaderHeight
         ;; Adjust grafport to account for header
         add16   window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
         add16   window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
 
         ;; Degenerate?
-        scmp16  desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
-      IF NEG
+      IF s16 desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2 < desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
         lda     #MGTK::Error::window_obscured
         jmp     BankInMain
       END_IF

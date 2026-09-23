@@ -86,7 +86,7 @@ END_PARAM_BLOCK
 
 .ifdef DEBUG
         ;; Bad if param block overlaps our zero page useage
-    IF ucmp16 params_addr, #zp_end : LT
+    IF u16 params_addr < #zp_end
         brk
     END_IF
 .endif ; DEBUG
@@ -1107,7 +1107,7 @@ find_icon:
         lda     (win_ptr),y
         copy16in (win_ptr),y, headery
         add16_8 headery, header_height
-    IF ucmp16 findwindow_params::mousey, headery : GE
+    IF u16 findwindow_params::mousey >= headery
         RETURN  C=0
     END_IF
 
@@ -2123,11 +2123,11 @@ reserved:       .byte   0
         ldx     #2              ; loop over dimensions
     DO
 
-      IF scmp16 portbits::maprect::topleft,x, bounding_rect+MGTK::Rect::topleft,x : NEG
+      IF s16 portbits::maprect::topleft,x < bounding_rect+MGTK::Rect::topleft,x
         copy16  bounding_rect+MGTK::Rect::topleft,x, portbits::maprect::topleft,x
       END_IF
 
-      IF scmp16 bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x : NEG
+      IF s16 bounding_rect+MGTK::Rect::bottomright,x < portbits::maprect::bottomright,x
         copy16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
       END_IF
 
@@ -2334,7 +2334,7 @@ do_pt:  lda     pt_num
         ;; Cases 7/8/9 (and done)
         ;; if (win_l > cr_l)
         ;; . cr_r = win_l - 1
-    IF scmp16 cr_l, win_l : NEG
+    IF s16 cr_l < win_l
         sub16   win_l, #1, cr_r
         jmp     reclip
     END_IF
@@ -2342,7 +2342,7 @@ do_pt:  lda     pt_num
         ;; Cases 1/2/3 (and continue below)
         ;; if (cr_r > win_r)
         ;; . cr_r = win_r
-    IF scmp16 win_r, cr_r : NEG
+    IF s16 win_r < cr_r
         copy16  win_r, cr_r
         ;; in case 2 this will be reset
     END_IF
@@ -2350,7 +2350,7 @@ do_pt:  lda     pt_num
         ;; Cases 3/6 (and done)
         ;; if (win_t > cr_t)
         ;; . cr_b = win_t - 1
-    IF scmp16 cr_t, win_t : NEG
+    IF s16 cr_t < win_t
         sub16   win_t, #1, cr_b
         jmp     reclip
     END_IF
@@ -2358,7 +2358,7 @@ do_pt:  lda     pt_num
         ;; Cases 1/4 (and done)
         ;; if (win_b < cr_b)
         ;; . cr_t = win_b + 1
-    IF scmp16 win_b, cr_b :  NEG
+    IF s16 win_b < cr_b
         ldxy    win_b
         inxy
         stxy    cr_t
@@ -2369,7 +2369,7 @@ do_pt:  lda     pt_num
         ;; if (win_r < stash_r)
         ;; . cr_l = win_r + 1
         ;; . cr_r = stash_r
-    IF scmp16 stash_r, win_r : POS
+    IF s16 stash_r >= win_r
         ldxy    win_r
         inxy
         stxy    cr_l

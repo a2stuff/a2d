@@ -658,10 +658,8 @@ end:    rts
         copy8   #0, tab_flag
 
         ldx     #0
-      IF ucmp16 current_line, first_visible_line : GE
-       IF ucmp16 last_visible_line, current_line : GE
+      IF u16 current_line >= first_visible_line AND u16 last_visible_line >= current_line
         inx
-       END_IF
       END_IF
         stx     visible_flag
 
@@ -802,7 +800,7 @@ loop:
         inc     run_width+1
 :
         ;; Is there room?
-    IF ucmp16 remaining_width, run_width : GE
+    IF u16 remaining_width >= run_width
         inc     drawtext_params::textlen
         jmp     loop
     END_IF
@@ -838,7 +836,7 @@ run_width:  .word   0
         add16   run_width, line_pos::left, line_pos::left
         ldx     #0
 loop:
-    IF ucmp16 times70,x, line_pos::left : LT
+    IF u16 times70,x < line_pos::left
         inx
         inx
         cpx     #14
