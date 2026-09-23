@@ -397,7 +397,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
 
         ;; Next block
         inc16   auxlc::block_num
-    WHILE ucmp16 auxlc::block_num, auxlc::source_block_count : LT
+    WHILE u16 auxlc::block_num < auxlc::source_block_count
 
         ;; That was last block so we're done
         RETURN  A=#$80

@@ -584,7 +584,7 @@ outer_only:
 
 next:
         inc16   yy
-    WHILE ucmp16 yy, outer_oval+OvalRec::bottom : LT
+    WHILE u16 yy < outer_oval+OvalRec::bottom
 
         MGTK_CALL MGTK::UnshieldCursor
         rts

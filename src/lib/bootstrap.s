@@ -30,7 +30,7 @@
         copy8   (src),y,  (dst),y
         inc16   src
         inc16   dst
-    WHILE ecmp16 src, #QuitRoutine + sizeof_QuitRoutine : NE
+    WHILE u16 src <> #QuitRoutine + sizeof_QuitRoutine
 
         bit     ROMIN2
 

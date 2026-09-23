@@ -7588,7 +7588,7 @@ vol_blocks_used:  .word   0
         inc16   ptr_src
 
         ;; All the way to top of used space
-    WHILE ecmp16 ptr_src, filerecords_free_start : NE
+    WHILE u16 ptr_src <> filerecords_free_start
         jsr     PopPointers     ; do not tail-call optimise!
 
         ;; Offset affected list pointers down
