@@ -6599,15 +6599,14 @@ done:
         viewport := window_grafport+MGTK::GrafPort::maprect
 
         ;; Below bottom?
-        scmp16  pos_col::ycoord, viewport+MGTK::Rect::y2
-        bpl     ret
-
+    IF s16 pos_col::ycoord < viewport+MGTK::Rect::y2
         copy16  pos_col::ycoord, list_view_shield_rect::y1
         add16   pos_col::ycoord, #kListViewRowHeight, pos_col::ycoord
 
         ;; Above top?
         scmp16  pos_col::ycoord, viewport+MGTK::Rect::y1
         bpl     in_range
+    END_IF
 ret:    rts
 
         ;; Draw it!

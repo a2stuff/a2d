@@ -326,9 +326,10 @@ first_dow:
 
         copy8   #12, datetime + ParsedDateTime::month
 year:   dec16   datetime + ParsedDateTime::year
-check:  ucmp16  datetime + ParsedDateTime::year, #1901
-        bcs     fin
+check:
+    IF u16 datetime + ParsedDateTime::year < #1901
         copy16  #2155, datetime + ParsedDateTime::year
+    END_IF
 
 fin:    jsr     UpdateWindow
         jmp     InputLoop
@@ -354,9 +355,10 @@ fin:    jsr     UpdateWindow
 
         copy8   #1, datetime + ParsedDateTime::month
 year:   inc16   datetime + ParsedDateTime::year
-check:  ucmp16  datetime + ParsedDateTime::year, #2155
-        bcc     fin
+check:
+    IF u16 datetime + ParsedDateTime::year >= #2155
         copy16  #1901, datetime + ParsedDateTime::year
+    END_IF
 
 fin:    jsr     UpdateWindow
         jmp     InputLoop

@@ -17,8 +17,7 @@ END_PARAM_BLOCK
 
     REPEAT
         MGTK_CALL MGTK::StringWidth, params
-        ucmp16  params::width, #kProgressDialogPathWidth
-        BREAK_IF LT             ; already short enough
+        BREAK_IF u16 params::width < #kProgressDialogPathWidth ; already short enough
 
         jsr     ellipsify
     FOREVER

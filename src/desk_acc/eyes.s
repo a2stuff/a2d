@@ -288,20 +288,21 @@ test:
     IF NEG
         sub16   #0, delta, delta ; negate
     END_IF
-        ucmp16  delta, #kMoveThresholdX
-        bcs     moved
+
+    IF u16 delta < #kMoveThresholdX
 
         ;; Compute absolute Y delta
         sub16   event_params::ycoord, screentowindow_params::screen::ycoord, delta
         lda     delta+1
-    IF NEG
+      IF NEG
         sub16   #0, delta, delta ; negate
-    END_IF
-        ucmp16  delta, #kMoveThresholdY
-        bcs     moved
+      END_IF
 
+      IF u16 delta < #kMoveThresholdY
         ;; Hasn't moved enough
         jmp     done
+      END_IF
+    END_IF
 
 moved:  copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
@@ -560,11 +561,7 @@ skip_erase_flag:        .byte   0 ; bit7
         copy16  yy, rect+MGTK::Rect::y1
         copy16  yy, rect+MGTK::Rect::y2
 
-        ucmp16  yy, inner_oval+OvalRec::top
-        bcc     outer_only
-        ucmp16  yy, inner_oval+OvalRec::bottom
-        bcs     outer_only
-
+      IF u16 yy >= inner_oval+OvalRec::top AND u16 yy < inner_oval+OvalRec::bottom
         ;; Need to draw the left and right edges
         copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
         copy16  inner_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x2
@@ -573,16 +570,13 @@ skip_erase_flag:        .byte   0 ; bit7
         copy16  inner_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x1
         copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
         MGTK_CALL MGTK::PaintRect, rect
-
-        jmp     next
-
-        ;; Only need to draw the outer oval
-outer_only:
+     ELSE
+         ;; Only need to draw the outer oval
         copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
         copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
         MGTK_CALL MGTK::PaintRect, rect
+     END_IF
 
-next:
         inc16   yy
     WHILE u16 yy < outer_oval+OvalRec::bottom
 
@@ -998,6 +992,7 @@ rotate:
 loop1:
         ;; while (oval.square [16.16] < oval.rSqYSq [32.0] ) {
         ucmp16  oval+OvalRec::square+2, oval+OvalRec::rSqYSq
+        ;; TODO: `BCS`, and convert this to Flow Control Macros
         jcs     endloop1
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16];
