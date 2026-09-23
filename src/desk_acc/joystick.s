@@ -338,7 +338,7 @@ num_analog_inputs:
         .byte   4               ; IIc only has 2 analog inputs
 
 .struct InputState
-        valid   .byte
+        valid   .byte           ; bit7
 
         pdl0    .byte
         pdl1    .byte
@@ -378,7 +378,7 @@ num_analog_inputs:
         sta     curr+InputState::butn2
 
         ;; Mark current state as valid
-        copy8   #$80, curr+InputState::valid
+        SET_BIT7_FLAG curr+InputState::valid
 
         ;; --------------------------------------------------
 

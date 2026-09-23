@@ -71,16 +71,16 @@ PREDEFINE_SCOPE UpdateProgress
 ;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),
 ;;; to infer support for MouseText characters.
 ;;; Done by testing testing for a ROM signature.
-;;; Output: Sets `supports_mousetext` to $80.
+;;; Output: Sets high bit of `supports_mousetext`
 
 .proc DetectMousetext
         ;; IIc/IIc+ have $00
         ;; IIe original has $EA, Enh. IIe, IIgs have $E0
     IF lda ZIDBYTE : ZERO OR A = #$E0
-        copy8   #$80, supports_mousetext
+        SET_BIT7_FLAG supports_mousetext
     END_IF
         rts
 .endproc ; DetectMousetext
 
-supports_mousetext:
+supports_mousetext:             ; bit7
         .byte   0

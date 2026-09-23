@@ -8687,8 +8687,7 @@ maxheight  .word
         sta     current_winport::viewloc + MGTK::Point::ycoord
 :       rts
 
-grow:   lda     #0
-        sta     grew_flag
+grow:   CLEAR_BIT7_FLAG grew_flag
 loop:   add16   current_winport::maprect + MGTK::Rect::x2,x, drag_delta,x, current_winport::maprect + MGTK::Rect::x2,x
         sub16   current_winport::maprect + MGTK::Rect::x2,x, current_winport::maprect + MGTK::Rect::x1,x, win_width
 
@@ -8712,7 +8711,7 @@ loop:   add16   current_winport::maprect + MGTK::Rect::x2,x, drag_delta,x, curre
         add16   content::maxwidth,x, current_winport::maprect + MGTK::Rect::x1,x, current_winport::maprect + MGTK::Rect::x2,x
 
 set_grew:
-        jsr     SetGrewFlag
+        SET_BIT7_FLAG grew_flag
 
 next:   inx
         inx
@@ -10452,23 +10451,15 @@ slip:
         RETURN  C=0             ; no further validation needed
 .endproc ; KbdMouseDragCheckXmax
 
-
-grew_flag:
+grew_flag:                      ; bit7
         .byte   0
-
-.proc SetGrewFlag
-        lda     #$80
-        sta     grew_flag
-grts:   rts
-.endproc ; SetGrewFlag
-
 
 .proc FinishGrow
         bit     kbd_mouse_state
-        bpl     SetGrewFlag::grts
+        bpl     ret
 
         bit     grew_flag
-        bpl     SetGrewFlag::grts
+        bpl     ret
 
         jsr     GetWinFrameRect
         php
@@ -10482,7 +10473,7 @@ grts:   rts
 
         jsr     PositionKbdMouse
         plp
-        rts
+ret:    rts
 .endproc ; FinishGrow
 
 ;;; ============================================================
