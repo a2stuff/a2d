@@ -316,8 +316,7 @@ StepMaze := DoMaze::step
     DO
         tya
         sta     (ptr),y
-        dec16   ptr
-    WHILE u16 ptr >= #visited_cells
+    WHILE u16 --ptr >= #visited_cells
         rts
 .endproc ; ClearVisitedCells
 

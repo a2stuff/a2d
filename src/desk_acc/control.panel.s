@@ -1052,8 +1052,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::PaintBits, darrow_params
         add16_8 addr, #.sizeof(MGTK::Point)
-        inc     arrow_num
-    WHILE u8 arrow_num <> #kNumArrows
+    WHILE u8 ++arrow_num <> #kNumArrows
 .endscope
 
         BTK_CALL BTK::RadioDraw, dblclick_button1

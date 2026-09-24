@@ -717,8 +717,7 @@ test_unit_num:
         copy8   (ptr),y, filename_buf,y
       WHILE dey : POS
         jsr     CopyFile
-        inc     filenum
-    WHILE u8 filenum <> #kNumFilenames
+    WHILE u8 ++filenum <> #kNumFilenames
 
         jsr     UpdateProgress
         FALL_THROUGH_TO FinishDeskTopCopy

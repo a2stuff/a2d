@@ -1998,8 +1998,7 @@ year:   .byte   0
       WHILE dex : NOT ZERO
 
 next_slot:
-        dec     slot_hi1
-    WHILE u8 slot_hi1 <> #$C0
+    WHILE u8 --slot_hi1 <> #$C0
 
         sec
         rts
@@ -2157,8 +2156,7 @@ seq:
         rts
 
 next_slot:
-        dec     slot_hi
-    WHILE u8 slot_hi <> #$C0
+    WHILE u8 --slot_hi <> #$C0
         sec
         rts
 

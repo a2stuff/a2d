@@ -500,7 +500,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::MoveTo, SELF_MODIFIED, pt_start
         MGTK_CALL MGTK::LineTo, SELF_MODIFIED, pt_end
 
-      WHILE inc index : u8 index < #kNumGridLines
+      WHILE u8 ++index < #kNumGridLines
     END_IF
 
         ;; --------------------------------------------------
@@ -607,7 +607,7 @@ draw_date:
         add16_8 date_pos::ycoord, #kDayDY
       END_IF
 
-    WHILE inc date : u8 date <> #39        ; extra, to erase previous days
+    WHILE u8 ++date <> #39        ; extra, to erase previous days
 
         ;; --------------------------------------------------
         ;; Left/right arrow buttons

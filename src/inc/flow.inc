@@ -37,8 +37,9 @@
 ;;; e.g. "IF A BETWEEN #'A', #'Z'"
 ;;;
 ;;; Typed comparisons: <type> <arg1> <operator> <arg2>
-;;; Types: u8 u16 s16
+;;; Types: u8 u16 s16 u24
 ;;; e.g. "IF u16 rect::x2 < rect::x1"
+;;; <arg1> can be prefixed with ++ or -- to pre-increment/decrement
 ;;;
 ;;; Conditions can be prepended with NOT to invert meaning.
 ;;; e.g. "IF NOT A = #25"
@@ -467,11 +468,13 @@
 
 ;;; Parse `f2_token_list` up to a comparison operator (=, <>, <, <=, >, >=); defines `f2_lhs` (caller must .undef it)
 .macro F2_PARSE_LHS
+        F2_CHECK_BAD_PREFIX_OP
         .define f2_lhs .left(1, {f2_token_list})
         F2_PARSE_CONSUME
         F2_PARSE_LHS2
 .endmacro
 .macro F2_PARSE_LHS2
+        F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
           .if .not(.xmatch(.left(1, {f2_token_list}), =) .or .xmatch(.left(1, {f2_token_list}), <>) .or .xmatch(.left(1, {f2_token_list}), <) .or .xmatch(.left(1, {f2_token_list}), <=) .or .xmatch(.left(1, {f2_token_list}), >) .or .xmatch(.left(1, {f2_token_list}), >=))
             .define f2_tmp f2_lhs
@@ -484,13 +487,24 @@
         .endif
 .endmacro
 
+;;; Watch for ++ or -- in `f2_token_list` as these are silently valid expressions in ca65
+.macro F2_CHECK_BAD_PREFIX_OP
+        .if .xmatch(.left(2, {f2_token_list}), ++)
+          F2_ERR "Unexpected '++' (only supported at start of typed comparison)"
+        .elseif .xmatch(.left(2, {f2_token_list}), --)
+          F2_ERR "Unexpected '--' (only supported at start of typed comparison)"
+        .endif
+.endmacro
+
 ;;; Parse `f2_token_list` up to an "AND" or an "OR"; defines `f2_rhs` (caller must .undef it)
 .macro F2_PARSE_RHS
+        F2_CHECK_BAD_PREFIX_OP
         .define f2_rhs .left(1, {f2_token_list})
         F2_PARSE_CONSUME
         F2_PARSE_RHS2
 .endmacro
 .macro F2_PARSE_RHS2
+        F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
           .if .not(.xmatch(.left(1, {f2_token_list}), AND) .or .xmatch(.left(1, {f2_token_list}), OR))
             .define f2_tmp f2_rhs
@@ -520,6 +534,20 @@
           F2_ERR_EXPECTED "type (u8,u16,s16,u24)"
         .endif
         F2_PARSE_CONSUME
+
+        ;; Optional prefix operator (++/--)
+        .define f2_prefix_op
+        .if .xmatch(.left(2, {f2_token_list}), ++)
+          .undef f2_prefix_op
+          .define f2_prefix_op ++
+          F2_PARSE_CONSUME
+          F2_PARSE_CONSUME
+        .elseif .xmatch(.left(2, {f2_token_list}), --)
+          .undef f2_prefix_op
+          .define f2_prefix_op --
+          F2_PARSE_CONSUME
+          F2_PARSE_CONSUME
+        .endif
 
         ;; Parse LHS to the binary operator (=, <>, <, <=, >, >=)
         .if .tcount({f2_token_list}) = 0
@@ -564,6 +592,12 @@
 
         ;; Code generation
         .if .xmatch(f2_type, u16)
+          .if .xmatch(f2_prefix_op, ++)
+            inc16 f2_lhs
+          .elseif .xmatch(f2_prefix_op, --)
+            dec16 f2_lhs
+          .endif
+
           .if .xmatch(f2_op, =)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -580,6 +614,12 @@
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch(f2_type, s16)
+          .if .xmatch(f2_prefix_op, ++)
+            inc16 f2_lhs
+          .elseif .xmatch(f2_prefix_op, --)
+            dec16 f2_lhs
+          .endif
+
           .if .xmatch(f2_op, =)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -596,6 +636,12 @@
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch(f2_type, u8)
+          .if .xmatch(f2_prefix_op, ++)
+            inc f2_lhs
+          .elseif .xmatch(f2_prefix_op, --)
+            dec f2_lhs
+          .endif
+
           .if .xmatch(f2_op, =) .and .xmatch(f2_rhs, #0)
             LDA f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -621,6 +667,12 @@
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch(f2_type, u24)
+          .if .xmatch(f2_prefix_op, ++)
+            inc24 f2_lhs
+          .elseif .xmatch(f2_prefix_op, --)
+            F2_ERR "dec24 not defined"
+          .endif
+
           .if .xmatch(f2_op, =)
             ecmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -641,6 +693,7 @@
         .endif
 
         .undef f2_type
+        .undef f2_prefix_op
         .undef f2_lhs
         .undef f2_op
         .undef f2_op_str

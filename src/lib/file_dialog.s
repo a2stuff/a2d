@@ -616,8 +616,8 @@ cloop:  iny
         cpy     #SELF_MODIFIED_BYTE
         bcc     cloop
 
-next:   inc     index
-    WHILE u8 index <> num_file_names
+next:
+    WHILE u8 ++index <> num_file_names
         dec     index
 found:  RETURN  A=index
 
@@ -1224,8 +1224,7 @@ next:   add16_8 ptr, #16        ; advance to next
         stax    ptr2
        END_IF
 
-        inc     inner
-      WHILE u8 inner <> outer
+      WHILE u8 ++inner <> outer
 
     WHILE dec outer : NOT_ZERO
         rts

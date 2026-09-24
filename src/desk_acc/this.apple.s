@@ -1432,7 +1432,7 @@ draw_maybe_sp:
       END_IF
 
         asl     mask
-    WHILE inc slot : u8 slot < #8
+    WHILE u8 ++slot < #8
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts

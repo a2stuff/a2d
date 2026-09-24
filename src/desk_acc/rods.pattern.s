@@ -153,8 +153,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         dey
       WHILE POS
 
-        inc     CV
-    WHILE u8 CV <> #24
+    WHILE u8 ++CV <> #24
 
         sta     CLR80STORE
         rts
@@ -190,8 +189,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         dey
       WHILE POS
 
-        inc     CV
-    WHILE u8 CV <> #24
+    WHILE u8 ++CV <> #24
 
         sta     CLR80STORE
         rts

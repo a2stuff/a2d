@@ -268,8 +268,7 @@ line_addrs:
         MGTK_CALL MGTK::MoveTo, pos
         MGTK_CALL MGTK::DrawStringCentered, SELF_MODIFIED, @addr
 
-        inc     index
-    WHILE u8 index <> #kLineCount
+    WHILE u8 ++index <> #kLineCount
 
         MGTK_CALL MGTK::ShowCursor
         rts

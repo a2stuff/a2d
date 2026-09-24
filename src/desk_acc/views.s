@@ -372,7 +372,7 @@ view_by_table:
 
         BTK_CALL BTK::RadioDraw, SELF_MODIFIED, params_addr
 
-    WHILE inc index : u8 index < #kNumButtons
+    WHILE u8 ++index < #kNumButtons
 
         ;; --------------------------------------------------
 

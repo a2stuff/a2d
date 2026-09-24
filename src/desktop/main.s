@@ -4388,8 +4388,7 @@ file_char:
 
       WHILE Y < len
 
-        inc     index
-    WHILE u8 index <> num_filenames
+    WHILE u8 ++index <> num_filenames
 
         dec     index
 found:  RETURN  A=index
@@ -7571,10 +7570,9 @@ vol_blocks_used:  .word   0
         bit     LCBANK1
         bit     LCBANK1
         inc16   ptr_dst
-        inc16   ptr_src
 
         ;; All the way to top of used space
-    WHILE u16 ptr_src <> filerecords_free_start
+    WHILE u16 ++ptr_src <> filerecords_free_start
         jsr     PopPointers     ; do not tail-call optimise!
 
         ;; Offset affected list pointers down

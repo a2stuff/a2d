@@ -688,12 +688,21 @@ var2 := *
         nop
     END_IF
 
+        ;; #0 special cases
     IF u8 var1 = #0
         nop
     END_IF
     IF u8 var1 <> #0
         nop
     END_IF
+
+        ;; prefix operators
+    DO
+        nop
+    WHILE u8 ++var1 < #12
+    DO
+        nop
+    WHILE u8 --var1 >= #12
 
 ;;; u16
     IF u16 var1 = var2
@@ -724,6 +733,14 @@ var2 := *
         nop
     END_IF
 
+        ;; prefix operators
+    DO
+        nop
+    WHILE u16 ++var1 < #1234
+    DO
+        nop
+    WHILE u16 --var1 >= #1234
+
 ;;; s16
     IF s16 var1 = var2
         nop
@@ -752,6 +769,48 @@ var2 := *
     IF s16 var1 >= #1234
         nop
     END_IF
+
+        ;; prefix operators
+    DO
+        nop
+    WHILE s16 ++var1 < #1234
+    DO
+        nop
+    WHILE s16 --var1 >= #1234
+
+;;; u24
+    IF u24 var1 = var2
+        nop
+    END_IF
+    IF u24 var1 = #1234
+        nop
+    END_IF
+
+    IF u24 var1 <> var2
+        nop
+    END_IF
+    IF u24 var1 <> #1234
+        nop
+    END_IF
+
+    IF u24 var1 < var2
+        nop
+    END_IF
+    IF u24 var1 < #1234
+        nop
+    END_IF
+
+    IF u24 var1 >= var2
+        nop
+    END_IF
+    IF u24 var1 >= #1234
+        nop
+    END_IF
+
+        ;; prefix operators
+    DO
+        nop
+    WHILE u24 ++var1 < #1234
 
 ;;; --------------------------------------------------
 ;;; Cheap Local Label Compatibility
@@ -1191,6 +1250,8 @@ ft21:
         RTS_IF aa >= #1            ; RTS_IF: Expected boolean expression, saw identifier ('aa')
         RTS_IF A IN #0 #1          ; Expected 'end-of-line' but found '#'
         RTS_IF BIT var             ; RTS_IF: Expected end-of-statement (':')
+        RTS_IF A = ++var           ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
+        RTS_IF A = var++           ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
 
         RTS_IF u16                 ; RTS_IF: Expected argument(s) after type 'u16'
         RTS_IF u16 var             ; RTS_IF: Expected operator (=, <>, <, >=)
@@ -1199,6 +1260,10 @@ ft21:
         RTS_IF u16 var <= #123     ; RTS_IF: Less-than-or-equal operator ('<=') not supported
         RTS_IF u16 var < #123,456  ; RTS_IF: Unexpected non-index-register after comparison '<'
         RTS_IF u16 var < 123       ; RTS_IF: Numeric literal in '<' comparison; did you mean '#123'?
+        RTS_IF u8 var++ = #5       ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
+        RTS_IF u8 var-- = #5       ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
+        RTS_IF u8 var = --var      ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
+        RTS_IF u8 var = ++var      ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
 
         CALL    target, FOO=        ; CALL: Expected 'reg=...'
         CALL    target, A           ; CALL: Expected 'A=...'
@@ -1209,4 +1274,3 @@ ft21:
 
         FALL_THROUGH_TO target      ; FALL_THROUGH_TO: Target not adjacent: 'target'
 .endif
-

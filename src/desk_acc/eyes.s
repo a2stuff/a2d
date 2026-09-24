@@ -577,8 +577,7 @@ skip_erase_flag:        .byte   0 ; bit7
         MGTK_CALL MGTK::PaintRect, rect
      END_IF
 
-        inc16   yy
-    WHILE u16 yy < outer_oval+OvalRec::bottom
+    WHILE u16 ++yy < outer_oval+OvalRec::bottom
 
         MGTK_CALL MGTK::UnshieldCursor
         rts

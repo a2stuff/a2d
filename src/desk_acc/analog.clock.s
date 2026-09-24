@@ -128,7 +128,7 @@ parsed: .tag    ParsedDateTime
         MGTK_CALL MGTK::MoveTo, line::start
         MGTK_CALL MGTK::LineTo, line::end
 
-    WHILE inc tindex : u8 tindex <> #60
+    WHILE u8 ++tindex <> #60
 
         rts
 
