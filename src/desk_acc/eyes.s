@@ -991,8 +991,7 @@ rotate:
 
 loop1:
         ;; while (oval.square [16.16] < oval.rSqYSq [32.0] ) {
-        ucmp16  oval+OvalRec::square+2, oval+OvalRec::rSqYSq
-        bcs     endloop1
+    IF u16 oval+OvalRec::square+2 < oval+OvalRec::rSqYSq
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16];
         add32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
@@ -1008,15 +1007,14 @@ loop1:
 
         ;; }
         jmp     loop1
+    END_IF
 
-endloop1:
         ;; --------------------------------------------------
         ;; while square > rSqYSq make oval smaller
 
 loop2:
         ;; while (oval.square [16.16] > oval.rSqYSq [32.0]) {
-        ucmp16  oval+OvalRec::square+2, oval+OvalRec::rSqYSq
-        bcc     endloop2
+    IF u16 oval+OvalRec::square+2 >= oval+OvalRec::rSqYSq
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] - oval.oneHalf [16.16];
         sub32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
@@ -1032,7 +1030,7 @@ loop2:
 
         ;; }
         jmp     loop2
-endloop2:
+    END_IF
 
         ;; oval.rSqYSq [32.0] = oval.rSqYSq [32.0] - (4 * (d0 [16.0] + 1)));
 
