@@ -248,7 +248,7 @@ jt_callbacks:
         CALL    file_dialog::GetPath, AX=#main::tmp_path_buf
 
         ;; If name is empty, use last path segment
-    IF lda text_input_buf : ZERO
+    IF u8 text_input_buf = #0
         ldx     path_buf0
       DO
         lda     path_buf0,x

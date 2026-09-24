@@ -688,6 +688,13 @@ var2 := *
         nop
     END_IF
 
+    IF u8 var1 = #0
+        nop
+    END_IF
+    IF u8 var1 <> #0
+        nop
+    END_IF
+
 ;;; u16
     IF u16 var1 = var2
         nop

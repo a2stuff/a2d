@@ -661,7 +661,7 @@ new_state:
         ;; ------------------------------
     IF A = #NekoState::rest
         ;; ------------------------------
-      IF lda dir : NOT_ZERO
+      IF u8 dir <> #0
         TAIL_CALL set_state_and_frame, X=#NekoState::chase, A=#NekoFrame::surprise
       END_IF
 
@@ -683,7 +683,7 @@ new_state:
         ;; ------------------------------
     IF A = #NekoState::chase
         ;; ------------------------------
-      IF lda dir : ZERO
+      IF u8 dir = #0
         TAIL_CALL set_state_and_frame, X=#NekoState::rest, A=#NekoFrame::sitting
       END_IF
 

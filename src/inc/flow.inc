@@ -596,7 +596,16 @@
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch(f2_type, u8)
-          .if .xmatch(f2_op, =)
+          .if .xmatch(f2_op, =) .and .xmatch(f2_rhs, #0)
+            LDA f2_lhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
+          .elseif .xmatch(f2_op, <>) .and .xmatch(f2_rhs, #0)
+            LDA f2_lhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
+          .elseif .xmatch(f2_op, <>) .and .xmatch(f2_rhs, #0)
+            LDA f2_lhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
+          .elseif .xmatch(f2_op, =)
             ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
           .elseif .xmatch(f2_op, <>)

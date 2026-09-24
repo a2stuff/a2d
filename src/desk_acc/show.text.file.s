@@ -682,7 +682,7 @@ end:    rts
         add16_8 ptr, drawtext_params::textlen
 
         ;; Did the run end due to a tab?
-    WHILE lda tab_flag : NOT ZERO ; yes, keep going
+    WHILE u8 tab_flag <> #0     ; yes, keep going
 
         ;; --------------------------------------------------
         ;; End of line
