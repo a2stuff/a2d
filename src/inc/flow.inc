@@ -106,7 +106,7 @@
 ;;;   binop = "=" | "<>" | "<" | ">="
 ;;;   rhs   = /* any non-zero sequence of tokens excluding "AND" and "OR" */
 ;;;   test  = "CC" | "CS" | "NC" | "NS" | "VC" | "VS" | "ZC" | "ZS"
-;;;   type  = "u8" "u16" "s16"
+;;;   type  = "u8" "u16" "s16" "u24"
 ;;;   cexpr = lhs binop rhs
 ;;;   lhs   = /* any non-zero sequence of tokens excluding "=" | "<>" | "<" | ">=" */
 
@@ -449,7 +449,7 @@
 ;;; --------------------------------------------------
 
 
-.define _f2_is_type(arg) .xmatch({arg}, u8) .or .xmatch({arg}, u16) .or .xmatch({arg}, s16)
+.define _f2_is_type(arg) .xmatch({arg}, u8) .or .xmatch({arg}, u16) .or .xmatch({arg}, s16) .or .xmatch({arg}, u24)
 .define _f2_is_register(arg) .xmatch({arg}, A) .or .xmatch({arg}, X) .or .xmatch({arg}, Y)
 .define _f2_is_flag_test(arg) .xmatch({arg}, CC) .or .xmatch({arg}, CS) .or .xmatch({arg}, NC) .or .xmatch({arg}, NS) .or .xmatch({arg}, ZC) .or .xmatch({arg}, ZS) .or .xmatch({arg}, VC) .or .xmatch({arg}, VS)
 .define _f2_is_unary_op(arg) .xmatch({arg}, NOT)
@@ -517,7 +517,7 @@
         .define f2_type .left(1, {f2_token_list})
         .if _f2_is_type {f2_type}
         .else
-          F2_ERR_EXPECTED "type (u8,u16,s16)"
+          F2_ERR_EXPECTED "type (u8,u16,s16,u24)"
         .endif
         F2_PARSE_CONSUME
 
@@ -607,6 +607,22 @@
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch(f2_op, >=)
             ucmp8 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
+          .else
+            F2_ERR_UNREACHED
+          .endif
+        .elseif .xmatch(f2_type, u24)
+          .if .xmatch(f2_op, =)
+            ecmp24 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
+          .elseif .xmatch(f2_op, <>)
+            ecmp24 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
+          .elseif .xmatch(f2_op, <)
+            ucmp24 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
+          .elseif .xmatch(f2_op, >=)
+            ucmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED

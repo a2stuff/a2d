@@ -214,7 +214,7 @@ remainder:      .word   0       ; (out)
         ;; > 64K? Treat as 64K
         ;; TODO: Rework load/display logic to be 24-bit friendly
         kMaxFileSize = $10000 - $200 ; don't wrap adding buffer size
-    IF ucmp24 get_eof_params::eof, #kMaxFileSize : GE
+    IF u24 get_eof_params::eof >= #kMaxFileSize
         copy16  #kMaxFileSize, get_eof_params::eof
     END_IF
 

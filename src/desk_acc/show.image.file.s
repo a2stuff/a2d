@@ -340,18 +340,18 @@ exit_hook := MaybeCallExitHook::hook
 
         ;; Maybe LR/DLR?
     IF u16 get_file_info_params::aux_type = #$400
-      IF ecmp24 get_eof_params::eof, #$400 : EQ
+      IF u24 get_eof_params::eof = #$400
         TAIL_CALL ShowLRFile
       END_IF
 
-      IF ecmp24 get_eof_params::eof, #$800 : EQ
+      IF u24 get_eof_params::eof = #$800
         TAIL_CALL ShowDLRFile
       END_IF
     END_IF
 
         ;; If bigger than $2000, assume DHR
 
-    IF ucmp24 get_eof_params::eof, #(kHiresSize+1) : GE
+    IF u24 get_eof_params::eof >= #(kHiresSize+1)
         TAIL_CALL ShowDHRFile
     END_IF
 
