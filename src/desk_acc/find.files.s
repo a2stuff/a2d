@@ -249,7 +249,7 @@ num_entries := listbox_rec::num_items
         jsr     ToUpperCase
 
         cmp     #kShortcutCloseWindow
-        jeq     Exit
+        beq     Exit
 
       IF A = #'O'
         lda     selected_index

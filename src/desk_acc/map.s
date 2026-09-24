@@ -511,7 +511,7 @@ len:    .byte   0
 
         ;; Click in map?
         MGTK_CALL MGTK::InRect, map_rect
-        jeq     done            ; nope
+        beq     done            ; nope
 
         ;; Erase old position
         jsr     SetPort

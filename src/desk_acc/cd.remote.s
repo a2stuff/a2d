@@ -803,11 +803,11 @@ HandleKey:
 
         ;; $51 = Q (Quit)
         cmp     #'Q'
-        jeq     DoQuitAction
+        beq     DoQuitAction
 
         ;; $1B = ESC (Quit)
         cmp     #CHAR_ESCAPE
-        jeq     DoQuitAction
+        beq     DoQuitAction
 
         ;; $4C = L (Continuous Play)
     IF A = #'L'

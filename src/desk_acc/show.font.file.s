@@ -144,10 +144,10 @@ grafport:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        jeq     HandleDown
+        beq     HandleDown
 
         cmp     #MGTK::EventKind::key_down  ; any key?
-        jeq     HandleKey
+        beq     HandleKey
 
         jmp     InputLoop
 .endproc ; InputLoop
@@ -167,12 +167,12 @@ grafport:       .tag    MGTK::GrafPort
     IF NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
-        jeq     Exit
+        beq     Exit
         jmp     InputLoop
     END_IF
 
         cmp     #CHAR_ESCAPE
-        jeq     Exit
+        beq     Exit
 
         jmp     InputLoop
 .endproc ; HandleKey
@@ -185,7 +185,7 @@ grafport:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
         ucmp8   findwindow_params::window_id, #kDAWindowId
-        jne     InputLoop
+        bne     InputLoop
 
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box

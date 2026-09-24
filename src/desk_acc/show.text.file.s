@@ -257,7 +257,7 @@ remainder:      .word   0       ; (out)
         ;; which part of the window?
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        jeq     OnCloseClick
+        beq     OnCloseClick
 
         cmp     #MGTK::Area::dragbar
         beq     title
@@ -305,7 +305,7 @@ title:  jsr     OnTitleBarClick
       END_IF
 
         cmp     #kShortcutCloseWindow
-        jeq     DoClose
+        beq     DoClose
     END_IF
 
         jmp     InputLoop
@@ -315,7 +315,7 @@ no_mod:
         lda     event_params::key
 
         cmp     #CHAR_ESCAPE
-        jeq     DoClose
+        beq     DoClose
 
     IF A = #' '
         jsr     ToggleMode
@@ -790,7 +790,7 @@ loop:
     END_IF
 
         cmp     #CHAR_TAB
-        jeq     HandleTab
+        beq     HandleTab
 
         jsr     GetCharWidth
         clc

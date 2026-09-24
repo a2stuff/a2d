@@ -591,7 +591,7 @@ check_source_finish:
         and     #NAME_LENGTH_MASK
     IF ZERO                     ; 0 signals error
         ucmp8   main::on_line_buffer2+1, #ERR_NOT_PRODOS_VOLUME
-        jne     try_format      ; Some other error - proceed with format
+        bne     try_format      ; Some other error - proceed with format
     END_IF
 
 dest_ok:

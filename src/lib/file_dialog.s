@@ -491,7 +491,7 @@ found:  ldx     num_file_names
     IF X <> #0
         ;; With modifiers
         jsr     CheckTypeDown
-        jeq     exit
+        beq     exit
 
         jsr     ResetTypeDown
         ldx     event_params+MGTK::Event::modifiers
@@ -501,7 +501,7 @@ found:  ldx     num_file_names
         ;; No modifiers
 
         jsr     CheckTypeDown
-        jeq     exit
+        beq     exit
 
         jsr     ResetTypeDown
         lda     event_params+MGTK::Event::key

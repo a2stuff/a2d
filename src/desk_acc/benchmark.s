@@ -254,7 +254,7 @@ pattern_plaid:
         lda     event_params::kind
 
         cmp     #MGTK::EventKind::button_down
-        jeq     OnClick
+        beq     OnClick
 
         cmp     #MGTK::EventKind::key_down
         beq     OnKey
@@ -276,7 +276,7 @@ probe_count:
         jeq     OnClick50Hz
 
         cmp     #res_char_shortcut_apple_6
-        jeq     OnClick60Hz
+        beq     OnClick60Hz
 
         cmp     #kShortcutCloseWindow
         beq     OnKeyOK
@@ -359,7 +359,7 @@ hit:    lda     winfo::window_id
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-        jeq     CloseWindow
+        beq     CloseWindow
         jmp     InputLoop
 .endproc ; OnClickOK
 

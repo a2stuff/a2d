@@ -11916,7 +11916,7 @@ ShowErrorAlertDst := ShowErrorAlertImpl::dst
         icon_index := *+1
         ldx     #SELF_MODIFIED_BYTE
         cpx     selected_icon_count
-        jeq     done
+        beq     done
 
         lda     selected_icon_list,x
         cmp     trash_icon_num

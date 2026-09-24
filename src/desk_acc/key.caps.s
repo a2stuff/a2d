@@ -557,10 +557,10 @@ continue:
         lda     event_params::kind
 
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        jeq     HandleDown
+        beq     HandleDown
 
         cmp     #MGTK::EventKind::key_down  ; any key?
-        jeq     HandleKey
+        beq     HandleKey
 
         jmp     InputLoop
 .endproc ; InputLoop

@@ -218,7 +218,7 @@ frame_counter:
         lda     event_params::kind
 
         cmp     #MGTK::EventKind::button_down
-        jeq     OnClick
+        beq     OnClick
 
         cmp     #MGTK::EventKind::key_down
         bne     InputLoop
@@ -286,13 +286,13 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        jne     OnClickOK
+        bne     OnClickOK
 
         MGTK_CALL MGTK::InRect, norm_button::rect
-        jne     OnClickNorm
+        bne     OnClickNorm
 
         MGTK_CALL MGTK::InRect, fast_button::rect
-        jne     OnClickFast
+        bne     OnClickFast
 
         jmp     InputLoop
 .endproc ; OnClick
@@ -301,7 +301,7 @@ hit:    copy8   winfo::window_id, screentowindow_params::window_id
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-        jeq     CloseWindow
+        beq     CloseWindow
         jmp     InputLoop
 .endproc ; OnClickOK
 

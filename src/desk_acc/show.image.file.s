@@ -1626,7 +1626,7 @@ kEntriesPerBlock = $0D
 
         ;; Open directory
         JUMP_TABLE_MLI_CALL OPEN, open_params
-        jcs     exit
+        bcs     exit
 
         lda     open_params::ref_num
         sta     read_params::ref_num

@@ -247,9 +247,9 @@ first_dow:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        jeq     HandleDown
+        beq     HandleDown
         cmp     #MGTK::EventKind::apple_key
-        jeq     HandleDown
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
 
@@ -267,9 +267,9 @@ first_dow:
 .proc HandleKey
         lda     event_params::key
         cmp     #CHAR_LEFT
-        jeq     DecDate
+        beq     DecDate
         cmp     #CHAR_UP
-        jeq     DecDate
+        beq     DecDate
         cmp     #CHAR_RIGHT
         jeq     IncDate
         cmp     #CHAR_DOWN
@@ -293,7 +293,7 @@ first_dow:
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         ucmp8   findwindow_params::window_id, #kDAWindowId
-        jne     InputLoop
+        bne     InputLoop
 
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box

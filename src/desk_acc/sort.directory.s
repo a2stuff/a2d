@@ -467,11 +467,11 @@ rtcs:   RETURN  C=1
         ldy     #FileEntry::storage_type_name_length
         lda     (ptr1),y
         and     #STORAGE_TYPE_MASK ; Active file entry?
-        jeq     rtcc
+        beq     rtcc
 
         lda     (ptr2),y
         and     #STORAGE_TYPE_MASK ; Active file entry?
-        jeq     rtcs
+        beq     rtcs
 
         ;; Are we sorting by selection order?
         jsr     JUMP_TABLE_GET_SEL_COUNT

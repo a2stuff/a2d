@@ -992,8 +992,7 @@ rotate:
 loop1:
         ;; while (oval.square [16.16] < oval.rSqYSq [32.0] ) {
         ucmp16  oval+OvalRec::square+2, oval+OvalRec::rSqYSq
-        ;; TODO: `BCS`, and convert this to Flow Control Macros
-        jcs     endloop1
+        bcs     endloop1
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16];
         add32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
@@ -1017,7 +1016,7 @@ endloop1:
 loop2:
         ;; while (oval.square [16.16] > oval.rSqYSq [32.0]) {
         ucmp16  oval+OvalRec::square+2, oval+OvalRec::rSqYSq
-        jcc     endloop2
+        bcc     endloop2
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] - oval.oneHalf [16.16];
         sub32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge

@@ -337,7 +337,7 @@ entry:
    IF ZERO
 quick_run_desktop:
         CALL    GetFileInfo, AX=#str_desktop_2
-        jcs     done_keys
+        bcs     done_keys
         jmp     RunDesktop
    END_IF
 
@@ -1340,7 +1340,7 @@ rest:
         ;; Figure out entry path, given entry options and overrides
     IF bit invoked_during_boot_flag : NC
         bit     BUTN0           ; if Open-Apple is down, skip RAMCard copy
-        jmi     use_entry_path
+        bmi     use_entry_path
 
         ;; Is there a RAMCard at all?
         jsr     GetCopiedToRAMCardFlag

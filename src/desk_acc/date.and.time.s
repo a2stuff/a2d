@@ -513,7 +513,7 @@ hit:
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        jne     OnClickOK
+        bne     OnClickOK
 
         MGTK_CALL MGTK::InRect, clock_12hour_button::rect
     IF NOT_ZERO
@@ -1905,7 +1905,7 @@ year:   .byte   0
         copy8   #$00, $06
         copy8   slot_hi1, $07
         CALL    WithInterruptsDisabled, AX=#DetectZ80
-        jcs     next_slot
+        bcs     next_slot
 
         ;; --------------------------------------------------
         ;; Save CPU state, disable interrupts

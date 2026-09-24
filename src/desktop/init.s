@@ -1024,7 +1024,7 @@ pending_alert := FinalSetup::pending_alert
 
         ;; Validate file format version byte
         ucmp8   main::save_restore_windows::desktop_file_data_buf, #kDeskTopFileVersion
-        jne     exit
+        bne     exit
 
         copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr
 

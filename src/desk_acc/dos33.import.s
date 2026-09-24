@@ -531,7 +531,7 @@ remainder:      .word   0                 ; (out)
         jsr     GetNextEvent
 
         cmp     #MGTK::EventKind::button_down
-        jeq     HandleDown
+        beq     HandleDown
 
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey

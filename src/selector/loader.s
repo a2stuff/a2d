@@ -62,21 +62,21 @@ start:
         jsr     UpdateProgress
 
         MLI_CALL SET_MARK, set_mark_segment_invoker_params
-        jcs     crash
+        bcs     crash
         MLI_CALL READ, read_segment_invoker_params
-        jcs     crash
+        bcs     crash
         jsr     UpdateProgress
 
         MLI_CALL SET_MARK, set_mark_segment_app_params
-        jcs     crash
+        bcs     crash
         MLI_CALL READ, read_segment_app_params
-        jcs     crash
+        bcs     crash
         jsr     UpdateProgress
 
         MLI_CALL SET_MARK, set_mark_segment_alert_params
-        jcs     crash
+        bcs     crash
         MLI_CALL READ, read_segment_alert_params
-        jcs     crash
+        bcs     crash
         jsr     UpdateProgress
 
         ;; Copy Alert segment to Aux LC1

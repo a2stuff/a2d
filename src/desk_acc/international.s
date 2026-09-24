@@ -353,12 +353,12 @@ hit:
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        jne     OnClickOK
+        bne     OnClickOK
 
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::InRect, clock_12hour_button::rect
-        jne     OnClick12Hour
+        bne     OnClick12Hour
 
         MGTK_CALL MGTK::InRect, clock_24hour_button::rect
         jne     OnClick24Hour

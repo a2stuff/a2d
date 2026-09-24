@@ -227,7 +227,7 @@ start:
 
 .ifdef AD_EJECTABLE
         bit     ejectable_flag
-        jmi     done_buttons
+        bmi     done_buttons
 .endif
 
         bit     alert_params::buttons ; high bit clear = OK only
@@ -359,7 +359,7 @@ event_loop:
 .ifdef AD_EJECTABLE
     IF bit ejectable_flag : NS
         jsr     WaitForDiskOrEsc
-        jeq     finish_ok
+        beq     finish_ok
         jmp     finish_cancel
     END_IF
 .endif ; AD_EJECTABLE

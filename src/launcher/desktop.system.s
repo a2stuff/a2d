@@ -1448,13 +1448,13 @@ str_not_completed:
         pla
 
         cmp     #GenericCopy::kErrCancel
-        jeq     FinishAndInvoke
+        beq     FinishAndInvoke
 
         cmp     #ERR_OVERRUN_ERROR
-        jeq     ShowNoSpacePrompt
+        beq     ShowNoSpacePrompt
 
         cmp     #ERR_VOLUME_DIR_FULL
-        jeq     ShowNoSpacePrompt
+        beq     ShowNoSpacePrompt
 
         ;; Show generic error
         pha

@@ -255,7 +255,7 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        jeq     HandleDown
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
 
@@ -285,7 +285,7 @@ grafport_win:       .tag    MGTK::GrafPort
     IF X <> #0
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
-        jeq     Exit
+        beq     Exit
         jmp     InputLoop
     END_IF
 

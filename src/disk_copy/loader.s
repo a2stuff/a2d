@@ -42,14 +42,14 @@ start:
         sta     ALTZPOFF
 
         MLI_CALL OPEN, open_params
-        jcs     fail
+        bcs     fail
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
 
         copy16  #kSegmentAuxLCOffset, set_mark_params::position
         MLI_CALL SET_MARK, set_mark_params
-        jcs     fail
+        bcs     fail
         copy16  #load_buf, read_params::data_buffer ; loads to temp address
         copy16  #kSegmentAuxLCLength, read_params::request_count
         MLI_CALL READ, read_params

@@ -209,10 +209,10 @@ auxtype:        .word   SELF_MODIFIED
         jsr     GetNextEvent
 
         cmp     #kEventKindMouseMoved
-        jeq     HandleMouseMoved
+        beq     HandleMouseMoved
 
         cmp     #MGTK::EventKind::button_down
-        jeq     HandleButtonDown
+        beq     HandleButtonDown
 
         cmp     #MGTK::EventKind::key_down
         jeq     HandleKeyDown
@@ -248,7 +248,7 @@ auxtype:        .word   SELF_MODIFIED
 .proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         ucmp8   findwindow_params::window_id, #kDAWindowId
-        jne     InputLoop
+        bne     InputLoop
 
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params

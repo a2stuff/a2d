@@ -566,7 +566,7 @@ caret_blink_caret_bitmap:
     END_IF
 
         cmp     #CHAR_ESCAPE
-        jeq     Exit
+        beq     Exit
 
         cmp     #CHAR_LEFT
         jeq     HandleLArrClick
