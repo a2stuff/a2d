@@ -621,7 +621,7 @@ cloop:  iny
         bcc     cloop
 
 next:   inc     index
-    WHILE lda index : A <> num_file_names
+    WHILE u8 index <> num_file_names
         dec     index
 found:  RETURN  A=index
 
@@ -1234,7 +1234,7 @@ next:   add16_8 ptr, #16        ; advance to next
        END_IF
 
         inc     inner
-      WHILE lda inner : A <> outer
+      WHILE u8 inner <> outer
 
     WHILE dec outer : NOT_ZERO
         rts

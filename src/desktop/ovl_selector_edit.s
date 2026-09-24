@@ -350,7 +350,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; HandleClick
 
 .proc ClickPrimaryRunListCtrl
-    IF lda which_run_list : A <> #kRunListPrimary
+    IF u8 which_run_list <> #kRunListPrimary
         CALL    UpdateRunListButton, C=0
         copy8   #kRunListPrimary, which_run_list
         CALL    UpdateRunListButton, C=1
@@ -359,7 +359,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickPrimaryRunListCtrl
 
 .proc ClickSecondaryRunListCtrl
-    IF lda which_run_list : A <> #kRunListSecondary
+    IF u8 which_run_list <> #kRunListSecondary
         CALL    UpdateRunListButton, C=0
         copy8   #kRunListSecondary, which_run_list
 	CALL    UpdateRunListButton, C=1
@@ -368,7 +368,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickSecondaryRunListCtrl
 
 .proc ClickAtFirstBootCtrl
-    IF lda copy_when : A <> #kCopyOnBoot
+    IF u8 copy_when <> #kCopyOnBoot
         CALL    DrawCopyWhenButton, C=0
         lda     #kCopyOnBoot
         sta     copy_when
@@ -378,7 +378,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickAtFirstBootCtrl
 
 .proc ClickAtFirstUseCtrl
-    IF lda copy_when : A <> #kCopyOnUse
+    IF u8 copy_when <> #kCopyOnUse
         CALL    DrawCopyWhenButton, C=0
         lda     #kCopyOnUse
         sta     copy_when
@@ -388,7 +388,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; ClickAtFirstUseCtrl
 
 .proc ClickNeverCtrl
-    IF lda copy_when : A <> #kCopyNever
+    IF u8 copy_when <> #kCopyNever
         CALL    DrawCopyWhenButton, C=0
         lda     #kCopyNever
         sta     copy_when

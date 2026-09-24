@@ -675,14 +675,14 @@ callback:
 
     IF bit data::type_valid : NS
         ;; Disallow changing type to/from directory
-      IF lda data::type : A <> gfi_params::file_type
+      IF u8 data::type <> gfi_params::file_type
         ;; type change - either one dir?
-       IF lda data::type : A = #FT_DIRECTORY
+       IF u8 data::type = #FT_DIRECTORY
         jsr     ShowDirError
         jmp     skip
        END_IF
 
-       IF lda gfi_params::file_type : A = #FT_DIRECTORY
+       IF u8 gfi_params::file_type = #FT_DIRECTORY
         jsr     ShowDirError
         jmp     skip
        END_IF

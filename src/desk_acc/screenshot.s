@@ -98,7 +98,7 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
         JUMP_TABLE_MLI_CALL WRITE, write_block_params
 
-    WHILE lda ptr+1 : A <> #$40
+    WHILE u8 ptr+1 <> #$40
 
         ;; ----------------------------------------
         ;; Write main segment

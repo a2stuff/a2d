@@ -120,7 +120,7 @@ DoAdd:  ldx     #kRunListPrimary
 
         copy16  selector_list, num_primary_run_list_entries
 
-    IF lda which_run_list : A = #kRunListPrimary
+    IF u8 which_run_list = #kRunListPrimary
         ucmp8   num_primary_run_list_entries, #kSelectorListNumPrimaryRunListEntries
         beq     ShowFullAlert
         ldy     copy_when       ; Flags
@@ -597,7 +597,7 @@ handle_button:
     WHILE dey : POS
 
         ;; If primary run list, update the menu as well
-    IF lda index : A < #kSelectorListNumPrimaryRunListEntries
+    IF u8 index < #kSelectorListNumPrimaryRunListEntries
         jsr     UpdateMenuResources
     END_IF
 

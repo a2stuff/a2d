@@ -1043,8 +1043,8 @@ match:  tya
         bne     found           ; always
 :
         ;; Is it a Nuova Elettronica DELTA?
-      IF lda $FA67 : A = #$A0
-       IF lda $FA68 : A = #$C0
+      IF u8 $FA67 = #$A0
+       IF u8 $FA68 = #$C0
         lda     #model::delta
         bne     found           ; always
        END_IF

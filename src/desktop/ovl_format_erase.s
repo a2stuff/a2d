@@ -700,7 +700,7 @@ got_blocks:
         ;; Call the write/increment/zero routine, and loop back if we're not done
 gowrite:
         jsr     WriteBlockAndZero
-    WHILE lda lastblock : A >= write_block_params::block_num
+    WHILE u8 lastblock >= write_block_params::block_num
 
         ;; Success
         lda     #$00

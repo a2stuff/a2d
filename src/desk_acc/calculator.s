@@ -513,7 +513,7 @@ intl_deci_sep:  .byte   0
         bcc     ignore_click
 
         ;; This window?
-    IF lda findwindow_params::window_id : A <> #kDAWindowId
+    IF u8 findwindow_params::window_id <> #kDAWindowId
 ignore_click:
         rts
     END_IF

@@ -600,7 +600,7 @@ window_click:
         ;; Ignore clicks in the header area
         copy8   clicked_window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-      IF lda screentowindow_params::windowy : A < #kWindowHeaderHeight
+      IF u8 screentowindow_params::windowy < #kWindowHeaderHeight
         jmp     _ActivateClickedWindow ; no-op if already active
       END_IF
 
@@ -3583,7 +3583,7 @@ entry2:
 ;;; Entry point when refreshing window contents
 entry3:
         ;; Clear selection if in the window
-    IF lda selected_window_id : A = active_window_id
+    IF u8 selected_window_id = active_window_id
         lda     #0
         sta     selected_icon_count
         sta     selected_window_id
@@ -3609,7 +3609,7 @@ entry3:
 ;;; valid across view changes.
 
 .proc _PreserveSelection
-    IF lda selected_window_id : A = active_window_id
+    IF u8 selected_window_id = active_window_id
         lda     selected_icon_count
       IF NOT_ZERO
         sta     selection_preserved_count
@@ -4401,7 +4401,7 @@ file_char:
       WHILE Y < len
 
         inc     index
-    WHILE lda index : A <> num_filenames
+    WHILE u8 index <> num_filenames
 
         dec     index
 found:  RETURN  A=index
@@ -4628,7 +4628,7 @@ make_visible:
         tay
 
         ;; Need at least two windows to cycle.
-    IF lda num_open_windows : A >= #2
+    IF u8 num_open_windows >= #2
         cpy     #'~'
         beq     reverse
 
@@ -5995,7 +5995,7 @@ validate_windows_flag:
 ;;; return zero.
 ;;; Z=0 and A=icon num if only one, Z=0 and A=0 otherwise
 .proc GetSingleSelectedIcon
-    IF lda selected_icon_count : A <> #1
+    IF u8 selected_icon_count <> #1
         RETURN  A=#0
     END_IF
         RETURN  A=selected_icon_list
@@ -6061,7 +6061,7 @@ for_path:
 
 no_win:
         ;; Is there a free window?
-    IF lda num_open_windows : A >= #kMaxDeskTopWindows
+    IF u8 num_open_windows >= #kMaxDeskTopWindows
         ;; Nope, show error.
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OK, AX=#aux::str_warning_too_many_windows
         ldx     saved_stack
@@ -6668,7 +6668,7 @@ set_pos:
 .proc _PrepareColSize
         file_type := list_view_filerecord + FileRecord::file_type
 
-    IF lda file_type : A = #FT_DIRECTORY
+    IF u8 file_type = #FT_DIRECTORY
         copy8   #1, text_buffer2
         copy8   #'-', text_buffer2+1
         rts
@@ -7322,7 +7322,7 @@ do_entry:
         jeq     finish
 
 next:   inc     index_in_block
-    IF lda index_in_block : A <> dir_header::entries_per_block
+    IF u8 index_in_block <> dir_header::entries_per_block
         add16_8 entry_ptr, dir_header::entry_length
     ELSE
         copy8   #$00, index_in_block
@@ -8442,7 +8442,7 @@ records_base_ptr:
         add16_8 icon_coords+MGTK::Point::xcoord, col_spacing
         inc     icons_this_row
         ;; Next row?
-    IF lda icons_this_row : A = icons_per_row
+    IF u8 icons_this_row = icons_per_row
         add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
         copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
         copy8   #0, icons_this_row
@@ -10124,7 +10124,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
     END_IF
 
         inc     entry_index_in_block
-    IF lda entry_index_in_block : A >= entries_per_block
+    IF u8 entry_index_in_block >= entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
@@ -13098,7 +13098,7 @@ ok:     RETURN  A=#0
         ;; Does the directory exist?
         CALL GetFileInfo, AX=#str_startup_items
         RTS_IF CS
-        RTS_IF lda file_info_params::file_type : A <> #FT_DIRECTORY
+        RTS_IF u8 file_info_params::file_type <> #FT_DIRECTORY
 
         ;; Loop over all entries
         ldx     #1              ; 1-based, for convenience
@@ -13173,7 +13173,7 @@ END_PARAM_BLOCK
 
         ;; Any more entries in block?
         inc     entry_in_block
-      IF lda entry_in_block : A = entries_per_block
+      IF u8 entry_in_block = entries_per_block
         MLI_CALL READ, read_params
         BREAK_IF CS             ; C=1 for EOF
         copy16  #read_dir_buffer + 4, dir_ptr

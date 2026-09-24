@@ -631,7 +631,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         ;; Hour requires special handling for 12-hour clock; patch the
         ;; min/max table depending on clock setting and period.
     IF bit clock_24hours : NC
-      IF lda hour : A < #12
+      IF u8 hour < #12
         copy8   #kHourMin, min_table + Field::hour - 1
         copy8   #11, max_table + Field::hour - 1
       ELSE
@@ -1056,7 +1056,7 @@ label_downarrow:
 
     IF bit clock_24hours : NS
         MGTK_CALL MGTK::DrawString, spaces_string
-    ELSE_IF lda hour : A < #12
+    ELSE_IF u8 hour < #12
       MGTK_CALL MGTK::DrawString, str_am
     ELSE
       MGTK_CALL MGTK::DrawString, str_pm
@@ -1221,7 +1221,7 @@ loop:
         ora     #kResultOptionsChanged ; settings changed
         sta     dialog_result
 
-    IF lda selected_field : A = #Field::period
+    IF u8 selected_field = #Field::period
         CALL    SelectField, A=#Field::minute
     END_IF
 
@@ -2003,7 +2003,7 @@ year:   .byte   0
 
 next_slot:
         dec     slot_hi1
-    WHILE lda slot_hi1 : A <> #$C0
+    WHILE u8 slot_hi1 <> #$C0
 
         sec
         rts
@@ -2162,7 +2162,7 @@ seq:
 
 next_slot:
         dec     slot_hi
-    WHILE lda slot_hi : A <> #$C0
+    WHILE u8 slot_hi <> #$C0
         sec
         rts
 

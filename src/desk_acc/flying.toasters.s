@@ -144,7 +144,7 @@ exit:
 
         ;; Next frame
         inc     frame
-      IF lda frame : A = #4     ; num frames
+      IF u8 frame = #4          ; num frames
         copy8   #0, frame
       END_IF
 

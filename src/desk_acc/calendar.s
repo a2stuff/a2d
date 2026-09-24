@@ -600,7 +600,7 @@ draw_date:
 
         ;; Next
         inc     col
-      IF lda col : A = #7
+      IF u8 col = #7
         copy8   #0, col
         inc     row
         copy16  date_base::xcoord, date_pos
