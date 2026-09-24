@@ -7630,7 +7630,14 @@ vol_blocks_used:  .word   0
         ;; This is to handle the case where an empty window is persisted
         ;; then a file is added and the window is restored. For at least
         ;; the single icon case it should not cause scrollbars to appear.
-        copy16  #AS_WORD(-kMaxIconTotalWidth/2), iconbb_rect+MGTK::Rect::x1
+
+        jsr     GetCachedWindowViewBy
+      IF ZERO
+        ldax    #AS_WORD(-kMaxIconTotalWidth/2)
+      ELSE
+        ldax    #0
+      END_IF
+        stax    iconbb_rect+MGTK::Rect::x1
     ELSE
         ;; Window space
         jsr     ComputeIconsBBox

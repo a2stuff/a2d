@@ -178,6 +178,44 @@ test.Step(
 end)
 
 --[[
+  Open an empty window. Set the view to "By Name". Exit desktop, add a
+  file to the directory, and restart. Verify the icon is at the left
+  edge of the window.
+]]
+test.Variants(
+  {
+    {"Empty window in list view restored scroll position", desktop.VIEW_BY_NAME},
+    {"Empty window in small icon view restored scroll position", desktop.VIEW_AS_SMALL_ICONS},
+  },
+  function(idx, name, item_id)
+    desktop.OpenWindow("/RAM1")
+    a2d.InvokeMenuItem(desktop.VIEW_MENU, item_id)
+    a2dtest.WaitForSystemTask()
+    a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.RUN_BASIC_HERE)
+    apple2.WaitForBasicSystem()
+    local filename = "MMMMMMMMMMMMMMM"
+    apple2.TypeLine("CREATE " .. filename)
+    apple2.TypeLine("BYE")
+    a2d.WaitForDesktopReady()
+    desktop.Select(filename)
+
+    local icon = desktop.GetSelectedIcons()[1]
+
+    -- screen to window coords
+    local HEADER_HEIGHT = 14
+    local wx, wy = a2dtest.GetFrontWindowContentRect()
+    local ix, iy = icon.x - wx, icon.y - wy - HEADER_HEIGHT
+
+    local vx, vy = mgtk.GetScrollPos(mgtk.FrontWindow())
+
+    test.ExpectLessThanOrEqual(ix, 8, "x position should be at left")
+    test.ExpectLessThanOrEqual(iy, 4, "y position should be at top")
+
+    -- cleanup
+    desktop.EraseVolume("RAM1")
+end)
+
+--[[
   Launch DeskTop. Open a volume window with multiple icons but that do
   not require the scrollbars to be active. Drag the first icon over to
   the right so that it is partially clipped by the window's right or

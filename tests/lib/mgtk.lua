@@ -113,6 +113,14 @@ function mgtk.GetWindowContentRect(window_id)
   return {vx, vy, (x2-x1), (y2-y1)}
 end
 
+function mgtk.GetScrollPos(window_id)
+  local ram = apple2.GetRAMDeviceProxy()
+  local winfo = bank_offset + mgtk.GetWinPtr(window_id)
+  local port = winfo + 20
+  local x1,y1 = ram.read_s16(port + 8), ram.read_s16(port + 10)
+  return x1, y1
+end
+
 ------------------------------------------------------------
 
 return mgtk
