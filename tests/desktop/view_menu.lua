@@ -694,3 +694,26 @@ test.Step(
     test.ExpectNotMatch(ocr, "by Size", "all menu items should be disabled")
     test.ExpectNotMatch(ocr, "by Type", "all menu items should be disabled")
 end)
+
+--[[
+  File > New Folder. View > by Date / Size / Type. File > Rename
+  Give it a new name. Verify that the icon is correctly "small" style
+  and cannot be dragged.
+]]
+test.Step(
+  "Rename in list view doesn't lose icon flags",
+  function()
+    for i, item in ipairs({
+      desktop.VIEW_AS_ICONS, desktop.VIEW_AS_SMALL_ICONS,
+      desktop.VIEW_BY_NAME, desktop.VIEW_BY_DATE, desktop.VIEW_BY_SIZE, desktop.VIEW_BY_TYPE }) do
+      desktop.OpenWindow("/RAM1")
+      desktop.CreateFolder("SAMPLE.FOLDER")
+      a2d.InvokeMenuItem(desktop.VIEW_MENU, item)
+      a2dtest.WaitForSystemTask()
+      local flags = desktop.GetSelectedIcons()[1].flags
+      desktop.RenameSelection("SOME.NEW.NAME")
+      -- TODO: Would be better to test behavior rather than internal state.
+      test.ExpectEquals(desktop.GetSelectedIcons()[1].flags, flags, "flags should not have changed")
+      desktop.EraseVolume("RAM1")
+    end
+end)

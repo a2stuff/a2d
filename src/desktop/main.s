@@ -12454,11 +12454,6 @@ retry:
         lda     #SELF_MODIFIED_BYTE
         sta     (icon_ptr),y
 
-        ;; Flags may change (e.g. app <-> system)
-        tax
-        ldy     #IconEntry::flags
-        copy8   icontype_iconentryflags_table,x, (icon_ptr),y
-
         ;; Compute new bounds of icon bitmap
         jsr     _GetIconBitmapSize
 
@@ -12470,6 +12465,19 @@ retry:
         add16in (icon_ptr),y, delta, (icon_ptr),y
         iny
       WHILE inx : inx : X <> #4
+    ELSE
+        ;; List View / Small Icon View
+        ;; Match the flags that would be set when icon was created
+        ;; TODO: Dedupe this logic
+        php                     ; N=1 for list view
+        ldy     #IconEntry::flags
+        lda     (icon_ptr),y
+        ora     #kIconEntryFlagsSmall
+        plp                     ; N = 1 for list view
+      IF NS
+        ora     #kIconEntryFlagsFixed
+      END_IF
+        sta     (icon_ptr),y
     END_IF
 
 end_filerecord_and_icon_update:
