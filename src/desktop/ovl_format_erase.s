@@ -862,8 +862,7 @@ prodos_loader_blocks:
         copy16  #0, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
     IF CC
-        lda     read_buffer + 1
-      IF A <> #kPascalSig1      ; DOS 3.3?
+      IF u8 read_buffer + 1 <> #kPascalSig1 ; DOS 3.3?
         jmp     maybe_dos       ; Maybe...
       END_IF
 

@@ -173,14 +173,12 @@ selection_requirement_flags:
         jsr     ResetTypeDown
 
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params+MGTK::FindWindowParams::which_area
-    IF A <> #MGTK::Area::content
+    IF u8 findwindow_params+MGTK::FindWindowParams::which_area <> #MGTK::Area::content
 ret:    rts
     END_IF
 
         ;; Dialog window?
-        lda     findwindow_params+MGTK::FindWindowParams::window_id
-    IF A <> #file_dialog_res::kFilePickerDlgWindowID
+    IF u8 findwindow_params+MGTK::FindWindowParams::window_id <> #file_dialog_res::kFilePickerDlgWindowID
         ;; No, assume list box (will fail gracefully if not)
         COPY_STRUCT MGTK::Point, event_params+MGTK::Event::coords, file_dialog_res::lb_params::coords
         LBTK_CALL LBTK::Click, file_dialog_res::lb_params
@@ -317,8 +315,7 @@ ret:    rts
 found:  ldx     num_file_names
     DO
         dex
-        lda     file_list_index,x
-    WHILE A <> index
+    WHILE u8 file_list_index,x <> index
         txa
         rts
 .endproc ; _FindFilenameIndex
@@ -589,8 +586,7 @@ file_char:
         RETURN  A=#0
 
 .proc _FindMatch
-        lda     num_file_names
-    IF ZERO
+    IF u8 num_file_names = #0
         RETURN  A=#$FF
     END_IF
 
@@ -910,11 +906,9 @@ found:  RETURN  A=index
         ldx     path_buf
         BREAK_IF ZERO
         dec     path_buf
-        lda     path_buf,x
-    WHILE A <> #'/'
+    WHILE u8 path_buf,x <> #'/'
 
-        lda     path_buf
-    IF ZERO
+    IF u8 path_buf = #0
         jsr     _SetRootPath
     END_IF
 
@@ -948,8 +942,7 @@ err:    jsr     _SetRootPath
         copy8   dir_read_buf+SubdirectoryHeader::entries_per_block, entries_per_block
 
         kMaxEntries = 127
-        lda     dir_read_buf+SubdirectoryHeader::file_count+1
-    IF NOT ZERO
+    IF u8 dir_read_buf+SubdirectoryHeader::file_count+1 <> #0
         lda     #kMaxEntries
     ELSE
         lda     dir_read_buf+SubdirectoryHeader::file_count
@@ -1016,8 +1009,8 @@ close:  MLI_CALL CLOSE, close_params
         jsr     _SetCursorPointer
         RETURN  C=0
 
-next:   lda     entry_in_block
-    IF A <> entries_per_block
+next:
+    IF u8 entry_in_block <> entries_per_block
         add16_8 ptr, entry_length
         jmp     do_entry
     END_IF
@@ -1154,8 +1147,7 @@ next:   add16_8 ptr, #16        ; advance to next
         ;; Copy last segment
         ldx     path_buf
       DO
-        lda     path_buf,x
-        BREAK_IF A = #'/'
+        BREAK_IF u8 path_buf,x = #'/'
         dex
       WHILE NOT_ZERO            ; always
         inx
@@ -1188,8 +1180,7 @@ next:   add16_8 ptr, #16        ; advance to next
 ;;; Assert: On entry, `file_list_index` table is populated 0...`num_file_names`-1
 
 .proc _SortFileNames
-        lda     num_file_names
-        RTS_IF A < #2           ; can't sort < 2 records
+        RTS_IF u8 num_file_names < #2 ; can't sort < 2 records
 
         ;; --------------------------------------------------
         ;; Selection sort

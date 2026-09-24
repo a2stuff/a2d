@@ -620,8 +620,7 @@ end:    rts
     END_IF
 
         ;; Select appropriate font
-        lda     fixed_mode_flag
-    IF ZERO
+    IF u8 fixed_mode_flag = #0
         MGTK_CALL MGTK::SetFont, DEFAULT_FONT
     ELSE
         MGTK_CALL MGTK::SetFont, fixed_font
@@ -754,8 +753,7 @@ cur_offset:
 
 .proc GetCharWidth
         tay
-        lda     fixed_mode_flag
-    IF ZERO
+    IF u8 fixed_mode_flag = #0
         lda     DEFAULT_FONT + MGTK::Font::charwidth,y
     ELSE
         lda     fixed_font + MGTK::Font::charwidth,y
@@ -878,8 +876,7 @@ end:    rts
         ptr := $06
 
         ;; Pointing at second page already?
-        lda     drawtext_params::textptr+1
-    IF A <> #>default_buffer
+    IF u8 drawtext_params::textptr+1 <> #>default_buffer
         ;; Yes, shift second page down.
         ldy     #0
       DO
@@ -1028,8 +1025,7 @@ window_id:      .byte   kDAWindowId
         ;; Clear background
         MGTK_CALL MGTK::PaintRect, mode_mapinfo::maprect
 
-        lda     fixed_mode_flag
-    IF NOT_ZERO
+    IF u8 fixed_mode_flag <> #0
         ldax    #fixed_str
     ELSE
         ldax    #prop_str
@@ -1085,8 +1081,7 @@ filename:       .res    16
         ;; Set window title to filename
         ldy     INVOKE_PATH
     DO
-        lda     INVOKE_PATH,y       ; find last '/'
-        BREAK_IF A = #'/'
+        BREAK_IF u8 INVOKE_PATH,y = #'/'    ; find last '/'
         dey
     WHILE NOT_ZERO
 

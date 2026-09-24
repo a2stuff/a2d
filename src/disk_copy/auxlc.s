@@ -795,8 +795,7 @@ check:  lda     current_drive_selection
 .proc MaybePromptDiskSwap
         stx     message
 
-        lda     source_drive_index
-    IF A = dest_drive_index
+    IF u8 source_drive_index = dest_drive_index
 
         tax                     ; A = index
         lda     drive_unitnum_table,x
@@ -867,10 +866,8 @@ menu_offset_table:
         RETURN  A=#$FF
       END_IF
 
-        lda     event_params::modifiers
-    IF ZERO
-        lda     event_params::key
-      IF A <> #CHAR_ESCAPE
+    IF u8 event_params::modifiers = #0
+      IF u8 event_params::key <> #CHAR_ESCAPE
         CALL    ToUpperCase, A=event_params::key
 
        IF A = #kShortcutReadDisk
@@ -1398,8 +1395,7 @@ fallback:
         ;; Valid ProDOS volume
 
         ldx     num_drives
-        lda     drive_unitnum_table,x
-       IF A = DISK_COPY_INITIAL_UNIT_NUM
+       IF u8 drive_unitnum_table,x = DISK_COPY_INITIAL_UNIT_NUM
         copy8   num_drives, current_drive_selection
        END_IF
 
@@ -1776,8 +1772,7 @@ ret:    rts
         jsr     SetPortForDialog
         CALL    IntToStringWithSeparators, AX=main::block_params::block_num
 
-        lda     err_writing_flag
-    IF ZERO
+    IF u8 err_writing_flag = #0
         MGTK_CALL MGTK::MoveTo, error_reading_label_pos
         MGTK_CALL MGTK::DrawStringForward, error_reading_label_str
         jsr     DrawIntString

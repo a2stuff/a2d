@@ -1718,8 +1718,7 @@ saw_header_flag:                ; bit7
         inx
     DO
         dex
-        lda     dir_path,x
-    WHILE A <> #'/'
+    WHILE u8 dir_path,x <> #'/'
         dex
         stx     dir_path
 

@@ -726,8 +726,7 @@ END_PARAM_BLOCK
 .scope _DragDetectImpl
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
-        lda     peekevent_params::kind
-    IF A <> #MGTK::EventKind::drag
+    IF u8 peekevent_params::kind <> #MGTK::EventKind::drag
         TAIL_CALL exit_with_a, A=#IconTK::kDragResultNotADrag
     END_IF
 

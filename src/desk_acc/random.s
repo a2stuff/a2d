@@ -46,8 +46,7 @@
         inx
     DO
         dex
-        lda     dir_path,x
-    WHILE A <> #'/'
+    WHILE u8 dir_path,x <> #'/'
         dex
         txa
         pha                     ; A = new `dir_path` length

@@ -1376,8 +1376,7 @@ egg:    .byte   0
       IF NOT_ZERO
         ;; ProDOS thinks there's a card...
 
-        lda     slot
-       IF A = #3
+       IF u8 slot = #3
         ;; Special case for Slot 3
         bit     ROMIN2
         jsr     DetectLeChatMauveEve
@@ -1423,8 +1422,7 @@ draw_maybe_sp:
       END_IF
 
         ;; Special case for Slot 2
-        lda     slot
-      IF A = #2
+      IF u8 slot = #2
         jsr     SetSlotPtr
         CALL    WithInterruptsDisabled, AX=#DetectTheCricket
        IF CS
@@ -1434,7 +1432,7 @@ draw_maybe_sp:
       END_IF
 
         asl     mask
-    WHILE inc slot : lda slot : A < #8
+    WHILE inc slot : u8 slot < #8
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
@@ -2232,8 +2230,7 @@ str_ramworks_memory:
         bcs     p658xx
 
         ;; 65C02 - check for ZIP CHIP (except on IIc Plus)
-        lda     model           ; cached
-    IF A <> #model::iic_plus
+    IF u8 model <> #model::iic_plus ; cached
         php                     ; timing sensitive
         sei
 
@@ -2345,8 +2342,7 @@ start:
         ldy     dib_buffer+SPDIB::ID_String_Length
       IF NOT_ZERO
        DO
-        lda     dib_buffer+SPDIB::Device_Name-1,y
-        BREAK_IF A <> #' '
+        BREAK_IF u8 dib_buffer+SPDIB::Device_Name-1,y <> #' '
        WHILE dey : NOT_ZERO
       END_IF
         sty     dib_buffer+SPDIB::ID_String_Length
@@ -2393,8 +2389,7 @@ done_adjust_case:
         str_current := dib_buffer+SPDIB::ID_String_Length
 
         ;; Empty?
-        lda     dib_buffer+SPDIB::ID_String_Length
-      IF ZERO
+      IF u8 dib_buffer+SPDIB::ID_String_Length = #0
         .assert .strlen(res_string_unknown) < kMaxSPDeviceNameLength, error, "string length"
         COPY_STRING str_unknown, str_current
       END_IF
@@ -2418,8 +2413,8 @@ done_adjust_case:
         CALL    DrawStringForwardFromMain, AX=#str_current
 
         ;; Next!
-next:   lda     status_params::unit_num
-        BREAK_IF A = num_devices
+next:
+        BREAK_IF u8 status_params::unit_num = num_devices
         inc     status_params::unit_num
     FOREVER
 

@@ -115,8 +115,7 @@ parsed: .tag    ParsedDateTime
         copy16  ticks_outer_xs,x, line::start::xcoord
         copy16  ticks_outer_ys,x, line::start::ycoord
 
-        lda     tfives
-      IF ZERO
+      IF u8 tfives = #0
         copy16  ticks_inner2_xs,x, line::end::xcoord
         copy16  ticks_inner2_ys,x, line::end::ycoord
         copy8   #4, tfives
@@ -129,7 +128,7 @@ parsed: .tag    ParsedDateTime
         MGTK_CALL MGTK::MoveTo, line::start
         MGTK_CALL MGTK::LineTo, line::end
 
-    WHILE inc tindex : lda tindex : A <> #60
+    WHILE inc tindex : u8 tindex <> #60
 
         rts
 

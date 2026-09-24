@@ -319,8 +319,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         .addr   status_params
 
       IF CC
-        lda     dib_buffer+SPDIB::Device_Type_Code
-       IF A = #SPDeviceType::Disk35
+       IF u8 dib_buffer+SPDIB::Device_Type_Code = #SPDeviceType::Disk35
         ;; Assume all 3.5" drives are ejectable
         RETURN  A=#$80
        END_IF
@@ -364,8 +363,7 @@ fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
         ;; Loop over blocks until we hit memory limit or are done
     DO
         ;; Check for keypress
-        lda     KBD
-      IF A = #(CHAR_ESCAPE | $80)
+      IF u8 KBD = #(CHAR_ESCAPE | $80)
         bit     KBDSTRB
         RETURN  A=#1
       END_IF

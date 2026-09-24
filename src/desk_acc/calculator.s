@@ -762,8 +762,7 @@ miss:   RETURN  C=0
         lda     calc_d          ; already a decimal?
         ora     calc_e          ; or exponent?
       IF ZERO
-        lda     calc_l
-       IF ZERO
+       IF u8 calc_l = #0
         inc     calc_l
        END_IF
         copy8   intl_deci_sep, calc_d
@@ -780,8 +779,7 @@ miss:   RETURN  C=0
     IF A = #'-'                 ; Subtract?
         pha
         ldxy    #btn_sub::port
-        lda     calc_e          ; negate vs. subtract
-      IF NOT_ZERO
+      IF u8 calc_e <> #0        ; negate vs. subtract
         lda     calc_n
        IF ZERO
         SET_BIT7_FLAG calc_n
@@ -952,8 +950,7 @@ empty:  inc     calc_l
         ;; ----------------------------------------
         ;; If there was input, parse it
 
-        lda     calc_g
-    IF NOT ZERO
+    IF u8 calc_g <> #0
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
       DO
@@ -1023,8 +1020,7 @@ empty:  inc     calc_l
 
         ldy     #0              ; count the size
     DO
-        lda     FBUFFR,y
-        BREAK_IF ZERO
+        BREAK_IF u8 FBUFFR,y = #0
     WHILE iny : NOT_ZERO        ; always
 
         ldx     #kTextBufferSize ; copy to text buffers
@@ -1076,8 +1072,7 @@ empty:  inc     calc_l
 .endproc ; ResetBuffer1AndState
 
 .proc MaybeAddLeadingZero
-        lda     text_buffer1+1,x
-    IF A = intl_deci_sep
+    IF u8 text_buffer1+1,x = intl_deci_sep
         lda     #'0'
         sta     text_buffer1,x
         sta     text_buffer2,x

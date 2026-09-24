@@ -162,8 +162,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-    IF A = #kDAWindowId
+    IF u8 findwindow_params::window_id = #kDAWindowId
         lda     findwindow_params::which_area
 
         cmp     #MGTK::Area::close_box

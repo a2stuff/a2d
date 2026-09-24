@@ -551,8 +551,7 @@ OpenDone:
         and     #%00011111      ; lo
         ldx     #0              ; hi
         jsr     IntToString
-        lda     str_from_int
-    IF A = #1
+    IF u8 str_from_int = #1
         lda     #' '
         ldx     str_from_int+1
     ELSE
@@ -598,8 +597,7 @@ OpenDone:
     END_IF
         ldx     #0              ; hi
         jsr     IntToString
-        lda     str_from_int
-    IF A = #1
+    IF u8 str_from_int = #1
         lda     #'0'
         ldx     str_from_int+1
     ELSE
@@ -641,8 +639,7 @@ tmp:    .byte   0
         ;; on the stack above and below for safety.
         kMaxRecursionDepth = 16
 
-        lda     Depth
-    IF A < #kMaxRecursionDepth
+    IF u8 Depth < #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
     END_IF
 

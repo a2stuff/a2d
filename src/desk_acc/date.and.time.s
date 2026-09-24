@@ -609,8 +609,7 @@ hit_target_jump_table:
         stx     hit_rect_index
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
-        lda     event_params::kind
-    IF A <> #MGTK::EventKind::button_up
+    IF u8 event_params::kind <> #MGTK::EventKind::button_up
         jsr     DoIncOrDec
         jmp     loop
     END_IF
@@ -860,8 +859,7 @@ dialog_result:  .byte   0
 
         ;; Dates in DeskTop list views may be invalidated, so if date
         ;; or settings changed, force a full redraw to avoid artifacts.
-        lda     dialog_result
-    IF NOT_ZERO
+    IF u8 dialog_result <> #0
         MGTK_CALL MGTK::RedrawDeskTop
     END_IF
 
@@ -1792,8 +1790,7 @@ year:   .byte   0
 
         ldx     #8
     DO
-        lda     rom_buf-1,x
-      IF A <> nsc_buf-1,x
+      IF u8 rom_buf-1,x <> nsc_buf-1,x
         ;; differs, so NSC intercepted the read
         clc
         rts
@@ -1988,8 +1985,7 @@ year:   .byte   0
 
         ldx     #8
       DO
-        lda     rom_buf-1,x
-       IF A <> nsc_buf-1,x
+       IF u8 rom_buf-1,x <> nsc_buf-1,x
         ;; differs, so NSC intercepted the read
         lda     slot_hi1
         sta     SetNoSlotClockInSlotROM::slot_hi1

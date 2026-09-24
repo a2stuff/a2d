@@ -251,8 +251,7 @@ jt_callbacks:
     IF u8 text_input_buf = #0
         ldx     path_buf0
       DO
-        lda     path_buf0,x
-        BREAK_IF A = #'/'
+        BREAK_IF u8 path_buf0,x = #'/'
       WHILE dex : NOT_ZERO      ; always, since path is valid
         inx
 

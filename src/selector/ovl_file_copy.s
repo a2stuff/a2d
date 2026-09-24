@@ -271,15 +271,13 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 
         ldy     src_path
     DO
-        lda     src_path,y
-        BREAK_IF A = #'/'
+        BREAK_IF u8 src_path,y = #'/'
     WHILE dey : NOT_ZERO
         dey
         sty     src_path
 
     DO
-        lda     src_path,y
-        BREAK_IF A = #'/'
+        BREAK_IF u8 src_path,y = #'/'
     WHILE dey : POS
 
         ldx     #0
@@ -427,8 +425,7 @@ remainder:      .word   0                 ; (out)
 
 .proc UpdateCopyProgress
         dec     file_count
-        lda     file_count
-    IF A = #$FF
+    IF u8 file_count = #$FF
         dec     file_count+1
     END_IF
 
@@ -523,8 +520,7 @@ display_path:
 ;;; Aborts if Escape key is down
 .proc CheckCancel
         MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_params::kind
-    IF A = #MGTK::EventKind::key_down
+    IF u8 app::event_params::kind = #MGTK::EventKind::key_down
         ucmp8   app::event_params::key, #CHAR_ESCAPE
         beq     RestoreStackAndReturn
     END_IF

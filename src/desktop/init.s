@@ -545,7 +545,7 @@ next:
         lda     (slot_ptr),y    ; $CnFE: Status Byte
         bmi     append          ; bit 7 - Medium is removable
 next:
-    WHILE inc index : lda DEVCNT : A >= index ; continue while index <= DEVCNT
+    WHILE inc index : u8 DEVCNT >= index ; continue while index <= DEVCNT
 
         lda     count
         sta     main::removable_device_table
@@ -648,7 +648,7 @@ unit_num:
         BREAK_IF A = count
 
         ;; Copy entry name into place
-        jsr     main::ATimes16
+        jsr     main::ATimes16  ; A = `index`
         addax   #selector_list_data_buf + kSelectorListEntriesOffset, ptr1
         CALL    main::ATimes16, A=index
         addax   #run_list_entries, ptr2
@@ -1043,8 +1043,7 @@ pending_alert := FinalSetup::pending_alert
         ;; Is there a matching volume icon? (If not, skip)
         ldx     #1              ; past leading '/'
       DO
-        lda     INVOKER_PREFIX+1,x
-        BREAK_IF A = #'/'       ; look for next '/'
+        BREAK_IF u8 INVOKER_PREFIX+1,x = #'/' ; look for next '/'
       WHILE inx : X <> INVOKER_PREFIX
 
         dex

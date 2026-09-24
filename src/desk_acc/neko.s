@@ -576,18 +576,15 @@ skip:   .word   0
         lsr16   y_delta          ; force down to 8 bits
 
         ;; Beyond threshold?
-        lda     x_delta
-    IF A < #kThreshold
-        lda     y_delta
-      IF A < #kThreshold
+    IF u8 x_delta < #kThreshold
+      IF u8 y_delta < #kThreshold
         ldx     #0              ; no; null out the deltas
         beq     skip_encode     ; always
       END_IF
     END_IF
 
         ;; Yes - do math to scale the deltas
-        lda     x_delta
-    IF A >= y_delta
+    IF u8 x_delta >= y_delta
         ;; x dominant:
         ;; * y_delta = kMove * y_delta / x_delta
         ;; * x_delta = kMove
@@ -619,8 +616,7 @@ skip:   .word   0
         ;; Encode direction into 4 bits %0000xxyy
         ;;  00 = no, 01 = +ve, 10 = -ve, 11 = (not used)
         ldx     #0
-        lda     x_delta
-    IF A >= #kMove/2
+    IF u8 x_delta >= #kMove/2
       IF bit x_neg: NEG
         inx
       END_IF
@@ -631,8 +627,7 @@ skip:   .word   0
         asl
         tax
 
-        lda     y_delta
-    IF A >= #kMove/2
+    IF u8 y_delta >= #kMove/2
       IF bit y_neg : NEG
         inx
       END_IF
@@ -748,8 +743,7 @@ new_state:
         ;; ------------------------------
         ;; IF A = #NekoState::sleep
         ;; ------------------------------
-        lda     dir
-      IF NOT_ZERO
+      IF u8 dir <> #0
         ldx     #NekoState::chase
         lda     #NekoFrame::surprise
         bne     set_state_and_frame ; always

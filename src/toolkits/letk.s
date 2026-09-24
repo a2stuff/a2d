@@ -421,8 +421,7 @@ ycoord  .word
     DO
         BREAK_IF u16 text_params+MGTK::TextWidthParams::width >= params::xcoord
         inc     text_params+MGTK::TextWidthParams::length
-        lda     text_params+MGTK::TextWidthParams::length
-        BREAK_IF A = len
+        BREAK_IF u8 text_params+MGTK::TextWidthParams::length = len
         jsr     _TextWidth
     WHILE ZERO                  ; always
 

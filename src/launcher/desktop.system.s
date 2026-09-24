@@ -245,8 +245,7 @@ str_self_filename:
         MLI_CALL GET_PREFIX, get_prefix_params
         MLI_CALL GET_FILE_INFO, file_info_params
     IF CC
-        lda     file_info_params + 7 ; storage_type
-      IF A = #ST_LINKED_DIRECTORY
+      IF u8 file_info_params + 7  = #ST_LINKED_DIRECTORY ; storage_type
         copy8   #7, file_info_params + 0 ; SET_FILE_INFO param_count
         copy16  #$8000, file_info_params + 5 ; aux_type
         MLI_CALL SET_FILE_INFO, file_info_params
@@ -301,30 +300,25 @@ startupitems_dir:
     END_IF
 
         ;; IIc?
-        lda     ZIDBYTE         ; $00 = IIc or later
-    IF ZERO
+    IF u8 ZIDBYTE = #0          ; $00 = IIc or later
         CALL    set_bit, A=#DeskTopSettings::kSysCapIsIIc
 
         ;; IIc Plus?
-        lda     ZIDBYTE2        ; ROM version
-      IF A = #$05               ; IIc Plus = $05
+      IF u8 ZIDBYTE2 = #$05     ; ROM version, IIc Plus = $05
         CALL    set_bit, A=#DeskTopSettings::kSysCapIsIIcPlus
       END_IF
         jmp     done_machid
     END_IF
 
         ;; Laser 128?
-        lda     IDBYTELASER128
-    IF A = #$AC
+    IF u8 IDBYTELASER128 = #$AC
         CALL    set_bit, A=#DeskTopSettings::kSysCapIsLaser128
         jmp     done_machid
     END_IF
 
         ;; Macintosh IIe Option Card?
-        lda     ZIDBYTE
-    IF A = #$E0                 ; Enhanced IIe
-        lda     IDBYTEMACIIE
-      IF A = #$02               ; Mac IIe Option Card
+    IF u8 ZIDBYTE = #$E0        ; Enhanced IIe
+      IF u8 IDBYTEMACIIE = #$02 ; Mac IIe Option Card
         CALL    set_bit, A=#DeskTopSettings::kSysCapIsIIeCard
         jmp     done_machid
       END_IF
@@ -724,8 +718,7 @@ test_unit_num:
       WHILE dey : POS
         jsr     CopyFile
         inc     filenum
-        lda     filenum
-    WHILE A <> #kNumFilenames
+    WHILE u8 filenum <> #kNumFilenames
 
         jsr     UpdateProgress
         FALL_THROUGH_TO FinishDeskTopCopy

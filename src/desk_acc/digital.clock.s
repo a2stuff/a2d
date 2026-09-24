@@ -164,8 +164,7 @@ last:   .tag    DateTime
         ldx     #SELF_MODIFIED_BYTE
         CALL    DrawVectorChar, A=str_time,x
 
-        lda     idx
-        BREAK_IF A = str_time
+        BREAK_IF u8 idx = str_time
     WHILE inc idx : NOT_ZERO
 
         rts

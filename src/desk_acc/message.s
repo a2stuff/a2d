@@ -157,8 +157,7 @@ printable:
 backspace:
         jsr     maybe_init
 
-        lda     text_params::length
-    IF A >= #3
+    IF u8 text_params::length >= #3
         dec     text_params::length
         ldx     text_params::length
         copy8   #kPadChar, buf-1,x
@@ -191,8 +190,7 @@ maybe_init:
 
         MGTK_CALL MGTK::MoveTo, text_pos
 
-        lda     text_params::length
-    IF ZERO
+    IF u8 text_params::length = #0
         copy16  #0, rect::x1
         copy16  #kScreenWidth-1, rect::x2
         MGTK_CALL MGTK::PaintRect, rect

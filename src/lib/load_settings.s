@@ -72,8 +72,7 @@ update: stxy    DefaultSettings + DeskTopSettings::dblclick_speed
         BREAK_IF CS             ; failed - use defaults
 
         ;; Check version byte; ignore on mismatch
-        lda     version_byte
-        BREAK_IF A <> #kDeskTopSettingsFileVersion ; mismatch - use defaults
+        BREAK_IF u8 version_byte <> #kDeskTopSettingsFileVersion ; mismatch - use defaults
 
         ;; Version byte is fine - read the rest of the file
         MLI_CALL READ, read_cfg_params

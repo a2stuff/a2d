@@ -350,8 +350,7 @@ retry:  MLI_CALL READ, read_src_dir_entry_params
     END_IF
 
         inc     entry_index_in_block
-        lda     entry_index_in_block
-    IF A >= entries_per_block
+    IF u8 entry_index_in_block >= entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
 retry2: MLI_CALL READ, read_padding_bytes_params
@@ -978,8 +977,7 @@ ret:    rts
 .endif
 
         ;; If source is volume, create directory instead
-        lda     create_params::storage_type
-    IF A = #ST_VOLUME_DIRECTORY
+    IF u8 create_params::storage_type = #ST_VOLUME_DIRECTORY
         copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 

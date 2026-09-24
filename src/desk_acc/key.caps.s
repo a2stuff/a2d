@@ -770,10 +770,8 @@ check:
     END_IF
 
         ;; Is IIc+?
-        lda     ZIDBYTE         ; $00 = IIc
-    IF ZERO
-        lda     ZIDBYTE2        ; $05 = IIc Plus
-      IF A = #$05
+    IF u8 ZIDBYTE = #0          ; $00 = IIc
+      IF u8 ZIDBYTE2 = #$05     ; $05 = IIc Plus
         RETURN  C=1             ; Yes, is a IIc+
       END_IF
     END_IF

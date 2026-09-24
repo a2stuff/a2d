@@ -82,8 +82,7 @@ done:
 ;;; ============================================================
 
 DoAdd:  ldx     #kRunListPrimary
-        lda     selector_menu
-    IF A >= #kSelectorMenuFixedItems + 8
+    IF u8 selector_menu >= #kSelectorMenuFixedItems + 8
         inx                     ; `kRunListSecondary`
     END_IF
 
@@ -131,8 +130,7 @@ DoAdd:  ldx     #kRunListPrimary
         jmp     Exit
     END_IF
 
-        lda     num_secondary_run_list_entries
-    IF A <> #kSelectorListNumSecondaryRunListEntries
+    IF u8 num_secondary_run_list_entries <> #kSelectorListNumSecondaryRunListEntries
         ldy     copy_when       ; Flags
         lda     num_secondary_run_list_entries
         clc
@@ -229,8 +227,7 @@ copy_when:
         jsr     main::CopyToPathBuf0
 
         ldx     #kRunListPrimary
-        lda     shortcut_picker_record::selected_index
-    IF A >= #kSelectorListNumPrimaryRunListEntries
+    IF u8 shortcut_picker_record::selected_index >= #kSelectorListNumPrimaryRunListEntries
         inx                     ; `kRunListSecondary`
     END_IF
 
@@ -273,14 +270,12 @@ copy_when:
         jmp     Exit
     END_IF
 
-        lda     shortcut_picker_record::selected_index
-    IF A >= #kSelectorListNumPrimaryRunListEntries
+    IF u8 shortcut_picker_record::selected_index >= #kSelectorListNumPrimaryRunListEntries
         ;; Was on secondary run list - is it still?
         ucmp8   which_run_list, #kRunListSecondary
         beq     reuse_same_index
 
-        lda     num_primary_run_list_entries
-      IF A = #kSelectorListNumPrimaryRunListEntries
+      IF u8 num_primary_run_list_entries = #kSelectorListNumPrimaryRunListEntries
         jmp     ShowFullAlert
       END_IF
 
@@ -296,8 +291,7 @@ copy_when:
         ucmp8   which_run_list, #kRunListPrimary
         beq     reuse_same_index
 
-        lda     num_secondary_run_list_entries
-      IF A = #kSelectorListNumSecondaryRunListEntries
+      IF u8 num_secondary_run_list_entries = #kSelectorListNumSecondaryRunListEntries
         jmp     ShowFullAlert
       END_IF
 
@@ -431,8 +425,7 @@ handle_button:
         RETURN  A=#$FF
     END_IF
 
-        lda     findwindow_params::window_id
-    IF A <> winfo_entry_picker
+    IF u8 findwindow_params::window_id <> winfo_entry_picker
         RETURN  A=#$FF
     END_IF
 
@@ -477,8 +470,7 @@ handle_button:
 ;;; Key down handler
 
 .proc HandleKey
-        lda     event_params::modifiers
-    IF A = #MGTK::event_modifier_solid_apple
+    IF u8 event_params::modifiers = #MGTK::event_modifier_solid_apple
         RETURN  A=#$FF
     END_IF
 
@@ -630,7 +622,7 @@ flags:  .byte   0
         TAIL_CALL UpdateMenuResources
       END_IF
 
-        jsr     MoveEntryDown
+        jsr     MoveEntryDown   ; A = `index`
     WHILE inc index : NOT ZERO  ; always
 
         ;; --------------------------------------------------

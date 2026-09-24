@@ -662,10 +662,8 @@ ret:    rts
     END_IF
 
     IF A = #CHAR_ESCAPE
-        lda     calc_p
-      IF ZERO                   ; empty state?
-        lda     calc_l
-       IF ZERO
+      IF u8 calc_p = #0         ; empty state?
+       IF u8 calc_l = #0
         pla                     ; pop OnKeyPress
         pla
         jmp     ExitDA
@@ -847,10 +845,8 @@ next:   add16_8 ptr, #.sizeof(btn_c)
     END_IF
 
     IF A = #Function::op_subtract
-        lda     calc_e          ; negate vs. subtract
-      IF NOT_ZERO
-        lda     calc_n
-       IF ZERO
+      IF u8 calc_e <> #0        ; negate vs. subtract
+       IF u8 calc_n = #0
         SET_BIT7_FLAG calc_n
         pla
         pha
@@ -865,8 +861,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         lda     calc_d          ; already a decimal?
         ora     calc_e          ; or exponent?
       IF ZERO
-        lda     calc_l
-       IF ZERO
+       IF u8 calc_l = #0
         inc     calc_l
        END_IF
         copy8   intl_deci_sep, calc_d
@@ -929,8 +924,7 @@ ret:   rts
 .proc DoOp
         ;; Pending input we need to parse?
         pha
-        lda     calc_g
-    IF NOT_ZERO
+    IF u8 calc_g <> #0
         CLEAR_BIT7_FLAG calc_r
         CLEAR_BIT7_FLAG calc_o
 
@@ -1080,8 +1074,7 @@ ret:   rts
 
         ldy     #0              ; count the size
     DO
-        lda     FBUFFR,y
-        BREAK_IF ZERO
+        BREAK_IF u8 FBUFFR,y = #0
     WHILE iny : NOT_ZERO        ; always
 
         ldx     #kTextBufferSize ; copy to text buffers
@@ -1145,8 +1138,7 @@ ret:   rts
 .endproc ; ResetBuffer1AndState
 
 .proc MaybeAddLeadingZero
-        lda     text_buffer1+1,x
-    IF A = intl_deci_sep
+    IF u8 text_buffer1+1,x = intl_deci_sep
         lda     #'0'
         sta     text_buffer1,x
         sta     text_buffer2,x

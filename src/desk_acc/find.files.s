@@ -397,8 +397,7 @@ search:
         sty     lb_params::new_size
         LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
 
-        lda     path_length
-    IF A = #1
+    IF u8 path_length = #1
         ucmp8   num_entries, #kMaxFilePaths
         beq     finish
         JSR_TO_MAIN ::main::NextVolume
@@ -983,8 +982,7 @@ OpenDone:
     END_IF
 
         ;; Does the file match the search pattern?
-        lda     pattern         ; Skip if pattern is empty
-    IF NOT_ZERO
+    IF u8 pattern <> #0         ; Skip if pattern is empty
         jsr     IsMatch
         bcc     exit            ; No match
     END_IF
@@ -1036,8 +1034,7 @@ exit:   rts
         ;; on the stack above and below for safety.
         kMaxRecursionDepth = 16
 
-        lda     Depth
-    IF A < #kMaxRecursionDepth
+    IF u8 Depth < #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
     END_IF
 

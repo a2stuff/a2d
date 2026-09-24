@@ -297,27 +297,26 @@ port:           .addr   grafport_win
         jmp     InputLoop
     END_IF
 
-        cmp     #kDAWindowId
-        bne     done
-
+    IF A = #kDAWindowId
         ;; Click in DA content area
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-    IF NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         bmi     done
         jmp     Exit
-    END_IF
+      END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         bmi     done
         copy8   #$FF, listbox_rec::selected_index
         jmp     Exit
+      END_IF
     END_IF
 
 done:   jmp     InputLoop
@@ -614,26 +613,25 @@ remainder:      .word   0                 ; (out)
         jmp     InputLoop
     END_IF
 
-        cmp     #kDAWindowId
-        bne     done
-
+    IF A = #kDAWindowId
         ;; Click in DA content area
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, import_button::rect
-    IF NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, import_button
         bmi     done
         jmp     Import
-    END_IF
+      END_IF
 
         MGTK_CALL MGTK::InRect, close_button::rect
-    IF NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, close_button
         bmi     done
         jmp     ExitOK
+      END_IF
     END_IF
 
 done:   jmp     InputLoop
@@ -994,8 +992,7 @@ index:  .byte   0
 
        DO
         dex
-        lda     entry_buf+aux::CatalogEntry::Name+1,x
-       WHILE A = #' '
+       WHILE u8 entry_buf+aux::CatalogEntry::Name+1,x = #' '
         inx
        IF ZERO
         inx

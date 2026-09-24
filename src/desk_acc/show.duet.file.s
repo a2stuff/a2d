@@ -210,8 +210,7 @@ ret:    rts
         ;; Extract filename
         ldy     INVOKE_PATH
     DO
-        lda     INVOKE_PATH,y   ; find last '/'
-        BREAK_IF A = #'/'
+        BREAK_IF u8 INVOKE_PATH,y = #'/' ; find last '/'
     WHILE dey : NOT_ZERO
 
         ldx     #0

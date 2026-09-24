@@ -439,8 +439,7 @@ done_keys:
         ;; --------------------------------------------------
         ;; Set up Startup menu
 
-        lda     quick_boot_slot
-    IF NOT ZERO
+    IF u8 quick_boot_slot <> #0
         ldy     slot_table
       DO
         cmp     slot_table,y
@@ -515,8 +514,7 @@ done_keys:
         jsr     ShowClock
         MGTK_CALL MGTK::FlushEvents
 
-        lda     startdesktop_params::slot_num
-    IF ZERO
+    IF u8 startdesktop_params::slot_num = #0
         CALL    ReadSetting, X=#DeskTopSettings::options
         ora     #DeskTopSettings::kOptionsShowShortcuts
         jsr     WriteSetting
@@ -532,8 +530,7 @@ done_keys:
         inc     scalemouse_params::y_exponent
     END_IF
         ;; Also doubled if a IIc
-        lda     ZIDBYTE         ; ZIDBYTE=0 for IIc / IIc+
-    IF ZERO
+    IF u8 ZIDBYTE = #0          ; ZIDBYTE=0 for IIc / IIc+
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
@@ -612,15 +609,13 @@ retry:  CALL    GetFileInfo, AX=#str_desktop_2
 CheckAndClearUpdates:
     DO
         MGTK_CALL MGTK::PeekEvent, event_params
-        lda     event_params::kind
-        BREAK_IF A <> #MGTK::EventKind::update
+        BREAK_IF u8 event_params::kind <> #MGTK::EventKind::update
 
         MGTK_CALL MGTK::GetEvent, event_params
         FALL_THROUGH_TO ClearUpdates
 
 ClearUpdates:
-        lda     event_params::window_id
-        REDO_IF A <> #winfo::kDialogId
+        REDO_IF u8 event_params::window_id <> #winfo::kDialogId
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         REDO_IF NOT_ZERO        ; obscured
@@ -788,9 +783,7 @@ dispatch:
     END_IF
 
         RTS_IF A <> #MGTK::Area::content
-
-        lda     findwindow_params::window_id
-        RTS_IF A <> #winfo::kDialogId
+        RTS_IF u8 findwindow_params::window_id <> #winfo::kDialogId
 
         CALL    GetWindowPort, A=#winfo::kDialogId
         copy8   #winfo::kDialogId, screentowindow_params::window_id
@@ -1777,14 +1770,12 @@ str_extras_awlaunch:
         copy8   (path_addr),y, len
         tay
     DO
-        lda     (path_addr),y
-        BREAK_IF A = #'/'
+        BREAK_IF u8 (path_addr),y = #'/'
     WHILE dey : NOT_ZERO
 
         dey
     DO
-        lda     (path_addr),y
-        BREAK_IF A = #'/'
+        BREAK_IF u8 (path_addr),y = #'/'
     WHILE dey : NOT_ZERO
 
         dey
@@ -1845,8 +1836,7 @@ TestInterceptSystemTask:
 
         inc     loop_counter
         inc     loop_counter
-        lda     loop_counter
-    IF A >= #kMaxCounter
+    IF u8 loop_counter >= #kMaxCounter
         copy8   #0, loop_counter
 
         jsr     ShowClock

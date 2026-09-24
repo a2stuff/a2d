@@ -401,8 +401,7 @@ yes:    RETURN  C=0
 
 .proc PadType
     DO
-        lda     str_type
-        BREAK_IF A = #2
+        BREAK_IF u8 str_type = #2
         copy8   str_type+1, str_type+2
         copy8   #'0', str_type+1
         inc     str_type
@@ -412,8 +411,7 @@ yes:    RETURN  C=0
 
 .proc PadAuxtype
     DO
-        lda     str_auxtype
-        BREAK_IF A = #4
+        BREAK_IF u8 str_auxtype = #4
         copy8   str_auxtype+3, str_auxtype+4
         copy8   str_auxtype+2, str_auxtype+3
         copy8   str_auxtype+1, str_auxtype+2
@@ -439,8 +437,7 @@ yes:    RETURN  C=0
         MGTK_CALL MGTK::CloseWindow, closewindow_params
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
-        lda     str_type
-    IF ZERO
+    IF u8 str_type = #0
         CLEAR_BIT7_FLAG data::type_valid
     ELSE
         SET_BIT7_FLAG data::type_valid
@@ -449,8 +446,7 @@ yes:    RETURN  C=0
         sta     data::type
     END_IF
 
-        lda     str_auxtype
-    IF ZERO
+    IF u8 str_auxtype = #0
         CLEAR_BIT7_FLAG data::auxtype_valid
     ELSE
         SET_BIT7_FLAG data::auxtype_valid
@@ -646,8 +642,7 @@ callback:
         sta     data::auxtype_valid
     ELSE
         ;; Rest - determine if same type/auxtype
-        lda     gfi_params::file_type
-      IF A <> data::type
+      IF u8 gfi_params::file_type <> data::type
         CLEAR_BIT7_FLAG data::type_valid
       END_IF
 

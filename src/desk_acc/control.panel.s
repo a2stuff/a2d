@@ -719,9 +719,7 @@ shortcut_table_addr_hi:
 
 .proc HandleRArrClick
         inc     pattern_index
-
-        lda     pattern_index
-    IF A >= #kPatternCount
+    IF u8 pattern_index >= #kPatternCount
         copy8   #0, pattern_index
     END_IF
 

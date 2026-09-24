@@ -360,7 +360,7 @@ button_eor_table:
 
         BTK_CALL BTK::CheckboxDraw, SELF_MODIFIED, params_addr
 
-    WHILE inc index : lda index : A < #kNumButtons
+    WHILE inc index : u8 index < #kNumButtons
 
         ;; --------------------------------------------------
 

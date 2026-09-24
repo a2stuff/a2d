@@ -949,8 +949,7 @@ ret:    rts
         ;; Returns with carry set if puzzle complete
 .proc CheckVictory        ; Allows for swapped indistinct pieces, etc.
         ;; 0/12 can be swapped
-        lda     position_table
-    IF NOT_ZERO
+    IF u8 position_table <> #0
         cmp     #12
         bne     nope
     END_IF
@@ -1024,8 +1023,7 @@ nope:   RETURN  C=0
 .proc FindHole
         ldy     #15
     DO
-        lda     position_table,y
-        BREAK_IF A = #kHolePiece
+        BREAK_IF u8 position_table,y = #kHolePiece
     WHILE dey : POS             ; always
 
         lda     #0

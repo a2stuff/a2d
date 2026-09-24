@@ -448,8 +448,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
         ;; Advance pointer to next record
 next:   inc     index
-        lda     index
-        BREAK_IF A = #kNumLocations
+        BREAK_IF u8 index = #kNumLocations
 
         ldy     #0              ; string length
         lda     (ptr),y
