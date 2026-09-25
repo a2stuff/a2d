@@ -269,9 +269,7 @@ jt_callbacks:
     END_IF
 
         ;; Disallow copying some types to ramcard
-        ucmp8   copy_when, #kCopyNever
-        beq     ok
-
+    IF u8 copy_when <> #kCopyNever
         MLI_CALL GET_FILE_INFO, get_file_info_params
         bcs     alert
         ;; Volume?
@@ -280,8 +278,9 @@ jt_callbacks:
         ;; Link?
         ucmp8   get_file_info_params::file_type, #FT_LINK
         beq     invalid
+    END_IF
 
-ok:     jsr     file_dialog::CloseWindow
+        jsr     file_dialog::CloseWindow
         ldx     saved_stack
         txs
         ldx     which_run_list

@@ -624,15 +624,14 @@ new_size        .byte
         ;; Reset thumb pos
         CALL    _UpdateThumb, A=#0
 
-        ucmp8   lbr_copy + LBTK::ListBoxRecord::num_rows, lbr_copy + LBTK::ListBoxRecord::num_items
-        bcc     greater         ; inverted comparison
-
+        ;; (inverted comparison)
+    IF u8 lbr_copy + LBTK::ListBoxRecord::num_rows >= lbr_copy + LBTK::ListBoxRecord::num_items
         ;; Deactivate
         lda     #MGTK::activatectl_deactivate
         ASSERT_EQUALS MGTK::activatectl_deactivate, 0
         beq     activate        ; always
+    END_IF
 
-greater:
         ;; Set max and activate
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
         sec

@@ -342,13 +342,12 @@ ignore: RETURN  C=1
         MGTK_CALL MGTK::PeekEvent, event_params
         MGTK_CALL MGTK::FlushEvents
 
-        ucmp8   event_params::kind, #MGTK::EventKind::key_down
-        bne     nope
-        ucmp8   event_params::key, #CHAR_ESCAPE
-        bne     nope
-        rts
+    IF u8 event_params::kind = #MGTK::EventKind::key_down
+        lda     event_params::key
+        RTS_IF A = #CHAR_ESCAPE
+    END_IF
 
-nope:   RETURN  A=#0
+        RETURN  A=#0
 .endproc ; CheckEvents
 
 ;;; ============================================================
@@ -398,10 +397,10 @@ search:
         LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
 
     IF u8 path_length = #1
-        ucmp8   num_entries, #kMaxFilePaths
-        beq     finish
+      IF u8 num_entries <> #kMaxFilePaths
         JSR_TO_MAIN ::main::NextVolume
         bcc     search
+      END_IF
     END_IF
 
 finish:
@@ -414,8 +413,9 @@ finish:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        jne     done
+    IF u8 findwindow_params::which_area <> #MGTK::Area::content
+        jmp     done
+    END_IF
 
         lda     findwindow_params::window_id
     IF A = #kResultsWindowId
@@ -1015,8 +1015,9 @@ OpenDone:
         jsr     DrawNextResultFromMain
 
         ;; If we've hit max number of entries, terminate operation.
-        ucmp8   num_entries, #kMaxFilePaths
-        jeq     Terminate
+    IF u8 num_entries = #kMaxFilePaths
+        jmp     Terminate
+    END_IF
 
 exit:   rts
 .endproc ; VisitFile

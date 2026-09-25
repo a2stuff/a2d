@@ -302,16 +302,12 @@ probe_count:
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     miss
+    IF u8 findwindow_params::window_id <> #kDAWindowId \
+      OR u8 findwindow_params::which_area <> #MGTK::Area::content
+        jmp     InputLoop
+    END_IF
 
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        beq     hit
-
-miss:   jmp     InputLoop
-
-hit:    lda     winfo::window_id
-        sta     screentowindow_params::window_id
+        copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 

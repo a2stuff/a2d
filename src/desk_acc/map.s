@@ -355,8 +355,9 @@ buf_search:     .res    kBufSize, 0 ; search term
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        jne     InputLoop
+    IF u8 findwindow_params::window_id <> #kDAWindowId
+        jmp     InputLoop
+    END_IF
 
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box

@@ -385,12 +385,10 @@ num_analog_inputs:
         ;; If last state was valid, see if joystick 2 registered
         ;; a change; if so, set a flag.
     IF bit last+InputState::valid : NS
-        ucmp8   curr+InputState::pdl2, last+InputState::pdl2
-        bne     set
-        ucmp8   curr+InputState::pdl3, last+InputState::pdl3
-        beq     :+
-set:    SET_BIT7_FLAG joy2_valid_flag
-:
+      IF u8 curr+InputState::pdl2 <> last+InputState::pdl2 \
+        OR u8 curr+InputState::pdl3 <> last+InputState::pdl3
+        SET_BIT7_FLAG joy2_valid_flag
+      END_IF
     END_IF
 
         ;; Changed? (or first time through)

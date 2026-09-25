@@ -818,8 +818,9 @@ is_drag:
         jsr     _XDrawOutline
     REPEAT
         MGTK_CALL MGTK::PeekEvent, peekevent_params
-        ucmp8   peekevent_params::kind, #MGTK::EventKind::drag
-        jne     not_drag
+      IF u8 peekevent_params::kind <> #MGTK::EventKind::drag
+        jmp     not_drag
+      END_IF
 
         ;; Escape key?
         lda     KBD             ; MGTK doesn't process keys during drag
@@ -905,8 +906,9 @@ not_drag:
     END_IF
 
         ;; Drag ended by a keystroke?
-        ucmp8   peekevent_params::kind, #MGTK::EventKind::key_down ; cancel?
-        jeq     exit_canceled
+      IF u8 peekevent_params::kind = #MGTK::EventKind::key_down ; cancel?
+        jmp     exit_canceled
+      END_IF
 
         ;; Drag ended over an icon?
         lda     highlight_icon_id

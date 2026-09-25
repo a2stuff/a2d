@@ -447,9 +447,9 @@ grafport_win:       .tag    MGTK::GrafPort
         stx     crc_hi
 
         copy8   #0, index
-
+    DO
         index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
+        lda     #SELF_MODIFIED_BYTE
 
         asl
         tay
@@ -457,18 +457,17 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         crc_lo := *+1
         cmp     #SELF_MODIFIED_BYTE
-        bne     next
+        CONTINUE_IF NE
+
         crc_hi := *+1
         cpx     #SELF_MODIFIED_BYTE
-        bne     next
+        CONTINUE_IF NE
 
         ;; Match!
         lda     index
         jmp     finish
 
-next:   inc     index
-        ucmp8   index, listbox_rec::num_items
-        bne     loop
+    WHILE u8 ++index <> listbox_rec::num_items
 
         ;; Not Found
         lda     #$FF

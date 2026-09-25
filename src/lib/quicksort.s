@@ -134,8 +134,7 @@ tc2:    dey                     ; Y = lt - 1
 
         ;; while eq <= gt do
 loop:
-        ucmp8   gt, eq
-        RTS_IF LT
+        RTS_IF u8 gt < eq
 
         lda     eq
         jsr     getptr

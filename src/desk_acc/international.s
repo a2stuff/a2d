@@ -336,12 +336,11 @@ update:
 
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, event_params::xcoord
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     miss
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        beq     hit
-miss:   rts
-hit:
+    IF u8 findwindow_params::window_id <> #kDAWindowId \
+      OR u8 findwindow_params::which_area <> #MGTK::Area::content
+        rts
+    END_IF
+
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::SetPort, winfo::port
