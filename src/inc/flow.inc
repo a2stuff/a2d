@@ -38,7 +38,8 @@
 ;;;
 ;;; Typed comparisons: <type> <arg1> <operator> <arg2>
 ;;; Types: u8 u16 s16 u24
-;;; e.g. "IF u16 rect::x2 < rect::x1"
+;;; Operators: =, <>, <, <=, >, >=
+;;; e.g. "IF u16 rect::x1 > rect::x2"
 ;;; <arg1> can be prefixed with ++ or -- to pre-increment/decrement
 ;;;
 ;;; Conditions can be prepended with NOT to invert meaning.
@@ -569,11 +570,11 @@
         .elseif .xmatch(f2_op, >=)
           .define f2_op_str ">="
         .elseif .xmatch(f2_op, >)
-          F2_ERR "Greater-than operator ('>') not supported"
+          .define f2_op_str ">"
         .elseif .xmatch(f2_op, <=)
-          F2_ERR "Less-than-or-equal operator ('<=') not supported"
+          .define f2_op_str "<="
         .else
-          F2_ERR_EXPECTED "operator (=, <>, <, >=)"
+          F2_ERR_EXPECTED "operator (=, <>, <, <=, >, >=)"
         .endif
 
         F2_PARSE_CONSUME
@@ -607,8 +608,14 @@
           .elseif .xmatch(f2_op, <)
             ucmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
+          .elseif .xmatch(f2_op, >)
+            ucmp16 f2_rhs, f2_lhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch(f2_op, >=)
             ucmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
+          .elseif .xmatch(f2_op, <=)
+            ucmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
@@ -629,8 +636,14 @@
           .elseif .xmatch(f2_op, <)
             scmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
+          .elseif .xmatch(f2_op, >)
+            scmp16 f2_rhs, f2_lhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
           .elseif .xmatch(f2_op, >=)
             scmp16 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
+          .elseif .xmatch(f2_op, <=)
+            scmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
           .else
             F2_ERR_UNREACHED
@@ -660,8 +673,14 @@
           .elseif .xmatch(f2_op, <)
             ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
+          .elseif .xmatch(f2_op, >)
+            ucmp8 f2_rhs, f2_lhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch(f2_op, >=)
             ucmp8 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
+          .elseif .xmatch(f2_op, <=)
+            ucmp8 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
@@ -682,8 +701,14 @@
           .elseif .xmatch(f2_op, <)
             ucmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
+          .elseif .xmatch(f2_op, >)
+            ucmp24 f2_rhs, f2_lhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch(f2_op, >=)
             ucmp24 f2_lhs, f2_rhs
+            F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
+          .elseif .xmatch(f2_op, <=)
+            ucmp24 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED

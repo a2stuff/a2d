@@ -681,10 +681,24 @@ var2 := *
         nop
     END_IF
 
+    IF u8 var1 > var2
+        nop
+    END_IF
+    IF u8 var1 > #12
+        nop
+    END_IF
+
     IF u8 var1 >= var2
         nop
     END_IF
     IF u8 var1 >= #12
+        nop
+    END_IF
+
+    IF u8 var1 <= var2
+        nop
+    END_IF
+    IF u8 var1 <= #12
         nop
     END_IF
 
@@ -703,6 +717,9 @@ var2 := *
     DO
         nop
     WHILE u8 --var1 >= #12
+    DO
+        nop
+    WHILE u8 --var1 > #0
 
 ;;; u16
     IF u16 var1 = var2
@@ -726,10 +743,24 @@ var2 := *
         nop
     END_IF
 
+    IF u16 var1 > var2
+        nop
+    END_IF
+    IF u16 var1 > #1234
+        nop
+    END_IF
+
     IF u16 var1 >= var2
         nop
     END_IF
     IF u16 var1 >= #1234
+        nop
+    END_IF
+
+    IF u16 var1 <= var2
+        nop
+    END_IF
+    IF u16 var1 <= #1234
         nop
     END_IF
 
@@ -740,6 +771,9 @@ var2 := *
     DO
         nop
     WHILE u16 --var1 >= #1234
+    DO
+        nop
+    WHILE u16 --var1 > #0
 
 ;;; s16
     IF s16 var1 = var2
@@ -763,10 +797,24 @@ var2 := *
         nop
     END_IF
 
+    IF s16 var1 > var2
+        nop
+    END_IF
+    IF s16 var1 > #1234
+        nop
+    END_IF
+
     IF s16 var1 >= var2
         nop
     END_IF
     IF s16 var1 >= #1234
+        nop
+    END_IF
+
+    IF s16 var1 <= var2
+        nop
+    END_IF
+    IF s16 var1 <= #1234
         nop
     END_IF
 
@@ -777,6 +825,9 @@ var2 := *
     DO
         nop
     WHILE s16 --var1 >= #1234
+    DO
+        nop
+    WHILE s16 --var1 > #0
 
 ;;; u24
     IF u24 var1 = var2
@@ -800,6 +851,13 @@ var2 := *
         nop
     END_IF
 
+    IF u24 var1 > var2
+        nop
+    END_IF
+    IF u24 var1 > #1234
+        nop
+    END_IF
+
     IF u24 var1 >= var2
         nop
     END_IF
@@ -807,10 +865,20 @@ var2 := *
         nop
     END_IF
 
+    IF u24 var1 <= var2
+        nop
+    END_IF
+    IF u24 var1 <= #1234
+        nop
+    END_IF
+
         ;; prefix operators
     DO
         nop
     WHILE u24 ++var1 < #1234
+    DO
+        nop
+    WHILE u24 ++var1 > #1234
 
 ;;; --------------------------------------------------
 ;;; Cheap Local Label Compatibility
@@ -1256,8 +1324,6 @@ ft21:
         RTS_IF u16                 ; RTS_IF: Expected argument(s) after type 'u16'
         RTS_IF u16 var             ; RTS_IF: Expected operator (=, <>, <, >=)
         RTS_IF u16 var <           ; RTS_IF: Expected argument(s) after operator '<'
-        RTS_IF u16 var > #123      ; RTS_IF: Greater-than operator ('>') not supported
-        RTS_IF u16 var <= #123     ; RTS_IF: Less-than-or-equal operator ('<=') not supported
         RTS_IF u16 var < #123,456  ; RTS_IF: Unexpected non-index-register after comparison '<'
         RTS_IF u16 var < 123       ; RTS_IF: Numeric literal in '<' comparison; did you mean '#123'?
         RTS_IF u8 var++ = #5       ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)

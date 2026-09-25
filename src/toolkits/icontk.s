@@ -2124,7 +2124,7 @@ reserved:       .byte   0
         ldx     #2              ; loop over dimensions
     DO
 
-      IF s16 portbits::maprect::topleft,x < bounding_rect+MGTK::Rect::topleft,x
+      IF s16 bounding_rect+MGTK::Rect::topleft,x > portbits::maprect::topleft,x
         copy16  bounding_rect+MGTK::Rect::topleft,x, portbits::maprect::topleft,x
       END_IF
 
@@ -2335,7 +2335,7 @@ do_pt:  lda     pt_num
         ;; Cases 7/8/9 (and done)
         ;; if (win_l > cr_l)
         ;; . cr_r = win_l - 1
-    IF s16 cr_l < win_l
+    IF s16 win_l > cr_l
         sub16   win_l, #1, cr_r
         jmp     reclip
     END_IF
@@ -2343,7 +2343,7 @@ do_pt:  lda     pt_num
         ;; Cases 1/2/3 (and continue below)
         ;; if (cr_r > win_r)
         ;; . cr_r = win_r
-    IF s16 win_r < cr_r
+    IF s16 cr_r > win_r
         copy16  win_r, cr_r
         ;; in case 2 this will be reset
     END_IF
@@ -2351,7 +2351,7 @@ do_pt:  lda     pt_num
         ;; Cases 3/6 (and done)
         ;; if (win_t > cr_t)
         ;; . cr_b = win_t - 1
-    IF s16 cr_t < win_t
+    IF s16 win_t > cr_t
         sub16   win_t, #1, cr_b
         jmp     reclip
     END_IF
@@ -2370,7 +2370,7 @@ do_pt:  lda     pt_num
         ;; if (win_r < stash_r)
         ;; . cr_l = win_r + 1
         ;; . cr_r = stash_r
-    IF s16 stash_r >= win_r
+    IF s16 win_r <= stash_r
         ldxy    win_r
         inxy
         stxy    cr_l

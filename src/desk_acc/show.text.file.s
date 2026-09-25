@@ -657,7 +657,7 @@ end:    rts
         copy8   #0, tab_flag
 
         ldx     #0
-      IF u16 current_line >= first_visible_line AND u16 last_visible_line >= current_line
+      IF u16 current_line >= first_visible_line AND u16 current_line <= last_visible_line
         inx
       END_IF
         stx     visible_flag

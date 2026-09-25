@@ -7885,7 +7885,7 @@ END_PARAM_BLOCK
         sub16   gap, width_k_available, gap
         asr16   gap                         ; divided evenly
 
-    IF s16 #kWindowHeaderSpacingX >= gap    ; is it below the minimum?
+    IF s16 gap <= #kWindowHeaderSpacingX    ; is it below the minimum?
         copy16  #kWindowHeaderSpacingX, gap ; yes, use the minimum
     END_IF
         copy16  gap, header_text_delta::xcoord
