@@ -1051,8 +1051,7 @@ END_PARAM_BLOCK
 
         ;; --------------------------------------------------
         ;; Prep selection
-        ucmp8   window_id, selected_window_id
-        bne     clear
+        IF u8 window_id <> selected_window_id GOTO clear
 
         lda     MainLoop::modifiers
         and     #kExtendSelectionModifierMask
@@ -1160,8 +1159,7 @@ event_loop:
         ;; TODO: Experiment with making this lower.
         kDragBoundThreshold = 5
 
-        ucmp8   delta,x, #kDragBoundThreshold
-        bcs     beyond
+        IF u8 delta,x >= #kDragBoundThreshold GOTO beyond
 
     WHILE dex : dex : POS       ; next dimension
         jmp     event_loop
@@ -1216,9 +1214,8 @@ beyond:
         php
         MLI_CALL CLOSE, close_params
         plp
-        bcs     invalid         ; READ failed
-        ucmp8   read_params::trans_count, #5
-        bne     invalid         ; couldn't read header
+
+        IF CS OR u8 read_params::trans_count <> #5 GOTO invalid ; READ failed or couldn't read header
 
         ;; Interpreter?
         ;; ProDOS Technical Reference Manual - 5.1.5.1 - Starting System Programs
@@ -1226,13 +1223,9 @@ beyond:
         ;; $2000 is a jump instruction. $2003 and $2004 are $EE."
         ;; https://prodos8.com/docs/techref/writing-a-prodos-system-program/
 
-        ucmp8   #OPC_JMP_abs, header_buf
-        bne     invalid
+        IF u8 #OPC_JMP_abs <> header_buf GOTO invalid
         lda     #$EE
-        cmp     header_buf+3
-        bne     invalid
-        cmp     header_buf+4
-        bne     invalid
+        IF A <> header_buf+3 OR A <> header_buf+4 GOTO invalid
 
         ;; Copy `operation_src_path` to `src_path_buf`
         CALL    CopyToSrcPath, AX=#operation_src_path
@@ -1367,8 +1360,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
         jsr     CheckDisksInDevices
         ldx     disk_in_device_table
       DO
-        ucmp8   disk_in_device_table,x, last_disk_in_devices_table,x
-        bne     changed
+        IF u8 disk_in_device_table,x <> last_disk_in_devices_table,x GOTO changed
       WHILE dex : NOT_ZERO
     END_IF
         RETURN  A=#0
@@ -1379,8 +1371,7 @@ changed:
         lda     removable_device_table,x
         ldy     DEVCNT
     DO
-        cmp     DEVLST,y
-        beq     found
+        IF A = DEVLST,y GOTO found
     WHILE dey : POS
         rts
 
@@ -2019,8 +2010,7 @@ LaunchFileByPathWithInterpreter := LaunchFileByPathImpl::launch
 
         ldx     #kCheckHeaderLength-1
        DO
-        ucmp8   read_buf,x, check_header,x
-        bne     bad
+        IF u8 read_buf,x <> check_header,x GOTO bad
        WHILE dex : POS
 
         CALL    CopyToSrcPath, AX=#read_buf + kLinkFilePathLengthOffset
@@ -2884,8 +2874,7 @@ next:   txa
         lda     selected_icon_list,x
 
         ;; Trash?
-        cmp     trash_icon_num
-        beq     next_icon
+        IF A = trash_icon_num GOTO next_icon
 
         pha                     ; A = icon id
 
@@ -2914,8 +2903,7 @@ maybe_open_file:
         pla                     ; A = icon id
         tax                     ; X = icon id
 
-        ucmp8   selected_icon_count, #2 ; multiple files open?
-        bcs     next_icon       ; don't try to invoke
+        IF u8 selected_icon_count >= #2 GOTO next_icon ; multiple files open? don't try to invoke
 
         pla                     ; A = index; no longer needed
 
@@ -3257,10 +3245,8 @@ CmdNewFolder    := CmdNewFolderImpl::start
     WHILE dex : NOT_ZERO        ; always (name must start w/ letter)
 
         ;; Did the string end with '.' then digits?
-        cmp     #'.'            ; dot before numbers?
-        bne     just_append
-        cpy     #0              ; any digits found?
-        beq     just_append
+        IF A <> #'.' GOTO just_append ; dot before numbers?
+        IF Y = #0 GOTO just_append    ; any digits found?
 
         ;; Truncate the '.', and increment the digits
         dex
@@ -3381,8 +3367,7 @@ done:   rts
 
         ;; And if there's only one, it's not Trash
         jsr     GetSingleSelectedIcon
-        cmp     trash_icon_num  ; if it's Trash, skip it
-        beq     done
+        IF A = trash_icon_num GOTO done ; if it's Trash, skip it
 
         ;; Make a copy of the volume selection to iterate over
         ldx     selected_icon_count
@@ -3930,8 +3915,7 @@ CmdRenameWithDefaultNameGiven := CmdRename::ep2 ; A,X = name
         CALL    AppendFilenameToDstPath, AX=#stashed_name
         jsr     GetDstFileInfo
     UNTIL CS
-        cmp     #ERR_FILE_NOT_FOUND
-        bne     error
+        IF A <> #ERR_FILE_NOT_FOUND GOTO error
 
         ;; --------------------------------------------------
         ;; Try copying the file
@@ -4183,17 +4167,16 @@ END_PARAM_BLOCK
         ;; compare against the full bounds so we would match against
         ;; the label, e.g. Shift+Down in large icon view, Shift+Right
         ;; in small icon view.
-        cmp     start_icon
-        beq     next_icon
+        CONTINUE_IF A = start_icon
 
         sta     cur_icon
         sta     icon_param
         jsr     IsIconSelected
-    IF ZS
+      IF ZS
         ;; Already selected. If we're not extending, skip it.
         bit     shift_flag
         bpl     next_icon
-    END_IF
+      END_IF
 
         ITK_CALL IconTK::IconInRect, icon_param ; tests against `tmp_rect`
         beq     next_icon
@@ -6312,10 +6295,8 @@ no_win:
         beq     use_minw        ; `iconbb_rect` is bogus if there are no icons
 
         ;; Check if width is < min or > max
-        ucmp16  bbox_dx, #kMinWindowWidth
-        bcc     use_minw
-        ucmp16  bbox_dx, #kMaxWindowWidth
-        bcs     use_maxw
+        IF u16 bbox_dx < #kMinWindowWidth GOTO use_minw
+        IF u16 bbox_dx >= #kMaxWindowWidth GOTO use_maxw
         ldax    bbox_dx
         bcc     assign_width    ; always
 
@@ -6341,10 +6322,8 @@ assign_width:
         beq     use_minh        ; `iconbb_rect` is bogus if there are no icons
 
         ;; Check if height is < min or > max
-        ucmp16  bbox_dy, #kMinWindowHeight
-        bcc     use_minh
-        ucmp16  bbox_dy, #kMaxWindowHeight
-        bcs     use_maxh
+        IF u16 bbox_dy < #kMinWindowHeight GOTO use_minh
+        IF u16 bbox_dy >= #kMaxWindowHeight GOTO use_maxh
         ldax    bbox_dy
         bcc     assign_height   ; always
 
@@ -6590,8 +6569,7 @@ done:
         add16   pos_col::ycoord, #kListViewRowHeight, pos_col::ycoord
 
         ;; Above top?
-        scmp16  pos_col::ycoord, viewport+MGTK::Rect::y1
-        bpl     in_range
+        IF s16 pos_col::ycoord >= viewport+MGTK::Rect::y1 GOTO in_range
     END_IF
 ret:    rts
 
@@ -7099,8 +7077,7 @@ CachedIconsWindowToScreen := CachedIconsXToYImpl::w2s
         lda     (ptr),y
         tay
     DO
-        ucmp8   (ptr),y, #'/'
-        beq     slash
+        IF u8 (ptr),y = #'/' GOTO slash
     WHILE dey : POS
 
         ;; Oops - no slash
@@ -7687,21 +7664,17 @@ vol_blocks_used:  .word   0
       IF bit flags : NS         ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
         ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
-        ucmp8   aux_type, (ptr),y
-        bne     next
+        IF u8 aux_type <> (ptr),y GOTO next
         iny
-        ucmp8   aux_type+1, (ptr),y
-        bne     next
+        IF u8 aux_type+1 <> (ptr),y GOTO next
       END_IF
 
         ;; Does Block Count matter, and if so does it match?
       IF bit flags : VS         ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
-        ucmp8   blocks_used, (ptr),y
-        bne     next
+        IF u8 blocks_used <> (ptr),y GOTO next
         iny
-        ucmp8   blocks_used+1, (ptr),y
-        bne     next
+        IF u8 blocks_used+1 <> (ptr),y GOTO next
       END_IF
 
         ;; Filename suffix?
@@ -8996,10 +8969,8 @@ test_size:
         CALL    GetBlockCount, A=block_params::unit_num
     IF CC
         stax    blocks
-        ucmp16  blocks, #kMax525FloppyBlocks+1
-        bcc     f525
-        ucmp16  blocks, #kMax35FloppyBlocks+1
-        bcc     f35
+        IF u16 blocks < #kMax525FloppyBlocks+1 GOTO f525
+        IF u16 blocks < #kMax35FloppyBlocks+1 GOTO f35
     END_IF
 
         RETURN  AX=#dib_buffer+SPDIB::ID_String_Length, Y=#IconType::profile
@@ -9462,8 +9433,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         ;; Skip if degenerate, to avoid cursor flashes
         ldx     #2              ; loop over dimensions
     DO
-        ecmp16  tmp_rect::topleft,x, tmp_rect::bottomright,x
-        beq     ret
+        IF s16 tmp_rect::topleft,x = tmp_rect::bottomright,x GOTO ret
     WHILE dex : dex : POS
 
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
@@ -9940,8 +9910,8 @@ loop:
         bit     entry_err_flag  ; don't recurse if the copy failed
         bmi     loop
 
-        ucmp8   file_entry + FileEntry::file_type, #FT_DIRECTORY
-        bne     loop            ; and don't recurse unless it's a directory
+        IF u8 file_entry + FileEntry::file_type <> #FT_DIRECTORY GOTO loop
+        ;; and don't recurse unless it's a directory
 
         ;; Recurse into child directory
         jsr     _DescendDirectory
@@ -11136,8 +11106,7 @@ _OpenDstOrFail := _OpenDstImpl::fail_ok
 .endif
 
         ;; Is there less than a full block? If so, just write it.
-        ucmp8   read_src_params::trans_count+1, #.hibyte(BLOCK_SIZE)
-        bcc     do_write        ; ...and done!
+        IF u8 read_src_params::trans_count+1 < #.hibyte(BLOCK_SIZE) GOTO do_write
 
         ;; Otherwise we'll go block-by-block, treating all zeros
         ;; specially.
@@ -11634,8 +11603,7 @@ src_path_slash_index:
 .proc CheckCancel
         jsr     GetEvent        ; no need to synthesize events
     IF A = #MGTK::EventKind::key_down
-        ucmp8   event_params::key, #CHAR_ESCAPE
-        beq     CloseFilesCancelDialogWithAppropriateResult
+        IF u8 event_params::key = #CHAR_ESCAPE GOTO CloseFilesCancelDialogWithAppropriateResult
     END_IF
         rts
 .endproc ; CheckCancel
@@ -13440,11 +13408,11 @@ RestoreOverlayBuffer    := LoadDynamicRoutineImpl::buffer
     IF NOT_ZERO
         tay
       DO
-        ucmp8   (path_ptr),y, #'/'
-        beq     :+
+        IF u8 (path_ptr),y = #'/' GOTO found_slash
       WHILE dey : NOT_ZERO
         iny
-:
+
+found_slash:
         dey
         tya
         ldy     #0
@@ -14082,8 +14050,7 @@ next_block:
 
 next_entry:
         ;; Advance to next entry
-        ucmp8   entry_num, #kEntriesPerBlock
-        beq     next_block
+        IF u8 entry_num = #kEntriesPerBlock GOTO next_block
 
         inc     entry_num
         add16_8 entry_ptr, #.sizeof(FileEntry)
@@ -14117,8 +14084,7 @@ next_entry:
         tay
         ASSERT_EQUALS FileEntry::file_name, 1
     DO
-        ucmp8   (entry_ptr),y, filename,y
-        bne     next_entry
+        IF u8 (entry_ptr),y <> filename,y GOTO next_entry
     WHILE dey : NOT_ZERO
 
         ;; Match!

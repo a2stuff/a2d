@@ -208,11 +208,8 @@ auxtype:        .word   SELF_MODIFIED
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        cmp     #kEventKindMouseMoved
-        beq     HandleMouseMoved
-
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleButtonDown
+        IF A = #kEventKindMouseMoved GOTO HandleMouseMoved
+        IF A = #MGTK::EventKind::button_down GOTO HandleButtonDown
 
         cmp     #MGTK::EventKind::key_down
         jeq     HandleKeyDown
@@ -247,8 +244,7 @@ auxtype:        .word   SELF_MODIFIED
 
 .proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
 
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -359,15 +355,11 @@ yes:    RETURN  C=0
 .proc IsHexChar
         jsr     ToUpperCase
 
-        cmp     #'0'
-        bcc     no
-        cmp     #'9'+1
-        bcc     yes
+        IF A < #'0' GOTO no
+        IF A < #'9'+1 GOTO yes
 
-        cmp     #'A'
-        bcc     no
-        cmp     #'F'+1
-        bcc     yes
+        IF A < #'A' GOTO no
+        IF A < #'F'+1 GOTO yes
 
 no:     RETURN  C=1
 

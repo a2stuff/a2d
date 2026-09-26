@@ -1001,8 +1001,7 @@ do_entry:
 
 done_entry:
         inc     entry_in_block
-        ucmp8   entry_index, num_file_names
-        bne     next
+        IF u8 entry_index <> num_file_names GOTO next
 
 close:  MLI_CALL CLOSE, close_params
         jsr     _SortFileNames

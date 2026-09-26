@@ -1131,14 +1131,8 @@ params: .res    3
 ;;; Output: C=0 if Pascal volume, C=1 otherwise
 
 .proc IsPascalBootBlock
-        ucmp8   default_block_buffer+1, #$E0
-        bne     fail
-
-        lda     default_block_buffer+2
-        cmp     #$70
-        beq     match
-        cmp     #$60
-        beq     match
+        IF u8 default_block_buffer+1 <> #$E0 GOTO fail
+        IF lda default_block_buffer+2 : A = #$70 OR A = #$60 GOTO match
 
 fail:   RETURN  C=1
 
@@ -1150,14 +1144,10 @@ match:  RETURN  C=0
 ;;; Output: C=0 if DOS 3.3 volume, C=1 otherwise
 
 .proc IsDOS33BootBlock
-        ucmp8   default_block_buffer+1, #$A5
-        bne     fail
-        ucmp8   default_block_buffer+2, #$27
-        beq     match
-
-fail:   RETURN  C=1
-
-match:  RETURN  C=0
+    IF u8 default_block_buffer+1 <> #$A5 OR u8 default_block_buffer+2 <> #$27
+        RETURN  C=1
+    END_IF
+        RETURN  C=0
 .endproc ; IsDOS33BootBlock
 
 ;;; ============================================================

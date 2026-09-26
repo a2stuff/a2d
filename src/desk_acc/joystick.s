@@ -211,12 +211,11 @@ joystick_bitmap:
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         jsr     DoJoystick
 
@@ -237,13 +236,11 @@ joystick_bitmap:
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
         bne     InputLoop       ; always
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        beq     Exit
+        IF A = #CHAR_ESCAPE GOTO Exit
         bne     InputLoop       ; always
 .endproc ; HandleKey
 
@@ -253,16 +250,12 @@ joystick_bitmap:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
-        cmp     #MGTK::Area::content
-        beq     HandleClick
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
+        IF A = #MGTK::Area::content GOTO HandleClick
         jmp     InputLoop
 .endproc ; HandleDown
 
@@ -395,14 +388,13 @@ num_analog_inputs:
     IF bit force_draw_flag : NC
         ldx     #.sizeof(InputState)-1
       DO
-        ucmp8   curr,x, last,x
-        bne     :+              ; changed - draw
+        IF u8 curr,x <> last,x GOTO draw ; changed
       WHILE dex : POS
         rts                     ; no change - skip
-:
     END_IF
 
         ;; --------------------------------------------------
+draw:
 
         COPY_STRUCT InputState, curr, last
         CLEAR_BIT7_FLAG force_draw_flag

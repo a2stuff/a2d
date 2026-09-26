@@ -72,10 +72,8 @@ pencopy:        .byte MGTK::pencopy
 .proc InputLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     exit
-        cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     exit
+        IF A = #MGTK::EventKind::button_down GOTO exit ; was clicked?
+        IF A = #MGTK::EventKind::key_down GOTO exit ; any key?
 
         lda     counter
         ora     counter+1

@@ -389,8 +389,7 @@ init_window:
         jmp     InputLoop
     END_IF
 
-        cmp     #MGTK::EventKind::key_down
-        bne     InputLoop
+        IF A <> #MGTK::EventKind::key_down GOTO InputLoop
         FALL_THROUGH_TO OnKey
 .endproc ; InputLoop
 
@@ -429,16 +428,11 @@ init_window:
         bmi     InputLoop
 
         ;; All controls are active
-        cmp     #CHAR_LEFT
-        beq     OnKeyLeft
-        cmp     #CHAR_RIGHT
-        beq     OnKeyRight
-        cmp     #CHAR_TAB
-        beq     OnKeyRight
-        cmp     #CHAR_DOWN
-        beq     OnKeyDown
-        cmp     #CHAR_UP
-        bne     InputLoop
+        IF A = #CHAR_LEFT GOTO OnKeyLeft
+        IF A = #CHAR_RIGHT GOTO OnKeyRight
+        IF A = #CHAR_TAB GOTO OnKeyRight
+        IF A = #CHAR_DOWN GOTO OnKeyDown
+        IF A <> #CHAR_UP GOTO InputLoop
         FALL_THROUGH_TO OnKeyUp
 
 .proc OnKeyUp
@@ -659,27 +653,22 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         lda     (ptr),y
         tax                     ; X = value
 
-        ucmp8   hit_rect_index, #kUpRectIndex
-        beq     incr
-
+    IF u8 hit_rect_index <> #kUpRectIndex
         ;; Decrement
-    IF X = min
+      IF X = min
         ldx     max
         inx
-    END_IF
+      END_IF
         dex
-        jmp     finish
-
+    ELSE
         ;; Increment
-incr:
-    IF X = max
+      IF X = max
         ldx     min
         dex
-    END_IF
+      END_IF
         inx
-        FALL_THROUGH_TO finish
+    END_IF
 
-finish:
         txa                     ; store new value
         sta     (ptr),y
         prepare_proc := *+1
@@ -1002,18 +991,12 @@ label_downarrow:
     END_IF
 
         pla
-        cmp     #Field::day
-        beq     DrawDay
-        cmp     #Field::month
-        beq     DrawMonth
-        cmp     #Field::year
-        beq     DrawYear
-        cmp     #Field::hour
-        beq     DrawHour
-        cmp     #Field::minute
-        beq     DrawMinute
-        cmp     #Field::period
-        beq     DrawPeriod
+        IF A = #Field::day GOTO DrawDay
+        IF A = #Field::month GOTO DrawMonth
+        IF A = #Field::year GOTO DrawYear
+        IF A = #Field::hour GOTO DrawHour
+        IF A = #Field::minute GOTO DrawMinute
+        IF A = #Field::period GOTO DrawPeriod
         rts
 
 .proc DrawDay
@@ -1111,18 +1094,12 @@ label_downarrow:
         sta     selected_field
         FALL_THROUGH_TO invert
 
-invert: cmp     #Field::day
-        beq     fill_day
-        cmp     #Field::month
-        beq     fill_month
-        cmp     #Field::year
-        beq     fill_year
-        cmp     #Field::hour
-        beq     fill_hour
-        cmp     #Field::minute
-        beq     fill_minute
-        cmp     #Field::period
-        beq     fill_period
+invert: IF A = #Field::day GOTO fill_day
+        IF A = #Field::month GOTO fill_month
+        IF A = #Field::year GOTO fill_year
+        IF A = #Field::hour GOTO fill_hour
+        IF A = #Field::minute GOTO fill_minute
+        IF A = #Field::period GOTO fill_period
         rts
 
 fill_day:
@@ -2414,12 +2391,10 @@ SEL_MBANK     :=  $F851       ; Select Main bank reg
         bit     $FACA
         bit     $FAFE
 
-        ucmp8   SigCk, #$4A     ; Check for ROMX signature bytes
-        bne     nope
-        ucmp8   SigCk+1, #$CD
-        bne     nope
-        ucmp8   FWReadClock, #$AD ; is RTC code there?
-        bne     nope
+        IF u8 SigCk <> #$4A GOTO nope    ; Check for ROMX signature bytes
+        IF u8 SigCk+1 <> #$CD GOTO nope
+        IF u8 FWReadClock <> #$AD GOTO nope ; is RTC code there?
+
         clc                     ; found clock!
         bcc     :+
 nope:   sec                     ; not found

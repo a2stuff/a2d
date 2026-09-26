@@ -64,12 +64,9 @@ file_entry:
         ;; AppleWorks?
         ldy     #FileEntry::file_type
         lda     (ptr),y
-        cmp     #FT_ADB
-        beq     appleworks
-        cmp     #FT_AWP
-        beq     appleworks
-        cmp     #FT_ASP
-        beq     appleworks
+        IF A = #FT_ADB GOTO appleworks
+        IF A = #FT_AWP GOTO appleworks
+        IF A = #FT_ASP GOTO appleworks
 
         ldy     #FileEntry::case_bits
         copy16in (ptr),y, case_bits

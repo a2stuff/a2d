@@ -533,8 +533,7 @@ scrambled_flag:                 ; bit7
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     bail
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO bail
 
         lda     findwindow_params::which_area
     IF ZERO
@@ -729,10 +728,8 @@ nope:   RETURN  C=0
         clc
         adc     hole_x
         tay
-        ucmp8   click_x, hole_x
-        beq     ClickInCol
-        ucmp8   click_y, hole_y
-        beq     ClickInRow
+        IF u8 click_x = hole_x GOTO ClickInCol
+        IF u8 click_y = hole_y GOTO ClickInRow
 
 miss:   rts                     ; Click on hole, or not row/col with hole
 
@@ -766,23 +763,23 @@ miss:   rts                     ; Click on hole, or not row/col with hole
 .proc ClickInCol
         ucmp8   click_y, hole_y
         beq     miss
-        bcs     after
-
+    IF LT
         lda     hole_y          ; click before hole
         sec
         sbc     click_y
         tax
 
-    DO
+      DO
         copy8   position_table-4,y, position_table,y
         dey
         dey
         dey
         dey
-    WHILE dex : NOT_ZERO
-        beq     col
+      WHILE dex : NOT_ZERO
+        beq     col             ; always
+    END_IF
 
-after:  lda     click_y         ; click after hole
+        lda     click_y         ; click after hole
         sec
         sbc     hole_y
         tax
@@ -963,47 +960,22 @@ ret:    rts
     WHILE iny : Y < #5
 
         ;; 5/6 are identical
-        lda     position_table+5
-    IF A <> #5
-        cmp     #6
-        bne     nope
-    END_IF
-
-        lda     position_table+6
-    IF A <> #5
-        cmp     #6
-        bne     nope
-    END_IF
+        IF lda position_table+5 : A <> #5 AND A <> #6 GOTO nope
+        IF lda position_table+6 : A <> #5 AND A <> #6 GOTO nope
 
         ;; Check 7/8
-        ucmp8   position_table+7, #7
-        bne     nope
-        ucmp8   position_table+8, #8
-        bne     nope
+        IF u8 position_table+7 <> #7 GOTO nope
+        IF u8 position_table+8 <> #8 GOTO nope
 
         ;; 9/10 are identical
-        lda     position_table+9
-    IF A <> #9
-        cmp     #10
-        bne     nope
-    END_IF
-
-        lda     position_table+10
-    IF A <> #9
-        cmp     #10
-        bne     nope
-    END_IF
+        IF lda position_table+9 : A <> #9 AND A <> #10 GOTO nope
+        IF lda position_table+10 : A <> #9 AND A <> #10 GOTO nope
 
         ;; Check 11
-        ucmp8   position_table+11, #11
-        bne     nope
+        IF u8 position_table+11 <> #11 GOTO nope
 
         ;; 0/12 can be swapped
-        lda     position_table+12
-    IF NOT_ZERO
-        cmp     #12
-        bne     nope
-    END_IF
+        IF lda position_table+12 : NOT ZERO AND A <> #12 GOTO nope
 
         ;; Check 13/14/15/16
         ldy     #13

@@ -214,14 +214,11 @@ frame_counter:
         jsr     AnimFrame
 
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-
-        cmp     #MGTK::EventKind::button_down
-        beq     OnClick
-
-        cmp     #MGTK::EventKind::key_down
-        bne     InputLoop
+        IF A = #MGTK::EventKind::button_down GOTO OnClick
+        IF A <> #MGTK::EventKind::key_down GOTO InputLoop
         FALL_THROUGH_TO OnKey
 .endproc ; InputLoop
 
@@ -231,22 +228,14 @@ frame_counter:
 
         ldx     event_params::modifiers
     IF NOT_ZERO
-        cmp     #kShortcutCloseWindow
-        beq     OnKeyOK
+        IF A = #kShortcutCloseWindow GOTO OnKeyOK
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_RETURN
-        beq     OnKeyOK
-
-        cmp     #CHAR_ESCAPE
-        beq     OnKeyOK
-
-        cmp     #kShortcutNorm
-        beq     OnKeyNorm
-
-        cmp     #kShortcutFast
-        beq     OnKeyFast
+        IF A = #CHAR_RETURN GOTO OnKeyOK
+        IF A = #CHAR_ESCAPE GOTO OnKeyOK
+        IF A = #kShortcutNorm GOTO OnKeyNorm
+        IF A = #kShortcutFast GOTO OnKeyFast
 
         jmp     InputLoop
 .endproc ; OnKey

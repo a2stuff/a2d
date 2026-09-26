@@ -212,11 +212,11 @@ view_by_table:
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+
         MGTK_CALL MGTK::GetEvent, event_params
-        ucmp8   event_params::kind, #MGTK::EventKind::button_down
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        lda     event_params::kind
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         jmp     InputLoop
 .endproc ; InputLoop
@@ -235,14 +235,10 @@ view_by_table:
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
 
         ;; Digit key?
-        cmp     #'1'
-        bcc     InputLoop
-        cmp     #'1'+kNumButtons
-        bcs     InputLoop
+        IF A < #'1' OR A >= #'1'+kNumButtons GOTO InputLoop
 
         sec
         sbc     #'1'            ; ASCII -> index
@@ -262,16 +258,12 @@ view_by_table:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
-        cmp     #MGTK::Area::content
-        beq     HandleClick
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
+        IF A = #MGTK::Area::content GOTO HandleClick
         jmp     InputLoop
 .endproc ; HandleDown
 

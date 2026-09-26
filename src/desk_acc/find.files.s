@@ -302,26 +302,17 @@ yes:    RETURN  C=0
 ;;; Output: C=0 if valid, C=1 otherwise
 .proc IsSearchChar
         ;; Valid characters are . 0-9 A-Z a-z ? *
-        cmp     #'*'            ; Wildcard
-        beq     insert
-        cmp     #'?'            ; Wildcard
-        beq     insert
-        cmp     #'.'            ; Filename char (here and below)
-        beq     insert
-        cmp     #'0'
-        bcc     ignore
-        cmp     #'9'+1
-        bcc     insert
-        cmp     #'A'
-        bcc     ignore
-        cmp     #'Z'+1
-        bcc     insert
+        IF A = #'*' GOTO insert ; Wildcard
+        IF A = #'?' GOTO insert ; Wildcard
+        IF A = #'.' GOTO insert ; Filename char (here and below)
+        IF A < #'0' GOTO ignore
+        IF A < #'9'+1 GOTO insert
+        IF A < #'A' GOTO ignore
+        IF A < #'Z'+1 GOTO insert
 
 .if kBuildSupportsLowercase
-        cmp     #'a'
-        bcc     ignore
-        cmp     #'z'+1
-        bcs     ignore
+        IF A < #'a' GOTO ignore
+        IF A >= #'z'+1 GOTO ignore
 .else
         bcs     ignore          ; always
 .endif

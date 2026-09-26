@@ -146,8 +146,7 @@ tfives: .byte   0
         ;; Compare
         ldx     #.sizeof(DateTime)-1
     DO
-        ucmp8   datetime,x, last,x
-        bne     diff
+        IF u8 datetime,x <> last,x GOTO diff
     WHILE dex : POS
         rts                     ; no change
 

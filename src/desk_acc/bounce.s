@@ -192,12 +192,9 @@ object_deltas:
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
-        cmp     #MGTK::EventKind::no_event
-        bne     InputLoop
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
+        IF A <> #MGTK::EventKind::no_event GOTO InputLoop
         jmp     HandleNoEvent
 .endproc ; InputLoop
 
@@ -209,13 +206,11 @@ object_deltas:
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
         bne     InputLoop       ; always
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        bne     InputLoop
+        IF A <> #CHAR_ESCAPE GOTO InputLoop
         FALL_THROUGH_TO Exit
 .endproc ; HandleKey
 
@@ -229,16 +224,12 @@ object_deltas:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
-        cmp     #MGTK::Area::content
-        beq     HandleGrow
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
+        IF A = #MGTK::Area::content GOTO HandleGrow
         bne     InputLoop       ; always
 .endproc ; HandleDown
 

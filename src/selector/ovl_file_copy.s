@@ -521,8 +521,7 @@ display_path:
 .proc CheckCancel
         MGTK_CALL MGTK::GetEvent, app::event_params
     IF u8 app::event_params::kind = #MGTK::EventKind::key_down
-        ucmp8   app::event_params::key, #CHAR_ESCAPE
-        beq     RestoreStackAndReturn
+        IF u8 app::event_params::key = #CHAR_ESCAPE GOTO RestoreStackAndReturn
     END_IF
 
         rts

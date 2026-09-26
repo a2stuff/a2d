@@ -363,14 +363,12 @@ quick_run_desktop:
     END_IF
 
 check_key:
-        cmp     #kShortcutRunDeskTop ; If key is down, try launching DeskTop
-        beq     quick_run_desktop
+        IF A = #kShortcutRunDeskTop GOTO quick_run_desktop ; If key is down, try launching DeskTop
 
         sec
         sbc     #'1'            ; 1-8 run that selector entry
         bmi     done_keys
-        cmp     num_primary_run_list_entries
-        bcs     done_keys
+        IF A >= num_primary_run_list_entries GOTO done_keys
         sta     invoke_index
         jsr     GetSelectorListEntryAddr
 
@@ -670,23 +668,17 @@ menu_addr_table:
 .proc HandleKey
         lda     event_params::modifiers
         bne     has_modifiers
-        lda     event_params::key
-        cmp     #CHAR_ESCAPE
-        beq     menukey
+
+        IF u8 event_params::key = #CHAR_ESCAPE GOTO menukey
 
 other:  jmp     HandleNonmenuKey
 
 has_modifiers:
         lda     event_params::key
         jsr     ToUpperCase
-        cmp     #CHAR_ESCAPE
-        beq     menukey
-        cmp     #kShortcutRunProgram
-        beq     menukey
-        cmp     #'9'+1
-        bcs     other
-        cmp     #'1'
-        bcc     other
+        IF A = #CHAR_ESCAPE GOTO menukey
+        IF A = #kShortcutRunProgram GOTO menukey
+        IF A >= #'9'+1 OR A < #'1' GOTO other
 
 menukey:
         sta     menu_params::which_key
@@ -1428,8 +1420,7 @@ retry:
         jsr     ShowAlert
         tax
         pla
-        cmp     #ERR_VOL_NOT_FOUND
-        bne     fail
+        IF A <> #ERR_VOL_NOT_FOUND GOTO fail
         txa
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     fail            ; `kAlertResultCancel` = 1
@@ -1480,12 +1471,7 @@ fail:
         jmp     ClearSelectedIndex
     END_IF
 
-        cmp     #FT_BINARY
-        beq     check_path
-        cmp     #FT_SYSTEM
-        beq     check_path
-        cmp     #FT_S16
-        beq     check_path
+        IF A = #FT_BINARY OR A = #FT_SYSTEM OR A = #FT_S16 GOTO check_path
 
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
     IF EQ
@@ -1506,8 +1492,7 @@ err:
 check_path:
         ldy     INVOKER_PREFIX
     DO
-        ucmp8   INVOKER_PREFIX,y, #'/'
-        beq     :+
+        IF u8 INVOKER_PREFIX,y = #'/' GOTO found_slash
     WHILE dey : NOT_ZERO
 
         CALL    ShowAlert, A=#AlertID::insert_source_disk
@@ -1515,7 +1500,8 @@ check_path:
         bne     ClearSelectedIndex ; `kAlertResultCancel` = 1
         jmp     retry
 
-:       dey
+found_slash:
+        dey
         tya
         pha
         iny
@@ -1595,13 +1581,11 @@ check_path:
         plp
         bcs     err
 
-        ucmp8   read_params::trans_count, #kLinkFilePathLengthOffset
-        bcc     err
+        IF u8 read_params::trans_count < #kLinkFilePathLengthOffset GOTO err
 
         ldx     #kCheckHeaderLength-1
     DO
-        ucmp8   read_buf,x, check_header,x
-        bne     err
+        IF u8 read_buf,x <> check_header,x GOTO err
     WHILE dex : POS
 
         COPY_STRING read_buf + kLinkFilePathLengthOffset, INVOKER_PREFIX
@@ -1651,8 +1635,7 @@ str_basix_system:
         path_length := *+1
         ldx     #SELF_MODIFIED_BYTE
       DO
-        ucmp8   interp_path,x, #'/'
-        beq     found_slash
+        IF u8 interp_path,x = #'/' GOTO found_slash
       WHILE dex : NOT_ZERO
 
 no_bs:  copy8   #0, interp_path ; null out the path

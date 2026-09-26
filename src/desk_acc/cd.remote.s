@@ -361,12 +361,9 @@ ep_size = * - ep_start
 
     IF u8 findwindow_params::window_id = #aux::kDAWindowId
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
-        cmp     #MGTK::Area::content
-        beq     HandleClick
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
+        IF A = #MGTK::Area::content GOTO HandleClick
     END_IF
 
         lda     #$FF            ; not a button
@@ -784,8 +781,7 @@ CheckUserInput:
         jmp     MainLoop
     END_IF
 
-        cmp     #MGTK::EventKind::key_down
-        bne     MainLoop
+        IF A <> #MGTK::EventKind::key_down GOTO MainLoop
 
         ;; ----------------------------------------
 
@@ -800,12 +796,10 @@ HandleKey:
     END_IF
 
         ;; $51 = Q (Quit)
-        cmp     #'Q'
-        beq     DoQuitAction
+        IF A = #'Q' GOTO DoQuitAction
 
         ;; $1B = ESC (Quit)
-        cmp     #CHAR_ESCAPE
-        beq     DoQuitAction
+        IF A = #CHAR_ESCAPE GOTO DoQuitAction
 
         ;; $4C = L (Continuous Play)
     IF A = #'L'

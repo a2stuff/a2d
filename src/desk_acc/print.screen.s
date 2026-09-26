@@ -48,8 +48,7 @@ sig_bytes:
         ldy     #kSigLen-1
     DO
         ldx     sig_offsets,y
-        ucmp8   SLOT1,x, sig_bytes,y
-        bne     no_device
+        IF u8 SLOT1,x <> sig_bytes,y GOTO no_device
     WHILE dey : POS
 
         hbasl := $6

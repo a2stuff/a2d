@@ -31,16 +31,11 @@
         lda     event_params+MGTK::Event::kind
         REDO_IF A = #MGTK::EventKind::no_event ; nothing to consume
 
-        cmp     #MGTK::EventKind::drag
-        beq     consume
-        cmp     #MGTK::EventKind::button_up
-        beq     consume
-        cmp     #MGTK::EventKind::button_down
-        beq     :+
-        cmp     #MGTK::EventKind::apple_key ; modified-click
-        bne     exit
-
-:
+        IF A = #MGTK::EventKind::drag GOTO consume
+        IF A = #MGTK::EventKind::button_up GOTO consume
+        IF A = #MGTK::EventKind::button_down GOTO click
+        IF A <> #MGTK::EventKind::apple_key GOTO exit ; modified-click
+click:
         ;; Double-click! Flush events rather than just getting the
         ;; next event to ensure there isn't a lingering button event.
         ;; (Observed on real hardware, e.g. IIc+)
@@ -64,13 +59,11 @@ consume:
         sbc     xcoord+1
     IF NEG
         ;; is -delta < x < 0 ?
-        ucmp8   delta, #AS_BYTE(-kDoubleClickDeltaX)
-        bcs     check_y
+        IF u8 delta >= #AS_BYTE{-kDoubleClickDeltaX} GOTO check_y
 fail:   RETURN  A=#$FF
     END_IF
         ;; is 0 < x < delta ?
-        ucmp8   delta, #kDoubleClickDeltaX
-        bcs     fail
+        IF u8 delta >= #kDoubleClickDeltaX GOTO fail
 
         ;; compute y delta
 check_y:
@@ -80,14 +73,10 @@ check_y:
         sta     delta
         lda     event_params+MGTK::Event::ycoord+1
         sbc     ycoord+1
-    IF NEG
         ;; is -delta < y < 0 ?
-        ucmp8   delta, #AS_BYTE(-kDoubleClickDeltaY)
-        bcs     ok
-    END_IF
+        IF NEG AND u8 delta >= #AS_BYTE{-kDoubleClickDeltaY} GOTO ok
         ;; is 0 < y < delta ?
-        ucmp8   delta, #kDoubleClickDeltaY
-        bcs     fail
+        IF u8 delta >= #kDoubleClickDeltaY GOTO fail
 
 ok:     RETURN  A=#0
 .endproc ; _CheckDelta

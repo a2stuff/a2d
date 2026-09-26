@@ -601,12 +601,9 @@ shortcut_table_addr_hi:
     END_IF
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
-        cmp     #MGTK::Area::content
-        beq     HandleClick
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
+        IF A = #MGTK::Area::content GOTO HandleClick
         jmp     InputLoop
 .endproc ; HandleDown
 

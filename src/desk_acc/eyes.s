@@ -211,12 +211,9 @@ pupil_rect:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
-        cmp     #MGTK::EventKind::no_event
-        beq     HandleNoEvent
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
+        IF A = #MGTK::EventKind::no_event GOTO HandleNoEvent
         jmp     InputLoop
 .endproc ; InputLoop
 
@@ -234,13 +231,11 @@ pupil_rect:
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
         bne     InputLoop       ; always
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        beq     Exit
+        IF A = #CHAR_ESCAPE GOTO Exit
         bne     InputLoop       ; always
 .endproc ; HandleKey
 
@@ -250,12 +245,10 @@ pupil_rect:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
+        IF A = #MGTK::Area::close_box GOTO HandleClose
         cmp     #MGTK::Area::dragbar
         jeq     HandleDrag
         cmp     #MGTK::Area::content

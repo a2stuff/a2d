@@ -280,8 +280,7 @@ port:           .addr   grafport_win
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        bne     done
+        IF u8 findwindow_params::which_area <> #MGTK::Area::content GOTO done
 
         lda     findwindow_params::window_id
     IF A = #kPickerWindowId
@@ -529,11 +528,8 @@ remainder:      .word   0                 ; (out)
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         bne     InputLoop       ; always
 .endproc ; InputLoop
@@ -596,8 +592,7 @@ remainder:      .word   0                 ; (out)
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        bne     done
+        IF u8 findwindow_params::which_area <> #MGTK::Area::content GOTO done
 
         lda     findwindow_params::window_id
     IF A = #kCatalogWindowId

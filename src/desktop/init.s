@@ -601,8 +601,8 @@ append:
         .byte   SPCall::Status
         .addr   status_params
         bcs     next            ; call failed - skip it!
-        ucmp8   dib_buffer+SPDIB::Device_Type_Code, #SPDeviceType::Disk525
-        beq     next            ; is 5.25 - skip it!
+
+        IF u8 dib_buffer+SPDIB::Device_Type_Code = #SPDeviceType::Disk525 GOTO next ; is 5.25 - skip it!
 
         ;; Append the device
         inc     count
@@ -796,11 +796,9 @@ process_block:
         lda     (dir_ptr),y
     IF A = #kDAFileType         ; DA? (must match type/auxtype)
         ldy     #FileEntry::aux_type
-        ucmp8   (dir_ptr),y, #<kDAFileAuxType
-        bne     next_entry
+        IF u8 (dir_ptr),y <> #<kDAFileAuxType GOTO next_entry
         iny
-        ucmp8   (dir_ptr),y, #>kDAFileAuxType
-        bne     next_entry
+        IF u8 (dir_ptr),y <> #>kDAFileAuxType GOTO next_entry
     END_IF
 
         ;; Allow anything else
@@ -853,12 +851,10 @@ process_block:
 
 next_entry:
         ;; Room for more DAs?
-        ucmp8   desk_acc_num, #kMaxDeskAccCount
-        bcs     close_dir
+        IF u8 desk_acc_num >= #kMaxDeskAccCount GOTO close_dir
 
         ;; Any more entries in dir?
-        ucmp8   entry_num, file_count
-        beq     close_dir
+        IF u8 entry_num = file_count GOTO close_dir
 
         ;; Any more entries in block?
         inc     entry_in_block

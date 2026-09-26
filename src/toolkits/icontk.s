@@ -833,8 +833,7 @@ is_drag:
         ;; Coords changed?
         ldx     #.sizeof(MGTK::Point)-1
       DO
-        ucmp8   findwindow_params,x, last_coords,x
-        bne     moved
+        IF u8 findwindow_params,x <> last_coords,x GOTO moved
       WHILE dex : POS
         REDO_IF NEG             ; always
 
@@ -1237,28 +1236,26 @@ start:
         ldx     #2              ; loop over dimensions
     DO
         ;; top/left of bitmap > bottom/right of rect --> outside
-        scmp16  params::rect+MGTK::Rect::bottomright,x, bitmap_rect+MGTK::Rect::topleft,x
-        bmi     :+
+        IF s16 params::rect+MGTK::Rect::bottomright,x < bitmap_rect+MGTK::Rect::topleft,x GOTO done_bitmap
 
         ;; bottom/right of bitmap < top/left of rect --> outside
-        scmp16  bitmap_rect+MGTK::Rect::bottomright,x, params::rect+MGTK::Rect::topleft,x
-        bmi     :+
+        IF s16 bitmap_rect+MGTK::Rect::bottomright,x < params::rect+MGTK::Rect::topleft,x GOTO done_bitmap
 
     WHILE dex : dex : POS       ; next dimension
         bmi     inside          ; always
-:
+
+done_bitmap:
+
         ;; --------------------------------------------------
         ;; Label
 
         ldx     #2              ; loop over dimensions
     DO
         ;; top/left of text > bottom/right of rect --> outside
-        scmp16  params::rect+MGTK::Rect::bottomright,x, label_rect+MGTK::Rect::topleft,x
-        bmi     outside
+        IF s16 params::rect+MGTK::Rect::bottomright,x < label_rect+MGTK::Rect::topleft,x GOTO outside
 
         ;; bottom/right of text < top/left of rect --> outside
-        scmp16  label_rect+MGTK::Rect::bottomright,x, params::rect+MGTK::Rect::topleft,x
-        bmi     outside
+        IF s16 label_rect+MGTK::Rect::bottomright,x < params::rect+MGTK::Rect::topleft,x GOTO outside
 
     WHILE dex : dex : POS       ; next dimension
 
@@ -2133,8 +2130,7 @@ reserved:       .byte   0
       END_IF
 
         ;; Is there anything left?
-        scmp16  portbits::maprect::bottomright,x, portbits::maprect::topleft,x
-        bmi     empty
+        IF s16 portbits::maprect::bottomright,x < portbits::maprect::topleft,x GOTO empty
 
     WHILE dex : dex : POS       ; next dimension
 
@@ -2262,8 +2258,7 @@ reclip:
 
 next_pt:
         ;; Done all 4 points?
-        ucmp8   pt_num, #4
-        bne     do_pt
+        IF u8 pt_num <> #4 GOTO do_pt
 
         ;; --------------------------------------------------
         ;; Finish up
@@ -2271,7 +2266,7 @@ next_pt:
         copy16  cr_l, vx
         copy16  cr_t, vy
 
-        scmp16   cr_r, clip_bounds+MGTK::Rect::x2 ; result in N / A's bit7
+        scmp16  cr_r, clip_bounds+MGTK::Rect::x2 ; result in N / A's bit7
         ;; if (cr_r < clip_bounds::x2) more drawing is needed
         sta     more_drawing_needed_flag ; update bit7
 
@@ -2294,8 +2289,7 @@ do_pt:  lda     pt_num
 
         inc     pt_num
         MGTK_CALL MGTK::FindWindow, cwi_findwindow_params
-        ucmp8   cwi_findwindow_params::window_id, clip_window_id
-        beq     next_pt
+        IF u8 cwi_findwindow_params::window_id = clip_window_id GOTO next_pt
 
         ;; --------------------------------------------------
         ;; Compute window edges (including non-content area)

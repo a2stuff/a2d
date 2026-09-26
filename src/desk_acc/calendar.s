@@ -246,12 +246,9 @@ first_dow:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-        cmp     #MGTK::EventKind::apple_key
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::apple_key GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         jmp     InputLoop
 .endproc ; InputLoop
@@ -266,10 +263,8 @@ first_dow:
 
 .proc HandleKey
         lda     event_params::key
-        cmp     #CHAR_LEFT
-        beq     DecDate
-        cmp     #CHAR_UP
-        beq     DecDate
+        IF A = #CHAR_LEFT GOTO DecDate
+        IF A = #CHAR_UP GOTO DecDate
         cmp     #CHAR_RIGHT
         jeq     IncDate
         cmp     #CHAR_DOWN
@@ -283,8 +278,7 @@ first_dow:
         bne     InputLoop       ; always
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        beq     Exit
+        IF A = #CHAR_ESCAPE GOTO Exit
         bne     InputLoop       ; always
 .endproc ; HandleKey
 
@@ -292,8 +286,7 @@ first_dow:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
@@ -350,8 +343,7 @@ fin:    jsr     UpdateWindow
         bmi     year
 
         inc     datetime + ParsedDateTime::month
-        ucmp8   datetime + ParsedDateTime::month, #13
-        bcc     fin
+        IF u8 datetime + ParsedDateTime::month < #13 GOTO fin
 
         copy8   #1, datetime + ParsedDateTime::month
 year:   inc16   datetime + ParsedDateTime::year
@@ -569,10 +561,7 @@ notpencopy:     .byte   MGTK::notpencopy
         sta     str_date+2
 
         ;; A valid day?
-        lda     date
-        beq     draw_date
-        cmp     mlen
-        bcs     draw_date
+        IF lda date : ZERO OR A >= mlen GOTO draw_date
 
         ;; Create the string.
         copy8   #2, str_date

@@ -417,13 +417,11 @@ flag:   .byte   0
         bcc     :+
         inc     ptr+1
 
-:       ucmp8   ptr, #$FF
-        bne     rtcc
+:       IF u8 ptr <> #$FF GOTO rtcc
         inc     ptr+1
         copy8   #1, entry_num
         copy8   #4, ptr         ; skip over block header
-        ucmp8   ptr+1, end_block_page
-        bcs     rtcs
+        IF u8 ptr+1 >= end_block_page GOTO rtcs
 
 rtcc:   RETURN  C=0
 

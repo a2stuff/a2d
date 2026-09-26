@@ -32,8 +32,7 @@ Exec:
         sta     selector_action
         ldx     #$FF            ; `INC` to clear high bit
         stx     clean_flag      ; set "clean"
-        cmp     #SelectorAction::add
-        beq     DoAdd
+        IF A = #SelectorAction::add GOTO DoAdd
         jmp     Init
 
 ;;; ============================================================
@@ -120,8 +119,7 @@ DoAdd:  ldx     #kRunListPrimary
         copy16  selector_list, num_primary_run_list_entries
 
     IF u8 which_run_list = #kRunListPrimary
-        ucmp8   num_primary_run_list_entries, #kSelectorListNumPrimaryRunListEntries
-        beq     ShowFullAlert
+        IF u8 num_primary_run_list_entries = #kSelectorListNumPrimaryRunListEntries GOTO ShowFullAlert
         ldy     copy_when       ; Flags
         lda     num_primary_run_list_entries
         inc     selector_list + kSelectorListNumPrimaryRunListOffset
@@ -185,15 +183,12 @@ copy_when:
         ;; Which action are we?
         lda     shortcut_picker_record::selected_index
         bmi     DialogLoop
+
         lda     selector_action
-        cmp     #SelectorAction::edit
-        beq     DoEdit
+        IF A = #SelectorAction::edit GOTO DoEdit
+        IF A = #SelectorAction::delete GOTO DoDelete
+        IF A <> #SelectorAction::run GOTO DialogLoop
 
-        cmp     #SelectorAction::delete
-        beq     DoDelete
-
-        cmp     #SelectorAction::run
-        bne     DialogLoop
         jmp     DoRun
 .endproc ; DialogLoop
 
@@ -272,8 +267,7 @@ copy_when:
 
     IF u8 shortcut_picker_record::selected_index >= #kSelectorListNumPrimaryRunListEntries
         ;; Was on secondary run list - is it still?
-        ucmp8   which_run_list, #kRunListSecondary
-        beq     reuse_same_index
+        IF u8 which_run_list = #kRunListSecondary GOTO reuse_same_index
 
       IF u8 num_primary_run_list_entries = #kSelectorListNumPrimaryRunListEntries
         jmp     ShowFullAlert
@@ -288,8 +282,7 @@ copy_when:
         txa
     ELSE
         ;; Was on primary run list - is it still?
-        ucmp8   which_run_list, #kRunListPrimary
-        beq     reuse_same_index
+        IF u8 which_run_list = #kRunListPrimary GOTO reuse_same_index
 
       IF u8 num_secondary_run_list_entries = #kSelectorListNumSecondaryRunListEntries
         jmp     ShowFullAlert
@@ -407,11 +400,8 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         jsr     ::main::SystemTask
         jsr     main::GetEvent
 
-        cmp     #MGTK::EventKind::button_down
-        beq     handle_button
-
-        cmp     #MGTK::EventKind::key_down
-        bne     EventLoop
+        IF A = #MGTK::EventKind::button_down GOTO handle_button
+        IF A <> #MGTK::EventKind::key_down GOTO EventLoop
         jmp     HandleKey
 
 handle_button:
@@ -476,11 +466,8 @@ handle_button:
 
         lda     event_params::key
 
-        cmp     #CHAR_RETURN
-        beq     HandleKeyReturn
-
-        cmp     #CHAR_ESCAPE
-        beq     HandleKeyEscape
+        IF A = #CHAR_RETURN GOTO HandleKeyReturn
+        IF A = #CHAR_ESCAPE GOTO HandleKeyEscape
 
         lda     num_primary_run_list_entries
         ora     num_secondary_run_list_entries
@@ -610,8 +597,7 @@ flags:  .byte   0
         ptr2 := $08
 
         sta     index
-        cmp     #kSelectorListNumPrimaryRunListEntries
-        bcs     secondary_run_list
+        IF A >= #kSelectorListNumPrimaryRunListEntries GOTO secondary_run_list
 
         ;; Primary run list
     DO

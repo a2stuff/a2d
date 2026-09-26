@@ -143,11 +143,8 @@ grafport:       .tag    MGTK::GrafPort
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     HandleDown
-
-        cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown ; was clicked?
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey ; any key?
 
         jmp     InputLoop
 .endproc ; InputLoop
@@ -188,10 +185,8 @@ grafport:       .tag    MGTK::GrafPort
         bne     InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
         jmp     InputLoop
 .endproc ; HandleDown
 

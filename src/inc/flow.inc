@@ -60,6 +60,22 @@
 ;;; e.g. "WHILE JSR GetNext : CC"
 
 ;;; ============================================================
+;;; Notes
+;;; ============================================================
+;;;
+;;; This will fail to assemble in ca65:
+;;;
+;;;   IF A = #AS_BYTE(-1) GOTO target
+;;;
+;;; This is because the ca65's C-style macro's arguments are delimited
+;;; by braces or commas, not parentheses. So despite appearances, this
+;;; is actually the same as:
+;;;
+;;;   IF A = #AS_BYTE{(-1) GOTO target}
+;;;
+;;; Call as AS_BYTE{-1} instead, which is the correct style.
+
+;;; ============================================================
 ;;; Infrastructure
 ;;; ============================================================
 

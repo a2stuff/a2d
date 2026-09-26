@@ -1133,10 +1133,8 @@ found:
         ;; Read ProDOS version field from global page in main
         lda     KVERSION
 
-        cmp     #$24
-        bcs     v_2x
-        cmp     #$20
-        bcs     v_20x
+        IF A >= #$24 GOTO v_2x
+        IF A >= #$20 GOTO v_20x
 
         ;; $00...$08 are 1.x (roughly)
 v_1x:   and     #$0F
@@ -1179,10 +1177,8 @@ v_2x:   and     #$0F
         jsr     CopyEventDataToMain
 
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown ; was clicked?
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey ; any key?
         jmp     InputLoop
 .endproc ; InputLoop
 
@@ -1199,16 +1195,12 @@ v_2x:   and     #$0F
 
         ldx     event_params::modifiers
     IF NOT_ZERO
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        beq     Exit
-
-        cmp     #kShortcutEasterEgg
-        beq     HandleEgg
+        IF A = #CHAR_ESCAPE GOTO Exit
+        IF A = #kShortcutEasterEgg GOTO HandleEgg
 
         jmp     InputLoop
 .endproc ; HandleKey
@@ -1218,14 +1210,11 @@ v_2x:   and     #$0F
 .proc HandleDown
         JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
         jsr     CopyEventDataToMain
-        ucmp8   findwindow_params::window_id, #aux::kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #aux::kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
         jmp     InputLoop
 .endproc ; HandleDown
 
@@ -2131,8 +2120,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         ldx     #3
       DO
         ldy     sig_offsets,x
-        ucmp8   (slot_ptr),y, sig_values,x
-        bne     next
+        IF u8 (slot_ptr),y <> sig_values,x GOTO next
       WHILE dex : POS
 
         ;; Now look for device type
@@ -2355,10 +2343,7 @@ start:
         ;; Any characters lowercase? If so, don't adjust.
        DO
         CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y
-        IF ZS
-        ucmp8   dib_buffer+SPDIB::Device_Name,y, #'a' ; guarded by `kBuildSupportsLowercase`
-        bcs     done_adjust_case ; is lower case
-        END_IF
+        IF ZS AND u8 dib_buffer+SPDIB::Device_Name,y >= #'a' GOTO done_adjust_case ; guarded by `kBuildSupportsLowercase`
        WHILE dey : POS
 
         ldy     dib_buffer+SPDIB::ID_String_Length

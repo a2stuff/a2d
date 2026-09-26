@@ -187,9 +187,7 @@ do1900: ldy     #ParsedDateTime::year
         lsr     a
         lsr     a
         lsr     a
-        beq     invalid         ; < 1
-        cmp     #13
-        bcs     invalid         ; > 12
+        IF ZERO OR A >= #13 GOTO invalid
         ldy     #ParsedDateTime::month
         sta     (parsed_ptr),y
 
@@ -199,9 +197,7 @@ do1900: ldy     #ParsedDateTime::year
         ldy     #DateTime::datelo
         lda     (datetime_ptr),y
         and     #%00011111
-        beq     invalid         ; < 1
-        cmp     #32
-        bcs     invalid         ; > 31
+        IF ZERO OR A >= #32 GOTO invalid
         ldy     #ParsedDateTime::day
         sta     (parsed_ptr),y
 
@@ -210,8 +206,7 @@ do1900: ldy     #ParsedDateTime::year
         ldy     #DateTime::timehi
         lda     (datetime_ptr),y
         and     #%00011111
-        cmp     #24
-        bcs     invalid         ; > 23
+        IF A >= #24 GOTO invalid
         ldy     #ParsedDateTime::hour
         sta     (parsed_ptr),y
 
@@ -220,8 +215,7 @@ do1900: ldy     #ParsedDateTime::year
         ldy     #DateTime::timelo
         lda     (datetime_ptr),y
         and     #%00111111
-        cmp     #60
-        bcs     invalid         ; > 59
+        IF A >= #60 GOTO invalid
         ldy     #ParsedDateTime::minute
         sta     (parsed_ptr),y
 

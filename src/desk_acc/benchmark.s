@@ -251,13 +251,10 @@ pattern_plaid:
 
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
+
         lda     event_params::kind
-
-        cmp     #MGTK::EventKind::button_down
-        beq     OnClick
-
-        cmp     #MGTK::EventKind::key_down
-        beq     OnKey
+        IF A = #MGTK::EventKind::button_down GOTO OnClick
+        IF A = #MGTK::EventKind::key_down GOTO OnKey
 
         jmp     InputLoop
 
@@ -283,11 +280,8 @@ probe_count:
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_RETURN
-        beq     OnKeyOK
-
-        cmp     #CHAR_ESCAPE
-        beq     OnKeyOK
+        IF A = #CHAR_RETURN GOTO OnKeyOK
+        IF A = #CHAR_ESCAPE GOTO OnKeyOK
 
         jmp     InputLoop
 .endproc ; OnKey

@@ -526,33 +526,19 @@ modifiers .byte
         bne     modified
 
         ;; Not modified
-        cmp     #CHAR_LEFT
-        beq     _MoveCaretLeft
-
-        cmp     #CHAR_RIGHT
-        beq     _MoveCaretRight
-
-        cmp     #CHAR_DELETE
-        beq     _DeleteLeft
-
-        cmp     #CHAR_CTRL_F
-        beq     _DeleteRight
-
-        cmp     #CHAR_CLEAR
-        beq     _DeleteLine
-
-        cmp     #' '
-        bcs     _InsertChar
+        IF A = #CHAR_LEFT GOTO _MoveCaretLeft
+        IF A = #CHAR_RIGHT GOTO _MoveCaretRight
+        IF A = #CHAR_DELETE GOTO _DeleteLeft
+        IF A = #CHAR_CTRL_F GOTO _DeleteRight
+        IF A = #CHAR_CLEAR GOTO _DeleteLine
+        IF A >= #' ' GOTO _InsertChar
 
         rts
 
         ;; Modified
 modified:
-        cmp     #CHAR_LEFT
-        beq     _MoveCaretStart
-
-        cmp     #CHAR_RIGHT
-        beq     _MoveCaretEnd
+        IF A = #CHAR_LEFT GOTO _MoveCaretStart
+        IF A = #CHAR_RIGHT GOTO _MoveCaretEnd
 
         rts
 .endproc ; KeyImpl

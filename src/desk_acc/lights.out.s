@@ -165,14 +165,9 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
     IF u8 findwindow_params::window_id = #kDAWindowId
         lda     findwindow_params::which_area
 
-        cmp     #MGTK::Area::close_box
-        beq     DoClose
-
-        cmp     #MGTK::Area::dragbar
-        beq     DoDrag
-
-        cmp     #MGTK::Area::content
-        beq     DoClick
+        IF A = #MGTK::Area::close_box GOTO DoClose
+        IF A = #MGTK::Area::dragbar GOTO DoDrag
+        IF A = #MGTK::Area::content GOTO DoClick
     END_IF
         rts
 .endproc ; OnClick

@@ -239,10 +239,8 @@ remainder:      .word   0       ; (out)
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
-        cmp     #MGTK::EventKind::key_down    ; key?
-        beq     OnKeyDown
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        bne     InputLoop      ; nope, keep waiting
+        IF A = #MGTK::EventKind::key_down GOTO OnKeyDown ; key?
+        IF A <> #MGTK::EventKind::button_down GOTO InputLoop ; was clicked?
 
         FALL_THROUGH_TO OnButtonDown
 .endproc ; InputLoop
@@ -251,18 +249,14 @@ remainder:      .word   0       ; (out)
 
 .proc OnButtonDown
         MGTK_CALL MGTK::FindWindow, event_params::coords
-        ucmp8   findwindow_params::window_id, #kDAWindowId ; in our window?
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop ; in our window?
 
         ;; which part of the window?
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     OnCloseClick
+        IF A = #MGTK::Area::close_box GOTO OnCloseClick
+        IF A = #MGTK::Area::dragbar GOTO title
+        IF A = #MGTK::Area::grow_box GOTO InputLoop ; not enabled, so this will never match
 
-        cmp     #MGTK::Area::dragbar
-        beq     title
-        cmp     #MGTK::Area::grow_box ; not enabled, so this will never match
-        beq     InputLoop
         jsr     OnContentClick
         jmp     InputLoop
 
@@ -301,11 +295,11 @@ title:  jsr     OnTitleBarClick
 
       IF A = #CHAR_DOWN         ; Apple+Down = Page Down
         jsr     PageDown
+        ;; BUG: This shouldn't be commented out, due to subsequent test!
         ;; jmp     InputLoop
       END_IF
 
-        cmp     #kShortcutCloseWindow
-        beq     DoClose
+        IF A = #kShortcutCloseWindow GOTO DoClose
     END_IF
 
         jmp     InputLoop
@@ -370,16 +364,11 @@ no_mod:
 
 .proc OnVScrollClick
         lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::thumb
-        beq     OnVScrollThumbClick
-        cmp     #MGTK::Part::page_down
-        beq     OnVScrollBelowClick
-        cmp     #MGTK::Part::page_up
-        beq     OnVScrollAboveClick
-        cmp     #MGTK::Part::up_arrow
-        beq     OnVScrollUpClick
-        cmp     #MGTK::Part::down_arrow
-        beq     OnVScrollDownClick
+        IF A = #MGTK::Part::thumb GOTO OnVScrollThumbClick
+        IF A = #MGTK::Part::page_down GOTO OnVScrollBelowClick
+        IF A = #MGTK::Part::page_up GOTO OnVScrollAboveClick
+        IF A = #MGTK::Part::up_arrow GOTO OnVScrollUpClick
+        IF A = #MGTK::Part::down_arrow GOTO OnVScrollDownClick
         rts
 .endproc ; OnVScrollClick
 
@@ -1072,8 +1061,7 @@ filename:       .res    16
         ;; Don't show directory files (volumes/subdirectories)
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_info_params
         bcs     ret
-        ucmp8   get_info_params::file_type, #FT_DIRECTORY
-        beq     ret
+        IF u8 get_info_params::file_type = #FT_DIRECTORY GOTO ret
 
         ;; Set window title to filename
         ldy     INVOKE_PATH

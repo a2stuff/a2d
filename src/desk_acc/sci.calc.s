@@ -605,10 +605,8 @@ init:
 
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        bcc     ret
-        ucmp8   findwindow_params::window_id, #kDAWindowId      ; This window?
-        bne     ret
+        IF u8 findwindow_params::which_area < #MGTK::Area::content GOTO ret
+        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO ret     ; This window?
 
         lda     findwindow_params::which_area
     IF A = #MGTK::Area::content ; Content area?
@@ -870,10 +868,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         rts
     END_IF
 
-        cmp     #Function::digit0
-        bcc     DoOp
-        cmp     #Function::digit9+1
-        bcs     DoOp
+        IF A < #Function::digit0 OR A >= #Function::digit9+1 GOTO DoOp
         FALL_THROUGH_TO _Insert
 
         .assert Function::digit0 = '0', error, "Enum values"
@@ -1311,8 +1306,9 @@ invert: jsr     invert_rect
 
 check_button:
         MGTK_CALL MGTK::GetEvent, event_params
-        ucmp8   event_params::kind, #MGTK::EventKind::drag ; Button down?
-        bne     done            ; Nope, done immediately
+
+        ;; Button down? If not, done immediately
+        IF u8 event_params::kind <> #MGTK::EventKind::drag GOTO done
 
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params

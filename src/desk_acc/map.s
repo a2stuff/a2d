@@ -305,11 +305,8 @@ buf_search:     .res    kBufSize, 0 ; search term
         cmp     #kEventKindMouseMoved
         jeq     HandleMouseMove
 
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         bne     InputLoop       ; always
 .endproc ; InputLoop
@@ -331,15 +328,13 @@ buf_search:     .res    kBufSize, 0 ; search term
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
 
         LETK_CALL LETK::Key, le_params
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        beq     Exit
+        IF A = #CHAR_ESCAPE GOTO Exit
 
     IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, find_button
@@ -360,10 +355,8 @@ buf_search:     .res    kBufSize, 0 ; search term
     END_IF
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
         cmp     #MGTK::Area::content
         jeq     HandleClick
         jmp     InputLoop

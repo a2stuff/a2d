@@ -432,8 +432,7 @@ OpFinishDirectory       := RemoveDstPathSegment
         lda     KBD
         bpl     ret
         sta     KBDSTRB
-        cmp     #$80|CHAR_ESCAPE
-        beq     cancel
+        IF A = #$80|CHAR_ESCAPE GOTO cancel
 ret:    rts
 
 cancel: lda     #kErrCancel
@@ -573,10 +572,7 @@ str_slash_desktop:
         lda     unit_num        ; not masked
 
         ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM.
-        cmp     #kRamDrvSystemUnitNum
-        beq     test_unit_num
-        cmp     #kRamAuxSystemUnitNum
-        beq     test_unit_num
+        IF A = #kRamDrvSystemUnitNum OR A = #kRamAuxSystemUnitNum GOTO test_unit_num
 
         ;; Smartport?
         jsr     FindSmartportDispatchAddress ; handles unmasked unit num
@@ -836,8 +832,7 @@ test_unit_num:
     IF NOT_ZERO
         lda     #'/'
       DO
-        cmp     src_path,x
-        beq     done
+        IF A = src_path,x GOTO done
       WHILE dex : NOT_ZERO
         inx
 
@@ -873,8 +868,7 @@ done:   dex
 
         lda     #'/'
       DO
-        cmp     dst_path,x
-        beq     done
+        IF A = dst_path,x GOTO done
       WHILE dex : NOT_ZERO
         inx
 
@@ -928,8 +922,7 @@ done:   dex
         jsr     AppendFilenameToSrcPath
         MLI_CALL GET_FILE_INFO, get_file_info_params
     IF CS
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     cleanup
+        IF A = #ERR_FILE_NOT_FOUND GOTO cleanup
         jmp     DidNotCopy
     END_IF
 
@@ -1439,14 +1432,8 @@ str_not_completed:
         MLI_CALL CLOSE, close_everything_params
         pla
 
-        cmp     #GenericCopy::kErrCancel
-        beq     FinishAndInvoke
-
-        cmp     #ERR_OVERRUN_ERROR
-        beq     ShowNoSpacePrompt
-
-        cmp     #ERR_VOLUME_DIR_FULL
-        beq     ShowNoSpacePrompt
+        IF A = #GenericCopy::kErrCancel GOTO FinishAndInvoke
+        IF A = #ERR_OVERRUN_ERROR OR A = #ERR_VOLUME_DIR_FULL GOTO ShowNoSpacePrompt
 
         ;; Show generic error
         pha
@@ -1459,20 +1446,19 @@ str_not_completed:
 
         ;; Wait for keyboard
         sta     KBDSTRB
-loop:   lda     KBD
-        bpl     loop
+    DO
+        lda     KBD
+        REDO_IF NC
         sta     KBDSTRB
 
-        cmp     #$80|kShortcutMonitor ; Easter Egg: If 'M', enter monitor
-        beq     monitor
+        IF A = #$80|kShortcutMonitor GOTO monitor ; Easter Egg: If 'M', enter monitor
 
 .if kBuildSupportsLowercase
         cmp     #$80|TO_LOWER(kShortcutMonitor)
         beq     monitor
 .endif
 
-        cmp     #$80|CHAR_RETURN
-        bne     loop
+    WHILE A <>#$80|CHAR_RETURN
 
         jmp     FinishAndInvoke
 .endproc ; HandleErrorCode
@@ -1612,12 +1598,9 @@ start:  bit     LCBANK2
         ;; Create file (if needed)
         copy16  DATELO, create_params::create_date
         copy16  TIMELO, create_params::create_time
-        MLI_CALL CREATE, create_params
-    IF CS
-        cmp     #ERR_DUPLICATE_FILENAME
-        bne     done
-    END_IF
 
+        MLI_CALL CREATE, create_params
+    IF CC OR A = #ERR_DUPLICATE_FILENAME
         ;; Populate it
         MLI_CALL OPEN, open_params
         lda     open_params::ref_num
@@ -1625,8 +1608,9 @@ start:  bit     LCBANK2
         sta     close_params::ref_num
         MLI_CALL WRITE, write_params
         MLI_CALL CLOSE, close_params
+    END_IF
 
-done:   rts
+        rts
 
 .endproc ; PreserveQuitCodeImpl
 PreserveQuitCode        := PreserveQuitCodeImpl::start
@@ -1667,8 +1651,7 @@ found:
         CALL    VTABZ, A=#kVtabRamNotEmptyMsg
         CALL    CoutString, AX=#str_ram_not_empty
         jsr     WaitEnterEscape
-        cmp     #$80|CHAR_ESCAPE
-        beq     quit
+        IF A = #$80|CHAR_ESCAPE GOTO quit
         jsr     HOME
 
 ret:    rts

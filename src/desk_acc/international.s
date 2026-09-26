@@ -214,14 +214,15 @@ init_window:
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
+
         lda     event_params::kind
     IF A = #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
 
-        cmp     #MGTK::EventKind::key_down
-        bne     InputLoop
+        IF A <> #MGTK::EventKind::key_down GOTO InputLoop
+
         jsr     OnKey
         jmp     InputLoop
 .endproc ; InputLoop
@@ -259,20 +260,13 @@ init_window:
         cmp     #CHAR_ESCAPE
         jeq     OnKeyOK
 
-        cmp     #CHAR_LEFT
-        beq     OnKeyPrev
-        cmp     #CHAR_UP
-        beq     OnKeyPrev
-        cmp     #CHAR_RIGHT
-        beq     OnKeyNext
-        cmp     #CHAR_TAB
-        beq     OnKeyNext
-        cmp     #CHAR_DOWN
-        beq     OnKeyNext
-        cmp     #' '
-        bcc     ret
-        cmp     #CHAR_DELETE
-        bcs     ret
+        IF A =  #CHAR_LEFT GOTO OnKeyPrev
+        IF A = #CHAR_UP GOTO OnKeyPrev
+        IF A = #CHAR_RIGHT GOTO OnKeyNext
+        IF A = #CHAR_TAB GOTO OnKeyNext
+        IF A = #CHAR_DOWN GOTO OnKeyNext
+        IF A < #' ' GOTO ret
+        IF A >= #CHAR_DELETE GOTO ret
         jmp     OnKeyChar
 
 ret:    rts
@@ -290,8 +284,7 @@ ret:    rts
         clc
         lda     selected_field
         adc     #1
-        cmp     #Field::LAST+1
-        bcc     UpdateSelection
+        IF A < #Field::LAST+1 GOTO UpdateSelection
         FALL_THROUGH_TO UpdateSelection, A=#Field::FIRST
 .endproc ; OnKeyNext
 

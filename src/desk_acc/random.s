@@ -134,16 +134,13 @@ continue:
 .proc _IsDAFile
         ;; Check file type
         ldy     #FileEntry::file_type
-        ucmp8   (entry_ptr),y, #kDAFileType
-        bne     nope
+        IF u8 (entry_ptr),y <> #kDAFileType GOTO nope
 
         ;; Check aux type
         ldy     #FileEntry::aux_type
-        ucmp8   (entry_ptr),y, #<kDAFileAuxType
-        bne     nope
+        IF u8 (entry_ptr),y <> #<kDAFileAuxType GOTO nope
         iny
-        ucmp8   (entry_ptr),y, #>kDAFileAuxType
-        bne     nope
+        IF u8 (entry_ptr),y <> #>kDAFileAuxType GOTO nope
 
         RETURN  C=0
 
@@ -165,8 +162,7 @@ nope:   RETURN  C=1
         ;; Yes, check characters
         ASSERT_EQUALS FileEntry::file_name, 1
     DO
-        ucmp8   (entry_ptr),y, self_filename,y
-        bne     nope
+        IF u8 (entry_ptr),y <> self_filename,y GOTO nope
     WHILE dey : NOT_ZERO
 
         RETURN  C=0
@@ -219,8 +215,7 @@ next_block:
 
 next_entry:
         ;; Advance to next entry
-        ucmp8   entry_in_block, #kEntriesPerBlock
-        beq     next_block
+        IF u8 entry_in_block = #kEntriesPerBlock GOTO next_block
 
         inc     entry_in_block
         add16_8 entry_ptr, #.sizeof(FileEntry)

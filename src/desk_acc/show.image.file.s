@@ -1498,21 +1498,17 @@ END_PARAM_BLOCK
       IF bit flags : NS         ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
         ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
-        ucmp8   aux_type, (ptr),y
-        bne     next
+        IF u8 aux_type <> (ptr),y GOTO next
         iny
-        ucmp8   aux_type+1, (ptr),y
-        bne     next
+        IF u8 aux_type+1 <> (ptr),y GOTO next
       END_IF
 
         ;; Does Block Count matter, and if so does it match?
       IF bit flags : VS         ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
-        ucmp8   blocks_used, (ptr),y
-        bne     next
+        IF u8 blocks_used <> (ptr),y GOTO next
         iny
-        ucmp8   blocks_used+1, (ptr),y
-        bne     next
+        IF u8 blocks_used+1 <> (ptr),y GOTO next
       END_IF
 
         ;; Filename suffix?
@@ -1641,8 +1637,7 @@ next_block:
 
 next_entry:
         ;; Advance to next entry
-        ucmp8   entry_in_block, #kEntriesPerBlock
-        beq     next_block
+        IF u8 entry_in_block = #kEntriesPerBlock GOTO next_block
 
         inc     entry_in_block
         add16_8 entry_ptr, #.sizeof(FileEntry)
@@ -1814,8 +1809,7 @@ fail:   jmp     Init
         cpx     last_filename
         bne     not_cur
     DO
-        ucmp8   cur_filename,x, last_filename,x
-        bne     not_cur
+        IF u8 cur_filename,x <> last_filename,x GOTO not_cur
     WHILE dex : NOT_ZERO
 
         SET_BIT7_FLAG seen_flag

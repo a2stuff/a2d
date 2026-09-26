@@ -273,11 +273,9 @@ jt_callbacks:
         MLI_CALL GET_FILE_INFO, get_file_info_params
         bcs     alert
         ;; Volume?
-        ucmp8   get_file_info_params::storage_type, #ST_VOLUME_DIRECTORY
-        beq     invalid
+        IF u8 get_file_info_params::storage_type = #ST_VOLUME_DIRECTORY GOTO invalid
         ;; Link?
-        ucmp8   get_file_info_params::file_type, #FT_LINK
-        beq     invalid
+        IF u8 get_file_info_params::file_type = #FT_LINK GOTO invalid
     END_IF
 
         jsr     file_dialog::CloseWindow

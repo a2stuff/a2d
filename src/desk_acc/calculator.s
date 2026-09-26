@@ -497,8 +497,7 @@ intl_deci_sep:  .byte   0
         jmp     InputLoop
     END_IF
 
-        cmp     #MGTK::EventKind::key_down
-        bne     InputLoop
+        IF A <> #MGTK::EventKind::key_down GOTO InputLoop
         jsr     OnKeyPress
         jmp     InputLoop
 .endproc ; InputLoop
@@ -509,8 +508,7 @@ intl_deci_sep:  .byte   0
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        bcc     ignore_click
+        IF u8 findwindow_params::which_area < #MGTK::Area::content GOTO ignore_click
 
         ;; This window?
     IF u8 findwindow_params::window_id <> #kDAWindowId
@@ -537,8 +535,7 @@ exit:   pla                     ; pop OnClick / OnKeyPress
         jmp     ExitDA
     END_IF
 
-        cmp     #MGTK::Area::dragbar ; Title bar?
-        bne     ignore_click
+        IF A <> #MGTK::Area::dragbar GOTO ignore_click ; Title bar?
 
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
@@ -607,32 +604,28 @@ rts1:  rts                     ; used by next proc
         FALL_THROUGH_TO FindButtonRow
 
 .proc FindButtonRow
-        cmp     #kRow1Top-kBorderLeftTop ; row 1?
-        bcc     miss
+        IF A < #kRow1Top-kBorderLeftTop GOTO miss ; row 1?
     IF A < #kRow1Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
         RETURN  A=row1_lookup,x
     END_IF
 
-        cmp     #kRow2Top-kBorderLeftTop ; row 2?
-        bcc     miss
+        IF A < #kRow2Top-kBorderLeftTop GOTO miss ; row 2?
     IF A < #kRow2Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
         RETURN  A=row2_lookup,x
     END_IF
 
-        cmp     #kRow3Top-kBorderLeftTop ; row 3?
-        bcc     miss
+        IF A < #kRow3Top-kBorderLeftTop GOTO miss ; row 3?
     IF A < #kRow3Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
         RETURN  A=row3_lookup,x
     END_IF
 
-        cmp     #kRow4Top-kBorderLeftTop ; row 4?
-        bcc     miss
+        IF A < #kRow4Top-kBorderLeftTop GOTO miss ; row 4?
     IF A < #kRow4Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
@@ -641,15 +634,11 @@ rts1:  rts                     ; used by next proc
 
     IF A < #kRow5Top-kBorderLeftTop ; special case for tall + button
         lda     screentowindow_params::windowx
-        cmp     #kCol4Left-kBorderLeftTop
-        bcc     miss
-        cmp     #kCol4Right+kBorderBottomRight-1
-        bcs     miss
+        IF A < #kCol4Left-kBorderLeftTop OR A >= #kCol4Right+kBorderBottomRight-1 GOTO miss
         RETURN  A=#'+', C=1
     END_IF
 
-        cmp     #kRow5Bot+kBorderBottomRight ; row 5?
-        bcs     miss
+        IF A >= #kRow5Bot+kBorderBottomRight GOTO miss ; row 5?
 
         jsr     FindButtonCol
     IF CS
@@ -677,26 +666,22 @@ miss:   RETURN  C=0
         ::decimal_lookup := *-2
 
 .proc FindButtonCol
-        cpx     #kCol1Left-kBorderLeftTop ; col 1?
-        bcc     miss
+        IF X < #kCol1Left-kBorderLeftTop GOTO miss; col 1?
     IF X < #kCol1Right+kBorderBottomRight
         RETURN  X=#1, C=1
     END_IF
 
-        cpx     #kCol2Left-kBorderLeftTop ; col 2?
-        bcc     miss
+        IF X < #kCol2Left-kBorderLeftTop GOTO miss ; col 2?
     IF X < #kCol2Right+kBorderBottomRight
         RETURN  X=#2, C=1
     END_IF
 
-        cpx     #kCol3Left-kBorderLeftTop ; col 3?
-        bcc     miss
+        IF X < #kCol3Left-kBorderLeftTop GOTO miss ; col 3?
     IF X < #kCol3Right+kBorderBottomRight
         RETURN  X=#3, C=1
     END_IF
 
-        cpx     #kCol4Left-kBorderLeftTop ; col 4?
-        bcc     miss
+        IF X < #kCol4Left-kBorderLeftTop GOTO miss ; col 4?
     IF X < #kCol4Right+kBorderBottomRight
         RETURN  X=#4, C=1
     END_IF
@@ -1128,8 +1113,9 @@ invert:
 
 check_button:
         MGTK_CALL MGTK::GetEvent, event_params
-        ucmp8   event_params::kind, #MGTK::EventKind::drag ; Button down?
-        bne     done            ; Nope, done immediately
+
+        ;; Button down? If not, done immediately
+        IF u8 event_params::kind <> #MGTK::EventKind::drag GOTO done
 
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params

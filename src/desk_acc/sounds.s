@@ -252,12 +252,11 @@ grafport_win:       .tag    MGTK::GrafPort
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         jmp     InputLoop
 .endproc ; InputLoop

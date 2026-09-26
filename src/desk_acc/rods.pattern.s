@@ -302,10 +302,8 @@ del1:   ;; See if there's an event that should make us exit.
         jsr     CopyEventAuxToMain
 
         lda     event_params + MGTK::Event::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     exit
-        cmp     #MGTK::EventKind::key_down
-        beq     exit
+        IF A = #MGTK::EventKind::button_down GOTO exit
+        IF A = #MGTK::EventKind::key_down GOTO exit
         rts
 
 exit:   pla                     ;pop stack

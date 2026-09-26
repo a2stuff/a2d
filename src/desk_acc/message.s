@@ -89,10 +89,8 @@ grafport:       .tag MGTK::GrafPort
 .proc InputLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
-        cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     HandleKeyDown
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     exit
+        IF A = #MGTK::EventKind::key_down GOTO HandleKeyDown ; any key?
+        IF A = #MGTK::EventKind::button_down GOTO exit; was clicked?
 
         jsr     Animate
         jmp     InputLoop

@@ -162,8 +162,7 @@ loop2:
         push16  #ovl_string_buf
         FORMAT_MESSAGE 1, aux::str_confirm_erase_format
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#text_input_buf
-        cmp     #kAlertResultOK
-        bne     cancel
+        IF A <> #kAlertResultOK GOTO cancel
 .endscope
 
         ;; Confirmed!
@@ -217,8 +216,7 @@ l12:    pha
     END_IF
 
         CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#aux::str_formatting_error
-        cmp     #kAlertResultCancel
-        bne     retry
+        IF A <> #kAlertResultCancel GOTO retry
 
 finish:
         pha
@@ -267,8 +265,7 @@ retry:
     END_IF
 
         CALL    ShowAlertParams, Y=#AlertButtonOptions::TryAgainCancel, AX=#aux::str_erasing_error
-        cmp     #kAlertResultCancel
-        bne     retry
+        IF A <> #kAlertResultCancel GOTO retry
 
 finish:
         pha
@@ -866,11 +863,7 @@ prodos_loader_blocks:
         jmp     maybe_dos       ; Maybe...
       END_IF
 
-        lda     read_buffer + 2
-        cmp     #kPascalSig2a
-        beq     pascal
-        cmp     #kPascalSig2b
-        beq     pascal
+        IF lda read_buffer + 2 : A = #kPascalSig2a OR A = #kPascalSig2b GOTO pascal
         FALL_THROUGH_TO unknown
     END_IF
 
@@ -892,10 +885,7 @@ pascal: CALL    pascal_disk, AX=#ovl_string_buf
 
         ;; Maybe DOS 3.3, not sure yet...
 maybe_dos:
-        cmp     #kDOS33Sig1
-        bne     unknown
-        ucmp8   read_buffer + 2, #kDOS33Sig2
-        bne     unknown
+        IF A <> #kDOS33Sig1 OR u8 read_buffer + 2 <> #kDOS33Sig2 GOTO unknown
 
         ;; DOS 3.3, use slot and drive
         CALL    _GetSlotNum, A=read_block_params::unit_num

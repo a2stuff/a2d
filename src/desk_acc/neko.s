@@ -397,12 +397,9 @@ ep_size := * - ep_start
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
-        cmp     #MGTK::EventKind::no_event
-        bne     InputLoop
+        IF A = #MGTK::EventKind::button_down GOTO HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
+        IF A <> #MGTK::EventKind::no_event GOTO InputLoop
         jmp     HandleNoEvent
 .endproc ; InputLoop
 
@@ -434,16 +431,12 @@ ep_size := * - ep_start
 .proc HandleDown
         JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
         jsr     CopyEventDataToMain
-        ucmp8   findwindow_params::window_id, #aux::kDAWindowId
-        bne     InputLoop
+        IF u8 findwindow_params::window_id <> #aux::kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        beq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        beq     HandleDrag
-        cmp     #MGTK::Area::content
-        beq     HandleGrow
+        IF A = #MGTK::Area::close_box GOTO HandleClose
+        IF A = #MGTK::Area::dragbar GOTO HandleDrag
+        IF A = #MGTK::Area::content GOTO HandleGrow
         bne     InputLoop       ; always
 .endproc ; HandleDown
 
