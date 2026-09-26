@@ -129,6 +129,11 @@ while (<STDIN>) {
 
       $_ = $opcode . ' ' . $arguments;
 
+    } elsif (m/\bIF\b.*\bGOTO\b/) {
+
+      # shortcut IF ... GOTO - don't start a block
+      die "Implement me";
+
     } elsif (m/^(\b(?:IF(?:_\w+)?|ELSE_IF(?:_\w+)?|ELSE|END_IF|DO|REPEAT|FOREVER|WHILE(?:_\w+)?|UNTIL(?:_\w+)?)\b)\s*(.*)$/) {
 
       # conditional macros - dynamic indent

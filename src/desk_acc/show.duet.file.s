@@ -202,10 +202,8 @@ ret:    rts
         ;; Verify type/auxtype
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_info_params
         bcs     ret
-        ucmp8   get_info_params::file_type, #FT_MUSIC
-        bne     ret
-        ecmp16  get_info_params::aux_type, #$D0E7
-        bne     ret
+        IF u8 get_info_params::file_type <> #FT_MUSIC GOTO ret
+        IF u16 get_info_params::aux_type <> #$D0E7 GOTO ret
 
         ;; Extract filename
         ldy     INVOKE_PATH

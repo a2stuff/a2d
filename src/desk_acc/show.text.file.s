@@ -452,8 +452,8 @@ ret:    rts
         jsr     IsAtTop
         beq     ret
 
-        ucmp16  first_visible_line, #kLineScrollDelta ; would be too far?
-        bcc     ForceScrollTop                        ; yes, clamp to top
+        IF u16 first_visible_line < #kLineScrollDelta GOTO ForceScrollTop
+
         sub16   first_visible_line, #kLineScrollDelta, first_visible_line
         jsr     UpdateScrollPos
 
@@ -464,8 +464,8 @@ ret:    rts
         jsr     IsAtTop
         beq     ret
 
-        ucmp16  first_visible_line, #kPageScrollDelta ; would be too far?
-        bcc     ForceScrollTop                        ; yes, clamp to top
+        IF u16 first_visible_line < #kPageScrollDelta GOTO ForceScrollTop
+
         sub16   first_visible_line, #kPageScrollDelta, first_visible_line
         jsr     UpdateScrollPos
 
@@ -488,8 +488,8 @@ ForceScrollTop := ScrollTop::force
         beq     ret
 
         add16   first_visible_line, #kLineScrollDelta, first_visible_line
-        ucmp16  first_visible_line, max_visible_line ; too far down?
-        bcs     ForceScrollBottom                    ; yes, clamp to bottom
+        IF u16 first_visible_line >= max_visible_line GOTO ForceScrollBottom
+
         jsr     UpdateScrollPos
 
 ret:    rts
@@ -500,8 +500,8 @@ ret:    rts
         beq     ret
 
         add16   first_visible_line, #kPageScrollDelta, first_visible_line
-        ucmp16  first_visible_line, max_visible_line ; too far down?
-        bcs     ForceScrollBottom                    ; yes, clamp to bottom
+        IF u16 first_visible_line >= max_visible_line GOTO  ForceScrollBottom
+
         jsr     UpdateScrollPos
 
 ret:    rts
@@ -703,12 +703,10 @@ end:    rts
        END_IF
 
         ;; EOF? If so, stop!
-        ucmp16  cur_offset, get_eof_params::eof
-        bcs     done
+        IF u16 cur_offset >= get_eof_params::eof GOTO done
       ELSE
         ;; Just rendering what's visible. Are we done?
-        ecmp16  current_line, last_visible_line
-        beq     done
+        IF u16 current_line = last_visible_line GOTO done
       END_IF
 
         ;; Nope - continue on next line
@@ -961,8 +959,7 @@ prep:   lda     #$00
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc OnTitleBarClick
-        ucmp16  event_params::xcoord, mode_mapinfo_viewloc_xcoord
-        bcs     ToggleMode
+        IF u16 event_params::xcoord >= mode_mapinfo_viewloc_xcoord GOTO ToggleMode
         RETURN  C=0             ; Click ignored
 .endproc ; OnTitleBarClick
 

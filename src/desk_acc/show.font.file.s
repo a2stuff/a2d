@@ -353,8 +353,7 @@ filename:       .res    16
         bcs     exit
 
         jsr     CalcFontSize
-        ecmp16  expected_size, read_params::trans_count
-        bne     exit
+        IF u16 expected_size <> read_params::trans_count GOTO exit
 
         ;; --------------------------------------------------
         ;; Copy the loaded data to AUX

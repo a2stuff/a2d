@@ -13,6 +13,7 @@
 ;;;
 ;;; ============================================================
 
+;;; * IF cond GOTO target
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
 ;;; * DO / REDO_IF cond / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
 ;;;   * or REPEAT / UNTIL cond if you prefer
@@ -1047,24 +1048,20 @@
 ;;; parsing and code generation (above).
 
 ;;; Parse expression and generate code with "branch if true" semantics
-.macro _FLOW_PARSE_AND_GEN_BIT target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro F2_PARSE_AND_GEN_BIT target,expr
         .local @stay
 
-        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        F2_PARSE_COND ::F2_SENSE_BIT, @stay, target, {f2_params}
-        .undef f2_params
+        F2_PARSE_COND ::F2_SENSE_BIT, @stay, target, {expr}
 
         @stay := *
         .refto @stay
 .endmacro
 
 ;;; Parse expression and generate code with "branch if false" semantics
-.macro _FLOW_PARSE_AND_GEN_BIF target,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro F2_PARSE_AND_GEN_BIF target,expr
         .local @stay
 
-        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        F2_PARSE_COND ::F2_SENSE_BIF, @stay, target, {f2_params}
-        .undef f2_params
+        F2_PARSE_COND ::F2_SENSE_BIF, @stay, target, {expr}
 
         @stay := *
         .refto @stay
@@ -1075,6 +1072,8 @@
 ;;; ============================================================
 ;;;
 ;;; Usage:
+;;;     IF <condition> GOTO <label>
+;;;
 ;;;     IF <condition>
 ;;;     ...
 ;;;     ELSE <condition> ; optional
@@ -1108,22 +1107,61 @@
 .define __flow_branch_ident_counter__ __flow_branch_ident__ {"counter"}
 .define __flow_branch_ident_block__ __flow_branch_ident__ {.sprintf("eob%d", __flow_branch_ident_counter__)}
 
-.macro IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro F2_FIND_GOTO_TARGET
+        .define f2_goto_target
+        .define f2_token_list f2_params
+        .undef f2_params
+        .define f2_params
+        F2_FIND_GOTO_TARGET2
+        .undef f2_token_list
+.endmacro
+
+.macro F2_FIND_GOTO_TARGET2
+        .if .tcount({f2_token_list}) > 0
+          .if .not(.xmatch(.left(1, {f2_token_list}), GOTO))
+            .define f2_tmp f2_params
+            .undef f2_params
+            .define f2_params f2_tmp .left(1, {f2_token_list})
+            .undef f2_tmp
+            F2_PARSE_CONSUME
+            F2_FIND_GOTO_TARGET2
+          .else
+            F2_PARSE_CONSUME
+            .if .tcount({f2_token_list}) = 0
+              F2_ERR_EXPECTED .sprintf("target after GOTO")
+            .endif
+            .undef f2_goto_target
+            .define f2_goto_target f2_token_list
+          .endif
+        .endif
+.endmacro
+
+.macro IF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "IF"
 
-        __INC_IDENT__ __flow_branch_depth__
-        __INC_IDENT__ __flow_branch_count_at_depth__
-        __INC_IDENT__ __flow_branch_ident_counter__
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
-        .local no_match
-        no_match := __flow_branch_ident_block__
+        F2_FIND_GOTO_TARGET
+        .if .tcount({f2_goto_target}) > 0
+          F2_PARSE_AND_GEN_BIT {f2_goto_target},{f2_params}
+        .else
+          __INC_IDENT__ __flow_branch_depth__
+          __INC_IDENT__ __flow_branch_count_at_depth__
+          __INC_IDENT__ __flow_branch_ident_counter__
 
-        _FLOW_PARSE_AND_GEN_BIF no_match,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+          .local no_match
+          no_match := __flow_branch_ident_block__
+
+          F2_PARSE_AND_GEN_BIF no_match,{f2_params}
+        .endif
+
+        .undef f2_goto_target
+        .undef f2_params
 
   _FLOW_END_STATEMENT
 .endmacro
 
-.macro ELSE_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro ELSE_IF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "ELSE_IF"
 
         jmp     __flow_branch_ident__ {"endif"}
@@ -1133,7 +1171,9 @@
         .local no_match
         no_match := __flow_branch_ident_block__
 
-        _FLOW_PARSE_AND_GEN_BIF no_match,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_AND_GEN_BIF no_match,{f2_params}
+        .undef f2_params
 
   _FLOW_END_STATEMENT
 .endmacro
@@ -1245,40 +1285,46 @@
 
 .define REPEAT DO
 
-.macro REDO_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro REDO_IF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "REDO_IF"
 
         .local @redo
         @redo := __flow_loop_ident__ {"start"}
 
-        _FLOW_PARSE_AND_GEN_BIT @redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_AND_GEN_BIT @redo,{f2_params}
+        .undef f2_params
 
   _FLOW_END_STATEMENT
 .endmacro
 
-.macro CONTINUE_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro CONTINUE_IF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "CONTINUE_IF"
 
         .local @continue
         @continue := __flow_loop_ident__ {"continue"}
 
-        _FLOW_PARSE_AND_GEN_BIT @continue,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_AND_GEN_BIT @continue,{f2_params}
+        .undef f2_params
 
   _FLOW_END_STATEMENT
 .endmacro
 
-.macro BREAK_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro BREAK_IF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "BREAK_IF"
 
         .local @break
         @break := __flow_loop_ident__ {"break"}
 
-        _FLOW_PARSE_AND_GEN_BIT @break,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_AND_GEN_BIT @break,{f2_params}
+        .undef f2_params
 
   _FLOW_END_STATEMENT
 .endmacro
 
-.macro WHILE expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro WHILE arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "WHILE"
 
         .local redo
@@ -1287,7 +1333,9 @@
         __flow_loop_ident__ {"continue"} := *
         .refto __flow_loop_ident__ {"continue"}
 
-        _FLOW_PARSE_AND_GEN_BIT redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_AND_GEN_BIT redo,{f2_params}
+        .undef f2_params
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
@@ -1297,7 +1345,7 @@
   _FLOW_END_STATEMENT
 .endmacro
 
-.macro UNTIL expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro UNTIL arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "UNTIL"
 
         .local redo
@@ -1306,7 +1354,9 @@
         __flow_loop_ident__ {"continue"} := *
         .refto __flow_loop_ident__ {"continue"}
 
-        _FLOW_PARSE_AND_GEN_BIF redo,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_AND_GEN_BIF redo,{f2_params}
+        .undef f2_params
 
         __flow_loop_ident__ {"break"} := *
         .refto __flow_loop_ident__ {"break"}
@@ -1359,12 +1409,14 @@
 ;;; Macros:
 ;;;     RTS_IF
 
-.macro RTS_IF expr,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro RTS_IF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "RTS_IF"
 
         .local skip
 
-        _FLOW_PARSE_AND_GEN_BIF skip,{expr},arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_SQUASH_PARAMS arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        F2_PARSE_AND_GEN_BIF skip,{f2_params}
+        .undef f2_params
 
         rts
         skip := *

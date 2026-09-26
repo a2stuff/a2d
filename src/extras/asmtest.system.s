@@ -50,6 +50,10 @@
 ;;; Structure
 ;;; --------------------------------------------------
 
+;;; IF ... GOTO
+@goto_target:
+    IF NS GOTO @goto_target
+
 ;;; IF
     IF NS
         nop
@@ -90,6 +94,11 @@
 ;;; --------------------------------------------------
 ;;; Flag Tests
 ;;; --------------------------------------------------
+
+
+;;; IF ... GOTO
+@goto_target:
+    IF NS GOTO @goto_target
 
 ;;; IF
     IF NC
@@ -196,6 +205,10 @@
 ;;; Register Comparisons
 ;;; --------------------------------------------------
 
+;;; IF ... GOTO
+@goto_target:
+    IF A >= #$12 GOTO @goto_target
+
 ;;; IF
     IF A >= #$12
         nop
@@ -270,6 +283,10 @@
 
 table := *
 
+;;; IF ... GOTO
+@goto_target:
+    IF A >= table,x GOTO @goto_target
+
 ;;; IF
     IF A >= table,x
         nop
@@ -319,6 +336,11 @@ table := *
 ;;; --------------------------------------------------
 ;;; IN / NOT_IN operators
 ;;; --------------------------------------------------
+
+;;; IF ... IN / NOT_IN... GOTO
+@goto_target:
+    IF A IN #1, #2, #3 GOTO @goto_target
+    IF A NOT_IN #1, #2, #3 GOTO @goto_target
 
 ;;; IF ... IN / NOT_IN
     IF A IN #1, #2, #3
@@ -492,6 +514,11 @@ table := *
 ;;; BETWEEN / NOT_BETWEEN operators
 ;;; --------------------------------------------------
 
+;;; IF ... BETWEEN / NOT_BETWEEN ... GOTO
+@goto_target:
+    IF A BETWEEN #'0', #'9' GOTO @goto_target
+    IF A NOT_BETWEEN #'0', #'9' GOTO @goto_target
+
 ;;; IF ... BETWEEN / NOT_BETWEEN
     IF A BETWEEN #'0', #'9'
         nop
@@ -660,6 +687,9 @@ var1 := *
 var2 := *
 
 ;;; u8
+@goto_target:
+    IF u8 var1 = var2 GOTO @goto_target
+
     IF u8 var1 = var2
         nop
     END_IF
@@ -722,6 +752,9 @@ var2 := *
     WHILE u8 --var1 > #0
 
 ;;; u16
+@goto_target:
+    IF u16 var1 = var2 GOTO @goto_target
+
     IF u16 var1 = var2
         nop
     END_IF
@@ -776,6 +809,9 @@ var2 := *
     WHILE u16 --var1 > #0
 
 ;;; s16
+@goto_target:
+    IF s16 var1 = var2 GOTO @goto_target
+
     IF s16 var1 = var2
         nop
     END_IF
@@ -830,6 +866,9 @@ var2 := *
     WHILE s16 --var1 > #0
 
 ;;; u24
+@goto_target:
+    IF u24 var1 = var2 GOTO @goto_target
+
     IF u24 var1 = var2
         nop
     END_IF
@@ -1339,4 +1378,6 @@ ft21:
         CALL    target, C=var       ; CALL: Expected constant expression after 'C='
 
         FALL_THROUGH_TO target      ; FALL_THROUGH_TO: Target not adjacent: 'target'
+
+        IF NS GOTO                  ; IF: Expected target after GOTO
 .endif

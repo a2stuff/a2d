@@ -490,11 +490,10 @@ finish: jmp     InputLoop
         jsr     CopyEventDataToMain
         jsr     GetWindowRect
         sub16   win_rect::x2, screentowindow_params::windowx, tmpw
-        ucmp16  #aux::kGrowBoxWidth, tmpw
-        bcc     HandleDrag::finish
+        IF u16 tmpw > #aux::kGrowBoxWidth GOTO HandleDrag::finish
+
         sub16   win_rect::y2, screentowindow_params::windowy, tmpw
-        ucmp16  #aux::kGrowBoxHeight, tmpw
-        bcc     HandleDrag::finish
+        IF u16 tmpw > #aux::kGrowBoxHeight GOTO HandleDrag::finish
 
         ;; Initiate the grow... re-using the drag logic
         copy8   #aux::kDAWindowId, growwindow_params::window_id
