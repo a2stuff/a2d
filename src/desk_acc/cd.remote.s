@@ -751,9 +751,8 @@ ExitInitDriveDisc:
     IF u8 DrivePlayingFlag <> #0
         ;; Drive is playing audio, watch for an AudioStatus return code of $03 = "Play operation complete"
         jsr     C24AudioStatus
-        ucmp8   SPBuffer, #$03
         ;; Audio playback operation is not complete
-      IF EQ
+      IF u8 SPBuffer = #3
         ;; Deal with reaching the end of a playback operation.  It's complicated.  :)
         jsr     PlayBackComplete
       END_IF
@@ -890,10 +889,8 @@ HandleKey:
         beq     ExitHandler
 
         ;; Increment the count of how many tracks have been played
-        inc     HexPlayedCount0Base
-        ucmp8   HexPlayedCount0Base, HexTrackCount0Base
-        ;; Haven't played all the tracks on the disc, so pick another one
-        bne     PlayARandomTrack
+        ;; Haven't played all the tracks on the disc? Pick another one
+        IF u8 ++HexPlayedCount0Base <> HexTrackCount0Base GOTO PlayARandomTrack
 
         ;; All tracks have been played randomly - clear the Play button STATE to inactive (with no UI change) ...
         lda     #$00
@@ -1102,19 +1099,16 @@ ExitReReadTOC:
 ;;; * Otherwise, sample until `MGTK::EventKind::button_up`
 
 .proc CheckGestureEnded
-        ucmp8   event_params::kind, #MGTK::EventKind::key_down
-        beq     ended
+    IF u8 event_params::kind <> #MGTK::EventKind::key_down
 
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
-        ucmp8   event_params::kind, #MGTK::EventKind::button_up
-        beq     ended
+      IF u8 event_params::kind <> #MGTK::EventKind::button_up
+        RETURN  A=#$FF          ; N=1
+      END_IF
+    END_IF
 
-        lda     #$FF            ; N=1
-        rts
-
-ended:  lda     #$00            ; N=0
-        rts
+        RETURN  A=#$00          ; N=0
 .endproc ; CheckGestureEnded
 
 ;;; ============================================================
@@ -2015,8 +2009,7 @@ SPBuffer        := DA_IO_BUFFER  ; 1K free to use in Main after loading
         pha
 
         ;; Only update/draw if changed
-        ucmp8   BCDRelTrack, last_track
-        beq     skip
+    IF u8 BCDRelTrack <> last_track
 
         txa
         pha
@@ -2031,16 +2024,17 @@ SPBuffer        := DA_IO_BUFFER  ; 1K free to use in Main after loading
         sta     str_track_num+2 ; "_0"
 
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-    IF ZERO
+      IF ZERO
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         jsr     ::DrawTrack
-    END_IF
+      END_IF
 
         pla
         tay
         pla
         tax
-skip:
+    END_IF
+
         pla
         rts
 .endproc ; DrawTrack
@@ -2049,11 +2043,7 @@ skip:
         pha
 
         ;; Only update/draw if changed
-        ucmp8   BCDRelMinutes, last_min
-        bne     :+
-        ucmp8   BCDRelSeconds, last_sec
-        beq     skip
-:
+    IF u8 BCDRelMinutes <> last_min OR u8 BCDRelSeconds <> last_sec
         txa
         pha
         tya
@@ -2075,16 +2065,17 @@ skip:
         sta     str_time+5      ; "__:_0"
 
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-    IF ZERO
+      IF ZERO
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         jsr     ::DrawTime
-    END_IF
+      END_IF
 
         pla
         tay
         pla
         tax
-skip:
+    END_IF
+
         pla
         rts
 .endproc ; DrawTime

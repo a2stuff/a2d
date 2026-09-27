@@ -271,8 +271,7 @@ view_by_table:
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        bne     Exit
+        IF u8 trackgoaway_params::clicked <> #0 GOTO Exit
         jmp     InputLoop
 .endproc ; HandleClose
 
@@ -283,8 +282,8 @@ view_by_table:
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        bit     dragwindow_params::moved
-    IF NS
+
+    IF bit dragwindow_params::moved : NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 

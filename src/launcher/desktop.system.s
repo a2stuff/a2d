@@ -959,6 +959,7 @@ noop:
 ;;; DeskTop.system itself is used as a sentinel, as it is the last
 ;;; file copied to the folder.
 
+;;; Output: C=0 if file is present (and big enough we trust it)
 .proc CheckDesktopOnDevice
         ;; `path_buf` = `dst_path`
         COPY_STRING dst_path, path_buf

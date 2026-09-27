@@ -446,47 +446,13 @@ done_keys:
 
         copy8   slot_table, startup_menu
 
-        lda     slot_x1
+    .repeat 7, slot
+        lda     .ident(.sprintf("slot_x%d", slot+1))
         ora     #$30            ; number to ASCII digit
-        sta     str_slot_x1 + kStrSlotXOffset
-        sta     mi_x1 + kMenuItemShortcutOffset
-        sta     mi_x1 + kMenuItemShortcutOffset + 1
-
-        lda     slot_x2
-        ora     #$30            ; number to ASCII digit
-        sta     str_slot_x2 + kStrSlotXOffset
-        sta     mi_x2 + kMenuItemShortcutOffset
-        sta     mi_x2 + kMenuItemShortcutOffset + 1
-
-        lda     slot_x3
-        ora     #$30            ; number to ASCII digit
-        sta     str_slot_x3 + kStrSlotXOffset
-        sta     mi_x3 + kMenuItemShortcutOffset
-        sta     mi_x3 + kMenuItemShortcutOffset + 1
-
-        lda     slot_x4
-        ora     #$30            ; number to ASCII digit
-        sta     str_slot_x4 + kStrSlotXOffset
-        sta     mi_x4 + kMenuItemShortcutOffset
-        sta     mi_x4 + kMenuItemShortcutOffset + 1
-
-        lda     slot_x5
-        ora     #$30            ; number to ASCII digit
-        sta     str_slot_x5 + kStrSlotXOffset
-        sta     mi_x5 + kMenuItemShortcutOffset
-        sta     mi_x5 + kMenuItemShortcutOffset + 1
-
-        lda     slot_x6
-        ora     #$30            ; number to ASCII digit
-        sta     str_slot_x6 + kStrSlotXOffset
-        sta     mi_x6 + kMenuItemShortcutOffset
-        sta     mi_x6 + kMenuItemShortcutOffset + 1
-
-        lda     slot_x7
-        ora     #$30            ; number to ASCII digit
-        sta     mi_x7 + kMenuItemShortcutOffset
-        sta     mi_x7 + kMenuItemShortcutOffset + 1
-        sta     str_slot_x7 + kStrSlotXOffset
+        sta     .ident(.sprintf("str_slot_x%d", slot+1)) + kStrSlotXOffset
+        sta     .ident(.sprintf("mi_x%d", slot+1)) + kMenuItemShortcutOffset
+        sta     .ident(.sprintf("mi_x%d", slot+1)) + kMenuItemShortcutOffset + 1
+    .endrepeat
 
         ;; Copy pattern from settings
         tmp_pattern := $00
@@ -665,12 +631,11 @@ menu_addr_table:
 ;;; ============================================================
 
 .proc HandleKey
-        lda     event_params::modifiers
-        bne     has_modifiers
-
+    IF u8 event_params::modifiers = #0
         IF u8 event_params::key = #CHAR_ESCAPE GOTO menukey
 
 other:  jmp     HandleNonmenuKey
+    END_IF
 
 has_modifiers:
         lda     event_params::key
@@ -806,7 +771,7 @@ done:   rts
         bne     done            ; `kAlertResultCancel` = 1
         REDO_IF ZERO            ; `kAlertResultTryAgain` = 0
         END_IF
-        jmp     RunDesktop
+        TAIL_CALL RunDesktop
        DONE
 
       END_IF
@@ -819,7 +784,7 @@ done:   rts
         jsr     DetectDoubleClick
     IF NC
         BTK_CALL BTK::Flash, ok_button
-        jmp     TryInvokeSelectedIndex
+        TAIL_CALL TryInvokeSelectedIndex
     END_IF
 ret:    rts
 .endproc ; HandleButtonDown

@@ -1011,7 +1011,7 @@
 .endmacro
 .macro F2_PARSE_STATEMENT2
         .if .tcount({f2_token_list}) = 0
-          F2_ERR_EXPECTED "end-of-statement (':')"
+          F2_ERR_EXPECTED "end-of-statement (':'); did you forget a type prefix ('u8', etc)?"
         .endif
 
         .if .xmatch(.left(1, {f2_token_list}), :)

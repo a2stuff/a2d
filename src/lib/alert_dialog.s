@@ -432,8 +432,7 @@ do_try_again:
 check_only_ok:
         IF A = #CHAR_ESCAPE GOTO do_ok   ; also allow Escape as default
 check_ok:
-        cmp     #CHAR_RETURN
-        jne     event_loop
+        IF A <> #CHAR_RETURN GOTO event_loop
 
 do_ok:  BTK_CALL BTK::Flash, ok_button
 finish_ok:
