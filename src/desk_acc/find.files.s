@@ -207,14 +207,9 @@ num_entries := listbox_rec::num_items
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        cmp     #kEventKindMouseMoved
-        jeq     HandleMouseMove
-
-        cmp     #MGTK::EventKind::button_down
-        jeq     HandleDown
-
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #kEventKindMouseMoved JUMP HandleMouseMove
+        IF A = #MGTK::EventKind::button_down JUMP HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         bne     InputLoop       ; always
 .endproc ; InputLoop

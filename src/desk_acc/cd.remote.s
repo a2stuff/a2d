@@ -791,8 +791,7 @@ HandleKey:
 
         ldx     event_params::modifiers
     IF NOT_ZERO
-        cmp     #kShortcutCloseWindow
-        jeq     DoQuitAction
+        IF A = #kShortcutCloseWindow JUMP DoQuitAction
     END_IF
 
         ;; $51 = Q (Quit)

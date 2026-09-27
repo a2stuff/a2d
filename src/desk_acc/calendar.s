@@ -265,16 +265,13 @@ first_dow:
         lda     event_params::key
         IF A = #CHAR_LEFT GOTO DecDate
         IF A = #CHAR_UP GOTO DecDate
-        cmp     #CHAR_RIGHT
-        jeq     IncDate
-        cmp     #CHAR_DOWN
-        jeq     IncDate
+        IF A = #CHAR_RIGHT JUMP IncDate
+        IF A = #CHAR_DOWN JUMP IncDate
 
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
         bne     InputLoop       ; always
     END_IF
 
@@ -289,12 +286,9 @@ first_dow:
         IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::close_box
-        jeq     HandleClose
-        cmp     #MGTK::Area::dragbar
-        jeq     HandleDrag
-        cmp     #MGTK::Area::content
-        jeq     HandleClick
+        IF A = #MGTK::Area::close_box JUMP HandleClose
+        IF A = #MGTK::Area::dragbar JUMP HandleDrag
+        IF A = #MGTK::Area::content JUMP HandleClick
         jmp     InputLoop
 .endproc ; HandleDown
 

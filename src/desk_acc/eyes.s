@@ -249,10 +249,8 @@ pupil_rect:
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
-        cmp     #MGTK::Area::dragbar
-        jeq     HandleDrag
-        cmp     #MGTK::Area::content
-        jeq     HandleGrow
+        IF A = #MGTK::Area::dragbar JUMP HandleDrag
+        IF A = #MGTK::Area::content JUMP HandleGrow
         jmp     InputLoop
 .endproc ; HandleDown
 

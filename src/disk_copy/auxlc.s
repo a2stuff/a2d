@@ -829,11 +829,9 @@ loop:   jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
 
-        cmp     #MGTK::EventKind::button_down
-        jeq     HandleClick
+        IF A = #MGTK::EventKind::button_down JUMP HandleClick
+        IF A <> #MGTK::EventKind::key_down GOTO loop
 
-        cmp     #MGTK::EventKind::key_down
-        bne     loop
         jmp     HandleKey
 
 ;;; ============================================================

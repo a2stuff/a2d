@@ -302,9 +302,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         jsr     IdlePositionIndicator
         jsr     GetNextEvent
 
-        cmp     #kEventKindMouseMoved
-        jeq     HandleMouseMove
-
+        IF A = #kEventKindMouseMoved JUMP HandleMouseMove
         IF A = #MGTK::EventKind::button_down GOTO HandleDown
         IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
@@ -357,8 +355,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
         IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        cmp     #MGTK::Area::content
-        jeq     HandleClick
+        IF A = #MGTK::Area::content JUMP HandleClick
         jmp     InputLoop
 .endproc ; HandleDown
 

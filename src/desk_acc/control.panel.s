@@ -503,14 +503,9 @@ caret_blink_caret_bitmap:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        cmp     #kEventKindMouseMoved
-        beq     HandleMove
-
-        cmp     #MGTK::EventKind::button_down
-        jeq     HandleDown
-
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #kEventKindMouseMoved GOTO HandleMove
+        IF A = #MGTK::EventKind::button_down JUMP HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         bne     InputLoop       ; always
 .endproc ; InputLoop
@@ -549,8 +544,7 @@ caret_blink_caret_bitmap:
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        beq     Exit
+        IF A = #kShortcutCloseWindow GOTO Exit
 
       IF A BETWEEN #'1', #'9'
         sec
@@ -565,14 +559,9 @@ caret_blink_caret_bitmap:
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        beq     Exit
-
-        cmp     #CHAR_LEFT
-        jeq     HandleLArrClick
-
-        cmp     #CHAR_RIGHT
-        jeq     HandleRArrClick
+        IF A = #CHAR_ESCAPE GOTO Exit
+        IF A = #CHAR_LEFT JUMP HandleLArrClick
+        IF A = #CHAR_RIGHT JUMP HandleRArrClick
 
     IF A = #CHAR_CTRL_D
         BTK_CALL BTK::Flash, pattern_button

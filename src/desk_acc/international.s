@@ -237,30 +237,21 @@ init_window:
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        jeq     OnKeyOK
+        IF A = #kShortcutCloseWindow JUMP OnKeyOK
 
-        cmp     #res_char_shortcut_apple_1
-        jeq     OnClickMDY
-        cmp     #res_char_shortcut_apple_2
-        jeq     OnClickDMY
-        cmp     #res_char_shortcut_apple_3
-        jeq     OnClick12Hour
-        cmp     #res_char_shortcut_apple_4
-        jeq     OnClick24Hour
-        cmp     #res_char_shortcut_apple_5
-        jeq     OnClickSunday
-        cmp     #res_char_shortcut_apple_6
-        jeq     OnClickMonday
+        IF A = #res_char_shortcut_apple_1 JUMP OnClickMDY
+        IF A = #res_char_shortcut_apple_2 JUMP OnClickDMY
+        IF A = #res_char_shortcut_apple_3 JUMP OnClick12Hour
+        IF A = #res_char_shortcut_apple_4 JUMP OnClick24Hour
+        IF A = #res_char_shortcut_apple_5 JUMP OnClickSunday
+        IF A = #res_char_shortcut_apple_6 JUMP OnClickMonday
         rts
     END_IF
 
-        cmp     #CHAR_RETURN
-        jeq     OnKeyOK
-        cmp     #CHAR_ESCAPE
-        jeq     OnKeyOK
+        IF A = #CHAR_RETURN JUMP OnKeyOK
+        IF A = #CHAR_ESCAPE JUMP OnKeyOK
 
-        IF A =  #CHAR_LEFT GOTO OnKeyPrev
+        IF A = #CHAR_LEFT GOTO OnKeyPrev
         IF A = #CHAR_UP GOTO OnKeyPrev
         IF A = #CHAR_RIGHT GOTO OnKeyNext
         IF A = #CHAR_TAB GOTO OnKeyNext

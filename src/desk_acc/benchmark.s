@@ -269,14 +269,10 @@ probe_count:
 
         ldx     event_params::modifiers
     IF NOT_ZERO
-        cmp     #res_char_shortcut_apple_5
-        jeq     OnClick50Hz
+        IF A = #res_char_shortcut_apple_5 JUMP OnClick50Hz
+        IF A = #res_char_shortcut_apple_6 GOTO OnClick60Hz
+        IF A = #kShortcutCloseWindow GOTO OnKeyOK
 
-        cmp     #res_char_shortcut_apple_6
-        beq     OnClick60Hz
-
-        cmp     #kShortcutCloseWindow
-        beq     OnKeyOK
         jmp     InputLoop
     END_IF
 

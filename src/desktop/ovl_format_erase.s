@@ -39,8 +39,8 @@
 
 ;;; A = operation (Format/Erase); X = unit num (or 0)
 Exec:
-        cmp     #FormatEraseAction::format
-        jeq     FormatDisk
+        IF A = #FormatEraseAction::format \
+          JUMP FormatDisk
         jmp     EraseDisk
 
 ;;; ============================================================

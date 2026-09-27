@@ -402,8 +402,7 @@ init_window:
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        jeq     OnKeyOK
+        IF A = #kShortcutCloseWindow JUMP OnKeyOK
 
       IF A = #'1'
         CALL    HandleOptionClick, A=#0
@@ -418,10 +417,8 @@ init_window:
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_RETURN
-        jeq     OnKeyOK
-        cmp     #CHAR_ESCAPE
-        jeq     OnKeyOK
+        IF A = #CHAR_RETURN JUMP OnKeyOK
+        IF A = #CHAR_ESCAPE JUMP OnKeyOK
 
         .assert kFlagsReadOnly = N_FLAG_MASK, error, "bad constant"
         bit     flags
@@ -607,8 +604,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         jmp     loop
     END_IF
 
-        ucmp8   hit_rect_index, #kUpRectIndex
-        jeq     InvertUp
+        IF u8 hit_rect_index = #kUpRectIndex JUMP InvertUp
         jmp     InvertDown
 .endproc ; OnUpOrDown
 

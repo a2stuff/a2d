@@ -905,9 +905,7 @@ not_drag:
     END_IF
 
         ;; Drag ended by a keystroke?
-      IF u8 peekevent_params::kind = #MGTK::EventKind::key_down ; cancel?
-        jmp     exit_canceled
-      END_IF
+        IF u8 peekevent_params::kind = #MGTK::EventKind::key_down JUMP exit_canceled ; cancel?
 
         ;; Drag ended over an icon?
         lda     highlight_icon_id
@@ -936,8 +934,7 @@ same_window:
         ASSERT_EQUALS MGTK::Area::desktop, 0
         beq     move_ok
 
-        cmp     #MGTK::Area::content
-        jne     exit_canceled   ; don't move
+        IF A <> #MGTK::Area::content JUMP exit_canceled ; don't move
 
         jsr     _CheckRealContentArea
         bcs     exit_canceled   ; don't move

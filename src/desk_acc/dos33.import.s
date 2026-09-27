@@ -214,11 +214,8 @@ port:           .addr   grafport_win
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        cmp     #MGTK::EventKind::button_down
-        jeq     HandleDown
-
-        cmp     #MGTK::EventKind::key_down
-        beq     HandleKey
+        IF A = #MGTK::EventKind::button_down JUMP HandleDown
+        IF A = #MGTK::EventKind::key_down GOTO HandleKey
 
         bne     InputLoop       ; always
 .endproc ; InputLoop
@@ -938,10 +935,8 @@ index:  .byte   0
         ;; Read VTOC
         CALL    do_read, A=#dos33::VTOCTrack, X=#dos33::VTOCSector
         jcs     exit_error
-        ucmp8   RWTS_SECTOR_BUF + dos33::VTOC::NumTracks, #35
-        jne     exit_error
-        ucmp8   RWTS_SECTOR_BUF + dos33::VTOC::NumSectors, #16
-        jne     exit_error
+        IF u8 RWTS_SECTOR_BUF + dos33::VTOC::NumTracks <> #35 JUMP exit_error
+        IF u8 RWTS_SECTOR_BUF + dos33::VTOC::NumSectors <> #16 JUMP exit_error
 
         copy8   RWTS_SECTOR_BUF + dos33::VTOC::VolumeNumber, control_block+ControlBlock::volume_number
 

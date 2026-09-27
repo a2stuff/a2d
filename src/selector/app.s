@@ -440,8 +440,7 @@ done_keys:
     IF u8 quick_boot_slot <> #0
         ldy     slot_table
       DO
-        cmp     slot_table,y
-        jeq     StartupSlot
+        IF A = slot_table,y JUMP StartupSlot
       WHILE dey : NOT_ZERO
     END_IF
 

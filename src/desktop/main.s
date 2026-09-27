@@ -285,22 +285,14 @@ tick_counter:
         jsr     ClearTypeDown
 
         lda     event_params::key
-        cmp     #CHAR_LEFT
-        jeq     KeyboardHighlightLeft
-        cmp     #CHAR_UP
-        jeq     KeyboardHighlightUp
-        cmp     #CHAR_RIGHT
-        jeq     KeyboardHighlightRight
-        cmp     #CHAR_DOWN
-        jeq     KeyboardHighlightDown
-        cmp     #CHAR_TAB
-        jeq     KeyboardHighlightAlpha
-        cmp     #'`'
-        jeq     KeyboardHighlightAlphaNext ; like Tab
-        cmp     #'~'
-        jeq     KeyboardHighlightAlphaPrev ; like Shift+Tab
-        cmp     #' '
-        jeq     KeyboardHighlightFirst
+        IF A = #CHAR_LEFT  JUMP KeyboardHighlightLeft
+        IF A = #CHAR_UP    JUMP KeyboardHighlightUp
+        IF A = #CHAR_RIGHT JUMP KeyboardHighlightRight
+        IF A = #CHAR_DOWN  JUMP KeyboardHighlightDown
+        IF A = #CHAR_TAB   JUMP KeyboardHighlightAlpha
+        IF A = #'`'        JUMP KeyboardHighlightAlphaNext ; like Tab
+        IF A = #'~'        JUMP KeyboardHighlightAlphaPrev ; like Shift+Tab
+        IF A = #' '        JUMP KeyboardHighlightFirst
 
     ELSE
         ;; --------------------------------------------------
@@ -311,36 +303,25 @@ tick_counter:
       IF u8 event_params::modifiers = #3 ; both Open-Apple + Solid-Apple ?
         ;; Double-modifier shortcuts
         CALL    ToUpperCase, A=event_params::key
-        cmp     #res_char_menu_item_open_shortcut
-        jeq     CmdOpenThenCloseCurrent
-        cmp     #CHAR_DOWN
-        jeq     CmdOpenThenCloseCurrent
-        cmp     #CHAR_UP
-        jeq     CmdOpenParentThenCloseCurrent
-        cmp     #kShortcutCloseWindow
-        jeq     CmdCloseAll
-        cmp     #CHAR_ESCAPE
-        jeq     CmdFocusDesktop
-        cmp     #CHAR_CTRL_F
-        jeq     CmdFlipScreen
+        IF A = #res_char_menu_item_open_shortcut JUMP CmdOpenThenCloseCurrent
+        IF A = #CHAR_DOWN            JUMP CmdOpenThenCloseCurrent
+        IF A = #CHAR_UP              JUMP CmdOpenParentThenCloseCurrent
+        IF A = #kShortcutCloseWindow JUMP CmdCloseAll
+        IF A = #CHAR_ESCAPE          JUMP CmdFocusDesktop
+        IF A = #CHAR_CTRL_F          JUMP CmdFlipScreen
         rts
       END_IF
 
         ;; Non-menu keys
         CALL    ToUpperCase, A=event_params::key
-        cmp     #CHAR_DOWN      ; Apple-Down (Open)
-        jeq     CmdOpenFromKeyboard
-        cmp     #CHAR_UP        ; Apple-Up (Open Parent)
-        jeq     CmdOpenParent
-        cmp     #CHAR_ESCAPE    ; Apple-Esc (Clear Selection+Focus Window)
-        jeq     CmdFocusWindow
+        IF A = #CHAR_DOWN   JUMP CmdOpenFromKeyboard ; Apple-Down (Open)
+        IF A = #CHAR_UP     JUMP CmdOpenParent ; Apple-Up (Open Parent)
+        IF A = #CHAR_ESCAPE JUMP CmdFocusWindow ; Apple-Esc (Clear Selection+Focus Window)
 
         ldx     active_window_id
       IF NOT_ZERO
-        cmp     #kShortcutGrowWindow ; Apple-G (Resize)
-        jeq     CmdResize
-        cmp     #kShortcutMoveWindow ; Apple-M (Move)
-        jeq     CmdMove
+        IF A = #kShortcutGrowWindow JUMP CmdResize ; Apple-G (Resize)
+        IF A = #kShortcutMoveWindow JUMP CmdMove   ; Apple-M (Move)
 
        IF A IN #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
         jmp     CmdCycleWindows
@@ -572,12 +553,9 @@ window_click:
         CALL    ActivateWindow, A=findwindow_params::window_id ; no-op if already active
         pla                     ; A = MGTK::Area::*
 
-        cmp     #MGTK::Area::dragbar
-        jeq     DoWindowDrag
-        cmp     #MGTK::Area::grow_box
-        jeq     DoWindowResize
-        cmp     #MGTK::Area::close_box
-        jeq     HandleCloseClick
+        IF A = #MGTK::Area::dragbar JUMP DoWindowDrag
+        IF A = #MGTK::Area::grow_box JUMP DoWindowResize
+        IF A = #MGTK::Area::close_box JUMP HandleCloseClick
         rts
     END_IF
 
@@ -687,8 +665,8 @@ h_proc_hi:        .hibytes ScrollNoOp, ScrollLeft, ScrollRight, ScrollPageLeft, 
         lda     trackthumb_params::thumbmoved
         RTS_IF ZERO
 
-        ucmp8   trackthumb_params::which_ctl, #MGTK::Ctl::vertical_scroll_bar
-        jeq     ScrollTrackVThumb
+        IF u8 trackthumb_params::which_ctl = #MGTK::Ctl::vertical_scroll_bar \
+          JUMP ScrollTrackVThumb
         jmp     ScrollTrackHThumb
 .endproc ; _TrackThumb
 
@@ -844,7 +822,7 @@ check_drag:
         ;; Trash?
     IF A = trash_icon_num
         lda     selected_window_id
-        jeq     CmdEject
+        IF ZERO JUMP CmdEject
         jmp     CmdDeleteSelection
     END_IF
 
@@ -864,7 +842,7 @@ check_drag:
         ldy     #IconEntry::flags
         lda     (icon_ptr),y
         and     #kIconEntryFlagsDirectory
-        jeq     _DropOnApplication
+        IF ZERO JUMP _DropOnApplication
     END_IF
 
         ;; Double modifier?
@@ -907,7 +885,7 @@ prev_selected_icon:
         ITK_CALL IconTK::GetRenameRect, icon_param
         MGTK_CALL MGTK::MoveTo, event_params::coords
         MGTK_CALL MGTK::InRect, tmp_rect
-        jne     CmdRename
+        IF NOT ZERO JUMP CmdRename
     END_IF
         rts
 .endproc ; _CheckRenameClick
@@ -1045,7 +1023,7 @@ END_PARAM_BLOCK
         ;; No, just a click; optionally clear selection
         lda     MainLoop::modifiers
         and     #kExtendSelectionModifierMask
-        jeq     ClearSelection  ; don't clear if mis-clicking
+        IF ZERO JUMP ClearSelection  ; don't clear if mis-clicking
         rts
     END_IF
 
@@ -3789,7 +3767,7 @@ found:  lda     DEVLST,x
         lda     selected_window_id
       IF NOT_ZERO               ; windowed (not desktop); refresh needed
         cmp     active_window_id
-        jeq     ClearAndDrawActiveWindowEntries ; active - just repaint
+        IF ZERO JUMP ClearAndDrawActiveWindowEntries ; active - just repaint
         jmp     ActivateWindow  ; inactive - activate, it will repaint
       END_IF
     END_IF
@@ -4104,7 +4082,7 @@ END_PARAM_BLOCK
         jsr     CacheFocusedWindowIconList
 
         ldx     selected_icon_count
-        jeq     fallback
+        IF ZERO JUMP fallback
     IF X = cached_window_icon_count
         ;; All icons in window are selected; use fallback if not
         ;; extending selection w/ Shift
@@ -5517,8 +5495,7 @@ err:    TAIL_CALL ShowAlertOption, X=#AlertButtonOptions::OK
 
         ;; File or volume?
         CALL    FindLastPathSegment, AX=#src_path_buf ; point Y at last '/'
-        cpy     src_path_buf
-        jne     ShowFileIconForPath
+        IF Y <> src_path_buf JUMP ShowFileIconForPath
 
         ;; Volume
         CALL    FindIconForPath, AX=#src_path_buf
@@ -7282,7 +7259,7 @@ enough_room:
 do_entry:
         inc     index_in_dir
         ucmp8   index_in_dir, dir_header::file_count
-        jeq     finish
+        IF ZERO JUMP finish
 
 next:   inc     index_in_block
     IF u8 index_in_block <> dir_header::entries_per_block
@@ -10676,14 +10653,10 @@ retry:
       IF bit operations::all_flag : NC
         CALL    ShowAlertParams, Y=#AlertButtonOptions::YesNoAllCancel, AX=#aux::str_exists_prompt
 
-        cmp     #kAlertResultNo
-        beq     failure
+        IF A = #kAlertResultNo GOTO failure
+        IF A = #kAlertResultCancel JUMP CloseFilesCancelDialogWithFailedResult
 
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialogWithFailedResult
-
-        cmp     #kAlertResultAll
-       IF EQ
+       IF A = #kAlertResultAll
         SET_BIT7_FLAG operations::all_flag
        END_IF
       END_IF
@@ -11229,8 +11202,7 @@ operation_traversal_callbacks_for_delete:
     END_IF
 
         CALL    ShowAlertParams, Y=#AlertButtonOptions::OKCancel, AX=#text_input_buf
-        cmp     #kAlertResultOK
-        jne     CloseFilesCancelDialogWithCanceledResult
+        IF A <> #kAlertResultOK JUMP CloseFilesCancelDialogWithCanceledResult
         rts
 .endproc ; _DeleteDialogConfirmCallback
 
@@ -12358,8 +12330,7 @@ retry:
     WHILE dey : POS
 
         ;; If not volume, find and update associated FileEntry
-        lda     selected_window_id
-        jeq     end_filerecord_and_icon_update
+        IF u8 selected_window_id = #0 JUMP end_filerecord_and_icon_update
 
         ;; Dig up the index of the icon within the window.
         icon_ptr := $06
@@ -13502,18 +13473,14 @@ found_slash:
         jsr     SystemTask
         jsr     GetNextEvent
 
-        cmp     #MGTK::EventKind::button_down
-        beq     _ClickHandler
-
-        cmp     #MGTK::EventKind::key_down
-        jeq     _KeyHandler
+        IF A = #MGTK::EventKind::button_down GOTO _ClickHandler
+        IF A = #MGTK::EventKind::key_down    JUMP _KeyHandler
 
         ;; Does the dialog have an input field?
         bit     has_input_field_flag
         bpl     PromptInputLoop
 
-        cmp     #kEventKindMouseMoved
-        bne     PromptInputLoop
+        IF A <> #kEventKindMouseMoved GOTO PromptInputLoop
 
         ;; Check if mouse is over input field, change cursor appropriately.
         copy8   winfo_prompt_dialog, screentowindow_params::window_id

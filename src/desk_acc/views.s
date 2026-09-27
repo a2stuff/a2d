@@ -375,8 +375,7 @@ view_by_table:
 ;;; ============================================================
 
 .proc ToggleButton
-        cmp     current_view_index
-        jeq     InputLoop
+        IF A = current_view_index JUMP InputLoop
 
         pha                     ; A = new index
         lda     current_view_index

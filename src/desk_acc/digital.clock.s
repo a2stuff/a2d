@@ -173,8 +173,7 @@ last:   .tag    DateTime
 
 ;;; A = char
 .proc DrawVectorChar
-        cmp     #' '
-        jeq     advance
+        IF A = #' ' JUMP advance
 
         ptr := $06
 

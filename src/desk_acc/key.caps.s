@@ -625,8 +625,7 @@ last_char:
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        jne     InputLoop
+        IF u8 findwindow_params::window_id <> #kDAWindowId JUMP InputLoop
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose

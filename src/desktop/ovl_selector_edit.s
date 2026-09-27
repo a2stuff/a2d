@@ -439,20 +439,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 ;;; Input: A=`event_params::key`
 .proc HandleKey
-        cmp     #res_char_shortcut_apple_1
-        jeq     ClickPrimaryRunListCtrl
-
-        cmp     #res_char_shortcut_apple_2
-        jeq     ClickSecondaryRunListCtrl
-
-        cmp     #res_char_shortcut_apple_3
-        jeq     ClickAtFirstBootCtrl
-
-        cmp     #res_char_shortcut_apple_4
-        jeq     ClickAtFirstUseCtrl
-
-        cmp     #res_char_shortcut_apple_5
-        jeq     ClickNeverCtrl
+        IF A = #res_char_shortcut_apple_1 JUMP ClickPrimaryRunListCtrl
+        IF A = #res_char_shortcut_apple_2 JUMP ClickSecondaryRunListCtrl
+        IF A = #res_char_shortcut_apple_3 JUMP ClickAtFirstBootCtrl
+        IF A = #res_char_shortcut_apple_4 JUMP ClickAtFirstUseCtrl
+        IF A = #res_char_shortcut_apple_5 JUMP ClickNeverCtrl
 
         rts
 .endproc ; HandleKey

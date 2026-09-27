@@ -210,9 +210,7 @@ auxtype:        .word   SELF_MODIFIED
 
         IF A = #kEventKindMouseMoved GOTO HandleMouseMoved
         IF A = #MGTK::EventKind::button_down GOTO HandleButtonDown
-
-        cmp     #MGTK::EventKind::key_down
-        jeq     HandleKeyDown
+        IF A = #MGTK::EventKind::key_down JUMP HandleKeyDown
 
         jmp     InputLoop
 .endproc ; InputLoop
@@ -291,8 +289,7 @@ auxtype:        .word   SELF_MODIFIED
         ldx     event_params::modifiers
     IF NOT_ZERO
         jsr     ToUpperCase
-        cmp     #kShortcutCloseWindow
-        jeq     ExitCancel
+        IF A = #kShortcutCloseWindow JUMP ExitCancel
 
         jmp     InputLoop
     END_IF

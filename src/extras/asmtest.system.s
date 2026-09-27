@@ -1325,6 +1325,15 @@ long_target:
         IF ZC GOTO long_target  ; BNE $D0
         IF ZS GOTO long_target  ; BEQ $F0
 
+        IF NC JUMP long_forward_target  ; BMI $30
+        IF NS JUMP long_forward_target  ; BPL $10
+        IF CC JUMP long_forward_target  ; BCS $B0
+        IF CS JUMP long_forward_target  ; BCC $90
+        IF VC JUMP long_forward_target  ; BVS $70
+        IF VS JUMP long_forward_target  ; BVC $50
+        IF ZC JUMP long_forward_target  ; BEQ $F0
+        IF ZS JUMP long_forward_target  ; BNE $D0
+
         .res    129
 
         IF NC GOTO long_target  ; BMI $30
@@ -1335,6 +1344,8 @@ long_target:
         IF VS GOTO long_target  ; BVC $50
         IF ZC GOTO long_target  ; BEQ $F0
         IF ZS GOTO long_target  ; BNE $D0
+
+long_forward_target:
 
 ;;; ============================================================
 ;;; Errors
@@ -1382,4 +1393,5 @@ long_target:
         FALL_THROUGH_TO target      ; FALL_THROUGH_TO: Target not adjacent: 'target'
 
         IF NS GOTO                  ; IF: Expected target after GOTO
+        IF NS JUMP                  ; IF: Expected target after JUMP
 .endif

@@ -168,10 +168,8 @@ event_params:   .tag MGTK::Event
         jsr     CopyEventAuxToMain
 
         lda     event_params + MGTK::Event::kind
-        cmp     #MGTK::EventKind::button_down ; was clicked?
-        jeq     Exit
-        cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     on_key
+        IF A = #MGTK::EventKind::button_down JUMP Exit ; was clicked?
+        IF A = #MGTK::EventKind::key_down GOTO on_key ; any key?
 
         bit     slideshow_flag
         bpl     InputLoop
@@ -198,23 +196,16 @@ on_key:
 
         ldx     event_params + MGTK::Event::modifiers
     IF NOT_ZERO
-        cmp     #kShortcutCloseWindow
-        beq     Exit
-        cmp     #CHAR_LEFT
-        jeq     FirstFile
-        cmp     #CHAR_RIGHT
-        jeq     LastFile
+        IF A = #kShortcutCloseWindow GOTO Exit
+        IF A = #CHAR_LEFT JUMP FirstFile
+        IF A = #CHAR_RIGHT JUMP LastFile
         bne     InputLoop       ; always
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        beq     Exit
-        cmp     #CHAR_RETURN
-        beq     Exit
-        cmp     #CHAR_LEFT
-        jeq     PreviousFile
-        cmp     #CHAR_RIGHT
-        jeq     NextFile
+        IF A = #CHAR_ESCAPE GOTO Exit
+        IF A = #CHAR_RETURN GOTO Exit
+        IF A = #CHAR_LEFT JUMP PreviousFile
+        IF A = #CHAR_RIGHT JUMP NextFile
 
     IF A = #'S'
         tya               ; Y = previous `slideshow_flag` state
@@ -305,11 +296,8 @@ exit_hook := MaybeCallExitHook::hook
 
         RTS_IF A = #FT_DIRECTORY ; C=1 signals failure
 
-        cmp     #FT_PNT
-        jeq     ShowPackedSHR
-
-        cmp     #FT_PIC
-        jeq     ShowUnpackedSHR
+        IF A = #FT_PNT JUMP ShowPackedSHR
+        IF A = #FT_PIC JUMP ShowUnpackedSHR
 
     IF A = #FT_GRAPHICS
         ;; FOT files
@@ -320,14 +308,9 @@ exit_hook := MaybeCallExitHook::hook
       END_IF
 
         ;; auxtype $4000 / $4001 are packed hires/double-hires
-        cpy     #$40
-        jne     ShowFOTFile
-
-        cpx     #$00
-        jeq     ShowPackedHRFile
-
-        cpx     #$01
-        bne     ShowFOTFile
+        IF Y <> #$40 JUMP ShowFOTFile
+        IF X = #$00 JUMP ShowPackedHRFile
+        IF X <> #$01 GOTO ShowFOTFile
         jmp     ShowPackedDHRFile
     END_IF
 

@@ -748,9 +748,7 @@ not_found:
         ;; Does the directory exist?
         MLI_CALL GET_FILE_INFO, get_file_info_params
         jcs     end
-
-        ucmp8   get_file_info_params::file_type, #FT_DIRECTORY
-        jne     end
+        IF u8 get_file_info_params::file_type <> #FT_DIRECTORY JUMP end
 
         MLI_CALL OPEN, open_params
         lda     open_params::ref_num
