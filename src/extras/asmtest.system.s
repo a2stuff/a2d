@@ -1314,25 +1314,27 @@ ft21:
 ;;; Long (backwards) branches
 ;;; --------------------------------------------------
 
-    DO
-.repeat 120
-        nop
-.endrepeat
-        ;; Should be `BMI`
-        REDO_IF NS
+long_target:
 
-        ;; Should be `BCS`
-    WHILE CS
+        IF NC GOTO long_target  ; BPL $10
+        IF NS GOTO long_target  ; BMI $30
+        IF CC GOTO long_target  ; BCC $90
+        IF CS GOTO long_target  ; BCS $B0
+        IF VC GOTO long_target  ; BVC $50
+        IF VS GOTO long_target  ; BVS $70
+        IF ZC GOTO long_target  ; BNE $D0
+        IF ZS GOTO long_target  ; BEQ $F0
 
-    DO
-.repeat 130
-        nop
-.endrepeat
-        ;; Should be `BPL` / `JMP`
-        REDO_IF NS
+        .res    129
 
-        ;; Should be `BCC` / `JMP`
-    WHILE CS
+        IF NC GOTO long_target  ; BMI $30
+        IF NS GOTO long_target  ; BPL $10
+        IF CC GOTO long_target  ; BCS $B0
+        IF CS GOTO long_target  ; BCC $90
+        IF VC GOTO long_target  ; BVS $70
+        IF VS GOTO long_target  ; BVC $50
+        IF ZC GOTO long_target  ; BEQ $F0
+        IF ZS GOTO long_target  ; BNE $D0
 
 ;;; ============================================================
 ;;; Errors

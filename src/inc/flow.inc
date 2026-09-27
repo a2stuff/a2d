@@ -218,7 +218,7 @@
            BCC *+5
          .elseif .xmatch(bop, BVC)
            BVS *+5
-         .elseif .xmatch(bop, BVCS)
+         .elseif .xmatch(bop, BVS)
            BVC *+5
          .elseif .xmatch(bop, BPL)
            BMI *+5
