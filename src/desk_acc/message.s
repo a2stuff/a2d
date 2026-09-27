@@ -31,7 +31,7 @@
 
         kFontHeight = 11
 
-delta:  .word   AS_WORD(-3)
+delta:  .word   AS_WORD{-3}
         DEFINE_POINT text_pos, kScreenWidth, (kScreenHeight + kFontHeight)/2
 
 placeholder_flag:

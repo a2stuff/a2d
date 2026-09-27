@@ -256,7 +256,7 @@ params: .res    3
         sta     hi
 
         ;; Copy 4 bytes from $8 to stack
-        ldx     #AS_BYTE(-4)
+        ldx     #AS_BYTE{-4}
     DO
         lda     $06 + 4,x
         pha

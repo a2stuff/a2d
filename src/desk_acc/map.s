@@ -751,8 +751,8 @@ blink_counter:
     .else
         UPPERCASE_PASCAL_STRING name
     .endif
-        .word   AS_WORD(lat)
-        .word   AS_WORD(long)
+        .word   AS_WORD{lat}
+        .word   AS_WORD{long}
         loc_count .set loc_count+1
 .endmacro
 

@@ -254,7 +254,7 @@ done:
     DO
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
-    WHILE dex : X <> #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE dex : X <> #AS_BYTE{DeskTopSettings::pattern-1}
 
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern

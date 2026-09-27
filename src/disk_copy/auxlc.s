@@ -719,7 +719,7 @@ do_copy:
         jsr     DrawTotalBlocks
 
         ;; Blocks read/written so far
-        ldax    #AS_WORD(-1)
+        ldax    #AS_WORD{-1}
         stax    blocks_read
         stax    blocks_written
 
@@ -1242,7 +1242,7 @@ match:  RETURN  C=0
         asl16   case_bits       ; Shift out high byte first
       IF CS
         lda     (ptr),y
-        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
+        ora     #AS_BYTE{~CASE_MASK} ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
       END_IF
     WHILE iny : Y < #16         ; bits

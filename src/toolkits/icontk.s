@@ -510,7 +510,7 @@ END_PARAM_BLOCK
         pha
 
         CALL    GetIconState, A=icon_list,x
-        and     #AS_BYTE(~kIconEntryStateHighlighted)
+        and     #AS_BYTE{~kIconEntryStateHighlighted}
         sta     (icon_ptr),y
 
         pla
@@ -742,7 +742,7 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     findwindow_params+1,x
         sbc     z:last_coords+1,x
     IF NEG
-        cpy     #AS_BYTE(-kDragDelta)
+        cpy     #AS_BYTE{-kDragDelta}
         bcc     is_drag         ; above threshold, so drag
         CONTINUE_IF CS          ; always
     END_IF
@@ -1206,7 +1206,7 @@ END_PARAM_BLOCK
 
         ;; Mark not highlighted
         jsr     GetIconState    ; A = state, sets `icon_ptr` too
-        and     #AS_BYTE(~kIconEntryStateHighlighted)
+        and     #AS_BYTE{~kIconEntryStateHighlighted}
         sta     (icon_ptr),y
 
         pla                     ; A = icon
@@ -1790,7 +1790,7 @@ END_PARAM_BLOCK
     WHILE dey : dex : POS
 
         ;; Loop over all icons
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
     DO
         inx
         BREAK_IF X = num_icons

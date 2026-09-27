@@ -642,7 +642,7 @@ UpdateWindow := PaintWindow::update
 
         ldy     #1
 
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
     DO
         inx
         sub16   tmp, #1000, tmp
@@ -653,7 +653,7 @@ UpdateWindow := PaintWindow::update
         sta     str_year,y
         iny
 
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
     DO
         inx
         sub16   tmp, #100, tmp
@@ -664,7 +664,7 @@ UpdateWindow := PaintWindow::update
         sta     str_year,y
         iny
 
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
     DO
         inx
         sub16   tmp, #10, tmp

@@ -118,7 +118,7 @@ penheight:      .byte   2
         DEFINE_LINE frame_l2, 205, 68, kDAWidth, 68
         DEFINE_LINE frame_l3, 205, 0, 205, kDAHeight
 
-        DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 2, kDAHeight
+        DEFINE_RECT frame_rect, AS_WORD{-1}, AS_WORD{-1}, kDAWidth - 2, kDAHeight
 
 
 ;;; ============================================================
@@ -813,7 +813,7 @@ shortcut_table_addr_hi:
     FOREVER
 
 mask1:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
-mask2:  .byte   AS_BYTE(~(1<<0)), AS_BYTE(~(1<<1)), AS_BYTE(~(1<<2)), AS_BYTE(~(1<<3)), AS_BYTE(~(1<<4)), AS_BYTE(~(1<<5)), AS_BYTE(~(1<<6)), AS_BYTE(~(1<<7))
+mask2:  .byte   AS_BYTE{~(1<<0)}, AS_BYTE{~(1<<1)}, AS_BYTE{~(1<<2)}, AS_BYTE{~(1<<3)}, AS_BYTE{~(1<<4)}, AS_BYTE{~(1<<5)}, AS_BYTE{~(1<<6)}, AS_BYTE{~(1<<7)}
 
 flag:   .byte   0
 
@@ -954,7 +954,7 @@ dblclick_speed: .word   0
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
     DO
         CALL    WriteSetting, A=pattern - DeskTopSettings::pattern,x
-    WHILE dex : X <> #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE dex : X <> #AS_BYTE{DeskTopSettings::pattern-1}
 
         jsr     MarkDirty
 
@@ -1348,7 +1348,7 @@ pattern:
 ;;; representing the current desktop pattern; either incrementing
 ;;; to 0 or decrementing (to a negative and wrapping) will start
 ;;; iterating through the table.
-pattern_index:  .byte   AS_BYTE(-1)
+pattern_index:  .byte   AS_BYTE{-1}
 
 kPatternCount = 15 + 14 + 1 ; 15 B&W patterns, 14 solid color patterns + 1
 patterns:

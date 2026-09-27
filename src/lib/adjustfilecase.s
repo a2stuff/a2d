@@ -99,7 +99,7 @@ apply_bits:
         asl16   case_bits   ; NOTE: Shift out high byte first
       IF CS
         lda     (ptr),y
-        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
+        ora     #AS_BYTE{~CASE_MASK} ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
       END_IF
         iny

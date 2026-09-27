@@ -3947,7 +3947,7 @@ alpha:  jsr     IsShiftDown
         bpl     a_next
         FALL_THROUGH_TO a_prev
 
-        ENTRY_POINTS_FOR_A a_prev, AS_BYTE(-1), a_next, 1
+        ENTRY_POINTS_FOR_A a_prev, AS_BYTE{-1}, a_next, 1
 
         sta     delta
         jsr     GetKeyboardSelectableIconsSorted
@@ -3959,7 +3959,7 @@ alpha:  jsr     IsShiftDown
         ;; ----------------------------------------
         ;; Arrows - next/prev in icon order
 
-        ENTRY_POINTS_FOR_A prev, AS_BYTE(-1), next, 1
+        ENTRY_POINTS_FOR_A prev, AS_BYTE{-1}, next, 1
 
         sta     delta
         jsr     GetKeyboardSelectableIcons
@@ -4194,8 +4194,8 @@ next_icon:
 ret:    rts
 
 ;;; Tables indexed by `kDirXXX`
-rect_deltas_lo: .byte   <AS_WORD(-kDelta), <kDelta, <AS_WORD(-kDelta), <kDelta
-rect_deltas_hi: .byte   >AS_WORD(-kDelta), >kDelta, >AS_WORD(-kDelta), >kDelta
+rect_deltas_lo: .byte   <AS_WORD{-kDelta}, <kDelta, <AS_WORD{-kDelta}, <kDelta
+rect_deltas_hi: .byte   >AS_WORD{-kDelta}, >kDelta, >AS_WORD{-kDelta}, >kDelta
 far_offsets:    .byte   MGTK::Rect::x1, MGTK::Rect::x2, MGTK::Rect::y1, MGTK::Rect::y2
 near_offsets:   .byte   MGTK::Rect::x2, MGTK::Rect::x1, MGTK::Rect::y2, MGTK::Rect::y1
 compare_order:  .byte   $80, $00, $80, $00
@@ -5054,7 +5054,7 @@ do_axis:
     IF POS
         ;; deactivate
         lda     (winfo_ptr),y
-        and     #AS_BYTE(~MGTK::Scroll::option_active)
+        and     #AS_BYTE{~MGTK::Scroll::option_active}
         sta     (winfo_ptr),y
         rts
     END_IF
@@ -6365,7 +6365,7 @@ OpenWindowForPath := OpenWindowImpl::for_path
         ;; Clear dimmed flag
         ldy     #IconEntry::win_state
         lda     (ptr),y
-        and     #AS_BYTE(~kIconEntryStateDimmed)
+        and     #AS_BYTE{~kIconEntryStateDimmed}
         sta     (ptr),y
 
         ;; Redrawing is left to caller
@@ -7240,7 +7240,7 @@ enough_room:
         sta     window_id_to_filerecord_list_entries,x ; update window id list
         inc     window_id_to_filerecord_list_count
 
-        copy8   #AS_BYTE(-1), index_in_dir ; immediately incremented
+        copy8   #AS_BYTE{-1}, index_in_dir ; immediately incremented
         copy8   #0, index_in_block
         copy8   #0, record_count
 
@@ -7571,7 +7571,7 @@ vol_blocks_used:  .word   0
 
         jsr     GetCachedWindowViewBy
       IF ZERO
-        ldax    #AS_WORD(-kMaxIconTotalWidth/2)
+        ldax    #AS_WORD{-kMaxIconTotalWidth/2}
       ELSE
         ldax    #0
       END_IF
@@ -8884,7 +8884,7 @@ is_sp:  CALL    FindSmartportDispatchAddress, A=block_params::unit_num
         CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
          IF ZS
         lda     dib_buffer+SPDIB::Device_Name,y
-        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
+        ora     #AS_BYTE{~CASE_MASK} ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
          END_IF
         END_IF
@@ -9152,7 +9152,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
 .proc AllocDesktopIconPosition
         pha
 
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
     DO
         inx
         lda     desktop_icon_usage_table,x
@@ -9366,7 +9366,7 @@ table:
         dec     step
         step := *+1
         lda     #SELF_MODIFIED_BYTE
-    WHILE A <> #AS_BYTE(-3)
+    WHILE A <> #AS_BYTE{-3}
         rts
 .endproc ; _AnimateClose
 
@@ -12152,7 +12152,7 @@ num_blocks:
         ora     #LOCKED_MASK
     ELSE
         ;; Lock
-        and     #AS_BYTE(~LOCKED_MASK)
+        and     #AS_BYTE{~LOCKED_MASK}
     END_IF
         sta     src_file_info_params::access
         jsr     SetSrcFileInfo
@@ -14011,7 +14011,7 @@ next_block:
 
         MLI_CALL READ, read_params
         bcs     close
-        copy8   #AS_BYTE(-1), entry_num
+        copy8   #AS_BYTE{-1}, entry_num
         entry_ptr := $06
         copy16  #(block_buf+4 - .sizeof(FileEntry)), entry_ptr
 

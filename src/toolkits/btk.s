@@ -136,7 +136,7 @@ checkerboard_pattern:
 
 .params shrink_rect
         .addr   rect
-        .word   AS_WORD(-1), AS_WORD(-1)
+        .word   AS_WORD{-1}, AS_WORD{-1}
 .endparams
 
 .params grow_rect

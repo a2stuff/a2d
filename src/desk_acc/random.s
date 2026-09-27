@@ -209,7 +209,7 @@ kEntriesPerBlock = $0D
 next_block:
         JUMP_TABLE_MLI_CALL READ, read_params
         bcs     close
-        copy8   #AS_BYTE(-1), entry_in_block
+        copy8   #AS_BYTE{-1}, entry_in_block
         entry_ptr := $08
         copy16  #(block_buf+4 - .sizeof(FileEntry)), entry_ptr
 

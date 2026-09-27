@@ -30,7 +30,7 @@ check_alpha:
         iny
         lda     (ptr),y
       IF a >= #'A'
-        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
+        ora     #AS_BYTE{~CASE_MASK} ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
       END_IF
     WHILE dey : POS             ; always

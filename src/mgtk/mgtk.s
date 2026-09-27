@@ -4314,7 +4314,7 @@ finish:
         ;; Ensure we don't try to draw above screen row 0
         lda     cursor_y1
     IF A >= #192
-        copy8   #AS_BYTE(-1), cursor_y1
+        copy8   #AS_BYTE{-1}, cursor_y1
     END_IF
 
         lda     cursor_pos::xcoord
@@ -5751,7 +5751,7 @@ active_menu:
         .addr   0
 
         ;; Modified by `StartDeskTopImpl`
-        DEFINE_RECT menu_bar_rect, AS_WORD(-1), AS_WORD(-1), kScreenWidth, $C
+        DEFINE_RECT menu_bar_rect, AS_WORD{-1}, AS_WORD{-1}, kScreenWidth, $C
 
         ;; Modified by `StartDeskTopImpl` and `HiliteMenu`
         DEFINE_RECT hilite_menu_rect, 0, 0, 0, 0
@@ -6411,7 +6411,7 @@ check      .byte
         bne     set_options            ; always
     END_IF
 
-        lda     #AS_BYTE(~MGTK::MenuOpt::item_is_checked)
+        lda     #AS_BYTE{~MGTK::MenuOpt::item_is_checked}
         and     curmenuitem::options
 
 set_options:
@@ -10350,7 +10350,7 @@ kMouseKeysDeltaY = 4
         jsr     KbdMouseDragCheckXmin ; If dragging window, maybe slip it
         bcc     :+              ; mouse didn't move, but window did
 
-        ldax    #AS_WORD(-kMouseKeysDeltaX)
+        ldax    #AS_WORD{-kMouseKeysDeltaX}
         jsr     KbdMouseAddToX
 :
         jmp     PositionKbdMouse
@@ -10818,7 +10818,7 @@ MUL2:   lda     ACL             ; ACX * AUX + XTND
         lsr                     ;   to AC, XTND
         bcc     MUL4            ; If no carry,
         clc                     ;   no partial product.
-        ldx     #AS_BYTE(-2)
+        ldx     #AS_BYTE{-2}
 MUL3:   lda     XTNDL+2,x       ; Add multiplicand (AUX)
         adc     AUXL+2,x        ;  to partial product
         sta     XTNDL+2,x       ;     (XTND).

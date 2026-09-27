@@ -1051,8 +1051,8 @@ label_downarrow:
 
 .params shrink
         .addr   up_arrow_rect
-        .word   AS_WORD(-1)
-        .word   AS_WORD(-1)
+        .word   AS_WORD{-1}
+        .word   AS_WORD{-1}
 .endparams
 .params grow
         .addr   up_arrow_rect
@@ -1068,7 +1068,7 @@ label_downarrow:
         rts
 .params shrink
         .addr   down_arrow_rect
-        .word   AS_WORD(-1), AS_WORD(-1)
+        .word   AS_WORD{-1}, AS_WORD{-1}
 .endparams
 .params grow
         .addr   down_arrow_rect
@@ -1584,7 +1584,7 @@ month:  .byte   0
 year:   .byte   0
 
 .proc _ToBCD
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
         sec
     DO
         inx

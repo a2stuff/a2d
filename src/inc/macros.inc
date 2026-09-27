@@ -4,6 +4,16 @@
 ;;; Common patterns
 ;;; ============================================================
 
+;;; Remember to call as AS_BYTE{...} or AS_WORD{...}. This is because
+;;; the ca65's C-style macro's arguments are delimited by braces or
+;;; commas, but not parentheses. So despite appearances, this:
+;;;
+;;;   IF A = #AS_BYTE(-1) GOTO target
+;;;
+;;; Is actually the same as:
+;;;
+;;;   IF A = #AS_BYTE{(-1) GOTO target}
+
 .define AS_BYTE(arg)        (arg) & $FF
 .define AS_WORD(arg)        (arg) & $FFFF
 
@@ -272,7 +282,7 @@ loop:   lda     src,x
 .endmacro
 
 .macro PUSH_BYTES size, src
-        ldx     #AS_BYTE(-size)
+        ldx     #AS_BYTE{-size}
 .local loop
 loop:
         lda     src + size,x

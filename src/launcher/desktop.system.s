@@ -1190,7 +1190,7 @@ entry_dir_name:
 .proc PreparePathsFromEntryPaths
 
         ;; Copy `entry_path2` to `pathname_src`
-        ldy     #AS_BYTE(-1)
+        ldy     #AS_BYTE{-1}
     DO
         iny
         copy8   entry_path2,y, GenericCopy::pathname_src,y

@@ -453,7 +453,7 @@ game_over_flag: .byte   0       ; bit7
         ;; NOTE: `sub16` is used not `sub16_8` so that N flag is set
         sub16  xcoord, #kHPadding, xcoord
         RTS_IF NEG
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
       DO
         inx
         sub16  xcoord, #kTileWidth, xcoord
@@ -462,7 +462,7 @@ game_over_flag: .byte   0       ; bit7
 
         sub16   ycoord, #kVPadding, ycoord
         RTS_IF NEG
-        ldy     #AS_BYTE(-1)
+        ldy     #AS_BYTE{-1}
       DO
         iny
         sub16   ycoord, #kTileHeight, ycoord
@@ -498,7 +498,7 @@ game_over_flag: .byte   0       ; bit7
         ;; unknown -> flag
        IF A = #kCellUnknown
         lda     state
-        and     #AS_BYTE(~kCellFlagsMask)
+        and     #AS_BYTE{~kCellFlagsMask}
         ora     #kCellFlag
         jmp     store_and_redraw
        END_IF
@@ -506,7 +506,7 @@ game_over_flag: .byte   0       ; bit7
         ;; flag -> question
        IF A = #kCellFlag
         lda     state
-        and     #AS_BYTE(~kCellFlagsMask)
+        and     #AS_BYTE{~kCellFlagsMask}
         ora     #kCellQuestion
         jmp     store_and_redraw
        END_IF
@@ -514,7 +514,7 @@ game_over_flag: .byte   0       ; bit7
         ;; question -> unknown
        IF A = #kCellQuestion
         lda     state
-        and     #AS_BYTE(~kCellFlagsMask)
+        and     #AS_BYTE{~kCellFlagsMask}
         ora     #kCellUnknown
         jmp     store_and_redraw
        END_IF
@@ -1447,7 +1447,7 @@ re_roll:
         sta     hi
 
         ;; Copy 4 bytes from $8 to stack
-        ldx     #AS_BYTE(-4)
+        ldx     #AS_BYTE{-4}
     DO
         lda     $06 + 4,x
         pha

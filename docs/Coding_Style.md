@@ -179,7 +179,7 @@ xcoord  .word
 
 * Use binary `%00110110` for bit patterns
 * Use decimal for numbers (counts, dimensions, etc)
-    * For negative numbers, the `AS_BYTE(-1)` and `AS_WORD(-1)` macros are handy.
+    * For negative numbers, the `AS_BYTE{-1}` and `AS_WORD{-1}` macros are handy.
 * Use hex for geeky values, e.g. $7F (bit mask), $80 (high bit), $FF (all bits set) when bits would be less readable.
 * Avoid magic numbers where possible:
     * Define local symbols (e.g. `ptr := $06`)

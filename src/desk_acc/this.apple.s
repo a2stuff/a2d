@@ -2357,7 +2357,7 @@ start:
         CALL    IsAlpha, A=dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
           IF EQ
         lda     dib_buffer+SPDIB::Device_Name,y
-        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
+        ora     #AS_BYTE{~CASE_MASK} ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
           END_IF
          END_IF

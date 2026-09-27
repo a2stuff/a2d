@@ -115,7 +115,7 @@ Exec:
         CALL    main::DrawDialogLabel, Y=#2, AX=#aux::str_location
 
         ;; Find `DEVLST` index of selected/specified device
-        ldx     #AS_BYTE(-1)
+        ldx     #AS_BYTE{-1}
     DO
         inx
         lda     DEVLST,x

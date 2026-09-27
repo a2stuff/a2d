@@ -852,7 +852,7 @@ END_PARAM_BLOCK
         .refto ident::bottomright
         .refto ident::x2
         .refto ident::y2
-        .word AS_WORD(left), AS_WORD(top), AS_WORD(right), AS_WORD(bottom)
+        .word AS_WORD{left}, AS_WORD{top}, AS_WORD{right}, AS_WORD{bottom}
 .endmacro
 
 ;;; Define a rect by size (right = left + width, bottom = top + height)
@@ -871,8 +871,8 @@ END_PARAM_BLOCK
         WARN_IF_SHADOWING ident
         ident := *
 .scope ident
-xcoord: .word   AS_WORD(left)
-ycoord: .word   AS_WORD(top)
+xcoord: .word   AS_WORD{left}
+ycoord: .word   AS_WORD{top}
         .refto xcoord
         .refto ycoord
 .endscope ; ident

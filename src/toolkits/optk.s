@@ -353,7 +353,7 @@ last:   lda     max_entries_minus_one
 .proc _HandleKeyDown
         lda     oprc_selected_index
     IF NS
-        lda     #AS_BYTE(-1)    ; no selection, start at first
+        lda     #AS_BYTE{-1}    ; no selection, start at first
     END_IF
 
     REPEAT

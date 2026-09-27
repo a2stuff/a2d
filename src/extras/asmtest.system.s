@@ -1150,7 +1150,7 @@ var2 := *
     IF scmp16 var, #kConstant : POS
         nop
     END_IF
-        ;; Note that AS_BYTE(-1) will result in an assembly error
+        ;; Note that AS_BYTE{-1} will result in an assembly error
         ;; because ca65 passes the whole rest of the line as the arg,
         ;; since commas are the delimiter.
     IF scmp16 var, #AS_BYTE{-1} : POS

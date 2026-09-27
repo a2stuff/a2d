@@ -39,10 +39,10 @@ xpos_table:
         .word   kScreenWidth+kToasterWidth+450
 
 ypos_table:
-        .word   AS_WORD(-kToasterHeight)
-        .word   AS_WORD(-kToasterHeight)+160
-        .word   AS_WORD(-kToasterHeight)+40
-        .word   AS_WORD(-kToasterHeight)+99
+        .word   AS_WORD{-kToasterHeight}
+        .word   AS_WORD{-kToasterHeight+160}
+        .word   AS_WORD{-kToasterHeight+40}
+        .word   AS_WORD{-kToasterHeight+99}
 
 frame_table:
         .byte   0,1,2,3
@@ -132,7 +132,7 @@ exit:
 
         ;; Wrap Y
       IF s16 ypos >= #kScreenHeight
-        copy16  #AS_WORD(-kToasterHeight), ypos
+        copy16  #AS_WORD{-kToasterHeight}, ypos
       END_IF
 
         ;; Wrap X
