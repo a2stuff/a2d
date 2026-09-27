@@ -217,34 +217,60 @@
 
 ;;; Emit a branch (`bop`) to a target (`target`); `kind` provides a name to log (e.g. "stay")
 .macro F2_CODEGEN_BRANCH bop, target, kind
-        .if (.def(target) .and .const((*-2)-(target)) .and ((*+2)-(target)>127)) .or f2_force_longbranch
 
-         .if .xmatch(bop, BCC)
-           BCS *+5
-         .elseif .xmatch(bop, BCS)
-           BCC *+5
-         .elseif .xmatch(bop, BVC)
-           BVS *+5
-         .elseif .xmatch(bop, BVS)
-           BVC *+5
-         .elseif .xmatch(bop, BPL)
-           BMI *+5
-         .elseif .xmatch(bop, BMI)
-           BPL *+5
-         .elseif .xmatch(bop, BEQ)
-           BNE *+5
-         .elseif .xmatch(bop, BNE)
-           BEQ *+5
-         .else
-           F2_ERR_UNREACHED
-         .endif
-         JMP target
+        ;; Set `f2_opbop` to the opposite branch instruction of `bop`
+        .if .xmatch(bop, BCC)
+          .define f2_opbop BCS
+        .elseif .xmatch(bop, BCS)
+          .define f2_opbop BCC
+        .elseif .xmatch(bop, BVC)
+          .define f2_opbop BVS
+        .elseif .xmatch(bop, BVS)
+          .define f2_opbop BVC
+        .elseif .xmatch(bop, BPL)
+          .define f2_opbop BMI
+        .elseif .xmatch(bop, BMI)
+          .define f2_opbop BPL
+        .elseif .xmatch(bop, BEQ)
+          .define f2_opbop BNE
+        .elseif .xmatch(bop, BNE)
+          .define f2_opbop BEQ
+        .else
+          F2_ERR_UNREACHED
+        .endif
+
+
+        ;; Logic based on cc65's longbranch.mac, assuming it is optimal
+        .if .match(target, 0)
+
+          ;; Unclear when this case applies
+          f2_opbop *+5
+          JMP target
+
+        .elseif (.def(target) .and .const((*-2)-(target)))
+
+          ;; Distance is known, so BXX or JMP
+          .if ((*-2)-(target)) >= 127
+            f2_opbop *+5
+            JMP target
+          .else
+            bop target
+            ;; NOTE: Could warn here if `f2_force_longbranch`
+          .endif
 
         .else
 
-          bop target
-
+          ;; Distance unknown, so JMP if requested, else BXX
+          .if f2_force_longbranch
+            f2_opbop *+5
+            JMP target
+          .else
+            ;; If assembly fails, switch from `GOTO` to `JUMP`
+            bop target
+          .endif
         .endif
+
+        .undef f2_opbop
 .endmacro
 
 ;;;Emit a comparison

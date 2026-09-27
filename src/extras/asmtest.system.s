@@ -1311,6 +1311,20 @@ ft21:
 
 
 ;;; --------------------------------------------------
+;;; JUMP is not overly pessimistic
+;;; --------------------------------------------------
+
+short_target:
+        IF NC JUMP short_target ; BPL $10
+        IF NS JUMP short_target ; BMI $30
+        IF CC JUMP short_target ; BCC $90
+        IF CS JUMP short_target ; BCS $B0
+        IF VC JUMP short_target ; BVC $50
+        IF VS JUMP short_target ; BVS $70
+        IF ZC JUMP short_target ; BNE $D0
+        IF ZS JUMP short_target ; BEQ $F0
+
+;;; --------------------------------------------------
 ;;; Long (backwards) branches
 ;;; --------------------------------------------------
 
