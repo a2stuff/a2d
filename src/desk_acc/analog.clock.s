@@ -107,8 +107,7 @@ parsed: .tag    ParsedDateTime
         sta     tindex
         sta     tfives
     DO
-        ldx     tindex
-        txa
+        lda     tindex
         asl
         tax
 

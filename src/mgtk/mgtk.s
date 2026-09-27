@@ -7893,8 +7893,8 @@ no_goaway:
         ;; Add padding to left of title
         sub16_8 right, #kTitleXInset
 
-        ;; BUG: `ucmp16` but testing N bit?
-    IF ucmp16 right, left : POS  ; skip if degenerate
+        ;; Paint (if not degenerate)
+    IF scmp16 right, left : POS
         jsr     PaintRectImpl
     END_IF
 

@@ -295,8 +295,7 @@ title:  jsr     OnTitleBarClick
 
       IF A = #CHAR_DOWN         ; Apple+Down = Page Down
         jsr     PageDown
-        ;; BUG: This shouldn't be commented out, due to subsequent test!
-        ;; jmp     InputLoop
+        jmp     InputLoop
       END_IF
 
         IF A = #kShortcutCloseWindow GOTO DoClose

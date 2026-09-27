@@ -317,10 +317,8 @@ probe_count:
 
 .proc OnClick60Hz
     IF bit radio_60hz_button::state : NC
-        lda     #BTK::kButtonStateChecked
-        sta     radio_60hz_button::state
-        lda     #BTK::kButtonStateNormal
-        sta     radio_50hz_button::state
+        copy8   #BTK::kButtonStateChecked, radio_60hz_button::state
+        copy8   #BTK::kButtonStateNormal, radio_50hz_button::state
         BTK_CALL BTK::RadioUpdate, radio_60hz_button
         BTK_CALL BTK::RadioUpdate, radio_50hz_button
     END_IF
@@ -331,10 +329,8 @@ probe_count:
 
 .proc OnClick50Hz
     IF bit radio_50hz_button::state : NC
-        lda     #BTK::kButtonStateNormal
-        sta     radio_60hz_button::state
-        lda     #BTK::kButtonStateChecked
-        sta     radio_50hz_button::state
+        copy8   #BTK::kButtonStateNormal, radio_60hz_button::state
+        copy8   #BTK::kButtonStateChecked, radio_50hz_button::state
         BTK_CALL BTK::RadioUpdate, radio_60hz_button
         BTK_CALL BTK::RadioUpdate, radio_50hz_button
     END_IF
