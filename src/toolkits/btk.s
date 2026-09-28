@@ -313,20 +313,7 @@ skip_port:
         rts
 .endproc ; _DrawString
 
-;;; Inputs: A,X points at string
-;;; Output: A,X = width
-.proc _MeasureString
-PARAM_BLOCK sw_params, btk::zp_scratch
-str     .addr
-width   .word
-END_PARAM_BLOCK
-        stax    sw_params::str
-        MGTK_CALL MGTK::StringWidth, sw_params
-        RETURN  AX=sw_params::width
-.endproc ; _MeasureString
-
 ;;; ============================================================
-
 
 .proc TrackImpl
 
@@ -674,6 +661,18 @@ unchecked_cb_bitmap:
     WHILE dey : dex : POS
         rts
 .endproc ; _MeasureAndWriteRectBackToButtonRecord
+
+;;; Inputs: A,X points at string
+;;; Output: A,X = width
+.proc _MeasureString
+PARAM_BLOCK sw_params, btk::zp_scratch
+str     .addr
+width   .word
+END_PARAM_BLOCK
+        stax    sw_params::str
+        MGTK_CALL MGTK::StringWidth, sw_params
+        RETURN  AX=sw_params::width
+.endproc ; _MeasureString
 
 ;;; ============================================================
 .endif ; BTK_SHORT

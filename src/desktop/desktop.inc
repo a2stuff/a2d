@@ -80,7 +80,6 @@ kMaxDeskTopWindows      = 8
 kShortcutCloseWindow  = res_char_shortcut_close
 kShortcutGrowWindow   = res_char_shortcut_resize
 kShortcutMoveWindow   = res_char_shortcut_move
-kShortcutScrollWindow = res_char_shortcut_scroll
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)

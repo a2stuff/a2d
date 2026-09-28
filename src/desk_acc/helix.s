@@ -250,7 +250,7 @@ exit:
 
 ;;; Output: A,X = signed in -7...7 but not 0
 .proc GetRandomDelta
-        ldx     #0
+        ldx     #0              ; high byte
     DO
         jsr     Random
         and     #%00001111      ; clamp to 0...15
@@ -259,7 +259,7 @@ exit:
     WHILE ZERO                  ; retry if 0
 
     IF NEG
-        ldx     #$FF            ; sign-extend into X
+        dex                     ; sign-extend into X
     END_IF
 
         rts

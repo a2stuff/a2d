@@ -502,7 +502,8 @@ ret:    rts
         ;; Double modifiers
 
         ;; Home/End move selection to first/last
-    IF X = #3
+    IF X = #(MGTK::event_modifier_open_apple | MGTK::event_modifier_solid_apple)
+
       IF A = #CHAR_UP
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret

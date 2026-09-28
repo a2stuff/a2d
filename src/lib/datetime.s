@@ -155,7 +155,7 @@ clock_24hours:
         ;; ----------------------------------------
         ;; Year
         ;; (top 7 bits of datehi, top 3 bits of timehi)
-year:   lda     #0
+        lda     #0
         sta     ytmp+1
 
         ldy     #DateTime::datehi
@@ -167,13 +167,13 @@ year:   lda     #0
         ;; 0-39 is 2000-2039
         ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.28.html
-tn28:   lda     ytmp            ; ytmp is still just one byte
+        lda     ytmp            ; ytmp is still just one byte
     IF A < #40
         adc     #100
         sta     ytmp
     END_IF
 
-do1900: ldy     #ParsedDateTime::year
+        ldy     #ParsedDateTime::year
         add16in ytmp, #1900, (parsed_ptr),y
 
         ;; ----------------------------------------

@@ -115,17 +115,11 @@ file_dialog_loop   := file_dialog::ep_loop
 ;;; File Dialog and Alerts compete over "save area" (main $800-$1FFF)
 ;;; so allow preserving the state while an alert is shown.
 
-.proc SaveFileDialogState
-        sec                          ; main>aux
-        bcs     _MoveFileDialogState ; always
-.endproc ; SaveFileDialogState
-
-.proc RestoreFileDialogState
-        FALL_THROUGH_TO _MoveFileDialogState, C=0 ; aux>main
-.endproc ; RestoreFileDialogState
 
 ;;; C set by caller
-.proc _MoveFileDialogState
+.proc _MoveFileDialogStateImpl
+        ENTRY_POINTS_FOR_CS_CC save, restore ; CS main>aux, CC aux>main
+
         pha
         txa
         pha
@@ -144,7 +138,9 @@ file_dialog_loop   := file_dialog::ep_loop
         pla
 
         rts
-.endproc ; _MoveFileDialogState
+.endproc ; _MoveFileDialogStateImpl
+SaveFileDialogState := _MoveFileDialogStateImpl::save
+RestoreFileDialogState := _MoveFileDialogStateImpl::restore
 
 ;;; ============================================================
 

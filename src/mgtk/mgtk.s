@@ -10046,26 +10046,19 @@ update_status:
 
 ;;; Input: `input::modifiers` and `input::key` have been set
 .proc CheckActivateMouseKeys
-        ;; Activate?
-        bit     mouse_status
-        bmi     ignore          ; branch away if button is down
-
-        ;; Check for OA+SA+Space
-        lda     input::modifiers
-        cmp     #3
-        bne     ignore
-        lda     input::key
-        cmp     #' '            ; space?
-        bne     ignore
+        ;; Activate? (OA+SA+Space, and mouse button not down)
+    IF bit mouse_status : NC \
+      AND u8 input::modifiers = #(MGTK::event_modifier_open_apple | MGTK::event_modifier_solid_apple) \
+      AND u8 input::key = #' '
 
         ;; Give immediate feedback
         jsr     PlayTone1
         jsr     PlayTone2
 
         ;; Wait for OA and SA to be released
-    DO
+      DO
         jsr     ComputeModifiers
-    WHILE NOT ZERO
+      WHILE NOT ZERO
         sta     input::modifiers
 
         lda     #kKeyboardMouseStateMouseKeys
@@ -10076,8 +10069,8 @@ update_status:
         COPY_BYTES 3, cursor_pos, kbd_mouse_x
 
         RETURN  C=0
+    END_IF
 
-ignore:
         RETURN  C=1
 
 .endproc ; CheckActivateMouseKeys
@@ -10327,7 +10320,7 @@ kMouseKeysDeltaY = 4
 ;;; Used by both `kKeyboardMouseStateMouseKeys` and `kKeyboardMouseStateForced`
 .proc MousekeysInput
     IF A = #CHAR_UP
-        lda     #256-kMouseKeysDeltaY
+        lda     #AS_BYTE{-kMouseKeysDeltaY}
         jmp     KbdMouseAddToY
     END_IF
 

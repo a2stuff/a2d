@@ -807,8 +807,7 @@ done:   rts
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        ldy     #$FF
-        iny
+        ldy     #0
     DO
         lda     default_block_buffer,y
         sta     (ptr1),y
@@ -877,8 +876,7 @@ done:   rts
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        ldy     #$FF
-        iny
+        ldy     #0
     DO
         lda     (ptr1),y
         sta     default_block_buffer,y

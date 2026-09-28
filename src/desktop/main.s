@@ -300,7 +300,7 @@ tick_counter:
 
         jsr     ClearTypeDown
 
-      IF u8 event_params::modifiers = #3 ; both Open-Apple + Solid-Apple ?
+      IF u8 event_params::modifiers = #(MGTK::event_modifier_open_apple | MGTK::event_modifier_solid_apple)
         ;; Double-modifier shortcuts
         CALL    ToUpperCase, A=event_params::key
         IF A = #res_char_menu_item_open_shortcut JUMP CmdOpenThenCloseCurrent
@@ -6548,7 +6548,7 @@ done:
         ;; Above top?
         IF s16 pos_col::ycoord >= viewport+MGTK::Rect::y1 GOTO in_range
     END_IF
-ret:    rts
+        rts
 
         ;; Draw it!
 in_range:
@@ -7093,13 +7093,9 @@ slash:  cpy     #1
         ptr1 := $6
         ptr2 := $8
 
-exact:  sec
-        bcs     start           ; always
+        ENTRY_POINTS_FOR_CS_CC exact, prefix
 
-prefix: clc
-
-
-start:  stax    ptr1
+        stax    ptr1
         ror     exact_match_flag
 
         lda     #0

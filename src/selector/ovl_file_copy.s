@@ -424,10 +424,7 @@ remainder:      .word   0                 ; (out)
 .endproc ; PrepWindowForCopy
 
 .proc UpdateCopyProgress
-        dec     file_count
-    IF u8 file_count = #$FF
-        dec     file_count+1
-    END_IF
+        dec16   file_count
 
         CALL    app::GetWindowPort, A=#winfo::kWindowId
 
@@ -489,7 +486,7 @@ display_path:
 
 .proc ShowDiskFullError
         CALL    app::ShowAlert, A=#AlertID::not_enough_room
-        jmp     RestoreStackAndReturn
+        TAIL_CALL RestoreStackAndReturn
 .endproc ; ShowDiskFullError
 
 ;;; ============================================================

@@ -61,6 +61,16 @@ ep_2:
     .endif
 .endmacro
 
+.macro ENTRY_POINTS_FOR_CS_CC ep_set, ep_clear
+        .local skip
+ep_set:
+        sec
+        bcs     skip            ; TODO: Replace with: .byte $90 ; OPC_BCC
+ep_clear:
+        clc
+skip:
+.endmacro
+
 ;;; Inject a return address to the stack.
 .macro PUSH_RETURN_ADDRESS addr
         lda     #>(addr-1)

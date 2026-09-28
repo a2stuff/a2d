@@ -335,8 +335,7 @@ StepMaze := DoMaze::step
         FALL_THROUGH_TO free
 
 free:   clc
-        bcc     restore
-
+        bcc     restore         ; always
 
 used:   sec
         FALL_THROUGH_TO restore

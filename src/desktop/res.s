@@ -768,9 +768,7 @@ addr:   .addr   0
 ;;; Used for IconTK::OffsetAll
 .params offset_icons_params
 window_id:      .byte   0
-delta:
-delta_x:        .word   0
-delta_y:        .word   0
+delta:          .word   0, 0
 .endparams
 
 ;;; Used by DeskTop to pad `tmp_rect`

@@ -1195,49 +1195,26 @@ hi:     .byte   0
 .proc DrawEntryCallback
         ptr := $06
 
+        ;; Prefix - number or just spaces
         pha
-        jsr     GetSelectorListEntryAddr
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y         ; length
-
-        ;; Copy string into buffer
-        tay
-    DO
-        copy8   (ptr),y, entry_string_buf+3,y
-    WHILE dey : NOT_ZERO
-
-        ;; Increase length by 3
-        ldy     #0
-        lda     (ptr),y
-        clc
-        adc     #3
-        sta     text_params::length
-
-        pla
-    IF A >= #8                  ; first 8?
-        ;; Prefix with spaces
-        lda     #' '
-        sta     entry_string_buf+1
-        sta     entry_string_buf+2
-        sta     entry_string_buf+3
-    ELSE
-        ;; Prefix with number
+    IF A < #8
+        ;; Assert: C=0
         adc     #'1'
-        sta     entry_string_buf+1
+    ELSE
         lda     #' '
-        sta     entry_string_buf+2
-        sta     entry_string_buf+3
     END_IF
+        sta     str_prefix+1
+        MGTK_CALL MGTK::DrawString, str_prefix
 
-        ;; Draw the string
-        MGTK_CALL MGTK::DrawText, text_params
+        ;; Entry name
+        pla
+        jsr     GetSelectorListEntryAddr
+        stax    @addr
+        MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 
-.params text_params
-data:   .addr   entry_string_buf+1
-length: .byte   SELF_MODIFIED_BYTE
-.endparams
+str_prefix:     PASCAL_STRING "   "
+
 .endproc ; DrawEntryCallback
 
 ;;; ============================================================
@@ -1398,7 +1375,9 @@ fail:
         ;; --------------------------------------------------
         ;; Check file type
 
-        ;; Ensure it's BIN, SYS, S16 or BAS (if BS is present)
+        ;; Ensure it's a type we can run directly (BIN, SYS, S16)
+        ;; or we have an interpreter for it (BAS, INT, AWP, ASP, ADB)
+        ;; or a fallback interpreter (BASIS.SYSTEM)
 
         lda     #0
         sta     INVOKER_INTERPRETER
@@ -1408,7 +1387,7 @@ fail:
     IF A = #FT_LINK
         jsr     ReadLinkFile
         bcs     err
-        bcc     retry
+        bcc     retry           ; success - get target file's info
     END_IF
 
     IF A = #FT_BASIC

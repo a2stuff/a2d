@@ -2392,7 +2392,7 @@ SEL_MBANK     :=  $F851       ; Select Main bank reg
         IF u8 FWReadClock <> #$AD GOTO nope ; is RTC code there?
 
         clc                     ; found clock!
-        bcc     :+
+        bcc     :+              ; always
 nope:   sec                     ; not found
 :
 

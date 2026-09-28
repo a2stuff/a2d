@@ -452,8 +452,6 @@ done:   rts
 ;;; ============================================================
 ;;; HighlightIcon
 
-;;; param is pointer to icon id
-
 .proc HighlightIconImpl
 PARAM_BLOCK params, icontk::command_data
 icon    .byte
@@ -521,8 +519,6 @@ END_PARAM_BLOCK
 
 ;;; ============================================================
 ;;; FreeIcon
-
-;;; param is pointer to icon number
 
 .proc FreeIconImpl
 PARAM_BLOCK params, icontk::command_data
@@ -618,8 +614,6 @@ END_PARAM_BLOCK
 
 ;;; ============================================================
 ;;; FreeAll
-
-;;; param is window id (0 = desktop)
 
 .proc FreeAllImpl
 PARAM_BLOCK params, icontk::command_data
@@ -741,11 +735,11 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         tay
         lda     findwindow_params+1,x
         sbc     z:last_coords+1,x
-    IF NEG
+      IF NEG
         cpy     #AS_BYTE{-kDragDelta}
         bcc     is_drag         ; above threshold, so drag
         CONTINUE_IF CS          ; always
-    END_IF
+      END_IF
         cpy     #kDragDelta     ; above threshold, so drag
         bcs     is_drag
 
@@ -777,10 +771,7 @@ is_drag:
         ;; Assert: there are highlighted icons
 
         ;; Make sure there's room
-        ucmp8   highlight_count, max_draggable_icons
-    IF NE AND GE                     ; equal okay
-        jmp    exit_canceled         ; too many
-    END_IF
+        IF u8 highlight_count > max_draggable_icons JUMP exit_canceled
 
         CALL    GetIconWin, A=last_highlighted_icon
         sta     source_window_id
@@ -822,9 +813,8 @@ is_drag:
         jmp     not_drag
       END_IF
 
-        ;; Escape key?
-        lda     KBD             ; MGTK doesn't process keys during drag
-      IF A = #CHAR_ESCAPE | $80
+        ;; Escape key? (MGTK doesn't process keys during drag)
+      IF u8 KBD = #CHAR_ESCAPE | $80
         bit     KBDSTRB         ; consume the keypress
         copy8   #MGTK::EventKind::key_down, peekevent_params::kind
         jmp     not_drag
@@ -1118,29 +1108,28 @@ headery:
         ;; Over an icon
         sta     icon_num
 
+        ;; Highlighted? (not valid if it's being dragged)
         jsr     GetIconState    ; A = state, sets `icon_ptr` too
-
-        ;; Highlighted?
         ;;and     #kIconEntryStateHighlighted
         ASSERT_EQUALS ::kIconEntryStateHighlighted, ::N_FLAG_MASK>>1
         asl
-        bmi     done            ; Not valid (it's being dragged)
-
+    IF NC
         ;; Is it a drop target?
         ldy     #IconEntry::flags
         lda     (icon_ptr),y
         ;;and     #kIconEntryFlagsDropTarget
         ASSERT_EQUALS ::kIconEntryFlagsDropTarget, ::N_FLAG_MASK>>1
         asl
-        bpl     done
-
+      IF NS
         ;; Highlight it!
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     highlight_icon_id
         jsr     _HighlightIcon
+      END_IF
+    END_IF
 
-done:   rts
+        rts
 .endproc ; _ValidateTargetAndHighlight
 
 .proc _XDrawOutline
@@ -1192,8 +1181,6 @@ done:   rts
 
 ;;; ============================================================
 ;;; UnhighlightIcon
-
-;;; param is pointer to IconEntry
 
 .proc UnhighlightIconImpl
 PARAM_BLOCK params, icontk::command_data

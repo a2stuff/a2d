@@ -3,8 +3,8 @@
 ### Common definitions
 
 # Compile flags. (Add `--expand-macros` to CAFLAGS for verbose logging)
-CAFLAGS = --target apple2 --list-bytes 0 --warnings-as-errors
-LDFLAGS = --config ../common/asm.cfg --warnings-as-errors
+CAFLAGS = --target apple2 --list-bytes 0 --warnings-as-errors --color on
+LDFLAGS = --config ../common/asm.cfg --warnings-as-errors --color on
 
 # Build into a top level "out" directory.
 OUTDIR = ../../out
