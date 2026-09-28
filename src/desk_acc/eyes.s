@@ -359,7 +359,6 @@ tmpw:   .word   0
 
 ;;; ============================================================
 
-penXOR: .byte   MGTK::penXOR
 pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 

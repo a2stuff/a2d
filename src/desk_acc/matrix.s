@@ -33,7 +33,7 @@ event_params:   .tag MGTK::Event
 kMainPageClearByte = ' '|$80    ; space
 kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
-.proc Start
+.scope Start
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
@@ -84,7 +84,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         jmp     JUMP_TABLE_RGB_MODE
-.endproc ; Start
+.endscope ; Start
 
 ;;; ============================================================
 
@@ -313,19 +313,6 @@ exit:   rts
     WHILE A < #' '+1            ; retry if control or space
         rts
 .endproc ; GetRandomChar
-
-        ;; --------------------------------------------------
-
-.proc Wait
-        sec
-wait2:  pha
-wait3:  sbc     #1
-        bne     wait3
-        pla
-        sbc     #1
-        bne     wait2
-        rts
-.endproc ; Wait
 
         ;; --------------------------------------------------
 

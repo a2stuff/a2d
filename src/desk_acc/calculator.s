@@ -125,7 +125,7 @@ port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
 .params btn_0
         DEFINE_POINT viewloc, kCol1Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
 mapbits:        .addr   wide_button_bitmap
-mapwidth:       .byte   8       ; kBitmapStride (bytes)
+mapwidth:       .byte   kWideBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 49, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
         REF_MAPINFO_MEMBERS

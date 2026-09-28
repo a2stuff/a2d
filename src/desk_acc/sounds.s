@@ -152,7 +152,6 @@ nextwinfo:      .addr   0
         kListWidth = kDAWidth - kMarginX*2 - kLabelWidth
         kListInnerWidth = kListWidth - kScrollBarWidth - 1
         kListHeight = kListItemHeight * kListRows - 1
-        kListBottom = kListTop + kListHeight
 
 ;;; ============================================================
 ;;; List Box

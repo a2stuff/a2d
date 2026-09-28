@@ -63,7 +63,6 @@ sizeof_mli_params = * - mli_params
 visible_flag:                   ; clear until text that should be visible is in view
         .byte   0
 
-params_end := * + 4       ; bug in original? (harmless as this is static)
 ;;; ----------------------------------------
 
         kDAWindowId = $80
@@ -81,8 +80,6 @@ kLinePosLeft = 3
 left:   .word   0
 base:   .word   0
 .endparams
-
-y_remaining:    .word   0
 
 ;;; Height of a line of text
 kLineHeight = kSystemFontHeight + 1

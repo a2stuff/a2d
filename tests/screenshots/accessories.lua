@@ -65,6 +65,7 @@ AccessoryTest(
   "Run Basic Here",
   function(suffix)
     desktop.InvokePath(a2d.GetLocalizedPath("/A2.DESKTOP/APPLE.MENU/RUN.BASIC.HERE"))
+    apple2.WaitForBasicSystem()
     test.Snap("Run Basic Here" .. suffix)
     apple2.TypeLine("BYE")
     a2d.WaitForDesktopReady()

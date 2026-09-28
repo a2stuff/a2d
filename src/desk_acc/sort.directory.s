@@ -161,7 +161,6 @@ start:  tsx
 ;;; ============================================================
 ;;; ProDOS call parameter blocks
 
-        DEFINE_SET_MARK_PARAMS set_mark_params, $2B
         DEFINE_READWRITE_BLOCK_PARAMS block_params, 0, 0
 
         buffer := dir_data_buffer
@@ -169,10 +168,7 @@ start:  tsx
 
         DEFINE_OPEN_PARAMS open_params, path_buf, DA_IO_BUFFER
         DEFINE_READWRITE_PARAMS read_params, buffer, kBufferLen
-        DEFINE_READWRITE_PARAMS write_params, buffer, kBufferLen
         DEFINE_CLOSE_PARAMS close_params
-
-        DEFINE_GET_FILE_INFO_PARAMS file_info_params, path_buf
 
 path_buf:
         .res    kPathBufferSize, 0
@@ -352,10 +348,6 @@ done:   jmp     Exit
 .endproc ; ReadSortWrite
 
 ;;; ============================================================
-
-;;; Device number (needed for writing blocks)
-dev_num:
-        .byte   0
 
 ;;; Page (address hi byte) after last block.
 end_block_page:

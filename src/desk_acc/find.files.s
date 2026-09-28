@@ -601,8 +601,6 @@ offset: .addr   0
         MLIEntry := MLI
         block_buffer := $1A00
 
-entry:
-
 .scope
         ptr := $06
 

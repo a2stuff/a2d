@@ -104,7 +104,6 @@ notpencopy:     .byte   MGTK::notpencopy
 
 kCDButtonW = 40
 kCDButtonH = 10
-kColW = 60
 
 kRow1 = 4
 kRow2 = 27
@@ -115,7 +114,6 @@ kCol2 = kCol1 + kCDButtonW + 10
 kCol3 = kCol2 + kCDButtonW + 10
 kCol4 = kCol3 + kCDButtonW + 10
 kCol5 = kCol4 + kCDButtonW + 10 + 10
-kCol6 = kCol5 + kCDButtonW + 10
 
         DEFINE_RECT_SZ display_rect, kCol1, kRow1, 190, 17
 
@@ -676,7 +674,6 @@ MAIN:                           ; "Null" out T/M/S values
                                 ; Do all the things!
         jsr     MainLoop
 
-EXIT:
         jmp     ::Exit
 
 ;;; ============================================================

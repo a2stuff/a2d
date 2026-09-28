@@ -400,7 +400,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
 
-.proc PaintWindow
+.proc PaintWindowImpl
         ENTRY_POINTS_FOR_BIT7_FLAG draw, update, full_flag
 
         ;; Defer if content area is not visible
@@ -629,9 +629,9 @@ date:   .byte   0
 mlen:   .byte   0               ; month length + 1
 row:    .byte   0
 col:    .byte   0               ; sun=0, etc
-.endproc ; PaintWindow
-DrawWindow := PaintWindow::draw
-UpdateWindow := PaintWindow::update
+.endproc ; PaintWindowImpl
+DrawWindow := PaintWindowImpl::draw
+UpdateWindow := PaintWindowImpl::update
 
 ;;; ============================================================
 ;;; Populates `str_year` from `datetime` (a `ParsedDateTime`)

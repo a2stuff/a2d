@@ -35,7 +35,7 @@
         kMaxDAsToConsider = 16  ; must be power of 2
         ASSERT_EQUALS kMaxDAsToConsider & (kMaxDAsToConsider-1), 0
 
-.proc Init
+.scope Init
         ;; Use time ticks as randomness - low byte is enough entropy
         jsr     JUMP_TABLE_GET_TICKS ; returns A,X,Y = tick count
         and     #kMaxDAsToConsider - 1
@@ -177,7 +177,7 @@ file_num:
 filename:
         .res    16
 
-.endproc ; Init
+.endscope ; Init
 
 
 ;;; ============================================================

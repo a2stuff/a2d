@@ -93,8 +93,6 @@ name:   PASCAL_STRING res_string_window_title
 
 pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
-penBIC:         .byte   MGTK::penBIC
-
 
 kHPadding = 0
 kVPadding = 0
@@ -630,8 +628,6 @@ store_and_redraw:
 
         SET_BIT7_FLAG game_over_flag
         rts
-
-count:  .word   0
 
 .endproc ; CheckVictory
 

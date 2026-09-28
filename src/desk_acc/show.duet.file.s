@@ -300,7 +300,6 @@ play:   ldax    #data_buf
         play_routine := *+1
         jsr     Player
 
-redo:
         ;; If a key was pressed, maybe restart with alt player
         lda     KBD
     IF NS
