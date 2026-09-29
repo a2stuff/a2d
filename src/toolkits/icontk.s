@@ -564,15 +564,14 @@ END_PARAM_BLOCK
 
         ;; Find index
         ldx     num_icons
-:       dex
-        cmp     icon_list,x
-        bne     :-
+    DO
+        dex
+    WHILE A <> icon_list,x
 
         ;; Shift items down
-:       copy8   icon_list+1,x, icon_list,x
-        inx
-        cpx     num_icons
-        bne     :-
+    DO
+        copy8   icon_list+1,x, icon_list,x
+    WHILE inx : X <> num_icons
 
         pla                     ; A = icon
         rts
@@ -946,7 +945,7 @@ move_ok:
     IF NS
         lda     #IconTK::kDragResultMoveModified
         ASSERT_NOT_EQUALS IconTK::kDragResultMoveModified, 0
-        bne     exit_with_a
+        bne     exit_with_a     ; always
     END_IF
 
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
@@ -1081,10 +1080,10 @@ find_icon:
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
         copy8   findwindow_params::window_id, findcontrol_params::window_id
         MGTK_CALL MGTK::FindControlEx, findcontrol_params
-        bne     fail
+    IF ZERO
         lda     findcontrol_params::which_ctl
         ASSERT_EQUALS MGTK::Ctl::not_a_control, 0
-        bne     fail            ; scrollbar, etc.
+      IF ZERO           ; skip if scrollbar, etc.
 
         ;; Ignore if y coord < window's header height
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
@@ -1094,8 +1093,10 @@ find_icon:
         lda     (win_ptr),y
         copy16in (win_ptr),y, headery
         add16_8 headery, header_height
-    IF u16 findwindow_params::mousey >= headery
+       IF u16 findwindow_params::mousey >= headery
         RETURN  C=0
+       END_IF
+      END_IF
     END_IF
 
 fail:   RETURN  C=1
