@@ -204,6 +204,7 @@ test.Step(
     desktop.OpenWindow("/RAM1")
     desktop.GrowWindowBy(0, -10)
     apple2.DownArrowKey() -- F1
+    a2dtest.WaitForSystemTask()
     apple2.DownArrowKey() -- F6
     a2dtest.WaitForSystemTask()
     local f6_x, f6_y = a2dtest.GetSelectedIconCoords()
