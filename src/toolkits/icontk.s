@@ -195,24 +195,17 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 .endparams
 
-.params textwidth_params
-textptr:        .addr   text_buffer
-textlen:        .byte   0
+.params stringwidth_params
+stringptr:      .addr   label_buffer
 result:         .word   0
 .endparams
-settextbg_params    := textwidth_params::result + 1  ; re-used
+settextbg_params    := stringwidth_params::result + 1 ; re-used
 
 settextbg_white:
         .byte   MGTK::textbg_white
 
-.params drawtext_params
-textptr:        .addr   text_buffer
-textlen:        .byte   0
-.endparams
-        ;; `text_buffer` contains only the characters; the length
-        ;; is in `drawtext_params::textlen`
-text_buffer:
-        .res    19, 0
+label_buffer:
+        .res    1 + 15 + 2, 0 ; length byte + `kMaxIconNameLength` + leading/trailing spaces
 
 white_pattern:
         .byte   %11111111
@@ -347,7 +340,7 @@ icon_grafport:  .tag    MGTK::GrafPort
 ;;; InitToolKit
 
 .proc InitToolKitImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 headersize      .byte
 a_polybuf       .addr
 bufsize         .word
@@ -355,17 +348,14 @@ a_typemap       .addr
 a_heap          .addr
 END_PARAM_BLOCK
 
-        table_ptr := generic_ptr
-
         copy8   params::headersize, header_height
         copy16  params::a_polybuf, polybuf_addr
-        copy16  params::bufsize, bufsize
         copy16  params::a_typemap, typemap_addr
-        copy16  params::a_heap, table_ptr
 
         ;; --------------------------------------------------
         ;; Populate `icon_ptrs_low/high` table
 
+        table_ptr := params::a_heap
         ldx     #1
     DO
         ;; Populate table entry
@@ -379,6 +369,7 @@ END_PARAM_BLOCK
         ;; --------------------------------------------------
         ;; MaxDraggableItems = BufferSize / kIconPolySize
 
+        bufsize := params::bufsize
         ldy     #0
     DO
         sub16_8 bufsize, #kIconPolySize
@@ -389,8 +380,6 @@ END_PARAM_BLOCK
 
         rts
 
-bufsize:
-        .word   0
 .endproc ; InitToolKitImpl
 
 ;;; ============================================================
@@ -453,7 +442,7 @@ done:   rts
 ;;; HighlightIcon
 
 .proc HighlightIconImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 END_PARAM_BLOCK
 
@@ -474,7 +463,7 @@ END_PARAM_BLOCK
 ;;; HighlightAll / UnhighlightAll
 
 .proc HighlightAllImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 window_id       .byte
 END_PARAM_BLOCK
 
@@ -521,7 +510,7 @@ END_PARAM_BLOCK
 ;;; FreeIcon
 
 .proc FreeIconImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 END_PARAM_BLOCK
 
@@ -603,7 +592,7 @@ END_PARAM_BLOCK
 ;;; EraseIcon
 
 .proc EraseIconImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 END_PARAM_BLOCK
 
@@ -615,7 +604,7 @@ END_PARAM_BLOCK
 ;;; FreeAll
 
 .proc FreeAllImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 window_id       .byte
 END_PARAM_BLOCK
 
@@ -643,7 +632,7 @@ END_PARAM_BLOCK
 ;;; FindIcon
 
 .proc FindIconImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 coords          .tag MGTK::Point
 result          .byte           ; out
 window_id       .byte
@@ -698,9 +687,12 @@ finish:
 ;;; DragHighlighted
 
 .proc DragHighlightedImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte                   ; in/out
 coords  .tag    MGTK::Point
+
+;;; local variables on ZP:
+headery .word
 END_PARAM_BLOCK
 
         initial_coords := params::coords
@@ -1091,9 +1083,9 @@ find_icon:
         copy16  window_ptr, z:win_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         lda     (win_ptr),y
-        copy16in (win_ptr),y, headery
-        add16_8 headery, header_height
-       IF u16 findwindow_params::mousey >= headery
+        copy16in (win_ptr),y, params::headery
+        add16_8 params::headery, header_height
+       IF u16 findwindow_params::mousey >= params::headery
         RETURN  C=0
        END_IF
       END_IF
@@ -1101,8 +1093,6 @@ find_icon:
 
 fail:   RETURN  C=1
 
-headery:
-        .word   0
 .endproc ; _CheckRealContentArea
 
 .proc _ValidateTargetAndHighlight
@@ -1184,7 +1174,7 @@ headery:
 ;;; UnhighlightIcon
 
 .proc UnhighlightIconImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 END_PARAM_BLOCK
 
@@ -1205,7 +1195,7 @@ END_PARAM_BLOCK
 ;;; IconInRect
 
 .proc IconInRectImplImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 rect    .tag    MGTK::Rect
 END_PARAM_BLOCK
@@ -1256,7 +1246,7 @@ IconInRectImpl := IconInRectImplImpl::start
 ;;; GetIconBounds
 
 .proc GetIconBoundsImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 rect    .tag    MGTK::Rect ; out
 END_PARAM_BLOCK
@@ -1285,7 +1275,7 @@ END_PARAM_BLOCK
 ;;; GetRenameRect
 
 .proc GetRenameRectImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 rect    .tag    MGTK::Rect ; out
 END_PARAM_BLOCK
@@ -1308,7 +1298,7 @@ END_PARAM_BLOCK
 ;;; GetBitmapRect
 
 .proc GetBitmapRectImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte
 rect    .tag    MGTK::Rect ; out
 END_PARAM_BLOCK
@@ -1374,8 +1364,11 @@ clip_window_id:
 ;;; ============================================================
 
 .proc DrawIconCommon
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
         icon    .byte
+
+;;; local variables on ZP:
+        win_state       .byte
 END_PARAM_BLOCK
 
         sta     clip_icons_flag
@@ -1391,7 +1384,7 @@ END_PARAM_BLOCK
 
         ;; Stash some state
         ldy     #IconEntry::win_state
-        copy8   (icon_ptr),y, win_state
+        copy8   (icon_ptr),y, params::win_state
 
         ;; For quick access
         and     #kIconEntryWinIdMask
@@ -1462,7 +1455,7 @@ ret:    rts
         ;; Set text background color
         lda     #MGTK::textbg_white
         ASSERT_EQUALS ::kIconEntryStateHighlighted, ::V_FLAG_MASK
-    IF bit win_state : VS       ; highlighted?
+    IF bit params::win_state : VS       ; highlighted?
         lda     #MGTK::textbg_black
     END_IF
         sta     settextbg_params
@@ -1473,14 +1466,14 @@ ret:    rts
 
         ;; Shade (XORs background)
         ASSERT_EQUALS ::kIconEntryStateDimmed, ::N_FLAG_MASK
-    IF bit win_state : NS
+    IF bit params::win_state : NS
         MGTK_CALL MGTK::SetPattern, dark_pattern
         jsr     _Shade
     END_IF
 
         ;; Mask (cleared to white or black)
         ASSERT_EQUALS ::kIconEntryStateHighlighted, ::V_FLAG_MASK
-    IF bit win_state : VS
+    IF bit params::win_state : VS
         MGTK_CALL MGTK::SetPenMode, penBIC
     ELSE
         MGTK_CALL MGTK::SetPenMode, penOR
@@ -1489,13 +1482,13 @@ ret:    rts
 
         ;; Shade again (restores background)
         ASSERT_EQUALS ::kIconEntryStateDimmed, ::N_FLAG_MASK
-    IF bit win_state : NS
+    IF bit params::win_state : NS
         jsr     _Shade
     END_IF
 
         ;; Icon (drawn in black or white)
         ASSERT_EQUALS ::kIconEntryStateHighlighted, ::V_FLAG_MASK
-    IF bit win_state : VS
+    IF bit params::win_state : VS
         MGTK_CALL MGTK::SetPenMode, penOR
     ELSE
         MGTK_CALL MGTK::SetPenMode, penBIC
@@ -1507,7 +1500,7 @@ ret:    rts
 
         MGTK_CALL MGTK::MoveTo, label_pos
 
-        MGTK_CALL MGTK::DrawText, drawtext_params
+        MGTK_CALL MGTK::DrawString, label_buffer
 
         MGTK_CALL MGTK::SetTextBG, settextbg_white
 
@@ -1520,16 +1513,12 @@ ret:    rts
 .endproc ; _Shade
 
 .endproc ; _DoPaint
-
-win_state:                      ; copy of IconEntry::win_state
-        .byte   0
-
 .endproc ; DrawIconCommon
 
 ;;; ============================================================
 
 ;;; Input: `icon_ptr` points at icon
-;;; Output: Populates `bitmap_rect` and `label_rect` and `text_buffer`
+;;; Output: Populates `bitmap_rect` and `label_rect` and `label_buffer`
 ;;; Sets `res_ptr`
 .proc CalcIconRects
         ;; Copy, pad, and measure name
@@ -1602,7 +1591,7 @@ win_state:                      ; copy of IconEntry::win_state
         ldy     #IconResource::maprect + MGTK::Rect::x2
         add16in label_rect+MGTK::Rect::x1, (res_ptr),y, label_rect+MGTK::Rect::x1
         jsr     stash_rename_rect
-        sub16   label_rect+MGTK::Rect::x1, textwidth_params::result, label_rect+MGTK::Rect::x1
+        sub16   label_rect+MGTK::Rect::x1, stringwidth_params::result, label_rect+MGTK::Rect::x1
         asr16   label_rect+MGTK::Rect::x1 ; signed
 
         sub16_8 rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x1
@@ -1611,7 +1600,7 @@ win_state:                      ; copy of IconEntry::win_state
     END_IF
 
         ;; Label right
-        add16   label_rect+MGTK::Rect::x1, textwidth_params::result, label_rect+MGTK::Rect::x2
+        add16   label_rect+MGTK::Rect::x1, stringwidth_params::result, label_rect+MGTK::Rect::x2
 
         add16_8 rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x2
         dec16   rename_rect+MGTK::Rect::y1
@@ -1731,31 +1720,27 @@ icon_poly_map:
 
 .endproc ; CalcIconPoly
 
-;;; Copy name from IconEntry (`icon_ptr`) to text_buffer,
+;;; Copy name from IconEntry (`icon_ptr`) to `label_buffer`,
 ;;; with leading/trailing spaces, and measure it.
 
 .proc PrepareName
-        .assert text_buffer - 1 = drawtext_params::textlen, error, "location mismatch"
-
-        dest := drawtext_params::textlen
-
-        ldy     #.sizeof(IconEntry)
-        ldx     #.sizeof(IconEntry) - IconEntry::name
+        ;; Copy IconEntry's name into `label_buffer`, offset by one
+        ldy     #IconEntry::name + kMaxIconNameLength
+        ldx     #kMaxIconNameLength
     DO
-        copy8   (icon_ptr),y, dest + 1,x
+        copy8   (icon_ptr),y, label_buffer + 1,x
     WHILE dey : dex : POS
 
-        ldy     dest + 1
+        ldy     label_buffer + 1 ; copied length
+        iny                      ; pad start / end with spaces
         iny
-        iny
-        sty     dest
+        sty     label_buffer    ; updated length
 
         lda     #' '
-        sta     dest + 1
-        sta     dest,y
+        sta     label_buffer + 1        ; pad start
+        sta     label_buffer,y          ; pad end
 
-        copy8   drawtext_params::textlen, textwidth_params::textlen
-        MGTK_CALL MGTK::TextWidth, textwidth_params
+        MGTK_CALL MGTK::StringWidth, stringwidth_params
 
         rts
 .endproc ; PrepareName
@@ -1764,7 +1749,7 @@ icon_poly_map:
 ;;; DrawAll
 
 .proc DrawAllImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 window_id       .byte
 END_PARAM_BLOCK
 
@@ -1810,7 +1795,7 @@ END_PARAM_BLOCK
 ;;; OffsetAll
 
 .proc OffsetAllImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 window_id       .byte
 delta_x         .word
 delta_y         .word
@@ -1842,7 +1827,7 @@ END_PARAM_BLOCK
 ;;; GetAllBounds
 
 .proc GetAllBoundsImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 window_id       .byte
 rect            .tag    MGTK::Rect ; out
 END_PARAM_BLOCK
@@ -1902,7 +1887,7 @@ END_PARAM_BLOCK
 ;;; GetIconEntry
 
 .proc GetIconEntryImpl
-PARAM_BLOCK params, icontk::command_data
+PARAM_BLOCK params, icontk::command_data, kMaxCommandDataSize
 icon    .byte           ; in
 entry   .addr           ; out
 END_PARAM_BLOCK

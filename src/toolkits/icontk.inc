@@ -89,13 +89,15 @@ label   := *
 ;;;      .res  15  name  (name)
 ;;;      .byte record_num (index of icon in window)
 
+kMaxIconNameLength = 15
+
 .struct IconEntry
         flags           .byte   ; 0
         win_state       .byte   ; 1
         iconx           .word   ; 2
         icony           .word   ; 4
         type            .byte   ; 6
-        name            .res 16 ; 7 (length + 15 chars)
+        name            .res 1 + 15 ; 7 (length + `kMaxIconNameLength` chars)
         record_num      .byte   ; 23
 .endstruct                      ; 24
 

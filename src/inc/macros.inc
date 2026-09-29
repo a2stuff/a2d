@@ -248,7 +248,14 @@ end:
 ;;; The `name` argument can be empty, in which case an anonymous block
 ;;; is used, with the parameters defined in the current scope.
 
-.macro PARAM_BLOCK name, addr
+.macro PARAM_BLOCK name, addr, opt_max_size
+    .define _param_block_name name
+    .define _param_block_max_size opt_max_size
+
+    .if .blank({name}) .and .not(.blank({opt_max_size}))
+      .error "PARAM_BLOCK: need name to check size"
+    .endif
+
     .ifnblank name
         WARN_IF_SHADOWING name
         name := addr
@@ -260,6 +267,13 @@ end:
 
 .macro END_PARAM_BLOCK
         .endstruct
+
+    .if .tcount({_param_block_name}) > 0 .and .tcount({_param_block_max_size}) > 0
+      .assert .sizeof(_param_block_name) <= _param_block_max_size, error, "PARAM_BLOCK too large"
+    .endif
+
+    .undef _param_block_name
+    .undef _param_block_max_size
 .endmacro
 
 
