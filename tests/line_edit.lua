@@ -603,7 +603,7 @@ end)
 LineEditTest(
   "Map DA - on screen",
   {
-    max = 15,
+    max = 16,
     chars = printable_chars,
   },
   function()
@@ -622,7 +622,7 @@ end)
 LineEditTest(
   "Map DA - line edit partially obscured",
   {
-    max = 15,
+    max = 16,
     chars = printable_chars,
   },
   function()
@@ -643,7 +643,7 @@ end)
 LineEditTest(
   "Map DA - line edit fully obscured",
   {
-    max = 15,
+    max = 16,
     chars = printable_chars,
   },
   function()
@@ -664,7 +664,7 @@ end)
 LineEditTest(
   "Map DA - window obscured",
   {
-    max = 15,
+    max = 16,
     chars = printable_chars,
   },
   function()
