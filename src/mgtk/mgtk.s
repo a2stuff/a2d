@@ -4920,7 +4920,7 @@ savesize        .word
         stx     menu_fill_rect + MGTK::Rect::y1
 
         inx                                   ; font height + 4: top of desktop area
-        stx     set_port_top
+        stx     set_port_viewloc+MGTK::Point::ycoord
         stx     winframe_top
         stx     desktop_mapinfo+MGTK::MapInfo::viewloc+MGTK::Point::ycoord
         stx     desktop_mapinfo+MGTK::MapInfo::maprect+MGTK::Rect::y1
@@ -8826,12 +8826,12 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         COPY_BLOCK winrect, left
         jsr     ClipRect
 
-        ldx     #3
+        ldx     #.sizeof(MGTK::Point)-1
 :       lda     left,x
-        sta     set_port_maprect,x
-        sta     set_port_params,x
+        sta     set_port_maprect+MGTK::Rect::topleft,x
+        sta     set_port_viewloc,x
         lda     right,x
-        sta     set_port_size,x
+        sta     set_port_maprect+MGTK::Rect::bottomright,x
         dex
         bpl     :-
 
@@ -8912,16 +8912,15 @@ wintitle_height:.word  12       ; font height + 3
 winframe_top:   .word  13       ; font height + 4
 
 .params set_port_params
-        DEFINE_POINT viewloc, 0,$D
+        DEFINE_POINT viewloc, 0, kMenuBarHeight
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0,0,0,0
         REF_MAPINFO_MEMBERS
 .endparams
-        set_port_top  := set_port_params::viewloc::ycoord
-        set_port_size := set_port_params::maprect::x2
-        set_port_maprect  := set_port_params::maprect::x1 ; Re-used since h/voff are 0
+        set_port_viewloc  := set_port_params::viewloc
+        set_port_maprect  := set_port_params::maprect
 
 ;;; ============================================================
 ;;; WindowToScreen

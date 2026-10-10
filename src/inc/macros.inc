@@ -4,6 +4,9 @@
 ;;; Common patterns
 ;;; ============================================================
 
+;;; Useful in macros, e.g. .byte value_or_default arg1, kDefaultValue
+.define value_or_default(value, default) value +((.tcount({value}) = 0) * default)
+
 ;;; Remember to call as AS_BYTE{...} or AS_WORD{...}. This is because
 ;;; the ca65's C-style macro's arguments are delimited by braces or
 ;;; commas, but not parentheses. So despite appearances, this:

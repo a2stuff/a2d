@@ -915,7 +915,6 @@ ycoord: .word   AS_WORD{top}
 ;;; NOTE: If shortcut is A-Z, char2 is to_lower(char1)
 .macro DEFINE_MENU_ITEM saddr, shortcut
     .ifnblank shortcut
-
         .byte   MGTK::MenuOpt::open_apple|MGTK::MenuOpt::solid_apple ; option byte
         .byte   0               ; mark_char
         .byte   shortcut        ; char1
@@ -925,17 +924,14 @@ ycoord: .word   AS_WORD{top}
       .else
         .byte   MGTK::no_shortcut
       .endif
-        .addr   saddr           ; item_str_pointer
-
     .else
-
         .byte   0               ; option byte
         .byte   0               ; mark_char
         .byte   MGTK::no_shortcut ; char1
         .byte   MGTK::no_shortcut ; char2
-        .addr   saddr           ; item_str_pointer
-
     .endif
+
+        .addr   saddr           ; item_str_pointer
 .endmacro
 
 ;;; For menu items with control keys (e.g. CHAR_RETURN), requiring no modifiers
@@ -943,11 +939,7 @@ ycoord: .word   AS_WORD{top}
         .byte   0               ; option byte
         .byte   0               ; mark_char
         .byte   shortcut1       ; char1
-    .ifnblank shortcut2
-        .byte   shortcut2       ; char2
-    .else
-        .byte   MGTK::no_shortcut
-    .endif
+        .byte   value_or_default shortcut2, MGTK::no_shortcut ; char2
         .addr   saddr           ; item_str_pointer
 .endmacro
 

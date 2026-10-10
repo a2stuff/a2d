@@ -446,13 +446,7 @@ position:       .faraddr pos
         WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   2
-
-    .ifnblank un
-unit_num:       .byte   un
-    .else
-unit_num:       .byte   0
-    .endif
-
+unit_num:       .byte   value_or_default un, 0
 data_buffer:    .addr   db
         .refto param_count
         .refto unit_num
@@ -503,17 +497,8 @@ int_num:        .byte   0
     .endif
 .params name
 param_count:    .byte   4
-quit_type:
-    .ifnblank type
-        .byte   type
-    .else
-        .byte   0
-    .endif
-    .ifnblank pathname
-        .word   pathname
-    .else
-        .word   0
-    .endif
+quit_type:      .byte   value_or_default type, 0
+        .word   value_or_default pathname, 0
         .byte   0
         .word   0
         .refto param_count
@@ -576,31 +561,10 @@ pathname:       .addr   pn
 .params name
 param_count:    .byte   7
 pathname:       .addr   pn
-
-    .ifnblank ac
-access: .byte   ac
-    .else
-access: .byte   0
-    .endif
-
-    .ifnblank ft
-file_type:      .byte   ft
-    .else
-file_type:      .byte   0
-    .endif
-
-    .ifnblank at
-aux_type:       .word   at
-    .else
-aux_type:       .word   0
-    .endif
-
-    .ifnblank st
-storage_type:   .byte   st
-    .else
-storage_type:   .byte   0
-    .endif
-
+access:         .byte   value_or_default ac, 0
+file_type:      .byte   value_or_default ft, 0
+aux_type:       .word   value_or_default at, 0
+storage_type:   .byte   value_or_default st, 0
 create_date:    .word   0
 create_time:    .word   0
         .refto param_count
