@@ -1362,6 +1362,63 @@ long_target:
 long_forward_target:
 
 ;;; ============================================================
+;;; Assignment Expressions
+;;; ============================================================
+
+
+varA:   .word   1234
+varB:   .word   4567
+varC:   .word   9870
+
+;;; u8
+        SET u8 varB = varA
+        SET u8 varB = #kConstant
+        SET u8 varB = #12
+        SET u8 varC = varA + varB
+        SET u8 varC = #12 + varB
+        SET u8 varC = varA + #12
+        SET u8 varC = varA - varB
+        SET u8 varC = #12 - varB
+        SET u8 varC = varA - #12
+        SET u8 varA += #12
+        SET u8 varA -= #12
+
+;;; u16
+        SET u16 varB = varA
+        SET u16 varB = #kConstant
+        SET u16 varB = #1234
+        SET u16 varC = varA + varB
+        SET u16 varC = #1234 + varB
+        SET u16 varC = varA + #1234
+        SET u16 varC = varA - varB
+        SET u16 varA += varB
+        SET u16 varA -= varB
+
+;;; s16
+        SET s16 varB = varA
+        SET s16 varC = varA + varB
+        SET s16 varC = varA - varB
+        SET s16 varA += varB
+        SET s16 varA -= varB
+
+;;; u24
+        SET u24 varB = varA
+        SET u24 varB = #$123456
+
+;;; u32
+        SET u32 varB = varA
+        SET u32 varB = #$12345678
+        SET u32 varC = varA + varB
+        SET u32 varC = varA - varB
+        SET u32 varA += varB
+        SET u32 varA -= varB
+
+;;; Parenthesized expressions
+
+        SET u16 (varC+4) = (varA+2) + (varB+3)
+        SET u16 varB+1,x = (varA+1,x)
+
+;;; ============================================================
 ;;; Errors
 ;;; ============================================================
 
@@ -1408,4 +1465,16 @@ long_forward_target:
 
         IF NS GOTO                  ; IF: Expected target after GOTO
         IF NS JUMP                  ; IF: Expected target after JUMP
+
+        SET                         ; SET: Expected type (u8,u16,s16,u24,u32)
+        SET u16                     ; SET: Expected assignment target
+        SET u16 target              ; SET: Expected assignment operator (=, +=, -=)
+        SET u16 target =            ; SET: Expected argument(s) after operator '='
+        SET u16 target = varA +     ; SET: Expected argument(s) after operator '+'
+        SET u16 target += varA + varB ; SET: Unexpected expression after assignment op ('+=')
+        SET u16 target += 1         ; SET: Numeric literal after '+='; did you mean '#1'?
+        SET u16 target = 1 + varB   ; SET: Numeric literal after '='; did you mean '#1'?
+        SET u16 target = kConstant + varB ; SET: Constant in assignment; did you mean '#kConstant'?
+        SET u16 target = varA + 1   ; SET: Numeric literal in '+' expression; did you mean '#1'?
+        SET u16 target = varA + kConstant ; SET: Constant in assignment; did you mean '#kConstant'?
 .endif

@@ -523,47 +523,47 @@ skip_erase_flag:        .byte   0 ; bit7
         MGTK_CALL MGTK::ShieldCursor, eye_rect
 
         COPY_STRUCT MGTK::Rect, eye_rect, io_params::rect
-        copy16  #outer_oval, io_params::oval
-        sub16   io_params::rect::right, io_params::rect::left, io_params::width
-        sub16   io_params::rect::bottom, io_params::rect::top, io_params::height
+        SET u16 io_params::oval = #outer_oval
+        SET s16 io_params::width  = io_params::rect::right  - io_params::rect::left
+        SET s16 io_params::height = io_params::rect::bottom - io_params::rect::top
         jsr     InitOval
 
-        add16   eye_rect+MGTK::Rect::x1, #kPenW, io_params::rect::left
-        add16   eye_rect+MGTK::Rect::y1, #kPenH, io_params::rect::top
-        sub16   eye_rect+MGTK::Rect::x2, #kPenW, io_params::rect::right
-        sub16   eye_rect+MGTK::Rect::y2, #kPenH, io_params::rect::bottom
-        copy16  #inner_oval, io_params::oval
-        sub16   io_params::rect::right, io_params::rect::left, io_params::width
-        sub16   io_params::rect::bottom, io_params::rect::top, io_params::height
+        SET s16 io_params::rect::left   = (eye_rect+MGTK::Rect::x1) + #kPenW
+        SET s16 io_params::rect::top    = (eye_rect+MGTK::Rect::y1) + #kPenH
+        SET s16 io_params::rect::right  = (eye_rect+MGTK::Rect::x2) - #kPenW
+        SET s16 io_params::rect::bottom = (eye_rect+MGTK::Rect::y2) - #kPenH
+        SET u16 io_params::oval = #inner_oval
+        SET s16 io_params::width  = io_params::rect::right  - io_params::rect::left
+        SET s16 io_params::height = io_params::rect::bottom - io_params::rect::top
         jsr     InitOval
 
-        copy16  outer_oval+OvalRec::top, yy
+        SET s16 yy = (outer_oval+OvalRec::top)
 
     DO
-        copy16  #outer_oval, bo_params::oval
-        copy16  yy, bo_params::vert
+        SET s16 bo_params::oval = #outer_oval
+        SET s16 bo_params::vert = yy
         jsr     BumpOval
 
-        copy16  #inner_oval, bo_params::oval
-        copy16  yy, bo_params::vert
+        SET s16 bo_params::oval = #inner_oval
+        SET s16 bo_params::vert = yy
         jsr     BumpOval
 
-        copy16  yy, rect+MGTK::Rect::y1
-        copy16  yy, rect+MGTK::Rect::y2
+        SET s16 rect+MGTK::Rect::y1 = yy
+        SET s16 rect+MGTK::Rect::y2 = yy
 
       IF u16 yy >= inner_oval+OvalRec::top AND u16 yy < inner_oval+OvalRec::bottom
         ;; Need to draw the left and right edges
-        copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
-        copy16  inner_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x2
+        SET s16 rect+MGTK::Rect::x1 = (outer_oval+OvalRec::leftEdge+2)
+        SET s16 rect+MGTK::Rect::x2 = (inner_oval+OvalRec::leftEdge+2)
         MGTK_CALL MGTK::PaintRect, rect
 
-        copy16  inner_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x1
-        copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
+        SET s16 rect+MGTK::Rect::x1 = (inner_oval+OvalRec::rightEdge+2)
+        SET s16 rect+MGTK::Rect::x2 = (outer_oval+OvalRec::rightEdge+2)
         MGTK_CALL MGTK::PaintRect, rect
      ELSE
          ;; Only need to draw the outer oval
-        copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
-        copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
+        SET s16 rect+MGTK::Rect::x1 = (outer_oval+OvalRec::leftEdge+2)
+        SET s16 rect+MGTK::Rect::x2 = (outer_oval+OvalRec::rightEdge+2)
         MGTK_CALL MGTK::PaintRect, rect
      END_IF
 
@@ -736,10 +736,10 @@ oval := $50
         ;; Init top/bottom to rect top/bottom
 
         ;; oval.top [16.0] = rect.top [16.0]
-        copy16 io_params::rect::top, oval+OvalRec::top
+        SET u16 oval+OvalRec::top = io_params::rect::top
 
         ;; oval.bottom [16.0] = rect.bottom [16.0]
-        copy16 io_params::rect::bottom, oval+OvalRec::bottom
+        SET u16 oval+OvalRec::bottom = io_params::rect::bottom
 
         ;; --------------------------------------------------
         ;; Check ovalWidth/Height, pin at 0
@@ -747,84 +747,84 @@ oval := $50
         ;; if (ovalWidth [16.0] < 0)
         ;;   ovalWidth [16.0] = 0
     IF bit ovalWidth+1 : NEG
-        copy16  #0, ovalWidth
+        SET u16 ovalWidth = #0
     END_IF
 
         ;; if (ovalHeight [16.0] < 0)
         ;;   ovalHeight [16.0] = 0
     IF bit ovalHeight+1 : NEG
-        copy16  #0, ovalHeight
+        SET u16 ovalHeight = #0
     END_IF
 
         ;; --------------------------------------------------
         ;; Check ovalWidth/Height, trim if bigger than rect
 
         ;; d0 [16.0] = rect.right [16.0] - rect.left [16.0]
-        sub16   io_params::rect::right, io_params::rect::left, d0
+        SET u16 d0 = io_params::rect::right - io_params::rect::left
 
         ;; if (ovalWidth [16.0] > d0 [16.0])
         ;;   ovalWidth [16.0] = d0 [16.0]
     IF u16 ovalWidth < d0
-        copy16  d0, ovalWidth
+        SET u16 ovalWidth = d0
     END_IF
 
         ;; d0 [16.0] = rect.bottom [16.0] - rect.top [16.0]
-        sub16   io_params::rect::bottom, io_params::rect::top, d0
+        SET u16 d0 = io_params::rect::bottom - io_params::rect::top
 
         ;; if (ovalHeight [16.0] > d0 [16.0])
         ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
     IF u16 ovalHeight < d0
-        copy16  d0, ovalHeight
+        SET u16 ovalHeight = d0
     END_IF
 
         ;; --------------------------------------------------
         ;; Set up left/right edges, numbers
 
         ;; oval.rightEdge [16.16] = rect.right [16.0]
-        copy16 #0, oval+OvalRec::rightEdge
-        copy16 io_params::rect::right, oval+OvalRec::rightEdge+2
+        SET u16 oval+OvalRec::rightEdge = #0
+        SET u16 oval+OvalRec::rightEdge+2 = io_params::rect::right
 
         ;; oval.leftEdge [16.16] = rect.left [16.0]
-        copy16 #0, oval+OvalRec::leftEdge
-        copy16 io_params::rect::left, oval+OvalRec::leftEdge+2
+        SET u16 oval+OvalRec::leftEdge = #0
+        SET u16 oval+OvalRec::leftEdge+2 = io_params::rect::left
 
         ;; ovalWidthDiv2 [16.16] = ovalWidth [16.0] / 2
-        copy16  #0, ovalWidthDiv2
-        copy16  ovalWidth, ovalWidthDiv2+2
+        SET u16 ovalWidthDiv2 =  #0
+        SET u16 ovalWidthDiv2+2 =  ovalWidth
         lsr32   ovalWidthDiv2
 
         ;; oval.leftEdge [16.16] = oval.leftEdge [16.16] + ovalWidthDiv2 [16.16]
-        add32   oval+OvalRec::leftEdge, ovalWidthDiv2, oval+OvalRec::leftEdge
+        SET u32 oval+OvalRec::leftEdge = (oval+OvalRec::leftEdge) + ovalWidthDiv2
 
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] - ovalWidthDiv2 [16.16]
-        sub32   oval+OvalRec::rightEdge, ovalWidthDiv2, oval+OvalRec::rightEdge
+        SET u32 oval+OvalRec::rightEdge = (oval+OvalRec::rightEdge) - ovalWidthDiv2
 
         ;; oval.oneHalf [16.16] = 0.5
-        copy32  #$00008000, oval+OvalRec::oneHalf
+        SET u32 oval+OvalRec::oneHalf = #$00008000
 
         ;; Bias
         ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16]
-        add32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
+        SET u32 oval+OvalRec::rightEdge = (oval+OvalRec::rightEdge) + oval+OvalRec::oneHalf
 
         ;; --------------------------------------------------
         ;; Init y to -height + 1
 
         ;; oval.y [16.0] = 1 - ovalHeight [16.0]
-        sub16 #1, ovalHeight, oval+OvalRec::yy
+        SET u16 oval+OvalRec::yy = #1 - ovalHeight
 
         ;; --------------------------------------------------
         ;; Init rSqYSq to 2*ovalHeight-1
 
         ;; oval.rSqYSq [32.0] = 2 * ovalHeight [16.0] - 1
-        copy32  ovalHeight, oval+OvalRec::rSqYSq
+        SET u32 oval+OvalRec::rSqYSq = ovalHeight
         asl32   oval+OvalRec::rSqYSq
-        sub32   oval+OvalRec::rSqYSq, #1, oval+OvalRec::rSqYSq
+        SET u32 oval+OvalRec::rSqYSq = (oval+OvalRec::rSqYSq) - #1
 
         ;; --------------------------------------------------
         ;; Init square to 0
 
         ;; oval.square [16.16] = 0
-        copy32  #0, oval+OvalRec::square
+        SET u32 oval+OvalRec::square = #0
 
         ;; --------------------------------------------------
         ;; oddNum = 1 * aspect ratio squared
@@ -862,7 +862,7 @@ oval := $50
 
 
         ;; oval.oddNum [16.16] = aspect_ratio [16.16] * aspect_ratio [16.16];
-        copy32  aspect_ratio, temp
+        SET u32 temp = aspect_ratio
 
 .scope
 multiplier      := aspect_ratio
@@ -925,7 +925,7 @@ rotate:
         ;; oddBump = 2 * aspect ratio squared
 
         ;; oval.oddBump [16.16] = 2 * oval.oddNum [16.16];
-        copy32  oval+OvalRec::oddNum, oval+OvalRec::oddBump
+        SET u32 oval+OvalRec::oddBump = (oval+OvalRec::oddNum)
         asl32   oval+OvalRec::oddBump
 
         ;; --------------------------------------------------

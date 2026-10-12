@@ -30,6 +30,14 @@ Swaps the source and the target. Uses the stack for temporary storage.
 
 Compares the two arguments as unsigned 8-bit values. Just `LDA` ... `CMP` in a single line. Sets 'C' for ordering, 'Z' for equality.
 
+### `add8 arg1, arg2, destination`
+
+Add `arg2` to `arg1`, store result in `destination`.
+
+### `sub8 arg1, arg2, destination`
+
+Subtract `arg2` from `arg1`, store result in `destination`.
+
 ## 16-bit Operations - Dual-Register
 
 Treating two 6502 registers as a single 16-bit value is common.

@@ -183,6 +183,115 @@
     .endif
 .endmacro
 
+;;; Core for add8/sub8
+.macro _addsub8 op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
+    .if (_is_register {arg2}) && (_is_register {arg4}) && (_is_register {arg6})
+        ;; xxx8 $11,x, $22,x, $33,x
+        lda     arg1,arg2
+        carryOp
+        op      arg3,arg4
+        sta     arg5,arg6
+    .elseif (_is_register {arg2}) && (_is_register {arg4})
+        ;; xxx8 $11,x, $22,x, $33
+        lda     arg1,arg2
+        carryOp
+        op      arg3,arg4
+        sta     arg5
+    .elseif (_is_register {arg2}) && (_is_register {arg5})
+        ;; xxx8 $11,x, $22, $33,x
+        ;; xxx8 $11,x, #$22, $33,x
+        lda     arg1,arg2
+        carryOp
+        _op_lo  op, {arg3}
+        sta     arg4,arg5
+        lda     arg1+1,arg2
+        _op_hi  op, {arg3}
+        sta     arg4+1,arg5
+    .elseif (_is_register {arg3}) && (_is_register {arg5})
+        ;; xxx8 $11, $22,x, $33,x
+        ;; xxx8 #$11, $22,x, $33,x
+        _op_lo  lda, {arg1}
+        carryOp
+        op      arg2,arg3
+        sta     arg4,arg5
+        _op_hi  lda, {arg1}
+        op      arg2+1,arg3
+        sta     arg4+1,arg5
+    .elseif _is_register {arg2}
+        ;; xxx8 $11,x, $22, $33
+        ;; xxx8 $11,x, #$22, $33
+        lda     arg1,arg2
+        carryOp
+        _op_lo  op, {arg3}
+        sta     arg4
+        lda     arg1+1,arg2
+        _op_hi  op, {arg3}
+        sta     arg4+1
+    .elseif _is_register {arg3}
+        ;; xxx8 $11, $22,x $33
+        ;; xxx8 #$11, $22,x $33
+        _op_lo  lda, {arg1}
+        carryOp
+        op      arg2,arg3
+        sta     arg4
+        _op_hi  lda, {arg1}
+        op      arg2+1,arg3
+        sta     arg4+1
+    .elseif _is_register {arg4}
+        ;; xxx8 $11, $22, $33,x
+        ;; xxx8 #$11, $22, $33,x
+        ;; xxx8 $11, #$22, $33,x
+        ;; xxx8 #$11, #$22, $33,x
+        _op_lo  lda, {arg1}
+        carryOp
+        _op_lo  op, {arg2}
+        sta     arg3,arg4
+        _op_hi  lda, {arg1}
+        _op_hi  op, {arg2}
+        sta     arg3+1,arg4
+    .else
+        ;; xxx8 $11, $22, $33
+        ;; xxx8 #$11, $22, $33
+        ;; xxx8 $11, #$22, $33
+        ;; xxx8 #$11, #$22, $33
+        _op_lo lda, {arg1}
+        carryOp
+        _op_lo op, {arg2}
+        sta     arg3
+        _op_hi lda, {arg1}
+        _op_hi op, {arg2}
+        sta     arg3+1
+    .endif
+.endmacro
+
+;;; Add arg1 to arg2, store to arg3
+;;;    add8 $11, $22, $33        ; absolute, absolute, absolute
+;;;    add8 $11, #$22, $33       ; absolute, immediate, absolute
+;;;    add8 $11,x, $22, $33      ; indexed, absolute, absolute
+;;;    add8 $11, $22,x, $33      ; absolute, indexed, absolute
+;;;    add8 $11, $22, $33,x      ; absolute, absolute, indexed
+;;;    add8 $11,x, $22, $33,x    ; indexed, absolute, indexed
+;;;    add8 $11, $22,x, $33,x    ; absolute, indexed, indexed
+;;;    add8 $11,x, $22,x, $33,x  ; indexed, indexed, indexed
+.macro add8 arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub8 adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
+.endmacro
+;;; Subtract arg2 from arg1, store to arg3
+;;;    sub8 #$11, #$22, $33      ; immediate, immediate, absolute
+;;;    sub8 #$11, $22, $33       ; immediate, absolute, absolute
+;;;    sub8 $11, #$22, $33       ; absolute, immediate, absolute
+;;;    sub8 $11, $22, $33        ; absolute, absolute, absolute
+;;;    sub8 $11, $22,x, $33      ; absolute, indexed, absolute
+;;;    sub8 $11, $22, $33,x      ; absolute, absolute, indexed
+;;;    sub8 $11,x, $22,x, $33    ; indexed, indexed, absolute
+;;;    sub8 $11,x, $22, $33,x    ; indexed, absolute, indexed
+;;;    sub8 $11, $22,x, $33,x    ; absolute, indexed, indexed
+;;;    sub8 $11,x, $22,x $33,x   ; indexed, indexed, indexed
+.macro sub8 arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub8 sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
+.endmacro
+
+
 ;;; ============================================================
 ;;; 16-bit pseudo-ops
 

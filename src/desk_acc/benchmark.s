@@ -207,7 +207,7 @@ pattern_plaid:
 
         MGTK_CALL MGTK::FrameRect, meter_frame
 
-        copy16  #kMeterLeft, pt_tick::xcoord
+        SET u16 pt_tick::xcoord = #kMeterLeft
         lda     #0
     DO
         pha
@@ -220,7 +220,7 @@ pattern_plaid:
         MGTK_CALL MGTK::Move, pt_labeldelta
         MGTK_CALL MGTK::DrawStringCentered, str_from_int
 
-        add16   pt_tick::xcoord, #kMeterIntervalWidth, pt_tick::xcoord
+        SET u16 pt_tick::xcoord = pt_tick::xcoord + #kMeterIntervalWidth
         pla
         clc
         adc     #.sizeof(SpeedTick)
@@ -363,12 +363,12 @@ probe_count:
 
         ;; Max out the meter
     IF u16 progress_muldiv_params::result >= #kMeterWidth
-        copy16  #kMeterWidth, progress_muldiv_params::result
+        SET u16 progress_muldiv_params::result = #kMeterWidth
         MGTK_CALL MGTK::SetPattern, pattern_plaid
     END_IF
 
-        add16   meter_left::x1, progress_muldiv_params::result, meter_left::x2
-        add16   meter_left::x2, #1, meter_right::x1
+        SET u16 meter_left::x2 = meter_left::x1 + progress_muldiv_params::result
+        SET u16 meter_right::x1 = meter_left::x2 + #1
 
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::ShieldCursor, meter_frame
@@ -385,8 +385,9 @@ probe_count:
 ;;; Convert the measured count to a position on the nonlinear scale.
 ;;; Interpolate within an interval without rounding to whole MHz first.
 .proc ScaleSpeed
-        copy16  #0, lower_bound
-        copy16  #0, base_position
+        SET u16 lower_bound = #0
+        SET u16 base_position = #0
+
     IF bit radio_60hz_button::state : NS
         ldx     #SpeedTick::count_60hz
     ELSE
@@ -394,30 +395,27 @@ probe_count:
     END_IF
 
     DO
-        lda     speed_ticks + .sizeof(SpeedTick),x
-        sta     upper_bound
-        lda     speed_ticks + .sizeof(SpeedTick) + 1,x
-        sta     upper_bound+1
-    IF u16 counter < upper_bound
+        SET u16 upper_bound = (speed_ticks + .sizeof(SpeedTick),x)
+      IF u16 counter < upper_bound
         jmp     interpolate
-    END_IF
+      END_IF
 
-        copy16  upper_bound, lower_bound
-        add16   base_position, #kMeterIntervalWidth, base_position
+        SET u16 lower_bound = upper_bound
+        SET u16 base_position += #kMeterIntervalWidth
         txa
         clc
         adc     #.sizeof(SpeedTick)
         tax
     WHILE A < #kSpeedTickLast
 
-        copy16  #kMeterWidth, progress_muldiv_params::result
+        SET u16 progress_muldiv_params::result = #kMeterWidth
         rts
 
 interpolate:
-        sub16   counter, lower_bound, progress_muldiv_params::numerator
-        sub16   upper_bound, lower_bound, progress_muldiv_params::denominator
+        SET u16 progress_muldiv_params::numerator = counter - lower_bound
+        SET u16 progress_muldiv_params::denominator = upper_bound - lower_bound
         MGTK_CALL MGTK::MulDiv, progress_muldiv_params
-        add16   base_position, progress_muldiv_params::result, progress_muldiv_params::result
+        SET u16 progress_muldiv_params::result = base_position + progress_muldiv_params::result
         rts
 
 lower_bound:    .word   0

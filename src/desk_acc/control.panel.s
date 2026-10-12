@@ -823,8 +823,8 @@ lasty:  .byte   0
 
 ;;; Assumes click is within fatbits_rect
 .proc MapCoords
-        sub16   screentowindow_params::windowx, fatbits_rect::x1, screentowindow_params::windowx
-        sub16   screentowindow_params::windowy, fatbits_rect::y1, screentowindow_params::windowy
+        SET s16 screentowindow_params::windowx -= fatbits_rect::x1
+        SET s16 screentowindow_params::windowy -= fatbits_rect::y1
 
         ldy     #kFatBitWidthShift
     DO
@@ -1241,12 +1241,12 @@ rotated_pattern:
         copy8   #$FF, mode
 
         copy8   #0, ypos
-        copy16  fatbits_rect::y1, bitrect::y1
-        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        SET s16 bitrect::y1 = fatbits_rect::y1
+        SET s16 bitrect::y2 = bitrect::y1 + (#kFatBitHeight-1)
 
 yloop:  copy8   #0, xpos
-        copy16  fatbits_rect::x1, bitrect::x1
-        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        SET s16 bitrect::x1 = fatbits_rect::x1
+        SET s16 bitrect::x2 = bitrect::x1 + (#kFatBitWidth-1)
         ldy     ypos
         copy8   pattern,y, row
 
@@ -1311,10 +1311,10 @@ mode:   .byte   0
         asl16   bitrect::y1
     WHILE dex : NOT_ZERO
 
-        add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
-        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
-        add16   bitrect::y1, fatbits_rect::y1, bitrect::y1
-        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        SET s16 bitrect::x1 += fatbits_rect::x1
+        SET s16 bitrect::x2 = bitrect::x1 + (#kFatBitWidth-1)
+        SET s16 bitrect::y1 += fatbits_rect::y1
+        SET s16 bitrect::y2 = bitrect::y1 + (#kFatBitHeight-1)
 
         lda     #MGTK::pencopy
     IF bit mode : NC

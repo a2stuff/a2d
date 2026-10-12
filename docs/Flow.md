@@ -4,12 +4,20 @@ The reconstructed and updated Apple II DeskTop [ca65](https://cc65.github.io/doc
 
 These macros allow writing compact and readable code that is more maintainable and resilient to refactoring errors than hand-crafted assembly.
 
+The macros fall into these categories:
+
+* [Branching and Looping](#branching-and-looping) with [Conditions](#conditions)
+* [Function Calls](#function-calls)
+* [Typed Assignments](#typed-assignments)
+
 For example:
 ```
   IF bit flag : NS AND s16 left > right
     CALL ShowAlert, AX=#str_err_message
     RETURN A=#kStatusError
   END_IF
+
+  SET u16 width = right - left
 
   DO
     CALL UpdateLine, A=index
@@ -256,6 +264,24 @@ And finally, it is common to let one procedure simply "fall through" to a subseq
    ...
 .endproc
 ```
+
+## Typed Assignments
+
+Reusing the same type-prefixed syntax from typed conditions, `SET` expressions can be used:
+```
+   SET u16 varA = varB          ; same as copy16 varB, varA
+   SET u16 varA += varB         ; same as add16 varA, varB, varA
+   SET u16 varA -= varB         ; same as sub16 varA, varB, varA
+   SET u16 varA = varB + varC   ; same as add16 varB, varC, varA
+   SET u16 varA = varB - varC   ; same as sub16 varB, varC, varA
+```
+... and similarly with `u8`, `s16`, `u24`, and `u32` types.
+
+These are no more compact than the corresponding [Multi-Byte](MultiByte.md) macros, but can be more readable.
+
+Use parentheses (`(`, `)`) to disambiguate the binary operator when using an offset within an expression, e.g. `SET u16 tmp = (pt1+Point::ycoord) + (pt2+Point::ycoord)`.
+
+There is no difference between `s16` and `u16` for typed assignment since signed numbers are represented as two's complement, but both are supported for readability and consistency with [typed comparisons](#typed-comparisons).
 
 ## Extras
 

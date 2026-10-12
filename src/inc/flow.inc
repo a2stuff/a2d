@@ -1142,6 +1142,7 @@
 .define __flow_branch_ident_counter__ __flow_branch_ident__ {"counter"}
 .define __flow_branch_ident_block__ __flow_branch_ident__ {.sprintf("eob%d", __flow_branch_ident_counter__)}
 
+;;; Searches `f2_params` for `GOTO` (etc); defines `f2_shortcut_op` and `f2_shortcut_target` (caller must .undef them)
 .macro F2_FIND_SHORTCUT
         .define f2_shortcut_op
         .define f2_shortcut_target
@@ -1669,4 +1670,310 @@
     .else
       F2_ERR_UNREACHED
     .endif
+.endmacro
+
+;;; ============================================================
+;;;
+;;; Typed Assignments
+;;;
+;;; ============================================================
+
+;;; * SET type target assignment_op source
+;;; * SET type target = lhs binop rhs
+;;; Types: u8 u16 s16 u24
+;;; Assignment operators: = += -=
+;;; Binary operators: + -
+;;;
+;;; Caveats:
+;;; * Combining +=/-= and +/- is not supported
+;;; * Using +/- within source or lhs requires wrapping in parentheses
+;;;
+;;; TODO:
+;;; * `inc16` as: SET u16 ++var
+;;; * `dec16` as: SET u16 --var
+;;; * `lsr16` as: SET u16 var >>= 1 (const only!)
+;;; * `asl16` as: SET u16 var <<= 1 (const only!)
+;;; * Determine if `add16_8`/`sub16_8` can usefully be emitted for
+;;;   `+=` and `-=` cases; this turns out to be challenging because
+;;;   most operands end up being considered non-constant by ca65.
+
+;;; Parse `f2_token_list` up to an assignment operator (=, +=, -=); defines `f2_target` (caller must .undef it)
+.macro F2_PARSE_ASSIGNMENT_TARGET
+        F2_CHECK_BAD_PREFIX_OP
+        .define f2_target .left(1, {f2_token_list})
+        F2_PARSE_CONSUME
+        F2_PARSE_ASSIGNMENT_TARGET2
+.endmacro
+.macro F2_PARSE_ASSIGNMENT_TARGET2
+        F2_CHECK_BAD_PREFIX_OP
+        .if .tcount({f2_token_list}) > 0
+          .if !(.xmatch({.left(1, {f2_token_list})}, =) || .xmatch({.left(2, {f2_token_list})}, +=) || .xmatch({.left(2, {f2_token_list})}, -=))
+            .define f2_tmp f2_target
+            .undef f2_target
+            .define f2_target f2_tmp .left(1, {f2_token_list})
+            .undef f2_tmp
+            F2_PARSE_CONSUME
+            F2_PARSE_ASSIGNMENT_TARGET2
+          .endif
+        .endif
+.endmacro
+
+;;; Parse `f2_token_list` up to a supported math operator (+, -); defines `f2_lhs` (caller must .undef it)
+;;; Handles parenthesized expressions.
+.macro F2_PARSE_ASSIGNMENT_LHS
+        .define f2_lhs
+        f2_pdepth .set 0
+        F2_PARSE_ASSIGNMENT_LHS2
+.endmacro
+.macro F2_PARSE_ASSIGNMENT_LHS_CONSUME
+        .define f2_tmp f2_lhs
+        .undef f2_lhs
+        .define f2_lhs f2_tmp .left(1, {f2_token_list})
+        .undef f2_tmp
+        F2_PARSE_CONSUME
+.endmacro
+.macro F2_PARSE_ASSIGNMENT_LHS2
+        F2_CHECK_BAD_PREFIX_OP
+        .if .tcount({f2_token_list}) > 0
+          ;; If a '(' is seen, switch to parsing via subexpr which
+          ;; doesn't terminate until a matching number of ')' have
+          ;; been seen.
+          .if .xmatch({.left(1, {f2_token_list})}, {(})
+            f2_pdepth .set f2_pdepth + 1
+            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
+            F2_PARSE_ASSIGNMENT_LHS2
+
+          ;; Otherwise, terminate on binary op (+, -)
+          .elseif !(.xmatch({.left(1, {f2_token_list})}, +) || .xmatch({.left(1, {f2_token_list})}, -))
+            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_ASSIGNMENT_LHS2
+          .endif
+        .endif
+.endmacro
+;;; Parenthesized expressions
+.macro F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
+        F2_CHECK_BAD_PREFIX_OP
+        .if .tcount({f2_token_list}) > 0
+
+          .if .xmatch({.left(1, {f2_token_list})}, {(})
+            f2_pdepth .set f2_pdepth + 1
+            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
+
+          .elseif .xmatch({.left(1, {f2_token_list})}, {)})
+            f2_pdepth .set f2_pdepth - 1
+            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+
+            .if f2_pdepth
+              F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
+            .endif
+
+          .else
+            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
+          .endif
+        .endif
+.endmacro
+
+.macro SET arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+  _FLOW_STATEMENT "SET",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        .define f2_token_list f2_params
+
+        ;; Parse type
+        .define f2_type .left(1, {f2_token_list})
+        .if _f2_is_type {f2_type} || .xmatch({f2_type}, u32)
+        .else
+          F2_ERR_EXPECTED "type (u8,u16,s16,u24,u32)"
+        .endif
+        F2_PARSE_CONSUME
+
+        ;; Parse assignment target
+        .if .tcount({f2_token_list}) = 0
+          F2_ERR_EXPECTED .sprintf("assignment target")
+        .endif
+        F2_PARSE_ASSIGNMENT_TARGET
+        .if .xmatch({.left(1, {f2_target})}, {(}) && .xmatch({.right(1, {f2_target})}, {)})
+          ;; strip parentheses from target expression
+          .define f2_tmp f2_target
+          .undef f2_target
+          .define f2_target .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
+          .undef f2_tmp
+        .endif
+
+        ;; Parse assignment operator
+        .if .tcount({f2_token_list}) = 0
+          F2_ERR_EXPECTED .sprintf("assignment operator (=, +=, -=)")
+        .endif
+        .if .xmatch({.left(1, {f2_token_list})}, =)
+          .define f2_assign_op =
+          .define f2_assign_op_str "="
+          F2_PARSE_CONSUME
+        .elseif .xmatch({.left(2, {f2_token_list})}, +=)
+          .define f2_assign_op +=
+          .define f2_assign_op_str "+="
+          F2_PARSE_CONSUME
+          F2_PARSE_CONSUME
+        .elseif .xmatch({.left(2, {f2_token_list})}, -=)
+          .define f2_assign_op -=
+          .define f2_assign_op_str "-="
+          F2_PARSE_CONSUME
+          F2_PARSE_CONSUME
+        .else
+          F2_ERR_UNREACHED
+        .endif
+
+        ;; Parse the LHS expression
+        .if .tcount({f2_token_list}) = 0
+          F2_ERR_EXPECTED .sprintf("argument(s) after operator '%s'", f2_assign_op_str)
+        .endif
+        F2_PARSE_ASSIGNMENT_LHS
+        .define f2_tok .left(1, {f2_lhs})
+        .if .match({f2_tok}, 1234)
+          F2_ERR .sprintf("Numeric literal after '%s'; did you mean '#%d'?", f2_assign_op_str, f2_tok)
+        .endif
+        .if .match({f2_tok}, kDummyConstant)
+          .if .strat(.string(f2_tok), 0) = 'k' && .strat(.string(f2_tok), 1) >= 'A' && .strat(.string(f2_tok), 1) <= 'Z'
+             F2_ERR .sprintf("Constant in assignment; did you mean '#%s'?", .string(f2_tok))
+          .endif
+        .endif
+        .undef f2_tok
+        .if .xmatch({.left(1, {f2_lhs})}, {(}) && .xmatch({.right(1, {f2_lhs})}, {)})
+          ;; strip parentheses from LHS expression
+          .define f2_tmp f2_lhs
+          .undef f2_lhs
+          .define f2_lhs .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
+          .undef f2_tmp
+        .endif
+
+        .if .tcount({f2_token_list}) = 0
+          ;; No binary operator
+
+          ;; Code generation
+          .if .xmatch({f2_type}, u8)
+            .if .xmatch({f2_assign_op}, =)
+              copy8 f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, +=)
+              add8 f2_target, f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, -=)
+              sub8 f2_target, f2_lhs, f2_target
+            .else
+              F2_ERR_UNREACHED
+            .endif
+          .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
+            .if .xmatch({f2_assign_op}, =)
+              copy16 f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, +=)
+              add16 f2_target, f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, -=)
+              sub16 f2_target, f2_lhs, f2_target
+            .else
+              F2_ERR_UNREACHED
+            .endif
+          .elseif .xmatch({f2_type}, u24)
+            .if .xmatch({f2_assign_op}, =)
+              copy24 f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, +=)
+              F2_ERR "add24 not defined"
+            .elseif .xmatch({f2_assign_op}, -=)
+              F2_ERR "sub24 not defined"
+            .else
+              F2_ERR_UNREACHED
+            .endif
+          .elseif .xmatch({f2_type}, u32)
+            .if .xmatch({f2_assign_op}, =)
+              copy32 f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, +=)
+              add32 f2_target, f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, -=)
+              sub32 f2_target, f2_lhs, f2_target
+            .else
+              F2_ERR_UNREACHED
+            .endif
+          .else
+            F2_ERR_UNREACHED
+          .endif
+
+        .else
+          ;; Operator
+
+          .if !(.xmatch({f2_assign_op}, =))
+            F2_ERR .sprintf("Unexpected expression after assignment op ('%s')", f2_assign_op_str)
+          .endif
+
+          .define f2_binop .left(1, {f2_token_list})
+          .if .xmatch({.left(1, {f2_token_list})}, +)
+            .define f2_binop_str "+"
+          .elseif .xmatch({.left(1, {f2_token_list})}, -)
+            .define f2_binop_str "-"
+          .else
+            F2_ERR_UNREACHED
+          .endif
+          F2_PARSE_CONSUME
+
+          .if .tcount({f2_token_list}) = 0
+            F2_ERR_EXPECTED .sprintf("argument(s) after operator '%s'", f2_binop_str)
+          .endif
+          .define f2_rhs f2_token_list
+          .if .xmatch({.left(1, {f2_rhs})}, {(}) && .xmatch({.right(1, {f2_rhs})}, {)})
+            ;; strip parentheses from RHS expression
+            .define f2_tmp f2_rhs
+            .undef f2_rhs
+            .define f2_rhs .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
+            .undef f2_tmp
+          .endif
+          .define f2_tok .left(1, {f2_rhs})
+          .if .match({f2_tok}, 1234)
+            F2_ERR .sprintf("Numeric literal in '%s' expression; did you mean '#%d'?", f2_binop_str, f2_tok)
+          .endif
+          .if .match({f2_tok}, kDummyConstant)
+            .if .strat(.string(f2_tok), 0) = 'k' && .strat(.string(f2_tok), 1) >= 'A' && .strat(.string(f2_tok), 1) <= 'Z'
+               F2_ERR .sprintf("Constant in assignment; did you mean '#%s'?", .string(f2_tok))
+            .endif
+          .endif
+          .undef f2_tok
+
+          ;; Code generation
+          .if .xmatch({f2_type}, u8)
+            .if .xmatch({f2_binop}, +)
+              add8 f2_lhs, f2_rhs, f2_target
+            .elseif .xmatch({f2_binop}, -)
+              sub8 f2_lhs, f2_rhs, f2_target
+            .else
+              F2_ERR_UNREACHED
+            .endif
+          .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
+            .if .xmatch({f2_binop}, +)
+              add16 f2_lhs, f2_rhs, f2_target
+            .elseif .xmatch({f2_binop}, -)
+              sub16 f2_lhs, f2_rhs, f2_target
+            .else
+              F2_ERR_UNREACHED
+            .endif
+          .elseif .xmatch({f2_type}, u24)
+            F2_ERR "add24/sub24 not defined"
+          .elseif .xmatch({f2_type}, u32)
+            .if .xmatch({f2_binop}, +)
+              add32 f2_lhs, f2_rhs, f2_target
+            .elseif .xmatch({f2_binop}, -)
+              sub32 f2_lhs, f2_rhs, f2_target
+            .else
+              F2_ERR_UNREACHED
+            .endif
+          .else
+            F2_ERR_UNREACHED
+          .endif
+
+          .undef f2_rhs
+          .undef f2_binop
+          .undef f2_binop_str
+        .endif
+
+        .undef f2_lhs
+        .undef f2_assign_op_str
+        .undef f2_assign_op
+        .undef f2_target
+        .undef f2_type
+        .undef f2_token_list
+  _FLOW_END_STATEMENT
 .endmacro
