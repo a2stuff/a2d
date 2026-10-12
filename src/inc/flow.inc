@@ -502,22 +502,26 @@
 .endmacro
 
 ;;; Parse `f2_token_list` up to a comparison operator (=, <>, <, <=, >, >=); defines `f2_lhs` (caller must .undef it)
+.define _f2_is_compare_op(arg) .xmatch({arg}, =) || .xmatch({arg}, <>) || .xmatch({arg}, <) || .xmatch({arg}, <=) || .xmatch({arg}, >) || .xmatch({arg}, >=)
 .macro F2_PARSE_LHS
         F2_CHECK_BAD_PREFIX_OP
-        .define f2_lhs .left(1, {f2_token_list})
-        F2_PARSE_CONSUME
+        .define f2_lhs
         F2_PARSE_LHS2
 .endmacro
 .macro F2_PARSE_LHS2
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
-          .if !(.xmatch({.left(1, {f2_token_list})}, =) || .xmatch({.left(1, {f2_token_list})}, <>) || .xmatch({.left(1, {f2_token_list})}, <) || .xmatch({.left(1, {f2_token_list})}, <=) || .xmatch({.left(1, {f2_token_list})}, >) || .xmatch({.left(1, {f2_token_list})}, >=))
+          .define f2_tok .left(1, {f2_token_list})
+          .if ! _f2_is_compare_op {f2_tok}
+            .undef f2_tok
             .define f2_tmp f2_lhs
             .undef f2_lhs
             .define f2_lhs f2_tmp .left(1, {f2_token_list})
             .undef f2_tmp
             F2_PARSE_CONSUME
             F2_PARSE_LHS2
+          .else
+            .undef f2_tok
           .endif
         .endif
 .endmacro
@@ -534,8 +538,7 @@
 ;;; Parse `f2_token_list` up to an "AND" or an "OR"; defines `f2_rhs` (caller must .undef it)
 .macro F2_PARSE_RHS
         F2_CHECK_BAD_PREFIX_OP
-        .define f2_rhs .left(1, {f2_token_list})
-        F2_PARSE_CONSUME
+        .define f2_rhs
         F2_PARSE_RHS2
 .endmacro
 .macro F2_PARSE_RHS2
@@ -1700,13 +1703,13 @@
 ;;; Parse `f2_token_list` up to an assignment operator (=, +=, -=); defines `f2_target` (caller must .undef it)
 .macro F2_PARSE_ASSIGNMENT_TARGET
         F2_CHECK_BAD_PREFIX_OP
-        .define f2_target .left(1, {f2_token_list})
-        F2_PARSE_CONSUME
+        .define f2_target
         F2_PARSE_ASSIGNMENT_TARGET2
 .endmacro
 .macro F2_PARSE_ASSIGNMENT_TARGET2
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
+          ;; Note that the assignment op may be 1 or 2 tokens long
           .if !(.xmatch({.left(1, {f2_token_list})}, =) || .xmatch({.left(2, {f2_token_list})}, +=) || .xmatch({.left(2, {f2_token_list})}, -=))
             .define f2_tmp f2_target
             .undef f2_target
@@ -1902,9 +1905,9 @@
           .endif
 
           .define f2_binop .left(1, {f2_token_list})
-          .if .xmatch({.left(1, {f2_token_list})}, +)
+          .if .xmatch({f2_binop}, +)
             .define f2_binop_str "+"
-          .elseif .xmatch({.left(1, {f2_token_list})}, -)
+          .elseif .xmatch({f2_binop}, -)
             .define f2_binop_str "-"
           .else
             F2_ERR_UNREACHED
