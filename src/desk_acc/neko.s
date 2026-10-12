@@ -192,8 +192,8 @@ grow_box_bitmap:
 
 .proc DrawGrowBox
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        sub16_8 winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
-        sub16_8 winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
+        sub16   winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
+        sub16   winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
         MGTK_CALL MGTK::PaintBits, grow_box_params
         rts
 .endproc ; DrawGrowBox
@@ -264,8 +264,8 @@ reserved:       .byte   0
 
         ;; Stash rect of this frame so we can optionally erase it next time
         COPY_STRUCT frame_params::viewloc, erase_rect::topleft
-        add16_8 frame_params::viewloc::xcoord, #kNekoWidth-1, erase_rect::x2
-        add16_8 frame_params::viewloc::ycoord, #kNekoHeight-1, erase_rect::y2
+        add16   frame_params::viewloc::xcoord, #kNekoWidth-1, erase_rect::x2
+        add16   frame_params::viewloc::ycoord, #kNekoHeight-1, erase_rect::y2
 
         ;; And conveniently it's what we can use to minimize cursor flash
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -790,7 +790,7 @@ set_frame:
         jsr     GetWindowRect
 
         sub16   win_rect::x2, win_rect::x1, tmp16
-        sub16_8 tmp16, #kNekoWidth-1, tmp16
+        sub16   tmp16, #kNekoWidth-1, tmp16
 
     IF u16 x_pos >= tmp16
         copy16  tmp16, x_pos
@@ -798,7 +798,7 @@ set_frame:
     END_IF
 
         sub16   win_rect::y2, win_rect::y1, tmp16
-        sub16_8 tmp16, #kNekoHeight + aux::kGrowBoxHeight, tmp16
+        sub16   tmp16, #kNekoHeight + aux::kGrowBoxHeight, tmp16
 
     IF u16 y_pos >= tmp16
         copy16  tmp16, y_pos

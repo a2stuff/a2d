@@ -741,7 +741,7 @@ ret:    rts
       IF NOT ZERO
         ;; Button's "port" is the inner inversion rect; test against
         ;; 1px beyond that, to match BTK. Make a copy and inflate it.
-        add16_8 ptr, #(btn_c::port - btn_c), rect_ptr
+        add16   ptr, #(btn_c::port - btn_c), rect_ptr
         ldy     #.sizeof(MGTK::Rect)-1
        DO
         copy8   (rect_ptr),y, inrect_rect,y
@@ -1442,10 +1442,10 @@ loop:
         jmp     break
     END_IF
 
-        add16_8 ptr, #(btn_c::viewloc - btn_c), bitmap_addr
-        add16_8 ptr, #(btn_c::pos - btn_c), pos
-        add16_8 ptr, #(btn_c::label - btn_c), label
-        add16_8 ptr, #(btn_c::port - btn_c), rect_addr
+        add16   ptr, #(btn_c::viewloc - btn_c), bitmap_addr
+        add16   ptr, #(btn_c::pos - btn_c), pos
+        add16   ptr, #(btn_c::label - btn_c), label
+        add16   ptr, #(btn_c::port - btn_c), rect_addr
 
         MGTK_CALL MGTK::SetPenMode, notpenBIC
         MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw drop shadow

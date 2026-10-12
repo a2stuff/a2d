@@ -7766,11 +7766,11 @@ END_PARAM_BLOCK
 
         ;; separator line x/y coords
         copy16  maprect+MGTK::Rect::x1, header_line::start::xcoord
-        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line::start::ycoord
+        add16   maprect+MGTK::Rect::y1, #kWindowHeaderHeight - 3, header_line::start::ycoord
 
         ;; label x/y coords
-        add16_8 maprect+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
-        add16_8 maprect+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
+        add16   maprect+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
+        add16   maprect+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
 
         ;; window width
         ;; Note that `gap` is in `window_mapinfo_cache`'s `MapInfo::viewloc`

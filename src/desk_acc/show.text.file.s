@@ -994,8 +994,8 @@ window_id:      .byte   kDAWindowId
 
         MGTK_CALL MGTK::GetWinFrameRect, winframerect_params
 
-        sub16_8 winframerect_params::rect::x2, #kLabelWidth+1, mode_mapinfo::viewloc::xcoord
-        add16_8 winframerect_params::rect::y1, #1, mode_mapinfo::viewloc::ycoord
+        sub16   winframerect_params::rect::x2, #kLabelWidth+1, mode_mapinfo::viewloc::xcoord
+        add16   winframerect_params::rect::y1, #1, mode_mapinfo::viewloc::ycoord
 
         FALL_THROUGH_TO DrawMode
 .endproc ; CalcAndDrawMode

@@ -610,7 +610,7 @@ done:   rts
 
         ;; Copy rectangle
         copy16  ptr, STARTLO
-        add16_8 STARTLO, #.sizeof(MGTK::Rect)-1, ENDLO
+        add16   STARTLO, #.sizeof(MGTK::Rect)-1, ENDLO
         copy16  #rect, DESTINATIONLO
         CALL    AUXMOVE, C=0    ; aux>main
 

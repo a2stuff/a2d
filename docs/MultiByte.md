@@ -84,13 +84,13 @@ Subtract `arg2` from `arg1`, store result in `destination`.
 
 Add 8-bit value `arg2` to `arg1`, store result in `destination` if given, `arg1` otherwise.
 
-Note that normal `add16` optimizes the output if `arg2` is an 8-bit immediate value (i.e. a constant), so this is only needed for non-constants.
+If `destination` is provided and `arg2` is an immediate value then the generated code is identical to `add16`.
 
 ### `sub16_8 arg1, arg2 [, destination]`
 
 Subtract 8-bit value `arg2` from `arg1`, store result in `destination` if given, `arg1` otherwise.
 
-Note that normal `sub16` optimizes the output if `arg2` is an 8-bit immediate value (i.e. a constant), so this is only needed for non-constants.
+If `destination` is provided and `arg2` is an immediate value then the generated code is identical to `sub16`.
 
 ### `copy16 source, destination`
 

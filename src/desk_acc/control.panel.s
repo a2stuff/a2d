@@ -1242,11 +1242,11 @@ rotated_pattern:
 
         copy8   #0, ypos
         copy16  fatbits_rect::y1, bitrect::y1
-        add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
 yloop:  copy8   #0, xpos
         copy16  fatbits_rect::x1, bitrect::x1
-        add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
         ldy     ypos
         copy8   pattern,y, row
 
@@ -1312,9 +1312,9 @@ mode:   .byte   0
     WHILE dex : NOT_ZERO
 
         add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
-        add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
         add16   bitrect::y1, fatbits_rect::y1, bitrect::y1
-        add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
         lda     #MGTK::pencopy
     IF bit mode : NC

@@ -730,7 +730,7 @@ done:   jmp     InputLoop
         ;; Name
         copy16  #kNameX, pt::xcoord
         MGTK_CALL MGTK::MoveTo, pt
-        add16_8 ptr, #CatalogEntry::Name, @addr
+        add16   ptr, #CatalogEntry::Name, @addr
         MGTK_CALL MGTK::DrawString, SELF_MODIFIED, @addr
         rts
 .endproc ; DrawListEntryProc

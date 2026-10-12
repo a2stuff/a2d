@@ -479,6 +479,10 @@
         _op_hi  inc, {arg1}
 @skip:
     .else
+      .if _is_immediate {arg2}
+          .warning "Unnecessary use of add16_8 macro with immediate arg"
+      .endif
+
         _op_lo  lda, {arg1}
         clc
         adc     arg2
@@ -640,6 +644,10 @@
         _op_hi  dec, {arg1}
 @skip:
     .else
+      .if _is_immediate {arg2}
+          .warning "Unnecessary use of add16_8 macro with immediate arg"
+      .endif
+
         _op_lo  lda, {arg1}
         sec
         sbc     arg2

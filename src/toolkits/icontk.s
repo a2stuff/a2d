@@ -1443,7 +1443,7 @@ ret:    rts
 
         ;; Prep coords
         copy16  label_rect+MGTK::Rect::x1, label_pos+MGTK::Point::xcoord
-        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight-1, label_pos+MGTK::Point::ycoord
+        add16   label_rect+MGTK::Rect::y1, #kSystemFontHeight-1, label_pos+MGTK::Point::ycoord
 
         ldx     #.sizeof(MGTK::Point)-1
     DO
@@ -1561,10 +1561,10 @@ ret:    rts
         copy16  bitmap_rect+MGTK::Rect::y1, label_rect+MGTK::Rect::y1
 
         ;; Label bottom
-        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight+1, label_rect+MGTK::Rect::y2
+        add16   label_rect+MGTK::Rect::y1, #kSystemFontHeight+1, label_rect+MGTK::Rect::y2
 
         ;; Left edge of label
-        add16_8 bitmap_rect+MGTK::Rect::x2, #kListViewIconGap-2, label_rect+MGTK::Rect::x1
+        add16   bitmap_rect+MGTK::Rect::x2, #kListViewIconGap-2, label_rect+MGTK::Rect::x1
 
         jsr     stash_rename_rect
 
@@ -1575,10 +1575,10 @@ ret:    rts
         ;; Regular icon
 
         ;; Label top
-        add16_8 bitmap_rect+MGTK::Rect::y2, #kIconLabelGapV, label_rect+MGTK::Rect::y1
+        add16   bitmap_rect+MGTK::Rect::y2, #kIconLabelGapV, label_rect+MGTK::Rect::y1
 
         ;; Label bottom
-        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight, label_rect+MGTK::Rect::y2
+        add16   label_rect+MGTK::Rect::y1, #kSystemFontHeight, label_rect+MGTK::Rect::y2
 
         ;; Center horizontally
 
@@ -1594,7 +1594,7 @@ ret:    rts
         sub16   label_rect+MGTK::Rect::x1, stringwidth_params::result, label_rect+MGTK::Rect::x1
         asr16   label_rect+MGTK::Rect::x1 ; signed
 
-        sub16_8 rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x1
+        sub16   rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x1
         asr16   rename_rect+MGTK::Rect::x1
 
     END_IF
@@ -1602,7 +1602,7 @@ ret:    rts
         ;; Label right
         add16   label_rect+MGTK::Rect::x1, stringwidth_params::result, label_rect+MGTK::Rect::x2
 
-        add16_8 rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x2
+        add16   rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x2
         dec16   rename_rect+MGTK::Rect::y1
 
         rts
@@ -1854,7 +1854,7 @@ END_PARAM_BLOCK
         lda     (icon_ptr),y
         and     #kIconEntryFlagsSmall
        IF ZERO
-        sub16_8 bitmap_rect+MGTK::Rect::y2, #kMaxIconBitmapHeight, bitmap_rect+MGTK::Rect::y1
+        sub16   bitmap_rect+MGTK::Rect::y2, #kMaxIconBitmapHeight, bitmap_rect+MGTK::Rect::y1
        END_IF
 
         MGTK_CALL MGTK::UnionRects, unionrects_bitmap_bounding
