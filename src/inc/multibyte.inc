@@ -7,10 +7,10 @@
 
 ;;; ============================================================
 
-.define _is_immediate(arg)       .xmatch (.mid (0, 1, {arg}), #)
-.define _is_register(arg)        .xmatch ({arg}, x) .or .xmatch ({arg}, y)
-.define _is_y_register(arg)      .xmatch ({arg}, y)
-.define _immediate_value(arg)    .right (.tcount ({arg}) - 1, {arg})
+.define _is_immediate(arg)       .xmatch({.mid (0, 1, {arg})}, #)
+.define _is_register(arg)        .xmatch({arg}, x) || .xmatch({arg}, y)
+.define _is_y_register(arg)      .xmatch({arg}, y)
+.define _immediate_value(arg)    .right(.tcount({arg}) - 1, {arg})
 
 ;;; Helpers for multi-byte operations
 
@@ -627,8 +627,8 @@
 ;;;    sub16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    sub16_8 $1111, $22, $3333        ; absolute, absolute, absolute
 ;;; Subtract arg2 (absolute) from arg1 (8-bit absolute/immediate), store to arg1
-;;;    add16_8 $1111, #$22              ; absolute, immediate
-;;;    add16_8 $1111, $22               ; absolute, absolute
+;;;    sub16_8 $1111, #$22              ; absolute, immediate
+;;;    sub16_8 $1111, $22               ; absolute, absolute
 .macro sub16_8 arg1, arg2, arg3
     .ifblank arg3
         .local @skip

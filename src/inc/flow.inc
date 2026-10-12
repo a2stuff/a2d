@@ -82,7 +82,7 @@
 
 ;;; Increment a numeric variable; if not initialized, treated as 0
 .macro __INC_IDENT__ ident
-    .if .not(.defined(ident))
+    .if !(.defined(ident))
         ident .set 0
     .endif
         ident .set ident + 1
@@ -203,21 +203,21 @@
 .macro F2_CODEGEN_BRANCH bop, target, kind
 
         ;; Set `f2_opbop` to the opposite branch instruction of `bop`
-        .if .xmatch(bop, BCC)
+        .if .xmatch({bop}, BCC)
           .define f2_opbop BCS
-        .elseif .xmatch(bop, BCS)
+        .elseif .xmatch({bop}, BCS)
           .define f2_opbop BCC
-        .elseif .xmatch(bop, BVC)
+        .elseif .xmatch({bop}, BVC)
           .define f2_opbop BVS
-        .elseif .xmatch(bop, BVS)
+        .elseif .xmatch({bop}, BVS)
           .define f2_opbop BVC
-        .elseif .xmatch(bop, BPL)
+        .elseif .xmatch({bop}, BPL)
           .define f2_opbop BMI
-        .elseif .xmatch(bop, BMI)
+        .elseif .xmatch({bop}, BMI)
           .define f2_opbop BPL
-        .elseif .xmatch(bop, BEQ)
+        .elseif .xmatch({bop}, BEQ)
           .define f2_opbop BNE
-        .elseif .xmatch(bop, BNE)
+        .elseif .xmatch({bop}, BNE)
           .define f2_opbop BEQ
         .else
           F2_ERR_UNREACHED
@@ -225,13 +225,13 @@
 
 
         ;; Logic based on cc65's longbranch.mac, assuming it is optimal
-        .if .match(target, 0)
+        .if .match({target}, 0)
 
           ;; Unclear when this case applies
           f2_opbop *+5
           JMP target
 
-        .elseif (.def(target) .and .const((*-2)-(target)))
+        .elseif (.def(target) && .const((*-2)-(target)))
 
           ;; Distance is known, so BXX or JMP
           .if ((*-2)-(target)) >= 127
@@ -266,7 +266,7 @@
           F2_ERR .sprintf("Unexpected arguments after comparison '%s'", op_str)
         .endif
         .ifnblank arg2
-          .if .not(.xmatch({arg2},X) .or .xmatch({arg2},Y))
+          .if !(.xmatch({arg2},X) || .xmatch({arg2},Y))
             F2_ERR .sprintf("Unexpected non-index-register after comparison '%s'", op_str)
           .endif
         .endif
@@ -303,13 +303,13 @@
           .else
             F2_CODEGEN_BRANCH bop1, f2_branch_target, "branch_target"
           .endif
-        .elseif .xmatch(.left(1, {f2_token_list}), OR)
+        .elseif .xmatch({.left(1, {f2_token_list})}, OR)
           .if @f2_sense_flag
             F2_CODEGEN_BRANCH bop1, f2_stay_target, "stay_target"
           .else
             F2_CODEGEN_BRANCH bop1, f2_branch_target, "branch_target"
           .endif
-        .elseif .xmatch(.left(1, {f2_token_list}), AND)
+        .elseif .xmatch({.left(1, {f2_token_list})}, AND)
           .if @f2_sense_flag
             F2_CODEGEN_BRANCH bop2, f2_branch_target, "branch_target"
           .else
@@ -329,7 +329,7 @@
 
         ;; TODO: Look for symmetries to exploit to simplify this
 
-        .if .not(@f2_negate_flag)
+        .if !(@f2_negate_flag)
           .if .tcount({f2_token_list}) = 0
             .if @f2_sense_flag
               ;; e.g. IF A IN #1, #2, #3
@@ -338,7 +338,7 @@
               ;; e.g. WHILE A IN #1, #2, #3
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_branch_target, "branch_target", BEQ, f2_branch_target, "branch_target", list
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), AND)
+          .elseif .xmatch({.left(1, {f2_token_list})}, AND)
             .if @f2_sense_flag
               ;; e.g. IF A IN #1, #2, #3 AND CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, @skip, "skip", BNE, f2_branch_target, "branch_target", list
@@ -346,7 +346,7 @@
               ;; e.g. WHILE A IN #1, #2, #3 AND CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, @skip, "skip", BNE, f2_stay_target, "stay_target", list
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), OR)
+          .elseif .xmatch({.left(1, {f2_token_list})}, OR)
             .if @f2_sense_flag
               ;; e.g. IF A IN #1, #2, #3 OR CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_stay_target, "stay_target", BEQ, f2_stay_target, "stay_target", list
@@ -366,7 +366,7 @@
               ;; e.g. WHILE NOT A IN #1, #2, #3
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_stay_target, "stay_target", BNE, f2_branch_target, "branch_target", list
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), AND)
+          .elseif .xmatch({.left(1, {f2_token_list})}, AND)
             .if @f2_sense_flag
               ;; e.g. IF NOT A IN #1, #2, #3 AND CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_branch_target, "branch_target", BEQ, f2_branch_target, "branch_target", list
@@ -374,7 +374,7 @@
               ;; e.g. WHILE NOT A IN #1, #2, #3 AND CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, f2_stay_target, "stay_target", BEQ, f2_stay_target, "stay_target", list
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), OR)
+          .elseif .xmatch({.left(1, {f2_token_list})}, OR)
             .if @f2_sense_flag
               ;; e.g. IF NOT A IN #1, #2, #3 OR CS
               F2_CODEGEN_IN_LIST2 cop, BEQ, @skip, "skip", BNE, f2_stay_target, "stay_target", list
@@ -406,15 +406,15 @@
 .macro F2_CODEGEN_BETWEEN cop, lo, hi, op_str
         .local @skip
 
-        .if .not(.xmatch(.left(1, {lo}), {#}))
+        .if !(.xmatch({.left(1, {lo})}, {#}))
           F2_ERR .sprintf("Expected immediate 1st argument for '%s'", op_str)
-        .elseif .not(.xmatch(.left(1, {hi}), {#}))
+        .elseif !(.xmatch({.left(1, {hi})}, {#}))
           F2_ERR .sprintf("Expected immediate 2nd argument for '%s'", op_str)
         .endif
 
         ;; TODO: Look for symmetries to exploit to simplify this
 
-        .if .not(@f2_negate_flag)
+        .if !(@f2_negate_flag)
           .if .tcount({f2_token_list}) = 0
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9
@@ -423,7 +423,7 @@
               ;; e.g. WHILE A BETWEEN #1, #9
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), AND)
+          .elseif .xmatch({.left(1, {f2_token_list})}, AND)
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9 AND CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
@@ -431,7 +431,7 @@
               ;; e.g. WHILE A BETWEEN #1, #9 AND CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), OR)
+          .elseif .xmatch({.left(1, {f2_token_list})}, OR)
             .if @f2_sense_flag
               ;; e.g. IF A BETWEEN #1, #9 OR CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_stay_target, "stay_target"
@@ -451,7 +451,7 @@
               ;; e.g. WHILE NOT A BETWEEN #1, #9
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_branch_target, "branch_target", BCS, f2_branch_target, "branch_target"
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), AND)
+          .elseif .xmatch({.left(1, {f2_token_list})}, AND)
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9 AND CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_branch_target, "branch_target"
@@ -459,7 +459,7 @@
               ;; e.g. WHILE NOT A BETWEEN #1, #9 AND CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, @skip, "skip", BCC, f2_stay_target, "stay_target"
             .endif
-          .elseif .xmatch(.left(1, {f2_token_list}), OR)
+          .elseif .xmatch({.left(1, {f2_token_list})}, OR)
             .if @f2_sense_flag
               ;; e.g. IF NOT A BETWEEN #1, #9 OR CS
               F2_CODEGEN_BETWEEN2 cop, {lo}, {hi}, BCC, f2_stay_target, "stay_target", BCC, f2_branch_target, "branch_target"
@@ -485,13 +485,13 @@
 ;;; --------------------------------------------------
 
 
-.define _f2_is_type(arg) .xmatch({arg}, u8) .or .xmatch({arg}, u16) .or .xmatch({arg}, s16) .or .xmatch({arg}, u24)
-.define _f2_is_register(arg) .xmatch({arg}, A) .or .xmatch({arg}, X) .or .xmatch({arg}, Y)
-.define _f2_is_flag_test(arg) .xmatch({arg}, CC) .or .xmatch({arg}, CS) .or .xmatch({arg}, NC) .or .xmatch({arg}, NS) .or .xmatch({arg}, ZC) .or .xmatch({arg}, ZS) .or .xmatch({arg}, VC) .or .xmatch({arg}, VS)
+.define _f2_is_type(arg) .xmatch({arg}, u8) || .xmatch({arg}, u16) || .xmatch({arg}, s16) || .xmatch({arg}, u24)
+.define _f2_is_register(arg) .xmatch({arg}, A) || .xmatch({arg}, X) || .xmatch({arg}, Y)
+.define _f2_is_flag_test(arg) .xmatch({arg}, CC) || .xmatch({arg}, CS) || .xmatch({arg}, NC) || .xmatch({arg}, NS) || .xmatch({arg}, ZC) || .xmatch({arg}, ZS) || .xmatch({arg}, VC) || .xmatch({arg}, VS)
 .define _f2_is_unary_op(arg) .xmatch({arg}, NOT)
 
 ;;; A condition must start with a type, register, flag test, or unary operator
-.define _f2_is_cond_start(arg) ( _f2_is_type {arg} .or _f2_is_register {arg} .or  _f2_is_flag_test {arg} .or  _f2_is_unary_op {arg} )
+.define _f2_is_cond_start(arg) ( _f2_is_type {arg} || _f2_is_register {arg} ||  _f2_is_flag_test {arg} ||  _f2_is_unary_op {arg} )
 
 ;;; Consume a single token from `f2_token_list`
 .macro F2_PARSE_CONSUME
@@ -511,7 +511,7 @@
 .macro F2_PARSE_LHS2
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
-          .if .not(.xmatch(.left(1, {f2_token_list}), =) .or .xmatch(.left(1, {f2_token_list}), <>) .or .xmatch(.left(1, {f2_token_list}), <) .or .xmatch(.left(1, {f2_token_list}), <=) .or .xmatch(.left(1, {f2_token_list}), >) .or .xmatch(.left(1, {f2_token_list}), >=))
+          .if !(.xmatch({.left(1, {f2_token_list})}, =) || .xmatch({.left(1, {f2_token_list})}, <>) || .xmatch({.left(1, {f2_token_list})}, <) || .xmatch({.left(1, {f2_token_list})}, <=) || .xmatch({.left(1, {f2_token_list})}, >) || .xmatch({.left(1, {f2_token_list})}, >=))
             .define f2_tmp f2_lhs
             .undef f2_lhs
             .define f2_lhs f2_tmp .left(1, {f2_token_list})
@@ -524,9 +524,9 @@
 
 ;;; Watch for ++ or -- in `f2_token_list` as these are silently valid expressions in ca65
 .macro F2_CHECK_BAD_PREFIX_OP
-        .if .xmatch(.left(2, {f2_token_list}), ++)
+        .if .xmatch({.left(2, {f2_token_list})}, ++)
           F2_ERR "Unexpected '++' (only supported at start of typed comparison)"
-        .elseif .xmatch(.left(2, {f2_token_list}), --)
+        .elseif .xmatch({.left(2, {f2_token_list})}, --)
           F2_ERR "Unexpected '--' (only supported at start of typed comparison)"
         .endif
 .endmacro
@@ -541,7 +541,7 @@
 .macro F2_PARSE_RHS2
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
-          .if .not(.xmatch(.left(1, {f2_token_list}), AND) .or .xmatch(.left(1, {f2_token_list}), OR))
+          .if !(.xmatch({.left(1, {f2_token_list})}, AND) || .xmatch({.left(1, {f2_token_list})}, OR))
             .define f2_tmp f2_rhs
             .undef f2_rhs
             .define f2_rhs f2_tmp .left(1, {f2_token_list})
@@ -563,6 +563,7 @@
 
 ;;; Parse a type-based binary operation, e.g. `u16 var1 < var2`
 .macro F2_PARSE_TYPECOMP
+        ;; Parse type
         .define f2_type .left(1, {f2_token_list})
         .if _f2_is_type {f2_type}
         .else
@@ -572,12 +573,12 @@
 
         ;; Optional prefix operator (++/--)
         .define f2_prefix_op
-        .if .xmatch(.left(2, {f2_token_list}), ++)
+        .if .xmatch({.left(2, {f2_token_list})}, ++)
           .undef f2_prefix_op
           .define f2_prefix_op ++
           F2_PARSE_CONSUME
           F2_PARSE_CONSUME
-        .elseif .xmatch(.left(2, {f2_token_list}), --)
+        .elseif .xmatch({.left(2, {f2_token_list})}, --)
           .undef f2_prefix_op
           .define f2_prefix_op --
           F2_PARSE_CONSUME
@@ -595,17 +596,17 @@
           F2_ERR_EXPECTED "operator (=, <>, <, >=)"
         .endif
         .define f2_op .left(1, {f2_token_list})
-        .if .xmatch(f2_op, =)
+        .if .xmatch({f2_op}, =)
           .define f2_op_str "="
-        .elseif .xmatch(f2_op, <>)
+        .elseif .xmatch({f2_op}, <>)
           .define f2_op_str "<>"
-        .elseif .xmatch(f2_op, <)
+        .elseif .xmatch({f2_op}, <)
           .define f2_op_str "<"
-        .elseif .xmatch(f2_op, >=)
+        .elseif .xmatch({f2_op}, >=)
           .define f2_op_str ">="
-        .elseif .xmatch(f2_op, >)
+        .elseif .xmatch({f2_op}, >)
           .define f2_op_str ">"
-        .elseif .xmatch(f2_op, <=)
+        .elseif .xmatch({f2_op}, <=)
           .define f2_op_str "<="
         .else
           F2_ERR_EXPECTED "operator (=, <>, <, <=, >, >=)"
@@ -626,122 +627,122 @@
         F2_VALIDATE_COMPARE_RHS f2_op_str, f2_rhs
 
         ;; Code generation
-        .if .xmatch(f2_type, u16)
-          .if .xmatch(f2_prefix_op, ++)
+        .if .xmatch({f2_type}, u16)
+          .if .xmatch({f2_prefix_op}, ++)
             inc16 f2_lhs
-          .elseif .xmatch(f2_prefix_op, --)
+          .elseif .xmatch({f2_prefix_op}, --)
             dec16 f2_lhs
           .endif
 
-          .if .xmatch(f2_op, =)
+          .if .xmatch({f2_op}, =)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
-          .elseif .xmatch(f2_op, <>)
+          .elseif .xmatch({f2_op}, <>)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-          .elseif .xmatch(f2_op, <)
+          .elseif .xmatch({f2_op}, <)
             ucmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-          .elseif .xmatch(f2_op, >)
+          .elseif .xmatch({f2_op}, >)
             ucmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-          .elseif .xmatch(f2_op, >=)
+          .elseif .xmatch({f2_op}, >=)
             ucmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
-          .elseif .xmatch(f2_op, <=)
+          .elseif .xmatch({f2_op}, <=)
             ucmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
           .endif
-        .elseif .xmatch(f2_type, s16)
-          .if .xmatch(f2_prefix_op, ++)
+        .elseif .xmatch({f2_type}, s16)
+          .if .xmatch({f2_prefix_op}, ++)
             inc16 f2_lhs
-          .elseif .xmatch(f2_prefix_op, --)
+          .elseif .xmatch({f2_prefix_op}, --)
             dec16 f2_lhs
           .endif
 
-          .if .xmatch(f2_op, =)
+          .if .xmatch({f2_op}, =)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
-          .elseif .xmatch(f2_op, <>)
+          .elseif .xmatch({f2_op}, <>)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-          .elseif .xmatch(f2_op, <)
+          .elseif .xmatch({f2_op}, <)
             scmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
-          .elseif .xmatch(f2_op, >)
+          .elseif .xmatch({f2_op}, >)
             scmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
-          .elseif .xmatch(f2_op, >=)
+          .elseif .xmatch({f2_op}, >=)
             scmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
-          .elseif .xmatch(f2_op, <=)
+          .elseif .xmatch({f2_op}, <=)
             scmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
           .else
             F2_ERR_UNREACHED
           .endif
-        .elseif .xmatch(f2_type, u8)
-          .if .xmatch(f2_prefix_op, ++)
+        .elseif .xmatch({f2_type}, u8)
+          .if .xmatch({f2_prefix_op}, ++)
             inc f2_lhs
-          .elseif .xmatch(f2_prefix_op, --)
+          .elseif .xmatch({f2_prefix_op}, --)
             dec f2_lhs
           .endif
 
-          .if .xmatch(f2_op, =) .and .xmatch(f2_rhs, #0)
+          .if .xmatch({f2_op}, =) && .xmatch({f2_rhs}, #0)
             LDA f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
-          .elseif .xmatch(f2_op, <>) .and .xmatch(f2_rhs, #0)
+          .elseif .xmatch({f2_op}, <>) && .xmatch({f2_rhs}, #0)
             LDA f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-          .elseif .xmatch(f2_op, <>) .and .xmatch(f2_rhs, #0)
+          .elseif .xmatch({f2_op}, <>) && .xmatch({f2_rhs}, #0)
             LDA f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-          .elseif .xmatch(f2_op, =)
+          .elseif .xmatch({f2_op}, =)
             ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
-          .elseif .xmatch(f2_op, <>)
+          .elseif .xmatch({f2_op}, <>)
             ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-          .elseif .xmatch(f2_op, <)
+          .elseif .xmatch({f2_op}, <)
             ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-          .elseif .xmatch(f2_op, >)
+          .elseif .xmatch({f2_op}, >)
             ucmp8 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-          .elseif .xmatch(f2_op, >=)
+          .elseif .xmatch({f2_op}, >=)
             ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
-          .elseif .xmatch(f2_op, <=)
+          .elseif .xmatch({f2_op}, <=)
             ucmp8 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
           .endif
-        .elseif .xmatch(f2_type, u24)
-          .if .xmatch(f2_prefix_op, ++)
+        .elseif .xmatch({f2_type}, u24)
+          .if .xmatch({f2_prefix_op}, ++)
             inc24 f2_lhs
-          .elseif .xmatch(f2_prefix_op, --)
+          .elseif .xmatch({f2_prefix_op}, --)
             F2_ERR "dec24 not defined"
           .endif
 
-          .if .xmatch(f2_op, =)
+          .if .xmatch({f2_op}, =)
             ecmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
-          .elseif .xmatch(f2_op, <>)
+          .elseif .xmatch({f2_op}, <>)
             ecmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-          .elseif .xmatch(f2_op, <)
+          .elseif .xmatch({f2_op}, <)
             ucmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-          .elseif .xmatch(f2_op, >)
+          .elseif .xmatch({f2_op}, >)
             ucmp24 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-          .elseif .xmatch(f2_op, >=)
+          .elseif .xmatch({f2_op}, >=)
             ucmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
-          .elseif .xmatch(f2_op, <=)
+          .elseif .xmatch({f2_op}, <=)
             ucmp24 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
@@ -772,25 +773,25 @@
           F2_ERR_EXPECTED "operator (=, <>, <, >=, IN, BETWEEN)"
         .endif
         .define f2_op .left(1, {f2_token_list})
-        .if .xmatch(f2_op, =)
+        .if .xmatch({f2_op}, =)
           .define f2_op_str "="
-        .elseif .xmatch(f2_op, <>)
+        .elseif .xmatch({f2_op}, <>)
           .define f2_op_str "<>"
-        .elseif .xmatch(f2_op, <)
+        .elseif .xmatch({f2_op}, <)
           .define f2_op_str "<"
-        .elseif .xmatch(f2_op, >=)
+        .elseif .xmatch({f2_op}, >=)
           .define f2_op_str ">="
-        .elseif .xmatch(f2_op, IN)
+        .elseif .xmatch({f2_op}, IN)
           .define f2_op_str "IN"
-        .elseif .xmatch(f2_op, NOT_IN)
+        .elseif .xmatch({f2_op}, NOT_IN)
           .define f2_op_str "NOT_IN"
-        .elseif .xmatch(f2_op, BETWEEN)
+        .elseif .xmatch({f2_op}, BETWEEN)
           .define f2_op_str "BETWEEN"
-        .elseif .xmatch(f2_op, NOT_BETWEEN)
+        .elseif .xmatch({f2_op}, NOT_BETWEEN)
           .define f2_op_str "NOT_BETWEEN"
-        .elseif .xmatch(f2_op, >)
+        .elseif .xmatch({f2_op}, >)
           F2_ERR "Greater-than operator ('>') not supported"
-        .elseif .xmatch(f2_op, <=)
+        .elseif .xmatch({f2_op}, <=)
           F2_ERR "Less-than-or-equal operator ('<=') not supported"
         .else
           F2_ERR_EXPECTED "operator (=, <>, <, >=, IN, BETWEEN)"
@@ -807,38 +808,38 @@
           F2_ERR .sprintf("Numeric literal in '%s' comparison; did you mean '#%d'?", f2_op_str, f2_rhs)
         .endif
 
-        .if .xmatch(f2_op, IN)
-          .if .xmatch(f2_lhs, A)
+        .if .xmatch({f2_op}, IN)
+          .if .xmatch({f2_lhs}, A)
             F2_CODEGEN_IN_LIST CMP, {f2_rhs}
-          .elseif .xmatch(f2_lhs, X)
+          .elseif .xmatch({f2_lhs}, X)
             F2_CODEGEN_IN_LIST CPX, {f2_rhs}
-          .elseif .xmatch(f2_lhs, Y)
+          .elseif .xmatch({f2_lhs}, Y)
             F2_CODEGEN_IN_LIST CPY, {f2_rhs}
           .else
             F2_ERR_UNREACHED
           .endif
 
-        .elseif .xmatch(f2_op, NOT_IN)
-          @f2_negate_flag .set .not(@f2_negate_flag)
-          .if .xmatch(f2_lhs, A)
+        .elseif .xmatch({f2_op}, NOT_IN)
+          @f2_negate_flag .set !(@f2_negate_flag)
+          .if .xmatch({f2_lhs}, A)
             F2_CODEGEN_IN_LIST CMP, {f2_rhs}
-          .elseif .xmatch(f2_lhs, X)
+          .elseif .xmatch({f2_lhs}, X)
             F2_CODEGEN_IN_LIST CPX, {f2_rhs}
-          .elseif .xmatch(f2_lhs, Y)
+          .elseif .xmatch({f2_lhs}, Y)
             F2_CODEGEN_IN_LIST CPY, {f2_rhs}
           .else
             F2_ERR_UNREACHED
           .endif
-          @f2_negate_flag .set .not(@f2_negate_flag)
+          @f2_negate_flag .set !(@f2_negate_flag)
 
-        .elseif .xmatch(f2_op, BETWEEN)
+        .elseif .xmatch({f2_op}, BETWEEN)
           F2_PARSE_PAIR f2_op_str, f2_rhs
 
-          .if .xmatch(f2_lhs, A)
+          .if .xmatch({f2_lhs}, A)
             F2_CODEGEN_BETWEEN CMP, {f2_first}, {f2_second}, f2_op_str
-          .elseif .xmatch(f2_lhs, X)
+          .elseif .xmatch({f2_lhs}, X)
             F2_CODEGEN_BETWEEN CPX, {f2_first}, {f2_second}, f2_op_str
-          .elseif .xmatch(f2_lhs, Y)
+          .elseif .xmatch({f2_lhs}, Y)
             F2_CODEGEN_BETWEEN CPY, {f2_first}, {f2_second}, f2_op_str
           .else
             F2_ERR_UNREACHED
@@ -847,20 +848,20 @@
           .undef f2_first
           .undef f2_second
 
-        .elseif .xmatch(f2_op, NOT_BETWEEN)
+        .elseif .xmatch({f2_op}, NOT_BETWEEN)
           F2_PARSE_PAIR f2_op_str, f2_rhs
 
-          @f2_negate_flag .set .not(@f2_negate_flag)
-          .if .xmatch(f2_lhs, A)
+          @f2_negate_flag .set !(@f2_negate_flag)
+          .if .xmatch({f2_lhs}, A)
             F2_CODEGEN_BETWEEN CMP, {f2_first}, {f2_second}, f2_op_str
-          .elseif .xmatch(f2_lhs, X)
+          .elseif .xmatch({f2_lhs}, X)
             F2_CODEGEN_BETWEEN CPX, {f2_first}, {f2_second}, f2_op_str
-          .elseif .xmatch(f2_lhs, Y)
+          .elseif .xmatch({f2_lhs}, Y)
             F2_CODEGEN_BETWEEN CPY, {f2_first}, {f2_second}, f2_op_str
           .else
             F2_ERR_UNREACHED
           .endif
-          @f2_negate_flag .set .not(@f2_negate_flag)
+          @f2_negate_flag .set !(@f2_negate_flag)
 
           .undef f2_first
           .undef f2_second
@@ -871,24 +872,24 @@
           F2_VALIDATE_COMPARE_RHS f2_op_str, f2_rhs
 
           ;; Code generation
-          .if .xmatch(f2_lhs, A)
+          .if .xmatch({f2_lhs}, A)
             F2_CODEGEN_COMPARE CMP, {f2_rhs}
-          .elseif .xmatch(f2_lhs, X)
+          .elseif .xmatch({f2_lhs}, X)
             F2_CODEGEN_COMPARE CPX, {f2_rhs}
-          .elseif .xmatch(f2_lhs, Y)
+          .elseif .xmatch({f2_lhs}, Y)
             F2_CODEGEN_COMPARE CPY, {f2_rhs}
           .else
             F2_ERR_UNREACHED
           .endif
 
           ;; Code generation - branches
-          .if .xmatch(f2_op, =)
+          .if .xmatch({f2_op}, =)
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
-          .elseif .xmatch(f2_op, <>)
+          .elseif .xmatch({f2_op}, <>)
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-          .elseif .xmatch(f2_op, <)
+          .elseif .xmatch({f2_op}, <)
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-          .elseif .xmatch(f2_op, >=)
+          .elseif .xmatch({f2_op}, >=)
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
@@ -906,21 +907,21 @@
         .define f2_flag_test .left(1, {f2_token_list})
         F2_PARSE_CONSUME
 
-        .if .xmatch(f2_flag_test, ZS)
+        .if .xmatch({f2_flag_test}, ZS)
           F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
-        .elseif .xmatch(f2_flag_test, ZC)
+        .elseif .xmatch({f2_flag_test}, ZC)
           F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
-        .elseif .xmatch(f2_flag_test, NS)
+        .elseif .xmatch({f2_flag_test}, NS)
           F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
-        .elseif .xmatch(f2_flag_test, NC)
+        .elseif .xmatch({f2_flag_test}, NC)
           F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
-        .elseif .xmatch(f2_flag_test, CS)
+        .elseif .xmatch({f2_flag_test}, CS)
           F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
-        .elseif .xmatch(f2_flag_test, CC)
+        .elseif .xmatch({f2_flag_test}, CC)
           F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
-        .elseif .xmatch(f2_flag_test, VS)
+        .elseif .xmatch({f2_flag_test}, VS)
           F2_CODEGEN_BRANCH_WITH_FLAGS BVS, BVC
-        .elseif .xmatch(f2_flag_test, VC)
+        .elseif .xmatch({f2_flag_test}, VC)
           F2_CODEGEN_BRANCH_WITH_FLAGS BVC, BVS
         .else
           F2_ERR_UNREACHED
@@ -937,7 +938,7 @@
 
           ;; NOT - toggle the invert flag, recurse
           F2_PARSE_CONSUME
-          @f2_negate_flag .set .not(@f2_negate_flag)
+          @f2_negate_flag .set !(@f2_negate_flag)
           F2_PARSE_BEXPR
 
         .elseif _f2_is_type {f2_tok}
@@ -970,10 +971,10 @@
         F2_PARSE_BEXPR
 
         .if .tcount({f2_token_list}) > 0
-          .if .xmatch(.left(1, {f2_token_list}), AND)
+          .if .xmatch({.left(1, {f2_token_list})}, AND)
             F2_PARSE_CONSUME
             F2_PARSE_BEXPR_LOOP
-          .elseif .xmatch(.left(1, {f2_token_list}), OR)
+          .elseif .xmatch({.left(1, {f2_token_list})}, OR)
             F2_PARSE_CONSUME
             F2_PARSE_BEXPR_LOOP
           .else
@@ -998,7 +999,7 @@
           F2_ERR_EXPECTED "end-of-statement (':'); did you forget a type prefix ('u8', etc)?"
         .endif
 
-        .if .xmatch(.left(1, {f2_token_list}), :)
+        .if .xmatch({.left(1, {f2_token_list})}, :)
           F2_PARSE_CONSUME
         .else
           .define f2_tmp f2_stmt
@@ -1152,7 +1153,7 @@
 .endmacro
 .macro F2_FIND_SHORTCUT2
         .if .tcount({f2_token_list}) > 0
-          .if .not(.xmatch(.left(1, {f2_token_list}), GOTO) .or .xmatch(.left(1, {f2_token_list}), JUMP))
+          .if !(.xmatch({.left(1, {f2_token_list})}, GOTO) || .xmatch({.left(1, {f2_token_list})}, JUMP))
             .define f2_tmp f2_params
             .undef f2_params
             .define f2_params f2_tmp .left(1, {f2_token_list})
@@ -1177,9 +1178,9 @@
 
         F2_FIND_SHORTCUT
         .if .tcount({f2_shortcut_target}) > 0
-          .if .xmatch(f2_shortcut_op, GOTO)
+          .if .xmatch({f2_shortcut_op}, GOTO)
             F2_PARSE_AND_GEN_BIT {f2_shortcut_target},{f2_params}
-          .elseif .xmatch(f2_shortcut_op, JUMP)
+          .elseif .xmatch({f2_shortcut_op}, JUMP)
             .undef f2_force_longbranch
             .define f2_force_longbranch 1
             F2_PARSE_AND_GEN_BIT {f2_shortcut_target},{f2_params}
@@ -1523,7 +1524,7 @@
 .macro _CALL_HELPER arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
     .ifblank arg1
         ;; nothing
-    .elseif .xmatch({arg2},X) .or .xmatch({arg2},Y)
+    .elseif .xmatch({arg2},X) || .xmatch({arg2},Y)
         ;; Allow calling like: A=table,x
         _CALL_SETUP
         _CALL_EXPR {arg1,arg2}
@@ -1559,109 +1560,103 @@
 
     .local @__flow_call_load_type__
 
-    .if .xmatch(.left(1,{arg}), A)
+    .if .xmatch({.left(1,{arg})}, A)
       .undef __flow_register_name__
       .undef __flow_opcode__
       .define __flow_register_name__ "A"
       .define __flow_opcode__ LDA
       @__flow_call_load_type__ .set __flow_call_load_type_register__
-    .elseif .xmatch(.left(1,{arg}), X)
+    .elseif .xmatch({.left(1,{arg})}, X)
       .undef __flow_register_name__
       .undef __flow_opcode__
       .define __flow_register_name__ "X"
       .define __flow_opcode__ LDX
       @__flow_call_load_type__ .set __flow_call_load_type_register__
-    .elseif .xmatch(.left(1,{arg}), Y)
+    .elseif .xmatch({.left(1,{arg})}, Y)
       .undef __flow_register_name__
       .undef __flow_opcode__
       .define __flow_register_name__ "Y"
       .define __flow_opcode__ LDY
       @__flow_call_load_type__ .set __flow_call_load_type_register__
-    .elseif .xmatch(.left(1,{arg}), AX)
+    .elseif .xmatch({.left(1,{arg})}, AX)
       .undef __flow_register_name__
       .undef __flow_opcode__
       .define __flow_register_name__ "AX"
       .define __flow_opcode__ ldax
       @__flow_call_load_type__ .set __flow_call_load_type_register__
-    .elseif .xmatch(.left(1,{arg}), AY)
+    .elseif .xmatch({.left(1,{arg})}, AY)
       .undef __flow_register_name__
       .undef __flow_opcode__
       .define __flow_register_name__ "AY"
       .define __flow_opcode__ lday
       @__flow_call_load_type__ .set __flow_call_load_type_register__
-    .elseif .xmatch(.left(1,{arg}), YA)
+    .elseif .xmatch({.left(1,{arg})}, YA)
       .undef __flow_register_name__
       .undef __flow_opcode__
       .define __flow_register_name__ "YA"
       .define __flow_opcode__ ldya
       @__flow_call_load_type__ .set __flow_call_load_type_register__
-    .elseif .xmatch(.left(1,{arg}), XY)
+    .elseif .xmatch({.left(1,{arg})}, XY)
       .undef __flow_register_name__
       .undef __flow_opcode__
       .define __flow_register_name__ "XY"
       .define __flow_opcode__ ldxy
       @__flow_call_load_type__ .set __flow_call_load_type_register__
-    .elseif .xmatch(.left(1,{arg}), C)
+    .elseif .xmatch({.left(1,{arg})}, C)
       .undef __flow_register_name__
       .define __flow_register_name__ "C"
       @__flow_call_load_type__ .set __flow_call_load_type_flag__
-    .elseif .xmatch(.left(1,{arg}), D)
+    .elseif .xmatch({.left(1,{arg})}, D)
       .undef __flow_register_name__
       .define __flow_register_name__ "D"
       @__flow_call_load_type__ .set __flow_call_load_type_flag__
     .else
-      .error .sprintf("%s: Expected 'reg=...'", __flow_statement__)
-      .exitmacro
+      F2_ERR "Expected 'reg=...'"
     .endif
 
         ;; --------------------------------------------------
         ;; Validation
 
-    .if .not(.xmatch(.mid(1,1,{arg}), =))
-      .error .sprintf("%s: Expected '%s=...'", __flow_statement__, __flow_register_name__)
-      .exitmacro
+    .if !(.xmatch({.mid(1,1,{arg})}, =))
+      F2_ERR .sprintf("Expected '%s=...'", __flow_register_name__)
     .endif
 
     .if @__flow_call_load_type__ = __flow_call_load_type_register__
-      .if .match(.mid(2,1,{arg}), 0)
-        .error .sprintf("%s: Numeric literal in '%s=expr' assignment; did you mean '#%s'?", __flow_statement__, __flow_register_name__, .string(.mid(2,1,{arg})))
-        .exitmacro
+      .if .match({.mid(2,1,{arg})}, 0)
+        F2_ERR .sprintf("Numeric literal in '%s=expr' assignment; did you mean '#%s'?", __flow_register_name__, .string(.mid(2,1,{arg})))
       .endif
-      .if .match(.mid(2,1,{arg}), kDummyConstant)
-        .if .strat(.string(.mid(2,1,{arg})), 0) = 'k' .and .strat(.string(.mid(2,1,{arg})), 1) >= 'A' .and .strat(.string(.mid(2,1,{arg})), 1) <= 'Z'
-          .error .sprintf("%s: Constant in '%s=expr' assignment; did you mean '#%s'?", __flow_statement__, __flow_register_name__, .string(.mid(2,1,{arg})))
-          .exitmacro
+      .if .match({.mid(2,1,{arg})}, kDummyConstant)
+        .if .strat(.string(.mid(2,1,{arg})), 0) = 'k' && .strat(.string(.mid(2,1,{arg})), 1) >= 'A' && .strat(.string(.mid(2,1,{arg})), 1) <= 'Z'
+          F2_ERR .sprintf("Constant in '%s=expr' assignment; did you mean '#%s'?", __flow_register_name__, .string(.mid(2,1,{arg})))
         .endif
       .endif
     .elseif @__flow_call_load_type__ = __flow_call_load_type_flag__
       .if .tcount({arg}) <> 3
-        .error .sprintf("%s: Unexpected tokens after '%s=...'", __flow_statement__, __flow_register_name__)
-        .exitmacro
+        F2_ERR .sprintf("Unexpected tokens after '%s=...'", __flow_register_name__)
       .endif
 
-      .if .not(.const(.mid(2,9999,{arg})))
-        .error .sprintf("%s: Expected constant expression after '%s='", __flow_statement__, __flow_register_name__)
-        .exitmacro
+      .if !(.const(.mid(2,9999,{arg})))
+        F2_ERR .sprintf("Expected constant expression after '%s='", __flow_register_name__)
       .elseif .mid(2,9999,{arg})
-        .if .xmatch(__flow_register_name__, "C")
+        .if .xmatch({__flow_register_name__}, "C")
           .undef __flow_opcode__
           .define __flow_opcode__ SEC
-        .elseif .xmatch(__flow_register_name__, "D")
+        .elseif .xmatch({__flow_register_name__}, "D")
           .undef __flow_opcode__
           .define __flow_opcode__ SED
         .endif
       .else
-        .if .xmatch(__flow_register_name__, "C")
+        .if .xmatch({__flow_register_name__}, "C")
           .undef __flow_opcode__
           .define __flow_opcode__ CLC
-        .elseif .xmatch(__flow_register_name__, "D")
+        .elseif .xmatch({__flow_register_name__}, "D")
           .undef __flow_opcode__
           .define __flow_opcode__ CLD
         .endif
       .endif
 
     .else
-      .fatal "unreached"
+      F2_ERR_UNREACHED
     .endif
 
         ;; --------------------------------------------------
@@ -1672,6 +1667,6 @@
     .elseif @__flow_call_load_type__ = __flow_call_load_type_flag__
         __flow_opcode__
     .else
-      .fatal "unreached"
+      F2_ERR_UNREACHED
     .endif
 .endmacro

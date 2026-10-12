@@ -168,7 +168,7 @@ end:
         .res    1
     .endif
   .else
-    .if (* & 1) .and .hibyte(*) <> .hibyte(* + (2 * opt_count))
+    .if (* & 1) && .hibyte(*) <> .hibyte(* + (2 * opt_count))
         .out .sprintf("Padding 1 byte to avoid page boundary at $%04X", *)
         .res    1
     .endif
@@ -255,7 +255,7 @@ end:
     .define _param_block_name name
     .define _param_block_max_size opt_max_size
 
-    .if .blank({name}) .and .not(.blank({opt_max_size}))
+    .if .blank({name}) && !(.blank({opt_max_size}))
       .error "PARAM_BLOCK: need name to check size"
     .endif
 
@@ -271,7 +271,7 @@ end:
 .macro END_PARAM_BLOCK
         .endstruct
 
-    .if .tcount({_param_block_name}) > 0 .and .tcount({_param_block_max_size}) > 0
+    .if .tcount({_param_block_name}) > 0 && .tcount({_param_block_max_size}) > 0
       .assert .sizeof(_param_block_name) <= _param_block_max_size, error, "PARAM_BLOCK too large"
     .endif
 
