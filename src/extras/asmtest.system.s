@@ -1383,6 +1383,11 @@ varC:   .word   9870
         SET u8 varA += #12
         SET u8 varA -= #12
 
+        SET u8 varA <<= #1
+        SET u8 varA <<= #4
+        SET u8 varA >>= #1
+        SET u8 varA >>= #4
+
 ;;; u16
         SET u16 varB = varA
         SET u16 varB = #kConstant
@@ -1394,12 +1399,23 @@ varC:   .word   9870
         SET u16 varA += varB
         SET u16 varA -= varB
 
+        SET u16 varA <<= #1
+        SET u16 varA <<= #4
+        SET u16 varA >>= #1
+        SET u16 varA >>= #4
+
+
 ;;; s16
         SET s16 varB = varA
         SET s16 varC = varA + varB
         SET s16 varC = varA - varB
         SET s16 varA += varB
         SET s16 varA -= varB
+
+        SET s16 varA <<= #1
+        SET s16 varA <<= #4
+        SET s16 varA >>= #1
+        SET s16 varA >>= #4
 
 ;;; u24
         SET u24 varB = varA
@@ -1413,10 +1429,20 @@ varC:   .word   9870
         SET u32 varA += varB
         SET u32 varA -= varB
 
+        SET u32 varA <<= #1
+        SET u32 varA <<= #4
+        SET u32 varA >>= #1
+        SET u32 varA >>= #4
+
 ;;; Parenthesized expressions
 
         SET u16 (varC+4) = (varA+2) + (varB+3)
         SET u16 varB+1,x = (varA+1,x)
+
+;;; Shifts with Constants
+
+        SET u8 varA <<= #kConstant
+        SET u8 varA >>= #kConstant
 
 ;;; ============================================================
 ;;; Errors
@@ -1429,6 +1455,7 @@ varC:   .word   9870
         RTS_IF A > #123            ; RTS_IF: Greater-than operator ('>') not supported
         RTS_IF A <= #123           ; RTS_IF: Less-than-or-equal operator ('<=') not supported
         RTS_IF A = 1               ; RTS_IF: Numeric literal in '=' comparison; did you mean '#1'?
+        RTS_IF A = kConstant       ; RTS_IF: Constant in '=' comparison; did you mean '#kConstant'?
         RTS_IF A >= table,A        ; RTS_IF: Unexpected non-index register after comparison '>='
         RTS_IF A >= table,X,Y      ; RTS_IF: Unexpected arguments after comparison '>='
         RTS_IF A BETWEEN           ; RTS_IF: Expected argument(s) after 'BETWEEN'
@@ -1449,6 +1476,7 @@ varC:   .word   9870
         RTS_IF u16 var <           ; RTS_IF: Expected argument(s) after operator '<'
         RTS_IF u16 var < #123,456  ; RTS_IF: Unexpected non-index-register after comparison '<'
         RTS_IF u16 var < 123       ; RTS_IF: Numeric literal in '<' comparison; did you mean '#123'?
+        RTS_IF u16 var < kConstant ; RTS_IF: Constant in '<' comparison; did you mean '#kConstant'?
         RTS_IF u8 var++ = #5       ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
         RTS_IF u8 var-- = #5       ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
         RTS_IF u8 var = --var      ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
@@ -1473,8 +1501,15 @@ varC:   .word   9870
         SET u16 target = varA +     ; SET: Expected argument(s) after operator '+'
         SET u16 target += varA + varB ; SET: Unexpected expression after assignment op ('+=')
         SET u16 target += 1         ; SET: Numeric literal after '+='; did you mean '#1'?
+        SET u16 target += kConstant ; SET: Constant after '+='; did you mean '#kConstant'?
         SET u16 target = 1 + varB   ; SET: Numeric literal after '='; did you mean '#1'?
-        SET u16 target = kConstant + varB ; SET: Constant in assignment; did you mean '#kConstant'?
+        SET u16 target = kConstant + varB ; SET: Constant after '='; did you mean '#kConstant'?
         SET u16 target = varA + 1   ; SET: Numeric literal in '+' expression; did you mean '#1'?
-        SET u16 target = varA + kConstant ; SET: Constant in assignment; did you mean '#kConstant'?
+        SET u16 target = varA + kConstant ; SET: Constant in '+' expression; did you mean '#kConstant'?
+
+        SET u16 target <<= 1             ; SET: Numeric literal after '<<='; did you mean '#1'?
+        SET u16 target <<= kConstant     ; SET: Constant after '<<='; did you mean '#kConstant'?
+        SET u16 target <<= varA          ; SET: Expected immediate argument for '<<='
+        SET u16 target <<= #kNonConstant ; SET: Expected constant expression after '<<='
+        SET u16 target <<= #0            ; SET: Expected non-zero count
 .endif

@@ -805,8 +805,7 @@ shortcut_table_addr_hi:
         jsr     MapCoords
         ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
-        BREAK_IF X <> lastx
-      WHILE Y = lasty
+      WHILE X = lastx AND Y = lasty
 
         stx     lastx
         sty     lasty
@@ -1301,15 +1300,8 @@ mode:   .byte   0
         sta     bitrect::x1+1
         sta     bitrect::y1+1
 
-        ldx     #kFatBitWidthShift
-    DO
-        asl16   bitrect::x1
-    WHILE dex : NOT_ZERO
-
-        ldx     #kFatBitHeightShift
-    DO
-        asl16   bitrect::y1
-    WHILE dex : NOT_ZERO
+        SET s16 bitrect::x1 <<= #::aux::kFatBitWidthShift
+        SET s16 bitrect::y1 <<= #::aux::kFatBitHeightShift
 
         SET s16 bitrect::x1 += fatbits_rect::x1
         SET s16 bitrect::x2 = bitrect::x1 + (#kFatBitWidth-1)

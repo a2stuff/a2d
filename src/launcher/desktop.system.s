@@ -1706,8 +1706,7 @@ str_ram_not_empty:
         lda     KBD
       WHILE NC
         sta     KBDSTRB
-        BREAK_IF A = #$80|CHAR_ESCAPE
-    WHILE A <> #$80|CHAR_RETURN
+    WHILE A <> #$80|CHAR_ESCAPE AND A <> #$80|CHAR_RETURN
         rts
 .endproc ; WaitEnterEscape
 

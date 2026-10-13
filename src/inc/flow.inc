@@ -526,6 +526,17 @@
         .endif
 .endmacro
 
+.macro F2_CHECK_NONIMM token, message
+        .if .match({token}, 1234)
+          F2_ERR .concat("Numeric literal ", message, .sprintf("; did you mean '#%d'?", token))
+        .endif
+        .if .match({token}, kDummyConstant)
+          .if .strat(.string(token), 0) = 'k' && .strat(.string(token), 1) >= 'A' && .strat(.string(token), 1) <= 'Z'
+             F2_ERR .concat("Constant ", message, .sprintf("; did you mean '#%s'?", .string(token)))
+          .endif
+        .endif
+.endmacro
+
 ;;; Watch for ++ or -- in `f2_token_list` as these are silently valid expressions in ca65
 .macro F2_CHECK_BAD_PREFIX_OP
         .if .xmatch({.left(2, {f2_token_list})}, ++)
@@ -623,9 +634,7 @@
         .endif
         F2_PARSE_RHS
 
-        .if .match({f2_rhs}, 1234)
-          F2_ERR .sprintf("Numeric literal in '%s' comparison; did you mean '#%d'?", f2_op_str, f2_rhs)
-        .endif
+        F2_CHECK_NONIMM {f2_rhs}, .sprintf("in '%s' comparison", f2_op_str)
 
         F2_VALIDATE_COMPARE_RHS f2_op_str, f2_rhs
 
@@ -807,9 +816,7 @@
         .endif
         F2_PARSE_RHS
 
-        .if .match({f2_rhs}, 1234)
-          F2_ERR .sprintf("Numeric literal in '%s' comparison; did you mean '#%d'?", f2_op_str, f2_rhs)
-        .endif
+        F2_CHECK_NONIMM {f2_rhs}, .sprintf("in '%s' comparison", f2_op_str)
 
         .if .xmatch({f2_op}, IN)
           .if .xmatch({f2_lhs}, A)
@@ -1626,9 +1633,7 @@
     .endif
 
     .if @__flow_call_load_type__ = __flow_call_load_type_register__
-      .if .match({.mid(2,1,{arg})}, 0)
-        F2_ERR .sprintf("Numeric literal in '%s=expr' assignment; did you mean '#%s'?", __flow_register_name__, .string(.mid(2,1,{arg})))
-      .endif
+      F2_CHECK_NONIMM {.mid(2,1,{arg})}, .sprintf("in '%s=expr' assignment", __flow_register_name__)
       .if .match({.mid(2,1,{arg})}, kDummyConstant)
         .if .strat(.string(.mid(2,1,{arg})), 0) = 'k' && .strat(.string(.mid(2,1,{arg})), 1) >= 'A' && .strat(.string(.mid(2,1,{arg})), 1) <= 'Z'
           F2_ERR .sprintf("Constant in '%s=expr' assignment; did you mean '#%s'?", __flow_register_name__, .string(.mid(2,1,{arg})))
@@ -1681,26 +1686,27 @@
 ;;;
 ;;; ============================================================
 
-;;; * SET type target assignment_op source
+;;; * SET type target = arg
+;;; * SET type target += arg
+;;; * SET type target -= arg
+;;; * SET type target <<= #const
+;;; * SET type target >>= #const
 ;;; * SET type target = lhs binop rhs
 ;;; Types: u8 u16 s16 u24
-;;; Assignment operators: = += -=
 ;;; Binary operators: + -
 ;;;
 ;;; Caveats:
 ;;; * Combining +=/-= and +/- is not supported
-;;; * Using +/- within source or lhs requires wrapping in parentheses
+;;; * Using +/- within arg or lhs requires wrapping in parentheses
 ;;;
 ;;; TODO:
 ;;; * `inc16` as: SET u16 ++var
 ;;; * `dec16` as: SET u16 --var
-;;; * `lsr16` as: SET u16 var >>= 1 (const only!)
-;;; * `asl16` as: SET u16 var <<= 1 (const only!)
 ;;; * Determine if `add16_8`/`sub16_8` can usefully be emitted for
 ;;;   `+=` and `-=` cases; this turns out to be challenging because
 ;;;   most operands end up being considered non-constant by ca65.
 
-;;; Parse `f2_token_list` up to an assignment operator (=, +=, -=); defines `f2_target` (caller must .undef it)
+;;; Parse `f2_token_list` up to an assignment operator (=, +=, -=, <<=, >>=); defines `f2_target` (caller must .undef it)
 .macro F2_PARSE_ASSIGNMENT_TARGET
         F2_CHECK_BAD_PREFIX_OP
         .define f2_target
@@ -1710,7 +1716,7 @@
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
           ;; Note that the assignment op may be 1 or 2 tokens long
-          .if !(.xmatch({.left(1, {f2_token_list})}, =) || .xmatch({.left(2, {f2_token_list})}, +=) || .xmatch({.left(2, {f2_token_list})}, -=))
+          .if !(.xmatch({.left(1, {f2_token_list})}, =) || .xmatch({.left(2, {f2_token_list})}, +=) || .xmatch({.left(2, {f2_token_list})}, -=) || .xmatch({.left(2, {f2_token_list})}, <<=) || .xmatch({.left(2, {f2_token_list})}, >>=))
             .define f2_tmp f2_target
             .undef f2_target
             .define f2_target f2_tmp .left(1, {f2_token_list})
@@ -1779,6 +1785,20 @@
         .endif
 .endmacro
 
+.macro F2_CODEGEN_LOOP op, count, target
+        .if (count) = 0
+          F2_ERR_EXPECTED "non-zero count"
+        .elseif (count) = 1
+          op target
+        .else
+          .local @loop
+          ldx #count
+@loop:    op target
+          dex
+          bne @loop
+        .endif
+.endmacro
+
 .macro SET arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "SET",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         .define f2_token_list f2_params
@@ -1806,7 +1826,7 @@
 
         ;; Parse assignment operator
         .if .tcount({f2_token_list}) = 0
-          F2_ERR_EXPECTED .sprintf("assignment operator (=, +=, -=)")
+          F2_ERR_EXPECTED .sprintf("assignment operator (=, +=, -=, <<=, >>=)")
         .endif
         .if .xmatch({.left(1, {f2_token_list})}, =)
           .define f2_assign_op =
@@ -1822,6 +1842,16 @@
           .define f2_assign_op_str "-="
           F2_PARSE_CONSUME
           F2_PARSE_CONSUME
+        .elseif .xmatch({.left(2, {f2_token_list})}, <<=)
+          .define f2_assign_op <<=
+          .define f2_assign_op_str "<<="
+          F2_PARSE_CONSUME
+          F2_PARSE_CONSUME
+        .elseif .xmatch({.left(2, {f2_token_list})}, >>=)
+          .define f2_assign_op >>=
+          .define f2_assign_op_str ">>="
+          F2_PARSE_CONSUME
+          F2_PARSE_CONSUME
         .else
           F2_ERR_UNREACHED
         .endif
@@ -1832,14 +1862,7 @@
         .endif
         F2_PARSE_ASSIGNMENT_LHS
         .define f2_tok .left(1, {f2_lhs})
-        .if .match({f2_tok}, 1234)
-          F2_ERR .sprintf("Numeric literal after '%s'; did you mean '#%d'?", f2_assign_op_str, f2_tok)
-        .endif
-        .if .match({f2_tok}, kDummyConstant)
-          .if .strat(.string(f2_tok), 0) = 'k' && .strat(.string(f2_tok), 1) >= 'A' && .strat(.string(f2_tok), 1) <= 'Z'
-             F2_ERR .sprintf("Constant in assignment; did you mean '#%s'?", .string(f2_tok))
-          .endif
-        .endif
+        F2_CHECK_NONIMM {f2_tok}, .sprintf("after '%s'", f2_assign_op_str)
         .undef f2_tok
         .if .xmatch({.left(1, {f2_lhs})}, {(}) && .xmatch({.right(1, {f2_lhs})}, {)})
           ;; strip parentheses from LHS expression
@@ -1852,6 +1875,22 @@
         .if .tcount({f2_token_list}) = 0
           ;; No binary operator
 
+          ;; Shift ops require immediate-mode / constant
+          .if .xmatch({f2_assign_op}, <<=) || .xmatch({f2_assign_op}, >>=)
+            .if !.xmatch({.left(1, {f2_lhs})}, #)
+              F2_ERR_EXPECTED .sprintf("immediate argument for '%s'", f2_assign_op_str)
+            .endif
+
+            .define f2_tmp f2_lhs
+            .undef f2_lhs
+            .define f2_lhs .mid(1, 9999, {f2_tmp})
+            .undef f2_tmp
+
+            .if !.const(f2_lhs)
+              F2_ERR_EXPECTED .sprintf("constant expression after '%s'", f2_assign_op_str)
+            .endif
+          .endif
+
           ;; Code generation
           .if .xmatch({f2_type}, u8)
             .if .xmatch({f2_assign_op}, =)
@@ -1860,6 +1899,10 @@
               add8 f2_target, f2_lhs, f2_target
             .elseif .xmatch({f2_assign_op}, -=)
               sub8 f2_target, f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, <<=)
+              F2_CODEGEN_LOOP asl, {f2_lhs}, {f2_target}
+            .elseif .xmatch({f2_assign_op}, >>=)
+              F2_CODEGEN_LOOP lsr, {f2_lhs}, {f2_target}
             .else
               F2_ERR_UNREACHED
             .endif
@@ -1870,6 +1913,10 @@
               add16 f2_target, f2_lhs, f2_target
             .elseif .xmatch({f2_assign_op}, -=)
               sub16 f2_target, f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, <<=)
+              F2_CODEGEN_LOOP asl16, {f2_lhs}, {f2_target}
+            .elseif .xmatch({f2_assign_op}, >>=)
+              F2_CODEGEN_LOOP lsr16, {f2_lhs}, {f2_target}
             .else
               F2_ERR_UNREACHED
             .endif
@@ -1880,6 +1927,10 @@
               F2_ERR "add24 not defined"
             .elseif .xmatch({f2_assign_op}, -=)
               F2_ERR "sub24 not defined"
+            .elseif .xmatch({f2_assign_op}, <<=)
+              F2_ERR "asl24 not defined"
+            .elseif .xmatch({f2_assign_op}, >>=)
+              F2_ERR "lsr24 not defined"
             .else
               F2_ERR_UNREACHED
             .endif
@@ -1890,6 +1941,10 @@
               add32 f2_target, f2_lhs, f2_target
             .elseif .xmatch({f2_assign_op}, -=)
               sub32 f2_target, f2_lhs, f2_target
+            .elseif .xmatch({f2_assign_op}, <<=)
+              F2_CODEGEN_LOOP asl32, {f2_lhs}, {f2_target}
+            .elseif .xmatch({f2_assign_op}, >>=)
+              F2_CODEGEN_LOOP lsr32, {f2_lhs}, {f2_target}
             .else
               F2_ERR_UNREACHED
             .endif
@@ -1926,14 +1981,7 @@
             .undef f2_tmp
           .endif
           .define f2_tok .left(1, {f2_rhs})
-          .if .match({f2_tok}, 1234)
-            F2_ERR .sprintf("Numeric literal in '%s' expression; did you mean '#%d'?", f2_binop_str, f2_tok)
-          .endif
-          .if .match({f2_tok}, kDummyConstant)
-            .if .strat(.string(f2_tok), 0) = 'k' && .strat(.string(f2_tok), 1) >= 'A' && .strat(.string(f2_tok), 1) <= 'Z'
-               F2_ERR .sprintf("Constant in assignment; did you mean '#%s'?", .string(f2_tok))
-            .endif
-          .endif
+          F2_CHECK_NONIMM {f2_tok}, .sprintf("in '%s' expression", f2_binop_str)
           .undef f2_tok
 
           ;; Code generation

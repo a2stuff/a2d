@@ -791,7 +791,7 @@ oval := $50
         ;; ovalWidthDiv2 [16.16] = ovalWidth [16.0] / 2
         SET u16 ovalWidthDiv2 =  #0
         SET u16 ovalWidthDiv2+2 =  ovalWidth
-        lsr32   ovalWidthDiv2
+        SET u32 ovalWidthDiv2 >>= #1
 
         ;; oval.leftEdge [16.16] = oval.leftEdge [16.16] + ovalWidthDiv2 [16.16]
         SET u32 oval+OvalRec::leftEdge = (oval+OvalRec::leftEdge) + ovalWidthDiv2
