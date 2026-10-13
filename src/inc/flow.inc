@@ -1698,6 +1698,7 @@
 ;;; Caveats:
 ;;; * Combining +=/-= and +/- is not supported
 ;;; * Using +/- within arg or lhs requires wrapping in parentheses
+;;; * Shifts use X as loop counter; append `, USE_Y` to use Y instead
 ;;;
 ;;; TODO:
 ;;; * `inc16` as: SET u16 ++var
@@ -1785,16 +1786,16 @@
         .endif
 .endmacro
 
-.macro F2_CODEGEN_LOOP op, count, target
+.macro F2_CODEGEN_LOOP shift_op, load_op, decr_op, count, target
         .if (count) = 0
           F2_ERR_EXPECTED "non-zero count"
         .elseif (count) = 1
-          op target
+          shift_op target
         .else
           .local @loop
-          ldx #count
-@loop:    op target
-          dex
+          load_op #count
+@loop:    shift_op target
+          decr_op
           bne @loop
         .endif
 .endmacro
@@ -1875,8 +1876,25 @@
         .if .tcount({f2_token_list}) = 0
           ;; No binary operator
 
+          .define f2_loop_load ldx
+          .define f2_loop_decr dex
+
           ;; Shift ops require immediate-mode / constant
           .if .xmatch({f2_assign_op}, <<=) || .xmatch({f2_assign_op}, >>=)
+            .if .tcount({f2_lhs}) > 2
+              .if .xmatch({.right(2, {f2_lhs})}, {, USE_Y})
+                .undef f2_loop_load
+                .undef f2_loop_decr
+                .define f2_loop_load ldy
+                .define f2_loop_decr dey
+
+                .define f2_tmp f2_lhs
+                .undef f2_lhs
+                .define f2_lhs .left(.tcount({f2_tmp}) - 2, {f2_tmp})
+                .undef f2_tmp
+              .endif
+            .endif
+
             .if !.xmatch({.left(1, {f2_lhs})}, #)
               F2_ERR_EXPECTED .sprintf("immediate argument for '%s'", f2_assign_op_str)
             .endif
@@ -1900,9 +1918,9 @@
             .elseif .xmatch({f2_assign_op}, -=)
               sub8 f2_target, f2_lhs, f2_target
             .elseif .xmatch({f2_assign_op}, <<=)
-              F2_CODEGEN_LOOP asl, {f2_lhs}, {f2_target}
+              F2_CODEGEN_LOOP asl, f2_loop_load, f2_loop_decr, {f2_lhs}, {f2_target}
             .elseif .xmatch({f2_assign_op}, >>=)
-              F2_CODEGEN_LOOP lsr, {f2_lhs}, {f2_target}
+              F2_CODEGEN_LOOP lsr, f2_loop_load, f2_loop_decr, {f2_lhs}, {f2_target}
             .else
               F2_ERR_UNREACHED
             .endif
@@ -1914,9 +1932,9 @@
             .elseif .xmatch({f2_assign_op}, -=)
               sub16 f2_target, f2_lhs, f2_target
             .elseif .xmatch({f2_assign_op}, <<=)
-              F2_CODEGEN_LOOP asl16, {f2_lhs}, {f2_target}
+              F2_CODEGEN_LOOP asl16, f2_loop_load, f2_loop_decr, {f2_lhs}, {f2_target}
             .elseif .xmatch({f2_assign_op}, >>=)
-              F2_CODEGEN_LOOP lsr16, {f2_lhs}, {f2_target}
+              F2_CODEGEN_LOOP lsr16, f2_loop_load, f2_loop_decr, {f2_lhs}, {f2_target}
             .else
               F2_ERR_UNREACHED
             .endif
@@ -1942,15 +1960,18 @@
             .elseif .xmatch({f2_assign_op}, -=)
               sub32 f2_target, f2_lhs, f2_target
             .elseif .xmatch({f2_assign_op}, <<=)
-              F2_CODEGEN_LOOP asl32, {f2_lhs}, {f2_target}
+              F2_CODEGEN_LOOP asl32, f2_loop_load, f2_loop_decr, {f2_lhs}, {f2_target}
             .elseif .xmatch({f2_assign_op}, >>=)
-              F2_CODEGEN_LOOP lsr32, {f2_lhs}, {f2_target}
+              F2_CODEGEN_LOOP lsr32, f2_loop_load, f2_loop_decr, {f2_lhs}, {f2_target}
             .else
               F2_ERR_UNREACHED
             .endif
           .else
             F2_ERR_UNREACHED
           .endif
+
+          .undef f2_loop_load
+          .undef f2_loop_decr
 
         .else
           ;; Operator

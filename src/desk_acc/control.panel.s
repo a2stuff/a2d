@@ -825,15 +825,8 @@ lasty:  .byte   0
         SET s16 screentowindow_params::windowx -= fatbits_rect::x1
         SET s16 screentowindow_params::windowy -= fatbits_rect::y1
 
-        ldy     #kFatBitWidthShift
-    DO
-        lsr16   screentowindow_params::windowx
-    WHILE dey : NOT_ZERO
-
-        ldy     #kFatBitHeightShift
-    DO
-        lsr16   screentowindow_params::windowy
-    WHILE dey : NOT_ZERO
+        SET s16 screentowindow_params::windowx >>= #::aux::kFatBitWidthShift, USE_Y
+        SET s16 screentowindow_params::windowy >>= #::aux::kFatBitHeightShift, USE_Y
 
         rts
 .endproc ; MapCoords

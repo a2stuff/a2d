@@ -408,8 +408,8 @@ kMoveThresholdY = 5
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
         ;; Draw resize box
-        sub16   winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
-        sub16   winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
+        SET s16 grow_box_params::viewloc::xcoord = winfo::maprect::x2 - #kGrowBoxWidth,
+        SET s16 grow_box_params::viewloc::ycoord = winfo::maprect::y2 - #kGrowBoxHeight
         MGTK_CALL MGTK::PaintBits, grow_box_params
 
         ;; Draw outline
@@ -417,16 +417,16 @@ kMoveThresholdY = 5
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
 
         ;; Left
-        copy16  #0, eye_rect+MGTK::Rect::x1
-        copy16  #0, eye_rect+MGTK::Rect::y1
-        copy16  winfo::maprect::x2, eye_rect+MGTK::Rect::x2
-        lsr16   eye_rect+MGTK::Rect::x2
-        add16   winfo::maprect::y2, #1, eye_rect+MGTK::Rect::y2
+        SET s16 eye_rect+MGTK::Rect::x1 = #0
+        SET s16 eye_rect+MGTK::Rect::y1 = #0
+        SET s16 eye_rect+MGTK::Rect::x2 = winfo::maprect::x2
+        SET s16 eye_rect+MGTK::Rect::x2 >>= #1
+        SET s16 eye_rect+MGTK::Rect::y2 = winfo::maprect::y2 + #1
         jsr     DrawEyeball
 
         ;; Right
-        copy16  eye_rect+MGTK::Rect::x2, eye_rect+MGTK::Rect::x1
-        copy16  winfo::maprect::x2, eye_rect+MGTK::Rect::x2
+        SET s16 eye_rect+MGTK::Rect::x1 = (eye_rect+MGTK::Rect::x2)
+        SET s16 eye_rect+MGTK::Rect::x2 = winfo::maprect::x2
         jsr     DrawEyeball
 
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
@@ -440,23 +440,23 @@ done_outline:
         COPY_STRUCT pos_r, last_r
 
         ;; Compute new coords
-        add16 winfo::maprect::x2, #2, rx ; width / 4
-        lsr16 rx
-        lsr16 rx
-        add16 winfo::maprect::y2, #2, ry ; height / 2
-        lsr16 ry
+        SET s16 rx = winfo::maprect::x2 + #2 ; width / 4
+        SET s16 rx >>= #1
+        SET s16 rx >>= #1
+        SET s16 ry = winfo::maprect::y2 + #2 ; height / 2
+        SET s16 ry >>= #1
 
-        copy16  rx, cx
-        copy16  ry, cy
+        SET s16 cx = rx
+        SET s16 cy = ry
         jsr     ComputePupilPos
-        sub16  ppx, #kPupilW/2, pos_l::xcoord
-        sub16  ppy, #kPupilH/2, pos_l::ycoord
+        SET s16 pos_l::xcoord = ppx - #kPupilW/2
+        SET s16 pos_l::ycoord = ppy - #kPupilH/2
 
-        add16   rx, cx, cx
-        add16   rx, cx, cx
+        SET s16 cx = rx + cx
+        SET s16 cx = rx + cx
         jsr     ComputePupilPos
-        sub16  ppx, #kPupilW/2, pos_r::xcoord
-        sub16  ppy, #kPupilH/2, pos_r::ycoord
+        SET s16 pos_r::xcoord = ppx - #kPupilW/2
+        SET s16 pos_r::ycoord = ppy - #kPupilH/2
 
         ;; Do one pupil at a time to minimize flicker
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve ; go fast

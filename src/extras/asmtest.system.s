@@ -1444,6 +1444,10 @@ varC:   .word   9870
         SET u8 varA <<= #kConstant
         SET u8 varA >>= #kConstant
 
+;;; Shifts with Y as loop counter
+
+        SET u16 varA >>= #kConstant, USE_Y
+
 ;;; ============================================================
 ;;; Errors
 ;;; ============================================================

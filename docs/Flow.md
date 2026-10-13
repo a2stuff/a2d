@@ -290,7 +290,9 @@ Shift-assignments are supported as well, with several caveats:
    SET u16 varA <<= #const
    SET u16 varA >>= #const
 ```
-The shift count *must* be what ca65 considers a constant so that the value is known at assemble-time. If the value is 1 then just an `asl16` (etc) is emitted, otherwise a loop using the `X` register is emitted. The count is required to be immediate mode (i.e. prefixed with `#`) to dissuade passing a symbol (e.g. `varB`) because that might be a constant but the loop count should not be based on the *address*. While it would be possible to support non-constant shifts, these are exceedingly rare; the current syntax allows this in the future.
+The shift count *must* be what ca65 considers a constant so that the value is known at assemble-time. If the value is 1 then just an `asl16` (etc) is emitted, otherwise a loop using the `X` register is emitted. Append `, USE_Y` to the statement to use the `Y` register instead.
+
+The count is required to be immediate mode (i.e. prefixed with `#`) to dissuade passing a symbol (e.g. `varB`) because that might be a constant but the loop count should not be based on the *address*. While it would be possible to support non-constant shifts, these are exceedingly rare; the current syntax allows this in the future.
 
 ## Extras
 
