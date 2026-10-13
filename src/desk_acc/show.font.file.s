@@ -140,16 +140,22 @@ grafport:       .tag    MGTK::GrafPort
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown ; was clicked?
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey ; any key?
-
-        jmp     InputLoop
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -165,13 +171,13 @@ grafport:       .tag    MGTK::GrafPort
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
-        jmp     InputLoop
+        rts
     END_IF
 
         cmp     #CHAR_ESCAPE
         beq     Exit
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -181,13 +187,12 @@ grafport:       .tag    MGTK::GrafPort
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        ucmp8   findwindow_params::window_id, #kDAWindowId
-        bne     InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
         IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        jmp     InputLoop
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -195,7 +200,7 @@ grafport:       .tag    MGTK::GrafPort
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        jeq     InputLoop
+        RTS_IF ZERO
 
         jmp     Exit
 .endproc ; HandleClose
@@ -216,7 +221,7 @@ grafport:       .tag    MGTK::GrafPort
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleDrag
 
 ;;; ============================================================

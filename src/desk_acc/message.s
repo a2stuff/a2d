@@ -87,23 +87,32 @@ grafport:       .tag MGTK::GrafPort
 ;;; Main Input Loop
 
 .proc InputLoop
+    REPEAT
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
-        IF A = #MGTK::EventKind::key_down GOTO HandleKeyDown ; any key?
-        IF A = #MGTK::EventKind::button_down GOTO exit; was clicked?
+      IF A = #MGTK::EventKind::key_down
+        jsr     HandleKeyDown
+      ELSE_IF A = #MGTK::EventKind::button_down
+        jsr     Exit
+      END_IF
 
         jsr     Animate
-        jmp     InputLoop
+    FOREVER
+.endproc ; InputLoop
 
-exit:
+.proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
+
         MGTK_CALL MGTK::RedrawDeskTop
 
         MGTK_CALL MGTK::DrawMenuBar
         JSR_TO_MAIN JUMP_TABLE_HILITE_MENU
 
         MGTK_CALL MGTK::ShowCursor
-        rts                     ; exits input loop
-.endproc ; InputLoop
+        rts
+.endproc ; Exit
 
 ;;; ============================================================
 ;;; Handle Key
@@ -118,20 +127,20 @@ exit:
         ;; --------------------------------------------------
         ;; Non-printable
 
-        cmp     #CHAR_ESCAPE
-        beq     InputLoop::exit
+        IF A = #CHAR_ESCAPE GOTO Exit
+
 
     IF A = #CHAR_LEFT
         dec16   delta
-        jmp     InputLoop
+        rts
     END_IF
 
     IF A = #CHAR_RIGHT
         inc16   delta
-        jmp     InputLoop
+        rts
     END_IF
 
-        jmp     InputLoop
+        rts
 
         ;; --------------------------------------------------
         ;; Printable (append char, preserving trailing space)
@@ -147,7 +156,7 @@ printable:
         inc     text_params::length
     END_IF
 
-        jmp     InputLoop
+        rts
 
         ;; --------------------------------------------------
         ;; Backspace (truncate, preserving trailing space)
@@ -161,7 +170,7 @@ backspace:
         copy8   #kPadChar, buf-1,x
     END_IF
 
-        jmp     InputLoop
+        rts
 
         ;; --------------------------------------------------
         ;; Initialize on first input

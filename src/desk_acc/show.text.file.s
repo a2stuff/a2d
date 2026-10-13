@@ -233,32 +233,32 @@ remainder:      .word   0       ; (out)
 ;;; Main Input Loop
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
-        IF A = #MGTK::EventKind::key_down GOTO OnKeyDown ; key?
-        IF A <> #MGTK::EventKind::button_down GOTO InputLoop ; was clicked?
-
-        FALL_THROUGH_TO OnButtonDown
+      IF A = #MGTK::EventKind::key_down
+        jsr OnKeyDown
+      ELSE_IF A = #MGTK::EventKind::button_down
+        jsr OnButtonDown
+      END_IF
+    FOREVER
 .endproc ; InputLoop
 
 ;;; ============================================================
 
 .proc OnButtonDown
         MGTK_CALL MGTK::FindWindow, event_params::coords
-        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop ; in our window?
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId ; in our window?
 
         ;; which part of the window?
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO OnCloseClick
-        IF A = #MGTK::Area::dragbar GOTO title
-        IF A = #MGTK::Area::grow_box GOTO InputLoop ; not enabled, so this will never match
+        IF A = #MGTK::Area::dragbar JUMP OnTitleBarClick
+        RTS_IF A = #MGTK::Area::grow_box ; not enabled, so this will never match
 
-        jsr     OnContentClick
-        jmp     InputLoop
-
-title:  jsr     OnTitleBarClick
-        jmp     InputLoop
+        TAIL_CALL OnContentClick
 .endproc ; OnButtonDown
 
 ;;; ============================================================
@@ -275,30 +275,27 @@ title:  jsr     OnTitleBarClick
     IF X = #3
         ;; Double modifiers
       IF A = #CHAR_UP           ; OA+SA+Up = Home
-        jsr     ScrollTop
-        jmp     InputLoop
+        TAIL_CALL ScrollTop
+
       END_IF
 
       IF A = #CHAR_DOWN         ; OA+SA+Down = End
-        jsr     ScrollBottom
-        ;; jmp     InputLoop
+        TAIL_CALL ScrollBottom
       END_IF
     ELSE
         ;; Single modifier
       IF A = #CHAR_UP           ; Apple+Up = Page Up
-        jsr     PageUp
-        jmp     InputLoop
+        TAIL_CALL PageUp
       END_IF
 
       IF A = #CHAR_DOWN         ; Apple+Down = Page Down
-        jsr     PageDown
-        jmp     InputLoop
+        TAIL_CALL PageDown
       END_IF
 
         IF A = #kShortcutCloseWindow GOTO DoClose
     END_IF
 
-        jmp     InputLoop
+        rts
 
         ;; No modifiers
 no_mod:
@@ -308,21 +305,18 @@ no_mod:
         beq     DoClose
 
     IF A = #' '
-        jsr     ToggleMode
-        jmp     InputLoop
+        TAIL_CALL ToggleMode
     END_IF
 
     IF A = #CHAR_UP
-        jsr     ScrollUp
-        jmp     InputLoop
+        TAIL_CALL ScrollUp
     END_IF
 
     IF A = #CHAR_DOWN
-        jsr     ScrollDown
-        ;; jmp     InputLoop
+        TAIL_CALL ScrollDown
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; OnKeyDown
 
 ;;; ============================================================
@@ -332,10 +326,13 @@ no_mod:
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway ; did click complete?
         bne     DoClose                    ; yes
-        jmp     InputLoop                  ; no
+        rts
 .endproc ; OnCloseClick
 
 .proc DoClose
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         JSR_TO_MAIN CloseFile
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES

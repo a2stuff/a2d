@@ -208,16 +208,26 @@ pupil_rect:
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-        IF A = #MGTK::EventKind::no_event GOTO HandleNoEvent
-        jmp     InputLoop
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      ELSE_IF A = #MGTK::EventKind::no_event
+        jsr     HandleNoEvent
+      END_IF
+
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -232,11 +242,11 @@ pupil_rect:
     IF NOT_ZERO
         jsr     ToUpperCase
         IF A = #kShortcutCloseWindow GOTO Exit
-        bne     InputLoop       ; always
+        rts
     END_IF
 
         IF A = #CHAR_ESCAPE GOTO Exit
-        bne     InputLoop       ; always
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -245,13 +255,13 @@ pupil_rect:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
-        IF A = #MGTK::Area::dragbar JUMP HandleDrag
-        IF A = #MGTK::Area::content JUMP HandleGrow
-        jmp     InputLoop
+        IF A = #MGTK::Area::dragbar   JUMP HandleDrag
+        IF A = #MGTK::Area::content   JUMP HandleGrow
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -260,7 +270,7 @@ pupil_rect:
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         bne     Exit
-        jmp     InputLoop
+        rts
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -300,7 +310,7 @@ moved:  copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         jsr     DrawWindow
 
-done:   jmp     InputLoop
+done:   rts
 
 
 delta:  .word   0
@@ -326,7 +336,7 @@ common:
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleDrag
 
 ;;; ============================================================
@@ -352,7 +362,7 @@ common:
       END_IF
     END_IF
 
-        jmp     InputLoop
+        rts
 
 tmpw:   .word   0
 .endproc ; HandleGrow

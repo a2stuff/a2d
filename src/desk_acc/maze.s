@@ -70,24 +70,25 @@ pencopy:        .byte MGTK::pencopy
 ;;; Main Input Loop
 
 .proc InputLoop
+    REPEAT
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
-        IF A = #MGTK::EventKind::button_down GOTO exit ; was clicked?
-        IF A = #MGTK::EventKind::key_down GOTO exit ; any key?
+        BREAK_IF A = #MGTK::EventKind::button_down ; was clicked?
+        BREAK_IF A = #MGTK::EventKind::key_down ; any key?
 
         lda     counter
         ora     counter+1
-    IF ZERO
+      IF ZERO
         copy16  #kCountdown, counter
         jsr     InitMaze
-    END_IF
+      END_IF
         dec16   counter
 
         MGTK_CALL MGTK::WaitVBL
         jsr     StepMaze
-        jmp     InputLoop
+    FOREVER
 
-exit:
+        ;; Exit
         MGTK_CALL MGTK::RedrawDeskTop
 
         MGTK_CALL MGTK::DrawMenuBar

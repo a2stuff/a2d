@@ -552,17 +552,24 @@ continue:
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
 
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown ; was clicked?
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey ; any key?
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
 
-        jmp     InputLoop
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -605,7 +612,7 @@ start:  lda     KBD
         jsr     invert
     END_IF
 
-        jmp     InputLoop
+        rts
 
 invert:
         MGTK_CALL MGTK::ShieldCursor, tmp_rect
@@ -625,12 +632,12 @@ last_char:
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
-        IF u8 findwindow_params::window_id <> #kDAWindowId JUMP InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
         IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        jmp     InputLoop
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -638,7 +645,7 @@ last_char:
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        jeq     InputLoop
+        RTS_IF ZERO
         jmp     Exit
 .endproc ; HandleClose
 
@@ -659,7 +666,7 @@ last_char:
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
+        rts
 
 .endproc ; HandleDrag
 

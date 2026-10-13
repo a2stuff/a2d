@@ -509,24 +509,22 @@ scrambled_flag:                 ; bit7
 ;;; Input loop and processing
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
-    IF bit scrambled_flag : NC
+      IF bit scrambled_flag : NC
         jsr     PreScramble
-    END_IF
+      END_IF
 
         lda     event_params::kind
-    IF A = #MGTK::EventKind::button_down
+      IF A = #MGTK::EventKind::button_down
         jsr     OnClick
-        jmp     InputLoop
-    END_IF
-
-        ;; key?
-        cmp     #MGTK::EventKind::key_down
-        bne     InputLoop
+      ELSE_IF A = #MGTK::EventKind::key_down
         jsr     CheckKey
-        jmp     InputLoop
+      END_IF
+    FOREVER
+
 .endproc ; InputLoop
 
         ;; click - where?

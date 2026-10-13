@@ -393,14 +393,21 @@ ep_size := * - ep_start
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         jsr JUMP_TABLE_SYSTEM_TASK
+
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-        IF A <> #MGTK::EventKind::no_event GOTO InputLoop
-        jmp     HandleNoEvent
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      ELSE_IF A = #MGTK::EventKind::no_event
+        jsr     HandleNoEvent
+      END_IF
+
+    FOREVER
 .endproc ; InputLoop
 
 ;;; ============================================================
@@ -413,15 +420,18 @@ ep_size := * - ep_start
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
-        bne     InputLoop       ; always
+        rts
     END_IF
 
-        cmp     #CHAR_ESCAPE
-        bne     InputLoop
+        RTS_IF A <> #CHAR_ESCAPE
+
         FALL_THROUGH_TO Exit
 .endproc ; HandleKey
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
         jmp JUMP_TABLE_CLEAR_UPDATES
 .endproc ; Exit
@@ -431,13 +441,13 @@ ep_size := * - ep_start
 .proc HandleDown
         JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
         jsr     CopyEventDataToMain
-        IF u8 findwindow_params::window_id <> #aux::kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #aux::kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
         IF A = #MGTK::Area::dragbar GOTO HandleDrag
         IF A = #MGTK::Area::content GOTO HandleGrow
-        bne     InputLoop       ; always
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -447,7 +457,7 @@ ep_size := * - ep_start
         jsr     CopyEventDataToMain
         lda     trackgoaway_params::clicked
         bne     Exit
-        beq     InputLoop       ; always
+        rts
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -466,7 +476,7 @@ common: jsr     CopyEventDataToMain
         ;; Draw DA's window
         jsr     DrawWindow
 
-finish: jmp     InputLoop
+finish: rts
 .endproc ; HandleDrag
 
 ;;; ============================================================
@@ -522,7 +532,7 @@ skip:   .word   0
         ora     skip+1
     IF NOT_ZERO
         dec16   skip
-        jmp     InputLoop
+        rts
     END_IF
 
         copy16  #20, skip
@@ -752,7 +762,7 @@ set_frame:
         sta     cur_frame
         jsr     DrawCurrentFrame
 
-        jmp     InputLoop
+        rts
 
 ;;; Apply the deltas and clamp
 ;;; Outputs: Y = number of clampings done (0, 1 or 2)

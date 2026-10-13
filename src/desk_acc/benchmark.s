@@ -244,19 +244,23 @@ pattern_plaid:
 ;;; Input loop
 
 .proc InputLoop
+    REPEAT
         dec     probe_count
-    IF ZERO
+      IF ZERO
         jsr     UpdateMeter
-    END_IF
+      END_IF
 
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO OnClick
-        IF A = #MGTK::EventKind::key_down GOTO OnKey
+      IF A = #MGTK::EventKind::button_down
+        jsr     OnClick
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     OnKey
+      END_IF
 
-        jmp     InputLoop
+    FOREVER
 
 probe_count:
         .byte   0
@@ -271,21 +275,24 @@ probe_count:
     IF NOT_ZERO
         IF A = #res_char_shortcut_apple_5 JUMP OnClick50Hz
         IF A = #res_char_shortcut_apple_6 GOTO OnClick60Hz
-        IF A = #kShortcutCloseWindow GOTO OnKeyOK
+        IF A = #kShortcutCloseWindow GOTO Exit
 
-        jmp     InputLoop
+        rts
     END_IF
 
-        IF A = #CHAR_RETURN GOTO OnKeyOK
-        IF A = #CHAR_ESCAPE GOTO OnKeyOK
+        IF A = #CHAR_RETURN GOTO Exit
+        IF A = #CHAR_ESCAPE GOTO Exit
 
-        jmp     InputLoop
+        rts
 .endproc ; OnKey
 
-.proc OnKeyOK
+.proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         BTK_CALL BTK::Flash, ok_button
         jmp     CloseWindow
-.endproc ; OnKeyOK
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -294,7 +301,7 @@ probe_count:
 
     IF u8 findwindow_params::window_id <> #kDAWindowId \
       OR u8 findwindow_params::which_area <> #MGTK::Area::content
-        jmp     InputLoop
+        rts
     END_IF
 
         copy8   winfo::window_id, screentowindow_params::window_id
@@ -310,7 +317,7 @@ probe_count:
         MGTK_CALL MGTK::InRect, ok_button::rect
         bne     OnClickOK
 
-        jmp     InputLoop
+        rts
 .endproc ; OnClick
 
 ;;; ============================================================
@@ -322,7 +329,7 @@ probe_count:
         BTK_CALL BTK::RadioUpdate, radio_60hz_button
         BTK_CALL BTK::RadioUpdate, radio_50hz_button
     END_IF
-        jmp     InputLoop
+        rts
 .endproc ; OnClick60Hz
 
 ;;; ============================================================
@@ -334,15 +341,15 @@ probe_count:
         BTK_CALL BTK::RadioUpdate, radio_60hz_button
         BTK_CALL BTK::RadioUpdate, radio_50hz_button
     END_IF
-        jmp     InputLoop
+        rts
 .endproc ; OnClick50Hz
 
 ;;; ============================================================
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-        beq     CloseWindow
-        jmp     InputLoop
+        IF NC JUMP Exit
+        rts
 .endproc ; OnClickOK
 
 ;;; ============================================================

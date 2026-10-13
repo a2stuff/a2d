@@ -243,17 +243,24 @@ first_dow:
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::apple_key GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-
-        jmp     InputLoop
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::apple_key
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -272,24 +279,25 @@ first_dow:
     IF NOT_ZERO
         jsr     ToUpperCase
         IF A = #kShortcutCloseWindow GOTO Exit
-        bne     InputLoop       ; always
+        rts
     END_IF
 
         IF A = #CHAR_ESCAPE GOTO Exit
-        bne     InputLoop       ; always
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box JUMP HandleClose
-        IF A = #MGTK::Area::dragbar JUMP HandleDrag
-        IF A = #MGTK::Area::content JUMP HandleClick
-        jmp     InputLoop
+        IF A = #MGTK::Area::dragbar   JUMP HandleDrag
+        IF A = #MGTK::Area::content   JUMP HandleClick
+
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -318,8 +326,8 @@ check:
         copy16  #2155, datetime + ParsedDateTime::year
     END_IF
 
-fin:    jsr     UpdateWindow
-        jmp     InputLoop
+fin:    TAIL_CALL UpdateWindow
+
 .endproc ; DecDate
 
 .proc IncDate
@@ -346,8 +354,8 @@ check:
         copy16  #1901, datetime + ParsedDateTime::year
     END_IF
 
-fin:    jsr     UpdateWindow
-        jmp     InputLoop
+fin:    TAIL_CALL UpdateWindow
+
 .endproc ; IncDate
 
 ;;; ============================================================
@@ -356,7 +364,7 @@ fin:    jsr     UpdateWindow
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         jne     Exit
-        jmp     InputLoop
+        rts
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -373,7 +381,7 @@ fin:    jsr     UpdateWindow
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleDrag
 
 
@@ -390,7 +398,7 @@ fin:    jsr     UpdateWindow
         MGTK_CALL MGTK::InRect, right_button::rect
         jne     IncDate
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleClick
 
 ;;; ============================================================

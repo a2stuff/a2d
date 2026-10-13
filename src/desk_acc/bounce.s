@@ -188,14 +188,20 @@ object_deltas:
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-        IF A <> #MGTK::EventKind::no_event GOTO InputLoop
-        jmp     HandleNoEvent
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      ELSE_IF A = #MGTK::EventKind::no_event
+        jsr     HandleNoEvent
+      END_IF
+
+    FOREVER
 .endproc ; InputLoop
 
 ;;; ============================================================
@@ -207,14 +213,18 @@ object_deltas:
     IF NOT_ZERO
         jsr     ToUpperCase
         IF A = #kShortcutCloseWindow GOTO Exit
-        bne     InputLoop       ; always
+        rts
     END_IF
 
-        IF A <> #CHAR_ESCAPE GOTO InputLoop
+        RTS_IF A <> #CHAR_ESCAPE
         FALL_THROUGH_TO Exit
 .endproc ; HandleKey
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
+
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -224,13 +234,15 @@ object_deltas:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
+
         IF A = #MGTK::Area::close_box GOTO HandleClose
-        IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        IF A = #MGTK::Area::content GOTO HandleGrow
-        bne     InputLoop       ; always
+        IF A = #MGTK::Area::dragbar   GOTO HandleDrag
+        IF A = #MGTK::Area::content   GOTO HandleGrow
+
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -239,7 +251,7 @@ object_deltas:
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         bne     Exit
-        beq     InputLoop       ; always
+        rts
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -257,7 +269,7 @@ common:
     END_IF
 
 finish:
-        jmp     InputLoop
+        rts
 .endproc ; HandleDrag
 
 ;;; ============================================================
@@ -283,9 +295,7 @@ finish:
 ;;; ============================================================
 
 .proc HandleNoEvent
-        jsr     AnimateObjects
-
-        jmp     InputLoop
+        TAIL_CALL       AnimateObjects
 .endproc ; HandleNoEvent
 
 ;;; ============================================================

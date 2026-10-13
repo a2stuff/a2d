@@ -250,17 +250,23 @@ grafport_win:       .tag    MGTK::GrafPort
 .endproc ; Init
 
 .proc InputLoop
+     REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
 
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-
-        jmp     InputLoop
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
+     FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo_listbox
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
@@ -277,14 +283,14 @@ grafport_win:       .tag    MGTK::GrafPort
         sta     lb_params::key
         stx     lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
-        jmp     InputLoop
+        rts
     END_IF
 
     IF X <> #0
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
-        jmp     InputLoop
+        rts
     END_IF
 
     IF A = #CHAR_ESCAPE
@@ -297,7 +303,7 @@ grafport_win:       .tag    MGTK::GrafPort
         jmp     Exit
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -309,7 +315,7 @@ grafport_win:       .tag    MGTK::GrafPort
     IF A = #kDAWindowId
         ucmp8   findwindow_params::which_area, #MGTK::Area::content
         beq     HandleDialogClick
-        jmp     InputLoop
+        rts
     END_IF
 
     IF A = #kListBoxWindowId
@@ -317,11 +323,11 @@ grafport_win:       .tag    MGTK::GrafPort
       IF A = #MGTK::Area::content
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
-        jmp     InputLoop
+        rts
       END_IF
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -340,19 +346,19 @@ grafport_win:       .tag    MGTK::GrafPort
     IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         jeq     Exit
-        jmp     InputLoop
+        rts
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         jeq     DoCancel
-        jmp     InputLoop
+        rts
     END_IF
 
         ;; ----------------------------------------
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleDialogClick
 
 ;;; ============================================================

@@ -203,18 +203,27 @@ num_entries := listbox_rec::num_items
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         LETK_CALL LETK::Idle, le_params
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+
         jsr     GetNextEvent
+      IF A = #kEventKindMouseMoved
+        jsr     HandleMouseMove
+      ELSE_IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
 
-        IF A = #kEventKindMouseMoved JUMP HandleMouseMove
-        IF A = #MGTK::EventKind::button_down JUMP HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-
-        bne     InputLoop       ; always
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
+
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
 
         MGTK_CALL MGTK::CloseWindow, winfo_results
@@ -235,7 +244,7 @@ num_entries := listbox_rec::num_items
 
     IF A IN #CHAR_UP, #CHAR_DOWN
         LBTK_CALL LBTK::Key, lb_params
-        jmp     InputLoop
+        rts
     END_IF
 
     IF X <> #0
@@ -248,13 +257,13 @@ num_entries := listbox_rec::num_items
 
       IF A = #'O'
         lda     selected_index
-        bmi     InputLoop
+        RTS_IF NS
         sta     show_index
         jmp     Exit
       END_IF
 
         LETK_CALL LETK::Key, le_params
-        jmp     InputLoop
+        rts
     END_IF
 
         ;; Not modified
@@ -274,7 +283,7 @@ num_entries := listbox_rec::num_items
         bcs     ignore
 allow:  LETK_CALL LETK::Key, le_params
 ignore:
-        jmp     InputLoop
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -391,7 +400,7 @@ search:
 
 finish:
         MGTK_CALL MGTK::SetCursor, SELF_MODIFIED, cursor_addr
-        jmp     InputLoop
+        rts
 
 .endproc ; DoSearch
 
@@ -415,30 +424,28 @@ finish:
        END_IF
       END_IF
 
-        jmp     InputLoop
+        rts
     END_IF
 
-        cmp     #kDAWindowId
-        bne     done
-
+    IF A = #kDAWindowId
         ;; Click in DA content area
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, search_button::rect
-    IF NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, search_button
         bmi     done
         jmp     DoSearch
-    END_IF
+      END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF NOT_ZERO
+      IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         bmi     done
         jmp     Exit
-    END_IF
+      END_IF
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, input_rect
@@ -447,7 +454,10 @@ finish:
         COPY_STRUCT screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
 
-done:   jmp     InputLoop
+        FALL_THROUGH_TO done
+    END_IF
+
+done:   rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -463,7 +473,7 @@ done:   jmp     InputLoop
     ELSE
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
     END_IF
-        jmp     InputLoop
+        rts
 .endproc ; HandleMouseMove
 
 ;;; ============================================================

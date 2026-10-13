@@ -210,19 +210,26 @@ joystick_bitmap:
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
 
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
+
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
 
         jsr     DoJoystick
-
-        jmp     InputLoop
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -237,11 +244,11 @@ joystick_bitmap:
     IF NOT_ZERO
         jsr     ToUpperCase
         IF A = #kShortcutCloseWindow GOTO Exit
-        bne     InputLoop       ; always
+        rts
     END_IF
 
         IF A = #CHAR_ESCAPE GOTO Exit
-        bne     InputLoop       ; always
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -250,13 +257,14 @@ joystick_bitmap:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
-        IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        IF A = #MGTK::Area::content GOTO HandleClick
-        jmp     InputLoop
+        IF A = #MGTK::Area::dragbar   GOTO HandleDrag
+        IF A = #MGTK::Area::content   GOTO HandleClick
+
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -265,7 +273,8 @@ joystick_bitmap:
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         bne     Exit
-        jmp     InputLoop
+
+        rts
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -284,7 +293,7 @@ joystick_bitmap:
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleDrag
 
 
@@ -292,7 +301,7 @@ joystick_bitmap:
 
 .proc HandleClick
         ;; no-op
-        jmp     InputLoop
+        rts
 .endproc ; HandleClick
 
 ;;; ============================================================

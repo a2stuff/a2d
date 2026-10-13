@@ -342,21 +342,18 @@ game_over_flag: .byte   0       ; bit7
 ;;; Input loop and processing
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-    IF A = #MGTK::EventKind::button_down OR A = #MGTK::EventKind::apple_key
+      IF A = #MGTK::EventKind::button_down OR A = #MGTK::EventKind::apple_key
         jsr     OnClick
-        jmp     InputLoop
-    END_IF
-
-    IF A = #MGTK::EventKind::key_down
+      ELSE_IF A = #MGTK::EventKind::key_down
         jsr     OnKey
-        jmp     InputLoop
-    END_IF
+      END_IF
 
-        jmp     InputLoop
+    FOREVER
 .endproc ; InputLoop
 
 ;;; ============================================================

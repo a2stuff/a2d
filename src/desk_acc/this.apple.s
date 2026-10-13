@@ -1172,17 +1172,25 @@ v_2x:   and     #$0F
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         jsr     JUMP_TABLE_SYSTEM_TASK
+
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
 
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown ; was clicked?
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey ; any key?
-        jmp     InputLoop
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown ; was clicked?
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey ; any key?
+      END_IF
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
         jmp     JUMP_TABLE_CLEAR_UPDATES ; exits input loop
 .endproc ; Exit
@@ -1196,13 +1204,13 @@ v_2x:   and     #$0F
         ldx     event_params::modifiers
     IF NOT_ZERO
         IF A = #kShortcutCloseWindow GOTO Exit
-        jmp     InputLoop
+        rts
     END_IF
 
         IF A = #CHAR_ESCAPE GOTO Exit
         IF A = #kShortcutEasterEgg GOTO HandleEgg
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -1210,12 +1218,12 @@ v_2x:   and     #$0F
 .proc HandleDown
         JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
         jsr     CopyEventDataToMain
-        IF u8 findwindow_params::window_id <> #aux::kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #aux::kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
         IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        jmp     InputLoop
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -1224,7 +1232,7 @@ v_2x:   and     #$0F
         JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, aux::trackgoaway_params
         jsr     CopyEventDataToMain
         lda     trackgoaway_params::clicked
-        beq     InputLoop
+        RTS_IF ZERO
         bne     Exit            ; always
 .endproc ; HandleClose
 
@@ -1245,7 +1253,7 @@ v_2x:   and     #$0F
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
+        rts
 
 .endproc ; HandleDrag
 
@@ -1262,8 +1270,7 @@ v_2x:   and     #$0F
         stx     egg
 
         jsr     ClearWindow
-        jsr     DrawWindow
-        jmp     InputLoop
+        TAIL_CALL DrawWindow
 
 egg:    .byte   0
 .endproc ; HandleEgg

@@ -499,18 +499,25 @@ caret_blink_caret_bitmap:
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         jsr     DoCaretBlink
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        IF A = #kEventKindMouseMoved GOTO HandleMove
-        IF A = #MGTK::EventKind::button_down JUMP HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-
-        bne     InputLoop       ; always
+      IF A = #kEventKindMouseMoved
+        jsr     HandleMove
+      ELSE_IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -533,7 +540,7 @@ caret_blink_caret_bitmap:
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleMove
 
 ;;; ============================================================
@@ -556,7 +563,7 @@ caret_blink_caret_bitmap:
         jmp     SELF_MODIFIED
       END_IF
 
-        jmp     InputLoop
+        rts
     END_IF
 
         IF A = #CHAR_ESCAPE GOTO Exit
@@ -568,8 +575,7 @@ caret_blink_caret_bitmap:
         jmp     HandlePatternClick
     END_IF
 
-        jmp     InputLoop
-
+        rts
 
 shortcut_table_values:
         .byte   0, 0, 1, 3, 2, 1, 1, 2, 3
@@ -585,15 +591,14 @@ shortcut_table_addr_hi:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-    IF u8 findwindow_params::window_id <> #kDAWindowId
-        jmp     InputLoop
-    END_IF
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
-        IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        IF A = #MGTK::Area::content GOTO HandleClick
-        jmp     InputLoop
+        IF A = #MGTK::Area::dragbar   GOTO HandleDrag
+        IF A = #MGTK::Area::content   GOTO HandleClick
+
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -602,7 +607,7 @@ shortcut_table_addr_hi:
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         jne     Exit
-        jmp     InputLoop
+        rts
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -618,7 +623,7 @@ shortcut_table_addr_hi:
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleDrag
 
 
@@ -646,7 +651,7 @@ shortcut_table_addr_hi:
         MGTK_CALL MGTK::InRect, pattern_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, pattern_button
-        jmi     InputLoop
+        RTS_IF NS
         jmp     HandlePatternClick
     END_IF
 
@@ -699,7 +704,7 @@ shortcut_table_addr_hi:
         TAIL_CALL HandleCaretBlinkClick, A=#3
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleClick
 
 ;;; ============================================================
@@ -744,7 +749,7 @@ shortcut_table_addr_hi:
         MGTK_CALL MGTK::ShowCursor
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; UpdatePattern
 
 ;;; ============================================================
@@ -791,9 +796,7 @@ shortcut_table_addr_hi:
         ;; Repeat until mouse-up
       DO
         MGTK_CALL MGTK::GetEvent, event_params
-       IF u8 event_params::kind = #MGTK::EventKind::button_up
-        jmp     InputLoop
-       END_IF
+        RTS_IF u8 event_params::kind = #MGTK::EventKind::button_up
 
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -871,8 +874,7 @@ dblclick_speed: .word   0
 
         jsr     MarkDirty
 
-        jsr     UpdateDblclickButtons
-        jmp     InputLoop
+        TAIL_CALL UpdateDblclickButtons
 
 dblclick_speed: .word   0
 .endproc ; HandleDblclickClick
@@ -921,9 +923,8 @@ dblclick_speed: .word   0
         ;; --------------------------------------------------
         ;; Update the UI
 
-        jsr     UpdateTrackingButtons
+        TAIL_CALL UpdateTrackingButtons
 
-        jmp     InputLoop
 .endproc ; HandleTrackingClick
 
 ;;; ============================================================
@@ -956,9 +957,8 @@ dblclick_speed: .word   0
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
-        jsr     DrawWindow
+        TAIL_CALL DrawWindow
 
-        jmp     InputLoop
 .endproc ; HandlePatternClick
 
 ;;; ============================================================
@@ -1577,8 +1577,7 @@ caret_blink_speed: .word   0
         jsr     MarkDirty
         jsr     ResetCaretBlinkCounter
 
-        jsr     UpdateCaretBlinkButtons
-        jmp     InputLoop
+        TAIL_CALL UpdateCaretBlinkButtons
 
 caret_blink_speed: .word   0
 .endproc ; HandleCaretBlinkClick
@@ -1624,7 +1623,7 @@ done:   rts
 
         JSR_TO_MAIN JUMP_TABLE_RGB_MODE
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleRGBClick
 
 ;;; ============================================================

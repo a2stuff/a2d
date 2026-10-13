@@ -112,15 +112,15 @@ grafport:       .tag MGTK::GrafPort
 ;;; Main Input Loop
 
 .proc InputLoop
+    REPEAT
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
-        IF A = #MGTK::EventKind::button_down GOTO exit ; was clicked?
-        IF A = #MGTK::EventKind::key_down GOTO exit ; any key?
+        BREAK_IF A = #MGTK::EventKind::button_down ; was clicked?
+        BREAK_IF A = #MGTK::EventKind::key_down ; any key?
 
         jsr     Animate
-        jmp     InputLoop
+    FOREVER
 
-exit:
         MGTK_CALL MGTK::RedrawDeskTop
 
         MGTK_CALL MGTK::DrawMenuBar

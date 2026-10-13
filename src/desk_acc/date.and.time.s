@@ -381,16 +381,17 @@ init_window:
 ;;; Input loop
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-    IF A = #MGTK::EventKind::button_down
-        jsr     OnClick
-        jmp     InputLoop
-    END_IF
 
-        IF A <> #MGTK::EventKind::key_down GOTO InputLoop
-        FALL_THROUGH_TO OnKey
+        lda     event_params::kind
+      IF A = #MGTK::EventKind::button_down
+        jsr     OnClick
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     OnKey
+      END_IF
+    FOREVER
 .endproc ; InputLoop
 
 .proc OnKey
@@ -405,16 +406,14 @@ init_window:
         IF A = #kShortcutCloseWindow JUMP OnKeyOK
 
       IF A = #'1'
-        CALL    HandleOptionClick, A=#0
-        jmp     InputLoop
+        TAIL_CALL HandleOptionClick, A=#0
       END_IF
 
       IF A = #'2'
-        CALL    HandleOptionClick, A=#$80
-        jmp     InputLoop
+        TAIL_CALL HandleOptionClick, A=#$80
       END_IF
 
-        jmp     InputLoop
+        rts
     END_IF
 
         IF A = #CHAR_RETURN JUMP OnKeyOK
@@ -422,30 +421,29 @@ init_window:
 
         .assert kFlagsReadOnly = N_FLAG_MASK, error, "bad constant"
         bit     flags
-        bmi     InputLoop
+        RTS_IF NS
 
         ;; All controls are active
-        IF A = #CHAR_LEFT GOTO OnKeyLeft
+        IF A = #CHAR_LEFT  GOTO OnKeyLeft
         IF A = #CHAR_RIGHT GOTO OnKeyRight
-        IF A = #CHAR_TAB GOTO OnKeyRight
-        IF A = #CHAR_DOWN GOTO OnKeyDown
-        IF A <> #CHAR_UP GOTO InputLoop
-        FALL_THROUGH_TO OnKeyUp
+        IF A = #CHAR_TAB   GOTO OnKeyRight
+        IF A = #CHAR_DOWN  GOTO OnKeyDown
+        IF A = #CHAR_UP    GOTO OnKeyUp
+        rts
 
 .proc OnKeyUp
         jsr     InvertUp
         copy8   #kUpRectIndex, hit_rect_index
         jsr     DoIncOrDec
-        jsr     InvertUp
-        jmp     InputLoop
+        TAIL_CALL InvertUp
+
 .endproc ; OnKeyUp
 
 .proc OnKeyDown
         jsr     InvertDown
         copy8   #kDownRectIndex, hit_rect_index
         jsr     DoIncOrDec
-        jsr     InvertDown
-        jmp     InputLoop
+        TAIL_CALL InvertDown
 .endproc ; OnKeyDown
 
 .proc OnKeyLeft
@@ -477,8 +475,7 @@ init_window:
 .endproc ; OnKeyRight
 
 .proc UpdateSelection
-        jsr     SelectField
-        jmp     InputLoop
+        TAIL_CALL SelectField
 .endproc ; UpdateSelection
 .endproc ; OnKey
 
@@ -542,11 +539,7 @@ hit_target_jump_table:
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-    IF ZERO
-        pla                     ; pop OnClick
-        pla
-        jmp     OnOK
-    END_IF
+        IF NC GOTO OnOK
         rts
 .endproc ; OnClickOK
 
@@ -556,6 +549,10 @@ hit_target_jump_table:
 .endproc ; OnKeyOK
 
 .proc OnOK
+        ;; Don't return to `InputLoop`
+        pla
+        pla
+
         .assert kResultDateChanged = N_FLAG_MASK, error, "bad constant"
     IF bit dialog_result : NS
         jsr     UpdateProDOS

@@ -198,21 +198,25 @@ auxtype:        .word   SELF_MODIFIED
 ;;; Input loop
 
 .proc InputLoop
-
-    IF bit auxtype_focused_flag : NC
+    REPEAT
+      IF bit auxtype_focused_flag : NC
         LETK_CALL LETK::Idle, type_le_params
-    ELSE
+      ELSE
         LETK_CALL LETK::Idle, auxtype_le_params
-    END_IF
+      END_IF
 
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        IF A = #kEventKindMouseMoved GOTO HandleMouseMoved
-        IF A = #MGTK::EventKind::button_down GOTO HandleButtonDown
-        IF A = #MGTK::EventKind::key_down JUMP HandleKeyDown
+      IF A = #kEventKindMouseMoved
+        jsr     HandleMouseMoved
+      ELSE_IF A = #MGTK::EventKind::button_down
+        jsr     HandleButtonDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKeyDown
+      END_IF
 
-        jmp     InputLoop
+    FOREVER
 .endproc ; InputLoop
 
 ;;; ==================================================
@@ -225,24 +229,24 @@ auxtype:        .word   SELF_MODIFIED
         MGTK_CALL MGTK::InRect, type_rect
     IF NOT_ZERO
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        jmp     InputLoop
+        rts
     END_IF
 
         MGTK_CALL MGTK::InRect, auxtype_rect
     IF NOT_ZERO
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        jmp     InputLoop
+        rts
     END_IF
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        jmp     InputLoop
+        rts
 .endproc ; HandleMouseMoved
 
 ;;; ============================================================
 
 .proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -252,14 +256,14 @@ auxtype:        .word   SELF_MODIFIED
     IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         jpl     ExitOK
-        jmp     InputLoop
+        rts
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         jpl     ExitCancel
-        jmp     InputLoop
+        rts
     END_IF
 
         MGTK_CALL MGTK::InRect, type_rect
@@ -267,7 +271,7 @@ auxtype:        .word   SELF_MODIFIED
         jsr     FocusType
         COPY_STRUCT screentowindow_params::window, type_le_params::coords
         LETK_CALL LETK::Click, type_le_params
-        jmp     InputLoop
+        rts
     END_IF
 
         MGTK_CALL MGTK::InRect, auxtype_rect
@@ -275,10 +279,10 @@ auxtype:        .word   SELF_MODIFIED
         jsr     FocusAuxtype
         COPY_STRUCT screentowindow_params::window, auxtype_le_params::coords
         LETK_CALL LETK::Click, auxtype_le_params
-        jmp     InputLoop
+        rts
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleButtonDown
 
 ;;; ============================================================
@@ -291,7 +295,7 @@ auxtype:        .word   SELF_MODIFIED
         jsr     ToUpperCase
         IF A = #kShortcutCloseWindow JUMP ExitCancel
 
-        jmp     InputLoop
+        rts
     END_IF
 
     IF A = #CHAR_ESCAPE
@@ -311,17 +315,14 @@ auxtype:        .word   SELF_MODIFIED
       ELSE
         jsr     FocusType
       END_IF
-        jmp     InputLoop
+        rts
     END_IF
 
         jsr     IsControlChar
     IF CS
         jsr     IsHexChar
-      IF CS
-        jmp     InputLoop
-      END_IF
+        RTS_IF CS
     END_IF
-
 
     IF bit auxtype_focused_flag : NC
         sta     type_le_params::key
@@ -333,7 +334,7 @@ auxtype:        .word   SELF_MODIFIED
         LETK_CALL LETK::Key, auxtype_le_params
     END_IF
 
-        jmp     InputLoop
+        rts
 
 ;;; Input: A=character
 ;;; Output: C=0 if control, C=1 if not
@@ -413,11 +414,17 @@ yes:    RETURN  C=0
 ;;; ============================================================
 
 .proc ExitOK
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         lda     #$80
         bne     Exit            ; always
 .endproc ; ExitOK
 
 .proc ExitCancel
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         FALL_THROUGH_TO Exit, A=#0
 .endproc ; ExitCancel
 

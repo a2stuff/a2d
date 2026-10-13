@@ -584,20 +584,18 @@ init:
 ;;; Input Loop
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-    IF A = #MGTK::EventKind::button_down
+      IF A = #MGTK::EventKind::button_down
         jsr     OnClick
-        jmp     InputLoop
-    END_IF
-
-        cmp     #MGTK::EventKind::key_down
-        bne     InputLoop
-
+      ELSE_IF A = #MGTK::EventKind::key_down
         jsr     OnKeyPress
-        jmp     InputLoop
+      END_IF
+
+    FOREVER
 .endproc ; InputLoop
 
 ;;; ============================================================

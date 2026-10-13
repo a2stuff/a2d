@@ -211,17 +211,23 @@ view_by_table:
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
 
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
-
-        jmp     InputLoop
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
@@ -238,7 +244,7 @@ view_by_table:
         IF A = #kShortcutCloseWindow GOTO Exit
 
         ;; Digit key?
-        IF A < #'1' OR A >= #'1'+kNumButtons GOTO InputLoop
+        RTS_IF A < #'1' OR A >= #'1'+kNumButtons
 
         sec
         sbc     #'1'            ; ASCII -> index
@@ -249,7 +255,7 @@ view_by_table:
         ;; no modifiers
         cmp     #CHAR_ESCAPE
         beq     Exit
-        bne     InputLoop       ; always
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -258,21 +264,22 @@ view_by_table:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        IF u8 findwindow_params::window_id <> #kDAWindowId GOTO InputLoop
+        RTS_IF u8 findwindow_params::window_id <> #kDAWindowId
 
         lda     findwindow_params::which_area
         IF A = #MGTK::Area::close_box GOTO HandleClose
-        IF A = #MGTK::Area::dragbar GOTO HandleDrag
-        IF A = #MGTK::Area::content GOTO HandleClick
-        jmp     InputLoop
+        IF A = #MGTK::Area::dragbar   GOTO HandleDrag
+        IF A = #MGTK::Area::content   GOTO HandleClick
+
+        rts
 .endproc ; HandleDown
 
 ;;; ============================================================
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        IF u8 trackgoaway_params::clicked <> #0 GOTO Exit
-        jmp     InputLoop
+        IF u8 trackgoaway_params::clicked <> #0 JUMP Exit
+        rts
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -291,8 +298,7 @@ view_by_table:
         jsr     DrawWindow
     END_IF
 
-        jmp     InputLoop
-
+        rts
 .endproc ; HandleDrag
 
 ;;; ============================================================
@@ -325,7 +331,7 @@ view_by_table:
 
         ;; ----------------------------------------
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleClick
 
 ;;; ============================================================
@@ -374,7 +380,7 @@ view_by_table:
 ;;; ============================================================
 
 .proc ToggleButton
-        IF A = current_view_index JUMP InputLoop
+        RTS_IF A = current_view_index
 
         pha                     ; A = new index
         lda     current_view_index
@@ -412,9 +418,7 @@ view_by_table:
 
         ldx     current_view_index
         CALL    WriteSetting, A=view_by_table,x, X=#DeskTopSettings::default_view
-        jsr     MarkDirty
-
-        jmp     InputLoop
+        TAIL_CALL MarkDirty
 .endproc ; ToggleButton
 
 ;;; ============================================================

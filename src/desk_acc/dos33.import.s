@@ -211,16 +211,24 @@ port:           .addr   grafport_win
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        IF A = #MGTK::EventKind::button_down JUMP HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
 
-        bne     InputLoop       ; always
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit
+        ;; Don't return to `InputLoop`
+        pla
+        pla
+
         ldx     listbox_rec::selected_index
     IF NC
         copy8   control_block+ControlBlock::dev_list,x, control_block+ControlBlock::unit_num
@@ -240,7 +248,7 @@ port:           .addr   grafport_win
         copy8   event_params::key, lb_params::key
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
-        jmp     InputLoop
+        rts
     END_IF
 
         ldx     event_params::modifiers
@@ -254,7 +262,7 @@ port:           .addr   grafport_win
         jmp     Exit
       END_IF
 
-        jmp     InputLoop
+        rts
     END_IF
 
         ;; Not modified
@@ -266,11 +274,11 @@ port:           .addr   grafport_win
 
     IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
-        jmi     InputLoop
-        jmp     Exit
+        jpl     Exit
+        rts
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -290,7 +298,7 @@ port:           .addr   grafport_win
         jmp     Exit
        END_IF
       END_IF
-        jmp     InputLoop
+        rts
     END_IF
 
     IF A = #kDAWindowId
@@ -315,7 +323,7 @@ port:           .addr   grafport_win
       END_IF
     END_IF
 
-done:   jmp     InputLoop
+done:   rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -522,13 +530,17 @@ remainder:      .word   0                 ; (out)
 .endproc ; Init
 
 .proc InputLoop
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     GetNextEvent
 
-        IF A = #MGTK::EventKind::button_down GOTO HandleDown
-        IF A = #MGTK::EventKind::key_down GOTO HandleKey
+      IF A = #MGTK::EventKind::button_down
+        jsr     HandleDown
+      ELSE_IF A = #MGTK::EventKind::key_down
+        jsr     HandleKey
+      END_IF
 
-        bne     InputLoop       ; always
+    FOREVER
 .endproc ; InputLoop
 
 .proc ExitOK
@@ -537,6 +549,13 @@ remainder:      .word   0                 ; (out)
 .endproc ; ExitOK
 
 .proc Exit
+        tax                     ; A = error code (0 = success)
+
+        ;; Don't return to `InputLoop`
+        pla
+        pla
+
+        txa
         pha                     ; A = error code (0 = success)
         MGTK_CALL MGTK::CloseWindow, winfo_catalog_listbox
         MGTK_CALL MGTK::CloseWindow, winfo_catalog
@@ -553,7 +572,7 @@ remainder:      .word   0                 ; (out)
         copy8   event_params::key, lb_params::key
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
-        jmp     InputLoop
+        rts
     END_IF
 
         ldx     event_params::modifiers
@@ -567,7 +586,7 @@ remainder:      .word   0                 ; (out)
         jmp     ExitOK
       END_IF
 
-        jmp     InputLoop
+        rts
     END_IF
 
         ;; Not modified
@@ -578,11 +597,11 @@ remainder:      .word   0                 ; (out)
 
     IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, import_button
-        jmi     InputLoop
+        RTS_IF NS
         jmp     Import
     END_IF
 
-        jmp     InputLoop
+        rts
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -602,7 +621,7 @@ remainder:      .word   0                 ; (out)
         jmp     Import
        END_IF
       END_IF
-        jmp     InputLoop
+        rts
     END_IF
 
     IF A = #kDAWindowId
@@ -626,7 +645,7 @@ remainder:      .word   0                 ; (out)
       END_IF
     END_IF
 
-done:   jmp     InputLoop
+done:   rts
 .endproc ; HandleDown
 
 ;;; ============================================================
@@ -640,7 +659,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         pla                     ; A = error code (0 = success
         jne     Exit
-        jmp     InputLoop
+        rts
 .endproc ; Import
 
 ;;; ============================================================
