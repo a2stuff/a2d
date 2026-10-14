@@ -386,7 +386,7 @@ update:
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-        beq     OnOK
+        IF ZS GOTO OnOK         ; N=0/Z=1 if clicked
         rts
 .endproc ; OnClickOK
 

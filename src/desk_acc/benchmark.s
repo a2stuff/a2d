@@ -348,7 +348,7 @@ probe_count:
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-        IF NC JUMP Exit
+        IF NC JUMP Exit         ; N=0/Z=1 if clicked
         rts
 .endproc ; OnClickOK
 

@@ -7894,7 +7894,7 @@ no_goaway:
         sub16_8 right, #kTitleXInset
 
         ;; Paint (if not degenerate)
-    IF scmp16 right, left : POS
+    IF s16 right >= left
         jsr     PaintRectImpl
     END_IF
 
@@ -8459,14 +8459,9 @@ win_port  .addr
         ptr := window
 
         jsr     WindowByIdOrExit
-        lda     ptr
-        clc
-        adc     #MGTK::Winfo::port
-        sta     ptr
-        bcc     :+
-        inc     ptr+1
+        add16_8 ptr, #MGTK::Winfo::port
 
-:       ldy     #.sizeof(MGTK::GrafPort)-1
+        ldy     #.sizeof(MGTK::GrafPort)-1
 loop:   lda     ($82),y
         sta     (ptr),y
         dey

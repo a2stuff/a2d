@@ -271,8 +271,7 @@ joystick_bitmap:
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        bne     Exit
+        IF u8 trackgoaway_params::clicked <> #MGTK::goaway_canceled GOTO Exit
 
         rts
 .endproc ; HandleClose

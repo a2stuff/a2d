@@ -204,9 +204,6 @@
         carryOp
         _op_lo  op, {arg3}
         sta     arg4,arg5
-        lda     arg1+1,arg2
-        _op_hi  op, {arg3}
-        sta     arg4+1,arg5
     .elseif (_is_register {arg3}) && (_is_register {arg5})
         ;; xxx8 $11, $22,x, $33,x
         ;; xxx8 #$11, $22,x, $33,x
@@ -214,9 +211,6 @@
         carryOp
         op      arg2,arg3
         sta     arg4,arg5
-        _op_hi  lda, {arg1}
-        op      arg2+1,arg3
-        sta     arg4+1,arg5
     .elseif _is_register {arg2}
         ;; xxx8 $11,x, $22, $33
         ;; xxx8 $11,x, #$22, $33
@@ -224,9 +218,6 @@
         carryOp
         _op_lo  op, {arg3}
         sta     arg4
-        lda     arg1+1,arg2
-        _op_hi  op, {arg3}
-        sta     arg4+1
     .elseif _is_register {arg3}
         ;; xxx8 $11, $22,x $33
         ;; xxx8 #$11, $22,x $33
@@ -234,9 +225,6 @@
         carryOp
         op      arg2,arg3
         sta     arg4
-        _op_hi  lda, {arg1}
-        op      arg2+1,arg3
-        sta     arg4+1
     .elseif _is_register {arg4}
         ;; xxx8 $11, $22, $33,x
         ;; xxx8 #$11, $22, $33,x
@@ -246,9 +234,6 @@
         carryOp
         _op_lo  op, {arg2}
         sta     arg3,arg4
-        _op_hi  lda, {arg1}
-        _op_hi  op, {arg2}
-        sta     arg3+1,arg4
     .else
         ;; xxx8 $11, $22, $33
         ;; xxx8 #$11, $22, $33
@@ -258,9 +243,6 @@
         carryOp
         _op_lo op, {arg2}
         sta     arg3
-        _op_hi lda, {arg1}
-        _op_hi op, {arg2}
-        sta     arg3+1
     .endif
 .endmacro
 

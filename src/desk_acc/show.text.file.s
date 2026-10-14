@@ -324,8 +324,7 @@ no_mod:
 
 .proc OnCloseClick
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::goaway ; did click complete?
-        bne     DoClose                    ; yes
+        IF u8 trackgoaway_params::goaway <> #MGTK::goaway_canceled GOTO DoClose
         rts
 .endproc ; OnCloseClick
 

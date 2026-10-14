@@ -374,7 +374,7 @@ ep_size = * - ep_start
         JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, aux::trackgoaway_params
         jsr     CopyEventDataToMain
 
-    IF u8 trackgoaway_params::clicked <> #0
+    IF u8 trackgoaway_params::clicked <> #MGTK::goaway_canceled
         pla                     ; not returning to the caller
         pla
         jmp     Exit

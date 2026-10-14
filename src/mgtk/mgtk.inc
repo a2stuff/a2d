@@ -763,6 +763,10 @@ inrect_outside          = $00
 inpoly_inside           = $80
 inpoly_outside          = $00
 
+;;; Response from TrackGoAway
+goaway_canceled         = 0
+goaway_close            = 1
+
 ;;; ============================================================
 ;;; Offsets
 

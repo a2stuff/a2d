@@ -455,8 +455,7 @@ ep_size := * - ep_start
 .proc HandleClose
         JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, aux::trackgoaway_params
         jsr     CopyEventDataToMain
-        lda     trackgoaway_params::clicked
-        bne     Exit
+        IF u8 trackgoaway_params::clicked <> #MGTK::goaway_canceled GOTO Exit
         rts
 .endproc ; HandleClose
 

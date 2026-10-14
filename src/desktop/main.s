@@ -5730,8 +5730,7 @@ exception_flag:
 .proc HandleCloseClick
         lda     active_window_id
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::goaway
-        RTS_IF ZERO
+        RTS_IF u8 trackgoaway_params::goaway = #MGTK::goaway_canceled
 
         ;; If modifier is down, close all windows
         lda     MainLoop::modifiers ; bit7 = OA, bit6 = SA
@@ -7253,9 +7252,7 @@ enough_room:
         record := $1F00
 
 do_entry:
-        inc     index_in_dir
-        ucmp8   index_in_dir, dir_header::file_count
-        IF ZERO JUMP finish
+        IF u8 ++index_in_dir = dir_header::file_count JUMP finish
 
 next:   inc     index_in_block
     IF u8 index_in_block <> dir_header::entries_per_block
@@ -13511,7 +13508,7 @@ found_slash:
         MGTK_CALL MGTK::InRect, ok_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
-      IF NC
+      IF NC                     ; N=0/Z=1 if clicked
         lda     #PromptResult::ok
       END_IF
         rts
@@ -13523,7 +13520,7 @@ found_slash:
         MGTK_CALL MGTK::InRect, cancel_button::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
-       IF NC
+       IF NC                    ; N=0/Z=1 if clicked
         lda     #PromptResult::cancel
        END_IF
         rts

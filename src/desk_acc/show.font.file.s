@@ -199,8 +199,7 @@ grafport:       .tag    MGTK::GrafPort
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        RTS_IF ZERO
+        RTS_IF u8 trackgoaway_params::clicked = #MGTK::goaway_canceled
 
         jmp     Exit
 .endproc ; HandleClose

@@ -202,8 +202,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
 .proc DoClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::goaway
-        bne     DoQuit
+        IF u8 trackgoaway_params::goaway <> #MGTK::goaway_canceled GOTO DoQuit
         rts
 .endproc ; DoClose
 

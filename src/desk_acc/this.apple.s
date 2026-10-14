@@ -1231,8 +1231,7 @@ v_2x:   and     #$0F
 .proc HandleClose
         JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, aux::trackgoaway_params
         jsr     CopyEventDataToMain
-        lda     trackgoaway_params::clicked
-        RTS_IF ZERO
+        RTS_IF u8 trackgoaway_params::clicked = #MGTK::goaway_canceled
         bne     Exit            ; always
 .endproc ; HandleClose
 

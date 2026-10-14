@@ -615,8 +615,8 @@ init:
 
     IF A = #MGTK::Area::close_box ; Close box?
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::goaway
-        beq     ret
+        IF u8 trackgoaway_params::goaway = #MGTK::goaway_canceled GOTO ret
+
         pla                     ; pop OnClick
         pla
         jmp     ExitDA

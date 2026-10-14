@@ -525,8 +525,7 @@ ignore_click:
 
     IF A = #MGTK::Area::close_box ; Close box?
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::goaway
-        beq     ignore_click
+        IF u8 trackgoaway_params::goaway = #MGTK::goaway_canceled GOTO ignore_click
 
 exit:   pla                     ; pop OnClick / OnKeyPress
         pla

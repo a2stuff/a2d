@@ -362,8 +362,7 @@ fin:    TAIL_CALL UpdateWindow
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        jne     Exit
+        IF u8 trackgoaway_params::clicked <> #MGTK::goaway_canceled JUMP Exit
         rts
 .endproc ; HandleClose
 

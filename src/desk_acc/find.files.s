@@ -436,14 +436,14 @@ finish:
         MGTK_CALL MGTK::InRect, search_button::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, search_button
-        bmi     done
+        IF NS GOTO done         ; N=0/Z=1 if clicked
         jmp     DoSearch
       END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
-        bmi     done
+        IF NS GOTO done         ; N=0/Z=1 if clicked
         jmp     Exit
       END_IF
 

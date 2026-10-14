@@ -312,15 +312,14 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
         lda     findwindow_params::window_id
+
     IF A = #kDAWindowId
-        ucmp8   findwindow_params::which_area, #MGTK::Area::content
-        beq     HandleDialogClick
+        IF u8 findwindow_params::which_area = #MGTK::Area::content GOTO HandleDialogClick
         rts
     END_IF
 
     IF A = #kListBoxWindowId
-        lda     findwindow_params::which_area
-      IF A = #MGTK::Area::content
+      IF u8 findwindow_params::which_area = #MGTK::Area::content
         COPY_STRUCT event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         rts
@@ -345,14 +344,14 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::InRect, ok_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
-        jeq     Exit
+        IF ZERO JUMP Exit       ; N=0/Z=1 if clicked
         rts
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
-        jeq     DoCancel
+        IF ZERO JUMP DoCancel   ; N=0/Z=1 if clicked
         rts
     END_IF
 

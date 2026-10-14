@@ -702,6 +702,16 @@
             dec f2_lhs
           .endif
 
+          ;; If possible, convert RHS to #0 since we special case that.
+          .if _is_immediate {f2_rhs}
+            .if .const(_immediate_value {f2_rhs})
+              .if (_immediate_value {f2_rhs}) = 0
+                .undef f2_rhs
+                .define f2_rhs #0
+              .endif
+            .endif
+          .endif
+
           .if .xmatch({f2_op}, =) && .xmatch({f2_rhs}, #0)
             LDA f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE

@@ -368,8 +368,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        bne     Exit
+        IF u8 trackgoaway_params::clicked <> #MGTK::goaway_canceled GOTO Exit
         rts
 .endproc ; HandleClose
 
@@ -490,7 +489,7 @@ len:    .byte   0
         MGTK_CALL MGTK::InRect, find_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, find_button
-      IF NC
+      IF NC                     ; N=0/Z=1 if clicked
         jsr     DoFind
       END_IF
         jmp     done

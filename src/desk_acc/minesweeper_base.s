@@ -395,8 +395,7 @@ game_over_flag: .byte   0       ; bit7
 
 .proc DoClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::goaway
-        bne     DoQuit
+        IF u8 trackgoaway_params::goaway <> #MGTK::goaway_canceled GOTO DoQuit
         rts
 .endproc ; DoClose
 

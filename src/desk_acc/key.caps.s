@@ -578,14 +578,15 @@ continue:
 ;;; ============================================================
 
 .proc HandleKey
-        lda     event_params::modifiers
-        beq     start
+    IF u8 event_params::modifiers <> #0
         lda     event_params::key
         jsr     ToUpperCase
         IF A = #kShortcutQuit GOTO Exit  ; Apple-Q to quit
         IF A = #kShortcutCloseWindow GOTO Exit ; Apple-W to close window
+    END_IF
 
-start:  lda     KBD
+start:
+        lda     KBD
         and     #CHAR_MASK
         sta     last_char
 
@@ -599,15 +600,15 @@ start:  lda     KBD
         MGTK_CALL MGTK::SetPenMode, penXOR
         jsr     invert
 
-:
-      IF bit KBDSTRB : NS
+      DO
+       IF bit KBDSTRB : NS
         lda     KBD
         and     #CHAR_MASK
-        cmp     last_char
-        beq     :-
+        REDO_IF A = last_char
         jsr     invert
         jmp     start
-      END_IF
+       END_IF
+      DONE
 
         jsr     invert
     END_IF
@@ -644,8 +645,7 @@ last_char:
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        RTS_IF ZERO
+        RTS_IF u8 trackgoaway_params::clicked = #MGTK::goaway_canceled
         jmp     Exit
 .endproc ; HandleClose
 

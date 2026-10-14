@@ -1019,7 +1019,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, dialog_ok_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, dialog_ok_button
-      IF NC
+      IF NC                     ; N=0/Z=1 if clicked
         lda     #$00
       END_IF
         rts
@@ -1028,7 +1028,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, read_drive_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, read_drive_button
-      IF NC
+      IF NC                     ; N=0/Z=1 if clicked
         lda     #$01
       END_IF
     END_IF
@@ -2151,11 +2151,8 @@ ShowAlertDialog := ShowAlertDialogImpl::start
 
         jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, Alert::event_params
-        ucmp8   Alert::event_kind, #MGTK::EventKind::key_down
-        bne     @retry
-
-        ucmp8   Alert::event_key, #CHAR_ESCAPE
-        bne     @retry
+        IF u8 Alert::event_kind <> #MGTK::EventKind::key_down GOTO @retry
+        IF u8 Alert::event_key <> #CHAR_ESCAPE GOTO @retry
         RETURN  A=#$80
 
 done:   RETURN  A=#$00

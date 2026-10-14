@@ -291,7 +291,7 @@ frame_counter:
 
 .proc OnClickOK
         BTK_CALL BTK::Track, ok_button
-        beq     CloseWindow
+        IF ZS GOTO CloseWindow  ; N=0/Z=1 if clicked
         rts
 .endproc ; OnClickOK
 
@@ -299,7 +299,7 @@ frame_counter:
 
 .proc OnClickNorm
         BTK_CALL BTK::Track, norm_button
-    IF ZERO
+    IF ZS                       ; N=0/Z=1 if clicked
         JSR_TO_MAIN DoNorm
     END_IF
         rts

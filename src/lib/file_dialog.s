@@ -204,7 +204,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::drives_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::drives_button
-        RTS_IF NS
+        RTS_IF NS               ; N=0/Z=1 if clicked
         jmp     _DoDrives
     END_IF
 
@@ -214,7 +214,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::open_button
-        RTS_IF NS
+        RTS_IF NS               ; N=0/Z=1 if clicked
         jmp     _DoOpen
     END_IF
 
@@ -224,7 +224,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::close_button
-        RTS_IF NS
+        RTS_IF NS               ; N=0/Z=1 if clicked
         jmp     _DoClose
     END_IF
 
@@ -234,7 +234,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::ok_button
-        RTS_IF NS
+        RTS_IF NS               ; N=0/Z=1 if clicked
         jmp     HandleOK
     END_IF
 
@@ -244,7 +244,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::cancel_button
-        RTS_IF NS
+        RTS_IF NS               ; N=0/Z=1 if clicked
         jmp     HandleCancel
     END_IF
 

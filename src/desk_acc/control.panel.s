@@ -605,8 +605,7 @@ shortcut_table_addr_hi:
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        jne     Exit
+        IF u8 trackgoaway_params::clicked <> #MGTK::goaway_canceled JUMP Exit
         rts
 .endproc ; HandleClose
 
@@ -651,7 +650,7 @@ shortcut_table_addr_hi:
         MGTK_CALL MGTK::InRect, pattern_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, pattern_button
-        RTS_IF NS
+        RTS_IF NS               ; N=0/Z=1 if clicked
         jmp     HandlePatternClick
     END_IF
 

@@ -249,8 +249,7 @@ object_deltas:
 
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
-        bne     Exit
+        IF u8 trackgoaway_params::clicked <> #0 GOTO Exit
         rts
 .endproc ; HandleClose
 

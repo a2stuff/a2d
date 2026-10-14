@@ -402,14 +402,9 @@ flag:   .byte   0
         ptr := $06
 
         inc     entry_num
-        lda     ptr
-        clc
-        adc     #.sizeof(FileEntry)
-        sta     ptr
-        bcc     :+
-        inc     ptr+1
+        add16_8 ptr, #.sizeof(FileEntry)
 
-:       IF u8 ptr <> #$FF GOTO rtcc
+        IF u8 ptr <> #$FF GOTO rtcc
         inc     ptr+1
         copy8   #1, entry_num
         copy8   #4, ptr         ; skip over block header

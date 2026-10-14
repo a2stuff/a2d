@@ -255,14 +255,14 @@ auxtype:        .word   SELF_MODIFIED
         MGTK_CALL MGTK::InRect, ok_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, ok_button
-        jpl     ExitOK
+        IF NC JUMP ExitOK       ; N=0/Z=1 if clicked
         rts
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
-        jpl     ExitCancel
+        IF NC JUMP ExitCancel   ; N=0/Z=1 if clicked
         rts
     END_IF
 

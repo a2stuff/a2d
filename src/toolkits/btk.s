@@ -351,8 +351,8 @@ loop_i: jsr     _Invert
 
         ;; Event loop
 loop:   MGTK_CALL MGTK::GetEvent, event_params
-        ucmp8   event_params::kind, #MGTK::EventKind::button_up
-        beq     exit
+        IF u8 event_params::kind =  #MGTK::EventKind::button_up GOTO exit
+
         lda     window_id
     IF ZERO
         MGTK_CALL MGTK::MoveTo, event_params::coords

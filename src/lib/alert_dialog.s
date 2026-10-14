@@ -452,7 +452,7 @@ HandleButtonDown:
         MGTK_CALL MGTK::InRect, cancel_button+BTK::ButtonRecord::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
-        bne     was_no_button
+        IF ZC GOTO was_no_button ; N=0/Z=1 if clicked
         lda     #kAlertResultCancel
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     finish          ; always
@@ -469,7 +469,7 @@ HandleButtonDown:
         MGTK_CALL MGTK::InRect, yes_button+BTK::ButtonRecord::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, yes_button
-        bne     was_no_button
+        IF ZC GOTO was_no_button ; N=0/Z=1 if clicked
         lda     #kAlertResultYes
         ASSERT_NOT_EQUALS ::kAlertResultYes, 0
         bne     finish          ; always
@@ -478,7 +478,7 @@ HandleButtonDown:
         MGTK_CALL MGTK::InRect, no_button+BTK::ButtonRecord::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, no_button
-        bne     was_no_button
+        IF ZC GOTO was_no_button ; N=0/Z=1 if clicked
         lda     #kAlertResultNo
         ASSERT_NOT_EQUALS ::kAlertResultNo, 0
         bne     finish          ; always
@@ -487,7 +487,7 @@ HandleButtonDown:
         MGTK_CALL MGTK::InRect, all_button+BTK::ButtonRecord::rect
         beq     was_no_button
         BTK_CALL BTK::Track, all_button
-        bne     was_no_button
+        IF ZC GOTO was_no_button ; N=0/Z=1 if clicked
         lda     #kAlertResultAll
         ASSERT_NOT_EQUALS ::kAlertResultAll, 0
         bne     finish          ; always

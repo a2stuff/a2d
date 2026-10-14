@@ -552,8 +552,8 @@ bail:   rts
         ;; close port?
     IF A = #MGTK::Area::close_box
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::goaway
-        beq     bail
+        IF u8 trackgoaway_params::goaway = #MGTK::goaway_canceled GOTO bail
+
 destroy:
         pla                     ; bust out of OnXXX proc
         pla

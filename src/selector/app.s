@@ -751,8 +751,9 @@ dispatch:
         MGTK_CALL MGTK::InRect, ok_button::rect
     IF ZC
         BTK_CALL BTK::Track, ok_button
-        bmi     done
-        jsr     TryInvokeSelectedIndex
+      IF NC                     ; N=0/Z=1 if clicked
+          jsr     TryInvokeSelectedIndex
+      END_IF
 done:   rts
     END_IF
 
@@ -761,7 +762,7 @@ done:   rts
         MGTK_CALL MGTK::InRect, desktop_button::rect
       IF NOT_ZERO
         BTK_CALL BTK::Track, desktop_button
-        bmi     done
+        IF NS GOTO done         ; N=0/Z=1 if clicked
 
        DO
         CALL    GetFileInfo, AX=#str_desktop_2

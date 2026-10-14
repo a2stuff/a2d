@@ -41,10 +41,9 @@ Exec:
         pha                     ; A = result
     IF lda clean_flag : NC
         ;; Update total count of entries (used for menu item states)
-        lda     selector_list + kSelectorListNumPrimaryRunListOffset
-        clc
-        adc     selector_list + kSelectorListNumSecondaryRunListOffset
-        sta     num_selector_list_items
+        primary_entries = selector_list + kSelectorListNumPrimaryRunListOffset
+        secondary_entries = selector_list + kSelectorListNumSecondaryRunListOffset
+        add8    primary_entries, secondary_entries, num_selector_list_items
 
         ;; First time - ask if we should even try.
         CLEAR_BIT7_FLAG retry_flag
@@ -427,7 +426,7 @@ handle_button:
         MGTK_CALL MGTK::InRect, entry_picker_ok_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_ok_button
-      IF NC
+      IF NC                     ; N=0/Z=1 if clicked
         lda     #$00            ; OK selected
       END_IF
         rts
@@ -436,7 +435,7 @@ handle_button:
         MGTK_CALL MGTK::InRect, entry_picker_cancel_button::rect
     IF NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_cancel_button
-      IF NC
+      IF NC                     ; N=0/Z=1 if clicked
         lda     #$01            ; cancel selected
       END_IF
         rts
