@@ -59,7 +59,7 @@ test.Variants(
     {"Matrix exits on key", apple2.ReturnKey },
   },
   function(idx, name, func)
-    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MATRIX")
+    desktop.InvokePath("/A2.DESKTOP/APPLE.MENU/SCREEN.SAVERS/MATRIX", {no_wait=true})
     emu.wait(1) -- screen saver
 
     func()
