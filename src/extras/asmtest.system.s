@@ -149,11 +149,14 @@
         nop
     FOREVER
 
-;;; BREAK_IF
+;;; BREAK_IF / IF ...  BREAK
     DO
         nop
         BREAK_IF NC
         BREAK_IF NOT NC
+        nop
+        IF NC BREAK
+        IF NOT NC BREAK
         nop
     WHILE CS
 
@@ -162,13 +165,19 @@
         BREAK_IF NC
         BREAK_IF NOT NC
         nop
+        IF NC BREAK
+        IF NOT NC BREAK
+        nop
     FOREVER
 
-;;; CONTINUE_IF
+;;; CONTINUE_IF / IF ... CONTINUE
     DO
         nop
         CONTINUE_IF NC
         CONTINUE_IF NOT NC
+        nop
+        IF NC CONTINUE
+        IF NOT NC CONTINUE
         nop
     WHILE CS
 
@@ -180,13 +189,19 @@
         CONTINUE_IF NC
         CONTINUE_IF NOT NC
         nop
+        IF NC CONTINUE
+        IF NOT NC CONTINUE
+        nop
     FOREVER
 
-;;; REDO_IF
+;;; REDO_IF / IF ... REDO
     DO
         nop
         REDO_IF NC
         REDO_IF NOT NC
+        nop
+        IF NC REDO
+        IF NOT NC REDO
         nop
     WHILE CS
 
@@ -194,6 +209,9 @@
         nop
         REDO_IF NC
         REDO_IF NOT NC
+        nop
+        IF NC REDO
+        IF NOT NC REDO
         nop
     FOREVER
 
@@ -249,27 +267,36 @@
         nop
     UNTIL NOT A < #$12
 
-;;; BREAK_IF
+;;; BREAK_IF / IF ... BREAK
     DO
         nop
         BREAK_IF A < #$12
         BREAK_IF NOT A < #$12
         nop
+        IF A < #$12 BREAK
+        IF NOT A < #$12 BREAK
+        nop
     WHILE CS
 
-;;; REDO_IF
+;;; REDO_IF / IF ... REDO
     DO
         nop
         REDO_IF A < #$12
         REDO_IF NOT A < #$12
         nop
+        IF A < #$12 REDO
+        IF NOT A < #$12 REDO
+        nop
     WHILE CS
 
-;;; CONTINUE_IF
+;;; CONTINUE_IF / IF ... CONTINUE
     DO
         nop
         CONTINUE_IF A < #$12
         CONTINUE_IF NOT A < #$12
+        nop
+        IF A < #$12 CONTINUE
+        IF NOT A < #$12 CONTINUE
         nop
     WHILE CS
 
@@ -309,24 +336,30 @@ table := *
         nop
     UNTIL A < table,y
 
-;;; BREAK_IF
+;;; BREAK_IF / IF ... BREAK
     DO
         nop
         BREAK_IF A < table,y
         nop
+        IF A < table,y BREAK
+        nop
     WHILE CS
 
-;;; REDO_IF
+;;; REDO_IF / IF ... REDO
     DO
         nop
         REDO_IF A < table,y
         nop
+        IF A < table,y REDO
+        nop
     WHILE CS
 
-;;; CONTINUE_IF
+;;; CONTINUE_IF / IF ... CONTINUE
     DO
         nop
         CONTINUE_IF A < table,y
+        nop
+        IF A < table,y CONTINUE
         nop
     WHILE CS
 
@@ -423,11 +456,15 @@ table := *
         nop
         BREAK_IF X IN #1, #2, #3
         nop
+        IF X IN #1, #2, #3 BREAK
+        nop
     WHILE CC
 
     DO
         nop
         BREAK_IF X NOT_IN #1, #2, #3
+        nop
+        IF X NOT_IN #1, #2, #3 BREAK
         nop
     WHILE CC
 
@@ -435,11 +472,15 @@ table := *
         nop
         BREAK_IF NOT X IN #1, #2, #3
         nop
+        IF NOT X IN #1, #2, #3 BREAK
+        nop
     WHILE CC
 
     DO
         nop
         BREAK_IF NOT X NOT_IN #1, #2, #3
+        nop
+        IF NOT X NOT_IN #1, #2, #3 BREAK
         nop
     WHILE CC
 
@@ -448,11 +489,15 @@ table := *
         nop
         REDO_IF X IN #1, #2, #3
         nop
+        IF X IN #1, #2, #3 REDO
+        nop
     WHILE CC
 
     DO
         nop
         REDO_IF X NOT_IN #1, #2, #3
+        nop
+        IF X NOT_IN #1, #2, #3 REDO
         nop
     WHILE CC
 
@@ -460,11 +505,15 @@ table := *
         nop
         REDO_IF NOT X IN #1, #2, #3
         nop
+        IF NOT X IN #1, #2, #3 REDO
+        nop
     WHILE CC
 
     DO
         nop
         REDO_IF NOT X NOT_IN #1, #2, #3
+        nop
+        IF NOT X NOT_IN #1, #2, #3 REDO
         nop
     WHILE CC
 
@@ -473,11 +522,15 @@ table := *
         nop
         CONTINUE_IF X IN #1, #2, #3
         nop
+        IF X IN #1, #2, #3 CONTINUE
+        nop
     WHILE CC
 
     DO
         nop
         CONTINUE_IF X NOT_IN #1, #2, #3
+        nop
+        IF X NOT_IN #1, #2, #3 CONTINUE
         nop
     WHILE CC
 
@@ -485,11 +538,15 @@ table := *
         nop
         CONTINUE_IF NOT X IN #1, #2, #3
         nop
+        IF NOT X IN #1, #2, #3 CONTINUE
+        nop
     WHILE CC
 
     DO
         nop
         CONTINUE_IF NOT X NOT_IN #1, #2, #3
+        nop
+        IF NOT X NOT_IN #1, #2, #3 CONTINUE
         nop
     WHILE CC
 
@@ -600,11 +657,15 @@ table := *
         nop
         BREAK_IF A BETWEEN #'A', #'Z'
         nop
+        IF A BETWEEN #'A', #'Z' BREAK
+        nop
     WHILE CS
 
     DO
         nop
         BREAK_IF A NOT_BETWEEN #'A', #'Z'
+        nop
+        IF A NOT_BETWEEN #'A', #'Z' BREAK
         nop
     WHILE CS
 
@@ -612,11 +673,15 @@ table := *
         nop
         BREAK_IF NOT A BETWEEN #'A', #'Z'
         nop
+        IF NOT A BETWEEN #'A', #'Z' BREAK
+        nop
     WHILE CS
 
     DO
         nop
         BREAK_IF NOT A NOT_BETWEEN #'A', #'Z'
+        nop
+        IF NOT A NOT_BETWEEN #'A', #'Z' BREAK
         nop
     WHILE CS
 
@@ -625,11 +690,15 @@ table := *
         nop
         REDO_IF A BETWEEN #'A', #'Z'
         nop
+        IF A BETWEEN #'A', #'Z' REDO
+        nop
     WHILE CS
 
     DO
         nop
         REDO_IF A NOT_BETWEEN #'A', #'Z'
+        nop
+        IF A NOT_BETWEEN #'A', #'Z' REDO
         nop
     WHILE CS
 
@@ -637,11 +706,15 @@ table := *
         nop
         REDO_IF NOT A BETWEEN #'A', #'Z'
         nop
+        IF NOT A BETWEEN #'A', #'Z' REDO
+        nop
     WHILE CS
 
     DO
         nop
         REDO_IF NOT A NOT_BETWEEN #'A', #'Z'
+        nop
+        IF NOT A NOT_BETWEEN #'A', #'Z' REDO
         nop
     WHILE CS
 
@@ -650,11 +723,15 @@ table := *
         nop
         CONTINUE_IF A BETWEEN #'A', #'Z'
         nop
+        IF A BETWEEN #'A', #'Z' CONTINUE
+        nop
     WHILE CS
 
     DO
         nop
         CONTINUE_IF A NOT_BETWEEN #'A', #'Z'
+        nop
+        IF A NOT_BETWEEN #'A', #'Z' CONTINUE
         nop
     WHILE CS
 
@@ -662,11 +739,15 @@ table := *
         nop
         CONTINUE_IF NOT A BETWEEN #'A', #'Z'
         nop
+        IF NOT A BETWEEN #'A', #'Z' CONTINUE
+        nop
     WHILE CS
 
     DO
         nop
         CONTINUE_IF NOT A NOT_BETWEEN #'A', #'Z'
+        nop
+        IF NOT A NOT_BETWEEN #'A', #'Z' CONTINUE
         nop
     WHILE CS
 
@@ -926,8 +1007,17 @@ var2 := *
     DO
 @cheap:
         BREAK_IF CS
+        nop
+        IF CS BREAK
+        nop
         REDO_IF CS
+        nop
+        IF CS REDO
+        nop
         CONTINUE_IF CS
+        nop
+        IF CS CONTINUE
+        nop
         beq     @cheap
     WHILE A < #123
 
@@ -1137,9 +1227,15 @@ var2 := *
         nop
         REDO_IF bit var : NS
         nop
+        IF bit var : NS REDO
+        nop
         CONTINUE_IF bit var : NS
         nop
+        IF bit var : NS CONTINUE
+        nop
         BREAK_IF bit var : NS
+        nop
+        IF bit var : NS BREAK
         nop
     WHILE POS
 
@@ -1497,6 +1593,9 @@ varC:   .word   9870
 
         IF NS GOTO                  ; IF: Expected target after GOTO
         IF NS JUMP                  ; IF: Expected target after JUMP
+        IF NS BREAK label           ; IF: Expected nothing after BREAK, saw identifier ('label')
+        IF NS CONTINUE label        ; IF: Expected nothing after CONTINUE, saw identifier ('label')
+        IF NS REDO label            ; IF: Expected nothing after REDO, saw identifier ('label')
 
         SET                         ; SET: Expected type (u8,u16,s16,u24,u32)
         SET u16                     ; SET: Expected assignment target
@@ -1517,3 +1616,4 @@ varC:   .word   9870
         SET u16 target <<= #kNonConstant ; SET: Expected constant expression after '<<='
         SET u16 target <<= #0            ; SET: Expected non-zero count
 .endif
+

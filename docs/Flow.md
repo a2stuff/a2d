@@ -107,6 +107,11 @@ Within the loop body, these statements can be used:
 * `CONTINUE_IF condition` - conditionally jumps to the end of the loop body; the loop may repeat or exit depending on the `WHILE` statement's condition.
 * `BREAK_IF condition` - conditionally exits the loop.
 
+These can also be written:
+* `IF condition REDO`
+* `IF condition CONTINUE`
+* `IF condition BREAK`
+
 Additionally:
 * `REPEAT` is an alias for `DO`
 * Instead of `WHILE condition` a loop can end with:
