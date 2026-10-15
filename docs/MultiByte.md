@@ -10,7 +10,7 @@ The macros are unevenly distributed, based on actual need. For example, there ar
 
 In general, the macros are crafted to allow passing arguments in any addressing mode, including immediate (`#$1234`), absolute (`$1234`), and indexed (`$1234,x`) without needing special syntax. So it's fine to call a macro like `copy16 buf1,x, buf2,y` with 4 actual arguments (`buf1`, `x`, `buf2`, `y`); it will be treated as 2 effective arguments (`buf1,x`, `buf2,y`).
 
-Indirect addressing modes (e.g. `($12),y`) require using dedicated macros.
+Indirect addressing modes (e.g. `($12),y`) require using dedicated macros that increment Y.
 
 Most macros use the accumulator.
 

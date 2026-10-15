@@ -1616,4 +1616,3 @@ varC:   .word   9870
         SET u16 target <<= #kNonConstant ; SET: Expected constant expression after '<<='
         SET u16 target <<= #0            ; SET: Expected non-zero count
 .endif
-

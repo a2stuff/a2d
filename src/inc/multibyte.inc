@@ -9,15 +9,24 @@
 
 .define _is_immediate(arg)       .xmatch({.mid (0, 1, {arg})}, #)
 .define _is_register(arg)        .xmatch({arg}, x) || .xmatch({arg}, y)
-.define _is_y_register(arg)      .xmatch({arg}, y)
 .define _immediate_value(arg)    .right(.tcount({arg}) - 1, {arg})
+
+.define _is_indexed(arg)         .match({.right(2, {arg})}, {,X}) || .match({.right(2, {arg})}, {,Y})
+.define _indexed_prefix(arg)     .left(.tcount({arg}) - 2, {arg})
+.define _indexed_suffix(arg)     .right(1, {arg})
+.define _is_indirect_indexed(arg) .xmatch({.left(1, {arg})}, {(}) && .xmatch({.right(3, {arg})}, {),Y})
 
 ;;; Helpers for multi-byte operations
 
 ;;; Emit specified opcode accessing the Nth byte, either immediate or absolute
+;;; For indirect indexed (i.e. `(zp),y`) the caller is responsible for `INY`
 .macro _op_b0 op, arg
     .if _is_immediate {arg}
         op #.lobyte(_immediate_value {arg})
+    .elseif _is_indirect_indexed {arg}
+        op arg
+    .elseif _is_indexed {arg}
+        op _indexed_prefix {arg} , _indexed_suffix {arg}
     .else
         op arg
     .endif
@@ -26,6 +35,10 @@
 .macro _op_b1 op, arg
     .if _is_immediate {arg}
         op #.hibyte(_immediate_value {arg})
+    .elseif _is_indirect_indexed {arg}
+        op arg
+    .elseif _is_indexed {arg}
+        op _indexed_prefix {arg} + 1, _indexed_suffix {arg}
     .else
         op arg+1
     .endif
@@ -34,6 +47,10 @@
 .macro _op_b2 op, arg
     .if _is_immediate {arg}
         op #.bankbyte(_immediate_value {arg})
+    .elseif _is_indirect_indexed {arg}
+        op arg
+    .elseif _is_indexed {arg}
+        op _indexed_prefix {arg} + 2, _indexed_suffix {arg}
     .else
         op arg+2
     .endif
@@ -42,6 +59,10 @@
 .macro _op_b3 op, arg
     .if _is_immediate {arg}
         op #.hibyte(.hiword(_immediate_value {arg}))
+    .elseif _is_indirect_indexed {arg}
+        op arg
+    .elseif _is_indexed {arg}
+        op _indexed_prefix {arg} + 3, _indexed_suffix {arg}
     .else
         op arg+3
     .endif
@@ -58,6 +79,10 @@
         op #.hibyte(_iv_)
       .endif
       .undefine _iv_
+    .elseif _is_indirect_indexed {arg}
+        op arg
+    .elseif _is_indexed {arg}
+        op _indexed_prefix {arg} + 1, _indexed_suffix {arg}
     .else
         op arg+1
     .endif
@@ -72,6 +97,10 @@
         op #.bankbyte(_iv_)
       .endif
       .undefine _iv_
+    .elseif _is_indirect_indexed {arg}
+        op arg
+    .elseif _is_indexed {arg}
+        op _indexed_prefix {arg} + 2, _indexed_suffix {arg}
     .else
         op arg+2
     .endif
@@ -86,6 +115,10 @@
         op #.hibyte(.hiword(_iv_))
       .endif
       .undefine _iv_
+    .elseif _is_indirect_indexed {arg}
+        op arg
+    .elseif _is_indexed {arg}
+        op _indexed_prefix {arg} + 3, _indexed_suffix {arg}
     .else
         op arg+3
     .endif
@@ -99,178 +132,93 @@
 ;;; ============================================================
 ;;; 8-bit pseudo-ops
 
+;;; Copy 8 bit value from src to dst
+;;;    copy8 src, dst
+;;; Supports all addressing modes.
 .macro copy8 arg1, arg2, arg3, arg4
-    .if (_is_register {arg2}) && (_is_register {arg4})
-        ;; indexed load/indexed store
-        lda     arg1,arg2
-        sta     arg3,arg4
-    .elseif _is_register {arg2}
-        ;; indexed load variant (arg2 is x or y)
-        lda     arg1,arg2
-        sta     arg3
+    .if _is_register {arg2}
+        copy8 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; indexed store variant (arg3 is x or y)
-        lda     arg1
-        sta     arg2,arg3
-    .else
-        lda     arg1
-        sta     arg2
+        copy8 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
     .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
+        _op_b0 lda, {arg1}
+        _op_b0 sta, {arg2}
 .endmacro
 
+;;; Swap arg1 and arg2
+;;;    swap8 src, dst
+;;; Supports all addressing modes.
 .macro swap8 arg1, arg2, arg3, arg4
-    .if (_is_register {arg2}) && (_is_register {arg4})
-        ;; indexed load/indexed store
-        lda     arg1,arg2
-        pha
-        lda     arg3,arg4
-        sta     arg1,arg2
-        pla
-        sta     arg3,arg4
-    .elseif _is_register {arg2}
-        ;; indexed load variant (arg2 is x or y)
-        lda     arg1,arg2
-        pha
-        lda     arg3
-        sta     arg1,arg2
-        pla
-        sta     arg3
+    .if _is_register {arg2}
+        swap8 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; indexed store variant (arg3 is x or y)
-        lda     arg1
-        pha
-        lda     arg2,arg3
-        sta     arg1
-        pla
-        sta     arg2,arg3
-    .else
-        lda     arg1
-        pha
-        lda     arg2
-        sta     arg1
-        pla
-        sta     arg2
+        swap8 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
     .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
+        _op_b0  lda, {arg1}
+        pha
+        _op_b0  lda, {arg2}
+        _op_b0  sta, {arg1}
+        pla
+        _op_b0  sta, {arg2}
 .endmacro
 
 ;;; Unsigned compare 8-bit values - C and Z valid
-;;;    ucmp8 #$11, #$22    ; immediate, immediate (silly, but supported)
-;;;    ucmp8 #$11, $22     ; immediate, absolute
-;;;    ucmp8 $11, #$22     ; absolute, immediate
-;;;    ucmp8 $11, $22      ; absolute, absolute
-;;;    ucmp8 $11,x, $22    ; indexed, absolute
-;;;    ucmp8 $11, $22,x    ; absolute, indexed
-;;;    ucmp8 $11,x, #$22   ; indexed, immediate
-;;;    ucmp8 #$11, $22,x   ; immediate, indexed
-;;;    ucmp8 $11,x, $22,x  ; indexed, indexed
+;;;    ucmp8 arg1, arg2
+;;; Supports all addressing modes.
 .macro ucmp8 arg1, arg2, arg3, arg4
-    .if (_is_register {arg2}) && (_is_register {arg4})
-        ;; indexed, indexed
-        lda     arg1,arg2
-        cmp     arg3,arg4
-    .elseif _is_register {arg2}
-        ;; indexed, absolute/immediate
-        lda     arg1,arg2
-        cmp     arg3
+    .if _is_register {arg2}
+        ucmp8 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; absolute/immediate, indexed
-        lda     arg1
-        cmp     arg2,arg3
-    .else
-        ;; absolute/immediate, absolute/immediate
-        lda     arg1
-        cmp     arg2
+        ucmp8 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
     .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
+        _op_b0  lda, {arg1}
+        _op_b0  cmp, {arg2}
 .endmacro
 
 ;;; Core for add8/sub8
 .macro _addsub8 op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
-    .if (_is_register {arg2}) && (_is_register {arg4}) && (_is_register {arg6})
-        ;; xxx8 $11,x, $22,x, $33,x
-        lda     arg1,arg2
-        carryOp
-        op      arg3,arg4
-        sta     arg5,arg6
-    .elseif (_is_register {arg2}) && (_is_register {arg4})
-        ;; xxx8 $11,x, $22,x, $33
-        lda     arg1,arg2
-        carryOp
-        op      arg3,arg4
-        sta     arg5
-    .elseif (_is_register {arg2}) && (_is_register {arg5})
-        ;; xxx8 $11,x, $22, $33,x
-        ;; xxx8 $11,x, #$22, $33,x
-        lda     arg1,arg2
-        carryOp
-        _op_lo  op, {arg3}
-        sta     arg4,arg5
-    .elseif (_is_register {arg3}) && (_is_register {arg5})
-        ;; xxx8 $11, $22,x, $33,x
-        ;; xxx8 #$11, $22,x, $33,x
-        _op_lo  lda, {arg1}
-        carryOp
-        op      arg2,arg3
-        sta     arg4,arg5
-    .elseif _is_register {arg2}
-        ;; xxx8 $11,x, $22, $33
-        ;; xxx8 $11,x, #$22, $33
-        lda     arg1,arg2
-        carryOp
-        _op_lo  op, {arg3}
-        sta     arg4
+    .if _is_register {arg2}
+        _addsub8 op, carryOp, {arg1,arg2}, {arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; xxx8 $11, $22,x $33
-        ;; xxx8 #$11, $22,x $33
-        _op_lo  lda, {arg1}
-        carryOp
-        op      arg2,arg3
-        sta     arg4
+        _addsub8 op, carryOp, {arg1}, {arg2,arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
     .elseif _is_register {arg4}
-        ;; xxx8 $11, $22, $33,x
-        ;; xxx8 #$11, $22, $33,x
-        ;; xxx8 $11, #$22, $33,x
-        ;; xxx8 #$11, #$22, $33,x
-        _op_lo  lda, {arg1}
-        carryOp
-        _op_lo  op, {arg2}
-        sta     arg3,arg4
-    .else
-        ;; xxx8 $11, $22, $33
-        ;; xxx8 #$11, $22, $33
-        ;; xxx8 $11, #$22, $33
-        ;; xxx8 #$11, #$22, $33
-        _op_lo lda, {arg1}
-        carryOp
-        _op_lo op, {arg2}
-        sta     arg3
+        _addsub8 op, carryOp, {arg1}, {arg2}, {arg3,arg4}, {arg5}, {arg6}
+        .exitmacro
     .endif
+        .assert .blank({arg4}) && .blank({arg5}) && .blank({arg6}), error, "extra parameters"
+
+        _op_b0 lda, {arg1}
+        carryOp
+        _op_b0 op,  {arg2}
+        _op_b0 sta, {arg3}
 .endmacro
 
 ;;; Add arg1 to arg2, store to arg3
-;;;    add8 $11, $22, $33        ; absolute, absolute, absolute
-;;;    add8 $11, #$22, $33       ; absolute, immediate, absolute
-;;;    add8 $11,x, $22, $33      ; indexed, absolute, absolute
-;;;    add8 $11, $22,x, $33      ; absolute, indexed, absolute
-;;;    add8 $11, $22, $33,x      ; absolute, absolute, indexed
-;;;    add8 $11,x, $22, $33,x    ; indexed, absolute, indexed
-;;;    add8 $11, $22,x, $33,x    ; absolute, indexed, indexed
-;;;    add8 $11,x, $22,x, $33,x  ; indexed, indexed, indexed
+;;;    add8 arg1, arg2, arg3
+;;; Supports all addressing modes.
 .macro add8 arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub8 adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub8 adc, clc, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
+
 ;;; Subtract arg2 from arg1, store to arg3
-;;;    sub8 #$11, #$22, $33      ; immediate, immediate, absolute
-;;;    sub8 #$11, $22, $33       ; immediate, absolute, absolute
-;;;    sub8 $11, #$22, $33       ; absolute, immediate, absolute
-;;;    sub8 $11, $22, $33        ; absolute, absolute, absolute
-;;;    sub8 $11, $22,x, $33      ; absolute, indexed, absolute
-;;;    sub8 $11, $22, $33,x      ; absolute, absolute, indexed
-;;;    sub8 $11,x, $22,x, $33    ; indexed, indexed, absolute
-;;;    sub8 $11,x, $22, $33,x    ; indexed, absolute, indexed
-;;;    sub8 $11, $22,x, $33,x    ; absolute, indexed, indexed
-;;;    sub8 $11,x, $22,x $33,x   ; indexed, indexed, indexed
+;;;    add8 arg1, arg2, arg3
+;;; Supports all addressing modes.
 .macro sub8 arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub8 sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub8 sbc, sec, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
 
@@ -279,24 +227,23 @@
 
 ;;; Load two registers (e.g. A, X), optimizing same immediate (e.g. w/ TAX)
 .macro _ld_reg_reg ld1, ld2, t12, arg, reg
-    .ifnblank reg
-        ld1    arg, reg
-        ld2    arg+1, reg
-    .elseif !_is_immediate {arg}
-        ld1   arg
-        ld2   arg+1
-    .else
-        ld1   #.lobyte(_immediate_value {arg})
+    .if _is_register {reg}
+        _ld_reg_reg {ld1}, {ld2}, {t12}, {arg,reg}
+        .exitmacro
+    .endif
+
+    .if _is_immediate {arg}
       .if .const(_immediate_value {arg})
-       .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
-        t12                     ; lo=hi
-       .else
-        ld2   #.hibyte(_immediate_value {arg})
-       .endif
-      .else
-        ld2   #.hibyte(_immediate_value {arg})
+        .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
+          _op_lo  ld1, {arg}
+          t12
+          .exitmacro
+        .endif
       .endif
     .endif
+
+        _op_lo  ld1, {arg}
+        _op_hi  ld2, {arg}
 .endmacro
 
 ;;; Load A,X
@@ -332,22 +279,22 @@
 ;;; Store A,X
 ;;;    stax $1234       ; absolute
 .macro stax arg
-        sta     arg
-        stx     arg+1
+        _op_lo  sta, {arg}
+        _op_hi  stx, {arg}
 .endmacro
 
 ;;; Store Y,X
 ;;;    styx $1234       ; absolute
 .macro styx arg
-        sty     arg
-        stx     arg+1
+        _op_lo  sty, {arg}
+        _op_hi  stx, {arg}
 .endmacro
 
 ;;; Store X,Y
 ;;;    stxy $1234       ; absolute
 .macro stxy arg
-        stx     arg
-        sty     arg+1
+        _op_lo  stx, {arg}
+        _op_hi  sty, {arg}
 .endmacro
 
 ;;; Increment X,Y as a 16-bit number (x lo, y hi)
@@ -361,248 +308,129 @@
 
 ;;; Core for add16/sub16
 .macro _addsub16 op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
-    .if (_is_register {arg2}) && (_is_register {arg4}) && (_is_register {arg6})
-        ;; xxx16 $1111,x, $2222,x, $3333,x
-        lda     arg1,arg2
-        carryOp
-        op      arg3,arg4
-        sta     arg5,arg6
-        lda     arg1+1,arg2
-        op      arg3+1,arg4
-        sta     arg5+1,arg6
-    .elseif (_is_register {arg2}) && (_is_register {arg4})
-        ;; xxx16 $1111,x, $2222,x, $3333
-        lda     arg1,arg2
-        carryOp
-        op      arg3,arg4
-        sta     arg5
-        lda     arg1+1,arg2
-        op      arg3+1,arg4
-        sta     arg5+1
-    .elseif (_is_register {arg2}) && (_is_register {arg5})
-        ;; xxx16 $1111,x, $2222, $3333,x
-        ;; xxx16 $1111,x, #$2222, $3333,x
-        lda     arg1,arg2
-        carryOp
-        _op_lo  op, {arg3}
-        sta     arg4,arg5
-        lda     arg1+1,arg2
-        _op_hi  op, {arg3}
-        sta     arg4+1,arg5
-    .elseif (_is_register {arg3}) && (_is_register {arg5})
-        ;; xxx16 $1111, $2222,x, $3333,x
-        ;; xxx16 #$1111, $2222,x, $3333,x
-        _op_lo  lda, {arg1}
-        carryOp
-        op      arg2,arg3
-        sta     arg4,arg5
-        _op_hi  lda, {arg1}
-        op      arg2+1,arg3
-        sta     arg4+1,arg5
-    .elseif _is_register {arg2}
-        ;; xxx16 $1111,x, $2222, $3333
-        ;; xxx16 $1111,x, #$2222, $3333
-        lda     arg1,arg2
-        carryOp
-        _op_lo  op, {arg3}
-        sta     arg4
-        lda     arg1+1,arg2
-        _op_hi  op, {arg3}
-        sta     arg4+1
+    .if _is_register {arg2}
+        _addsub16 op, carryOp, {arg1,arg2}, {arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; xxx16 $1111, $2222,x $3333
-        ;; xxx16 #$1111, $2222,x $3333
-        _op_lo  lda, {arg1}
-        carryOp
-        op      arg2,arg3
-        sta     arg4
-        _op_hi  lda, {arg1}
-        op      arg2+1,arg3
-        sta     arg4+1
+        _addsub16 op, carryOp, {arg1}, {arg2,arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
     .elseif _is_register {arg4}
-        ;; xxx16 $1111, $2222, $3333,x
-        ;; xxx16 #$1111, $2222, $3333,x
-        ;; xxx16 $1111, #$2222, $3333,x
-        ;; xxx16 #$1111, #$2222, $3333,x
-        _op_lo  lda, {arg1}
-        carryOp
-        _op_lo  op, {arg2}
-        sta     arg3,arg4
-        _op_hi  lda, {arg1}
-        _op_hi  op, {arg2}
-        sta     arg3+1,arg4
-    .else
-        ;; xxx16 $1111, $2222, $3333
-        ;; xxx16 #$1111, $2222, $3333
-        ;; xxx16 $1111, #$2222, $3333
-        ;; xxx16 #$1111, #$2222, $3333
+        _addsub16 op, carryOp, {arg1}, {arg2}, {arg3,arg4}, {arg5}, {arg6}
+        .exitmacro
+    .endif
+        .assert .blank({arg4}) && .blank({arg5}) && .blank({arg6}), error, "extra parameters"
+
         _op_lo lda, {arg1}
         carryOp
         _op_lo op, {arg2}
-        sta     arg3
+        _op_lo sta, {arg3}
         _op_hi lda, {arg1}
         _op_hi op, {arg2}
-        sta     arg3+1
-    .endif
+        _op_hi sta, {arg3}
 .endmacro
-
 
 ;;; Core for add16in/sub16in
 .macro _addsub16in op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
-    .if _is_y_register {arg2} && _is_y_register {arg4} && _is_y_register {arg6}
-        ;; xxx16in ($1111),y, ($2222),y, ($3333),y
-        lda     (arg1),y
-        carryOp
-        op      (arg3),y
-        sta     (arg5),y
-        iny
-        lda     (arg1),y
-        op      (arg3),y
-        sta     (arg5),y
-    .elseif _is_y_register {arg2} && _is_y_register {arg4}
-        ;; xxx16in ($1111),y, ($2222),y, $3333
-        ;; xxx16in ($1111),y, ($2222),y, #$3333
-        lda     (arg1),y
-        carryOp
-        op      (arg3),y
-        sta     arg5
-        iny
-        lda     (arg1),y
-        op      (arg3),y
-        sta     arg5+1
-    .elseif _is_y_register {arg2} && _is_y_register {arg5}
-        ;; xxx16in ($1111),y, $2222, ($3333),y
-        ;; xxx16in ($1111),y, #$2222, ($3333),y
-        lda     (arg1),y
-        carryOp
-        _op_lo  op, {arg3}
-        sta     (arg4),y
-        iny
-        lda     (arg1),y
-        _op_hi  op, {arg3}
-        sta     (arg4),y
-    .elseif _is_y_register {arg3} && _is_y_register {arg5}
-        ;; xxx16in $1111, ($2222),y, ($3333),y
-        ;; xxx16in #$1111, ($2222),y, ($3333),y
+    .if _is_register {arg2}
+        _addsub16in op, carryOp, {arg1,arg2}, {arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
+    .elseif _is_register {arg3}
+        _addsub16in op, carryOp, {arg1}, {arg2,arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
+    .elseif _is_register {arg4}
+        _addsub16in op, carryOp, {arg1}, {arg2}, {arg3,arg4}, {arg5}, {arg6}
+        .exitmacro
+    .endif
+        .assert .blank({arg4}) && .blank({arg5}) && .blank({arg6}), error, "extra parameters"
+
         _op_lo  lda, {arg1}
         carryOp
-        op      (arg2),y
-        sta     (arg4),y
+        _op_lo  op,  {arg2}
+        _op_lo  sta, {arg3}
         iny
         _op_hi  lda, {arg1}
-        op      (arg2),y
-        sta     (arg4),y
-    .elseif _is_y_register {arg2}
-        ;; xxx16in ($1111),y, $2222, $3333
-        ;; xxx16in ($1111),y, #$2222, $3333
-        ;; xxx16in ($1111),y, $2222, #$3333
-        ;; xxx16in ($1111),y, #$2222, #$3333
-        lda     (arg1),y
-        carryOp
-        _op_lo  op, {arg3}
-        sta     arg4
-        iny
-        lda     (arg1),y
-        _op_hi  op, {arg3}
-        sta     arg4+1
-    .elseif _is_y_register {arg3}
-        ;; xxx16in $1111, ($2222),y $3333
-        ;; xxx16in #$1111, ($2222),y $3333
-        ;; xxx16in $1111, ($2222),y #$3333
-        ;; xxx16in #$1111, ($2222),y #$3333
+        _op_hi  op,  {arg2}
+        _op_hi  sta, {arg3}
+.endmacro
+
+;;; Core for add16_8/sub16_8
+.macro _addsub16_8 op, carryOp, brOp, incOp, arg1, arg2, arg3, arg4, arg5, arg6
+    .if _is_register {arg2}
+        _addsub16_8 op, carryOp, brOp, incOp, {arg1,arg2}, {arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
+    .elseif _is_register {arg3}
+        _addsub16_8 op, carryOp, brOp, incOp, {arg1}, {arg2,arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
+    .elseif _is_register {arg4}
+        _addsub16_8 op, carryOp, brOp, incOp, {arg1}, {arg2}, {arg3,arg4}, {arg5}, {arg6}
+        .exitmacro
+    .endif
+        .assert .blank({arg4}) && .blank({arg5}) && .blank({arg6}), error, "extra parameters"
+
+    .ifblank arg3
+        .local @skip
         _op_lo  lda, {arg1}
         carryOp
-        op      (arg2),y
-        sta     arg4
-        iny
-        _op_hi  lda, {arg1}
-        op      (arg2),y
-        sta     arg4+1
-    .elseif _is_y_register {arg4}
-        ;; xxx16in $1111, $2222, $3333,y
-        ;; xxx16in #$1111, $2222, $3333,y
-        ;; xxx16in $1111, #$2222, $3333,y
-        ;; xxx16in #$1111, #$2222, $3333,y
-        _op_lo  lda, {arg1}
-        carryOp
-        _op_lo  op, {arg2}
-        sta     (arg3),y
-        iny
-        _op_hi  lda, {arg1}
-        _op_hi  op, {arg2}
-        sta     (arg3),y
+        _op_lo  op,  {arg2}
+        _op_lo  sta, {arg1}
+        brOp    @skip
+        _op_hi  incOp, {arg1}
+@skip:
     .else
-        .error "Indirect indexed required at least one use of y reg"
+      .if _is_immediate {arg2}
+          .warning "Unnecessary use of add/sub16_8 macro with immediate arg"
+      .endif
+
+        _op_lo  lda, {arg1}
+        carryOp
+        _op_lo  op,  {arg2}
+        _op_lo  sta, {arg3}
+        _op_hi  lda, {arg1}
+        op      #0
+        _op_hi  sta, {arg3}
     .endif
 .endmacro
 
 ;;; Add arg1 to arg2, store to arg3
-;;;    add16 $1111, $2222, $3333        ; absolute, absolute, absolute
-;;;    add16 $1111, #$2222, $3333       ; absolute, immediate, absolute
-;;;    add16 $1111,x, $2222, $3333      ; indexed, absolute, absolute
-;;;    add16 $1111, $2222,x, $3333      ; absolute, indexed, absolute
-;;;    add16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
-;;;    add16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
-;;;    add16 $1111, $2222,x, $3333,x    ; absolute, indexed, indexed
-;;;    add16 $1111,x, $2222,x, $3333,x  ; indexed, indexed, indexed
+;;;    add16 arg1, arg2, arg3
+;;; Supports all non-indirect addressing modes.
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16 adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub16 adc, clc, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 ;;; (as above, but indirect indexed, y register is incremented)
 .macro add16in arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16in adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub16in adc, clc, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
-;;; Add arg1 (absolute) to arg2 (8-bit absolute/immediate), store to arg3
-;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
-;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
-;;; Add arg1 (absolute) to arg2 (8-bit absolute/immediate), store to arg1
-;;;    add16_8 $1111, #$22              ; absolute, immediate
-;;;    add16_8 $1111, $22               ; absolute, absolute
-.macro add16_8 arg1, arg2, arg3
-    .ifblank arg3
-        .local @skip
-        _op_lo  lda, {arg1}
-        clc
-        adc     arg2
-        sta     arg1
-        bcc     @skip
-        _op_hi  inc, {arg1}
-@skip:
-    .else
-      .if _is_immediate {arg2}
-          .warning "Unnecessary use of add16_8 macro with immediate arg"
-      .endif
-
-        _op_lo  lda, {arg1}
-        clc
-        adc     arg2
-        sta     arg3
-        _op_hi  lda, {arg1}
-        adc     #0
-        sta     arg3+1
-    .endif
+;;; Add arg1 (16-bit) to arg2 (8-bit), store to arg3
+;;;    add16_8 arg1, arg2, arg3
+;;; Add arg1 (16-bit) to arg2 (8-bit), store to arg1
+;;;    add16_8 arg1, arg2
+;;; Does not support indirect addressing modes.
+.macro add16_8 arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub16_8 adc, clc, bcc, inc, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
 ;;; Add A,X to arg1 (immediate or absolute), store to arg2
 ;;;    addax #$1111, $3333       ; immediate, absolute
 ;;;    addax $1111, $3333        ; absolute, absolute
 ;;;    addax $1111               ; absolute
+;;; Does not support indexed addressing modes.
 .macro addax arg1, arg2
     .ifblank arg2
         clc
-        adc     arg1
-        sta     arg1
+        _op_lo  adc, {arg1}
+        _op_lo  sta, {arg1}
         txa
-        adc     arg1+1
-        sta     arg1+1
+        _op_hi  adc, {arg1}
+        _op_hi  sta, {arg1}
     .else
         clc
         _op_lo adc, {arg1}
-        sta     arg2
+        _op_lo sta, {arg2}
         txa
         _op_hi adc, {arg1}
-        sta     arg2+1
+        _op_hi sta, {arg2}
     .endif
 .endmacro
 
@@ -610,25 +438,26 @@
 ;;;    subax #$1111, $3333       ; immediate, absolute
 ;;;    subax $1111, $3333        ; absolute, absolute
 ;;;    subax $1111               ; absolute
+;;; Does not support indexed addressing modes.
 .macro subax arg1, arg2
     .ifblank arg2
         sec
         eor     #$FF
-        adc     arg1
-        sta     arg1
+        _op_lo  adc, {arg1}
+        _op_lo  sta, {arg1}
         txa
         eor     #$FF
-        adc     arg1+1
-        sta     arg1+1
+        _op_hi  adc, {arg1}
+        _op_hi  sta, {arg1}
     .else
         sec
         eor     #$FF
         _op_lo adc, {arg1}
-        sta     arg2
+        _op_lo sta, {arg2}
         txa
         eor     #$FF
         _op_hi adc, {arg1}
-        sta     arg2+1
+        _op_hi sta, {arg2}
     .endif
 .endmacro
 
@@ -637,18 +466,19 @@
 ;;;    addax8 $11        ; absolute
 ;;;    addax8 #$11,$2222 ; immediate, absolute
 ;;;    addax8 $11,$2222  ; absolute, absolute
+;;; Does not support indexed addressing modes.
 .macro addax8  arg1, arg2
 .local @skip
         clc
-        adc     arg1
+        _op_lo  adc, {arg1}
     .ifnblank arg2
-        sta     arg2
+        _op_lo  sta, {arg2}
     .endif
         bcc     @skip
         inx
 @skip:
     .ifnblank arg2
-        stx     arg2+1
+        _op_hi  stx, {arg2}
     .endif
 .endmacro
 
@@ -657,18 +487,19 @@
 ;;;    subax8 $11        ; absolute
 ;;;    subax8 #$11,$2222 ; immediate, absolute
 ;;;    subax8 $11,$2222  ; absolute, absolute
+;;; Does not support indexed addressing modes.
 .macro subax8  arg1, arg2
 .local @skip
         sec
-        sbc     arg1
+        _op_lo  sbc, {arg1}
     .ifnblank arg2
-        sta     arg2
+        _op_lo  sta, {arg2}
     .endif
         bcs     @skip
         dex
 @skip:
     .ifnblank arg2
-        stx     arg2+1
+        _op_hi  stx, {arg2}
     .endif
 .endmacro
 
@@ -676,111 +507,64 @@
 ;;;    addxy #$1111, $3333       ; immediate, absolute
 ;;;    addxy $1111, $3333        ; absolute, absolute
 ;;;    addxy $1111               ; absolute
+;;; Does not support indexed addressing modes.
 .macro addxy arg1, arg2
     .ifblank arg2
         clc
         txa
-        adc     arg1
-        sta     arg1
+        _op_lo  adc, {arg1}
+        _op_lo  sta, {arg1}
         tya
-        adc     arg1+1
-        sta     arg1+1
+        _op_hi  adc, {arg1}
+        _op_hi  sta, {arg1}
     .else
         clc
         txa
         _op_lo adc, {arg1}
-        sta     arg2
+        _op_lo sta, {arg2}
         tya
         _op_hi adc, {arg1}
-        sta     arg2+1
+        _op_hi sta, {arg2}
     .endif
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
-;;;    sub16 #$1111, #$2222, $3333      ; immediate, immediate, absolute
-;;;    sub16 #$1111, $2222, $3333       ; immediate, absolute, absolute
-;;;    sub16 $1111, #$2222, $3333       ; absolute, immediate, absolute
-;;;    sub16 $1111, $2222, $3333        ; absolute, absolute, absolute
-;;;    sub16 $1111, $2222,x, $3333      ; absolute, indexed, absolute
-;;;    sub16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
-;;;    sub16 $1111,x, $2222,x, $3333    ; indexed, indexed, absolute
-;;;    sub16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
-;;;    sub16 $1111, $2222,x, $3333,x    ; absolute, indexed, indexed
-;;;    sub16 $1111,x, $2222,x $3333,x   ; indexed, indexed, indexed
+;;;    sub16 arg1, arg2, arg3
+;;; Supports all non-indirect addressing modes.
 .macro sub16 arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16 sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub16 sbc, sec, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 ;;; (as above, but indirect indexed, y register incremented)
 .macro sub16in arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16in sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub16in sbc, sec, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
-
-;;; Subtract arg2 from arg1, store to arg3
-;;;    sub16_8 #$1111, #$22, $3333      ; immediate, immediate, absolute
-;;;    sub16_8 #$1111, $22, $3333       ; immediate, absolute, absolute
-;;;    sub16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
-;;;    sub16_8 $1111, $22, $3333        ; absolute, absolute, absolute
-;;; Subtract arg2 (absolute) from arg1 (8-bit absolute/immediate), store to arg1
-;;;    sub16_8 $1111, #$22              ; absolute, immediate
-;;;    sub16_8 $1111, $22               ; absolute, absolute
-.macro sub16_8 arg1, arg2, arg3
-    .ifblank arg3
-        .local @skip
-        _op_lo  lda, {arg1}
-        sec
-        sbc     arg2
-        sta     arg1
-        bcs     @skip
-        _op_hi  dec, {arg1}
-@skip:
-    .else
-      .if _is_immediate {arg2}
-          .warning "Unnecessary use of add16_8 macro with immediate arg"
-      .endif
-
-        _op_lo  lda, {arg1}
-        sec
-        sbc     arg2
-        sta     arg3
-        _op_hi  lda, {arg1}
-        sbc     #0
-        sta     arg3+1
-    .endif
+;;; Subtract arg2 (8-bit) from arg1 (16-bit), store to arg3
+;;;    sub16_8 arg1, arg2, arg3
+;;; Subtract arg2 (8-bit) from arg1 (16-bit), store to arg1
+;;;    sub16_8 arg1, arg2
+;;; Does not support indirect addressing modes.
+.macro sub16_8 arg1, arg2, arg3, arg4, arg5, arg6
+        _addsub16_8 sbc, sec, bcs, dec, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
 ;;; Copy 16-bit value
-;;;    copy16 #$1111, $2222     ; immediate, absolute
-;;;    copy16 $1111, $2222      ; absolute, absolute
-;;;    copy16 $1111,x, $2222    ; indirect load, absolute store
-;;;    copy16 $1111, $2222,x    ; absolute load, indirect store
-;;;    copy16 $1111,x $2222,x   ; indirect load, indirect store
-;;;    copy16 #$1111, $2222,x   ; immediate load, indirect store
+;;;    copy16 src, dst
+;;; Supports all non-indirect addressing modes. Immediate mode optimized.
 .macro copy16 arg1, arg2, arg3, arg4
-    .if (_is_register {arg2}) && (_is_register {arg4})
-        ;; indexed load/indexed store
-        lda     arg1,arg2
-        sta     arg3,arg4
-        lda     arg1+1,arg2
-        sta     arg3+1,arg4
-    .elseif _is_register {arg2}
-        ;; indexed load variant (arg2 is x or y)
-        lda     arg1,arg2
-        sta     arg3
-        lda     arg1+1,arg2
-        sta     arg3+1
+    .if _is_register {arg2}
+        copy16 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; indexed store variant (arg3 is x or y)
-        _op_lo  lda, {arg1}
-        sta     arg2,arg3
-        _op_hx  lda, {arg1}     ; optimized
-        sta     arg2+1,arg3
-    .else
-        _op_lo  lda, {arg1}
-        sta     arg2
-        _op_hx  lda, {arg1}     ; optimized
-        sta     arg2+1
+        copy16 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
     .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
+        _op_lo  lda, {arg1}
+        _op_lo  sta, {arg2}
+        _op_hx  lda, {arg1}     ; optimized
+        _op_hi  sta, {arg2}
 .endmacro
 
 ;;; Copy 16-bit value, indexed indirect, y register incremented
@@ -789,113 +573,70 @@
 ;;;    copy16in ($1111),y, $2222    ; indexed indirect load, absolute store
 ;;;    copy16in ($1111),y ($2222),y ; indexed indirect load, indexed indirect store
 .macro copy16in arg1, arg2, arg3, arg4
-    .if _is_y_register {arg2} && _is_y_register {arg4}
-        ;; copy16in ($1111),y, ($2222),y
-        lda     (arg1),y
-        sta     (arg3),y
-        iny
-        lda     (arg1),y
-        sta     (arg3),y
-    .elseif _is_y_register {arg2}
-        ;; copy16in ($1111),y, $2222
-        lda     (arg1),y
-        sta     arg3
-        iny
-        lda     (arg1),y
-        sta     arg3+1
-    .elseif _is_y_register {arg3}
-        ;; copy16in #$1111, ($2222),y
-        ;; copy16in $1111, ($2222),y
+    .if _is_register {arg2}
+        copy16in {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
+    .elseif _is_register {arg3}
+        copy16in {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
+    .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
         _op_lo  lda, {arg1}
-        sta     (arg2),y
+        _op_lo  sta, {arg2}
         iny
         _op_hx  lda, {arg1}
-        sta     (arg2),y
-    .else
-        .error "Indirect indexed required at least one use of y reg"
-    .endif
+        _op_hi  sta, {arg2}
 .endmacro
 
 ;;; Copy low/high 16-bit value
-;;; 8 bits from $1111[,x] to $3333
-;;; 8 bits from $2222[,x] to $3333+1
-;;; 8 bits from $1111 to $2222
-;;; 8 bits from $1111+1 to $3333
-;;;    copylohi $1111, $2222, $3333        ; absolute, absolute
-;;;    copylohi $1111,x, $2222,x, $3333    ; indirect load, absolute store
-;;;    copylohi $1111, $2222,x, $3333,x    ; absolute load, indirect store
-.macro copylohi arg1, arg2, arg3, arg4, arg5
-    .if (_is_register {arg2}) && (_is_register {arg4})
-        ;; indexed load
-        lda     arg1,arg2
-        sta     arg5
-        lda     arg3,arg4
-        sta     arg5+1
+;;;    copylohi src_lo, src_hi, dst
+;;; Supports all non-indirect addressing modes.
+.macro copylohi arg1, arg2, arg3, arg4, arg5, arg6
+    .if _is_register {arg2}
+        copylohi {arg1,arg2}, {arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; indexed store
-        lda     arg1
-        sta     arg2,arg3
-        lda     arg1+1
-        sta     arg4,arg5
-    .else
-        lda     arg1
-        sta     arg3
-        lda     arg2
-        sta     arg3+1
+        copylohi {arg1}, {arg2,arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
+    .elseif _is_register {arg4}
+        copylohi {arg1}, {arg2}, {arg3,arg4}, {arg5}, {arg6}
+        .exitmacro
     .endif
-.endmacro
+        .assert .blank({arg4}) && .blank({arg5}) && .blank({arg6}), error, "extra parameters"
 
+        _op_lo lda, {arg1}
+        _op_lo sta, {arg3}
+        _op_lo lda, {arg2}
+        _op_hi sta, {arg3}
+.endmacro
 
 
 ;;; Unsigned compare 16-bit values - test C (BCC/BCS) for ordering
 ;;; WARNING: Z (for equality) is NOT set per CMP; use ecmp16 if needed.
-;;;    ucmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
-;;;    ucmp16 #$1111, $2222     ; immediate, absolute
-;;;    ucmp16 $1111, #$2222     ; absolute, immediate
-;;;    ucmp16 $1111, $2222      ; absolute, absolute
-;;;    ucmp16 $1111,x, $2222    ; indexed, absolute
-;;;    ucmp16 $1111, $2222,x    ; absolute, indexed
-;;;    ucmp16 $1111,x, #$2222   ; indexed, immediate
-;;;    ucmp16 #$1111, $2222,x   ; immediate, indexed
-;;;    ucmp16 $1111,x, $2222,x  ; indexed, indexed
+;;;    ucmp16 arg1, arg2
+;;; Supports all non-indirect addressing modes.
 .macro ucmp16 arg1, arg2, arg3, arg4
-    .if (_is_register {arg2}) && (_is_register {arg4})
-        ;; indexed, indexed
-        lda     arg1,arg2
-        cmp     arg3,arg4
-        lda     arg1+1,arg2
-        sbc     arg3+1,arg4
-    .elseif _is_register {arg2}
-        ;; indexed, absolute/immediate
-        lda     arg1,arg2
-        _op_lo  cmp, {arg3}
-        lda     arg1+1,arg2
-        _op_hi  sbc, {arg3}
+    .if _is_register {arg2}
+        ucmp16 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
     .elseif _is_register {arg3}
-        ;; absolute/immediate, indexed
-        _op_lo  lda, {arg1}
-        cmp     arg2,arg3
-        _op_hi  lda, {arg1}
-        sbc     arg2+1,arg3
-    .else
-        ;; absolute/immediate, absolute/immediate
+        ucmp16 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
+    .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
         _op_lo  lda, {arg1}
         _op_lo  cmp, {arg2}
         _op_hi  lda, {arg1}
         _op_hi  sbc, {arg2}
-    .endif
 .endmacro
 
 ;;; Signed compare 16-bit values - test N (BPL/BMI) for ordering
 ;;; (http://6502.org/tutorials/compare_beyond.html#6)
 ;;; WARNING: C (for ordering) and Z (for equality) are NOT set per CMP.
-;;;    scmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
-;;;    scmp16 #$1111, $2222     ; immediate, absolute
-;;;    scmp16 $1111, #$2222     ; absolute, immediate
-;;;    scmp16 $1111, $2222      ; absolute, absolute
-;;;    scmp16 $1111,x, $2222    ; indexed, absolute
-;;;    scmp16 $1111, $2222,x    ; absolute, indexed
-;;;    scmp16 $1111,x, $2222,x  ; indexed, indexed
+;;;    scmp16 arg1, arg2
+;;; Supports all non-indirect addressing modes.
 ;;; NOTE: Some callers rely on A's bit7 implicitly matching result in N.
 .macro scmp16 arg1, arg2, arg3, arg4
         .local @skip
@@ -907,92 +648,105 @@
 
 ;;; Equality compare 16-bit values - test Z (BEQ/BNE) for equality, or C (BCC/BCS) for ordering.
 ;;; NOTE: Use ucmp16 (smaller code) if Z is not needed.
-;;;    ecmp16 #$1111, #$2222   ; immediate, immediate (silly, but supported)
-;;;    ecmp16 #$1111, $2222    ; immediate, absolute
-;;;    ecmp16 $1111, #$2222    ; absolute, immediate
-;;;    ecmp16 $1111, $2222     ; absolute, absolute
-;;;    ecmp16 $1111,x, $2222   ; indexed, absolute
-;;;    ecmp16 $1111, $2222,x   ; absolute, indexed
-;;;    ecmp16 $1111,x, #$2222  ; indexed, immediate
-;;;    ecmp16 #$1111, $2222,x  ; immediate, indexed
-;;;    ecmp16 $1111,x, $2222,x ; indexed, indexed
+;;;    ecmp16 arg1, arg2
+;;; Supports all non-indirect addressing modes.
 .macro ecmp16 arg1, arg2, arg3, arg4
-    .local @skip
+    .if _is_register {arg2}
+        ecmp16 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
+    .elseif _is_register {arg3}
+        ecmp16 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
+    .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
         ;; Note that high bytes are compared before low bytes because
         ;; of the early exit when not equal - we want the high byte to
         ;; domimate the ordering.
-    .if (_is_register {arg2}) && (_is_register {arg4})
-        ;; indexed, indexed
-        lda     arg1+1,arg2
-        cmp     arg3+1,arg4
-        bne     @skip
-        lda     arg1,arg2
-        cmp     arg3,arg4
-    .elseif _is_register {arg2}
-        ;; indexed, absolute/immediate
-        lda     arg1+1,arg2
-        _op_hi  cmp, {arg3}
-        bne     @skip
-        lda     arg1,arg2
-        _op_lo  cmp, {arg3}
-    .elseif _is_register {arg3}
-        ;; absolute/immediate, indexed
-        _op_hi  lda, {arg1}
-        cmp     arg2+1,arg3
-        bne     @skip
-        _op_lo  lda, {arg1}
-        cmp     arg2,arg3
-    .else
-        ;; absolute/immediate, absolute/immediate
         _op_hi  lda, {arg1}
         _op_hi  cmp, {arg2}
         bne     @skip
         _op_lo  lda, {arg1}
         _op_lo  cmp, {arg2}
-    .endif
 @skip:
 .endmacro
 
 
-
 ;;; Shift 16-bit values
-;;;    lsr16 $1111      ; absolute
-.macro lsr16 arg1
-        lsr     arg1+1
-        ror     arg1
+;;;    lsr16 arg
+;;; Supports absolute, zero-page, and x-indexed addressing modes.
+.macro lsr16 arg1, arg2
+    .if _is_register {arg2}
+        lsr16 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
+        _op_hi  lsr, {arg1}
+        _op_lo  ror, {arg1}
 .endmacro
 
-;;;    asl16 $1111      ; absolute
-.macro asl16 arg1
-        asl     arg1
-        rol     arg1+1
+;;;    asl16 arg
+;;; Supports absolute, zero-page, and x-indexed addressing modes.
+.macro asl16 arg1, arg2
+    .if _is_register {arg2}
+        asl16 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
+        _op_lo  asl, {arg1}
+        _op_hi  rol, {arg1}
 .endmacro
 
 ;;; "Arithmetic Shift Right" i.e. signed division by 2
-;;;    asr16 $1111      ; absolute
-.macro asr16 arg1
-        lda     arg1+1
+;;;    asr16 arg
+;;; Supports absolute, zero-page, and x-indexed addressing modes.
+.macro asr16 arg1, arg2
+    .if _is_register {arg2}
+        asr16 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
+        _op_hi  lda, {arg1}
         rol
-        ror     arg1+1
-        ror     arg1
+        _op_hi  ror, {arg1}
+        _op_lo  ror, {arg1}
 .endmacro
 
 ;;; Increment 16-bit value
-.macro inc16    arg
+;;;    inc16 arg
+;;; Supports absolute, zero-page, and x-indexed addressing modes.
+.macro inc16 arg1, arg2
+    .if _is_register {arg2}
+        inc16 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
         .local @skip
-        inc     arg
+        _op_lo  inc, {arg1}
         bne     @skip
-        inc     arg+1
+        _op_hi  inc, {arg1}
 @skip:
 .endmacro
 
 ;;; Decrement 16-bit value
-.macro dec16    arg
+;;;    dec16 arg
+;;; Supports absolute, zero-page, and x-indexed addressing modes.
+.macro dec16 arg1, arg2
+    .if _is_register {arg2}
+        dec16 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
         .local @skip
-        lda     arg
+        _op_lo  lda, {arg1}
         bne     @skip
-        dec     arg+1
-@skip:   dec     arg
+        _op_hi  dec, {arg1}
+@skip:  _op_lo  dec, {arg1}
 .endmacro
 
 ;;; Push 16-bit value in A,X
@@ -1010,10 +764,18 @@
 .endmacro
 
 ;;; Push a 16-bit value
-.macro push16 arg
-        _op_lo  lda, {arg}
+;;;    push16 arg
+;;; Supports all non-indirect addressing modes.
+.macro push16 arg1, arg2
+    .if _is_register {arg2}
+        push16 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
+        _op_lo  lda, {arg1}
         pha
-        _op_hi  lda, {arg}
+        _op_hi  lda, {arg1}
         pha
 .endmacro
 
@@ -1021,32 +783,58 @@
 ;;; 24-bit pseudo-ops
 
 ;;; Copy 24-bit value
-;;;    copy24 #$111111, $2222 ; immediate, absolute
-;;;    copy24 $1111, $2222    ; absolute, absolute
-.macro copy24 arg1, arg2
+;;;    copy24 arg1, arg2
+;;; Supports all non-indirect addressing modes. Immediate mode optimized.
+.macro copy24 arg1, arg2, arg3, arg4
+    .if _is_register {arg2}
+        copy24 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
+    .elseif _is_register {arg3}
+        copy24 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
+    .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
         _op_b0  lda, {arg1}
-        sta     arg2
+        _op_b0  sta, {arg2}
         _op_x1  lda, {arg1}     ; optimized
-        sta     arg2+1
+        _op_b1  sta, {arg2}
         _op_x2  lda, {arg1}     ; optimized
-        sta     arg2+2
+        _op_b2  sta, {arg2}
 .endmacro
 
-
 ;;; Increment 24-bit value
-.macro inc24    arg
+;;;    inc24 arg
+;;; Supports all non-indirect addressing modes.
+.macro inc24 arg1, arg2
+    .if _is_register {arg2}
+        inc24 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
         .local @skip
-        inc     arg
+        _op_b0  inc, {arg1}
         bne     @skip
-        inc     arg+1
+        _op_b1  inc, {arg1}
         bne     @skip
-        inc     arg+2
+        _op_b2  inc, {arg1}
 @skip:
 .endmacro
 
-;;;    ucmp24 #$111111, $2222 ; immediate, absolute
-;;;    ucmp24 $1111, $2222    ; absolute, absolute
-.macro ucmp24   arg1, arg2
+;;; Unsigned compare 24-bit values
+;;;    ucmp24 arg1, arg2
+;;; Supports all non-indirect addressing modes.
+.macro ucmp24 arg1, arg2, arg3, arg4
+    .if _is_register {arg2}
+        ucmp24 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
+    .elseif _is_register {arg3}
+        ucmp24 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
+    .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
         _op_b0  lda, {arg1}
         _op_b0  cmp, {arg2}
         _op_b1  lda, {arg1}
@@ -1055,9 +843,19 @@
         _op_b2  sbc, {arg2}
 .endmacro
 
-;;;    ecmp24 #$111111, $2222 ; immediate, absolute
-;;;    ecmp24 $1111, $2222    ; absolute, absolute
-.macro ecmp24   arg1, arg2
+;;; Equality compare 24-bit values
+;;;    ecmp24 arg1, arg2
+;;; Supports all non-indirect addressing modes.
+.macro ecmp24 arg1, arg2, arg3, arg4
+    .if _is_register {arg2}
+        ecmp24 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
+    .elseif _is_register {arg3}
+        ecmp24 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
+    .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
         .local @skip
         _op_b0  lda, {arg1}
         _op_b0  cmp, {arg2}
@@ -1074,65 +872,100 @@
 ;;; 32-bit pseudo-ops
 
 ;;; Core for add32/sub32
-.macro _addsub32 op, carryOp, arg1, arg2, arg3
+.macro _addsub32 op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
+    .if _is_register {arg2}
+        _addsub32 op, carryOp, {arg1,arg2}, {arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
+    .elseif _is_register {arg3}
+        _addsub32 op, carryOp, {arg1}, {arg2,arg3}, {arg4}, {arg5}, {arg6}
+        .exitmacro
+    .elseif _is_register {arg4}
+        _addsub32 op, carryOp, {arg1}, {arg2}, {arg3,arg4}, {arg5}, {arg6}
+        .exitmacro
+    .endif
+        .assert .blank({arg4}) && .blank({arg5}) && .blank({arg6}), error, "extra parameters"
+
         carryOp
         _op_b0 lda, {arg1}
-        _op_b0 op, {arg2}
-        sta     arg3
+        _op_b0 op,  {arg2}
+        _op_b0 sta, {arg3}
         _op_b1 lda, {arg1}
-        _op_b1 op, {arg2}
-        sta     arg3+1
+        _op_b1 op,  {arg2}
+        _op_b1 sta, {arg3}
         _op_b2 lda, {arg1}
-        _op_b2 op, {arg2}
-        sta     arg3+2
+        _op_b2 op,  {arg2}
+        _op_b2 sta, {arg3}
         _op_b3 lda, {arg1}
-        _op_b3 op, {arg2}
-        sta     arg3+3
+        _op_b3 op,  {arg2}
+        _op_b3 sta, {arg3}
 .endmacro
 
-;;; absolute  + absolute  => absolute
-;;; immediate + absolute  => absolute
-;;; absolute  + immediate => absolute
-.macro add32 arg1, arg2, arg3
-    _addsub32 adc, clc, arg1, arg2, arg3
+;;; Add arg1 to arg2, store to arg3
+;;;    add32 arg1, arg2, arg3
+;;; Supports all non-indirect addressing modes.
+.macro add32 arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub32 adc, clc, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
-;;; absolute  - absolute  => absolute
-;;; immediate - absolute  => absolute
-;;; absolute  - immediate => absolute
-.macro sub32 arg1, arg2, arg3
-    _addsub32 sbc, sec, arg1, arg2, arg3
+;;; Subtract arg2 from arg1, store to arg3
+;;;    sub32 arg1, arg2, arg3
+;;; Supports all non-indirect addressing modes.
+.macro sub32 arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub32 sbc, sec, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
 ;;; Copy 32-bit value
-;;;    copy32 #$11111111, $2222 ; immediate, absolute
-;;;    copy32 $1111, $2222      ; absolute, absolute
-.macro copy32 arg1, arg2
+;;;    copy32 src, dst
+;;; Supports all non-indirect addressing modes. Immediate mode optimized.
+.macro copy32 arg1, arg2, arg3, arg4
+    .if _is_register {arg2}
+        copy32 {arg1,arg2}, {arg3}, {arg4}
+        .exitmacro
+    .elseif _is_register {arg3}
+        copy32 {arg1}, {arg2,arg3}, {arg4}
+        .exitmacro
+    .endif
+        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
+
         _op_b0  lda, {arg1}
-        sta     arg2
+        _op_b0  sta, {arg2}
         _op_x1  lda, {arg1}     ; optimized
-        sta     arg2+1
+        _op_b1  sta, {arg2}
         _op_x2  lda, {arg1}     ; optimized
-        sta     arg2+2
+        _op_b2  sta, {arg2}
         _op_x3  lda, {arg1}     ; optimized
-        sta     arg2+3
+        _op_b3  sta, {arg2}
 .endmacro
 
 ;;; Shift 32-bit values
-;;;    asl32 $1111      ; absolute
-.macro asl32 arg1
-        asl     arg1
-        rol     arg1+1
-        rol     arg1+2
-        rol     arg1+3
+;;;    asl32 arg
+;;; Supports absolute, zero-page, and x-indexed addressing modes.
+.macro asl32 arg1, arg2
+    .if _is_register {arg2}
+        asl32 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
+        _op_b0  asl, {arg1}
+        _op_b1  rol, {arg1}
+        _op_b2  rol, {arg1}
+        _op_b3  rol, {arg1}
 .endmacro
 
-;;;    lsr32 $1111      ; absolute
-.macro lsr32 arg1
-        lsr     arg1+3
-        ror     arg1+2
-        ror     arg1+1
-        ror     arg1
+;;;    lsr32 arg
+;;; Supports absolute, zero-page, and x-indexed addressing modes.
+.macro lsr32 arg1, arg2
+    .if _is_register {arg2}
+        lsr32 {arg1,arg2}
+        .exitmacro
+    .endif
+        .assert .blank({arg2}), error, "extra parameters"
+
+        _op_b3  lsr, {arg1}
+        _op_b2  ror, {arg1}
+        _op_b1  ror, {arg1}
+        _op_b0  ror, {arg1}
 .endmacro
 
 
