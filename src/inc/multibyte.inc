@@ -233,12 +233,10 @@
     .endif
 
     .if _is_immediate {arg}
-      .if .const(_immediate_value {arg})
-        .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
-          _op_lo  ld1, {arg}
-          t12
-          .exitmacro
-        .endif
+      .if .const(_immediate_value {arg}) && .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
+        _op_lo  ld1, {arg}
+        t12
+        .exitmacro
       .endif
     .endif
 

@@ -1552,6 +1552,7 @@ varC:   .word   9870
         RTS_IF                     ; RTS_IF: Empty expression
         RTS_IF CS X                ; RTS_IF: Unexpected token: 'X'
         RTS_IF CS,CC               ; RTS_IF: Unexpected token: ','
+        RTS_IF A                   ; RTS_IF: Expected operator (=, <>, <, >=, IN, BETWEEN)
         RTS_IF A > #123            ; RTS_IF: Greater-than operator ('>') not supported
         RTS_IF A <= #123           ; RTS_IF: Less-than-or-equal operator ('<=') not supported
         RTS_IF A = 1               ; RTS_IF: Numeric literal in '=' comparison; did you mean '#1'?
@@ -1572,7 +1573,7 @@ varC:   .word   9870
         RTS_IF A = var++           ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
 
         RTS_IF u16                 ; RTS_IF: Expected argument(s) after type 'u16'
-        RTS_IF u16 var             ; RTS_IF: Expected operator (=, <>, <, >=)
+        RTS_IF u16 var             ; RTS_IF: Expected operator (=, <>, <, <=, >, >=)
         RTS_IF u16 var <           ; RTS_IF: Expected argument(s) after operator '<'
         RTS_IF u16 var < #123,456  ; RTS_IF: Unexpected non-index-register after comparison '<'
         RTS_IF u16 var < 123       ; RTS_IF: Numeric literal in '<' comparison; did you mean '#123'?
@@ -1582,8 +1583,9 @@ varC:   .word   9870
         RTS_IF u8 var = --var      ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
         RTS_IF u8 var = ++var      ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
 
-        CALL    target, FOO=        ; CALL: Expected 'reg=...'
-        CALL    target, A           ; CALL: Expected 'A=...'
+        CALL    target, FOO=        ; CALL: Expected 'reg=...', saw identifier ('FOO')
+        CALL    target, A           ; CALL: Expected '=' after register 'A'
+        CALL    target, A=          ; CALL: Expected expression after 'A='
         CALL    target, A=0         ; CALL: Numeric literal in 'A=expr' assignment; did you mean '#0'?
         CALL    target, A=kConstant ; CALL: Constant in 'A=expr' assignment; did you mean '#kConstant'?
         CALL    target, C=1 bad     ; CALL: Unexpected tokens after 'C=...'
@@ -1598,6 +1600,8 @@ varC:   .word   9870
         IF NS REDO label            ; IF: Expected nothing after REDO, saw identifier ('label')
 
         SET                         ; SET: Expected type (u8,u16,s16,u24,u32)
+        SET A                       ; SET: Expected type (u8,u16,s16,u24,u32), saw register 'A'
+        SET , u8                    ; SET: Expected type (u8,u16,s16,u24,u32), saw comma (',')
         SET u16                     ; SET: Expected assignment target
         SET u16 target              ; SET: Expected assignment operator (=, +=, -=)
         SET u16 target =            ; SET: Expected argument(s) after operator '='
@@ -1616,3 +1620,4 @@ varC:   .word   9870
         SET u16 target <<= #kNonConstant ; SET: Expected constant expression after '<<='
         SET u16 target <<= #0            ; SET: Expected non-zero count
 .endif
+
