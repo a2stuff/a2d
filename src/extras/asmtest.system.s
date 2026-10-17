@@ -1500,6 +1500,19 @@ varC:   .word   9870
         SET u16 varA >>= #1
         SET u16 varA >>= #4
 
+        SET u16 AX = varA
+        SET u16 XY = varA
+        SET u16 varA = AX
+        SET u16 varA = XY
+        SET u16 varA += AX
+        SET u16 varA += XY
+        SET u16 varB = varA + AX
+        SET u16 varB = varA + XY
+        SET u16 varB = varA + XY
+        SET u16 varB = AX + varA
+        SET u16 varB = XY + varA
+        SET u16 varA -= AX
+        SET u16 varB = varA - AX
 
 ;;; s16
         SET s16 varB = varA
@@ -1512,6 +1525,19 @@ varC:   .word   9870
         SET s16 varA <<= #4
         SET s16 varA >>= #1
         SET s16 varA >>= #4
+
+        SET s16 AX = varA
+        SET s16 XY = varA
+        SET s16 varA = AX
+        SET s16 varA = XY
+        SET s16 varA += AX
+        SET s16 varA += XY
+        SET s16 varB = varA + AX
+        SET s16 varB = varA + XY
+        SET s16 varB = AX + varA
+        SET s16 varB = XY + varA
+        SET s16 varA -= AX
+        SET s16 varB = varA - AX
 
 ;;; u24
         SET u24 varB = varA

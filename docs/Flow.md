@@ -290,6 +290,8 @@ Use parentheses (`(`, `)`) to disambiguate the binary operator when using an off
 
 There is no difference between `s16` and `u16` for typed assignment since signed numbers are represented as two's complement, but both are supported for readability and consistency with [typed comparisons](#typed-comparisons).
 
+For `u16`/`s16`, the register pair `AX` and `XY` can be used as the source or target for simple assignments, or the rightmost value for additions/subtractions.
+
 Shift-assignments are supported as well, with several caveats:
 ```
    SET u16 varA <<= #const

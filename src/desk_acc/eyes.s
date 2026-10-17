@@ -472,40 +472,41 @@ done_outline:
 
     IF bit skip_erase_flag : NC
         MGTK_CALL MGTK::SetPenMode, pencopy
-        ldax    last_l::xcoord
-        stax    pupil_rect+MGTK::Rect::x1
-        addax   #kPupilW, pupil_rect+MGTK::Rect::x2
-        ldax    last_l::ycoord
-        stax    pupil_rect+MGTK::Rect::y1
-        addax   #kPupilH, pupil_rect+MGTK::Rect::y2
+        SET s16 AX = last_l::xcoord
+        SET s16 pupil_rect+MGTK::Rect::x1 = AX
+        SET s16 pupil_rect+MGTK::Rect::x2 = AX + #kPupilW
+        SET s16 AX = last_l::ycoord
+        SET s16 pupil_rect+MGTK::Rect::y1 = AX
+        SET s16 pupil_rect+MGTK::Rect::y2 = AX + #kPupilH
         jsr     _DrawPupil
     END_IF
+
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        ldax    pos_l::xcoord
-        stax    pupil_rect+MGTK::Rect::x1
-        addax   #kPupilW, pupil_rect+MGTK::Rect::x2
-        ldax    pos_l::ycoord
-        stax    pupil_rect+MGTK::Rect::y1
-        addax   #kPupilH, pupil_rect+MGTK::Rect::y2
+        SET s16 AX = pos_l::xcoord
+        SET s16 pupil_rect+MGTK::Rect::x1 = AX
+        SET s16 pupil_rect+MGTK::Rect::x2 = AX + #kPupilW
+        SET s16 AX = pos_l::ycoord
+        SET s16 pupil_rect+MGTK::Rect::y1 = AX
+        SET s16 pupil_rect+MGTK::Rect::y2 = AX + #kPupilH
         jsr     _DrawPupil
 
     IF bit skip_erase_flag : NC
         MGTK_CALL MGTK::SetPenMode, pencopy
-        ldax    last_r::xcoord
-        stax    pupil_rect+MGTK::Rect::x1
-        addax   #kPupilW, pupil_rect+MGTK::Rect::x2
-        ldax    last_r::ycoord
-        stax    pupil_rect+MGTK::Rect::y1
-        addax   #kPupilH, pupil_rect+MGTK::Rect::y2
+        SET s16 AX = last_r::xcoord
+        SET s16 pupil_rect+MGTK::Rect::x1 = AX
+        SET s16 pupil_rect+MGTK::Rect::x2 = AX + #kPupilW
+        SET s16 AX = last_r::ycoord
+        SET s16 pupil_rect+MGTK::Rect::y1 = AX
+        SET s16 pupil_rect+MGTK::Rect::y2 = AX + #kPupilH
         jsr     _DrawPupil
     END_IF
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        ldax    pos_r::xcoord
-        stax    pupil_rect+MGTK::Rect::x1
-        addax   #kPupilW, pupil_rect+MGTK::Rect::x2
-        ldax    pos_r::ycoord
-        stax    pupil_rect+MGTK::Rect::y1
-        addax   #kPupilH, pupil_rect+MGTK::Rect::y2
+        SET s16 AX = pos_r::xcoord
+        SET s16 pupil_rect+MGTK::Rect::x1 = AX
+        SET s16 pupil_rect+MGTK::Rect::x2 = AX + #kPupilW
+        SET s16 AX = pos_r::ycoord
+        SET s16 pupil_rect+MGTK::Rect::y1 = AX
+        SET s16 pupil_rect+MGTK::Rect::y2 = AX + #kPupilH
         jsr     _DrawPupil
 
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve

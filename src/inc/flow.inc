@@ -1703,6 +1703,7 @@
 ;;; * Combining +=/-= and +/- is not supported
 ;;; * Using +/- within arg or lhs requires wrapping in parentheses
 ;;; * Shifts use X as loop counter; append `, USE_Y` to use Y instead
+;;; * For u16/s16, `arg`, `lhs` and `rhs` can be `AX` or `XY`
 ;;;
 ;;; TODO:
 ;;; * `inc16` as: SET u16 ++var
@@ -1930,11 +1931,33 @@
             .endif
           .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
             .if .xmatch({f2_assign_op}, =)
-              copy16 f2_lhs, f2_target
+              .if .xmatch({f2_target}, AX)
+                ldax f2_lhs
+              .elseif .xmatch({f2_target}, XY)
+                ldxy f2_lhs
+              .elseif .xmatch({f2_lhs}, AX)
+                stax f2_target
+              .elseif .xmatch({f2_lhs}, XY)
+                stxy f2_target
+              .else
+                copy16 f2_lhs, f2_target
+              .endif
             .elseif .xmatch({f2_assign_op}, +=)
-              add16 f2_target, f2_lhs, f2_target
+              .if .xmatch({f2_lhs}, AX)
+                addax f2_target
+              .elseif .xmatch({f2_lhs}, XY)
+                addxy f2_target
+              .else
+                add16 f2_target, f2_lhs, f2_target
+              .endif
             .elseif .xmatch({f2_assign_op}, -=)
-              sub16 f2_target, f2_lhs, f2_target
+              .if .xmatch({f2_lhs}, AX)
+                subax f2_target
+              .elseif .xmatch({f2_lhs}, XY)
+                F2_ERR "subxy not defined"
+              .else
+                sub16 f2_target, f2_lhs, f2_target
+              .endif
             .elseif .xmatch({f2_assign_op}, <<=)
               F2_CODEGEN_LOOP asl16, f2_loop_load, f2_loop_decr, {f2_lhs}, {f2_target}
             .elseif .xmatch({f2_assign_op}, >>=)
@@ -2020,9 +2043,23 @@
             .endif
           .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
             .if .xmatch({f2_binop}, +)
-              add16 f2_lhs, f2_rhs, f2_target
+              .if .xmatch({f2_lhs}, AX)
+                addax f2_rhs, f2_target
+              .elseif .xmatch({f2_lhs}, XY)
+                addxy f2_rhs, f2_target
+              .elseif .xmatch({f2_rhs}, AX)
+                addax f2_lhs, f2_target
+              .elseif .xmatch({f2_rhs}, XY)
+                addxy f2_lhs, f2_target
+              .else
+                add16 f2_lhs, f2_rhs, f2_target
+              .endif
             .elseif .xmatch({f2_binop}, -)
-              sub16 f2_lhs, f2_rhs, f2_target
+              .if .xmatch({f2_rhs}, AX)
+                subax f2_lhs, f2_target
+              .else
+                sub16 f2_lhs, f2_rhs, f2_target
+              .endif
             .else
               F2_ERR_UNREACHED
             .endif
