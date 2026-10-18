@@ -13,8 +13,10 @@
 ;;;
 ;;; ============================================================
 
-;;; * IF cond GOTO target (or JUMP for forced long branch)
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
+;;; * IF cond GOTO target (or JUMP for forced long branch)
+;;; * IF cond RETURN ... (with register-loading micro-syntax below)
+;;;
 ;;; * DO / REDO_IF cond / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
 ;;;   * or REPEAT / UNTIL cond if you prefer
 ;;;   * also IF cond REDO / CONTINUE / BREAK
@@ -1163,10 +1165,10 @@
 .define __flow_branch_ident_counter__ __flow_branch_ident__ {"counter"}
 .define __flow_branch_ident_block__ __flow_branch_ident__ {.sprintf("eob%d", __flow_branch_ident_counter__)}
 
-;;; Searches `f2_params` for `GOTO` (etc); defines `f2_shortcut_op` and `f2_shortcut_target` (caller must .undef them)
+;;; Searches `f2_params` for `GOTO` (etc); defines `f2_shortcut_op` and `f2_shortcut_rhs` (caller must .undef them)
 .macro F2_FIND_SHORTCUT
         .define f2_shortcut_op
-        .define f2_shortcut_target
+        .define f2_shortcut_rhs
         .define f2_token_list f2_params
         .undef f2_params
         .define f2_params
@@ -1185,8 +1187,8 @@
           .if .tcount({f2_token_list}) = 0
             F2_ERR_EXPECTED .sprintf("target after %s", .string(f2_shortcut_op))
           .endif
-          .undef f2_shortcut_target
-          .define f2_shortcut_target f2_token_list
+          .undef f2_shortcut_rhs
+          .define f2_shortcut_rhs f2_token_list
         .elseif .xmatch({.left(1, {f2_token_list})}, BREAK) || .xmatch({.left(1, {f2_token_list})}, REDO) || .xmatch({.left(1, {f2_token_list})}, CONTINUE)
           .undef f2_shortcut_op
           .define f2_shortcut_op .left(1, {f2_token_list})
@@ -1194,16 +1196,22 @@
           .if .tcount({f2_token_list}) <> 0
             F2_ERR_EXPECTED .sprintf("nothing after %s", .string(f2_shortcut_op))
           .endif
-          .undef f2_shortcut_target
+          .undef f2_shortcut_rhs
           .if .xmatch({f2_shortcut_op}, BREAK)
-            .define f2_shortcut_target __flow_loop_ident__ {"break"}
+            .define f2_shortcut_rhs __flow_loop_ident__ {"break"}
           .elseif  .xmatch({f2_shortcut_op}, REDO)
-            .define f2_shortcut_target __flow_loop_ident__ {"start"}
+            .define f2_shortcut_rhs __flow_loop_ident__ {"start"}
           .elseif  .xmatch({f2_shortcut_op}, CONTINUE)
-            .define f2_shortcut_target __flow_loop_ident__ {"continue"}
+            .define f2_shortcut_rhs __flow_loop_ident__ {"continue"}
           .else
             F2_ERR_UNREACHED
           .endif
+        .elseif .xmatch({.left(1, {f2_token_list})}, RETURN)
+          .undef f2_shortcut_op
+          .define f2_shortcut_op .left(1, {f2_token_list})
+          F2_PARSE_CONSUME
+          .undef f2_shortcut_rhs
+          .define f2_shortcut_rhs f2_token_list
         .else
           .define f2_tmp f2_params
           .undef f2_params
@@ -1218,13 +1226,21 @@
   _FLOW_STATEMENT "IF",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
 
         F2_FIND_SHORTCUT
-        .if .tcount({f2_shortcut_target}) > 0
-          .if .xmatch({f2_shortcut_op}, JUMP)
-            .undef f2_force_longbranch
-            .define f2_force_longbranch 1
-          .endif
-          F2_PARSE_AND_GEN_BIT {f2_shortcut_target},{f2_params}
-        .else
+        .if .tcount({f2_shortcut_op}) > 0
+          .if .xmatch({f2_shortcut_op}, RETURN)
+            .local @skip
+            F2_PARSE_AND_GEN_BIF @skip,{f2_params}
+            _CALL_HELPER f2_shortcut_rhs
+            rts
+            @skip := *
+          .else
+            .if .xmatch({f2_shortcut_op}, JUMP)
+              .undef f2_force_longbranch
+              .define f2_force_longbranch 1
+            .endif
+            F2_PARSE_AND_GEN_BIT {f2_shortcut_rhs},{f2_params}
+         .endif
+         .else
           __INC_IDENT__ __flow_branch_depth__
           __INC_IDENT__ __flow_branch_count_at_depth__
           __INC_IDENT__ __flow_branch_ident_counter__
@@ -1236,7 +1252,7 @@
         .endif
 
         .undef f2_shortcut_op
-        .undef f2_shortcut_target
+        .undef f2_shortcut_rhs
   _FLOW_END_STATEMENT
 .endmacro
 
@@ -1514,6 +1530,7 @@
 ;;; * CALL proc, args...
 ;;; * TAIL_CALL proc, args...
 ;;; * RETURN args...
+;;;   * also IF cond RETURN args, ... (with condition micro-syntax above)
 ;;; * FALL_THROUGH_TO proc, args...
 ;;;
 ;;; Args take the form of (pseudo-)register or flag assignments, and

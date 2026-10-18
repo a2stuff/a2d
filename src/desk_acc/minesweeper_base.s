@@ -637,9 +637,8 @@ store_and_redraw:
         RTS_IF A = #kCellBoom
 
         and     #kCellRevealed  ; revealed?
-    IF NOT ZERO
-        RETURN A=state
-    END_IF
+        IF NOT ZERO \
+          RETURN A=state
 
         lda     state           ; C=x MFABNNNN
         asl                     ; C=M FABNNNN0

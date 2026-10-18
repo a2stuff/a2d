@@ -519,9 +519,8 @@ END_PARAM_BLOCK
 .ifdef DEBUG
         ;; Is it in `icon_list`?
         jsr     IsInIconList
-    IF NOT_ZERO
-        RETURN  A=#1            ; Not found
-    END_IF
+        IF NOT_ZERO \
+          RETURN A=#1            ; Not found
 .endif ; DEBUG
 
         jsr     FreeIconCommon  ; A = icon id
@@ -1085,9 +1084,8 @@ find_icon:
         lda     (win_ptr),y
         copy16in (win_ptr),y, params::headery
         add16_8 params::headery, header_height
-       IF u16 findwindow_params::mousey >= params::headery
-        RETURN  C=0
-       END_IF
+        IF u16 findwindow_params::mousey >= params::headery \
+          RETURN C=0
       END_IF
     END_IF
 

@@ -198,9 +198,8 @@ ret:
 
 .proc FlashImpl
         ;; If disabled, return canceled
-    IF bit state : NS
-        RETURN  A=#$80
-    END_IF
+        IF bit state : NS \
+          RETURN A=#$80
 
         jsr     _SetPort
         jsr     _Invert
@@ -337,9 +336,8 @@ window          .tag MGTK::Point
 UNSUPPRESS_SHADOW_WARNING
 
         ;; If disabled, return canceled
-    IF bit state : NS
-        RETURN  A=#$80
-    END_IF
+        IF bit state : NS \
+          RETURN A=#$80
 
         jsr     _SetPort
 

@@ -1108,9 +1108,9 @@ arrow_num:
 .endproc ; DrawWindow
 
 .proc ZToButtonState
-    IF NOT_ZERO
-        RETURN  A=#BTK::kButtonStateNormal
-    END_IF
+        IF NOT_ZERO \
+          RETURN A=#BTK::kButtonStateNormal
+
         RETURN  A=#BTK::kButtonStateChecked
 .endproc ; ZToButtonState
 

@@ -1395,6 +1395,34 @@ ft21:
         RETURN  Y=#kConstant, AX=var
         RETURN  C=1, A=table,x, X=table,y
 
+;;; IF ... RETURN
+
+        IF CS RETURN
+
+        IF CS RETURN A=#0
+        IF CS RETURN A=#kConstant
+        IF CS RETURN A=var
+        IF CS RETURN A=table,x
+
+        IF CS RETURN A=#0
+        IF CS RETURN X=#0
+        IF CS RETURN Y=#0
+        IF CS RETURN AX=#0
+        IF CS RETURN AY=#0
+        IF CS RETURN XY=#0
+
+        IF CS RETURN C=0
+        IF CS RETURN C=1
+        IF CS RETURN C=kClear
+        IF CS RETURN C=kSet
+
+        IF CS RETURN C=1
+        IF CS RETURN D=1
+
+        IF CS RETURN C=0, D=1, A=#0, X=#1, Y=#2
+        IF CS RETURN Y=#kConstant, AX=var
+        IF CS RETURN C=1, A=table,x, X=table,y
+
 ;;; --------------------------------------------------
 ;;; Cheap Local Label Compatibility
 ;;; --------------------------------------------------

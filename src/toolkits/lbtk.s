@@ -284,9 +284,8 @@ coords          .tag MGTK::Point
         RETURN  A=#$FF          ; not an item
     END_IF
 
-    IF A <> #MGTK::Ctl::not_a_control
-        RETURN  A=#$FF          ; not an item
-    END_IF
+        IF A <> #MGTK::Ctl::not_a_control \
+          RETURN  A=#$FF          ; not an item
 
         ldy     #MGTK::Winfo::window_id
         copy8   (winfo_ptr),y, screentowindow_params::window_id

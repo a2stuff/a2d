@@ -406,17 +406,12 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 handle_button:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-    IF ZERO
-        RETURN  A=#$FF
-    END_IF
-
-    IF A <> #MGTK::Area::content
-        RETURN  A=#$FF
-    END_IF
-
-    IF u8 findwindow_params::window_id <> winfo_entry_picker
-        RETURN  A=#$FF
-    END_IF
+        IF ZERO \
+          RETURN A=#$FF
+        IF A <> #MGTK::Area::content \
+          RETURN A=#$FF
+        IF u8 findwindow_params::window_id <> winfo_entry_picker \
+          RETURN A=#$FF
 
         lda     #winfo_entry_picker::kWindowId
         sta     screentowindow_params::window_id
@@ -459,9 +454,8 @@ handle_button:
 ;;; Key down handler
 
 .proc HandleKey
-    IF u8 event_params::modifiers = #MGTK::event_modifier_solid_apple
-        RETURN  A=#$FF
-    END_IF
+        IF u8 event_params::modifiers = #MGTK::event_modifier_solid_apple \
+          RETURN  A=#$FF
 
         lda     event_params::key
 
@@ -485,9 +479,8 @@ handle_button:
 
 .proc HandleKeyReturn
         BTK_CALL BTK::Flash, entry_picker_ok_button
-    IF NS
-        RETURN  A=#$FF          ; ignore
-    END_IF
+        IF NS \
+          RETURN A=#$FF         ; ignore
         RETURN  A=#0
 .endproc ; HandleKeyReturn
 

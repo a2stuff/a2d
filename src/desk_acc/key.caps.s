@@ -764,16 +764,12 @@ char:   .byte   0
         ;; Is IIgs?
 check:
         CALL    IDROUTINE, C=1  ; Clears carry if IIgs
-    IF CC
-        RETURN  C=1             ; Yes, is a IIgs
-    END_IF
+        IF CC \
+          RETURN  C=1           ; Yes, is a IIgs
 
         ;; Is IIc+?
-    IF u8 ZIDBYTE = #0          ; $00 = IIc
-      IF u8 ZIDBYTE2 = #$05     ; $05 = IIc Plus
-        RETURN  C=1             ; Yes, is a IIc+
-      END_IF
-    END_IF
+        IF u8 ZIDBYTE = #0 AND u8 ZIDBYTE2 = #$05 \
+          RETURN C=1            ; Yes, is a IIc+
 
         ;; Can't distinguish Platinum IIe, even via shift key mod,
         ;; because unshifted state is high, just like no mod.

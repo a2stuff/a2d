@@ -633,21 +633,20 @@ rts1:  rts                     ; used by next proc
 
     IF A < #kRow5Top-kBorderLeftTop ; special case for tall + button
         lda     screentowindow_params::windowx
-        IF A < #kCol4Left-kBorderLeftTop OR A >= #kCol4Right+kBorderBottomRight-1 GOTO miss
+        IF A < #kCol4Left-kBorderLeftTop OR A >= #kCol4Right+kBorderBottomRight-1 \
+          GOTO miss
         RETURN  A=#'+', C=1
     END_IF
 
         IF A >= #kRow5Bot+kBorderBottomRight GOTO miss ; row 5?
 
         jsr     FindButtonCol
-    IF CS
-        RETURN  A=row5_lookup,x
-    END_IF
+        IF CS \
+          RETURN A=row5_lookup,x
 
         lda     screentowindow_params::windowx ; special case for wide 0 button
-    IF A >= #kCol1Left-kBorderLeftTop AND A < #kCol2Right+kBorderBottomRight
-        RETURN  A=#'0', C=1
-    END_IF
+        IF A >= #kCol1Left-kBorderLeftTop AND A < #kCol2Right+kBorderBottomRight \
+          RETURN A=#'0', C=1
 
 miss:   RETURN  C=0
 .endproc ; FindButtonRow
@@ -666,24 +665,20 @@ miss:   RETURN  C=0
 
 .proc FindButtonCol
         IF X < #kCol1Left-kBorderLeftTop GOTO miss; col 1?
-    IF X < #kCol1Right+kBorderBottomRight
-        RETURN  X=#1, C=1
-    END_IF
+        IF X < #kCol1Right+kBorderBottomRight \
+          RETURN X=#1, C=1
 
         IF X < #kCol2Left-kBorderLeftTop GOTO miss ; col 2?
-    IF X < #kCol2Right+kBorderBottomRight
-        RETURN  X=#2, C=1
-    END_IF
+        IF X < #kCol2Right+kBorderBottomRight \
+          RETURN X=#2, C=1
 
         IF X < #kCol3Left-kBorderLeftTop GOTO miss ; col 3?
-    IF X < #kCol3Right+kBorderBottomRight
-        RETURN  X=#3, C=1
-    END_IF
+        IF X < #kCol3Right+kBorderBottomRight \
+          RETURN X=#3, C=1
 
         IF X < #kCol4Left-kBorderLeftTop GOTO miss ; col 4?
-    IF X < #kCol4Right+kBorderBottomRight
-        RETURN  X=#4, C=1
-    END_IF
+        IF X < #kCol4Right+kBorderBottomRight \
+          RETURN X=#4, C=1
 
 miss:   RETURN  C=0
 .endproc ; FindButtonCol

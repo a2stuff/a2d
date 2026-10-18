@@ -195,9 +195,8 @@ list:   .word   0               ; 0 items in list
 
         ;; DOS 3.3?
         jsr     auxlc::IsDOS33BootBlock
-    IF CC
-        RETURN  A=#auxlc::kSourceDiskFormatDOS33
-    END_IF
+        IF CC \
+          RETURN A=#auxlc::kSourceDiskFormatDOS33
 
         ;; Anything else
 fail:   RETURN  A=#auxlc::kSourceDiskFormatOther
@@ -510,9 +509,8 @@ mem_block_addr:
       END_IF
 
         inc16   block
-      IF u16 block >= auxlc::source_block_count
-        RETURN  AX=count
-      END_IF
+        IF u16 block >= auxlc::source_block_count \
+          RETURN AX=count
     FOREVER
 .endproc ; CountActiveBlocksInVolumeBitmap
 

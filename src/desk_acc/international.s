@@ -566,9 +566,8 @@ dialog_result:  .byte   0
 .endproc ; UpdateFirstDOWOptionButtons
 
 .proc ZToButtonState
-    IF ZC
-        RETURN  A=#BTK::kButtonStateNormal
-    END_IF
+        IF ZC \
+          RETURN A=#BTK::kButtonStateNormal
         RETURN  A=#BTK::kButtonStateChecked
 .endproc ; ZToButtonState
 

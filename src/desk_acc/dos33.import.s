@@ -1167,9 +1167,7 @@ start:
         lda     prefix_path
         clc
         adc     str_name
-    IF A >= #kMaxPathLength     ; not +1 because we'll add '/'
-        RETURN  A=#ERR_INVALID_PATHNAME
-    END_IF
+        IF A >= #kMaxPathLength RETURN A=#ERR_INVALID_PATHNAME ; not +1 because we'll add '/'
 
         COPY_STRING prefix_path, path_buf
 

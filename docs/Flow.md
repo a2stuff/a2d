@@ -239,7 +239,7 @@ You can write:
 
 Function calls are another control flow mechanism, and the library provides another set of statements to improve readability and maintainability.
 
-The syntax here allows specifying register and flag states in the same line as a `JSR` subroutine call (for arguments) or `RTS` subroutine return (for return values) by providing a list of _reg_ = _value_ pairs. Registers can be simple registers (`A`, `X`, `Y`), common register pairs for 16-bit values (`AX`, `AY`, `XY`, `YA`), and flags (`C`, `D`) which can be set to 0 or 1.
+The new micro-syntax here allows specifying register and flag states in the same line as a `JSR` subroutine call (for arguments) or `RTS` subroutine return (for return values) by providing a list of _reg_ = _value_ pairs. Registers can be simple registers (`A`, `X`, `Y`), common register pairs for 16-bit values (`AX`, `AY`, `XY`, `YA`), and flags (`C`, `D`) which can be set to 0 or 1.
 
 For indexed loads, surround the argument with `{` `}`, e.g. `CALL CRC, {AX=proc_table,y}, Y=#kChecksumLength`.
 
@@ -274,11 +274,11 @@ And finally, it is common to let one procedure simply "fall through" to a subseq
 
 Reusing the same type-prefixed syntax from typed conditions, `SET` expressions can be used:
 ```
-   SET u16 varA = varB          ; same as copy16 varB, varA
-   SET u16 varA += varB         ; same as add16 varA, varB, varA
-   SET u16 varA -= varB         ; same as sub16 varA, varB, varA
-   SET u16 varA = varB + varC   ; same as add16 varB, varC, varA
-   SET u16 varA = varB - varC   ; same as sub16 varB, varC, varA
+  SET u16 varA = varB          ; same as copy16 varB, varA
+  SET u16 varA += varB         ; same as add16 varA, varB, varA
+  SET u16 varA -= varB         ; same as sub16 varA, varB, varA
+  SET u16 varA = varB + varC   ; same as add16 varB, varC, varA
+  SET u16 varA = varB - varC   ; same as sub16 varB, varC, varA
 ```
 ... and similarly with `u8`, `s16`, `u24`, and `u32` types.
 
@@ -294,8 +294,8 @@ For `u16`/`s16`, the register pair `AX` and `XY` can be used as the source or ta
 
 Shift-assignments are supported as well, with several caveats:
 ```
-   SET u16 varA <<= #const
-   SET u16 varA >>= #const
+  SET u16 varA <<= #const
+  SET u16 varA >>= #const
 ```
 The shift count *must* be what ca65 considers a constant so that the value is known at assemble-time. If the value is 1 then just an `asl16` (etc) is emitted, otherwise a loop using the `X` register is emitted. Append `, USE_Y` to the statement to use the `Y` register instead.
 
@@ -304,5 +304,13 @@ The count is required to be immediate mode (i.e. prefixed with `#`) to dissuade 
 ## Extras
 
 The `RTS_IF` statement is the odd one out; it allows conditional returning from a procedure. Note that it doesn't support register loads.
+```
+  RTS_IF condition
+```
 
-`RTS_IF condition`
+For more power, there is this form which combines the condition micro-syntax with the register loading micro-syntax:
+```
+  IF condition RETURN args, ...
+```
+
+

@@ -892,9 +892,8 @@ ignore: RETURN  A=#$FF
 
 .proc HandleMenuSelection
         ldx     menuselect_params::menu_id
-    IF ZERO
-        RETURN  A=#$FF
-    END_IF
+        IF ZERO \
+          RETURN A=#$FF
 
         ;; Compute offset into command table - menu offset + item offset
         lda     menuselect_params::menu_item ; menu item index is 1-based
@@ -969,9 +968,8 @@ CmdDiskCopy := SetCopyModeImpl::disk_copy
         jmp     HandleMenuSelection
     END_IF
 
-    IF A <> #MGTK::Area::content
-        RETURN  A=#$FF
-    END_IF
+        IF A <> #MGTK::Area::content \
+          RETURN A=#$FF
 
         lda     findwindow_params::window_id
         cmp     #winfo_dialog::kWindowId
@@ -1142,9 +1140,9 @@ match:  RETURN  C=0
 ;;; Output: C=0 if DOS 3.3 volume, C=1 otherwise
 
 .proc IsDOS33BootBlock
-    IF u8 default_block_buffer+1 <> #$A5 OR u8 default_block_buffer+2 <> #$27
-        RETURN  C=1
-    END_IF
+        IF u8 default_block_buffer+1 <> #$A5 OR u8 default_block_buffer+2 <> #$27 \
+          RETURN  C=1
+
         RETURN  C=0
 .endproc ; IsDOS33BootBlock
 

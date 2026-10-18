@@ -968,9 +968,9 @@ label_downarrow:
 .endproc ; UpdateOptionButtons
 
 .proc ZToButtonState
-    IF ZC
-        RETURN  A=#BTK::kButtonStateNormal
-    END_IF
+        IF ZC \
+          RETURN A=#BTK::kButtonStateNormal
+
         RETURN  A=#BTK::kButtonStateChecked
 .endproc ; ZToButtonState
 

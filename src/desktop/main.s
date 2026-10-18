@@ -3122,9 +3122,8 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
 .proc SelectFileIconByName
         CALL    FindIconByName, Y=active_window_id
-    IF ZERO                     ; not found
-        RETURN  C=1
-    END_IF
+        IF ZERO \
+          RETURN C=1            ; not found
 
         jsr     SelectIconAndEnsureVisible
         RETURN  C=0
@@ -5607,9 +5606,8 @@ alert:  jmp     ShowAlert       ; either `ERR_INVALID_PATHNAME` or `ERR_FILE_NOT
         jsr     _TryActivateReloadAndRefreshWindow
         pla                     ; A = window id
 
-    IF bit exception_flag : NC
-        RETURN  A=#0
-    END_IF
+        IF bit exception_flag : NC \
+          RETURN A=#0
 
         jsr     CloseWindow ; A = window id
         RETURN  A=#$FF
@@ -5941,9 +5939,9 @@ validate_windows_flag:
 ;;; return zero.
 ;;; Z=0 and A=icon num if only one, Z=0 and A=0 otherwise
 .proc GetSingleSelectedIcon
-    IF u8 selected_icon_count <> #1
-        RETURN  A=#0
-    END_IF
+        IF u8 selected_icon_count <> #1 \
+          RETURN A=#0
+
         RETURN  A=selected_icon_list
 .endproc ; GetSingleSelectedIcon
 
@@ -7435,9 +7433,8 @@ CreateFileRecordsForRefreshedWindow := CreateFileRecordsForWindowImpl::refresh_w
         pla                     ; A = original length
         sta     src_path_buf
 
-    IF CS
-        RETURN  A=#$FF          ; failure
-    END_IF
+        IF CS \
+          RETURN A=#$FF         ; failure
 
         ;; aux = total blocks
         copy16  src_file_info_params::blocks_used, vol_blocks_used
@@ -8792,9 +8789,8 @@ start:
         sta     block_params::unit_num
 
         ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM
-    IF A IN #kRamDrvSystemUnitNum, #kRamAuxSystemUnitNum
-        RETURN  AX=#str_device_type_ramdisk, Y=#IconType::ramdisk
-    END_IF
+        IF A IN #kRamDrvSystemUnitNum, #kRamAuxSystemUnitNum \
+          RETURN AX=#str_device_type_ramdisk, Y=#IconType::ramdisk
 
         ;; Special case for VEDRIVE
         jsr     DeviceDriverAddress
@@ -8814,9 +8810,8 @@ vdrive: RETURN  AX=#str_device_type_vdrive, Y=#IconType::fileshare
         ;; Is Disk II? A dedicated test that takes advantage of the
         ;; fact that Disk II devices are never remapped.
         CALL    IsDiskII, A=block_params::unit_num
-    IF ZS
-        RETURN  AX=#str_device_type_diskii, Y=#IconType::floppy140
-    END_IF
+        IF ZS \
+          RETURN AX=#str_device_type_diskii, Y=#IconType::floppy140
 
         ;; Look up driver address
         CALL    DeviceDriverAddress, A=block_params::unit_num ; Z=1 if $Cn
@@ -8893,12 +8888,13 @@ done_adjust_case:
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer+SPDIB::Device_Type_Code
         ASSERT_EQUALS SPDeviceType::MemoryExpansionCard, 0
-    IF ZERO                     ; $00 = Memory Expansion Card (RAM Disk)
-        RETURN  AX=#dib_buffer+SPDIB::ID_String_Length, Y=#IconType::ramdisk
-    END_IF
+        ;; $00 = Memory Expansion Card (RAM Disk)
+        IF ZERO \
+          RETURN  AX=#dib_buffer+SPDIB::ID_String_Length, Y=#IconType::ramdisk
 
-        cmp     #SPDeviceType::SCSICDROM
-        bne     test_size
+        IF A <> #SPDeviceType::SCSICDROM \
+          GOTO test_size
+
         RETURN  AX=#dib_buffer+SPDIB::ID_String_Length, Y=#IconType::cdrom
 
         ;; NOTE: Codes for 3.5" disk ($01) and 5-1/4" disk ($0A) are not trusted
@@ -8909,9 +8905,8 @@ done_adjust_case:
 not_sp:
         ;; Not SmartPort - try AppleTalk
         MLI_CALL READ_BLOCK, block_params
-    IF A = #ERR_NETWORK_ERROR
-        RETURN  AX=#str_device_type_appletalk, Y=#IconType::fileshare
-    END_IF
+        IF A = #ERR_NETWORK_ERROR \
+          RETURN AX=#str_device_type_appletalk, Y=#IconType::fileshare
 
         ;; RAM-based driver or not SmartPort
 generic:
@@ -10497,9 +10492,8 @@ retry:  MLI_CALL GET_FILE_INFO, dst_file_info_params
         ;; Copying a volume? If so, `src_file_info_params` has total
         ;; blocks used on the volume, which isn't useful for an
         ;; incremental copy.
-    IF u8 src_file_info_params::storage_type = #ST_VOLUME_DIRECTORY
-        RETURN  C=0
-    END_IF
+        IF u8 src_file_info_params::storage_type = #ST_VOLUME_DIRECTORY \
+          RETURN C=0
 
         ;; --------------------------------------------------
         ;; Check how much space might be reclaimed if we're
@@ -12532,14 +12526,12 @@ DoRename        := DoRenameImpl::start
 .proc _ClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-    IF A <> #MGTK::Area::content
-        RETURN  A=#PromptResult::ok
-    END_IF
+        IF A <> #MGTK::Area::content \
+          RETURN A=#PromptResult::ok
 
         lda     findwindow_params::window_id
-    IF A <> #winfo_rename_dialog::kWindowId
-        RETURN  A=#PromptResult::ok
-    END_IF
+        IF A <> #winfo_rename_dialog::kWindowId \
+          RETURN A=#PromptResult::ok
 
         copy8   winfo_rename_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -12561,13 +12553,11 @@ DoRename        := DoRenameImpl::start
         bne     allow           ; pass through modified keys
 
         ;; No modifiers
-    IF A = #CHAR_RETURN
-        RETURN  A=#PromptResult::ok
-    END_IF
+        IF A = #CHAR_RETURN \
+          RETURN A=#PromptResult::ok
 
-    IF A = #CHAR_ESCAPE
-        RETURN  A=#PromptResult::cancel
-    END_IF
+        IF A = #CHAR_ESCAPE \
+          RETURN A=#PromptResult::cancel
 
         jsr     IsControlChar   ; pass through control characters
         bcc     allow
@@ -13493,13 +13483,11 @@ found_slash:
 
 .proc _ClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
-    IF u8 findwindow_params::which_area <> #MGTK::Area::content
-        RETURN  A=#$FF
-    END_IF
+        IF u8 findwindow_params::which_area <> #MGTK::Area::content \
+          RETURN A=#$FF
 
-    IF u8 findwindow_params::window_id <> #winfo_prompt_dialog::kWindowId
-        RETURN  A=#$FF
-    END_IF
+        IF u8 findwindow_params::window_id <> #winfo_prompt_dialog::kWindowId \
+          RETURN A=#$FF
 
         copy8   winfo_prompt_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -13596,9 +13584,9 @@ KeyHookRelay:
 
 .proc _HandleKeyOK
         BTK_CALL BTK::Flash, ok_button
-    IF NS
-        RETURN  A=#$FF          ; ignore
-    END_IF
+        IF NS \
+          RETURN A=#$FF          ; ignore
+
         RETURN  A=#PromptResult::ok
 .endproc ; _HandleKeyOK
 
@@ -13967,9 +13955,8 @@ kEntriesPerBlock = $0D
     WHILE dey : NOT_ZERO
 
         dey                     ; length not including '/'
-    IF ZERO
-        RETURN  C=1             ; was a volume path - failure
-    END_IF
+        IF ZERO \
+          RETURN C=1            ; was a volume path - failure
 
         tya
         pha                     ; A = new path length

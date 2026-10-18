@@ -1100,9 +1100,8 @@ ExitReReadTOC:
 
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
-      IF u8 event_params::kind <> #MGTK::EventKind::button_up
-        RETURN  A=#$FF          ; N=1
-      END_IF
+        IF u8 event_params::kind <> #MGTK::EventKind::button_up \
+          RETURN  A=#$FF          ; N=1
     END_IF
 
         RETURN  A=#$00          ; N=0

@@ -586,9 +586,8 @@ file_char:
         RETURN  A=#0
 
 .proc _FindMatch
-    IF u8 num_file_names = #0
-        RETURN  A=#$FF
-    END_IF
+        IF u8 num_file_names = #0 \
+          RETURN A=#$FF
 
         copy8   #0, index
     DO
