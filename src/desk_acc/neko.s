@@ -394,7 +394,7 @@ ep_size := * - ep_start
 
 .proc InputLoop
     REPEAT
-        jsr JUMP_TABLE_SYSTEM_TASK
+        jsr     JUMP_TABLE_SYSTEM_TASK
 
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
@@ -433,7 +433,7 @@ ep_size := * - ep_start
         pla
         pla
         JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
-        jmp JUMP_TABLE_CLEAR_UPDATES
+        jmp     JUMP_TABLE_CLEAR_UPDATES
 .endproc ; Exit
 
 ;;; ============================================================
@@ -744,11 +744,11 @@ new_state:
         ;; ------------------------------
         ;; IF A = #NekoState::sleep
         ;; ------------------------------
-      IF u8 dir <> #0
+    IF u8 dir <> #0
         ldx     #NekoState::chase
         lda     #NekoFrame::surprise
         bne     set_state_and_frame ; always
-      END_IF
+    END_IF
         lda     cur_frame
         eor     #1
         bne     set_frame       ; always

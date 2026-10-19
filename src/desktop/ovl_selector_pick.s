@@ -894,6 +894,7 @@ rest:
         REDO_IF EQ
         bne     failed          ; always
       END_IF
+    DONE
 
         ;; Destroy existing settings file if necessary
         ;; This is to catch write failures before the file `OPEN`, as

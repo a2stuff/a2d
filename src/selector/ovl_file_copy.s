@@ -251,7 +251,7 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
         ;; Copy `src_path` to `pathname_src`
         ldy     src_path
     DO
-        copy8    src_path,y, pathname_src,y
+        copy8   src_path,y, pathname_src,y
     WHILE dey : POS
 
         ;; Copy `dst_path` to `pathname_dst`

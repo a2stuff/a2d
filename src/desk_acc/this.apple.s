@@ -1551,23 +1551,23 @@ ret:    rts
 .endmacro
 
         ;; Specific Apple cards/built-ins
-    IF_SIGNATURE_THEN_RETURN $31, str_ssc
-    IF_SIGNATURE_THEN_RETURN $88, str_80col
-    IF_SIGNATURE_THEN_RETURN $20, str_mouse
-    IF_SIGNATURE_THEN_RETURN $14, str_grappler
-    IF_SIGNATURE_THEN_RETURN $41, str_applecat
+        IF_SIGNATURE_THEN_RETURN $31, str_ssc
+        IF_SIGNATURE_THEN_RETURN $88, str_80col
+        IF_SIGNATURE_THEN_RETURN $20, str_mouse
+        IF_SIGNATURE_THEN_RETURN $14, str_grappler
+        IF_SIGNATURE_THEN_RETURN $41, str_applecat
 
         ;; Generic cards
         and     #$F0            ; just device class nibble
-    IF_SIGNATURE_THEN_RETURN $10, str_printer
-    IF_SIGNATURE_THEN_RETURN $20, str_joystick
-    IF_SIGNATURE_THEN_RETURN $30, str_io
-    IF_SIGNATURE_THEN_RETURN $40, str_modem
-    IF_SIGNATURE_THEN_RETURN $50, str_audio
-    IF_SIGNATURE_THEN_RETURN $60, str_clock
-    IF_SIGNATURE_THEN_RETURN $70, str_storage
-    IF_SIGNATURE_THEN_RETURN $80, str_80col
-    IF_SIGNATURE_THEN_RETURN $90, str_network
+        IF_SIGNATURE_THEN_RETURN $10, str_printer
+        IF_SIGNATURE_THEN_RETURN $20, str_joystick
+        IF_SIGNATURE_THEN_RETURN $30, str_io
+        IF_SIGNATURE_THEN_RETURN $40, str_modem
+        IF_SIGNATURE_THEN_RETURN $50, str_audio
+        IF_SIGNATURE_THEN_RETURN $60, str_clock
+        IF_SIGNATURE_THEN_RETURN $70, str_storage
+        IF_SIGNATURE_THEN_RETURN $80, str_80col
+        IF_SIGNATURE_THEN_RETURN $90, str_network
 
         ;; Pascal Firmware, but unknown type. Return
         ;; "unknown" otherwise it will be detected as serial below.
@@ -1891,9 +1891,9 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         tmp := $06
         copy16  memory, tmp
         ldy     #6
-      DO
+    DO
         asl16   tmp             ; * 64
-      WHILE dey : NOT_ZERO
+    WHILE dey : NOT_ZERO
         CALL    IntToStringWithSeparators, AX=tmp
         CALL    AppendMemorySuffix, AX=#str_memory_kb_suffix
         COPY_STRING str_from_int, str_ramworks_memory
@@ -1920,7 +1920,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
         SET_BIT7_FLAG memory_is_mb_flag
     END_IF
 
-        CALL IntToStringWithSeparators, AX=memory
+        CALL    IntToStringWithSeparators, AX=memory
     IF bit memory_is_mb_flag : NS
         CALL    AppendMemorySuffix, AX=#str_memory_mb_suffix
     ELSE
@@ -2236,7 +2236,7 @@ p6502:  RETURN  AX=#str_6502
 p658xx: jsr     IsIIgs
         IF CC \
           RETURN AX=#str_65816  ; Only IIgs supports 65816
-        RETURN AX=#str_65802    ; Other boards support 65802
+        RETURN  AX=#str_65802   ; Other boards support 65802
 .endproc ; CPUId
 
 ;;; ============================================================

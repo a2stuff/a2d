@@ -4810,7 +4810,7 @@ _PreamblePreCached:
 .endproc ; PageDown
 
 .proc _Page_hi
-        add16 viewport+MGTK::Rect::bottomright,x, viewport_size,x, viewport+MGTK::Rect::bottomright,x
+        add16   viewport+MGTK::Rect::bottomright,x, viewport_size,x, viewport+MGTK::Rect::bottomright,x
         rts
 .endproc ; _Page_hi
 
@@ -6884,7 +6884,7 @@ done:
         ;; clipped port.
 
         jsr     UnsafeSetPortForWindowIdAndAdjustForEntries ; CHECKED
-        RTS_IF NOT_ZERO         ; obscured
+        RTS_IF NOT_ZERO                                     ; obscured
 
         jsr     PushPointers
         jsr     CacheActiveWindowIconList
@@ -6893,22 +6893,22 @@ done:
         COPY_STRUCT MGTK::Rect, window_grafport+MGTK::GrafPort::maprect, tmp_rect
 
         ldx     #0
-       DO
+      DO
         txa
         pha                     ; A = index
 
         copy8   selected_icon_list,x, icon_param
 
         ITK_CALL IconTK::IconInRect, icon_param
-        IF NOT ZERO
+       IF NOT ZERO
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
-        ELSE
+       ELSE
         jsr     CheckEvents
-        END_IF
+       END_IF
 
         pla                     ; A = index
         tax
-       WHILE inx : X <> selected_icon_count
+      WHILE inx : X <> selected_icon_count
 
         jsr     CachedIconsWindowToScreen
         jsr     PopPointers     ; do not tail-call optimize!
@@ -11264,11 +11264,11 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         ;; Locked?
         lda     src_file_info_params::access
         and     #ACCESS_DEFAULT
-      IF A = #ACCESS_DEFAULT
+    IF A = #ACCESS_DEFAULT
         ;; Already unlocked, so we just fail with unknown error.
         ;; TODO: If it's a directory, this could be because it's not empty,
         TAIL_CALL ShowErrorAlert, A=#kErrUnknown
-      END_IF
+    END_IF
 
         bit     operations::all_flag
         bmi     unlock
@@ -12993,7 +12993,7 @@ ok:     RETURN  A=#0
 ;;; Uses `DIR_READ_DATA_BUFFER` and `IO_BUFFER`
 .proc ExecuteStartupItems
         ;; Does the directory exist?
-        CALL GetFileInfo, AX=#str_startup_items
+        CALL    GetFileInfo, AX=#str_startup_items
         RTS_IF CS
         RTS_IF u8 file_info_params::file_type <> #FT_DIRECTORY
 

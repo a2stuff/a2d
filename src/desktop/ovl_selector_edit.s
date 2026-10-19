@@ -179,11 +179,11 @@ len:    .byte   0
         MGTK_CALL MGTK::MoveTo, screentowindow_params+MGTK::ScreenToWindowParams::window
         MGTK_CALL MGTK::InRect, shortcut_dialog_res::line_edit_rect
         ASSERT_EQUALS MGTK::inrect_outside, 0
-       IF NOT ZERO
+      IF NOT ZERO
         jsr     main::SetCursorIBeam
-       ELSE
+      ELSE
         jsr     main::SetCursorPointer
-       END_IF
+      END_IF
 
         FALL_THROUGH_TO consume
     END_IF
@@ -358,7 +358,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
     IF u8 which_run_list <> #kRunListSecondary
         CALL    UpdateRunListButton, C=0
         copy8   #kRunListSecondary, which_run_list
-	CALL    UpdateRunListButton, C=1
+        CALL    UpdateRunListButton, C=1
     END_IF
         RETURN  A=#$FF
 .endproc ; ClickSecondaryRunListCtrl

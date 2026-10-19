@@ -856,13 +856,13 @@ menu_offset_table:
 
 .proc HandleKey
         lda     event_params::key
-      IF A IN #CHAR_UP, #CHAR_DOWN
+    IF A IN #CHAR_UP, #CHAR_DOWN
         sta     lb_params::key
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
         jsr     UpdateOKButton
         RETURN  A=#$FF
-      END_IF
+    END_IF
 
     IF u8 event_params::modifiers = #0
       IF u8 event_params::key <> #CHAR_ESCAPE
@@ -1116,9 +1116,9 @@ params: .res    3
         ldy     #0
         lda     (src_ptr),y
         tay
-      DO
+    DO
         copy8   (src_ptr),y, (dst_ptr),y
-      WHILE dey : POS
+    WHILE dey : POS
         rts
 .endproc ; AssignDriveName
 

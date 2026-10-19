@@ -386,7 +386,7 @@ search:
 
         ;; And invoke it!
         ldy     num_entries     ; A,X are trashed by macro
-        JSR_TO_MAIN  ::main::RecursiveCatalog::Start
+        JSR_TO_MAIN ::main::RecursiveCatalog::Start
         sty     num_entries
         sty     lb_params::new_size
         LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
@@ -582,7 +582,7 @@ NoOp:   rts
         asl16   offset
     WHILE dex : NOT_ZERO
 
-        add16_8 offset, num ; offset += num, so * 65
+        add16_8 offset, num     ; offset += num, so * 65
         add16   offset, #::main::entries_buffer, offset
 
         RETURN  AX=offset

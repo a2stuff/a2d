@@ -570,12 +570,12 @@ skip_erase_flag:        .byte   0 ; bit7
         SET s16 rect+MGTK::Rect::x1 = (inner_oval+OvalRec::rightEdge+2)
         SET s16 rect+MGTK::Rect::x2 = (outer_oval+OvalRec::rightEdge+2)
         MGTK_CALL MGTK::PaintRect, rect
-     ELSE
+      ELSE
          ;; Only need to draw the outer oval
         SET s16 rect+MGTK::Rect::x1 = (outer_oval+OvalRec::leftEdge+2)
         SET s16 rect+MGTK::Rect::x2 = (outer_oval+OvalRec::rightEdge+2)
         MGTK_CALL MGTK::PaintRect, rect
-     END_IF
+      END_IF
 
     WHILE u16 ++yy < outer_oval+OvalRec::bottom
 
@@ -622,13 +622,13 @@ ppy:    .word   0
         FAC_STORE       cyf
 
         ;; pupil shouldn't overlap border
-        sub16  rx, #kPenW, tmpw
-        sub16  tmpw, #kPupilW, tmpw
+        sub16   rx, #kPenW, tmpw
+        sub16   tmpw, #kPupilW, tmpw
         FAC_LOAD_INT tmpw
         FAC_STORE prx
 
-        sub16  ry, #kPenH, tmpw
-        sub16  tmpw, #kPupilH, tmpw
+        sub16   ry, #kPenH, tmpw
+        sub16   tmpw, #kPupilH, tmpw
         FAC_LOAD_INT    tmpw
         FAC_STORE       pry
 
@@ -665,14 +665,14 @@ ppy:    .word   0
         FAC_MUL         dy
         FAC_ADD         tmpf
 
-        jsr             SQR
+        jsr     SQR
 
         ;; if d > pry:
         ;;   f = pry / d
         ;;   dx = f * dx
         ;;   dy = f * dy
 
-        FAC_COMP pry
+        FAC_COMP        pry
         bmi     skip
 
         FAC_DIV         pry     ; f = pry / d
@@ -958,8 +958,8 @@ rotate:
 
 .struct
         .org $10
-        d0     .word            ; [16.0]
-        temp   .dword
+        d0      .word           ; [16.0]
+        temp    .dword
 .endstruct
 
         ;; --------------------------------------------------

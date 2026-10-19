@@ -250,7 +250,7 @@ grafport_win:       .tag    MGTK::GrafPort
 .endproc ; Init
 
 .proc InputLoop
-     REPEAT
+    REPEAT
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
 
         MGTK_CALL MGTK::GetEvent, event_params
@@ -260,7 +260,7 @@ grafport_win:       .tag    MGTK::GrafPort
       ELSE_IF A = #MGTK::EventKind::key_down
         jsr     HandleKey
       END_IF
-     FOREVER
+    FOREVER
 .endproc ; InputLoop
 
 .proc Exit

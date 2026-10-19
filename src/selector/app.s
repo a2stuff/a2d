@@ -334,12 +334,12 @@ entry:
         ;; Any shortcuts?
         lda     num_secondary_run_list_entries
         ora     num_primary_run_list_entries
-   IF ZERO
+    IF ZERO
 quick_run_desktop:
         CALL    GetFileInfo, AX=#str_desktop_2
         bcs     done_keys
         jmp     RunDesktop
-   END_IF
+    END_IF
 
         ;; --------------------------------------------------
         ;; Check for key down

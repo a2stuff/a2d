@@ -113,179 +113,179 @@ reserved:       .byte   0
         DEFINE_RECT shield_rect, 0, 0, 0, 0
 
 bits_hidden:
-        PIXELS "................#"
-        PIXELS "....#...#...#...#"
-        PIXELS "..#...#...#...#.#"
-        PIXELS "....#...#...#...#"
-        PIXELS "..#...#...#...#.#"
-        PIXELS "....#...#...#...#"
-        PIXELS "..#...#...#...#.#"
-        PIXELS "....#...#...#...#"
-        PIXELS "#################"
+        PIXELS  "................#"
+        PIXELS  "....#...#...#...#"
+        PIXELS  "..#...#...#...#.#"
+        PIXELS  "....#...#...#...#"
+        PIXELS  "..#...#...#...#.#"
+        PIXELS  "....#...#...#...#"
+        PIXELS  "..#...#...#...#.#"
+        PIXELS  "....#...#...#...#"
+        PIXELS  "#################"
 .if 0
 bits_flag:
-        PIXELS "................."
-        PIXELS "...########......"
-        PIXELS "...########......"
-        PIXELS "...########......"
-        PIXELS ".........##......"
-        PIXELS ".........##......"
-        PIXELS ".........##......"
-        PIXELS ".......######...."
-        PIXELS "................."
+        PIXELS  "................."
+        PIXELS  "...########......"
+        PIXELS  "...########......"
+        PIXELS  "...########......"
+        PIXELS  ".........##......"
+        PIXELS  ".........##......"
+        PIXELS  ".........##......"
+        PIXELS  ".......######...."
+        PIXELS  "................."
 .endif
 bits_flag_precomposed:
-        PIXELS "................#"
-        PIXELS "...########.#...#"
-        PIXELS "..#########...#.#"
-        PIXELS "...########.#...#"
-        PIXELS "..#...#..##...#.#"
-        PIXELS "....#...###.#...#"
-        PIXELS "..#...#..##...#.#"
-        PIXELS "....#..######...#"
-        PIXELS "#################"
+        PIXELS  "................#"
+        PIXELS  "...########.#...#"
+        PIXELS  "..#########...#.#"
+        PIXELS  "...########.#...#"
+        PIXELS  "..#...#..##...#.#"
+        PIXELS  "....#...###.#...#"
+        PIXELS  "..#...#..##...#.#"
+        PIXELS  "....#..######...#"
+        PIXELS  "#################"
 .if 0
 bits_question:
-        PIXELS "................."
-        PIXELS "....########....."
-        PIXELS "...###....###...."
-        PIXELS "..........###...."
-        PIXELS "........###......"
-        PIXELS "......###........"
-        PIXELS "................."
-        PIXELS "......###........"
-        PIXELS "................."
+        PIXELS  "................."
+        PIXELS  "....########....."
+        PIXELS  "...###....###...."
+        PIXELS  "..........###...."
+        PIXELS  "........###......"
+        PIXELS  "......###........"
+        PIXELS  "................."
+        PIXELS  "......###........"
+        PIXELS  "................."
 .endif
 bits_question_precomposed:
-        PIXELS "................#"
-        PIXELS "....#########...#"
-        PIXELS "..#####...###.#.#"
-        PIXELS "....#...#.###...#"
-        PIXELS "..#...#.###...#.#"
-        PIXELS "....#.###...#...#"
-        PIXELS "..#...#...#...#.#"
-        PIXELS "....#.###...#...#"
-        PIXELS "#################"
+        PIXELS  "................#"
+        PIXELS  "....#########...#"
+        PIXELS  "..#####...###.#.#"
+        PIXELS  "....#...#.###...#"
+        PIXELS  "..#...#.###...#.#"
+        PIXELS  "....#.###...#...#"
+        PIXELS  "..#...#...#...#.#"
+        PIXELS  "....#.###...#...#"
+        PIXELS  "#################"
 bits_mine:
-        PIXELS "................."
-        PIXELS "....#...#...#...."
-        PIXELS ".....#######....."
-        PIXELS "....##.######...."
-        PIXELS "..###..########.."
-        PIXELS "....#########...."
-        PIXELS ".....#######....."
-        PIXELS "....#...#...#...."
-        PIXELS "................."
+        PIXELS  "................."
+        PIXELS  "....#...#...#...."
+        PIXELS  ".....#######....."
+        PIXELS  "....##.######...."
+        PIXELS  "..###..########.."
+        PIXELS  "....#########...."
+        PIXELS  ".....#######....."
+        PIXELS  "....#...#...#...."
+        PIXELS  "................."
 bits_mine_precomposed:
-        PIXELS "................#"
-        PIXELS "....#...#...#...#"
-        PIXELS "..#..#######..#.#"
-        PIXELS "....##.######...#"
-        PIXELS "..###.#########.#"
-        PIXELS "....#########...#"
-        PIXELS "..#..#######..#.#"
-        PIXELS "....#...#...#...#"
-        PIXELS "#################"
+        PIXELS  "................#"
+        PIXELS  "....#...#...#...#"
+        PIXELS  "..#..#######..#.#"
+        PIXELS  "....##.######...#"
+        PIXELS  "..###.#########.#"
+        PIXELS  "....#########...#"
+        PIXELS  "..#..#######..#.#"
+        PIXELS  "....#...#...#...#"
+        PIXELS  "#################"
 bits_x:
-        PIXELS "##.............##"
-        PIXELS "..##.........##.."
-        PIXELS "....##.....##...."
-        PIXELS "......##.##......"
-        PIXELS ".......###......."
-        PIXELS "......##.##......"
-        PIXELS "....##.....##...."
-        PIXELS "..##.........##.."
-        PIXELS "##.............##"
+        PIXELS  "##.............##"
+        PIXELS  "..##.........##.."
+        PIXELS  "....##.....##...."
+        PIXELS  "......##.##......"
+        PIXELS  ".......###......."
+        PIXELS  "......##.##......"
+        PIXELS  "....##.....##...."
+        PIXELS  "..##.........##.."
+        PIXELS  "##.............##"
 bits_0:
-        PIXELS "................."
-        PIXELS "................#"
-        PIXELS "................."
-        PIXELS "................#"
-        PIXELS "................."
-        PIXELS "................#"
-        PIXELS "................."
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  "................#"
+        PIXELS  "................."
+        PIXELS  "................#"
+        PIXELS  "................."
+        PIXELS  "................#"
+        PIXELS  "................."
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_1:
-        PIXELS "................."
-        PIXELS ".......##.......#"
-        PIXELS "......###........"
-        PIXELS ".......##.......#"
-        PIXELS ".......##........"
-        PIXELS ".......##.......#"
-        PIXELS ".....######......"
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  ".......##.......#"
+        PIXELS  "......###........"
+        PIXELS  ".......##.......#"
+        PIXELS  ".......##........"
+        PIXELS  ".......##.......#"
+        PIXELS  ".....######......"
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_2:
-        PIXELS "................."
-        PIXELS ".....######.....#"
-        PIXELS "....##....##....."
-        PIXELS "........###.....#"
-        PIXELS "......### ......."
-        PIXELS "....###.........#"
-        PIXELS "....########....."
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  ".....######.....#"
+        PIXELS  "....##....##....."
+        PIXELS  "........###.....#"
+        PIXELS  "......### ......."
+        PIXELS  "....###.........#"
+        PIXELS  "....########....."
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_3:
-        PIXELS "................."
-        PIXELS "....#######.....#"
-        PIXELS "..........##....."
-        PIXELS ".......####.....#"
-        PIXELS "..........##....."
-        PIXELS "..........##....#"
-        PIXELS "....#######......"
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  "....#######.....#"
+        PIXELS  "..........##....."
+        PIXELS  ".......####.....#"
+        PIXELS  "..........##....."
+        PIXELS  "..........##....#"
+        PIXELS  "....#######......"
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_4:
-        PIXELS "................."
-        PIXELS ".........##.....#"
-        PIXELS "....##...##......"
-        PIXELS "....##...##.....#"
-        PIXELS "....########....."
-        PIXELS ".........##.....#"
-        PIXELS ".........##......"
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  ".........##.....#"
+        PIXELS  "....##...##......"
+        PIXELS  "....##...##.....#"
+        PIXELS  "....########....."
+        PIXELS  ".........##.....#"
+        PIXELS  ".........##......"
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_5:
-        PIXELS "................."
-        PIXELS "....########....#"
-        PIXELS "....##..........."
-        PIXELS "....#######.....#"
-        PIXELS "..........##....."
-        PIXELS "....##....##....#"
-        PIXELS ".....######......"
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  "....########....#"
+        PIXELS  "....##..........."
+        PIXELS  "....#######.....#"
+        PIXELS  "..........##....."
+        PIXELS  "....##....##....#"
+        PIXELS  ".....######......"
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_6:
-        PIXELS "................."
-        PIXELS ".....#####......#"
-        PIXELS "....##..........."
-        PIXELS "....#######.....#"
-        PIXELS "....##....##....."
-        PIXELS "....##....##....#"
-        PIXELS ".....######......"
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  ".....#####......#"
+        PIXELS  "....##..........."
+        PIXELS  "....#######.....#"
+        PIXELS  "....##....##....."
+        PIXELS  "....##....##....#"
+        PIXELS  ".....######......"
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_7:
-        PIXELS "................."
-        PIXELS "....########....#"
-        PIXELS "..........##....."
-        PIXELS ".........##.....#"
-        PIXELS "........##......."
-        PIXELS ".......##.......#"
-        PIXELS ".......##........"
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  "....########....#"
+        PIXELS  "..........##....."
+        PIXELS  ".........##.....#"
+        PIXELS  "........##......."
+        PIXELS  ".......##.......#"
+        PIXELS  ".......##........"
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 bits_8:
-        PIXELS "................."
-        PIXELS ".....######.....#"
-        PIXELS "....##....##....."
-        PIXELS ".....######.....#"
-        PIXELS "....##....##....."
-        PIXELS "....##....##....#"
-        PIXELS ".....######......"
-        PIXELS "................#"
-        PIXELS "..#...#...#...#.."
+        PIXELS  "................."
+        PIXELS  ".....######.....#"
+        PIXELS  "....##....##....."
+        PIXELS  ".....######.....#"
+        PIXELS  "....##....##....."
+        PIXELS  "....##....##....#"
+        PIXELS  ".....######......"
+        PIXELS  "................#"
+        PIXELS  "..#...#...#...#.."
 
 num_table:
         .addr   bits_0, bits_1, bits_2, bits_3, bits_4, bits_5, bits_6, bits_7, bits_8
@@ -445,22 +445,22 @@ game_over_flag: .byte   0       ; bit7
         ycoord := screentowindow_params::windowy
 
         ;; NOTE: `sub16` is used not `sub16_8` so that N flag is set
-        sub16  xcoord, #kHPadding, xcoord
+        sub16   xcoord, #kHPadding, xcoord
         RTS_IF NEG
         ldx     #AS_BYTE{-1}
-      DO
+    DO
         inx
-        sub16  xcoord, #kTileWidth, xcoord
-      WHILE POS
+        sub16   xcoord, #kTileWidth, xcoord
+    WHILE POS
         RTS_IF X >= #kBoardWidth
 
         sub16   ycoord, #kVPadding, ycoord
         RTS_IF NEG
         ldy     #AS_BYTE{-1}
-      DO
+    DO
         iny
         sub16   ycoord, #kTileHeight, ycoord
-      WHILE POS
+    WHILE POS
         RTS_IF Y >= #kBoardHeight
 
         ;; ----------------------------------------
@@ -1034,29 +1034,29 @@ new_state_table:
         and     #kCellMine | kCellFlagsMask
 
         bit     game_over_flag
-      IF NS
-       IF A = #kCellMine
+    IF NS
+      IF A = #kCellMine
         TAIL_CALL _Draw, AX=#bits_mine_precomposed
-       END_IF
       END_IF
+    END_IF
 
         and     #kCellFlagsMask
 
-      IF A = #kCellUnknown
+    IF A = #kCellUnknown
         TAIL_CALL _Draw, AX=#bits_hidden
-      END_IF
+    END_IF
 
-      IF A = #kCellFlag
+    IF A = #kCellFlag
         TAIL_CALL _Draw, AX=#bits_flag_precomposed
-      END_IF
+    END_IF
 
-      IF A = #kCellQuestion
+    IF A = #kCellQuestion
         TAIL_CALL _Draw, AX=#bits_question_precomposed
-      END_IF
+    END_IF
 
-      IF A = #kCellX
+    IF A = #kCellX
         TAIL_CALL _Draw, AX=#bits_x
-      END_IF
+    END_IF
 
         ;; Assert: Unreached
         brk
@@ -1079,7 +1079,7 @@ new_state_table:
         ;; Init board to empty
 
         INVOKE_WITH_LAMBDA IterateBoard
-        RETURN A=#kCellUnknown
+        RETURN  A=#kCellUnknown
         END_OF_LAMBDA
 
         copy16  #kBoardWidth * kBoardHeight, num_hidden

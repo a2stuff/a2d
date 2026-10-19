@@ -294,7 +294,7 @@ finish:
 ;;; ============================================================
 
 .proc HandleNoEvent
-        TAIL_CALL       AnimateObjects
+        TAIL_CALL AnimateObjects
 .endproc ; HandleNoEvent
 
 ;;; ============================================================

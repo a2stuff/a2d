@@ -1581,7 +1581,7 @@ caret_blink_speed: .word   0
 caret_blink_speed: .word   0
 .endproc ; HandleCaretBlinkClick
 
-        .proc ResetCaretBlinkCounter
+.proc ResetCaretBlinkCounter
         CALL    ReadSettingWord, X=#DeskTopSettings::caret_blink_speed
         stax    caret_blink_counter
         rts
