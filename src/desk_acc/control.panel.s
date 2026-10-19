@@ -1030,7 +1030,7 @@ notpencopy:     .byte   MGTK::notpencopy
       WHILE dey : POS
 
         MGTK_CALL MGTK::PaintBits, darrow_params
-        add16_8 addr, #.sizeof(MGTK::Point)
+        SET u16 addr += u8 #.sizeof(MGTK::Point)
     WHILE u8 ++arrow_num <> #kNumArrows
 .endscope
 
@@ -1257,16 +1257,16 @@ zero:   lda     #MGTK::notpencopy
         ;; next x
         inc     xpos
     IF u8 xpos <> #8
-        add16_8 bitrect::x1, #kFatBitWidth
-        add16_8 bitrect::x2, #kFatBitWidth
+        SET u16 bitrect::x1 += u8 #kFatBitWidth
+        SET u16 bitrect::x2 += u8 #kFatBitWidth
         jmp     xloop
     END_IF
 
         ;; next y
         inc     ypos
     IF u8 ypos <> #8
-        add16_8 bitrect::y1, #kFatBitHeight
-        add16_8 bitrect::y2, #kFatBitHeight
+        SET u16 bitrect::y1 += u8 #kFatBitHeight
+        SET u16 bitrect::y2 += u8 #kFatBitHeight
         jmp     yloop
     END_IF
 

@@ -290,7 +290,10 @@ Use parentheses (`(`, `)`) to disambiguate the binary operator when using an off
 
 There is no difference between `s16` and `u16` for typed assignment since signed numbers are represented as two's complement, but both are supported for readability and consistency with [typed comparisons](#typed-comparisons).
 
-For `u16`/`s16`, the register pair `AX` and `XY` can be used as the source or target for simple assignments, or the rightmost value for additions/subtractions.
+For `u16`/`s16` there are a few special cases:
+
+* The register pair `AX` and `XY` can be used as the source or target for simple assignments, or the rightmost value for additions/subtractions.
+* The rightmost value for additions and subtractions can be prefixed with `u8` to specify an 8-bit argument. For immediate mode values this generates smaller code.
 
 Shift-assignments are supported as well, with several caveats:
 ```

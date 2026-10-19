@@ -502,25 +502,49 @@
         .undef f2_tmp
 .endmacro
 
+;;; Consume a token from `f2_token_list`, append to `f2_lhs`
+.macro F2_PARSE_CONSUME_TO_LHS
+        .define f2_tmp f2_lhs
+        .undef f2_lhs
+        .define f2_lhs f2_tmp .left(1, {f2_token_list})
+        .undef f2_tmp
+        F2_PARSE_CONSUME
+.endmacro
+
+;;; Consume a token from `f2_lhs`
+.macro F2_PARSE_CONSUME_LHS
+        .define f2_tmp .mid(1, 9999, {f2_lhs})
+        .undef f2_lhs
+        .define f2_lhs f2_tmp
+        .undef f2_tmp
+        F2_PARSE_CONSUME
+.endmacro
+
+;;; Consume a token from `f2_rhs`
+.macro F2_PARSE_CONSUME_RHS
+        .define f2_tmp .mid(1, 9999, {f2_rhs})
+        .undef f2_rhs
+        .define f2_rhs f2_tmp
+        .undef f2_tmp
+        F2_PARSE_CONSUME
+.endmacro
+
+
 ;;; Parse `f2_token_list` up to a comparison operator (=, <>, <, <=, >, >=); defines `f2_lhs` (caller must .undef it)
 .define _f2_is_compare_op(arg) .xmatch({arg}, =) || .xmatch({arg}, <>) || .xmatch({arg}, <) || .xmatch({arg}, <=) || .xmatch({arg}, >) || .xmatch({arg}, >=)
-.macro F2_PARSE_LHS
+.macro F2_PARSE_COMPEXPR_LHS
         F2_CHECK_BAD_PREFIX_OP
         .define f2_lhs
-        F2_PARSE_LHS2
+        F2_PARSE_COMPEXPR_LHS2
 .endmacro
-.macro F2_PARSE_LHS2
+.macro F2_PARSE_COMPEXPR_LHS2
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
           .define f2_tok .left(1, {f2_token_list})
           .if ! _f2_is_compare_op {f2_tok}
             .undef f2_tok
-            .define f2_tmp f2_lhs
-            .undef f2_lhs
-            .define f2_lhs f2_tmp .left(1, {f2_token_list})
-            .undef f2_tmp
-            F2_PARSE_CONSUME
-            F2_PARSE_LHS2
+            F2_PARSE_CONSUME_TO_LHS
+            F2_PARSE_COMPEXPR_LHS2
           .else
             .undef f2_tok
           .endif
@@ -605,7 +629,7 @@
         .if .tcount({f2_token_list}) = 0
           F2_ERR_EXPECTED .sprintf("argument(s) after type '%s'", .string(f2_type))
         .endif
-        F2_PARSE_LHS
+        F2_PARSE_COMPEXPR_LHS
 
         ;; Parse the operator
         .if .tcount({f2_token_list}) = 0
@@ -1721,13 +1745,11 @@
 ;;; * Using +/- within arg or lhs requires wrapping in parentheses
 ;;; * Shifts use X as loop counter; append `, USE_Y` to use Y instead
 ;;; * For u16/s16, `arg`, `lhs` and `rhs` can be `AX` or `XY`
+;;; * For u16/s16 add/subtract, `arg` and `rhs` can be prefixed by u8
 ;;;
 ;;; TODO:
 ;;; * `inc16` as: SET u16 ++var
 ;;; * `dec16` as: SET u16 --var
-;;; * Determine if `add16_8`/`sub16_8` can usefully be emitted for
-;;;   `+=` and `-=` cases; this turns out to be challenging because
-;;;   most operands end up being considered non-constant by ca65.
 
 ;;; Parse `f2_token_list` up to an assignment operator (=, +=, -=, <<=, >>=); defines `f2_target` (caller must .undef it)
 .macro F2_PARSE_ASSIGNMENT_TARGET
@@ -1757,13 +1779,6 @@
         f2_pdepth .set 0
         F2_PARSE_ASSIGNMENT_LHS2
 .endmacro
-.macro F2_PARSE_ASSIGNMENT_LHS_CONSUME
-        .define f2_tmp f2_lhs
-        .undef f2_lhs
-        .define f2_lhs f2_tmp .left(1, {f2_token_list})
-        .undef f2_tmp
-        F2_PARSE_CONSUME
-.endmacro
 .macro F2_PARSE_ASSIGNMENT_LHS2
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
@@ -1772,37 +1787,36 @@
           ;; been seen.
           .if .xmatch({.left(1, {f2_token_list})}, {(})
             f2_pdepth .set f2_pdepth + 1
-            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_CONSUME_TO_LHS
             F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
             F2_PARSE_ASSIGNMENT_LHS2
 
           ;; Otherwise, terminate on binary op (+, -)
           .elseif !(.xmatch({.left(1, {f2_token_list})}, +) || .xmatch({.left(1, {f2_token_list})}, -))
-            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_CONSUME_TO_LHS
             F2_PARSE_ASSIGNMENT_LHS2
           .endif
         .endif
 .endmacro
-;;; Parenthesized expressions
 .macro F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
         F2_CHECK_BAD_PREFIX_OP
         .if .tcount({f2_token_list}) > 0
 
           .if .xmatch({.left(1, {f2_token_list})}, {(})
             f2_pdepth .set f2_pdepth + 1
-            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_CONSUME_TO_LHS
             F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
 
           .elseif .xmatch({.left(1, {f2_token_list})}, {)})
             f2_pdepth .set f2_pdepth - 1
-            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_CONSUME_TO_LHS
 
             .if f2_pdepth
               F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
             .endif
 
           .else
-            F2_PARSE_ASSIGNMENT_LHS_CONSUME
+            F2_PARSE_CONSUME_TO_LHS
             F2_PARSE_ASSIGNMENT_LHS_SUBEXPR
           .endif
         .endif
@@ -1921,10 +1935,7 @@
               F2_ERR_EXPECTED .sprintf("immediate argument for '%s'", f2_assign_op_str)
             .endif
 
-            .define f2_tmp f2_lhs
-            .undef f2_lhs
-            .define f2_lhs .mid(1, 9999, {f2_tmp})
-            .undef f2_tmp
+            F2_PARSE_CONSUME_LHS
 
             .if !.const(f2_lhs)
               F2_ERR_EXPECTED .sprintf("constant expression after '%s'", f2_assign_op_str)
@@ -1964,6 +1975,9 @@
                 addax f2_target
               .elseif .xmatch({f2_lhs}, XY)
                 addxy f2_target
+              .elseif .xmatch({.left(1, {f2_lhs})}, u8)
+                F2_PARSE_CONSUME_LHS
+                add16_8 f2_target, f2_lhs
               .else
                 add16 f2_target, f2_lhs, f2_target
               .endif
@@ -1972,6 +1986,9 @@
                 subax f2_target
               .elseif .xmatch({f2_lhs}, XY)
                 F2_ERR "subxy not defined"
+              .elseif .xmatch({.left(1, {f2_lhs})}, u8)
+                F2_PARSE_CONSUME_LHS
+                sub16_8 f2_target, f2_lhs
               .else
                 sub16 f2_target, f2_lhs, f2_target
               .endif
@@ -2068,12 +2085,18 @@
                 addax f2_lhs, f2_target
               .elseif .xmatch({f2_rhs}, XY)
                 addxy f2_lhs, f2_target
+              .elseif .xmatch({.left(1, {f2_rhs})}, u8)
+                F2_PARSE_CONSUME_RHS
+                add16_8 f2_lhs, f2_rhs, f2_target
               .else
                 add16 f2_lhs, f2_rhs, f2_target
               .endif
             .elseif .xmatch({f2_binop}, -)
               .if .xmatch({f2_rhs}, AX)
                 subax f2_lhs, f2_target
+              .elseif .xmatch({.left(1, {f2_rhs})}, u8)
+                F2_PARSE_CONSUME_RHS
+                sub16_8 f2_lhs, f2_rhs, f2_target
               .else
                 sub16 f2_lhs, f2_rhs, f2_target
               .endif

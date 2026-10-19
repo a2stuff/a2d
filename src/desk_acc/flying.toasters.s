@@ -127,8 +127,8 @@ grafport:       .tag MGTK::GrafPort
         copy16  ypos_table,x, ypos
 
         ;; Move
-        add16   ypos, #1, ypos
-        sub16   xpos, #4, xpos
+        add16   ypos, #1, ypos  ; TODO: add16_8
+        sub16   xpos, #4, xpos  ; TODO: sub16_8
 
         ;; Wrap Y
       IF s16 ypos >= #kScreenHeight

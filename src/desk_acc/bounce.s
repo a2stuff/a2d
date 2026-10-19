@@ -330,7 +330,7 @@ finish:
       WHILE dey : POS
         MGTK_CALL MGTK::PaintBits, object_params
 
-        add16_8 pos_ptr, #.sizeof(MGTK::Point)
+        SET u16 pos_ptr += u8 #.sizeof(MGTK::Point)
 
         pla
         tax
@@ -442,8 +442,8 @@ finish:
         ;; --------------------------------------------------
         ;; Next
 
-        add16_8 pos_ptr, #.sizeof(MGTK::Point)
-        add16_8 delta_ptr, #.sizeof(MGTK::Point)
+        SET u16 pos_ptr += u8 #.sizeof(MGTK::Point)
+        SET u16 delta_ptr += u8 #.sizeof(MGTK::Point)
 
         pla
         tax
@@ -452,13 +452,13 @@ finish:
         rts
 
 .proc _Paint
-        ldax    object_params::viewloc::xcoord
-        stax    shield_rect::x1
-        addax   object_params::maprect::x2, shield_rect::x2
+        SET s16 AX = object_params::viewloc::xcoord
+        SET s16 shield_rect::x1 = AX
+        SET s16 shield_rect::x2 = AX + object_params::maprect::x2
 
-        ldax    object_params::viewloc::ycoord
-        stax    shield_rect::y1
-        addax   object_params::maprect::y2, shield_rect::y2
+        SET s16 AX = object_params::viewloc::ycoord
+        SET s16 shield_rect::y1 = AX
+        SET s16 shield_rect::y2 = AX + object_params::maprect::y2
 
         MGTK_CALL MGTK::ShieldCursor, shield_rect
         MGTK_CALL MGTK::PaintBits, object_params
