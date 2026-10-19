@@ -336,10 +336,10 @@ done:
         copy8   #0, (ptr),y
         ASSERT_EQUALS IconEntry::iconx, IconEntry::win_state+1
         iny
-        copy16in #main::kTrashIconX, (ptr),y ; includes INY
+        copy16  #main::kTrashIconX, (ptr),y ; includes INY
         ASSERT_EQUALS IconEntry::icony, IconEntry::iconx+2
         iny
-        copy16in #main::kTrashIconY, (ptr),y ; includes INY
+        copy16  #main::kTrashIconY, (ptr),y ; includes INY
         ASSERT_EQUALS IconEntry::type, IconEntry::icony+2
         iny
         copy8   #IconType::trash, (ptr),y

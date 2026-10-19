@@ -855,9 +855,9 @@ update_poly:
         copy16  polybuf_addr, poly_ptr
 ploop:  ldy     #2              ; offset in poly to first vertex
       DO
-        add16in (poly_ptr),y, poly_dx, (poly_ptr),y
+        add16   (poly_ptr),y, poly_dx, (poly_ptr),y
         iny
-        add16in (poly_ptr),y, poly_dy, (poly_ptr),y
+        add16   (poly_ptr),y, poly_dy, (poly_ptr),y
       WHILE iny : Y <> #kIconPolySize
 
         ldy     #1              ; MGTK Polygon "not last" flag
@@ -957,9 +957,9 @@ move_ok:
         jsr     SetIconPtr
 
         ldy     #IconEntry::iconx
-        add16in (icon_ptr),y, poly_dx, (icon_ptr),y
+        add16   (icon_ptr),y, poly_dx, (icon_ptr),y
         iny
-        add16in (icon_ptr),y, poly_dy, (icon_ptr),y
+        add16   (icon_ptr),y, poly_dy, (icon_ptr),y
         rts
         END_OF_LAMBDA
 
@@ -1082,7 +1082,7 @@ find_icon:
         copy16  window_ptr, z:win_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         lda     (win_ptr),y
-        copy16in (win_ptr),y, params::headery
+        copy16  (win_ptr),y, params::headery
         add16_8 params::headery, header_height
         IF u16 findwindow_params::mousey >= params::headery \
           RETURN C=0
@@ -1398,7 +1398,7 @@ END_PARAM_BLOCK
 
         ;; Icon definition is followed by pointer to mask address.
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point)
-        copy16in (res_ptr),y, mask_paintbits_params::mapbits
+        copy16  (res_ptr),y, mask_paintbits_params::mapbits
 
         ;; Avoid cursor flashing
         MGTK_CALL MGTK::ShieldCursor, bounding_rect
@@ -1544,9 +1544,9 @@ ret:    rts
 
         ;; Bitmap bottom/right
         ldy     #IconResource::maprect + MGTK::Rect::x2
-        add16in bitmap_rect+MGTK::Rect::x1, (res_ptr),y, bitmap_rect+MGTK::Rect::x2
+        add16   bitmap_rect+MGTK::Rect::x1, (res_ptr),y, bitmap_rect+MGTK::Rect::x2
         iny
-        add16in bitmap_rect+MGTK::Rect::y1, (res_ptr),y, bitmap_rect+MGTK::Rect::y2
+        add16   bitmap_rect+MGTK::Rect::y1, (res_ptr),y, bitmap_rect+MGTK::Rect::y2
 
         ldy     #IconEntry::flags
         lda     (icon_ptr),y
@@ -1587,7 +1587,7 @@ ret:    rts
         add16   bitmap_rect+MGTK::Rect::x1, #1, label_rect+MGTK::Rect::x1 ; rounded
         asl16   label_rect+MGTK::Rect::x1
         ldy     #IconResource::maprect + MGTK::Rect::x2
-        add16in label_rect+MGTK::Rect::x1, (res_ptr),y, label_rect+MGTK::Rect::x1
+        add16   label_rect+MGTK::Rect::x1, (res_ptr),y, label_rect+MGTK::Rect::x1
         jsr     stash_rename_rect
         sub16   label_rect+MGTK::Rect::x1, stringwidth_params::result, label_rect+MGTK::Rect::x1
         asr16   label_rect+MGTK::Rect::x1 ; signed
@@ -1809,9 +1809,9 @@ END_PARAM_BLOCK
         CALL    GetIconWin, A=icon_list,x ; A = window_id, sets `icon_ptr` too
       IF A = params::window_id
         ldy     #IconEntry::iconx
-        add16in (icon_ptr),y, params::delta_x, (icon_ptr),y
+        add16   (icon_ptr),y, params::delta_x, (icon_ptr),y
         iny
-        add16in (icon_ptr),y, params::delta_y, (icon_ptr),y
+        add16   (icon_ptr),y, params::delta_y, (icon_ptr),y
       END_IF
 
         pla

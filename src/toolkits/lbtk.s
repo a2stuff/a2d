@@ -291,7 +291,7 @@ coords          .tag MGTK::Point
         copy8   (winfo_ptr),y, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
-        add16in (winfo_ptr),y, screentowindow_params::windowy, screentowindow_params::windowy
+        add16   (winfo_ptr),y, screentowindow_params::windowy, screentowindow_params::windowy
 
         copy16  screentowindow_params::windowy, divide_params::numerator
         MGTK_CALL MGTK::MulDiv, divide_params
@@ -767,7 +767,7 @@ update:
 
         copy16  #kListItemTextOffsetX, tmp_point+MGTK::Point::xcoord
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
-        add16in (winfo_ptr),y, #kListItemTextOffsetY, tmp_point+MGTK::Point::ycoord
+        add16   (winfo_ptr),y, #kListItemTextOffsetY, tmp_point+MGTK::Point::ycoord
 
     DO
         MGTK_CALL MGTK::MoveTo, tmp_point

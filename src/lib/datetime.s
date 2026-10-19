@@ -174,7 +174,7 @@ clock_24hours:
     END_IF
 
         ldy     #ParsedDateTime::year
-        add16in ytmp, #1900, (parsed_ptr),y
+        add16   ytmp, #1900, (parsed_ptr),y
 
         ;; ----------------------------------------
         ;; Month
@@ -287,7 +287,7 @@ prodos_2_5:
         ;; ----------------------------------------
         ;; hour: 0-23
         ldy     #0
-        copy16in (datetime_ptr),y, ytmp
+        copy16  (datetime_ptr),y, ytmp
         ldx     #6
     DO
         lsr16   ytmp

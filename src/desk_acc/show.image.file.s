@@ -1500,7 +1500,7 @@ END_PARAM_BLOCK
       IF NOT_ZERO
         ;; Set up pointers to suffix and filename
         ldy     #ICTRecord::aux_suf
-        copy16in (ptr),y, ptr_suffix
+        copy16  (ptr),y, ptr_suffix
         ;; Start at the end of the strings
         ldy     #0
         copy8   (ptr_suffix),y, suffix_pos

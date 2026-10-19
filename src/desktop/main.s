@@ -7580,9 +7580,9 @@ vol_blocks_used:  .word   0
         ;; (Only done for width because height is treated as fixed.)
 
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x1
-        add16in (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
+        add16   (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
-        add16in (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
+        add16   (winfo_ptr),y, iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y
         rts
 .endproc ; AdjustViewportForNewIcons
 
@@ -7651,7 +7651,7 @@ vol_blocks_used:  .word   0
         ;; Set up pointers to suffix and filename
         ptr_suffix      := $08
         ldy     #ICTRecord::aux_suf
-        copy16in (ptr),y, ptr_suffix
+        copy16  (ptr),y, ptr_suffix
         ;; Start at the end of the strings
         ldy     #0
         copy8   (ptr_suffix),y, suffix_pos
@@ -7695,9 +7695,9 @@ next:   add16_8 ptr, #.sizeof(ICTRecord)
         ldy     #FileRecord::file_type
         copy8   (file_record),y, src_file_info_params::file_type
         ldy     #FileRecord::aux_type
-        copy16in (file_record),y, src_file_info_params::aux_type
+        copy16  (file_record),y, src_file_info_params::aux_type
         ldy     #FileRecord::blocks
-        copy16in (file_record),y, src_file_info_params::blocks_used
+        copy16  (file_record),y, src_file_info_params::blocks_used
         rts
 .endproc ; FileRecordToSrcFileInfo
 
@@ -8750,9 +8750,9 @@ map_delta_y:    .word   0
         stax    ptr
 
         ldy     #MGTK::Point::xcoord
-        add16in map_delta_x, (ptr),y, (ptr),y
+        add16   map_delta_x, (ptr),y, (ptr),y
         iny                     ; Y = #MGTK::Point::ycoord
-        add16in map_delta_y, (ptr),y, (ptr),y
+        add16   map_delta_y, (ptr),y, (ptr),y
 
         jsr     PopPointers     ; do not tail-call optimize!
         rts
@@ -9095,16 +9095,16 @@ error:
 
         ;; Center it horizontally
         ldy     #IconResource::maprect + MGTK::Rect::x2
-        copy16in (icon_defn_ptr),y, offset
+        copy16  (icon_defn_ptr),y, offset
         lsr16   offset          ; offset = (icon_width-1) / 2
         ldy     #IconEntry::iconx
-        sub16in (icon_ptr),y, offset, (icon_ptr),y
+        sub16   (icon_ptr),y, offset, (icon_ptr),y
 
         ;; Adjust vertically
         ldy     #IconResource::maprect + MGTK::Rect::y2
-        copy16in (icon_defn_ptr),y, offset ; offset = (icon_height-1)
+        copy16  (icon_defn_ptr),y, offset ; offset = (icon_height-1)
         ldy     #IconEntry::icony
-        sub16in (icon_ptr),y, offset, (icon_ptr),y
+        sub16   (icon_ptr),y, offset, (icon_ptr),y
 
         jsr     PopPointers
         RETURN  A=#0
@@ -10698,7 +10698,7 @@ failure:
         bcs     ret
         entry_ptr := $06
         ldy     #FileEntry::case_bits
-        copy16in (entry_ptr),y, case_bits
+        copy16  (entry_ptr),y, case_bits
     END_IF
 
         clc                     ; success
@@ -10718,7 +10718,7 @@ ret:    rts
         MLI_CALL READ_BLOCK, block_params
         bcs     ret
         ldy     #FileEntry::case_bits
-        copy16in case_bits, (block_ptr),y
+        copy16  case_bits, (block_ptr),y
         MLI_CALL WRITE_BLOCK, block_params
 
 ret:    rts
@@ -12376,7 +12376,7 @@ retry:
         ldy     #IconEntry::iconx
       DO
         sub16   tmpc,x, tmp_rect::bottomright,x, delta
-        add16in (icon_ptr),y, delta, (icon_ptr),y
+        add16   (icon_ptr),y, delta, (icon_ptr),y
         iny
       WHILE inx : inx : X <> #4
     ELSE
@@ -13755,7 +13755,7 @@ recurse_down:
         next_ptr := $0A
 
         ldy     #MGTK::Winfo::nextwinfo
-        copy16in (winfo_ptr),y, next_ptr
+        copy16  (winfo_ptr),y, next_ptr
         ora     next_ptr
         beq     recurse_up      ; Nope - just finish.
 
@@ -14020,7 +14020,7 @@ next_entry:
         ora     current_block+1
     IF ZERO
         ldy     #FileEntry::header_pointer
-        copy16in (entry_ptr),y, current_block
+        copy16  (entry_ptr),y, current_block
     END_IF
 
         ;; See if this is the file we're looking for

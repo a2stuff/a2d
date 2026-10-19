@@ -589,7 +589,7 @@ end:    rts
         asl16   offset_ptr
         add16   offset_ptr, #line_offsets, offset_ptr
         ldy     #0
-        copy16in (offset_ptr),y, set_mark_params::position
+        copy16  (offset_ptr),y, set_mark_params::position
         JSR_TO_MAIN SetFileMark
 
         ;; And adjust to the appropriate offset for that line in the viewport.
@@ -678,7 +678,7 @@ end:    rts
         dec     offset_counter
        IF ZERO
         ldy     #0
-        copy16in cur_offset, (offset_ptr),y
+        copy16  cur_offset, (offset_ptr),y
         add16_8 offset_ptr, #2
         copy8   #kLineOffsetDelta, offset_counter ; reset
        END_IF

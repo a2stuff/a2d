@@ -736,15 +736,15 @@ found:  RETURN  A=index
 
         ;; List box position
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::viewloc
-        add16in (ptr),y, #file_dialog_res::kListBoxLeft, file_dialog_res::winfo_listbox::port+MGTK::GrafPort::viewloc+MGTK::Point::xcoord
+        add16   (ptr),y, #file_dialog_res::kListBoxLeft, file_dialog_res::winfo_listbox::port+MGTK::GrafPort::viewloc+MGTK::Point::xcoord
         iny
-        add16in (ptr),y, #file_dialog_res::kListBoxTop, file_dialog_res::winfo_listbox::port+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
+        add16   (ptr),y, #file_dialog_res::kListBoxTop, file_dialog_res::winfo_listbox::port+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
 
         ;; Frame rect size
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::bottomright
-        sub16in (ptr),y, #kBorderDX*2-1, file_dialog_res::dialog_frame_rect::x2
+        sub16   (ptr),y, #kBorderDX*2-1, file_dialog_res::dialog_frame_rect::x2
         iny
-        sub16in (ptr),y, #kBorderDY*2-1, file_dialog_res::dialog_frame_rect::y2
+        sub16   (ptr),y, #kBorderDY*2-1, file_dialog_res::dialog_frame_rect::y2
 
         ;; Open and decorate the window
 

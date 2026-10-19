@@ -213,7 +213,7 @@ ret:    rts
     END_IF
 
         ldy     #LETK::LineEditRecord::caret_counter
-        sub16in (a_record),y, #1, (a_record),y
+        sub16   (a_record),y, #1, (a_record),y
 
         lda     (a_record),y  ; Y = LETK::LineEditRecord::caret_counter+1
         dey

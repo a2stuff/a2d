@@ -69,7 +69,7 @@ file_entry:
         IF A = #FT_ASP GOTO appleworks
 
         ldy     #FileEntry::case_bits
-        copy16in (ptr),y, case_bits
+        copy16  (ptr),y, case_bits
         FALL_THROUGH_TO common
 
 common:

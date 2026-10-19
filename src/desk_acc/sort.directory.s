@@ -269,7 +269,7 @@ loop:
         and     #STORAGE_TYPE_MASK ; skip deleted entries
     WHILE ZERO
         ldy     #FileEntry::header_pointer
-        copy16in (ptr),y, block_num_table
+        copy16  (ptr),y, block_num_table
 .endscope ; read
 
         ;; --------------------------------------------------
@@ -323,7 +323,7 @@ loop2:  jsr     SetPtrToNextEntry
 
         ;; Grab key block, using pointer in directory.
         ldy     #FileEntry::key_pointer
-        copy16in (ptr),y, block_params::block_num
+        copy16  (ptr),y, block_params::block_num
         jsr     ReadBlock
         bne     done
 

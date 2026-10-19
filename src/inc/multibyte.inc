@@ -322,33 +322,14 @@
         carryOp
         _op_lo op, {arg2}
         _op_lo sta, {arg3}
+
+    .if _is_indirect_indexed {arg1} || _is_indirect_indexed {arg2} || _is_indirect_indexed {arg3}
+        iny
+    .endif
+
         _op_hi lda, {arg1}
         _op_hi op, {arg2}
         _op_hi sta, {arg3}
-.endmacro
-
-;;; Core for add16in/sub16in
-.macro _addsub16in op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
-    .if _is_register {arg2}
-        _addsub16in op, carryOp, {arg1,arg2}, {arg3}, {arg4}, {arg5}, {arg6}
-        .exitmacro
-    .elseif _is_register {arg3}
-        _addsub16in op, carryOp, {arg1}, {arg2,arg3}, {arg4}, {arg5}, {arg6}
-        .exitmacro
-    .elseif _is_register {arg4}
-        _addsub16in op, carryOp, {arg1}, {arg2}, {arg3,arg4}, {arg5}, {arg6}
-        .exitmacro
-    .endif
-        .assert .blank({arg4}) && .blank({arg5}) && .blank({arg6}), error, "extra parameters"
-
-        _op_lo  lda, {arg1}
-        carryOp
-        _op_lo  op,  {arg2}
-        _op_lo  sta, {arg3}
-        iny
-        _op_hi  lda, {arg1}
-        _op_hi  op,  {arg2}
-        _op_hi  sta, {arg3}
 .endmacro
 
 ;;; Core for add16_8/sub16_8
@@ -391,13 +372,9 @@
 
 ;;; Add arg1 to arg2, store to arg3
 ;;;    add16 arg1, arg2, arg3
-;;; Supports all non-indirect addressing modes.
+;;; Supports all non-indirect addressing modes, plus indirect indexed (i.e. `(zp),y`).
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 adc, clc, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
-.endmacro
-;;; (as above, but indirect indexed, y register is incremented)
-.macro add16in arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16in adc, clc, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
 ;;; Add arg1 (16-bit) to arg2 (8-bit), store to arg3
@@ -528,13 +505,9 @@
 
 ;;; Subtract arg2 from arg1, store to arg3
 ;;;    sub16 arg1, arg2, arg3
-;;; Supports all non-indirect addressing modes.
+;;; Supports all non-indirect addressing modes, plus indirect indexed (i.e. `(zp),y`).
 .macro sub16 arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16 sbc, sec, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
-.endmacro
-;;; (as above, but indirect indexed, y register incremented)
-.macro sub16in arg1, arg2, arg3, arg4, arg5, arg6
-    _addsub16in sbc, sec, {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}
 .endmacro
 
 ;;; Subtract arg2 (8-bit) from arg1 (16-bit), store to arg3
@@ -548,7 +521,7 @@
 
 ;;; Copy 16-bit value
 ;;;    copy16 src, dst
-;;; Supports all non-indirect addressing modes. Immediate mode optimized.
+;;; Supports all non-indirect addressing modes, plus indirect indexed (i.e. `(zp),y`). Immediate mode optimized.
 .macro copy16 arg1, arg2, arg3, arg4
     .if _is_register {arg2}
         copy16 {arg1,arg2}, {arg3}, {arg4}
@@ -561,29 +534,12 @@
 
         _op_lo  lda, {arg1}
         _op_lo  sta, {arg2}
-        _op_hx  lda, {arg1}     ; optimized
-        _op_hi  sta, {arg2}
-.endmacro
 
-;;; Copy 16-bit value, indexed indirect, y register incremented
-;;;    copy16in #$1111, ($2222),y   ; immediate load, indexed indirect store
-;;;    copy16in $1111, ($2222),y    ; absolute load, indexed indirect store
-;;;    copy16in ($1111),y, $2222    ; indexed indirect load, absolute store
-;;;    copy16in ($1111),y ($2222),y ; indexed indirect load, indexed indirect store
-.macro copy16in arg1, arg2, arg3, arg4
-    .if _is_register {arg2}
-        copy16in {arg1,arg2}, {arg3}, {arg4}
-        .exitmacro
-    .elseif _is_register {arg3}
-        copy16in {arg1}, {arg2,arg3}, {arg4}
-        .exitmacro
-    .endif
-        .assert .blank({arg3}) && .blank({arg4}), error, "extra parameters"
-
-        _op_lo  lda, {arg1}
-        _op_lo  sta, {arg2}
+    .if _is_indirect_indexed {arg1} || _is_indirect_indexed {arg2}
         iny
-        _op_hx  lda, {arg1}
+    .endif
+
+        _op_hx  lda, {arg1}     ; optimized
         _op_hi  sta, {arg2}
 .endmacro
 
