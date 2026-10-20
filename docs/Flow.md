@@ -241,8 +241,6 @@ Function calls are another control flow mechanism, and the library provides anot
 
 The new micro-syntax here allows specifying register and flag states in the same line as a `JSR` subroutine call (for arguments) or `RTS` subroutine return (for return values) by providing a list of _reg_ = _value_ pairs. Registers can be simple registers (`A`, `X`, `Y`), common register pairs for 16-bit values (`AX`, `AY`, `XY`, `YA`), and flags (`C`, `D`) which can be set to 0 or 1.
 
-For indexed loads, surround the argument with `{` `}`, e.g. `CALL CRC, {AX=proc_table,y}, Y=#kChecksumLength`.
-
 The `CALL` statement emits a `JSR` preceded by the register loads, for example:
 ```
   CALL ShowErrorMessage, AX=#str_err

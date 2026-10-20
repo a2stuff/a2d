@@ -1254,6 +1254,7 @@
           .if .xmatch({f2_shortcut_op}, RETURN)
             .local @skip
             F2_PARSE_AND_GEN_BIF @skip,{f2_params}
+            ;; RHS explicitly passed w/o {} to allow expansion
             _CALL_HELPER f2_shortcut_rhs
             rts
             @skip := *
@@ -1263,8 +1264,8 @@
               .define f2_force_longbranch 1
             .endif
             F2_PARSE_AND_GEN_BIT {f2_shortcut_rhs},{f2_params}
-         .endif
-         .else
+          .endif
+       .else
           __INC_IDENT__ __flow_branch_depth__
           __INC_IDENT__ __flow_branch_count_at_depth__
           __INC_IDENT__ __flow_branch_ident_counter__
