@@ -20,6 +20,7 @@ local machine = manager.machine
 
 local mouse
 local auxram
+local auxram_text_base
 
 -- Defaults (Apple IIe, Apple IIc)
 local keyboard = {
@@ -93,7 +94,13 @@ if machine.system.name:match("^apple2e")
   -- * many possible aux memory devices
   scan_for_mouse = true
   if emu.subst_env("$CHECKAUXMEMORY") == "true" then
-    auxram = emu.item(get_device("^:aux:").items["0/m_ram"])
+    local dev = get_device("^:aux:");
+    if dev.tag == ':aux:std80' then
+      auxram_text_base = 0
+    else
+      auxram_text_base = 0x400
+    end
+    auxram = emu.item(dev.items["0/m_ram"])
   end
 
 elseif machine.system.name:match("^apple2c") then
@@ -1187,13 +1194,14 @@ end
 local function IterateTextScreen(char_cb, row_cb)
   local is80 = system_class ~= "apple2" and apple2.ReadSSW("RD80VID") > 127
   local isAlt = system_class ~= "apple2" and apple2.ReadSSW("RDALTCHAR") > 127
+  local mainram_text_base = 0x400
   for row = 0,23 do
-    local base = 0x400 + (row - math.floor(row/8) * 8) * 0x80 + 40 * math.floor(row/8)
+    local offset = (row - math.floor(row/8) * 8) * 0x80 + 40 * math.floor(row/8)
     for col = 0,39 do
       if is80 then
-        char_cb(apple2.ReadRAMDevice(0x10000 + base + col), isAlt)
+        char_cb(apple2.ReadRAMDevice(0x10000 + auxram_text_base + offset + col), isAlt)
       end
-      char_cb(apple2.ReadRAMDevice(base + col), isAlt)
+      char_cb(apple2.ReadRAMDevice(mainram_text_base + offset + col), isAlt)
     end
     row_cb()
   end
