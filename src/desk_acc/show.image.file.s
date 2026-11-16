@@ -1444,11 +1444,12 @@ file_entry:  .tag    FileEntry
 PARAM_BLOCK, $06
         ptr          .addr      ; $06/$07
         reserved     .word      ; $08/$09 - must be preserved for `EnumerateDirectory`
-.union                          ; $0A/$0B
-        flags        .byte
-        ptr_filename .addr
+        ptr_filename .addr      ; $0A/$0B
+.union                          ; $0C/$0D
+        ptr_suffix   .addr
+        tmp_aux      .word
 .endunion
-        ptr_suffix   .addr      ; $0C/$0D
+        ict_record   .tag ICTRecord ; $0E...
 END_PARAM_BLOCK
 
         file_type   := file_entry+FileEntry::file_type
@@ -1460,47 +1461,51 @@ END_PARAM_BLOCK
         copy16  #icontype_table, ptr
 
     REPEAT
-        ldy     #ICTRecord::mask ; $00 if done
-        lda     (ptr),y
+        ;; Copy somewhere handy
+        ldy     #.sizeof(ICTRecord)-1
+      DO
+        copy8   (ptr),y, ict_record,y
+      WHILE dey : POS
+
+        ;; Sentinel?
+        ASSERT_EQUALS ICTRecord::mask, 0
         IF A = #kICTSentinel \
           RETURN A=#IconType::generic
 
         ;; Check type (with mask)
         and     file_type       ; A = type & mask
-        iny                     ; ASSERT: Y = ICTRecord::filetype
-        ASSERT_EQUALS ICTRecord::filetype, ICTRecord::mask+1
-        cmp     (ptr),y         ; type check
-        bne     next
+        IF A <> ict_record+ICTRecord::filetype \
+          GOTO next
 
-        ;; Flags
-        iny                     ; ASSERT: Y = ICTRecord::flags
-        ASSERT_EQUALS ICTRecord::flags, ICTRecord::filetype+1
-        copy8   (ptr),y, flags
+        flags := ict_record + ICTRecord::flags
 
         ;; Does Aux Type matter, and if so does it match?
+        ASSERT_EQUALS ::ICT_FLAGS_AUX, ::N_FLAG_MASK
       IF bit flags : NS         ; bit 7 = compare aux
-        iny                     ; ASSERT: Y = FTORecord::aux_suf
-        ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
-        IF u8 aux_type <> (ptr),y GOTO next
-        iny
-        IF u8 aux_type+1 <> (ptr),y GOTO next
+        IF u16 aux_type <> ict_record+ICTRecord::aux_suf \
+          GOTO next
+      END_IF
+
+        ;; Does masked Aux Type matter, and if so does it match?
+      IF lda flags : and #ICT_FLAGS_AUXMASK : NOT ZERO
+        IF lda aux_type : and ict_record+ICTRecord::blocks_auxmask : A <> ict_record+ICTRecord::aux_suf \
+          GOTO next
+        IF lda aux_type+1 : and ict_record+ICTRecord::blocks_auxmask+1 : A <> ict_record+ICTRecord::aux_suf+1 \
+          GOTO next
       END_IF
 
         ;; Does Block Count matter, and if so does it match?
+        ASSERT_EQUALS ::ICT_FLAGS_BLOCKS, ::V_FLAG_MASK
       IF bit flags : VS         ; bit 6 = compare blocks
-        ldy     #ICTRecord::blocks
-        IF u8 blocks_used <> (ptr),y GOTO next
-        iny
-        IF u8 blocks_used+1 <> (ptr),y GOTO next
+        IF u16 blocks_used <> ict_record+ICTRecord::blocks_auxmask \
+          GOTO next
       END_IF
 
         ;; Filename suffix?
-        lda     flags
-        and     #ICT_FLAGS_SUFFIX
-      IF NOT_ZERO
+      IF lda flags : and #ICT_FLAGS_SUFFIX : NOT_ZERO
         ;; Set up pointers to suffix and filename
-        ldy     #ICTRecord::aux_suf
-        copy16  (ptr),y, ptr_suffix
+        copy16  ict_record+ICTRecord::aux_suf, ptr_suffix
+
         ;; Start at the end of the strings
         ldy     #0
         copy8   (ptr_suffix),y, suffix_pos
@@ -1526,9 +1531,7 @@ END_PARAM_BLOCK
       END_IF
 
         ;; Have a match
-        ldy     #ICTRecord::icontype
-        lda     (ptr),y
-        rts
+        RETURN A=ict_record+ICTRecord::icontype
 
         ;; Next entry
 next:   add16_8 ptr, #.sizeof(ICTRecord)

@@ -233,3 +233,17 @@ test.Step(
     desktop.EraseVolume("RAM1")
 end)
 
+test.Step(
+  "CHIP-8 files detected without suffix",
+  function()
+    desktop.CopyPath("/A2.DESKTOP/SAMPLE.MEDIA/BLINKY.CH8", "/RAM1")
+    desktop.RenamePath("/RAM1/BLINKY.CH8", "NOSUFFIX")
+    desktop.InvokePath("/RAM1/NOSUFFIX")
+    emu.wait(5)
+    test.Expect(apple2.ReadSSW('RDTEXT') < 128, "should not be in text mode")
+    test.Expect(apple2.ReadSSW('RDHIRES') < 128, "should not be in hires mode")
+    apple2.EscapeKey()
+    a2d.WaitForDesktopReady()
+    desktop.EraseVolume("RAM1")
+end)
+

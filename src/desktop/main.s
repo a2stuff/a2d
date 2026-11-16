@@ -7595,8 +7595,9 @@ vol_blocks_used:  .word   0
 
 .proc DetermineIconType
         ptr := $06
-        flags := $08
-        ptr_filename := $0A
+        ptr_filename := $08
+        ptr_suffix   := $0A
+        ict_record   := $0C
 
         file_type   := src_file_info_params::file_type
         aux_type    := src_file_info_params::aux_type
@@ -7608,50 +7609,53 @@ vol_blocks_used:  .word   0
         copy16  #icontype_table, ptr
 
     REPEAT
-        ldy     #ICTRecord::mask ; $00 if done
-        lda     (ptr),y
+        ;; Copy somewhere handy
+        ldy     #.sizeof(ICTRecord)-1
+      DO
+        copy8   (ptr),y, ict_record,y
+      WHILE dey : POS
+
+        ;; Sentinel?
+        ASSERT_EQUALS ICTRecord::mask, 0
       IF A = #kICTSentinel
         jsr     PopPointers
-        RETURN  A=#IconType::generic
+        RETURN A=#IconType::generic
       END_IF
 
         ;; Check type (with mask)
         and     file_type       ; A = type & mask
-        iny                     ; ASSERT: Y = ICTRecord::filetype
-        ASSERT_EQUALS ICTRecord::filetype, ICTRecord::mask+1
-        cmp     (ptr),y         ; type check
-        bne     next
+        IF A <> ict_record+ICTRecord::filetype \
+          GOTO next
 
-        ;; Flags
-        iny                     ; ASSERT: Y = ICTRecord::flags
-        ASSERT_EQUALS ICTRecord::flags, ICTRecord::filetype+1
-        copy8   (ptr),y, flags
+        flags := ict_record + ICTRecord::flags
 
         ;; Does Aux Type matter, and if so does it match?
+        ASSERT_EQUALS ::ICT_FLAGS_AUX, ::N_FLAG_MASK
       IF bit flags : NS         ; bit 7 = compare aux
-        iny                     ; ASSERT: Y = FTORecord::aux_suf
-        ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
-        IF u8 aux_type <> (ptr),y GOTO next
-        iny
-        IF u8 aux_type+1 <> (ptr),y GOTO next
+        IF u16 aux_type <> ict_record+ICTRecord::aux_suf \
+          GOTO next
+      END_IF
+
+        ;; Does masked Aux Type matter, and if so does it match?
+      IF lda flags : and #ICT_FLAGS_AUXMASK : NOT ZERO
+        IF lda aux_type : and ict_record+ICTRecord::blocks_auxmask : A <> ict_record+ICTRecord::aux_suf \
+          GOTO next
+        IF lda aux_type+1 : and ict_record+ICTRecord::blocks_auxmask+1 : A <> ict_record+ICTRecord::aux_suf+1 \
+          GOTO next
       END_IF
 
         ;; Does Block Count matter, and if so does it match?
+        ASSERT_EQUALS ::ICT_FLAGS_BLOCKS, ::V_FLAG_MASK
       IF bit flags : VS         ; bit 6 = compare blocks
-        ldy     #ICTRecord::blocks
-        IF u8 blocks_used <> (ptr),y GOTO next
-        iny
-        IF u8 blocks_used+1 <> (ptr),y GOTO next
+        IF u16 blocks_used <> ict_record+ICTRecord::blocks_auxmask \
+          GOTO next
       END_IF
 
         ;; Filename suffix?
-        lda     flags
-        and     #ICT_FLAGS_SUFFIX
-      IF NOT_ZERO
+      IF lda flags : and #ICT_FLAGS_SUFFIX : NOT_ZERO
         ;; Set up pointers to suffix and filename
-        ptr_suffix      := $08
-        ldy     #ICTRecord::aux_suf
-        copy16  (ptr),y, ptr_suffix
+        copy16  ict_record+ICTRecord::aux_suf, ptr_suffix
+
         ;; Start at the end of the strings
         ldy     #0
         copy8   (ptr_suffix),y, suffix_pos
@@ -7677,10 +7681,8 @@ vol_blocks_used:  .word   0
       END_IF
 
         ;; Have a match
-        ldy     #ICTRecord::icontype
-        lda     (ptr),y
         jsr     PopPointers
-        rts
+        RETURN A=ict_record+ICTRecord::icontype
 
         ;; Next entry
 next:   add16_8 ptr, #.sizeof(ICTRecord)
@@ -14892,6 +14894,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_ARCHIVE,   ICT_FLAGS_AUX, $8002, 0, IconType::archive    ; NuFX
         DEFINE_ICTRECORD $FF, FT_LINK,      ICT_FLAGS_AUX, kLinkFileAuxType, 0, IconType::link ; $E1 LNK
         DEFINE_ICTRECORD $FF, FT_SPEECH,    ICT_FLAGS_AUX, $0001, 0, IconType::speech     ; $D9 Speech
+        DEFINE_ICTRECORD $FF, FT_ENTERTAINMENT, ICT_FLAGS_AUXMASK, $C800, $FF00, IconType::chip8 ; CHIP-8
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
