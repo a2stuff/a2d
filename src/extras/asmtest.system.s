@@ -1641,6 +1641,7 @@ varC:   .word   9870
         RTS_IF aa >= #1            ; RTS_IF: Expected boolean expression, saw identifier ('aa')
         RTS_IF A IN #0 #1          ; Expected 'end-of-line' but found '#'
         RTS_IF BIT var             ; RTS_IF: Expected end-of-statement (':'); did you forget a type prefix ('u8', etc)?
+        RTS_IF BIT var :           ; RTS_IF: Expected condition after end-of-statement (':')
         RTS_IF A = ++var           ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
         RTS_IF A = var++           ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
 
@@ -1692,4 +1693,3 @@ varC:   .word   9870
         SET u16 target <<= #kNonConstant ; SET: Expected constant expression after '<<='
         SET u16 target <<= #0            ; SET: Expected non-zero count
 .endif
-

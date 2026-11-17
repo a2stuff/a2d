@@ -7,7 +7,7 @@
 
 ;;; ============================================================
 
-.define _is_immediate(arg)       .xmatch({.mid (0, 1, {arg})}, #)
+.define _is_immediate(arg)       .xmatch({.left(1, {arg})}, #)
 .define _is_register(arg)        .xmatch({arg}, x) || .xmatch({arg}, y)
 .define _immediate_value(arg)    .right(.tcount({arg}) - 1, {arg})
 
