@@ -45,7 +45,16 @@
 
 kICTSentinel = $01     ; not $00, because $00 as a mask is useful
 
+;;; NOTE: This macro will not generate anything if the passed icontype
+;;; is not a defined symbol; this allows the same table definition to
+;;; be used in contexts (like the image preview accessory) where only
+;;; a subset of types are needed.
+
 .macro DEFINE_ICTRECORD mask, filetype, flags, aux_suf, blocks_auxmask, icontype
+        .ifndef icontype
+          .exitmacro
+        .endif
+
         .assert mask <> kICTSentinel, error, "Can't use sentinel value as a mask"
         .byte   mask
         .byte   filetype

@@ -1469,35 +1469,7 @@ END_PARAM_BLOCK
 ;;; Subset of the data from `src/desktop/main.s` - just enough to distinguish graphics types
 
 icontype_table:
-        ;; Types where suffix shouldn't override other metadata
-        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_NONE, 0, 0, IconType::folder        ; $0F
-
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fc_suffix, 0, IconType::graphics ; Apple II Full Color
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fm_suffix, 0, IconType::graphics ; Apple II Full Monochrome
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2lc_suffix, 0, IconType::graphics ; Apple II Low Color
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2hr_suffix, 0, IconType::graphics ; Apple II High Resolution
-
-        ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 17, IconType::graphics ; HR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 33, IconType::graphics ; DHR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 33, IconType::graphics ; DHR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4800, 3,  IconType::graphics ; Print Shop 88x52 Mono as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $5800, 3,  IconType::graphics ; Print Shop 88x52 Mono as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $6800, 3,  IconType::graphics ; Print Shop 88x52 Mono as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $7800, 3,  IconType::graphics ; Print Shop 88x52 Mono as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $400, 3,  IconType::graphics ; LR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $400, 5,  IconType::graphics ; DLR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX, $60FF, 0, IconType::graphics ; AXE PACKER image as FOT
-
-        ;; Simple Mappings
-        DEFINE_ICTRECORD $FF, FT_GRAPHICS,  ICT_FLAGS_NONE, 0, 0, IconType::graphics      ; $08
-
-        ;; IIgs-Specific Files (ranges)
-        DEFINE_ICTRECORD $FF, FT_PNT, ICT_FLAGS_AUX, $0001, 0, IconType::graphics ; IIgs Pkd SHR  $C0
-        DEFINE_ICTRECORD $FF, FT_PIC, ICT_FLAGS_AUX, $0000, 0, IconType::graphics ; IIgs SHR      $C1
-
-        .byte   kICTSentinel
+        .include "../lib/icon_type_records.s"
 .endproc ; IsImageFileEntry
 
 ;;; ============================================================
