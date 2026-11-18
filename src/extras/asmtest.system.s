@@ -1620,7 +1620,10 @@ varC:   .word   9870
 ;;; Errors
 ;;; ============================================================
 
+;;; Run bin/test_flow_warnings.pl to exercise these
+
 .if 0
+__BEGIN_CASES__
         RTS_IF                     ; RTS_IF: Empty expression
         RTS_IF CS X                ; RTS_IF: Unexpected token: 'X'
         RTS_IF CS,CC               ; RTS_IF: Unexpected token: ','
@@ -1632,13 +1635,13 @@ varC:   .word   9870
         RTS_IF A >= table,A        ; RTS_IF: Unexpected non-index register after comparison '>='
         RTS_IF A >= table,X,Y      ; RTS_IF: Unexpected arguments after comparison '>='
         RTS_IF A BETWEEN           ; RTS_IF: Expected argument(s) after 'BETWEEN'
-        RTS_IF A BETWEEN 0         ; RTS_IF: Numeric literal in 'BETWEEN' comparison; did you mean '#0'
+        RTS_IF A BETWEEN 0         ; RTS_IF: Numeric literal in 'BETWEEN' comparison; did you mean '#0'?
         RTS_IF A BETWEEN a         ; RTS_IF: Expected two arguments for 'BETWEEN'
         RTS_IF A BETWEEN a,b,c     ; RTS_IF: Expected two arguments for 'BETWEEN'
         RTS_IF A BETWEEN '0', #'9' ; RTS_IF: Expected immediate 1st argument for 'BETWEEN'
         RTS_IF A BETWEEN #'0', '9' ; RTS_IF: Expected immediate 2nd argument for 'BETWEEN'
         RTS_IF A IN                ; RTS_IF: Expected argument(s) after 'IN'
-        RTS_IF aa >= #1            ; RTS_IF: Expected boolean expression, saw identifier ('aa')
+        RTS_IF aa >= #1            ; RTS_IF: Expected end-of-statement (':'); did you forget a type prefix ('u8', etc)?
         RTS_IF A IN #0 #1          ; Expected 'end-of-line' but found '#'
         RTS_IF BIT var             ; RTS_IF: Expected end-of-statement (':'); did you forget a type prefix ('u8', etc)?
         RTS_IF BIT var :           ; RTS_IF: Expected condition after end-of-statement (':')
@@ -1648,11 +1651,11 @@ varC:   .word   9870
         RTS_IF u16                 ; RTS_IF: Expected argument(s) after type 'u16'
         RTS_IF u16 var             ; RTS_IF: Expected operator (=, <>, <, <=, >, >=)
         RTS_IF u16 var <           ; RTS_IF: Expected argument(s) after operator '<'
-        RTS_IF u16 var < #123,456  ; RTS_IF: Unexpected non-index-register after comparison '<'
+        RTS_IF u16 var < #123,456  ; RTS_IF: Unexpected non-index register after comparison '<'
         RTS_IF u16 var < 123       ; RTS_IF: Numeric literal in '<' comparison; did you mean '#123'?
         RTS_IF u16 var < kConstant ; RTS_IF: Constant in '<' comparison; did you mean '#kConstant'?
-        RTS_IF u8 var++ = #5       ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
-        RTS_IF u8 var-- = #5       ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
+        RTS_IF u8 var++ = #5       ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
+        RTS_IF u8 var-- = #5       ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
         RTS_IF u8 var = --var      ; RTS_IF: Unexpected '--' (only supported at start of typed comparison)
         RTS_IF u8 var = ++var      ; RTS_IF: Unexpected '++' (only supported at start of typed comparison)
 
@@ -1676,7 +1679,7 @@ varC:   .word   9870
         SET A                       ; SET: Expected type (u8,u16,s16,u24,u32), saw register 'A'
         SET , u8                    ; SET: Expected type (u8,u16,s16,u24,u32), saw comma (',')
         SET u16                     ; SET: Expected assignment target
-        SET u16 target              ; SET: Expected assignment operator (=, +=, -=)
+        SET u16 target              ; SET: Expected assignment operator (=, +=, -=, <<=, >>=)
         SET u16 target =            ; SET: Expected argument(s) after operator '='
         SET u16 target = varA +     ; SET: Expected argument(s) after operator '+'
         SET u16 target += varA + varB ; SET: Unexpected expression after assignment op ('+=')
@@ -1692,4 +1695,5 @@ varC:   .word   9870
         SET u16 target <<= varA          ; SET: Expected immediate argument for '<<='
         SET u16 target <<= #kNonConstant ; SET: Expected constant expression after '<<='
         SET u16 target <<= #0            ; SET: Expected non-zero count
+__END_CASES__
 .endif

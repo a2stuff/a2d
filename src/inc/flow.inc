@@ -269,7 +269,7 @@
           F2_ERR .sprintf("Unexpected arguments after comparison '%s'", op_str)
         .endif
         .if .tcount({arg2}) > 0 && !(.xmatch({arg2},X) || .xmatch({arg2},Y))
-          F2_ERR .sprintf("Unexpected non-index-register after comparison '%s'", op_str)
+          F2_ERR .sprintf("Unexpected non-index register after comparison '%s'", op_str)
         .endif
 .endmacro
 
@@ -1047,9 +1047,13 @@
           .endif
         .endrepeat
         .if @op_index = -1
+          .undef f2_token_list
+          .define f2_token_list ; empty for correct error logging
           F2_ERR_EXPECTED "end-of-statement (':'); did you forget a type prefix ('u8', etc)?"
         .endif
-        .if @op_index = .tcount({f2_token_list})
+        .if @op_index = .tcount({f2_token_list}) - 1
+          .undef f2_token_list
+          .define f2_token_list ; empty for correct error logging
           F2_ERR_EXPECTED "condition after end-of-statement (':')"
         .endif
 
@@ -1222,11 +1226,13 @@
         .if .xmatch({f2_shortcut_op}, GOTO) || .xmatch({f2_shortcut_op}, JUMP)
           ;; `GOTO`/`JUMP` - RHS should be target
           .if .tcount({f2_shortcut_rhs}) = 0
+            .define f2_token_list f2_shortcut_rhs ; for error logging
             F2_ERR_EXPECTED .sprintf("target after %s", .string(f2_shortcut_op))
           .endif
         .elseif .xmatch({f2_shortcut_op}, BREAK) || .xmatch({f2_shortcut_op}, REDO) || .xmatch({f2_shortcut_op}, CONTINUE)
           ;; `BREAK`/`REDO`/`CONTINUE` - RHS should be empty, rewritten to appropriate loop identifier
           .if .tcount({f2_shortcut_rhs}) <> 0
+            .define f2_token_list f2_shortcut_rhs ; for error logging
             F2_ERR_EXPECTED .sprintf("nothing after %s", .string(f2_shortcut_op))
           .endif
           .undef f2_shortcut_rhs
