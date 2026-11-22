@@ -206,6 +206,7 @@ test.Variants(
     a2d.InvokeMenuItem(desktop.SHORTCUTS_MENU, idx)
     a2dtest.WaitForSystemTask()
     a2d.DialogCancel()
+    a2dtest.WaitForSystemTask()
     test.Snap("verify window correctly repaints")
     desktop.CloseAllWindows()
 end)
@@ -693,6 +694,7 @@ test.Step(
     test.ExpectNotMatch(ocr, "by Date", "all menu items should be disabled")
     test.ExpectNotMatch(ocr, "by Size", "all menu items should be disabled")
     test.ExpectNotMatch(ocr, "by Type", "all menu items should be disabled")
+    apple2.EscapeKey()
 end)
 
 --[[

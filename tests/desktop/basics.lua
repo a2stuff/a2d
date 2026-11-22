@@ -661,5 +661,5 @@ test.Step(
     desktop.CloseAllWindows()
     desktop.Reboot()
     a2dtest.WaitForSystemTask()
-    a2dtest.MultiSnap(240, "verify RAMCard icon doesn't flicker")
+    a2dtest.MultiSnap(360, "verify RAMCard icon doesn't flicker")
 end)
