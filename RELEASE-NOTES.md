@@ -178,6 +178,8 @@ An 8-bit Apple II running at 1MHz will never be a perfect platform for a graphic
 
 ### Misc
 
+* Fix asymmetry in horizontal scrollbar arrows.
+
 
 ## 1.5
 

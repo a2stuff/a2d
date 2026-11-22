@@ -7919,7 +7919,7 @@ no_titlebar:
         bpl     no_vscroll
 
         jsr     GetWinVertScrollRect
-        ldx     #3
+        ldx     #.sizeof(MGTK::Point)-1
 :       lda     winrect,x
         sta     up_scroll_params,x
         sta     down_scroll_params,x
@@ -7959,6 +7959,7 @@ no_vscroll:
         dex
         bpl     :-
 
+        inc16   left_scroll_params::xcoord
         ldax    winrect::x2
         subax8  #kVScrollBarWidth
         tay
@@ -8985,7 +8986,7 @@ windowy         .word           ; out
 
         stax    icon_ptr
 
-        ldy     #3
+        ldy     #.sizeof(MGTK::Point)-1
 :       lda     #0
         sta     PaintBitsImpl::dbi_left,y
         lda     (icon_ptr),y
@@ -9159,7 +9160,7 @@ v_noscroll:
 
 
 horiz:  jsr     GetWinHorizScrollRect
-        add16_8 winrect::x1, #kHScrollArrowWidth ; TODO: Fix asymmetry (1px narrower)
+        add16_8 winrect::x1, #kHScrollArrowWidth+1
         sub16_8 winrect::x2, #kHScrollArrowWidth
 
         lda     current_winfo::options
