@@ -139,7 +139,7 @@ saved_stack:
     END_IF
 
         blocks := $06
-        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks
+        SET u16 blocks = dst_file_info_params::aux_type - dst_file_info_params::blocks_used
     IF u16 blocks < block_count
         jmp     ShowDiskFullError
     END_IF
@@ -231,10 +231,9 @@ retry:  MLI_CALL GET_FILE_INFO, src_file_info_params
 
 .proc EnumerateVisitFile
         ;; Called with `src_file_info_params` pre-populated
-        add16   block_count, src_file_info_params::blocks_used, block_count
-
-        inc16   file_count
-        copy16  file_count, total_count
+        SET u16 block_count += src_file_info_params::blocks_used
+        SET u16 ++file_count
+        SET u16 total_count = file_count
         jmp     UpdateEnumerationProgress
 .endproc ; EnumerateVisitFile
 
@@ -441,10 +440,10 @@ remainder:      .word   0                 ; (out)
         MGTK_CALL MGTK::DrawStringForward, str_from_int
         MGTK_CALL MGTK::DrawStringForward, str_spaces
 
-        sub16   total_count, file_count, progress_muldiv_params::numerator
-        copy16  total_count, progress_muldiv_params::denominator
+        SET u16 progress_muldiv_params::numerator = total_count - file_count
+        SET u16 progress_muldiv_params::denominator = total_count
         MGTK_CALL MGTK::MulDiv, progress_muldiv_params
-        add16   progress_muldiv_params::result, progress_meter::x1, progress_meter::x2
+        SET u16 progress_meter::x2 = progress_muldiv_params::result + progress_meter::x1
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_meter
         MGTK_CALL MGTK::UnshieldCursor

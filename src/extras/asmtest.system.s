@@ -1512,6 +1512,9 @@ varC:   .word   9870
         SET u8 varA >>= #1
         SET u8 varA >>= #4
 
+        SET u8 ++varA
+        SET u8 --varA
+
 ;;; u16
         SET u16 varB = varA
         SET u16 varB = #kConstant
@@ -1547,6 +1550,9 @@ varC:   .word   9870
         SET u16 varA -= u8 varB
         SET u16 varC = varA - u8 varB
 
+        SET u16 ++varA
+        SET u16 --varA
+
 ;;; s16
         SET s16 varB = varA
         SET s16 varC = varA + varB
@@ -1577,9 +1583,14 @@ varC:   .word   9870
         SET s16 varA -= u8 varB
         SET s16 varC = varA - u8 varB
 
+        SET u16 ++varA
+        SET u16 --varA
+
 ;;; u24
         SET u24 varB = varA
         SET u24 varB = #$123456
+
+        SET u24 ++varA
 
 ;;; u32
         SET u32 varB = varA

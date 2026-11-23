@@ -1744,7 +1744,9 @@
 ;;; * SET type target <<= #const
 ;;; * SET type target >>= #const
 ;;; * SET type target = lhs binop rhs
-;;; Types: u8 u16 s16 u24
+;;; * SET type ++var
+;;; * SET type --var
+;;; Types: u8 u16 s16 u24 u32
 ;;; Binary operators: + -
 ;;;
 ;;; Caveats:
@@ -1753,10 +1755,6 @@
 ;;; * Shifts use X as loop counter; append `, USE_Y` to use Y instead
 ;;; * For u16/s16, `arg`, `lhs` and `rhs` can be `AX` or `XY`
 ;;; * For u16/s16 add/subtract, `arg` and `rhs` can be prefixed by u8
-;;;
-;;; TODO:
-;;; * `inc16` as: SET u16 ++var
-;;; * `dec16` as: SET u16 --var
 
 ;;; Parse `f2_token_list` up to an assignment operator (=, +=, -=, <<=, >>=); defines `f2_target` (caller must .undef it)
 .macro F2_PARSE_TO_ASSIGNMENT_OP
@@ -1843,277 +1841,308 @@
         .endif
         F2_PARSE_CONSUME
 
-        ;; Parse assignment target
-        .if .tcount({f2_token_list}) = 0
-          F2_ERR_EXPECTED .sprintf("assignment target")
-        .endif
-        F2_PARSE_TO_ASSIGNMENT_OP ; .defines `f2_target`
-        .if .xmatch({.left(1, {f2_target})}, {(}) && .xmatch({.right(1, {f2_target})}, {)})
-          ;; strip parentheses from target expression
-          .define f2_tmp f2_target
-          .undef f2_target
-          .define f2_target .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
-          .undef f2_tmp
-        .endif
-
-        ;; Parse assignment operator
-        .if .tcount({f2_token_list}) = 0
-          F2_ERR_EXPECTED .sprintf("assignment operator (=, +=, -=, <<=, >>=)")
-        .endif
-        .if .xmatch({.left(1, {f2_token_list})}, =)
-          .define f2_assign_op =
-          .define f2_assign_op_str "="
-          F2_PARSE_CONSUME
-        .elseif .xmatch({.left(2, {f2_token_list})}, +=)
-          .define f2_assign_op +=
-          .define f2_assign_op_str "+="
-          F2_PARSE_CONSUME
-          F2_PARSE_CONSUME
-        .elseif .xmatch({.left(2, {f2_token_list})}, -=)
-          .define f2_assign_op -=
-          .define f2_assign_op_str "-="
-          F2_PARSE_CONSUME
-          F2_PARSE_CONSUME
-        .elseif .xmatch({.left(2, {f2_token_list})}, <<=)
-          .define f2_assign_op <<=
-          .define f2_assign_op_str "<<="
-          F2_PARSE_CONSUME
-          F2_PARSE_CONSUME
-        .elseif .xmatch({.left(2, {f2_token_list})}, >>=)
-          .define f2_assign_op >>=
-          .define f2_assign_op_str ">>="
-          F2_PARSE_CONSUME
-          F2_PARSE_CONSUME
-        .else
-          F2_ERR_UNREACHED
-        .endif
-
-        ;; Parse the LHS expression
-        .if .tcount({f2_token_list}) = 0
-          F2_ERR_EXPECTED .sprintf("argument(s) after operator '%s'", f2_assign_op_str)
-        .endif
-        F2_PARSE_TO_MATH_OP     ; .defines `f2_lhs`
-        .define f2_tok .left(1, {f2_lhs})
-        F2_CHECK_NONIMM {f2_tok}, .sprintf("after '%s'", f2_assign_op_str)
-        .undef f2_tok
-        .if .xmatch({.left(1, {f2_lhs})}, {(}) && .xmatch({.right(1, {f2_lhs})}, {)})
-          ;; strip parentheses from LHS expression
-          .define f2_tmp f2_lhs
-          .undef f2_lhs
-          .define f2_lhs .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
-          .undef f2_tmp
-        .endif
-
-        .if .tcount({f2_token_list}) = 0
-          ;; No binary operator
-
-          .define f2_loop_load ldx
-          .define f2_loop_decr dex
-
-          ;; Shift ops require immediate-mode / constant
-          .if .xmatch({f2_assign_op}, <<=) || .xmatch({f2_assign_op}, >>=)
-            .if .tcount({f2_lhs}) > 2
-              .if .xmatch({.right(2, {f2_lhs})}, {, USE_Y})
-                .undef f2_loop_load
-                .undef f2_loop_decr
-                .define f2_loop_load ldy
-                .define f2_loop_decr dey
-
-                .define f2_tmp f2_lhs
-                .undef f2_lhs
-                .define f2_lhs .left(.tcount({f2_tmp}) - 2, {f2_tmp})
-                .undef f2_tmp
-              .endif
-            .endif
-
-            .if ! _is_immediate {f2_lhs}
-              F2_ERR_EXPECTED .sprintf("immediate argument for '%s'", f2_assign_op_str)
-            .endif
-
-            .if !.const(_immediate_value {f2_lhs})
-              F2_ERR_EXPECTED .sprintf("constant expression after '%s'", f2_assign_op_str)
-            .endif
-          .endif
-
+        ;; Increment/decrement shortcut?
+        .if .xmatch(.left(2, {f2_token_list}), {++}) || .xmatch(.left(2, {f2_token_list}), {--})
+          .define f2_op .left(2, {f2_token_list})
+          .define f2_target .mid(2, 9999, {f2_token_list})
           ;; Code generation
           .if .xmatch({f2_type}, u8)
-            .if .xmatch({f2_assign_op}, =)
-              copy8 f2_lhs, f2_target
-            .elseif .xmatch({f2_assign_op}, +=)
-              add8 f2_target, f2_lhs, f2_target
-            .elseif .xmatch({f2_assign_op}, -=)
-              sub8 f2_target, f2_lhs, f2_target
-            .elseif .xmatch({f2_assign_op}, <<=)
-              F2_CODEGEN_LOOP asl, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
-            .elseif .xmatch({f2_assign_op}, >>=)
-              F2_CODEGEN_LOOP lsr, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+            .if .xmatch({f2_op}, {++})
+              inc f2_target
             .else
-              F2_ERR_UNREACHED
+              dec f2_target
             .endif
           .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
-            .if .xmatch({f2_assign_op}, =)
-              .if .xmatch({f2_target}, AX)
-                ldax f2_lhs
-              .elseif .xmatch({f2_target}, XY)
-                ldxy f2_lhs
-              .elseif .xmatch({f2_lhs}, AX)
-                stax f2_target
-              .elseif .xmatch({f2_lhs}, XY)
-                stxy f2_target
-              .else
-                copy16 f2_lhs, f2_target
-              .endif
-            .elseif .xmatch({f2_assign_op}, +=)
-              .if .xmatch({f2_lhs}, AX)
-                addax f2_target
-              .elseif .xmatch({f2_lhs}, XY)
-                addxy f2_target
-              .elseif .xmatch({.left(1, {f2_lhs})}, u8)
-                add16_8 f2_target, _f2_butfirst {f2_lhs}
-              .else
-                add16 f2_target, f2_lhs, f2_target
-              .endif
-            .elseif .xmatch({f2_assign_op}, -=)
-              .if .xmatch({f2_lhs}, AX)
-                subax f2_target
-              .elseif .xmatch({f2_lhs}, XY)
-                F2_ERR "subxy not defined"
-              .elseif .xmatch({.left(1, {f2_lhs})}, u8)
-                sub16_8 f2_target, _f2_butfirst {f2_lhs}
-              .else
-                sub16 f2_target, f2_lhs, f2_target
-              .endif
-            .elseif .xmatch({f2_assign_op}, <<=)
-              F2_CODEGEN_LOOP asl16, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
-            .elseif .xmatch({f2_assign_op}, >>=)
-              F2_CODEGEN_LOOP lsr16, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+            .if .xmatch({f2_op}, {++})
+              inc16 f2_target
             .else
-              F2_ERR_UNREACHED
+              dec16 f2_target
             .endif
           .elseif .xmatch({f2_type}, u24)
-            .if .xmatch({f2_assign_op}, =)
-              copy24 f2_lhs, f2_target
-            .elseif .xmatch({f2_assign_op}, +=)
-              F2_ERR "add24 not defined"
-            .elseif .xmatch({f2_assign_op}, -=)
-              F2_ERR "sub24 not defined"
-            .elseif .xmatch({f2_assign_op}, <<=)
-              F2_ERR "asl24 not defined"
-            .elseif .xmatch({f2_assign_op}, >>=)
-              F2_ERR "lsr24 not defined"
+            .if .xmatch({f2_op}, {++})
+              inc24 f2_target
             .else
-              F2_ERR_UNREACHED
+              F2_ERR "dec24 not defined"
             .endif
           .elseif .xmatch({f2_type}, u32)
-            .if .xmatch({f2_assign_op}, =)
-              copy32 f2_lhs, f2_target
-            .elseif .xmatch({f2_assign_op}, +=)
-              add32 f2_target, f2_lhs, f2_target
-            .elseif .xmatch({f2_assign_op}, -=)
-              sub32 f2_target, f2_lhs, f2_target
-            .elseif .xmatch({f2_assign_op}, <<=)
-              F2_CODEGEN_LOOP asl32, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
-            .elseif .xmatch({f2_assign_op}, >>=)
-              F2_CODEGEN_LOOP lsr32, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
-            .else
-              F2_ERR_UNREACHED
-            .endif
-          .else
-            F2_ERR_UNREACHED
+            F2_ERR "inc32/dec32 not defined"
           .endif
-
-          .undef f2_loop_load
-          .undef f2_loop_decr
-
+          .undef f2_op
         .else
-          ;; Operator
 
-          .if !(.xmatch({f2_assign_op}, =))
-            F2_ERR .sprintf("Unexpected expression after assignment op ('%s')", f2_assign_op_str)
-          .endif
-
-          .define f2_binop .left(1, {f2_token_list})
-          .if .xmatch({f2_binop}, +)
-            .define f2_binop_str "+"
-          .elseif .xmatch({f2_binop}, -)
-            .define f2_binop_str "-"
-          .else
-            F2_ERR_UNREACHED
-          .endif
-          F2_PARSE_CONSUME
-
+          ;; Parse assignment target
           .if .tcount({f2_token_list}) = 0
-            F2_ERR_EXPECTED .sprintf("argument(s) after operator '%s'", f2_binop_str)
+            F2_ERR_EXPECTED .sprintf("assignment target")
           .endif
-          .define f2_rhs f2_token_list
-          .if .xmatch({.left(1, {f2_rhs})}, {(}) && .xmatch({.right(1, {f2_rhs})}, {)})
-            ;; strip parentheses from RHS expression
-            .define f2_tmp f2_rhs
-            .undef f2_rhs
-            .define f2_rhs .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
+          F2_PARSE_TO_ASSIGNMENT_OP ; .defines `f2_target`
+          .if .xmatch({.left(1, {f2_target})}, {(}) && .xmatch({.right(1, {f2_target})}, {)})
+            ;; strip parentheses from target expression
+            .define f2_tmp f2_target
+            .undef f2_target
+            .define f2_target .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
             .undef f2_tmp
           .endif
-          .define f2_tok .left(1, {f2_rhs})
-          F2_CHECK_NONIMM {f2_tok}, .sprintf("in '%s' expression", f2_binop_str)
-          .undef f2_tok
 
-          ;; Code generation
-          .if .xmatch({f2_type}, u8)
-            .if .xmatch({f2_binop}, +)
-              add8 f2_lhs, f2_rhs, f2_target
-            .elseif .xmatch({f2_binop}, -)
-              sub8 f2_lhs, f2_rhs, f2_target
-            .else
-              F2_ERR_UNREACHED
-            .endif
-          .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
-            .if .xmatch({f2_binop}, +)
-              .if .xmatch({f2_lhs}, AX)
-                addax f2_rhs, f2_target
-              .elseif .xmatch({f2_lhs}, XY)
-                addxy f2_rhs, f2_target
-              .elseif .xmatch({f2_rhs}, AX)
-                addax f2_lhs, f2_target
-              .elseif .xmatch({f2_rhs}, XY)
-                addxy f2_lhs, f2_target
-              .elseif .xmatch({.left(1, {f2_rhs})}, u8)
-                add16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
-              .else
-                add16 f2_lhs, f2_rhs, f2_target
-              .endif
-            .elseif .xmatch({f2_binop}, -)
-              .if .xmatch({f2_rhs}, AX)
-                subax f2_lhs, f2_target
-              .elseif .xmatch({.left(1, {f2_rhs})}, u8)
-                sub16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
-              .else
-                sub16 f2_lhs, f2_rhs, f2_target
-              .endif
-            .else
-              F2_ERR_UNREACHED
-            .endif
-          .elseif .xmatch({f2_type}, u24)
-            F2_ERR "add24/sub24 not defined"
-          .elseif .xmatch({f2_type}, u32)
-            .if .xmatch({f2_binop}, +)
-              add32 f2_lhs, f2_rhs, f2_target
-            .elseif .xmatch({f2_binop}, -)
-              sub32 f2_lhs, f2_rhs, f2_target
-            .else
-              F2_ERR_UNREACHED
-            .endif
+          ;; Parse assignment operator
+          .if .tcount({f2_token_list}) = 0
+            F2_ERR_EXPECTED .sprintf("assignment operator (=, +=, -=, <<=, >>=)")
+          .endif
+          .if .xmatch({.left(1, {f2_token_list})}, =)
+            .define f2_assign_op =
+            .define f2_assign_op_str "="
+            F2_PARSE_CONSUME
+          .elseif .xmatch({.left(2, {f2_token_list})}, +=)
+            .define f2_assign_op +=
+            .define f2_assign_op_str "+="
+            F2_PARSE_CONSUME
+            F2_PARSE_CONSUME
+          .elseif .xmatch({.left(2, {f2_token_list})}, -=)
+            .define f2_assign_op -=
+            .define f2_assign_op_str "-="
+            F2_PARSE_CONSUME
+            F2_PARSE_CONSUME
+          .elseif .xmatch({.left(2, {f2_token_list})}, <<=)
+            .define f2_assign_op <<=
+            .define f2_assign_op_str "<<="
+            F2_PARSE_CONSUME
+            F2_PARSE_CONSUME
+          .elseif .xmatch({.left(2, {f2_token_list})}, >>=)
+            .define f2_assign_op >>=
+            .define f2_assign_op_str ">>="
+            F2_PARSE_CONSUME
+            F2_PARSE_CONSUME
           .else
             F2_ERR_UNREACHED
           .endif
 
-          .undef f2_rhs
-          .undef f2_binop
-          .undef f2_binop_str
+          ;; Parse the LHS expression
+          .if .tcount({f2_token_list}) = 0
+            F2_ERR_EXPECTED .sprintf("argument(s) after operator '%s'", f2_assign_op_str)
+          .endif
+          F2_PARSE_TO_MATH_OP     ; .defines `f2_lhs`
+          .define f2_tok .left(1, {f2_lhs})
+          F2_CHECK_NONIMM {f2_tok}, .sprintf("after '%s'", f2_assign_op_str)
+          .undef f2_tok
+          .if .xmatch({.left(1, {f2_lhs})}, {(}) && .xmatch({.right(1, {f2_lhs})}, {)})
+            ;; strip parentheses from LHS expression
+            .define f2_tmp f2_lhs
+            .undef f2_lhs
+            .define f2_lhs .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
+            .undef f2_tmp
+          .endif
+
+          .if .tcount({f2_token_list}) = 0
+            ;; No binary operator
+
+            .define f2_loop_load ldx
+            .define f2_loop_decr dex
+
+            ;; Shift ops require immediate-mode / constant
+            .if .xmatch({f2_assign_op}, <<=) || .xmatch({f2_assign_op}, >>=)
+              .if .tcount({f2_lhs}) > 2
+                .if .xmatch({.right(2, {f2_lhs})}, {, USE_Y})
+                  .undef f2_loop_load
+                  .undef f2_loop_decr
+                  .define f2_loop_load ldy
+                  .define f2_loop_decr dey
+
+                  .define f2_tmp f2_lhs
+                  .undef f2_lhs
+                  .define f2_lhs .left(.tcount({f2_tmp}) - 2, {f2_tmp})
+                  .undef f2_tmp
+                .endif
+              .endif
+
+              .if ! _is_immediate {f2_lhs}
+                F2_ERR_EXPECTED .sprintf("immediate argument for '%s'", f2_assign_op_str)
+              .endif
+
+              .if !.const(_immediate_value {f2_lhs})
+                F2_ERR_EXPECTED .sprintf("constant expression after '%s'", f2_assign_op_str)
+              .endif
+            .endif
+
+            ;; Code generation
+            .if .xmatch({f2_type}, u8)
+              .if .xmatch({f2_assign_op}, =)
+                copy8 f2_lhs, f2_target
+              .elseif .xmatch({f2_assign_op}, +=)
+                add8 f2_target, f2_lhs, f2_target
+              .elseif .xmatch({f2_assign_op}, -=)
+                sub8 f2_target, f2_lhs, f2_target
+              .elseif .xmatch({f2_assign_op}, <<=)
+                F2_CODEGEN_LOOP asl, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+              .elseif .xmatch({f2_assign_op}, >>=)
+                F2_CODEGEN_LOOP lsr, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+              .else
+                F2_ERR_UNREACHED
+              .endif
+            .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
+              .if .xmatch({f2_assign_op}, =)
+                .if .xmatch({f2_target}, AX)
+                  ldax f2_lhs
+                .elseif .xmatch({f2_target}, XY)
+                  ldxy f2_lhs
+                .elseif .xmatch({f2_lhs}, AX)
+                  stax f2_target
+                .elseif .xmatch({f2_lhs}, XY)
+                  stxy f2_target
+                .else
+                  copy16 f2_lhs, f2_target
+                .endif
+              .elseif .xmatch({f2_assign_op}, +=)
+                .if .xmatch({f2_lhs}, AX)
+                  addax f2_target
+                .elseif .xmatch({f2_lhs}, XY)
+                  addxy f2_target
+                .elseif .xmatch({.left(1, {f2_lhs})}, u8)
+                  add16_8 f2_target, _f2_butfirst {f2_lhs}
+                .else
+                  add16 f2_target, f2_lhs, f2_target
+                .endif
+              .elseif .xmatch({f2_assign_op}, -=)
+                .if .xmatch({f2_lhs}, AX)
+                  subax f2_target
+                .elseif .xmatch({f2_lhs}, XY)
+                  F2_ERR "subxy not defined"
+                .elseif .xmatch({.left(1, {f2_lhs})}, u8)
+                  sub16_8 f2_target, _f2_butfirst {f2_lhs}
+                .else
+                  sub16 f2_target, f2_lhs, f2_target
+                .endif
+              .elseif .xmatch({f2_assign_op}, <<=)
+                F2_CODEGEN_LOOP asl16, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+              .elseif .xmatch({f2_assign_op}, >>=)
+                F2_CODEGEN_LOOP lsr16, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+              .else
+                F2_ERR_UNREACHED
+              .endif
+            .elseif .xmatch({f2_type}, u24)
+              .if .xmatch({f2_assign_op}, =)
+                copy24 f2_lhs, f2_target
+              .elseif .xmatch({f2_assign_op}, +=)
+                F2_ERR "add24 not defined"
+              .elseif .xmatch({f2_assign_op}, -=)
+                F2_ERR "sub24 not defined"
+              .elseif .xmatch({f2_assign_op}, <<=)
+                F2_ERR "asl24 not defined"
+              .elseif .xmatch({f2_assign_op}, >>=)
+                F2_ERR "lsr24 not defined"
+              .else
+                F2_ERR_UNREACHED
+              .endif
+            .elseif .xmatch({f2_type}, u32)
+              .if .xmatch({f2_assign_op}, =)
+                copy32 f2_lhs, f2_target
+              .elseif .xmatch({f2_assign_op}, +=)
+                add32 f2_target, f2_lhs, f2_target
+              .elseif .xmatch({f2_assign_op}, -=)
+                sub32 f2_target, f2_lhs, f2_target
+              .elseif .xmatch({f2_assign_op}, <<=)
+                F2_CODEGEN_LOOP asl32, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+              .elseif .xmatch({f2_assign_op}, >>=)
+                F2_CODEGEN_LOOP lsr32, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
+              .else
+                F2_ERR_UNREACHED
+              .endif
+            .else
+              F2_ERR_UNREACHED
+            .endif
+
+            .undef f2_loop_load
+            .undef f2_loop_decr
+
+          .else
+            ;; Operator
+
+            .if !(.xmatch({f2_assign_op}, =))
+              F2_ERR .sprintf("Unexpected expression after assignment op ('%s')", f2_assign_op_str)
+            .endif
+
+            .define f2_binop .left(1, {f2_token_list})
+            .if .xmatch({f2_binop}, +)
+              .define f2_binop_str "+"
+            .elseif .xmatch({f2_binop}, -)
+              .define f2_binop_str "-"
+            .else
+              F2_ERR_UNREACHED
+            .endif
+            F2_PARSE_CONSUME
+
+            .if .tcount({f2_token_list}) = 0
+              F2_ERR_EXPECTED .sprintf("argument(s) after operator '%s'", f2_binop_str)
+            .endif
+            .define f2_rhs f2_token_list
+            .if .xmatch({.left(1, {f2_rhs})}, {(}) && .xmatch({.right(1, {f2_rhs})}, {)})
+              ;; strip parentheses from RHS expression
+              .define f2_tmp f2_rhs
+              .undef f2_rhs
+              .define f2_rhs .mid(1, .tcount({f2_tmp}) - 2, {f2_tmp})
+              .undef f2_tmp
+            .endif
+            .define f2_tok .left(1, {f2_rhs})
+            F2_CHECK_NONIMM {f2_tok}, .sprintf("in '%s' expression", f2_binop_str)
+            .undef f2_tok
+
+            ;; Code generation
+            .if .xmatch({f2_type}, u8)
+              .if .xmatch({f2_binop}, +)
+                add8 f2_lhs, f2_rhs, f2_target
+              .elseif .xmatch({f2_binop}, -)
+                sub8 f2_lhs, f2_rhs, f2_target
+              .else
+                F2_ERR_UNREACHED
+              .endif
+            .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
+              .if .xmatch({f2_binop}, +)
+                .if .xmatch({f2_lhs}, AX)
+                  addax f2_rhs, f2_target
+                .elseif .xmatch({f2_lhs}, XY)
+                  addxy f2_rhs, f2_target
+                .elseif .xmatch({f2_rhs}, AX)
+                  addax f2_lhs, f2_target
+                .elseif .xmatch({f2_rhs}, XY)
+                  addxy f2_lhs, f2_target
+                .elseif .xmatch({.left(1, {f2_rhs})}, u8)
+                  add16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
+                .else
+                  add16 f2_lhs, f2_rhs, f2_target
+                .endif
+              .elseif .xmatch({f2_binop}, -)
+                .if .xmatch({f2_rhs}, AX)
+                  subax f2_lhs, f2_target
+                .elseif .xmatch({.left(1, {f2_rhs})}, u8)
+                  sub16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
+                .else
+                  sub16 f2_lhs, f2_rhs, f2_target
+                .endif
+              .else
+                F2_ERR_UNREACHED
+              .endif
+            .elseif .xmatch({f2_type}, u24)
+              F2_ERR "add24/sub24 not defined"
+            .elseif .xmatch({f2_type}, u32)
+              .if .xmatch({f2_binop}, +)
+                add32 f2_lhs, f2_rhs, f2_target
+              .elseif .xmatch({f2_binop}, -)
+                sub32 f2_lhs, f2_rhs, f2_target
+              .else
+                F2_ERR_UNREACHED
+              .endif
+            .else
+              F2_ERR_UNREACHED
+            .endif
+
+            .undef f2_rhs
+            .undef f2_binop
+            .undef f2_binop_str
+          .endif
+
+          .undef f2_lhs
+          .undef f2_assign_op_str
+          .undef f2_assign_op
         .endif
 
-        .undef f2_lhs
-        .undef f2_assign_op_str
-        .undef f2_assign_op
         .undef f2_target
         .undef f2_type
         .undef f2_token_list
