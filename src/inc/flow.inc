@@ -652,13 +652,11 @@
         F2_VALIDATE_COMPARE_RHS f2_op_str, f2_rhs
 
         ;; Code generation
-        .if .xmatch({f2_type}, u16)
-          .if .xmatch({f2_prefix_op}, ++)
-            inc16 f2_lhs
-          .elseif .xmatch({f2_prefix_op}, --)
-            dec16 f2_lhs
-          .endif
+        .if .xmatch({f2_prefix_op}, {++}) || .xmatch({f2_prefix_op}, {--})
+          F2_CODEGEN_INCDEC f2_type, f2_prefix_op, f2_lhs
+        .endif
 
+        .if .xmatch({f2_type}, u16)
           .if .xmatch({f2_op}, =)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -681,12 +679,6 @@
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch({f2_type}, s16)
-          .if .xmatch({f2_prefix_op}, ++)
-            inc16 f2_lhs
-          .elseif .xmatch({f2_prefix_op}, --)
-            dec16 f2_lhs
-          .endif
-
           .if .xmatch({f2_op}, =)
             ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -709,14 +701,6 @@
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch({f2_type}, u8)
-
-          ;; Optional pre-increment/decrement
-          .if .xmatch({f2_prefix_op}, ++)
-            inc f2_lhs
-          .elseif .xmatch({f2_prefix_op}, --)
-            dec f2_lhs
-          .endif
-
           ;; If possible, convert RHS to #0 since we special case that.
           .if _is_immediate {f2_rhs}
             .if .const(_immediate_value {f2_rhs}) && (_immediate_value {f2_rhs}) = 0
@@ -756,12 +740,6 @@
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch({f2_type}, u24)
-          .if .xmatch({f2_prefix_op}, ++)
-            inc24 f2_lhs
-          .elseif .xmatch({f2_prefix_op}, --)
-            F2_ERR "dec24 not defined"
-          .endif
-
           .if .xmatch({f2_op}, =)
             ecmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
@@ -1829,6 +1807,36 @@
         .endif
 .endmacro
 
+.macro F2_CODEGEN_INCDEC type, op, arg
+        .if .xmatch({type}, u8)
+          .if .xmatch({op}, {++})
+            inc arg
+          .elseif .xmatch({op}, {--})
+            dec arg
+          .else
+            F2_ERR_UNREACHED
+          .endif
+        .elseif .xmatch({type}, u16) || .xmatch({type}, s16)
+          .if .xmatch({op}, {++})
+            inc16 arg
+          .elseif .xmatch({op}, {--})
+            dec16 arg
+          .endif
+        .elseif .xmatch({type}, u24)
+          .if .xmatch({op}, {++})
+            inc24 arg
+          .elseif .xmatch({op}, {--})
+            F2_ERR "dec24 not defined"
+          .else
+            F2_ERR_UNREACHED
+          .endif
+        .elseif .xmatch({type}, u32)
+          F2_ERR "inc32/dec32 not defined"
+        .else
+          F2_ERR_UNREACHED
+        .endif
+.endmacro
+
 .macro SET arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
   _FLOW_STATEMENT "SET",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         .define f2_token_list f2_params
@@ -1843,31 +1851,7 @@
 
         ;; Increment/decrement shortcut?
         .if .xmatch(.left(2, {f2_token_list}), {++}) || .xmatch(.left(2, {f2_token_list}), {--})
-          .define f2_op .left(2, {f2_token_list})
-          .define f2_target .mid(2, 9999, {f2_token_list})
-          ;; Code generation
-          .if .xmatch({f2_type}, u8)
-            .if .xmatch({f2_op}, {++})
-              inc f2_target
-            .else
-              dec f2_target
-            .endif
-          .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
-            .if .xmatch({f2_op}, {++})
-              inc16 f2_target
-            .else
-              dec16 f2_target
-            .endif
-          .elseif .xmatch({f2_type}, u24)
-            .if .xmatch({f2_op}, {++})
-              inc24 f2_target
-            .else
-              F2_ERR "dec24 not defined"
-            .endif
-          .elseif .xmatch({f2_type}, u32)
-            F2_ERR "inc32/dec32 not defined"
-          .endif
-          .undef f2_op
+          F2_CODEGEN_INCDEC f2_type, .left(2, {f2_token_list}), .mid(2, 9999, {f2_token_list})
         .else
 
           ;; Parse assignment target
@@ -2141,9 +2125,9 @@
           .undef f2_lhs
           .undef f2_assign_op_str
           .undef f2_assign_op
+          .undef f2_target
         .endif
 
-        .undef f2_target
         .undef f2_type
         .undef f2_token_list
   _FLOW_END_STATEMENT
