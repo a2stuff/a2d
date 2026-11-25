@@ -202,6 +202,34 @@
 ;;; Low Level
 ;;; ----------------------------------------
 
+.macro F2_EMIT p1,p2,p3,p4,p5,p6,p7,p8,p9
+        .if !(.ismnemonic(.left(1, {p1})) || .definedmacro(.left(1, {p1})))
+          F2_ERR .sprintf("%s not defined", .string(.left(1, {p1})))
+        .endif
+
+        .if .paramcount = 1
+          p1
+        .elseif .paramcount = 2
+          p1,p2
+        .elseif .paramcount = 3
+          p1,p2,p3
+        .elseif .paramcount = 4
+          p1,p2,p3,p4
+        .elseif .paramcount = 5
+          p1,p2,p3,p4,p5
+        .elseif .paramcount = 6
+          p1,p2,p3,p4,p5,p6
+        .elseif .paramcount = 7
+          p1,p2,p3,p4,p5,p6,p7
+        .elseif .paramcount = 8
+          p1,p2,p3,p4,p5,p6,p7,p8
+        .elseif .paramcount = 9
+          p1,p2,p3,p4,p5,p6,p7,p8,p9
+        .else
+          F2_ERR_UNREACHED
+        .endif
+.endmacro
+
 ;;; Emit a branch (`bop`) to a target (`target`); `kind` provides a name to log (e.g. "stay")
 .macro F2_CODEGEN_BRANCH bop, target, kind
 
@@ -658,44 +686,44 @@
 
         .if .xmatch({f2_type}, u16)
           .if .xmatch({f2_op}, =)
-            ecmp16 f2_lhs, f2_rhs
+            F2_EMIT ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
           .elseif .xmatch({f2_op}, <>)
-            ecmp16 f2_lhs, f2_rhs
+            F2_EMIT ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
           .elseif .xmatch({f2_op}, <)
-            ucmp16 f2_lhs, f2_rhs
+            F2_EMIT ucmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch({f2_op}, >)
-            ucmp16 f2_rhs, f2_lhs
+            F2_EMIT ucmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch({f2_op}, >=)
-            ucmp16 f2_lhs, f2_rhs
+            F2_EMIT ucmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .elseif .xmatch({f2_op}, <=)
-            ucmp16 f2_rhs, f2_lhs
+            F2_EMIT ucmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch({f2_type}, s16)
           .if .xmatch({f2_op}, =)
-            ecmp16 f2_lhs, f2_rhs
+            F2_EMIT ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
           .elseif .xmatch({f2_op}, <>)
-            ecmp16 f2_lhs, f2_rhs
+            F2_EMIT ecmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
           .elseif .xmatch({f2_op}, <)
-            scmp16 f2_lhs, f2_rhs
+            F2_EMIT scmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
           .elseif .xmatch({f2_op}, >)
-            scmp16 f2_rhs, f2_lhs
+            F2_EMIT scmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BMI, BPL
           .elseif .xmatch({f2_op}, >=)
-            scmp16 f2_lhs, f2_rhs
+            F2_EMIT scmp16 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
           .elseif .xmatch({f2_op}, <=)
-            scmp16 f2_rhs, f2_lhs
+            F2_EMIT scmp16 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BPL, BMI
           .else
             F2_ERR_UNREACHED
@@ -710,53 +738,53 @@
           .endif
 
           .if .xmatch({f2_op}, =) && .xmatch({f2_rhs}, #0)
-            lda f2_lhs
+            F2_EMIT lda f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
           .elseif .xmatch({f2_op}, <>) && .xmatch({f2_rhs}, #0)
-            lda f2_lhs
+            F2_EMIT lda f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
           .elseif .xmatch({f2_op}, <>) && .xmatch({f2_rhs}, #0)
-            lda f2_lhs
+            F2_EMIT lda f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
           .elseif .xmatch({f2_op}, =)
-            ucmp8 f2_lhs, f2_rhs
+            F2_EMIT ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
           .elseif .xmatch({f2_op}, <>)
-            ucmp8 f2_lhs, f2_rhs
+            F2_EMIT ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
           .elseif .xmatch({f2_op}, <)
-            ucmp8 f2_lhs, f2_rhs
+            F2_EMIT ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch({f2_op}, >)
-            ucmp8 f2_rhs, f2_lhs
+            F2_EMIT ucmp8 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch({f2_op}, >=)
-            ucmp8 f2_lhs, f2_rhs
+            F2_EMIT ucmp8 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .elseif .xmatch({f2_op}, <=)
-            ucmp8 f2_rhs, f2_lhs
+            F2_EMIT ucmp8 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch({f2_type}, u24)
           .if .xmatch({f2_op}, =)
-            ecmp24 f2_lhs, f2_rhs
+            F2_EMIT ecmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BEQ, BNE
           .elseif .xmatch({f2_op}, <>)
-            ecmp24 f2_lhs, f2_rhs
+            F2_EMIT ecmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BNE, BEQ
           .elseif .xmatch({f2_op}, <)
-            ucmp24 f2_lhs, f2_rhs
+            F2_EMIT ucmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch({f2_op}, >)
-            ucmp24 f2_rhs, f2_lhs
+            F2_EMIT ucmp24 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCC, BCS
           .elseif .xmatch({f2_op}, >=)
-            ucmp24 f2_lhs, f2_rhs
+            F2_EMIT ucmp24 f2_lhs, f2_rhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .elseif .xmatch({f2_op}, <=)
-            ucmp24 f2_rhs, f2_lhs
+            F2_EMIT ucmp24 f2_rhs, f2_lhs
             F2_CODEGEN_BRANCH_WITH_FLAGS BCS, BCC
           .else
             F2_ERR_UNREACHED
@@ -1797,12 +1825,12 @@
         .if (count) = 0
           F2_ERR_EXPECTED "non-zero count"
         .elseif (count) = 1
-          shift_op target
+          F2_EMIT shift_op target
         .else
           .local @loop
-          load_op #count
-@loop:    shift_op target
-          decr_op
+          F2_EMIT load_op #count
+@loop:    F2_EMIT shift_op target
+          F2_EMIT decr_op
           bne @loop
         .endif
 .endmacro
@@ -1810,28 +1838,34 @@
 .macro F2_CODEGEN_INCDEC type, op, arg
         .if .xmatch({type}, u8)
           .if .xmatch({op}, {++})
-            inc arg
+            F2_EMIT inc arg
           .elseif .xmatch({op}, {--})
-            dec arg
+            F2_EMIT dec arg
           .else
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch({type}, u16) || .xmatch({type}, s16)
           .if .xmatch({op}, {++})
-            inc16 arg
+            F2_EMIT inc16 arg
           .elseif .xmatch({op}, {--})
-            dec16 arg
+            F2_EMIT dec16 arg
           .endif
         .elseif .xmatch({type}, u24)
           .if .xmatch({op}, {++})
-            inc24 arg
+            F2_EMIT inc24 arg
           .elseif .xmatch({op}, {--})
-            F2_ERR "dec24 not defined"
+            F2_EMIT dec24 arg
           .else
             F2_ERR_UNREACHED
           .endif
         .elseif .xmatch({type}, u32)
-          F2_ERR "inc32/dec32 not defined"
+          .if .xmatch({op}, {++})
+            F2_EMIT inc32 arg
+          .elseif .xmatch({op}, {--})
+            F2_EMIT dec32 arg
+          .else
+            F2_ERR_UNREACHED
+          .endif
         .else
           F2_ERR_UNREACHED
         .endif
@@ -1949,11 +1983,11 @@
             ;; Code generation
             .if .xmatch({f2_type}, u8)
               .if .xmatch({f2_assign_op}, =)
-                copy8 f2_lhs, f2_target
+                F2_EMIT copy8 f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, +=)
-                add8 f2_target, f2_lhs, f2_target
+                F2_EMIT add8 f2_target, f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, -=)
-                sub8 f2_target, f2_lhs, f2_target
+                F2_EMIT sub8 f2_target, f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, <<=)
                 F2_CODEGEN_LOOP asl, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
               .elseif .xmatch({f2_assign_op}, >>=)
@@ -1964,35 +1998,35 @@
             .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
               .if .xmatch({f2_assign_op}, =)
                 .if .xmatch({f2_target}, AX)
-                  ldax f2_lhs
+                  F2_EMIT ldax f2_lhs
                 .elseif .xmatch({f2_target}, XY)
-                  ldxy f2_lhs
+                  F2_EMIT ldxy f2_lhs
                 .elseif .xmatch({f2_lhs}, AX)
-                  stax f2_target
+                  F2_EMIT stax f2_target
                 .elseif .xmatch({f2_lhs}, XY)
-                  stxy f2_target
+                  F2_EMIT stxy f2_target
                 .else
-                  copy16 f2_lhs, f2_target
+                  F2_EMIT copy16 f2_lhs, f2_target
                 .endif
               .elseif .xmatch({f2_assign_op}, +=)
                 .if .xmatch({f2_lhs}, AX)
-                  addax f2_target
+                  F2_EMIT addax f2_target
                 .elseif .xmatch({f2_lhs}, XY)
-                  addxy f2_target
+                  F2_EMIT addxy f2_target
                 .elseif .xmatch({.left(1, {f2_lhs})}, u8)
-                  add16_8 f2_target, _f2_butfirst {f2_lhs}
+                  F2_EMIT add16_8 f2_target, _f2_butfirst {f2_lhs}
                 .else
-                  add16 f2_target, f2_lhs, f2_target
+                  F2_EMIT add16 f2_target, f2_lhs, f2_target
                 .endif
               .elseif .xmatch({f2_assign_op}, -=)
                 .if .xmatch({f2_lhs}, AX)
-                  subax f2_target
+                  F2_EMIT subax f2_target
                 .elseif .xmatch({f2_lhs}, XY)
-                  F2_ERR "subxy not defined"
+                  F2_EMIT subxy f2_target
                 .elseif .xmatch({.left(1, {f2_lhs})}, u8)
-                  sub16_8 f2_target, _f2_butfirst {f2_lhs}
+                  F2_EMIT sub16_8 f2_target, _f2_butfirst {f2_lhs}
                 .else
-                  sub16 f2_target, f2_lhs, f2_target
+                  F2_EMIT sub16 f2_target, f2_lhs, f2_target
                 .endif
               .elseif .xmatch({f2_assign_op}, <<=)
                 F2_CODEGEN_LOOP asl16, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
@@ -2003,25 +2037,25 @@
               .endif
             .elseif .xmatch({f2_type}, u24)
               .if .xmatch({f2_assign_op}, =)
-                copy24 f2_lhs, f2_target
+                F2_EMIT copy24 f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, +=)
-                F2_ERR "add24 not defined"
+                F2_EMIT add24 f2_target, f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, -=)
-                F2_ERR "sub24 not defined"
+                F2_EMIT sub24 f2_target, f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, <<=)
-                F2_ERR "asl24 not defined"
+                F2_CODEGEN_LOOP asl24, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
               .elseif .xmatch({f2_assign_op}, >>=)
-                F2_ERR "lsr24 not defined"
+                F2_CODEGEN_LOOP lsr24, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
               .else
                 F2_ERR_UNREACHED
               .endif
             .elseif .xmatch({f2_type}, u32)
               .if .xmatch({f2_assign_op}, =)
-                copy32 f2_lhs, f2_target
+                F2_EMIT copy32 f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, +=)
-                add32 f2_target, f2_lhs, f2_target
+                F2_EMIT add32 f2_target, f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, -=)
-                sub32 f2_target, f2_lhs, f2_target
+                F2_EMIT sub32 f2_target, f2_lhs, f2_target
               .elseif .xmatch({f2_assign_op}, <<=)
                 F2_CODEGEN_LOOP asl32, f2_loop_load, f2_loop_decr, _immediate_value {f2_lhs}, {f2_target}
               .elseif .xmatch({f2_assign_op}, >>=)
@@ -2071,45 +2105,51 @@
             ;; Code generation
             .if .xmatch({f2_type}, u8)
               .if .xmatch({f2_binop}, +)
-                add8 f2_lhs, f2_rhs, f2_target
+                F2_EMIT add8 f2_lhs, f2_rhs, f2_target
               .elseif .xmatch({f2_binop}, -)
-                sub8 f2_lhs, f2_rhs, f2_target
+                F2_EMIT sub8 f2_lhs, f2_rhs, f2_target
               .else
                 F2_ERR_UNREACHED
               .endif
             .elseif .xmatch({f2_type}, u16) || .xmatch({f2_type}, s16)
               .if .xmatch({f2_binop}, +)
                 .if .xmatch({f2_lhs}, AX)
-                  addax f2_rhs, f2_target
+                  F2_EMIT addax f2_rhs, f2_target
                 .elseif .xmatch({f2_lhs}, XY)
-                  addxy f2_rhs, f2_target
+                  F2_EMIT addxy f2_rhs, f2_target
                 .elseif .xmatch({f2_rhs}, AX)
-                  addax f2_lhs, f2_target
+                  F2_EMIT addax f2_lhs, f2_target
                 .elseif .xmatch({f2_rhs}, XY)
-                  addxy f2_lhs, f2_target
+                  F2_EMIT addxy f2_lhs, f2_target
                 .elseif .xmatch({.left(1, {f2_rhs})}, u8)
-                  add16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
+                  F2_EMIT add16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
                 .else
-                  add16 f2_lhs, f2_rhs, f2_target
+                  F2_EMIT add16 f2_lhs, f2_rhs, f2_target
                 .endif
               .elseif .xmatch({f2_binop}, -)
                 .if .xmatch({f2_rhs}, AX)
-                  subax f2_lhs, f2_target
+                  F2_EMIT subax f2_lhs, f2_target
                 .elseif .xmatch({.left(1, {f2_rhs})}, u8)
-                  sub16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
+                  F2_EMIT sub16_8 f2_lhs, _f2_butfirst {f2_rhs}, f2_target
                 .else
-                  sub16 f2_lhs, f2_rhs, f2_target
+                  F2_EMIT sub16 f2_lhs, f2_rhs, f2_target
                 .endif
               .else
                 F2_ERR_UNREACHED
               .endif
             .elseif .xmatch({f2_type}, u24)
-              F2_ERR "add24/sub24 not defined"
+              .if .xmatch({f2_binop}, +)
+                F2_EMIT add24 f2_lhs, f2_rhs, f2_target
+              .elseif .xmatch({f2_binop}, -)
+                F2_EMIT sub24 f2_lhs, f2_rhs, f2_target
+              .else
+                F2_ERR_UNREACHED
+              .endif
             .elseif .xmatch({f2_type}, u32)
               .if .xmatch({f2_binop}, +)
-                add32 f2_lhs, f2_rhs, f2_target
+                F2_EMIT add32 f2_lhs, f2_rhs, f2_target
               .elseif .xmatch({f2_binop}, -)
-                sub32 f2_lhs, f2_rhs, f2_target
+                F2_EMIT sub32 f2_lhs, f2_rhs, f2_target
               .else
                 F2_ERR_UNREACHED
               .endif

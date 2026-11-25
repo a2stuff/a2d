@@ -1706,5 +1706,20 @@ __BEGIN_CASES__
         SET u16 target <<= varA          ; SET: Expected immediate argument for '<<='
         SET u16 target <<= #kNonConstant ; SET: Expected constant expression after '<<='
         SET u16 target <<= #0            ; SET: Expected non-zero count
+
+        SET u24 --target                ; SET: dec24 not defined
+        SET u32 ++target                ; SET: inc32 not defined
+        SET u32 --target                ; SET: dec32 not defined
+
+        SET u16 varA -= XY              ; SET: subxy not defined
+
+        SET u24 --varA                  ; SET: dec24 not defined
+        SET u32 ++varA                  ; SET: inc32 not defined
+        SET u32 --varA                  ; SET: dec32 not defined
+
+        SET u24 varA += varB            ; SET: add24 not defined
+        SET u24 varA -= varB            ; SET: sub24 not defined
+        SET u24 varA = varB + varC      ; SET: add24 not defined
+        SET u24 varA = varB - varC      ; SET: sub24 not defined
 __END_CASES__
 .endif

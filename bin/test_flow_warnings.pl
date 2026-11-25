@@ -30,8 +30,21 @@ EOF
   utf8::decode($out);
   $out =~ tr/‘’/''/;
 
-  my @errors = ($out =~ /Error:/g);
-  die "Multiple errors from $code\n" if scalar @errors != 1;
+  my @errors = ($out =~ /Error: .*$/mg);
+  if (scalar @errors > 1) {
+    print "Multiple errors from:\n";
+    print "Code:     $code\n";
+    print "Expected: $expected_error\n";
+    print join("\n", @errors);
+    print "\n\n";
+    return;
+  } elsif (scalar @errors == 0) {
+    print "No errors from:\n";
+    print "Code:     $code\n";
+    print "Expected: $expected_error\n";
+    print "\n";
+    return;
+  }
 
   my $saw;
   if (!$?) {
