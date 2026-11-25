@@ -23,9 +23,6 @@ selector_list := SELECTOR_FILE_BUF
 PARAM_BLOCK, $1400
 orig_prefix     .res    ::kSelectorListBufSize
 current_prefix  .res    ::kPathBufferSize
-
-;;; Table for 24 entries; index (0...23) if in use, $FF if empty
-entries_flag_table .res ::kSelectorListNumEntries
 END_PARAM_BLOCK
 
 Exec:
@@ -164,8 +161,6 @@ copy_when:
 
         copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
         copy8   selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
-        jsr     PopulateEntriesFlagTable
-
         OPTK_CALL OPTK::Draw, shortcut_picker_params
 
         FALL_THROUGH_TO DialogLoop
@@ -505,34 +500,6 @@ handle_button:
     END_IF
         rts
 .endproc ; UpdateOKButton
-
-;;; ============================================================
-
-.proc PopulateEntriesFlagTable
-        ldx     #kSelectorListNumEntries - 1
-        lda     #$FF
-    DO
-        sta     entries_flag_table,x
-    WHILE dex : POS
-
-        ldx     #0
-    DO
-        BREAK_IF X = num_primary_run_list_entries
-        txa
-        sta     entries_flag_table,x
-    WHILE inx : NOT_ZERO
-
-        ldx     #0
-    DO
-        BREAK_IF X = num_secondary_run_list_entries
-        txa
-        clc
-        adc     #kSelectorListNumPrimaryRunListEntries
-        sta     entries_flag_table+8,x
-    WHILE inx : NOT_ZERO
-
-        rts
-.endproc ; PopulateEntriesFlagTable
 
 ;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer
@@ -960,8 +927,18 @@ retry_flag:        .byte   0 ; bit7
 ;;; ============================================================
 
 .proc IsEntryCallback
-        tay
-        ldx     entries_flag_table,y ; set N appropriately
+    IF A < #kSelectorListNumPrimaryRunListEntries
+        sec
+        sbc     num_primary_run_list_entries ; N=1 if valid
+        eor     #$80            ; now N=0 if valid
+        rts
+    END_IF
+
+        sec
+        sbc     #kSelectorListNumPrimaryRunListEntries
+        sec
+        sbc     num_secondary_run_list_entries ; N=1 if valid
+        eor     #$80            ; now N=0 if valid
         rts
 .endproc ; IsEntryCallback
 

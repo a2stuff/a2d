@@ -511,7 +511,6 @@ done_keys:
         jsr     GetPortAndDrawWindow
         copy8   #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
-        jsr     PopulateEntriesFlagTable
 
         OPTK_CALL OPTK::Draw, op_params
 
@@ -741,7 +740,6 @@ dispatch:
         RTS_IF A <> #MGTK::Area::content
         RTS_IF u8 findwindow_params::window_id <> #winfo::kDialogId
 
-        CALL    GetWindowPort, A=#winfo::kDialogId
         copy8   #winfo::kDialogId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -781,13 +779,15 @@ done:   rts
         ;; Entry selection?
         COPY_STRUCT screentowindow_params::window, op_params::coords
         OPTK_CALL OPTK::Click, op_params
-        bmi     ret
-        jsr     DetectDoubleClick
     IF NC
+        jsr     DetectDoubleClick
+      IF NC
         BTK_CALL BTK::Flash, ok_button
         TAIL_CALL TryInvokeSelectedIndex
+      END_IF
     END_IF
-ret:    rts
+
+        rts
 .endproc ; HandleButtonDown
 
 ;;; ============================================================
@@ -865,11 +865,9 @@ noop:   rts
 ;;; ============================================================
 
 .proc HandleNonmenuKey
-        CALL    GetWindowPort, A=#winfo::kDialogId
         lda     event_params::key
-    IF A < #$1C                 ; Control character?
-        jmp     control_char
-    END_IF
+
+        IF A < #$1C JUMP control_char ; Control character?
 
         ;; --------------------------------------------------
 
@@ -883,7 +881,7 @@ noop:   rts
 
         sta     op_params::new_selection
         OPTK_CALL OPTK::SetSelection, op_params
-        jmp     UpdateOKButton
+        TAIL_CALL UpdateOKButton
 
         ;; --------------------------------------------------
         ;; Control characters - return and arrows
@@ -893,7 +891,7 @@ noop:   rts
 control_char:
     IF A = #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
-        jmp     TryInvokeSelectedIndex
+        TAIL_CALL TryInvokeSelectedIndex
     END_IF
 
         ;; --------------------------------------------------
@@ -913,38 +911,6 @@ control_char:
         rts
 
 .endproc ; HandleNonmenuKey
-
-;;; ============================================================
-
-.proc PopulateEntriesFlagTable
-        ldx     #kSelectorListNumEntries - 1
-        lda     #$FF
-    DO
-        sta     entries_flag_table,x
-    WHILE dex : POS
-
-        ldx     #0
-    DO
-        BREAK_IF X = num_primary_run_list_entries
-        txa
-        sta     entries_flag_table,x
-    WHILE inx : NOT_ZERO
-
-        ldx     #0
-    DO
-        BREAK_IF X = num_secondary_run_list_entries
-        txa
-        clc
-        adc     #8
-        sta     entries_flag_table+8,x
-    WHILE inx : NOT_ZERO
-
-        rts
-.endproc ; PopulateEntriesFlagTable
-
-;;; Table for 24 entries; index (0...23) if in use, $FF if empty
-entries_flag_table:
-        .res    ::kSelectorListNumEntries, 0
 
 ;;; ============================================================
 
@@ -1185,8 +1151,18 @@ hi:     .byte   0
 ;;; Output: N=0 if valid entry
 
 .proc IsEntryCallback
-        tay
-        ldx     entries_flag_table,y ; set N
+    IF A < #kSelectorListNumPrimaryRunListEntries
+        sec
+        sbc     num_primary_run_list_entries ; N=1 if valid
+        eor     #$80            ; now N=0 if valid
+        rts
+    END_IF
+
+        sec
+        sbc     #kSelectorListNumPrimaryRunListEntries
+        sec
+        sbc     num_secondary_run_list_entries ; N=1 if valid
+        eor     #$80            ; now N=0 if valid
         rts
 .endproc ; IsEntryCallback
 

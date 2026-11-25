@@ -15,7 +15,7 @@ item_height     .byte            ; +$08 item height
 hoffset         .byte            ; +$09 item label horizontal offset
 voffset         .byte            ; +$0A item label vertical offset
 selected_index  .byte            ; +$0B selected index, or $FF if none
-is_entry_proc   .addr            ; +$0C called to draw an item (A=index)
+is_entry_proc   .addr            ; +$0C called to validate an item (A=index)
 draw_entry_proc .addr            ; +$0E called to draw an item (A=index)
 on_sel_change   .addr            ; +$10 called when `selected_index` has changed
 .endstruct                       ; length = $12
