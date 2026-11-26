@@ -31,7 +31,10 @@ notpencopy:     .byte   MGTK::notpencopy
         .include "../lib/event_params.s"
 
 ;;; See docs/Selector_List_Format.md for file format
-selector_list   := $B300
+selector_list   := $B700
+.assert selector_list + kSelectorListBufSize <= $BF00, error, "Overlaps ProDOS Global Page"
+
+IO_BUFFER := $1C00
 
 kShortcutRunDeskTop = res_char_button_desktop_shortcut
 kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
@@ -138,18 +141,15 @@ slot_x7:        .byte   0
 ;;; ============================================================
 ;;; More Resources
 
-grafport2:
-        .tag    MGTK::GrafPort
-
 solid_pattern:
         .res    8, $FF
 
 .params getwinport_params
 window_id:      .byte   0
-a_grafport:     .addr   grafport_win
+a_grafport:     .addr   grafport
 .endparams
 
-grafport_win:   .tag    MGTK::GrafPort
+grafport:       .tag    MGTK::GrafPort
 
 setzp_params:   .byte   MGTK::zp_overwrite ; performance over convenience
 
@@ -236,17 +236,13 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         ;; Frame
         DEFINE_RECT entry_picker_rect, kBorderDX*2 - 1, kEntryPickerTop - 2, winfo::kWidth - kBorderDX*2 + 1, kEntryPickerTop + kEntryPickerRows * kEntryPickerItemHeight + 1
 
-        io_buf_sl = $BB00
-
-        DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, io_buf_sl
+        DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, IO_BUFFER
         DEFINE_READWRITE_PARAMS read_selector_list_params, selector_list, kSelectorListBufSize
 
-        io_buf_desktop = $1C00
-        desktop_load_addr = $2000
-        kDeskTopLoadSize = $400
+        .assert * >= MODULE_BOOTSTRAP + kModuleBootstrapSize, error, "overlapping addresses"
 
-        DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, io_buf_desktop
-        DEFINE_READWRITE_PARAMS read_desktop_params, desktop_load_addr, kDeskTopLoadSize
+        DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, IO_BUFFER
+        DEFINE_READWRITE_PARAMS read_desktop_params, MODULE_BOOTSTRAP, kModuleBootstrapSize
 
 str_selector_list:
         PASCAL_STRING kPathnameSelectorList
@@ -254,8 +250,10 @@ str_selector_list:
 str_desktop:
         PASCAL_STRING kPathnameDeskTop
 
+        ;; Closes everything
         DEFINE_CLOSE_PARAMS close_desktop_params
 
+        ;; Used for loading overloys
         DEFINE_OPEN_PARAMS open_selector_params, str_selector, $800
 
 str_selector:
@@ -267,16 +265,10 @@ str_selector:
         DEFINE_READWRITE_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
         DEFINE_CLOSE_PARAMS close_overlay_params
 
-str_desktop_2:
-        PASCAL_STRING kPathnameDeskTop
-
 desktop_available_flag:
         .byte   0
 
         DEFINE_GET_FILE_INFO_PARAMS file_info_params, SELF_MODIFIED
-
-entry_string_buf:
-        .res    20
 
 num_primary_run_list_entries:
         .byte   0
@@ -336,7 +328,7 @@ entry:
         ora     num_primary_run_list_entries
     IF ZERO
 quick_run_desktop:
-        CALL    GetFileInfo, AX=#str_desktop_2
+        CALL    GetFileInfo, AX=#str_desktop
         bcs     done_keys
         jmp     RunDesktop
     END_IF
@@ -501,7 +493,7 @@ done_keys:
         ;; --------------------------------------------------
 
         ;; Is DeskTop available?
-        CALL    GetFileInfo, AX=#str_desktop_2
+        CALL    GetFileInfo, AX=#str_desktop
         ror     desktop_available_flag ; bit7 = C (1=not available)
 
         ;; --------------------------------------------------
@@ -510,7 +502,6 @@ done_keys:
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     GetPortAndDrawWindow
         copy8   #BTK::kButtonStateDisabled, ok_button::state
-        jsr     LoadSelectorList
 
         OPTK_CALL OPTK::Draw, op_params
 
@@ -541,7 +532,7 @@ quick_boot_slot:
        IF A = #kShortcutRunDeskTop
 
         BTK_CALL BTK::Flash, desktop_button
-retry:  CALL    GetFileInfo, AX=#str_desktop_2
+retry:  CALL    GetFileInfo, AX=#str_desktop
         IF CS
         CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
@@ -636,7 +627,6 @@ menu_addr_table:
 other:  jmp     HandleNonmenuKey
     END_IF
 
-has_modifiers:
         lda     event_params::key
         jsr     ToUpperCase
         IF A = #CHAR_ESCAPE GOTO menukey
@@ -720,7 +710,7 @@ dispatch:
       WHILE ZS
     END_IF
 
-        jmp     LoadSelectorList
+        rts
 
 .endproc ; CmdRunAProgram
 
@@ -763,7 +753,7 @@ done:   rts
         IF NS GOTO done         ; N=0/Z=1 if clicked
 
        DO
-        CALL    GetFileInfo, AX=#str_desktop_2
+        CALL    GetFileInfo, AX=#str_desktop
         IF CS
         CALL    ShowAlert, A=#AlertID::insert_system_disk
         ASSERT_NOT_EQUALS kAlertResultCancel, 0
@@ -820,7 +810,7 @@ noop:   rts
         sta     read_desktop_params::ref_num
         MLI_CALL READ, read_desktop_params
         MLI_CALL CLOSE, close_desktop_params
-        jmp     desktop_load_addr
+        jmp     MODULE_BOOTSTRAP
 .endproc ; RunDesktop
 
 ;;; ============================================================
@@ -867,7 +857,7 @@ noop:   rts
 .proc HandleNonmenuKey
         lda     event_params::key
 
-        IF A < #$1C JUMP control_char ; Control character?
+        IF A < #$1C GOTO control_char ; Control character?
 
         ;; --------------------------------------------------
 
@@ -1089,7 +1079,7 @@ backup_devlst:
 .proc GetWindowPort
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport_win
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 .endproc ; GetWindowPort
 
@@ -1170,11 +1160,9 @@ hi:     .byte   0
 ;;; Input: A = entry number
 
 .proc DrawEntryCallback
-        ptr := $06
-
         ;; Prefix - number or just spaces
         pha
-    IF A < #8
+    IF A < #kSelectorListNumPrimaryRunListEntries
         ;; Assert: C=0
         adc     #'1'
     ELSE
@@ -1198,8 +1186,12 @@ str_prefix:     PASCAL_STRING "   "
 
 .proc CmdStartup
         ldy     menu_params::menu_item
-        lda     slot_table,y
-set:    ora     #>$C000         ; compute $Cn00
+        FALL_THROUGH_TO StartupSlot, A=slot_table,y
+.endproc ; CmdStartup
+
+;;; Input: A = slot
+.proc StartupSlot
+        ora     #>$C000         ; compute $Cn00
         sta     @addr+1
         lda     #<$C000
         sta     @addr
@@ -1208,8 +1200,7 @@ set:    ora     #>$C000         ; compute $Cn00
 
         @addr := * + 1
         jmp     SELF_MODIFIED
-.endproc ; CmdStartup
-StartupSlot := CmdStartup::set
+.endproc ; StartupSlot
 
 ;;; ============================================================
 
@@ -1275,7 +1266,6 @@ rest:
         jsr     LoadOverlayCopyDialog ; Trashes in-memory selector list
         jsr     ::file_copier::Exec
         pha
-        jsr     LoadSelectorList
         jsr     CheckAndClearUpdates
         pla
     IF NOT_ZERO
@@ -1421,6 +1411,8 @@ check_path:
         jmp     retry
 
 found_slash:
+        ;; Split full path at `INVOKER_PREFIX` into prefix and
+        ;; filename.
         dey
         tya
         pha
@@ -1451,6 +1443,8 @@ found_slash:
         jmp     INVOKER
 
 .endproc ; LaunchPath
+
+;;; ============================================================
 
 .proc ClearSelectedIndex
     IF bit invoked_during_boot_flag : NC
@@ -1488,7 +1482,6 @@ found_slash:
 
 .proc ReadLinkFile
         read_buf := $800
-        io_buf := $1C00
 
         MLI_CALL OPEN, open_params
         bcs     err
@@ -1508,7 +1501,7 @@ found_slash:
         IF u8 read_buf,x <> check_header,x GOTO err
     WHILE dex : POS
 
-        COPY_STRING read_buf + kLinkFilePathLengthOffset, INVOKER_PREFIX
+        CALL    CopyPathToInvokerPrefix, AX=#read_buf + kLinkFilePathLengthOffset
         RETURN  C=0
 
 err:    RETURN  C=1
@@ -1517,7 +1510,7 @@ check_header:
         .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
         kCheckHeaderLength = * - check_header
 
-        DEFINE_OPEN_PARAMS open_params, INVOKER_PREFIX, io_buf
+        DEFINE_OPEN_PARAMS open_params, INVOKER_PREFIX, IO_BUFFER
         DEFINE_READWRITE_PARAMS read_params, read_buf, kLinkFileMaxSize
         DEFINE_CLOSE_PARAMS close_params
 

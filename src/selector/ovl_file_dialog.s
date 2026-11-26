@@ -145,4 +145,5 @@ RestoreFileDialogState := _MoveFileDialogStateImpl::restore
 ;;; ============================================================
 
         ENDSEG OverlayFileDialog
+        .assert * <= app::selector_list, error, "Overwrites selector list buffer"
         .assert * <= $BF00, error, "Overwrites ProDOS Global Page"

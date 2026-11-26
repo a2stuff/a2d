@@ -122,7 +122,7 @@ start:
 
         Bell = app::Bell
         SystemTask = app::SystemTaskFromLC
-        alert_grafport = app::grafport2
+        alert_grafport = app::grafport
         BTKEntry := app::BTKEntry
 
         AD_SAVEBG = 1

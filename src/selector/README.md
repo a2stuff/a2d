@@ -13,8 +13,8 @@ The file is broken down into multiple segments:
 | Invoker      | Main    | $0290   | `../lib/invoker.s`   |
 | App          | Main    | $4000   | `app.s`              |
 | Alert Dialog | Aux LC1 | $D000   | `alert_dialog.s`     |
-| File Dialog  | Main    | $A500   | `ovl_file_dialog.s`  |
-| Copy Dialog  | Main    | $A500   | `ovl_file_copy.s`    |
+| File Dialog  | Main    | $AB00   | `ovl_file_dialog.s`  |
+| Copy Dialog  | Main    | $AB00   | `ovl_file_copy.s`    |
 
 See `selector.s` for the specific values. Segments are padded in the
 file to ensure they appear at block boundaries, enabling faster
@@ -48,6 +48,7 @@ appropriate IO buffer location based on load address.
 * A copy of MGTK resides at $4000.
 * The font comes next.
 * The application resources, entry point, and code follows.
+* The `SELECTOR.LIST` file is loaded just before the ProDOS global page.
 
 ### Alert Dialog - `alert_dialog.s`
 
@@ -62,7 +63,7 @@ to run.
 
 ### File Copy Overlay - `ovl_file_copy.s`
 
-Recursive copy implementation. Loaded to $A600.
+Recursive copy implementation. Loaded after the app.
 
 Used when invoking a program via the selector with the option
 "Copy to RAMCard" / "On first use" specified.
@@ -86,7 +87,7 @@ $C000 +-------------+       +-------------+       +-------------+
       |.ProDOS.GP...|       |             |
 $BF00 +-------------+       |             |
       | Sel.List    |       |             |
-$B300 + - - - - - - +       |             |
+$B700 +-------------+       |             |
       | Selector    |       |             |
       | Overlays    |       |             |
       |             |       |             |

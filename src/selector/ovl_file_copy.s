@@ -535,3 +535,5 @@ display_path:
 .endscope ; file_copier
 
         ENDSEG OverlayCopyDialog
+
+        .assert * <= app::selector_list, error, "Overwrites selector list buffer"
