@@ -292,32 +292,23 @@ ret:    rts
         stax    name_ptr
 
         ;; Compare against each filename
-        lda     #0
-        sta     index
-        copy16  #file_names, curr_ptr
-    REPEAT
+        copy8   #0, index
+    DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
-        BREAK_IF A = num_file_names
+        IF A = num_file_names \
+          RETURN A=#$FF
 
-        ;; Check length
+        jsr     _GetFilenameForIndex
+        stax    curr_ptr
+
         jsr     _CompareStrings
-        beq     found
+        IF ZS \
+          RETURN A=index
 
         ;; No match - next!
-        inc     index
-        add16_8 curr_ptr, #16
-    FOREVER
+    WHILE inc index : NOT ZERO  ; always
 
-        RETURN  A=#$FF
-
-        ;; Now find index
-found:  ldx     num_file_names
-    DO
-        dex
-    WHILE u8 file_list_index,x <> index
-        txa
-        rts
 .endproc ; _FindFilenameIndex
 .endif
 
@@ -586,6 +577,8 @@ file_char:
         RETURN  A=#0
 
 .proc _FindMatch
+        curr_ptr := $06
+
         IF u8 num_file_names = #0 \
           RETURN A=#$FF
 
@@ -593,16 +586,18 @@ file_char:
     DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
+        BREAK_IF A = num_file_names
+
         jsr     _GetFilenameForIndex
-        stax    $06
+        stax    curr_ptr
 
         ldy     #0
-        lda     ($06),y
+        lda     (curr_ptr),y
         sta     len
 
         ;; compare strings (length >= 1)
 cloop:  iny
-        CALL    _ToUpperCase, A=($06),y
+        CALL    _ToUpperCase, A=(curr_ptr),y
         cmp     type_down_buf,y
         bcc     next
         beq     :+
@@ -1231,7 +1226,7 @@ next:   add16_8 ptr, #16        ; advance to next
 
 ;;; ============================================================
 
-;;; Inputs: $06, $08 are pts to strings
+;;; Inputs: $06, $08 are ptrs to strings
 ;;; Compare strings at $06 (1) and $08 (2).
 ;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
 .proc _CompareStrings
