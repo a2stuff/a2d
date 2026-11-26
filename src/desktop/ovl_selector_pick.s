@@ -704,15 +704,8 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetFileEntryAddr
-        addr := selector_list + kSelectorListEntriesOffset
         jsr     main::ATimes16
-        clc
-        adc     #<addr
-        tay
-        txa
-        adc     #>addr
-        tax
-        tya
+        addax16 #selector_list + kSelectorListEntriesOffset
         rts
 .endproc ; GetFileEntryAddr
 
@@ -722,16 +715,8 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetFilePathAddr
-        addr := selector_list + kSelectorListPathsOffset
-
         jsr     main::ATimes64
-        clc
-        adc     #<addr
-        tay
-        txa
-        adc     #>addr
-        tax
-        tya
+        addax16 #selector_list + kSelectorListPathsOffset
         rts
 .endproc ; GetFilePathAddr
 
@@ -742,13 +727,7 @@ index:  .byte   0
 
 .proc GetResourceEntryAddr
         jsr     main::ATimes16
-        clc
-        adc     #<run_list_entries
-        tay
-        txa
-        adc     #>run_list_entries
-        tax
-        tya
+        addax16 #run_list_entries
         rts
 .endproc ; GetResourceEntryAddr
 
@@ -759,13 +738,7 @@ index:  .byte   0
 
 .proc GetResourcePathAddr
         jsr     main::ATimes64
-        clc
-        adc     #<main::run_list_paths
-        tay
-        txa
-        adc     #>main::run_list_paths
-        tax
-        tya
+        addax16 #main::run_list_paths
         rts
 .endproc ; GetResourcePathAddr
 

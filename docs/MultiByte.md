@@ -70,6 +70,10 @@ Subtract `arg1` from A,X. A,X is dirtied. The result is stored to `arg2` if give
 
 Add `arg1` to A,X. The result remains in A,X, and stored in `arg2` if given.
 
+### `addax16 arg1 [, arg2]`
+
+Add `arg1` to A,X. The result remains in A,X, and stored in `arg2` if given. Y is trashed.
+
 ### `subax8 arg1 [, arg2]`
 
 Subtract `arg1` from A,X. The result remains in A,X, and stored in `arg2` if given.

@@ -1210,16 +1210,8 @@ entry_dir_name:
 ;;; Compute first offset into selector file - A*16 + 2
 
 .proc ComputeLabelAddr
-        addr := selector_buffer + kSelectorListEntriesOffset
-
         jsr     AxTimes16
-        clc
-        adc     #<addr
-        tay
-        txa
-        adc     #>addr
-        tax
-        tya
+        addax16 #selector_buffer + kSelectorListEntriesOffset
         rts
 .endproc ; ComputeLabelAddr
 
@@ -1227,16 +1219,8 @@ entry_dir_name:
 ;;; Compute second offset into selector file - A*64 + $182
 
 .proc ComputePathAddr
-        addr := selector_buffer + kSelectorListPathsOffset
-
         jsr     AxTimes64
-        clc
-        adc     #<addr
-        tay
-        txa
-        adc     #>addr
-        tax
-        tya
+        addax16 #selector_buffer + kSelectorListPathsOffset
         rts
 .endproc ; ComputePathAddr
 

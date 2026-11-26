@@ -457,6 +457,23 @@
     .endif
 .endmacro
 
+;;; Add arg (16-bit value) into A,X, optionally store to arg2; trashes Y
+.macro addax16 arg1, arg2
+        clc
+        _op_lo  adc, {arg1}
+    .ifnblank arg2
+        _op_lo  sta, {arg2}
+    .endif
+        tay
+        txa
+        _op_hi  adc, {arg1}
+    .ifnblank arg2
+        _op_hi  sta, {arg2}
+    .endif
+        tax
+        tya
+.endmacro
+
 ;;; Subtract arg1 (8 bit value) from A,X, optionally store to arg2
 ;;;    subax8 #$11       ; immediate
 ;;;    subax8 $11        ; absolute
