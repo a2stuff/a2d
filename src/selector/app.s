@@ -1449,7 +1449,7 @@ found_slash:
 
 ;;; Copy path to INVOKER_PREFIX
 ;;; Input: A,X = path
-;;; Trashes $06
+;;; Scrambles: $06
 .proc CopyPathToInvokerPrefix
         ptr := $06
 

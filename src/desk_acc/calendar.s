@@ -694,7 +694,7 @@ tmp:    .word   0
 
 ;;; Appends passed string to `buf_month_year`
 ;;; Inputs: A,X = string
-;;; Trashes: $06
+;;; Scrambles: $06
 .proc AppendString
         ptr := $06
         stax    ptr

@@ -946,7 +946,7 @@ prev_selected_icon:
 
 ;;; Inputs: `drag_drop_params::target`
 ;;; Assert: If target is a file icon, icon is in active window.
-;;; Trashes $06
+;;; Scrambles: $06
 .proc _MaybeStashDropTargetName
         ;; Flag as not stashed
         copy8   #0, stashed_name
@@ -970,7 +970,7 @@ prev_selected_icon:
 ;;; --------------------------------------------------
 ;;; Outputs: `drag_drop_params::target` updated if needed
 ;;; Assert: `_MaybeStashDropTargetName` was previously called
-;;; Trashes $06
+;;; Scrambles: $06
 
 .proc _MaybeUpdateDropTargetFromName
         ;; Did we previously stash an icon's name?
@@ -1938,7 +1938,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 
 ;;; --------------------------------------------------
 
-;;; Trashes: `INVOKER_INTERPRETER`
+;;; Scrambles: `INVOKER_INTERPRETER`
 .proc _MakeSrcPathAbsolute
         ;; Already absolute?
     IF u8 src_path_buf+1 <> #'/'
@@ -2163,7 +2163,7 @@ main_length:    .word   0
 ;;; ============================================================
 ;;; Uppercase a string
 ;;; Input: A,X = Address
-;;; Trashes $06
+;;; Scrambles: $06
 
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc UpcaseString
@@ -3116,7 +3116,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
 ;;; Select and scroll into view an icon in the active window.
 ;;; Inputs: A,X = name
 ;;; Output: C=0 on success
-;;; Trashes $06
+;;; Scrambles: $06
 
 .proc SelectFileIconByName
         CALL    FindIconByName, Y=active_window_id
@@ -3161,7 +3161,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
 ;;; ============================================================
 ;;; Input: $06 has name
 ;;; Output: A = icon id (and Z=0), or A=0 and Z=1 if not found
-;;; Trashes $08
+;;; Scrambles: $08
 
 .proc FindIconByNameInCachedWindow
         ptr_icon_name := $08
@@ -3198,7 +3198,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
 ;;; Take the name in `stashed_name` and "increment it":
 ;;; * If ends in dot-digits, increment (adjusting length if needed)
 ;;; * Otherwise, append ".2" (shrinking if needed)
-;;; Trashes $10...$1F
+;;; Scrambles: $10...$1F
 
 .proc SpinName
         digits := $10
@@ -4979,7 +4979,7 @@ _PreamblePreCached:
 .endproc ; _SetVThumbFromViewport
 
 ;;; Input: X=axis (`MGTK::Point::xcoord` or `MGTK::Point::ycoord`)
-;;; Scrambles A,X,Y
+;;; Scrambles: A,X,Y
 .proc _CalcThumbFromViewport
         sub16   viewport+MGTK::Rect::topleft,x, ubox+MGTK::Rect::topleft,x, setthumb_muldiv_params::number
         sub16   ubox+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::topleft,x, tmpw
@@ -6349,7 +6349,7 @@ OpenWindowForPath := OpenWindowImpl::for_path
 ;;; Mark the icon as not open; does not redraw as not all clients need
 ;;; it, e.g. if they will subsequently select the icon.
 ;;; Input: A = `icon_id`
-;;; Trashes $06
+;;; Scrambles: $06
 ;;; Note: Does not modify `window_to_dir_icon_table` entry
 
 .proc MarkIconNotDimmedNoDraw
@@ -6426,7 +6426,7 @@ err:    RETURN  C=1
 ;;;
 ;;; Inputs: A,X has path
 ;;; Output: A=icon id and Z=0 if found, Z=1 if no match
-;;; Trashes $06 and `operation_dst_path`
+;;; Scrambles: $06 and `operation_dst_path`
 
 .proc FindIconForPath
         jsr     CopyToOperationDstPath
@@ -6621,7 +6621,7 @@ set_pos:
 
 ;;; ============================================================
 ;;; Populate `text_buffer2` with "12,345K"
-;;; Trashes: $06
+;;; Scrambles: $06
 
         PROC_USED_CLEARING_UPDATES
 .proc ComposeSizeString
@@ -6831,7 +6831,7 @@ done:
 ;;; Retrieve the `IconEntry::record_num` for a given icon.
 ;;; Input: A = icon id
 ;;; Output: A = icon's record index in its window
-;;; Trashes $06
+;;; Scrambles: $06
 
         PROC_USED_CLEARING_UPDATES
 .proc GetIconRecordNum
@@ -7634,7 +7634,7 @@ vol_blocks_used:  .word   0
 ;;;
 ;;; Input: A = `window_id`
 ;;; Output: $40...$4F holds copy of window's `MapInfo`
-;;; Trashes $06
+;;; Scrambles: $06
 
 window_mapinfo_cache := $40
 
@@ -8399,7 +8399,7 @@ records_base_ptr:
 ;;; does not depend on icon creation state.
 ;;; Input: A = window_od
 ;;; Output: A = entry count
-;;; Trashes $06
+;;; Scrambles: $06
 
         PROC_USED_CLEARING_UPDATES
 .proc GetFileRecordCountForWindow
@@ -8643,7 +8643,7 @@ map_delta_y:    .word   0
 ;;; Inits `map_delta_x` and `map_delta_y` for window/screen mapping
 ;;; for active window.
 ;;; Inputs: `active_window_id` set
-;;; Trashes: $08
+;;; Scrambles: $08
 
 .proc PrepActiveWindowScreenMapping
         FALL_THROUGH_TO PrepWindowScreenMapping, A=active_window_id
@@ -12717,7 +12717,7 @@ list:   .word   0               ; 0 items in list
 ;;; Outputs: Path updated.
 ;;; Modifies `tmp_path_buf` and $1F00
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
-;;; Trashes $06
+;;; Scrambles: $06
 
 .proc _UpdateTargetPath
         dst := $06
@@ -12765,7 +12765,7 @@ assign: ldy     new_path
 ;;; Inputs: A,X = pointer to path to update
 ;;; Outputs: Z=0 if updated, Z=1 if no change
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
-;;; Trashes $06, $08
+;;; Scrambles: $06, $08
 
 .proc _MaybeUpdateTargetPath
         ptr := $08
@@ -13276,7 +13276,7 @@ RestoreOverlayBuffer    := LoadDynamicRoutineImpl::buffer
 ;;; Remove segment from path at A,X
 ;;; Input: A,X = path to modify
 ;;; Output: A = length
-;;; Trashes $06
+;;; Scrambles: $06
 
         PROC_USED_IN_OVERLAY
 .proc RemovePathSegment
@@ -13345,7 +13345,7 @@ found_slash:
 ;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/gsos/tn.gsos.08.html
 ;;; Input: A,X = name
 ;;; Output: A,X = case bits
-;;; Trashes: $06/$08
+;;; Scrambles: $06/$08
 
         PROC_USED_IN_FORMAT_ERASE_OVERLAY
 .proc CalculateCaseBits
@@ -14289,7 +14289,7 @@ ret:    rts
 ;;; ============================================================
 
 ;;; Input: A,X = string to copy
-;;; Trashes: $06
+;;; Scrambles: $06
         PROC_USED_IN_OVERLAY
 .proc CopyToPathBuf0
         ptr1 := $06
@@ -14300,7 +14300,7 @@ ret:    rts
 ;;; ============================================================
 
 ;;; Input: A,X = string to copy
-;;; Trashes: $06
+;;; Scrambles: $06
 .proc CopyToOperationDstPath
         ptr1 := $06
         stax    ptr1

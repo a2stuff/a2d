@@ -1288,7 +1288,7 @@ bits:   .byte   $00
 ;;;            e.g. "APPLEWORKS"
 ;;;         `entry_path1` set to RAMCARD_PREFIX
 ;;;            e.g. "/RAM"
-;;; Trashes $06
+;;; Scrambles: $06
 
 .proc PrepareEntryPaths
         ptr := $6

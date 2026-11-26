@@ -12,7 +12,7 @@
 ;;; Mega II chip.
 
 ;;; Output: Z=1 if Mega II, Z=0 otherwise
-;;; Trashes A, X
+;;; Scrambles: A, X
 .proc DetectMegaII
         ldx     RDPAGE2
         stx     rdpage2_flag

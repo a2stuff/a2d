@@ -381,7 +381,7 @@ found:  ldx     num_file_names
 ;;; ============================================================
 
 ;;; Output: Z=1 if path is just '/'
-;;; Trashes: A
+;;; Scrambles: A
 
 .proc _IsRootPath
         ucmp8   path_buf, #1
@@ -1074,7 +1074,7 @@ next:   add16_8 ptr, #16        ; advance to next
 
 ;;; ============================================================
 ;;; Inputs: A = dst filename index; $06 = src ptr
-;;; Trashes $08
+;;; Scrambles: $08
 
 .proc _CopyIntoNthFilename
         src_ptr := $06

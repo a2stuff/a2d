@@ -570,7 +570,7 @@ END_PARAM_BLOCK
 ;;; Move icon to end of `icon_list`, i.e. top of z-order, unless
 ;;; it has `kIconEntryFlagsFixed`.
 ;;; Input: A = icon
-;;; Trashes `icon_ptr`
+;;; Scrambles: `icon_ptr`
 ;;; Assert: icon is in `icon_list`
 .proc MaybeMoveIconToTop
         pha                     ; A = icon
@@ -1032,7 +1032,7 @@ last_highlighted_icon:
 ;;;
 ;;; Inputs: `findwindow_params` mouse coords populated
 ;;; Outputs: A = icon (0 if none found), `findwindow_params::window_id` populated
-;;; Trashes `generic_ptr`
+;;; Scrambles: `generic_ptr`
 
 .proc _FindIconValidateWindow
         MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -1066,7 +1066,7 @@ find_icon:
 ;;; Input: `findwindow_params` populated
 ;;; Output: C=0 if content, C=1 if non-content
 ;;; Assert: `FindWindow` was called and returned `Area::content`
-;;; Trashes `generic_ptr`
+;;; Scrambles: `generic_ptr`
 .proc _CheckRealContentArea
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
         copy8   findwindow_params::window_id, findcontrol_params::window_id

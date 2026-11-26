@@ -1435,7 +1435,7 @@ IsDOS33 := IsDOS33Impl::start
 
 ;;; Input: A = Track, X = Sector, Y = unit_num, $06/$07 = 256-byte buffer
 ;;; Output: C=0 on success, C=1 on error
-;;; Trashes: $08/$09
+;;; Scrambles: $08/$09
 .scope RWTSImpl
 
 ;;; See ProDOS-8 Technical Reference Manual

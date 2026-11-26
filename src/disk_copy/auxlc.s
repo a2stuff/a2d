@@ -2050,7 +2050,7 @@ find_in_alert_table:
 ;;; --------------------------------------------------
 ;;; Inputs: X,Y = volume name
 ;;; Output: `confirm_erase_buf` populated
-;;; Scrambles $06...$08
+;;; Scrambles: $06...$08
 
 .proc _ComposeConfirmErase
         buf := confirm_erase_buf

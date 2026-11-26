@@ -598,7 +598,7 @@ done:   rts
 ;;; ============================================================
 ;;; Inputs: A,X = rect address
 ;;; Assert: Called from Main
-;;; Trashes: $06/$07
+;;; Scrambles: $06/$07
 
 .proc InvertButton
         ptr := $06

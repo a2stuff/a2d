@@ -2,7 +2,7 @@
 ;;; into the border. If the string is too long, it is shrunk from the
 ;;; center with "..." inserted.
 ;;; Inputs: A,X = string address
-;;; Trashes $06...$0C
+;;; Scrambles: $06...$0C
 
 ;;; `kProgressDialogPathWidth` must be defined
 

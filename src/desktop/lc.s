@@ -353,7 +353,7 @@ params: .res    3
 ;;; to support localization where the order of items in the string
 ;;; could change.
 ;;;
-;;; Trashes $06, $08
+;;; Scrambles: $06, $08
 
 .proc FormatMessage
         out_buf := text_input_buf

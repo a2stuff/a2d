@@ -435,7 +435,7 @@ eof:    RETURN  A=#$FF
 
 ;;; ============================================================
 ;;; Input: `file_entry` (a `FileEntry`), and A,X = path to modify
-;;; Trashes $06
+;;; Scrambles: $06
 
 .proc AppendFileEntryToPath
         path_ptr := $06
@@ -465,7 +465,7 @@ eof:    RETURN  A=#$FF
 ;;; Remove segment from path at A,X
 ;;; Input: A,X = path to modify
 ;;; Output: A = length
-;;; Trashes $06
+;;; Scrambles: $06
 
 .proc RemovePathSegment
         path_ptr := $06

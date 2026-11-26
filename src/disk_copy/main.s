@@ -518,7 +518,7 @@ mem_block_addr:
 
 ;;; Input: A,X = block number
 ;;; Output: C=0 if used, C=1 if free
-;;; Scrambles A,X,Y,$06/$07
+;;; Scrambles: A,X,Y,$06/$07
 
 .proc IsUsedInVolumeBitmap
         ptr := $06
@@ -543,7 +543,7 @@ mem_block_addr:
 
 ;;; Input: A,X = block number
 ;;; Output: A,X = offset into volume bitmap, Y = mask
-;;; Scrambles $06
+;;; Scrambles: $06
 
 .proc GetVolumeBitmapOffsetAndMask
         hi := $06

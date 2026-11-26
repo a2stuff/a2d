@@ -1202,7 +1202,7 @@ clear:  copy16  #hires, ptr
 ;;; Check suffix on `INVOKE_PATH` to see if it matches passed string
 ;;; Inputs: A,X = pointer to suffix (uppercase)
 ;;; Outputs: C=0 on match, C=1 otherwise
-;;; Trashes $06
+;;; Scrambles: $06
 
 .proc CheckSuffix
         ptr := $06
@@ -1400,7 +1400,7 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
 
 ;;; Inputs: A,X = `FileEntry`
 ;;; Output: C=1 if it's an image file we can preview, C=0 otherwise
-;;; Trashes: $06/$07, $0A...$0D
+;;; Scrambles: $06/$07, $0A...$0D
 
 .proc IsImageFileEntry
         ;; Copy somewhere more convenient
