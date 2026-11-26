@@ -704,7 +704,7 @@ END_PARAM_BLOCK
 
         lda     #0
         sta     highlight_icon_id
-        sta     trash_flag
+        sta     move_only_flag
 
 ;;; Determine if it's a drag or just a click
 .scope _DragDetectImpl
@@ -753,7 +753,7 @@ is_drag:
         jsr     GetIconFlags
         and     #kIconEntryFlagsNotDropSource
     IF NOT_ZERO
-        copy8   #$80, trash_flag
+        copy8   #$80, move_only_flag
     END_IF
         rts
         END_OF_LAMBDA
@@ -824,7 +824,7 @@ moved:
         jsr     _XDrawOutline
 
         ;; Check for highlighting changes
-        bit     trash_flag      ; Trash is not drop-able, so skip if in selection
+        bit     move_only_flag      ; not drop-able, so skip if in selection
         bmi     update_poly
 
         jsr     _FindIconValidateWindow
@@ -899,16 +899,14 @@ not_drag:
         sta     highlight_icon_id
         pla
 
-        cmp     source_window_id
-        beq     same_window
-
-        bit     trash_flag
-        jmi     exit_canceled
+    IF A <> source_window_id
+        IF bit move_only_flag : NS \
+          JUMP exit_canceled
 
         jmp     exit_drop
+    END_IF
 
         ;; Drag within same window (or desktop)
-same_window:
         ldx     #$80            ; clip (if desktop)
         lda     findwindow_params::which_area
         ASSERT_EQUALS MGTK::Area::desktop, 0
@@ -992,7 +990,7 @@ exit_canceled:
 highlight_icon_id:  .byte   $00
 
 source_window_id:       .byte   0 ; source window of drag (0=desktop)
-trash_flag:             .byte   0 ; if Trash is included in selection
+move_only_flag:         .byte   0 ; e.g. if Trash is included in selection
 
 highlight_count:
         .byte   0
