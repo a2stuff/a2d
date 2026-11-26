@@ -35,6 +35,9 @@ kAlertMsgInsertDestinationOrCancel = 10 ; No bell, *
 ;;; Y identifies a removable volume. In that case, the alert will
 ;;; automatically be dismissed when a disk is inserted.
 
+kInsertNormal = 0
+kInsertAutoDismiss = $80
+
 ;;; ============================================================
 
         ASSERT_ADDRESS ::kSegmentAuxLCAddress, "Entry point"
@@ -525,7 +528,7 @@ InitDialog:
         ;; Prompt to insert source disk
 
 prompt_insert_source:
-        CALL    ShowAlertDialog, X=#0, A=#kAlertMsgInsertSource ; X=0 means just show alert
+        CALL    ShowAlertDialog, X=#kInsertNormal, A=#kAlertMsgInsertSource
     IF A <> #kAlertResultOK
         jmp     InitDialog      ; Cancel
     END_IF
@@ -571,7 +574,7 @@ check_source_finish:
         ;; --------------------------------------------------
         ;; Prompt to insert destination disk
 
-        CALL    ShowAlertDialog, X=#0, A=#kAlertMsgInsertDestination ; X=0 means just show alert
+        CALL    ShowAlertDialog, X=#kInsertNormal, A=#kAlertMsgInsertDestination
     IF A <> #kAlertResultOK
         jmp     InitDialog      ; Cancel
     END_IF
@@ -806,7 +809,7 @@ check:  lda     current_drive_selection
 
         message := *+1
         lda     #SELF_MODIFIED_BYTE
-        CALL    ShowAlertDialog, X=#$80 ; X != 0 means Y=unit number, auto-dismiss
+        CALL    ShowAlertDialog, X=#kInsertAutoDismiss ; Y=unit number
 
       IF A <> #kAlertResultOK
         pla                     ; Cancel
