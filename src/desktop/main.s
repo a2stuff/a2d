@@ -455,8 +455,6 @@ dispatch_table:
         .addr   CmdSelectorItem
         ASSERT_ADDRESS_TABLE_SIZE menu7_start, ::kMenuSizeSelector
 
-        menu_end := *
-
         ;; indexed by menu id-1
 offset_table:
         .byte   menu1_start - dispatch_table
@@ -466,8 +464,7 @@ offset_table:
         .byte   menu5_start - dispatch_table
         .byte   menu6_start - dispatch_table
         .byte   menu7_start - dispatch_table
-        .byte   menu_end - dispatch_table
-        ASSERT_TABLE_SIZE offset_table, ::kMenuNumItems+1
+        ASSERT_TABLE_SIZE offset_table, ::kMenuNumItems
 .endproc ; MenuDispatch
 
 ;;; ============================================================

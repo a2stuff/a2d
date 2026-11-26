@@ -603,13 +603,11 @@ menu3:  .addr   CmdStartup
         .addr   CmdStartup
         .addr   CmdStartup
         .addr   CmdStartup
-menu_end:
 
-menu_addr_table:
+menu_offset_table:
         .byte   menu1 - menu_dispatch_table
         .byte   menu2 - menu_dispatch_table
         .byte   menu3 - menu_dispatch_table
-        .byte   menu_end - menu_dispatch_table
 
 ;;; ============================================================
 
@@ -643,25 +641,17 @@ menukey:
 ;;; ==================================================
 
 .proc HandleMenu
-        ldx     menu_params::menu_item
-        beq     fail
         ldx     menu_params::menu_id
-        bne     :+
-fail:   jmp     EventLoop
+        IF ZERO \
+          JUMP EventLoop
 
-:       dex
-        lda     menu_addr_table,x
-        tax
-        ldy     menu_params::menu_item
-        dey
-        tya
+        ;; Compute offset into command table - menu offset + item offset
+        lda     menu_params::menu_item ; menu item index is 1-based
         asl     a
-        sta     addr
-        txa
         clc
-        adc     addr
+        adc     menu_offset_table-1,x ; menu id is also 1-based
         tax
-        copy16  menu_dispatch_table,x, addr
+        copy16  menu_dispatch_table-2,x, addr ; 1-based (*2) to 0-based
         jsr     dispatch
         MGTK_CALL MGTK::HiliteMenu, menu_params
         rts

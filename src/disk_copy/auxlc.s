@@ -838,19 +838,21 @@ loop:   jsr     SystemTask
 
 menu_command_table:
         ;; Apple menu
-        .addr   NoOp
+menu1:  .addr   NoOp
         .addr   NoOp
         .addr   NoOp
         .addr   NoOp
         .addr   NoOp
         ;; File menu
-        .addr   main::Quit
+menu2:  .addr   main::Quit
         ;; Facilities menu
-        .addr   CmdQuickCopy
+menu3:  .addr   CmdQuickCopy
         .addr   CmdDiskCopy
 
 menu_offset_table:
-        .byte   0, 5*2, 6*2
+        .byte   menu1 - menu_command_table
+        .byte   menu2 - menu_command_table
+        .byte   menu3 - menu_command_table
 
 ;;; ============================================================
 
@@ -902,11 +904,11 @@ ignore: RETURN  A=#$FF
         adc     menu_offset_table-1,x ; menu id is also 1-based
         tax
         copy16  menu_command_table-2,x, jump_addr ; 1-based (*2) to 0-based
-        jsr     do_jump
+        jsr     dispatch
         MGTK_CALL MGTK::HiliteMenu, hilitemenu_params
         jmp     EventLoop
 
-do_jump:
+dispatch:
         jump_addr := *+1
         jmp     SELF_MODIFIED
 .endproc ; HandleMenuSelection
