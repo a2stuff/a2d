@@ -992,7 +992,7 @@ test.Step(
     desktop.SelectPath("/A2.DESKTOP/READ.ME")
     a2d.InvokeMenuItem(desktop.APPLE_MENU, desktop.CONTROL_PANELS)
     a2dtest.WaitForSystemTask()
-    test.Expect(#desktop.GetSelectedIcons(), 0, "no icons should be selected")
+    test.ExpectEquals(#desktop.GetSelectedIcons(), 0, "no icons should be selected")
 end)
 
 --[[
