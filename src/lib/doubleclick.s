@@ -1,8 +1,16 @@
 ;;; ============================================================
 ;;; Double Click Detection
 ;;; Returns with A=0 if double click, A=$FF otherwise.
+;;; Scrambles: $06...$0C
 
 .proc DetectDoubleClick
+
+PARAM_BLOCK, $06
+counter .word
+coords  .tag MGTK::Point
+delta   .byte
+END_PARAM_BLOCK
+
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
     DO
@@ -53,10 +61,10 @@ consume:
         ;; compute x delta
         lda     event_params + MGTK::Event::xcoord
         sec
-        sbc     xcoord
+        sbc     coords+MGTK::Point::xcoord
         sta     delta
         lda     event_params + MGTK::Event::xcoord+1
-        sbc     xcoord+1
+        sbc     coords+MGTK::Point::xcoord+1
     IF NEG
         ;; is -delta < x < 0 ?
         IF u8 delta >= #AS_BYTE{-kDoubleClickDeltaX} GOTO check_y
@@ -69,22 +77,17 @@ fail:   RETURN  A=#$FF
 check_y:
         lda     event_params+MGTK::Event::ycoord
         sec
-        sbc     ycoord
+        sbc     coords+MGTK::Point::ycoord
         sta     delta
         lda     event_params+MGTK::Event::ycoord+1
-        sbc     ycoord+1
+        sbc     coords+MGTK::Point::ycoord+1
         ;; is -delta < y < 0 ?
         IF NEG AND u8 delta >= #AS_BYTE{-kDoubleClickDeltaY} GOTO ok
         ;; is 0 < y < delta ?
+        ;; NOTE: Not guarded by !NEG, but could only yield a false
+        ;; positive if Y delta was greater than screen height.
         IF u8 delta >= #kDoubleClickDeltaY GOTO fail
 
 ok:     RETURN  A=#0
 .endproc ; _CheckDelta
-
-counter:
-        .word   0
-coords:
-xcoord: .word   0
-ycoord: .word   0
-delta:  .byte   0
 .endproc ; DetectDoubleClick
