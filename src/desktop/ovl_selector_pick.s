@@ -704,7 +704,7 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetFileEntryAddr
-        jsr     main::ATimes16
+        jsr     main::CalcSelectorListEntryOffset
         addax16 #selector_list + kSelectorListEntriesOffset
         rts
 .endproc ; GetFileEntryAddr
@@ -715,7 +715,7 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetFilePathAddr
-        jsr     main::ATimes64
+        jsr     main::CalcSelectorListPathOffset
         addax16 #selector_list + kSelectorListPathsOffset
         rts
 .endproc ; GetFilePathAddr
@@ -726,7 +726,7 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetResourceEntryAddr
-        jsr     main::ATimes16
+        jsr     main::CalcSelectorListEntryOffset
         addax16 #run_list_entries
         rts
 .endproc ; GetResourceEntryAddr
@@ -737,7 +737,7 @@ index:  .byte   0
 ;;; Output: A,X = Address
 
 .proc GetResourcePathAddr
-        jsr     main::ATimes64
+        jsr     main::CalcSelectorListPathOffset
         addax16 #main::run_list_paths
         rts
 .endproc ; GetResourcePathAddr
@@ -918,7 +918,7 @@ retry_flag:        .byte   0 ; bit7
 .proc DrawEntryCallback
         addr := selector_list + kSelectorListEntriesOffset
 
-        jsr     main::ATimes16
+        jsr     main::CalcSelectorListEntryOffset
         clc
         adc     #<addr
         pha

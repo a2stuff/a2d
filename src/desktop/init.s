@@ -648,9 +648,9 @@ unit_num:
         BREAK_IF A = count
 
         ;; Copy entry name into place
-        jsr     main::ATimes16  ; A = `index`
+        jsr     main::CalcSelectorListEntryOffset  ; A = `index`
         addax   #selector_list_data_buf + kSelectorListEntriesOffset, ptr1
-        CALL    main::ATimes16, A=index
+        CALL    main::CalcSelectorListEntryOffset, A=index
         addax   #run_list_entries, ptr2
         jsr     _CopyPtr1ToPtr2
 
@@ -659,9 +659,9 @@ unit_num:
         copy8   (ptr1),y, (ptr2),y
 
         ;; Copy entry path into place
-        CALL    main::ATimes64, A=index
+        CALL    main::CalcSelectorListPathOffset, A=index
         addax   #selector_list_data_buf + kSelectorListPathsOffset, ptr1
-        CALL    main::ATimes64, A=index
+        CALL    main::CalcSelectorListPathOffset, A=index
         addax   #main::run_list_paths, ptr2
         jsr     _CopyPtr1ToPtr2
 

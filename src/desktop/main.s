@@ -2484,12 +2484,12 @@ entry_num:
         ptr := $06
 
     IF A < #kSelectorListNumPrimaryRunListEntries
-        jsr     ATimes16
+        jsr     CalcSelectorListEntryOffset
         addax   #run_list_entries, ptr
         rts
     END_IF
 
-        jsr     ATimes16
+        jsr     CalcSelectorListEntryOffset
         addax   #SELECTOR_FILE_BUF + kSelectorListEntriesOffset, ptr
         rts
 .endproc ; _SetEntryPtr
@@ -2504,12 +2504,12 @@ entry_num:
         ptr := $06
 
     IF A < #kSelectorListNumPrimaryRunListEntries
-        jsr     ATimes64
+        jsr     CalcSelectorListPathOffset
         addax   #run_list_paths, ptr
         rts
     END_IF
 
-        jsr     ATimes64
+        jsr     CalcSelectorListPathOffset
         addax   #SELECTOR_FILE_BUF + kSelectorListPathsOffset, ptr
         rts
 .endproc ; _SetEntryPathPtr
@@ -6519,8 +6519,7 @@ done:
 
         ptr := $06
 
-        ASSERT_EQUALS .sizeof(FileRecord), 32
-        jsr     ATimes32        ; A,X = A * 32
+        jsr     CalcFileRecordOffset
         addax   file_record_ptr, ptr
 
         ;; Copy into more convenient location (LCBANK1)
@@ -7945,8 +7944,7 @@ scratch_space   := $804         ; can be used by comparison funcs
         tya
 
         ;; Calculate the pointer
-        ASSERT_EQUALS .sizeof(FileRecord), 32
-        jsr     ATimes32
+        jsr     CalcFileRecordOffset
 
         clc
         adc     list_start_ptr
@@ -8168,8 +8166,7 @@ END_PARAM_BLOCK
         dex
         txa
         pha                     ; A = record_num-1
-        ASSERT_EQUALS .sizeof(FileRecord), 32
-        jsr     ATimes32        ; A,X = A * 32
+        jsr     CalcFileRecordOffset
         record_ptr := $08
         addax   records_base_ptr, record_ptr
         pla                     ; A = record_num-1
@@ -12533,8 +12530,7 @@ ignore:
 
         ;; Look up the FileRecord within the list.
         pla                     ; A = index
-        ASSERT_EQUALS .sizeof(FileRecord), 32
-        jsr     ATimes32        ; A,X = index * 32
+        jsr     CalcFileRecordOffset
         addax   file_record_ptr, file_record_ptr
         rts
 .endproc ; SetFileRecordPtrFromIconPtr
@@ -13304,26 +13300,28 @@ found_slash:
 
 ;;; ============================================================
 
-
-;;; A,X = A * 16
         PROC_USED_IN_OVERLAY
-.proc ATimes16
+.proc CalcSelectorListEntryOffset
+        ASSERT_EQUALS ::kSelectorListNameLength, 16
+        ;; A,X = A * 16
         ldx     #4
         bne     AShiftX       ; always
-.endproc ; ATimes16
+.endproc ; CalcSelectorListEntryOffset
 
-;;; A,X = A * 32
         PROC_USED_CLEARING_UPDATES
-.proc ATimes32
+.proc CalcFileRecordOffset
+        ASSERT_EQUALS .sizeof(FileRecord), 32
+        ;; A,X = A * 32
         ldx     #5
         bne     AShiftX       ; always
-.endproc ; ATimes32
+.endproc ; CalcFileRecordOffset
 
-;;; A,X = A * 64
         PROC_USED_IN_OVERLAY
-.proc ATimes64
+.proc CalcSelectorListPathOffset
+        ASSERT_EQUALS ::kSelectorListPathLength, 64
+        ;; A,X = A * 64
         FALL_THROUGH_TO AShiftX, X=#6
-.endproc ; ATimes64
+.endproc ; CalcSelectorListPathOffset
 
 ;;; A,X = A << X
 .proc AShiftX
