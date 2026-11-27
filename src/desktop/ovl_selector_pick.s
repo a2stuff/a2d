@@ -8,6 +8,22 @@
 
         BEGINSEG OverlayShortcutPick
 
+;;; The overlay is responsible for managing updates to the shortcuts
+;;; list, with these commands:
+;;; * Add
+;;;   * show shortcut editor (custom file dialog)
+;;;   * add entry to `SELECTOR.LIST` file
+;;; * Edit
+;;;   * show shortcut picker
+;;;   * show shortcut editor (custom file dialog)
+;;;   * update entry in `SELECTOR.LIST` file
+;;; * Delete
+;;;   * show shortcut picker
+;;;   * remove entry from `SELECTOR.LIST` file
+;;; * Run
+;;;   * show shortcut picker
+;;;   * return selected entry path/flags to caller
+
 .scope SelectorPickOverlay
 
         MLIEntry := main::MLIRelayImpl
@@ -107,6 +123,7 @@ DoAdd:  ldx     #kRunListPrimary
         ;; Map to `kCopyOnBoot` to `kSelectorEntryCopyOnBoot` etc
         copy8   copy_when_conversion_table-1,y, copy_when
 
+        ;; Need to reload file since buffers are trashed by file dialog.
         jsr     ReadFile
     IF NS
         jmp     Exit
@@ -254,6 +271,7 @@ copy_when:
         ;; Map to `kCopyOnBoot` to `kSelectorEntryCopyOnBoot` etc
         copy8   copy_when_conversion_table-1,y, copy_when
 
+        ;; Need to reload file since buffers are trashed by file dialog.
         jsr     ReadFile
     IF NS
         jmp     Exit
