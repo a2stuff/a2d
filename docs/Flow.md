@@ -78,11 +78,17 @@ There is also a shortcut form for unstructured branching:
 IF condition GOTO label
 ```
 
-If the target label is too far away for a branch, `JUMP` can be used instead of `GOTO` to force
+If the target label is too far away for a branch, `JUMP` can be used instead of `GOTO` to force using `jmp`:
 
 ```
 IF condition JUMP label
 ```
+
+For single-line `IF` statements, use `THEN` - whatever follows is emitted verbatim.
+```
+  IF condition THEN statement
+```
+
 
 ### `DO` ... `WHILE` statements
 
@@ -277,6 +283,8 @@ Reusing the same type-prefixed syntax from typed conditions, `SET` expressions c
   SET u16 varA -= varB         ; same as sub16 varA, varB, varA
   SET u16 varA = varB + varC   ; same as add16 varB, varC, varA
   SET u16 varA = varB - varC   ; same as sub16 varB, varC, varA
+  SET u16 ++varA               ; same as inc16 varA
+  SET u16 --varA               ; same as dec16 varA
 ```
 ... and similarly with `u8`, `s16`, `u24`, and `u32` types.
 
@@ -301,6 +309,16 @@ Shift-assignments are supported as well, with several caveats:
 The shift count *must* be what ca65 considers a constant so that the value is known at assemble-time. If the value is 1 then just an `asl16` (etc) is emitted, otherwise a loop using the `X` register is emitted. Append `, USE_Y` to the statement to use the `Y` register instead.
 
 The count is required to be immediate mode (i.e. prefixed with `#`) to dissuade passing a symbol (e.g. `varB`) because that might be a constant but the loop count should not be based on the *address*. While it would be possible to support non-constant shifts, these are exceedingly rare; the current syntax allows this in the future.
+
+A special form exists for mixing 16-bit and 8-bit operands:
+```
+  SET u16 varA += u8 varB         ; same as add16_8 varA, varB
+  SET u16 varA += u8 varB         ; same as sub16_8 varA, varB
+  SET u16 varA = varB + u8 varC   ; same as add16_8 varB, varC, varA
+  SET u16 varA = varB - u8 varC   ; same as sub16_8 varB, varC, varA
+```
+
+Note that some combinations aren't supported by the underlying multi-byte macros (e.g. there is currently no `inc32` or `dec32` as these are not needed by the project); a diagnostic an error will be generated. These can be added (along with tests!) if needed.
 
 ## Extras
 

@@ -125,9 +125,8 @@ DoAdd:  ldx     #kRunListPrimary
 
         ;; Need to reload file since buffers are trashed by file dialog.
         jsr     ReadFile
-    IF NS
-        jmp     Exit
-    END_IF
+        IF NS \
+          THEN TAIL_CALL Exit
 
         copy16  selector_list, num_primary_run_list_entries
 
@@ -172,9 +171,8 @@ copy_when:
 
         jsr     OpenWindow
         jsr     ReadFile
-    IF NS
-        jmp     DoCancel
-    END_IF
+        IF NS \
+          JUMP DoCancel
 
         copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
         copy8   selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
@@ -233,9 +231,8 @@ copy_when:
         jsr     main::CopyToPathBuf0
 
         ldx     #kRunListPrimary
-    IF u8 shortcut_picker_record::selected_index >= #kSelectorListNumPrimaryRunListEntries
-        inx                     ; `kRunListSecondary`
-    END_IF
+        IF u8 shortcut_picker_record::selected_index >= #kSelectorListNumPrimaryRunListEntries \
+          THEN inx              ; `kRunListSecondary`
 
         ;; Map to `kSelectorEntryCopyOnBoot` to `kCopyOnBoot` etc
         .define swizzle(n) (n >> 7) + 1 + (n > 127)
@@ -273,17 +270,15 @@ copy_when:
 
         ;; Need to reload file since buffers are trashed by file dialog.
         jsr     ReadFile
-    IF NS
-        jmp     Exit
-    END_IF
+        IF NS \
+          THEN TAIL_CALL Exit
 
     IF u8 shortcut_picker_record::selected_index >= #kSelectorListNumPrimaryRunListEntries
         ;; Was on secondary run list - is it still?
         IF u8 which_run_list = #kRunListSecondary GOTO reuse_same_index
 
-      IF u8 num_primary_run_list_entries = #kSelectorListNumPrimaryRunListEntries
-        jmp     ShowFullAlert
-      END_IF
+        IF u8 num_primary_run_list_entries = #kSelectorListNumPrimaryRunListEntries \
+          THEN TAIL_CALL ShowFullAlert
 
         CALL    RemoveEntry, A=shortcut_picker_record::selected_index
 
@@ -296,9 +291,8 @@ copy_when:
         ;; Was on primary run list - is it still?
         IF u8 which_run_list = #kRunListPrimary GOTO reuse_same_index
 
-      IF u8 num_secondary_run_list_entries = #kSelectorListNumSecondaryRunListEntries
-        jmp     ShowFullAlert
-      END_IF
+        IF u8 num_secondary_run_list_entries = #kSelectorListNumSecondaryRunListEntries \
+          THEN TAIL_CALL ShowFullAlert
 
         CALL    RemoveEntry, A=shortcut_picker_record::selected_index
 
@@ -553,9 +547,8 @@ handle_button:
     WHILE dey : POS
 
         ;; If primary run list, update the menu as well
-    IF u8 index < #kSelectorListNumPrimaryRunListEntries
-        jsr     UpdateMenuResources
-    END_IF
+        IF u8 index < #kSelectorListNumPrimaryRunListEntries \
+          THEN jsr UpdateMenuResources
 
         rts
 
@@ -686,9 +679,8 @@ finish:
         adc     #kSelectorMenuFixedItems
         sta     selector_menu
         ;; No separator if it is last
-    IF A = #kSelectorMenuFixedItems
-        dec     selector_menu
-    END_IF
+        IF A = #kSelectorMenuFixedItems \
+          THEN dec selector_menu
 
         ;; Re-initialize the menu so that new widths can be pre-computed.
         ;; That will un-hilite the Selector menu, so re-hilite it so
@@ -904,9 +896,8 @@ failed:
     END_IF
 
         ;; Special case
-    IF A = #ERR_VOL_NOT_FOUND
-        lda     #kErrInsertSystemDisk ; Try Again/Cancel
-    END_IF
+        IF A = #ERR_VOL_NOT_FOUND \
+          THEN lda #kErrInsertSystemDisk ; Try Again/Cancel
         jsr     JUMP_TABLE_SHOW_ALERT ; arbitrary ProDOS error
         ;; Responses are either OK or Try Again/Cancel
         cmp     #kAlertResultTryAgain

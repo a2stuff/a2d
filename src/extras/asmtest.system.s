@@ -1423,6 +1423,12 @@ ft21:
         IF CS RETURN Y=#kConstant, AX=var
         IF CS RETURN C=1, A=table,x, X=table,y
 
+;;; IF ... THEN ...
+
+        IF CS THEN nop
+jump_target:
+        IF CS THEN TAIL_CALL jump_target
+
 ;;; --------------------------------------------------
 ;;; Cheap Local Label Compatibility
 ;;; --------------------------------------------------

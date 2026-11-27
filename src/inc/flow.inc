@@ -16,6 +16,7 @@
 ;;; * IF cond / ELSE_IF cond / ELSE / END_IF
 ;;; * IF cond GOTO target (or JUMP for forced long branch)
 ;;; * IF cond RETURN ... (with register-loading micro-syntax below)
+;;; * IF cond THEN ... (single statement shortcut form)
 ;;;
 ;;; * DO / REDO_IF cond / CONTINUE_IF cond / BREAK_IF cond / WHILE cond
 ;;;   * or REPEAT / UNTIL cond if you prefer
@@ -1205,6 +1206,7 @@
                 .xmatch({f2_tok}, REDO    ) || \
                 .xmatch({f2_tok}, CONTINUE) || \
                 .xmatch({f2_tok}, BREAK   ) || \
+                .xmatch({f2_tok}, THEN    ) || \
                 .xmatch({f2_tok}, RETURN  )
               @op_index .set tindex
             .endif
@@ -1251,8 +1253,8 @@
           .else
             F2_ERR_UNREACHED
           .endif
-        .elseif .xmatch({f2_shortcut_op}, RETURN)
-          ;; `RETURN` - as is
+        .elseif .xmatch({f2_shortcut_op}, RETURN) || .xmatch({f2_shortcut_op}, THEN)
+          ;; `RETURN`/`THEN` - as is
         .else
           F2_ERR_UNREACHED
         .endif
@@ -1269,6 +1271,13 @@
             ;; RHS explicitly passed w/o {} to allow expansion
             _CALL_HELPER f2_shortcut_rhs
             rts
+            @skip := *
+          .elseif .xmatch({f2_shortcut_op}, THEN)
+            .local @skip
+            F2_PARSE_AND_GEN_BIF @skip,{f2_params}
+            _FLOW_END_STATEMENT ; Allow RHS to be a statement on its own
+            f2_shortcut_rhs
+            _FLOW_STATEMENT "IF"
             @skip := *
           .else
             .if .xmatch({f2_shortcut_op}, JUMP)

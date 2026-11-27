@@ -671,9 +671,9 @@ unit_num:
     END_IF
 
         ;; No separator if it is last
-    IF u8 selector_menu = #kSelectorMenuFixedItems
-        dec     selector_menu
-    END_IF
+        IF u8 selector_menu = #kSelectorMenuFixedItems \
+          THEN dec selector_menu
+
         jmp     end_of_scope
 
 index:  .byte   0
@@ -838,9 +838,8 @@ process_block:
         tay
     DO
         lda     name_buf,y
-      IF A = #'.'
-        lda     #' '
-      END_IF
+        IF A = #'.' \
+          THEN lda #' '
         sta     (da_ptr),y
     WHILE dey : NOT_ZERO
 
@@ -891,9 +890,8 @@ name_buf:       .res    ::kDAMenuItemSize, 0
 
 end:
         ;; No separator if it is last
-    IF u8 apple_menu = #kAppleMenuFixedItems
-        dec     apple_menu
-    END_IF
+        IF u8 apple_menu = #kAppleMenuFixedItems \
+          THEN dec apple_menu
 
         FALL_THROUGH_TO PopulateStartupMenu
 
